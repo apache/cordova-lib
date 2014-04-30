@@ -1,5 +1,5 @@
 var Q = require('q'),
-    cordova = require('../cordova');
+    cordova = require('../src/cordova/cordova');
 
 describe('callback wrapper', function() {
     var calls = ['prepare', 'build', 'create', 'emulate', 'plugin', 'platform', 'compile', 'run'];

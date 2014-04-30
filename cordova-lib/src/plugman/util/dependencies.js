@@ -1,7 +1,7 @@
 var dep_graph = require('dep-graph'),
     path = require('path'),
     fs = require('fs'),
-    plugman = require('../../plugman'),
+    plugman = require('../plugman'),
     config_changes = require('./config-changes'),
     underscore = require('underscore'),
     xml_helpers = require('./xml-helpers'),

@@ -25,7 +25,7 @@ var fs            = require('fs'),
     project_config= require('../config'),
     Q             = require('q'),
     ConfigParser = require('../ConfigParser'),
-    CordovaError = require('../CordovaError');
+    CordovaError = require('../../CordovaError');
 
 var awv_interface='awv_interface.jar';
 

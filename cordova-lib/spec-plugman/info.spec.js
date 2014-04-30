@@ -1,6 +1,6 @@
-var search = require('../src/info'),
+var search = require('../src/plugman/info'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('info', function() {
     it('should show plugin info', function() {

@@ -24,8 +24,8 @@ var http   = require('http'),
     temp   = path.join(osenv.tmpdir(), 'plugman'),
     shell  = require('shelljs'),
     child_process = require('child_process'),
-    plugins = require('../../src/util/plugins'),
-    xml_helpers = require('../../src/util/xml-helpers');
+    plugins = require('../../src/plugman/util/plugins'),
+    xml_helpers = require('../../src/plugman/util/xml-helpers');
 
 describe('plugins utility module', function(){
     describe('clonePluginGitRepo', function(){

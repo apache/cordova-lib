@@ -17,18 +17,18 @@
     under the License.
 */
 
-var platforms = require('../../platforms'),
-    util = require('../../src/util'),
+var platforms = require('../../src/cordova/platforms'),
+    util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     child_process = require('child_process'),
-    xmlHelpers = require('../../src/xml-helpers'),
+    xmlHelpers = require('../../src/cordova/xml-helpers'),
     et = require('elementtree'),
     Q = require('q'),
     fs = require('fs'),
-    config = require('../../src/config'),
-    ConfigParser = require('../../src/ConfigParser'),
-    cordova = require('../../cordova');
+    config = require('../../src/cordova/config'),
+    ConfigParser = require('../../src/cordova/ConfigParser'),
+    cordova = require('../../src/cordova/cordova');
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));

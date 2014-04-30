@@ -20,42 +20,42 @@
 module.exports = {
     'ios' : {
         hostos : ['darwin'],
-        parser : './src/metadata/ios_parser',
+        parser : './metadata/ios_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
         version: '3.4.1'
-    }, 
+    },
     'android' : {
-        parser : './src/metadata/android_parser',
+        parser : './metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
         version: '3.4.0'
-    }, 
+    },
     'ubuntu' : {
         hostos : ['linux'],
-        parser : './src/metadata/ubuntu_parser',
+        parser : './metadata/ubuntu_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
         version: '3.4.0'
-    }, 
+    },
      'amazon-fireos' : {
-        parser : './src/metadata/amazon_fireos_parser',
+        parser : './metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
         version: '3.4.0'
     },
     'wp7' : {
         hostos : ['win32'],
-        parser : './src/metadata/wp7_parser',
+        parser : './metadata/wp7_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
         version: '3.4.0',
         subdirectory: 'wp7'
     },
     'wp8' : {
         hostos : ['win32'],
-        parser : './src/metadata/wp8_parser',
+        parser : './metadata/wp8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
         version: '3.4.0',
         subdirectory: 'wp8'
     },
     'blackberry10' : {
-        parser : './src/metadata/blackberry10_parser',
+        parser : './metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
         version: '3.4.0',
         subdirectory: 'blackberry10'
@@ -66,20 +66,20 @@ module.exports = {
         version: '3.4.0'
     },
     'firefoxos':{
-        parser: './src/metadata/firefoxos_parser',
+        parser: './metadata/firefoxos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
         version: '3.4.0'
     },
     'windows8':{
         hostos : ['win32'],
-        parser: './src/metadata/windows8_parser',
+        parser: './metadata/windows8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
         version: '3.4.0',
         subdirectory: 'windows8'
     }
 };
 
-var addModuleProperty = require('./src/util').addModuleProperty;
+var addModuleProperty = require('./util').addModuleProperty;
 Object.keys(module.exports).forEach(function(key) {
     var obj = module.exports[key];
     if (obj.parser) {

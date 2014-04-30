@@ -4,8 +4,8 @@ var helpers = require('./helpers'),
     fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
-    events = require('../src/events'),
-    cordova = require('../cordova');
+    events = require('../src/cordova/events'),
+    cordova = require('../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');

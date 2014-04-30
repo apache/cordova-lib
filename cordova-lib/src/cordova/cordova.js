@@ -16,8 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova_events = require('./src/events');
-var cordova_util = require('./src/util');
+var cordova_events = require('./events');
+var cordova_util = require('./util');
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -50,19 +50,19 @@ exports.findProjectRoot = function(opt_startDir) {
 // To use a promise instead, call the APIs via cordova.raw.FOO(), which returns
 // a promise instead of using a final-parameter-callback.
 var addModuleProperty = cordova_util.addModuleProperty;
-addModuleProperty(module, 'prepare', './src/prepare', true);
-addModuleProperty(module, 'build', './src/build', true);
-addModuleProperty(module, 'help', './src/help');
-addModuleProperty(module, 'config', './src/config');
-addModuleProperty(module, 'create', './src/create', true);
-addModuleProperty(module, 'emulate', './src/emulate', true);
-addModuleProperty(module, 'plugin', './src/plugin', true);
-addModuleProperty(module, 'plugins', './src/plugin', true);
-addModuleProperty(module, 'serve', './src/serve');
-addModuleProperty(module, 'platform', './src/platform', true);
-addModuleProperty(module, 'platforms', './src/platform', true);
-addModuleProperty(module, 'compile', './src/compile', true);
-addModuleProperty(module, 'run', './src/run', true);
-addModuleProperty(module, 'info', './src/info', true);
+addModuleProperty(module, 'prepare', './prepare', true);
+addModuleProperty(module, 'build', './build', true);
+addModuleProperty(module, 'help', './help');
+addModuleProperty(module, 'config', './config');
+addModuleProperty(module, 'create', './create', true);
+addModuleProperty(module, 'emulate', './emulate', true);
+addModuleProperty(module, 'plugin', './plugin', true);
+addModuleProperty(module, 'plugins', './plugin', true);
+addModuleProperty(module, 'serve', './serve');
+addModuleProperty(module, 'platform', './platform', true);
+addModuleProperty(module, 'platforms', './platform', true);
+addModuleProperty(module, 'compile', './compile', true);
+addModuleProperty(module, 'run', './run', true);
+addModuleProperty(module, 'info', './info', true);
 
 

@@ -15,7 +15,7 @@
  * under the License.
  *
 */
-var common = require('../../src/platforms/common')
+var common = require('../../src/plugman/platforms/common')
   , path = require('path')
   , fs = require('fs')
   , osenv = require('osenv')

@@ -1,16 +1,16 @@
-var fetch   = require('../src/fetch'),
+var fetch   = require('../src/plugman/fetch'),
     fs      = require('fs'),
     os      = require('osenv'),
     path    = require('path'),
     shell   = require('shelljs'),
-    xml_helpers = require('../src/util/xml-helpers'),
-    metadata = require('../src/util/metadata'),
+    xml_helpers = require('../src/plugman/util/xml-helpers'),
+    metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     test_plugin = path.join(__dirname, 'plugins', 'ChildBrowser'),
     test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'ChildBrowser'),
-    plugins = require('../src/util/plugins'),
+    plugins = require('../src/plugman/util/plugins'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('fetch', function() {
     function wrapper(p, done, post) {

@@ -15,8 +15,8 @@
  * under the License.
  *
 */
-var tizen = require('../../src/platforms/tizen'),
-	common = require('../../src/platforms/common'),
+var tizen = require('../../src/plugman/platforms/tizen'),
+	common = require('../../src/plugman/platforms/common'),
 	temp = require('temp'),
 	os = require('osenv'),
 	fs = require('fs'),

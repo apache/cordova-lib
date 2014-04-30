@@ -1,8 +1,8 @@
-var platform = require('../src/platform'),
+var platform = require('../src/plugman/platform'),
     Q = require('q'),
     fs = require('fs'),
     shell = require('shelljs'),
-    plugman = require('../plugman');
+    plugman = require('../src/plugman/plugman');
 
 describe( 'platform add/remove', function() {
     it( 'should call platform add', function() {

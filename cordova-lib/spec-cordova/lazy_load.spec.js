@@ -16,17 +16,17 @@
     specific language governing permissions and limitations
     under the License.
 */
-var lazy_load = require('../src/lazy_load'),
-    config = require('../src/config'),
-    util = require('../src/util'),
+var lazy_load = require('../src/cordova/lazy_load'),
+    config = require('../src/cordova/config'),
+    util = require('../src/cordova/util'),
     shell = require('shelljs'),
     npmconf = require('npmconf');
     path = require('path'),
-    hooker = require('../src/hooker'),
+    hooker = require('../src/cordova/hooker'),
     request = require('request'),
     fs = require('fs'),
     Q = require('q'),
-    platforms = require('../platforms');
+    platforms = require('../src/cordova/platforms');
 
 describe('lazy_load module', function() {
     var custom_path;

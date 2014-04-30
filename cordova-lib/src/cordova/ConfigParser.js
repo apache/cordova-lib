@@ -18,7 +18,7 @@
 */
 var et = require('elementtree'),
     xml= require('./xml-helpers'),
-    CordovaError = require('./CordovaError'),
+    CordovaError = require('../CordovaError'),
     fs = require('fs');
 
 /** Wraps a config.xml file */

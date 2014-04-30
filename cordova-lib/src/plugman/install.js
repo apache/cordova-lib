@@ -13,7 +13,7 @@ var path = require('path'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
     events = require('./events'),
-    plugman = require('../plugman'),
+    plugman = require('./plugman'),
     isWindows = (os.platform().substr(0,3) === 'win');
 
 /* INSTALL FLOW

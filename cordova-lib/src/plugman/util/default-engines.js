@@ -5,7 +5,7 @@ module.exports = function(project_dir){
         'cordova':
             { 'platform':'*', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-plugman':
-            { 'platform':'*', 'currentVersion': require('../../package.json').version },
+            { 'platform':'*', 'currentVersion': require('../../../package.json').version },
         'cordova-android':
             { 'platform':'android', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-ios':

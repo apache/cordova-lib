@@ -20,7 +20,7 @@ var cordova_util = require('./util'),
     crypto = require('crypto'),
     path = require('path'),
     shell = require('shelljs'),
-    platforms     = require('../platforms'),
+    platforms     = require('./platforms'),
     ConfigParser = require('./ConfigParser'),
     hooker        = require('./hooker'),
     fs = require('fs'),
@@ -215,7 +215,7 @@ module.exports = function server(port) {
     return hooks.fire('before_serve')
     .then(function() {
         // Run a prepare first!
-        return require('../cordova').raw.prepare([]);
+        return require('./cordova').raw.prepare([]);
     }).then(function() {
         launchServer(projectRoot, port);
         return hooks.fire('after_serve');

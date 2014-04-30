@@ -1,8 +1,8 @@
-var create = require('../src/create'),
+var create = require('../src/plugman/create'),
     Q = require('q'),
     fs = require('fs'),
     shell = require('shelljs'),
-    plugman = require('../plugman');
+    plugman = require('../src/plugman/plugman');
 
 describe( 'create', function() {
     it( 'should call create', function() {

@@ -13,7 +13,7 @@ var path = require('path'),
     underscore = require('underscore'),
     events = require('./events'),
     platform_modules = require('./platforms'),
-    plugman = require('../plugman');
+    plugman = require('./plugman');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.

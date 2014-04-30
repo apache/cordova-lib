@@ -23,7 +23,7 @@ var fs            = require('fs'),
     Q             = require('q'),
     child_process = require('child_process'),
     ConfigParser  = require('../ConfigParser'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('../../CordovaError'),
     events        = require('../events'),
     config        = require('../config');
 
@@ -43,7 +43,7 @@ module.exports.check_requirements = function(project_root) {
     if (custom_path) {
         lib_path = path.resolve(custom_path);
     } else {
-        lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../../platforms').blackberry10.version);
+        lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../platforms').blackberry10.version);
     }
     var d = Q.defer();
     child_process.exec("\"" + path.join(lib_path, 'bin', 'check_reqs') + "\"", function(err, output, stderr) {

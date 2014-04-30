@@ -19,7 +19,7 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-var events = require('./src/events');
+var events = require('./events');
 var Q = require('q');
 
 function addProperty(o, symbol, modulePath, doWrap) {
@@ -60,21 +60,20 @@ plugman = {
     raw:                {}
 };
 
-addProperty(plugman, 'help', './src/help');
-addProperty(plugman, 'install', './src/install', true);
-addProperty(plugman, 'uninstall', './src/uninstall', true);
-addProperty(plugman, 'fetch', './src/fetch', true);
-addProperty(plugman, 'prepare', './src/prepare');
-addProperty(plugman, 'config', './src/config', true);
-addProperty(plugman, 'owner', './src/owner', true);
-addProperty(plugman, 'adduser', './src/adduser', true);
-addProperty(plugman, 'publish', './src/publish', true);
-addProperty(plugman, 'unpublish', './src/unpublish', true);
-addProperty(plugman, 'search', './src/search', true);
-addProperty(plugman, 'info', './src/info', true);
-addProperty(plugman, 'create', './src/create', true);
-addProperty(plugman, 'platform', './src/platform_operation', true);
-addProperty(plugman, 'config_changes', './src/util/config-changes');
+addProperty(plugman, 'install', './install', true);
+addProperty(plugman, 'uninstall', './uninstall', true);
+addProperty(plugman, 'fetch', './fetch', true);
+addProperty(plugman, 'prepare', './prepare');
+addProperty(plugman, 'config', './config', true);
+addProperty(plugman, 'owner', './owner', true);
+addProperty(plugman, 'adduser', './adduser', true);
+addProperty(plugman, 'publish', './publish', true);
+addProperty(plugman, 'unpublish', './unpublish', true);
+addProperty(plugman, 'search', './search', true);
+addProperty(plugman, 'info', './info', true);
+addProperty(plugman, 'create', './create', true);
+addProperty(plugman, 'platform', './platform_operation', true);
+addProperty(plugman, 'config_changes', './util/config-changes');
 
 plugman.commands =  {
     'config'   : function(cli_opts) {
@@ -111,7 +110,7 @@ plugman.commands =  {
                 return plugman.raw.install(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
             })
         });
-        
+
         return p;
     },
     'uninstall': function(cli_opts) {

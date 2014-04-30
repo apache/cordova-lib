@@ -25,7 +25,7 @@ var fs            = require('fs'),
     child_process = require('child_process'),
     Q             = require('q'),
     ConfigParser  = require('../ConfigParser'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('../../CordovaError'),
     xml           = require('../xml-helpers'),
     config        = require('../config'),
     hooker        = require('../hooker');
@@ -47,7 +47,7 @@ module.exports = function wp8_parser(project) {
 // Returns a promise.
 module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking wp8 requirements...');
-    var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp8.version, 'wp8');
+    var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../platforms').wp8.version, 'wp8');
     var custom_path = config.has_custom_path(project_root, 'wp8');
     if (custom_path) {
         lib_path = path.join(custom_path, 'wp8');

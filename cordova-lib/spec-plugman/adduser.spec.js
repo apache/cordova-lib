@@ -1,6 +1,6 @@
-var adduser = require('../src/adduser'),
+var adduser = require('../src/plugman/adduser'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('adduser', function() {
     it('should add a user', function() {

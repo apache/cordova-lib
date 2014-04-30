@@ -16,32 +16,15 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova_util      = require('./util'),
-    Q                 = require('q'),
-    hooker            = require('./hooker');
 
-// Returns a promise.
-module.exports = function build(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
+// For now expose plagman and cordova just as they were in the old repos
+exports.plugman = require('./src/plugman/plugman');
+exports.cordova = require('./src/cordova/cordova');
+exports.cordova_platforms = require('./src/cordova/platforms');
 
-    if (!options) {
-        options = {
-            verbose: false,
-            platforms: [],
-            options: []
-        };
-    }
 
-    options = cordova_util.preProcessOptions(options);
+////  MAIN CORDOVA TOOLS API
+exports.CordovaError = require('./src/CordovaError');
 
-    // fire build hooks
-    var hooks = new hooker(projectRoot);
-    return hooks.fire('before_build', options)
-    .then(function() {
-        return require('./cordova').raw.prepare(options);
-    }).then(function() {
-        return require('./cordova').raw.compile(options);
-    }).then(function() {
-        return hooks.fire('after_build', options);
-    });
-};
+
+

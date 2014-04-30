@@ -8,7 +8,7 @@ var shell   = require('shelljs'),
     path    = require('path'),
     Q       = require('q'),
     registry = require('./registry/registry');
-// XXX: leave the require('../plugman') because jasmine shits itself if you declare it up top
+// XXX: leave the require('./plugman') because jasmine shits itself if you declare it up top
 // possible options: link, subdir, git_ref, client, expected_id
 // Returns a promise.
 module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {

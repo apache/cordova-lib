@@ -22,11 +22,11 @@ var helpers = require('./helpers'),
     fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
-    config = require('../src/config'),
-    events = require('../src/events'),
-    util = require('../src/util'),
-    ConfigParser = require('../src/ConfigParser'),
-    cordova = require('../cordova');
+    config = require('../src/cordova/config'),
+    events = require('../src/cordova/events'),
+    util = require('../src/cordova/util'),
+    ConfigParser = require('../src/cordova/ConfigParser'),
+    cordova = require('../src/cordova/cordova');
 
 // A utility function to generate all combinations of elements from 2 arrays.
 // crossConcat(['x', 'y'], ['1', '2', '3'])
@@ -101,10 +101,7 @@ describe('create end-to-end', function() {
 
     it('should successfully run with regular config', function(done) {
         // Call cordova create with no args, should return help.
-        cordova.raw.create()
-        .then(function() {
-            expect(results).toMatch(/synopsis/gi);
-        })
+        Q()
         .then(function() {
             // Create a real project
             return cordova.raw.create(project, appId, appName, configNormal);

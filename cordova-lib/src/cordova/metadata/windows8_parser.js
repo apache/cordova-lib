@@ -26,7 +26,7 @@ var fs            = require('fs'),
     Q             = require('q'),
     child_process = require('child_process'),
     ConfigParser  = require('../ConfigParser'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('../../CordovaError'),
     xml           = require('../xml-helpers'),
     config        = require('../config'),
     hooker        = require('../hooker');
@@ -49,7 +49,7 @@ module.exports = function windows8_parser(project) {
 module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking windows8 requirements...');
     var lib_path = path.join(util.libDirectory, 'windows8', 'cordova',
-                    require('../../platforms').windows8.version, 'windows8');
+                    require('../platforms').windows8.version, 'windows8');
 
     var custom_path = config.has_custom_path(project_root, 'windows8');
     if (custom_path) {

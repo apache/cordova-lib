@@ -19,7 +19,7 @@
 var cordova_util      = require('./util'),
     ConfigParser = require('./ConfigParser'),
     path              = require('path'),
-    platforms         = require('../platforms'),
+    platforms         = require('./platforms'),
     platform          = require('./platform'),
     fs                = require('fs'),
     shell             = require('shelljs'),
@@ -28,7 +28,7 @@ var cordova_util      = require('./util'),
     lazy_load         = require('./lazy_load'),
     events            = require('./events'),
     Q                 = require('q'),
-    plugman           = require('plugman'),
+    plugman           = require('../plugman/plugman'),
     util              = require('util');
 
 // Returns a promise.

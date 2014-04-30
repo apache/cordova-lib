@@ -1,5 +1,5 @@
-var action_stack = require('../../src/util/action-stack'),
-    ios = require('../../src/platforms/ios');
+var action_stack = require('../../src/plugman/util/action-stack'),
+    ios = require('../../src/plugman/platforms/ios');
 
 describe('action-stack', function() {
     var stack;

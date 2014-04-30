@@ -17,9 +17,9 @@
     under the License.
 */
 var config            = require('./config'),
-    cordova           = require('../cordova'),
+    cordova           = require('./cordova'),
     cordova_util      = require('./util'),
-    ConfigParser     = require('./ConfigParser'),
+    ConfigParser      = require('./ConfigParser'),
     util              = require('util'),
     fs                = require('fs'),
     os                = require('os'),
@@ -27,9 +27,9 @@ var config            = require('./config'),
     hooker            = require('./hooker'),
     events            = require('./events'),
     lazy_load         = require('./lazy_load'),
-    CordovaError      = require('./CordovaError'),
+    CordovaError      = require('../CordovaError'),
     Q                 = require('q'),
-    platforms         = require('../platforms'),
+    platforms         = require('./platforms'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
     shell             = require('shelljs');
@@ -368,7 +368,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
             }
             return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
             .then(function() {
-                return require('../cordova').raw.prepare(target);
+                return require('./cordova').raw.prepare(target);
             })
             .then(function() {
                 createOverrides(projectRoot, target);
@@ -378,7 +378,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
                 var parser = new platforms[target].parser(output);
                 if (!plugins) return Q();
 
-                var plugman = require('plugman');
+                var plugman = require('../plugman/plugman');
                 // Install them serially.
                 return plugins.reduce(function(soFar, plugin) {
                     return soFar.then(function() {

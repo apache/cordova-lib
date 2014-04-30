@@ -1,4 +1,4 @@
-var platforms = require('../src/platforms')
+var platforms = require('../src/plugman/platforms')
 var pluginTags = ["source-file", "header-file", "lib-file", "resource-file", "framework"];
 
 function getTest(platformId, pluginTag) {

@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
-    platforms = require('../platforms'),
-    superspawn = require('../src/superspawn'),
+var cordova = require('../src/cordova/cordova'),
+    platforms = require('../src/cordova/platforms'),
+    superspawn = require('../src/cordova/superspawn'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/hooker'),
+    hooker = require('../src/cordova/hooker'),
     Q = require('q'),
-    util = require('../src/util'),
+    util = require('../src/cordova/util'),
     os = require('os');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });

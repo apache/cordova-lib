@@ -63,8 +63,8 @@ module.exports = {
 };
 
 function doPlatform( platformName, pluginName, pluginID, pluginVersion ) {
-    var docDir = path.join(__dirname, '..', 'doc/platforms/' + platformName + "/"),
-        platformFile = docDir + platformName + ".xml",
+    var templatesDir = path.join(__dirname, '..', '..', 'templates/platforms/' + platformName + "/"),
+        platformFile = templatesDir + platformName + ".xml",
         platform;
 
     if( !fs.existsSync( platformFile ) ) {
@@ -77,12 +77,12 @@ function doPlatform( platformName, pluginName, pluginID, pluginVersion ) {
                 .replace( /%packageName%/g, pluginID.replace( /[.]/g, '/' ) );
     platform = new et.ElementTree( et.XML( platform ) );
 
-    doPlatformBase( docDir, platformName, pluginName, pluginID, pluginVersion );
+    doPlatformBase( templatesDir, platformName, pluginName, pluginID, pluginVersion );
 
     return platform;
 }
 
-function doPlatformBase( docDir, platformName, pluginName, pluginID, pluginVersion ) {
+function doPlatformBase( templatesDir, platformName, pluginName, pluginID, pluginVersion ) {
     //Create the default plugin file
     var baseFiles = [],
         i = 0;
@@ -91,7 +91,7 @@ function doPlatformBase( docDir, platformName, pluginName, pluginID, pluginVersi
     case 'android':
         baseFiles.push (
             {
-                file: fs.readFileSync( docDir + "base.java", "utf-8" )
+                file: fs.readFileSync( templatesDir + "base.java", "utf-8" )
                     .replace( /%pluginName%/g, pluginName )
                     .replace( /%pluginID%/g, pluginID ),
                 extension: "java"
@@ -102,7 +102,7 @@ function doPlatformBase( docDir, platformName, pluginName, pluginID, pluginVersi
     case 'ios':
         baseFiles.push(
             {
-                file: fs.readFileSync( docDir + "base.m", "utf-8" )
+                file: fs.readFileSync( templatesDir + "base.m", "utf-8" )
                     .replace( /%pluginName%/g, pluginName ),
                 extension: "m"
             }

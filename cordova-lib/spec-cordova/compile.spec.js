@@ -16,13 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
-    platforms = require('../platforms'),
+var cordova = require('../src/cordova/cordova'),
+    platforms = require('../src/cordova/platforms'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/hooker'),
-    superspawn = require('../src/superspawn'),
-    util = require('../src/util'),
+    hooker = require('../src/cordova/hooker'),
+    superspawn = require('../src/cordova/superspawn'),
+    util = require('../src/cordova/util'),
     Q = require('q'),
     os = require('os');
 

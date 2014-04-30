@@ -1,5 +1,5 @@
-var registry = require('../../src/registry/registry'),
-    manifest = require('../../src/registry/manifest'),
+var registry = require('../../src/plugman/registry/registry'),
+    manifest = require('../../src/plugman/registry/manifest'),
     fs = require('fs'),
     path = require('path'),
     Q = require('q'),

@@ -19,7 +19,7 @@
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    platforms     = require('../platforms'),
+    platforms     = require('./platforms'),
     npmconf       = require('npmconf'),
     events        = require('./events'),
     request       = require('request'),

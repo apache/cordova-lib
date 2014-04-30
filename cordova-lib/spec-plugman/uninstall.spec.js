@@ -1,9 +1,9 @@
-var uninstall = require('../src/uninstall'),
-    install = require('../src/install'),
-    actions = require('../src/util/action-stack'),
-    config_changes = require('../src/util/config-changes'),
-    events  = require('../src/events'),
-    plugman = require('../plugman'),
+var uninstall = require('../src/plugman/uninstall'),
+    install = require('../src/plugman/install'),
+    actions = require('../src/plugman/util/action-stack'),
+    config_changes = require('../src/plugman/util/config-changes'),
+    events  = require('../src/plugman/events'),
+    plugman = require('../src/plugman/plugman'),
     common  = require('./common'),
     fs      = require('fs'),
     path    = require('path'),
@@ -60,7 +60,7 @@ describe('uninstallPlatform', function() {
     var proc, prepare, actions_push, add_to_queue, c_a, rm;
     var fsWrite;
 
-    var plat_common = require('../src/platforms/common');
+    var plat_common = require('../src/plugman/platforms/common');
 
     beforeEach(function() {
         proc = spyOn(actions.prototype, 'process').andReturn(Q());

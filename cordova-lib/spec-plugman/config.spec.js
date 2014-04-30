@@ -1,6 +1,6 @@
-var config = require('../src/config'),
+var config = require('../src/plugman/config'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('config', function() {
     it('should run config', function() {

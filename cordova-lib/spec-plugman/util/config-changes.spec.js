@@ -1,13 +1,13 @@
 /* jshint node:true, sub:true, indent:4  */
 /* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
 
-var configChanges = require('../../src/util/config-changes'),
-    xml_helpers = require('../../src/util/xml-helpers'),
-    ios_parser = require('../../src/platforms/ios'),
+var configChanges = require('../../src/plugman/util/config-changes'),
+    xml_helpers = require('../../src/plugman/util/xml-helpers'),
+    ios_parser = require('../../src/plugman/platforms/ios'),
     fs      = require('fs'),
     os      = require('osenv'),
-    plugman = require('../../plugman'),
-    events  = require('../../src/events'),
+    plugman = require('../../src/plugman/plugman'),
+    events  = require('../../src/plugman/events'),
     et      = require('elementtree'),
     path    = require('path'),
     plist = require('plist-with-patches'),

@@ -1,11 +1,11 @@
-var platforms = require('../src/platforms'),
-    prepare = require('../src/prepare'),
-    common  = require('../src/platforms/common');
+var platforms = require('../src/plugman/platforms'),
+    prepare = require('../src/plugman/prepare'),
+    common  = require('../src/plugman/platforms/common');
     fs      = require('fs'),
     os      = require('osenv'),
     path    = require('path'),
     shell   = require('shelljs'),
-    config_changes = require('../src/util/config-changes'),
+    config_changes = require('../src/plugman/util/config-changes'),
     temp    = __dirname,
     plugins_dir = path.join(temp, 'plugins');
 

@@ -24,7 +24,7 @@ module.exports = function plugin(command, targets, opts) {
         hooker        = require('./hooker'),
         config        = require('./config'),
         Q             = require('q'),
-        CordovaError  = require('./CordovaError'),
+        CordovaError  = require('../CordovaError'),
         events        = require('./events');
 
     var projectRoot = cordova_util.cdProjectRoot(),
@@ -107,14 +107,14 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        var plugman = require('plugman');
+                        var plugman = require('../plugman/plugman');
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath});
                     })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
                             return soFar.then(function() {
-                                var platforms = require('../platforms');
+                                var platforms = require('./platforms');
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
                                     parser = new platforms[platform].parser(platformRoot),
                                     options = {
@@ -163,11 +163,11 @@ module.exports = function plugin(command, targets, opts) {
                     // If this is a web-only or dependency-only plugin, then
                     // there may be nothing to do here except remove the
                     // reference from the platform's plugin config JSON.
-                    var plugman = require('plugman');
+                    var plugman = require('../plugman/plugman');
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
-                            var platforms = require('../platforms');
+                            var platforms = require('./platforms');
                             var parser = new platforms[platform].parser(platformRoot);
                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
@@ -184,7 +184,7 @@ module.exports = function plugin(command, targets, opts) {
         case 'search':
             return hooks.fire('before_plugin_search')
             .then(function() {
-                var plugman = require('plugman');
+                var plugman = require('../plugman/plugman');
                 return plugman.raw.search(opts.plugins);
             }).then(function(plugins) {
                 for(var plugin in plugins) {

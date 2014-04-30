@@ -3,12 +3,12 @@ var helpers = require('./helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    platforms = require('../platforms'),
-    superspawn = require('../src/superspawn'),
-    config = require('../src/config'),
+    platforms = require('../src/cordova/platforms'),
+    superspawn = require('../src/cordova/superspawn'),
+    config = require('../src/cordova/config'),
     Q = require('q'),
-    events = require('../src/events'),
-    cordova = require('../cordova');
+    events = require('../src/cordova/events'),
+    cordova = require('../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('platform_test');
 var project = path.join(tmpDir, 'project');

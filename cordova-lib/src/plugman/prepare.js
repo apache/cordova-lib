@@ -31,7 +31,7 @@ var platform_modules = require('./platforms'),
     shell           = require('shelljs'),
     util            = require('util'),
     events          = require('./events'),
-    plugman         = require('../plugman'),
+    plugman         = require('./plugman'),
     et              = require('elementtree');
 
 // Called on --prepare.

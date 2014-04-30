@@ -16,11 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     path = require('path'),
     fs = require('fs'),
-    util = require('../src/util'),
+    util = require('../src/cordova/util'),
     temp = path.join(__dirname, '..', 'temp'),
     fixtures = path.join(__dirname, 'fixtures');
 

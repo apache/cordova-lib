@@ -1,6 +1,6 @@
-var publish = require('../src/publish'),
+var publish = require('../src/plugman/publish'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('publish', function() {
     it('should publish a plugin', function() {

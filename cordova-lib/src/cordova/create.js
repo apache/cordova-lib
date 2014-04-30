@@ -20,13 +20,12 @@
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    platforms     = require('../platforms'),
-    help          = require('./help'),
+    platforms     = require('./platforms'),
     events        = require('./events'),
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
-    CordovaError  = require('./CordovaError'),
+    CordovaError  = require('../CordovaError'),
     ConfigParser = require('./ConfigParser'),
     util          = require('./util');
 
@@ -44,7 +43,9 @@ var DEFAULT_NAME = "HelloCordova",
 module.exports = create;
 function create(dir, id, name, cfg) {
     if (!dir ) {
-        return Q(help());
+        return Q.reject(new CordovaError(
+            'At least the dir must be provided to create new project. See `corova help`.'
+        ));
     }
 
     // Massage parameters
@@ -203,12 +204,12 @@ function create(dir, id, name, cfg) {
         shell.mkdir(path.join(dir, 'hooks'));
 
         // Add hooks README.md
-        shell.cp(path.join(__dirname, '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
+        shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
 
         var configPath = util.projectConfig(dir);
         // Add template config.xml for apps that are missing it
         if (!fs.existsSync(configPath)) {
-            var template_config_xml = path.join(__dirname, '..', 'templates', 'config.xml');
+            var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');
             shell.cp(template_config_xml, configPath);
             // Write out id and name to config.xml
             var config = new ConfigParser(configPath);

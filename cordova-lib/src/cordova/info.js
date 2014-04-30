@@ -24,7 +24,7 @@ Outputs to a file
  */
 var cordova_util = require('./util'),
     superspawn   = require('./superspawn'),
-    package      = require('../package'),
+    package      = require('../../package'),
     path         = require('path'),
     fs           = require('fs'),
     Q            = require('q');

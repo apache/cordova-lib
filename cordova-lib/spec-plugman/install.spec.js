@@ -1,10 +1,10 @@
-var install = require('../src/install'),
-    actions = require('../src/util/action-stack'),
-    config_changes = require('../src/util/config-changes'),
-    xml_helpers = require('../src/util/xml-helpers'),
-    events  = require('../src/events'),
-    plugman = require('../plugman'),
-    platforms = require('../src/platforms/common'),
+var install = require('../src/plugman/install'),
+    actions = require('../src/plugman/util/action-stack'),
+    config_changes = require('../src/plugman/util/config-changes'),
+    xml_helpers = require('../src/plugman/util/xml-helpers'),
+    events  = require('../src/plugman/events'),
+    plugman = require('../src/plugman/plugman'),
+    platforms = require('../src/plugman/platforms/common'),
     common  = require('./common'),
     fs      = require('fs'),
     os      = require('os'),
@@ -113,6 +113,10 @@ describe('start', function() {
                 }
 
                 events.emit("verbose", "***** DONE START *****");
+            }
+        ).fail(
+            function(error) {
+                expect(error).toBeUndefined();
             }
         );
         waitsFor(function() { return done; }, 'promise never resolved', 500);
@@ -376,7 +380,7 @@ describe('install', function() {
 
             it('install uses meta data (if available) of top level plugin source', function() {
                 // Fake metadata so plugin 'B' appears from 'meta/B'
-                var meta = require('../src/util/metadata');
+                var meta = require('../src/plugman/util/metadata');
                 spyOn(meta, 'get_fetch_metadata').andCallFake(function(){
                     return {
                         source: {type: 'dir', url: path.join(plugins['B'], '..', 'meta')}

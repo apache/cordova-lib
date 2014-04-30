@@ -1,6 +1,6 @@
-var unpublish = require('../src/unpublish'),
+var unpublish = require('../src/plugman/unpublish'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('unpublish', function() {
     it('should unpublish a plugin', function() {

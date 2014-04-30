@@ -1,6 +1,6 @@
-var owner = require('../src/owner'),
+var owner = require('../src/plugman/owner'),
     Q = require('q'),
-    registry = require('../src/registry/registry');
+    registry = require('../src/plugman/registry/registry');
 
 describe('owner', function() {
     it('should run owner', function() {

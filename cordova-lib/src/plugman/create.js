@@ -24,7 +24,7 @@ var Q = require('q'),
 
 module.exports = function create( name, id, version, pluginPath, options ) {
     var cwd = pluginPath + "/" + name + "/",
-        docDir = path.join(__dirname, '..', 'doc/'),
+        templatesDir = path.join(__dirname, '..', '..', 'templates/'),
         baseJS,
         root,
         pluginName,
@@ -61,7 +61,7 @@ module.exports = function create( name, id, version, pluginPath, options ) {
     shell.mkdir( '-p', cwd + "src" );
 
     //create a base plugin.js file
-    baseJS = fs.readFileSync( docDir + 'base.js', 'utf-8').replace( /%pluginName%/g, name );
+    baseJS = fs.readFileSync( templatesDir + 'base.js', 'utf-8').replace( /%pluginName%/g, name );
     fs.writeFileSync( cwd + 'www/' + name + '.js', baseJS, 'utf-8' );
     //Add it to the xml as a js module
     jsMod = et.Element( 'js-module' );

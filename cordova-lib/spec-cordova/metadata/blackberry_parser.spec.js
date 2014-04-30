@@ -17,18 +17,18 @@
     under the License.
 */
 
-var platforms = require('../../platforms'),
-    util = require('../../src/util'),
+var platforms = require('../../src/cordova/platforms'),
+    util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),
     et = require('elementtree'),
-    xmlHelpers = require('../../src/xml-helpers'),
+    xmlHelpers = require('../../src/cordova/xml-helpers'),
     Q = require('q'),
     child_process = require('child_process'),
-    config = require('../../src/config'),
-    ConfigParser = require('../../src/ConfigParser'),
-    cordova = require('../../cordova');
+    config = require('../../src/cordova/config'),
+    ConfigParser = require('../../src/cordova/ConfigParser'),
+    cordova = require('../../src/cordova/cordova');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 

@@ -18,7 +18,7 @@
 */
 var path = require('path'),
     fs = require('fs'),
-    ConfigParser = require('../src/ConfigParser'),
+    ConfigParser = require('../src/cordova/ConfigParser'),
     xml = path.join(__dirname, 'test-config.xml'),
     xml_contents = fs.readFileSync(xml, 'utf-8');
 
