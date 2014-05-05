@@ -25,7 +25,7 @@ var http = require('http'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     Q = require('q'),
-    xml_helpers = require('./xml-helpers'),
+    xml_helpers = require('../../util/xml-helpers'),
     events = require('../events'),
     tmp_dir;
 

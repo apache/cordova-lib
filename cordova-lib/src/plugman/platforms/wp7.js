@@ -23,7 +23,7 @@ var common = require('./common'),
     fs = require('fs'),
     csproj = require('../util/csproj'),
     events = require('../events'),
-    xml_helpers = require('../util/xml-helpers');
+    xml_helpers = require('../../util/xml-helpers');
 
 module.exports = {
     www_dir:function(project_dir) {

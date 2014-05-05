@@ -4,7 +4,7 @@ var dep_graph = require('dep-graph'),
     plugman = require('../plugman'),
     config_changes = require('./config-changes'),
     underscore = require('underscore'),
-    xml_helpers = require('./xml-helpers'),
+    xml_helpers = require('../../util/xml-helpers'),
     package;
 
 module.exports = package = {

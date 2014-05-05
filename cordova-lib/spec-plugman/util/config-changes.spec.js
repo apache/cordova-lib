@@ -2,7 +2,7 @@
 /* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
 
 var configChanges = require('../../src/plugman/util/config-changes'),
-    xml_helpers = require('../../src/plugman/util/xml-helpers'),
+    xml_helpers = require('../../src/util/xml-helpers'),
     ios_parser = require('../../src/plugman/platforms/ios'),
     fs      = require('fs'),
     os      = require('osenv'),

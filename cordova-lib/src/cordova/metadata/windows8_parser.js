@@ -27,7 +27,7 @@ var fs            = require('fs'),
     child_process = require('child_process'),
     ConfigParser  = require('../ConfigParser'),
     CordovaError  = require('../../CordovaError'),
-    xml           = require('../xml-helpers'),
+    xml           = require('../../util/xml-helpers'),
     config        = require('../config'),
     hooker        = require('../hooker');
 

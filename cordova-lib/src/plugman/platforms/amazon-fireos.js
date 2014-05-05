@@ -21,7 +21,7 @@ var fs = require('fs')  // use existsSync in 0.6.x
    , path = require('path')
    , common = require('./common')
    , events = require('../events')
-   , xml_helpers = require(path.join(__dirname, '..', 'util', 'xml-helpers'));
+   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
 
 module.exports = {
     www_dir:function(project_dir) {

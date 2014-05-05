@@ -1,4 +1,4 @@
-var xml_helpers = require('../util/xml-helpers'),
+var xml_helpers = require('../../util/xml-helpers'),
     path = require('path'),
     Q = require('q'),
     fs = require('fs'),

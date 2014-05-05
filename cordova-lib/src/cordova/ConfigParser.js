@@ -17,7 +17,7 @@
     under the License.
 */
 var et = require('elementtree'),
-    xml= require('./xml-helpers'),
+    xml= require('../util/xml-helpers'),
     CordovaError = require('../CordovaError'),
     fs = require('fs');
 

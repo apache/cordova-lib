@@ -25,7 +25,7 @@ var http   = require('http'),
     shell  = require('shelljs'),
     child_process = require('child_process'),
     plugins = require('../../src/plugman/util/plugins'),
-    xml_helpers = require('../../src/plugman/util/xml-helpers');
+    xml_helpers = require('../../src/util/xml-helpers');
 
 describe('plugins utility module', function(){
     describe('clonePluginGitRepo', function(){

@@ -1,7 +1,7 @@
 var install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
     config_changes = require('../src/plugman/util/config-changes'),
-    xml_helpers = require('../src/plugman/util/xml-helpers'),
+    xml_helpers = require('../src/util/xml-helpers'),
     events  = require('../src/plugman/events'),
     plugman = require('../src/plugman/plugman'),
     platforms = require('../src/plugman/platforms/common'),

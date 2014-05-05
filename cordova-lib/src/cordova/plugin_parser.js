@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var xml = require('./xml-helpers'),
+var xml = require('../util/xml-helpers'),
     fs  = require('fs');
 
 function plugin_parser(xmlPath) {

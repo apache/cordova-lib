@@ -24,7 +24,7 @@ var common = require('./common'),
     fs = require('fs'),
     w8jsproj = require('../util/w8jsproj'),
     events = require('../events'),
-    xml_helpers = require('../util/xml-helpers');
+    xml_helpers = require('../../util/xml-helpers');
 
 
 module.exports = {

@@ -3,7 +3,7 @@
 */
 
 
-var xml_helpers = require('./xml-helpers'),
+var xml_helpers = require('../../util/xml-helpers'),
     et = require('elementtree'),
     fs = require('fs'),
     shell = require('shelljs'),

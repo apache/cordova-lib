@@ -17,7 +17,7 @@
 */
 
 var path = require('path')
-  , xml_helpers = require('../../src/plugman/util/xml-helpers')
+  , xml_helpers = require('../../src/util/xml-helpers')
   , et = require('elementtree')
 
   , title = et.XML('<title>HELLO</title>')

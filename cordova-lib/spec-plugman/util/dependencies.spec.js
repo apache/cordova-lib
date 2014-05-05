@@ -1,5 +1,5 @@
 var dependencies = require('../../src/plugman/util/dependencies'),
-    xml_helpers = require('../../src/plugman/util/xml-helpers'),
+    xml_helpers = require('../../src/util/xml-helpers'),
     path = require('path'),
     config = require('../../src/plugman/util/config-changes');
 

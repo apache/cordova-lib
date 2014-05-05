@@ -31,7 +31,7 @@ TODO (kamrik): refactor this to use no fs sync fnctions and return promises.
 var path = require('path'),
     fs = require('fs'),
     _ = require('underscore'),
-    xml_helpers = require('./cordova/xml-helpers');
+    xml_helpers = require('./util/xml-helpers');
 
 // Exports
 exports.PluginInfo = PluginInfo;

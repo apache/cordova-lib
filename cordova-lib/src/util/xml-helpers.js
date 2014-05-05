@@ -27,15 +27,6 @@ var fs = require('fs')
   , et = require('elementtree');
 
 module.exports = {
-    moveProjFile: function(origFile, projPath, callback) {
-        var src = path.resolve(projPath, origFile)
-          , dest = src.replace('.orig', '');
-
-        fs.createReadStream(src)
-            .pipe(fs.createWriteStream(dest))
-            .on('close', callback);
-    },
-
     // compare two et.XML nodes, see if they match
     // compares tagName, text, attributes and children (recursively)
     equalNodes: function(one, two) {
@@ -121,7 +112,11 @@ module.exports = {
     },
 
     parseElementtreeSync: function (filename) {
-        var contents = fs.readFileSync(filename, 'utf-8').replace("\ufeff", "");;
+        var contents = fs.readFileSync(filename, 'utf-8');
+        if(contents) {
+            //Windows is the BOM. Skip the Byte Order Mark.
+            contents = contents.substring(contents.indexOf("<"));
+        }
         return new et.ElementTree(et.XML(contents));
     }
 };
@@ -156,6 +151,7 @@ function uniqueChild(node, parent) {
 
 var ROOT = /^\/([^\/]*)/,
     ABSOLUTE = /^\/([^\/]*)\/(.*)/;
+
 function resolveParent(doc, selector) {
     var parent, tagName, subSelector;
 
@@ -184,7 +180,6 @@ function resolveParent(doc, selector) {
 // of tags after which the insertion should be made. E.g. If we need to
 // insert an element C, and the rule is that the order of children has to be
 // As, Bs, Cs. After will be equal to "C;B;A".
-
 function findInsertIdx(children, after) {
     var childrenTags = children.map(function(child) { return child.tag; });
     var afters = after.split(";");

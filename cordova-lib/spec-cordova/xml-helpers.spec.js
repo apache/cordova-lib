@@ -18,7 +18,7 @@
 */
 
 var path = require('path')
-  , xml_helpers = require('../src/cordova/xml-helpers')
+  , xml_helpers = require('../src/util/xml-helpers')
   , et = require('elementtree')
 
   , title = et.XML('<title>HELLO</title>')

@@ -3,7 +3,7 @@ var csproj  = require('../../src/plugman/util/csproj'),
     os      = require('osenv'),
     et      = require('elementtree'),
     fs      = require('fs'),
-    xml_helpers = require('../../src/plugman/util/xml-helpers');
+    xml_helpers = require('../../src/util/xml-helpers');
 
 var wp7_project     = path.join(__dirname, '..', 'projects', 'wp7'),
     wp8_project     = path.join(__dirname, '..', 'projects', 'wp8'),

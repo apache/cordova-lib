@@ -22,7 +22,7 @@
 var platform_modules = require('./platforms'),
     path            = require('path'),
     config_changes  = require('./util/config-changes'),
-    xml_helpers     = require('./util/xml-helpers'),
+    xml_helpers     = require('../util/xml-helpers'),
     wp7             = require('./platforms/wp7'),
     wp8             = require('./platforms/wp8'),
     windows8        = require('./platforms/windows8'),

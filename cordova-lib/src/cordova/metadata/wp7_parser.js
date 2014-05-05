@@ -19,7 +19,7 @@
 var fs            = require('fs'),
     path          = require('path'),
     et            = require('elementtree'),
-    xml           = require('../xml-helpers'),
+    xml           = require('../../util/xml-helpers'),
     util          = require('../util'),
     events        = require('../events'),
     shell         = require('shelljs'),

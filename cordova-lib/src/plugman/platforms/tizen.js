@@ -2,7 +2,7 @@ var path = require('path')
     , fs = require('fs')
     , common = require('./common')
     , events = require('../events')
-    , xml_helpers = require(path.join(__dirname, '..', 'util', 'xml-helpers'));
+    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
 
 module.exports = {
     www_dir: function(project_dir) {
