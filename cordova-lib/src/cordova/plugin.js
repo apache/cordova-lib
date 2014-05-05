@@ -17,16 +17,20 @@
     under the License.
 */
 
+/* jshint node: true */
+
+var cordova_util  = require('./util'),
+    path          = require('path'),
+    semver        = require('semver'),
+    hooker        = require('./hooker'),
+    config        = require('./config'),
+    Q             = require('q'),
+    CordovaError  = require('../CordovaError'),
+    PluginInfo    = require('../PluginInfo'),
+    events        = require('./events');
+
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
-    var cordova_util  = require('./util'),
-        path          = require('path'),
-        hooker        = require('./hooker'),
-        config        = require('./config'),
-        Q             = require('q'),
-        CordovaError  = require('../CordovaError'),
-        events        = require('./events');
-
     var projectRoot = cordova_util.cdProjectRoot(),
         err;
 
@@ -193,18 +197,54 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooks.fire('after_plugin_search');
             });
-            break;
         case 'ls':
         case 'list':
         default:
-            return hooks.fire('before_plugin_ls')
-            .then(function() {
-                events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `cordova plugin add <plugin>`.'));
-                return hooks.fire('after_plugin_ls')
-                .then(function() {
-                    return plugins;
-                });
-            });
-            break;
+            return list(projectRoot, hooks);
     }
 };
+
+function list(projectRoot, hooks) {
+    var pluginsList = [];
+    return hooks.fire('before_plugin_ls')
+    .then(function() {
+        var pluginsDir = path.join(projectRoot, 'plugins');
+        return PluginInfo.loadPluginsDir(pluginsDir);
+    })
+    .then(function(plugins) {
+        if (plugins.length === 0) {
+            events.emit('results', 'No plugins added. Use `cordova plugin add <plugin>`.');
+            return;
+        }
+        var pluginsDict = {};
+        var lines = [];
+        var txt, p;
+        for (var i=0; i<plugins.length; i++) {
+            p = plugins[i];
+            pluginsDict[p.id] = p;
+            pluginsList.push(p.id);
+            txt = p.id + ' ' + p.version + ' "' + p.name + '"';
+            lines.push(txt);
+        }
+        // Add warnings for deps with wrong versions.
+        for (var id in pluginsDict) {
+            p = pluginsDict[id];
+            for (var depId in p.deps) {
+                var dep = pluginsDict[depId];
+                if (!semver.satisfies(dep.version, p.deps[depId].version)) {
+                    txt = 'WARNING, broken dependency: plugin ' + id +
+                          ' depends on ' + depId + ' ' + p.deps[depId].version +
+                          ' but installed version is ' + dep.version;
+                    lines.push(txt);
+                }
+            }
+        }
+        events.emit('results', lines.join('\n'));
+    })
+    .then(function() {
+        return hooks.fire('after_plugin_ls');
+    })
+    .then(function() {
+        return pluginsList;
+    });
+}

@@ -49,7 +49,6 @@ describe('plugin end-to-end', function() {
             return cordova.raw.plugin('ls');
         }).then(function() {
             expect(results).toContain(pluginId);
-            expect(results.length).toEqual(1);
         }).then(function() {
             // And now remove it.
             return cordova.raw.plugin('rm', pluginId);
