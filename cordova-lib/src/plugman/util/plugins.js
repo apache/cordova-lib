@@ -93,6 +93,7 @@ module.exports = {
             shell.cp('-R', path.join(tmp_dir, '*'), plugin_dir);
 
             events.emit('verbose', 'Plugin "' + plugin_id + '" fetched.');
+            process.env.CORDOVA_PLUGIN_ID = plugin_id;
             return plugin_dir;
         });
     }
