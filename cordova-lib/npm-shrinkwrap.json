@@ -1,6 +1,6 @@
 {
   "name": "cordova-lib",
-  "version": "0.21.1",
+  "version": "0.21.2",
   "dependencies": {
     "bplist-parser": {
       "version": "0.0.5",
