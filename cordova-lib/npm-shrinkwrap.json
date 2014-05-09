@@ -446,6 +446,10 @@
         }
       }
     },
+    "osenv": {
+      "version": "0.0.3",
+      "from": "osenv@0.0.x"
+    },
     "plist-with-patches": {
       "version": "0.5.1",
       "from": "plist-with-patches@0.5.x",

@@ -32,12 +32,12 @@
     "tar": "0.1.x",
     "request": "2.22.0",
     "npmconf": "0.1.x",
-    "mime": "~1.2.11"
+    "mime": "~1.2.11",
+    "osenv": "0.0.x"
   },
   "devDependencies": {
     "temp": "0.6.x",
-    "jasmine-node": "~1",
-    "osenv": "0.0.x"
+    "jasmine-node": "~1"  
   },
   "scripts": {
     "test": "jasmine-node --color spec-plugman spec-cordova"
