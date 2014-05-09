@@ -27,7 +27,7 @@
     <name>dummyplugin</name>
     <!-- These are going to be required by plugman-registry -->
     <description>my description</description>
-    <author>Jackson Badman</author> 
+    <author>Jackson Badman</author>
     <keywords>dummy,plugin</keywords>
     <license>BSD</license>
     <!-- end plugman-registry requirements -->
@@ -68,7 +68,7 @@
                 target-dir="src/com/phonegap/plugins/dummyplugin" />
         <lib-file src="src/android/TestLib.jar" />
     </platform>
-    
+
     <!-- amazon fireos -->
     <platform name="amazon-fireos">
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
@@ -108,13 +108,9 @@
         </js-module>
     </platform>
 
-        
+
     <!-- ios -->
     <platform name="ios">
-        <!-- CDV < 2.4 -->
-        <plugins-plist key="com.phonegap.plugins.dummyplugin"
-            string="DummyPluginCommand" />
-        
         <!-- CDV 2.5+ -->
         <config-file target="config.xml" parent="/widget/plugins">
             <plugin name="DummyPlugin"

@@ -17,7 +17,6 @@ var ios = require('../../src/plugman/platforms/ios'),
     xml_helpers = require('../../src/util/xml-helpers'),
     variableplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    plistplugin = path.join(__dirname, '..', 'plugins', 'PluginsPlistOnly'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin');
 
 var xml_path = path.join(dummyplugin, 'plugin.xml'),
@@ -32,7 +31,6 @@ var valid_source = platformTag.findall('./source-file'),
     valid_resources = platformTag.findall('./resource-file'),
     valid_custom_frameworks = platformTag.findall('./framework[@custom="true"]'),
     valid_frameworks = platformTag.findall('./framework'),
-    plist_els = platformTag.findall('./plugins-plist'),
     dummy_configs = platformTag.findall('./config-file');
 
 xml_path = path.join(variableplugin, 'plugin.xml');
@@ -55,14 +53,6 @@ var invalid_headers = platformTag.findall('./header-file');
 var invalid_resources = platformTag.findall('./resource-file');
 var invalid_custom_frameworks = platformTag.findall('./framework[@custom="true"]');
 var invalid_frameworks = platformTag.findall('./framework');
-
-xml_path = path.join(plistplugin, 'plugin.xml');
-xml_test = fs.readFileSync(xml_path, 'utf-8');
-plugin_et = new et.ElementTree(et.XML(xml_test));
-platformTag = plugin_et.find('./platform[@name="ios"]');
-
-var plist_id = plugin_et._root.attrib['id'];
-var plist_only_els = platformTag.findall('./plugins-plist');
 
 shell.mkdir('-p', temp);
 shell.cp('-rf', ios_config_xml_project, temp);
