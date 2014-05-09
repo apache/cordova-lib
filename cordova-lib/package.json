@@ -1,8 +1,8 @@
 {
-  "author": "Andrew Lunny <alunny@gmail.com>",
+  "author": "Apache Software Foundation",
   "name": "cordova-lib",
   "description": "Apache Cordova tools core lib and API",
-  "version": "0.21.1-dev",
+  "version": "0.21.1",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"

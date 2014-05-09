@@ -22,59 +22,59 @@ module.exports = {
         hostos : ['darwin'],
         parser : './metadata/ios_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
-        version: '3.4.1'
+        version: '3.5.0'
     },
     'android' : {
         parser : './metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.4.0'
+        version: '3.5.0'
     },
     'ubuntu' : {
         hostos : ['linux'],
         parser : './metadata/ubuntu_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
-        version: '3.4.0'
+        version: '3.5.0'
     },
      'amazon-fireos' : {
         parser : './metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
-        version: '3.4.0'
+        version: '3.5.0'
     },
     'wp7' : {
         hostos : ['win32'],
         parser : './metadata/wp7_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.4.0',
+        version: '3.5.0',
         subdirectory: 'wp7'
     },
     'wp8' : {
         hostos : ['win32'],
         parser : './metadata/wp8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.4.0',
+        version: '3.5.0',
         subdirectory: 'wp8'
     },
     'blackberry10' : {
         parser : './metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.4.0',
+        version: '3.5.0',
         subdirectory: 'blackberry10'
     },
     'www':{
         hostos : [],
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git',
-        version: '3.4.0'
+        version: '3.5.0'
     },
     'firefoxos':{
         parser: './metadata/firefoxos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
-        version: '3.4.0'
+        version: '3.5.0'
     },
     'windows8':{
         hostos : ['win32'],
         parser: './metadata/windows8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.4.0',
+        version: '3.5.0',
         subdirectory: 'windows8'
     }
 };
