@@ -66,7 +66,7 @@ ConfigParser.prototype = {
     description: function() {
         return this.doc.find('description').text.trim();
     },
-    setDescription: function() {
+    setDescription: function(name) {
         this.doc.find('description').text = name;
         var el = findOrCreate(this.doc, 'description');
     },
