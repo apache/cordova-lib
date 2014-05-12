@@ -231,7 +231,14 @@ function list(projectRoot, hooks) {
             p = pluginsDict[id];
             for (var depId in p.deps) {
                 var dep = pluginsDict[depId];
-                if (!semver.satisfies(dep.version, p.deps[depId].version)) {
+                //events.emit('results', p.deps[depId].version);
+                //events.emit('results', dep != null);
+                if (!dep) {
+                    txt = 'WARNING, missing dependency: plugin ' + id +
+                          ' depends on ' + depId +
+                          ' but it is not installed';
+                    lines.push(txt);
+                } else if (!semver.satisfies(dep.version, p.deps[depId].version)) {
                     txt = 'WARNING, broken dependency: plugin ' + id +
                           ' depends on ' + depId + ' ' + p.deps[depId].version +
                           ' but installed version is ' + dep.version;
