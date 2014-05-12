@@ -19,6 +19,7 @@
 var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
+    events = require('../events'),
     util = require('../util'),
     events = require('../events'),
     Q = require('q'),
@@ -50,6 +51,7 @@ module.exports.prototype = {
             };
         }
 
+events.emit('verbose', "config:" + JSON.stringify(config));
         manifest.version = config.version();
         manifest.name = config.name();
         manifest.pkgName = config.packageName();
@@ -95,6 +97,33 @@ module.exports.prototype = {
             manifest.type = 'privileged';
         } else {
             delete manifest.type;
+        }
+
+        var icons = config.getIcons('firefoxos');
+        // if there are icon elements in config.xml
+        if (icons) {
+          manifest.icons = {};
+          for (var i=0; i<icons.length; i++) {
+            var icon = icons[i];
+            events.emit('verbose', "icon["+i+"]:" + JSON.stringify(icon));
+            var destfilepath;
+            var size = icon.width;
+            var sizeInt = parseInt(size);
+            if (size && sizeInt !== NaN) {
+              if (icon.src) {
+                if (!manifest.icons[sizeInt]) { // do not yet have an icon for this size
+                  var destfilepath = path.join(this.www_dir(), "icon-"+size+".png");
+                  manifest.icons[sizeInt] = "/icon-"+size+".png";
+                  events.emit('verbose', 'Copying icon from ' + icon.src + ' to ' + destfilepath);
+                  shell.cp('-f', icon.src, destfilepath);
+                } else {
+                  events.emit('warn', "ignoring icon["+i+"]:" + JSON.stringify(icon));
+                }
+              } else {
+                events.emit('warn', "ignoring icon["+i+"] no src attribute:" + JSON.stringify(icon));
+              }
+            }
+          }
         }
 
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
