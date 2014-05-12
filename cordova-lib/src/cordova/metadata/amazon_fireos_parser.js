@@ -27,8 +27,6 @@ var fs            = require('fs'),
     ConfigParser = require('../ConfigParser'),
     CordovaError = require('../../CordovaError');
 
-var awv_interface='awv_interface.jar';
-
 var default_prefs = {
     "useBrowserHistory":"true",
     "exit-on-suspend":"false"
@@ -44,7 +42,6 @@ module.exports = function android_parser(project) {
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
 };
 
-// Returns a promise.
 // Returns a promise.
 module.exports.check_requirements = function(project_root) {
     // Rely on platform's bin/create script to check requirements.
@@ -191,10 +188,11 @@ module.exports.prototype = {
         var orig_pkg = manifest.getroot().attrib.package;
         manifest.getroot().attrib.package = pkg;
 
+        var act = manifest.getroot().find('./application/activity');
+        
          // Set the orientation in the AndroidManifest
         var orientationPref = this.findOrientationPreference(config);
         if (orientationPref) {
-            var act = manifest.getroot().find('./application/activity');
             switch (orientationPref) {
                 case 'default':
                     delete act.attrib["android:screenOrientation"];
