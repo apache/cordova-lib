@@ -24,7 +24,7 @@ Contains npm modules used primarily by [cordova](https://github.com/apache/cordo
 
 ## Setup
 * Clone this repository onto your local machine. 
-    `git clone https://git-wip-us.apache.org/repos/asf/cordova-lib.git`
+    `git clone https://github.com/CollinearGroup/cordova-lib.git`
 * In terminal, navigate to the inner cordova-lib directory.
     `cd cordova-lib/cordova-lib`
 * Install dependencies and npm-link
