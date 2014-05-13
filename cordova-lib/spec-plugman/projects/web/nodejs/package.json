@@ -1,0 +1,10 @@
+{
+    "name": "little test",
+    "description": "hello world test app",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+	"express": "~3.0.0"
+    }
+}
+	
