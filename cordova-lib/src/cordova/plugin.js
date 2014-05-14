@@ -26,6 +26,8 @@ var cordova_util  = require('./util'),
     config        = require('./config'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
+    ConfigParser  = require('./ConfigParser'),
+    fs            = require('fs'),
     PluginInfo    = require('../PluginInfo'),
     events        = require('./events');
 
@@ -173,6 +175,15 @@ module.exports = function plugin(command, targets, opts) {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
                             var platforms = require('./platforms');
                             var parser = new platforms[platform].parser(platformRoot);
+                            //check if plugin is restorable and warn
+                            var configPath = cordova_util.projectConfig(projectRoot);
+                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                                var configXml = new ConfigParser(configPath);
+                                var features = configXml.doc.findall('./feature/param[@name="id"][@value="'+target+'"]/..');
+                                if(features && features.length){
+                                    events.emit('results','"'+target + '" plugin is restorable, call "cordova save plugins" to remove it from restorable plugins list');
+                                }
+                            }                            
                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
                         });
