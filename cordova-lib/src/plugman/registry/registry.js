@@ -40,57 +40,6 @@ function getPackageInfo(args) {
     return d.promise;
 }
 
-/**
- * @method fetchPackage
- * @param {String} info Package info
- * @return {Promise.<string>} Promised path to the package.
- */
-function fetchPackage(info, cl) {
-    var settings = module.exports.settings;
-    var d = Q.defer();
-    var cached = path.resolve(settings.cache, info.name, info.version, 'package');
-    if(fs.existsSync(cached)) {
-        d.resolve(cached);
-    } else {
-        var download_dir = path.resolve(cached, '..');
-        shell.mkdir('-p', download_dir);
-
-        var req = makeRequest('GET', info.dist.tarball, function (err, res, body) {
-            if(err || res.statusCode != 200) {
-                d.reject(new Error('failed to fetch the plugin archive'));
-            } else {
-                // Update the download count for this plugin.
-                // Fingers crossed that the timestamps are unique, and that no plugin is downloaded
-                // twice in a single millisecond.
-                //
-                // This is acceptable, because the failure mode is Couch gracefully rejecting the second one
-                // (for lacking a _rev), and dropped a download count is not important.
-                var now = new Date();
-                var pkgId = info._id.substring(0, info._id.indexOf('@'));
-                var message = {
-                    day: now.getUTCFullYear() + '-' + (now.getUTCMonth()+1) + '-' + now.getUTCDate(),
-                    pkg: pkgId,
-                    client: cl
-                };
-                var remote = settings.registry + '/downloads'
-
-                makeRequest('POST', remote, message, function (err, res, body) {
-                    // ignore errors
-                });
-            }
-        });
-        req.pipe(zlib.createUnzip())
-        .pipe(tar.Extract({path:download_dir}))
-        .on('error', function(err) {
-            shell.rm('-rf', download_dir);
-            d.reject(err);
-        })
-        .on('end', function() {
-            d.resolve(path.resolve(download_dir, 'package'));
-        });
-    }
-    return d.promise;
-}
 
 module.exports = {
     settings: null,
@@ -185,16 +134,23 @@ module.exports = {
 
     /**
      * @method fetch
-     * @param {String} name Plugin name
+     * @param {Array} with one element - the plugin id or "id@version"
      * @return {Promise.<string>} Promised path to fetched package.
      */
-    fetch: function(args, client) {
-        var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+    fetch: function(plugin, client) {
+        plugin = plugin.shift();
         return initSettings()
-        .then(function(settings) {
-            return getPackageInfo(args);
-        }).then(function(info) {
-            return fetchPackage(info, cl);
+        .then(Q.nbind(npm.load, npm))
+        .then(function() {
+            // With no --force, npm won't re-download if appropriate version is already cached.
+            npm.config.set('force', false);
+            return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
+        })
+        .then(function(info) {
+            var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+            bumpCounter(info, cl);
+            var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
+            return pluginDir;
         });
     },
 
@@ -237,6 +193,30 @@ function initSettings() {
          userconfig: path.resolve(plugmanConfigDir, 'config')
     });
     return Q(settings);
+}
+
+
+// Send a message to the registry to update download counts.
+function bumpCounter(info, client) {
+    // Update the download count for this plugin.
+    // Fingers crossed that the timestamps are unique, and that no plugin is downloaded
+    // twice in a single millisecond.
+    //
+    // This is acceptable, because the failure mode is Couch gracefully rejecting the second one
+    // (for lacking a _rev), and dropped a download count is not important.
+    var settings = module.exports.settings;
+    var now = new Date();
+    var message = {
+        day: now.getUTCFullYear() + '-' + (now.getUTCMonth()+1) + '-' + now.getUTCDate(),
+        pkg: info.name,
+        client: client,
+        version: info.version
+    };
+    var remote = settings.registry + '/downloads'
+
+    makeRequest('POST', remote, message, function (err, res, body) {
+        // ignore errors
+    });
 }
 
 
