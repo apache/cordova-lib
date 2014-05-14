@@ -7,6 +7,7 @@ var path = require('path'),
     xml_helpers = require('../util/xml-helpers'),
     action_stack = require('./util/action-stack'),
     dependencies = require('./util/dependencies'),
+    CordovaError  = require('../CordovaError'),
     underscore = require('underscore'),
     Q = require('q'),
     plugins = require('./util/plugins'),
@@ -42,12 +43,12 @@ module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_d
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new Error(platform + " not supported."));
+        return Q.reject(new CordovaError(platform + " not supported."));
     }
 
     var plugin_dir = path.join(plugins_dir, id);
     if (!fs.existsSync(plugin_dir)) {
-        return Q.reject(new Error('Plugin "' + id + '" not found. Already uninstalled?'));
+        return Q.reject(new CordovaError('Plugin "' + id + '" not found. Already uninstalled?'));
     }
 
     var current_stack = new action_stack();
@@ -146,7 +147,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
                 msg += ' and cannot be removed (hint: use -f or --force)';
 
                 if(plugin_id == top_plugin_id) {
-                    return Q.reject( new Error(msg) );
+                    return Q.reject( new CordovaError(msg) );
                 } else {
                     events.emit('warn', msg +' and cannot be removed (hint: use -f or --force)');
                     continue;
@@ -180,7 +181,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         if(options.force) {
             events.emit("info", msg + " but forcing removal");
         } else {
-            return Q.reject( new Error(msg + ", skipping uninstallation.") );
+            return Q.reject( new CordovaError(msg + ", skipping uninstallation.") );
         }
     }
 

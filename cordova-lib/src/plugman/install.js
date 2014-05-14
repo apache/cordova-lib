@@ -7,6 +7,7 @@ var path = require('path'),
     semver = require('semver'),
     config_changes = require('./util/config-changes'),
     xml_helpers = require('../util/xml-helpers'),
+    CordovaError  = require('../CordovaError'),
     Q = require('q'),
     platform_modules = require('./platforms'),
     os = require('os'),
@@ -45,7 +46,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new Error(platform + " not supported."));
+        return Q.reject(new CordovaError(platform + " not supported."));
     }
 
     var current_stack = new action_stack();
@@ -87,7 +88,10 @@ function checkEngines(engines) {
         if(semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null){
             // engine ok!
         }else{
-            return Q.reject(new Error('Plugin doesn\'t support this project\'s '+engine.name+' version. '+engine.name+': ' + engine.currentVersion + ', failed version requirement: ' + engine.minVersion));
+            var msg = "Plugin doesn't support this project's " + engine.name + ' version. ' +
+                      engine.name + ': ' + engine.currentVersion +
+                      ', failed version requirement: ' + engine.minVersion;
+            return Q.reject(new CordovaError(msg));
         }
     }
 
@@ -340,7 +344,7 @@ function installDependencies(install, dependencies, options) {
                 }
 
                 if (!dep.id) {
-                    throw new Error('<dependency> tag is missing id attribute: ' + elementtree.tostring(depXml, {xml_declaration:false}));
+                    throw new CordovaError('<dependency> tag is missing id attribute: ' + elementtree.tostring(depXml, {xml_declaration:false}));
                 }
 
                 // We build the dependency graph only to be able to detect cycles, getChain will throw an error if it detects one

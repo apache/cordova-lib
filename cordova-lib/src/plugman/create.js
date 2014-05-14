@@ -20,7 +20,8 @@ var Q = require('q'),
     fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
-    et = require('elementtree');
+    et = require('elementtree'),
+    CordovaError  = require('../CordovaError');
 
 module.exports = function create( name, id, version, pluginPath, options ) {
     var cwd = pluginPath + "/" + name + "/",
@@ -34,7 +35,7 @@ module.exports = function create( name, id, version, pluginPath, options ) {
 
     //check we are not already in a plugin
     if( fs.existsSync( cwd + 'plugin.xml' ) ) {
-        return Q.reject( new Error( 'plugin.xml already exists. Are you already in a plugin?' ) );
+        return Q.reject( new CordovaError( 'plugin.xml already exists. Are you already in a plugin?' ) );
     }
 
     //Create a plugin.xml file
