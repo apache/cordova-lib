@@ -5,8 +5,6 @@ var ios = require('../../src/plugman/platforms/ios'),
     et = require('elementtree'),
     shell = require('shelljs'),
     os = require('osenv'),
-    common = require('../../src/plugman/platforms/common'),
-    xcode = require('xcode'),
     plist = require('plist-with-patches'),
     bplist = require('bplist-parser'),
     temp = path.join(os.tmpdir(), 'plugman'),
@@ -17,7 +15,9 @@ var ios = require('../../src/plugman/platforms/ios'),
     xml_helpers = require('../../src/util/xml-helpers'),
     variableplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin');
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
+    weblessplugin = path.join(__dirname, '..', 'plugins', 'WeblessPlugin'),
+    done = false;
 
 var xml_path = path.join(dummyplugin, 'plugin.xml'),
     xml_test = fs.readFileSync(xml_path, 'utf-8'),
@@ -64,6 +64,10 @@ function copyArray(arr) {
     return Array.prototype.slice.call(arr, 0);
 }
 
+function installPromise(f) {
+    f.then(function(res) { done = true; }, function(err) { done = err; });
+}
+
 describe('ios project handler', function() {
     beforeEach(function() {
         shell.mkdir('-p', temp);
@@ -103,11 +107,12 @@ describe('ios project handler', function() {
     });
 
     describe('installation', function() {
-        describe('of <source-file> elements', function() {
-            beforeEach(function() {
-                shell.cp('-rf', ios_config_xml_project, temp);
-            });
+        beforeEach(function() {
+            shell.cp('-rf', ios_config_xml_project, temp);
+            done = false;
+        });
 
+        describe('of <source-file> elements', function() {
             it('should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
                 expect(function() {
@@ -157,10 +162,6 @@ describe('ios project handler', function() {
         });
 
         describe('of <header-file> elements', function() {
-            beforeEach(function() {
-                shell.cp('-rf', ios_config_xml_project, temp);
-            });
-
             it('should throw if header-file src cannot be found', function() {
                 var headers = copyArray(invalid_headers);
                 expect(function() {
@@ -203,9 +204,6 @@ describe('ios project handler', function() {
         });
 
         describe('of <resource-file> elements', function() {
-            beforeEach(function() {
-                shell.cp('-rf', ios_config_xml_project, temp);
-            });
             it('should throw if resource-file src cannot be found', function() {
                 var resources = copyArray(invalid_resources);
                 expect(function() {
@@ -235,9 +233,6 @@ describe('ios project handler', function() {
             });
         });
         describe('of <framework custom="true"> elements', function() {
-            beforeEach(function() {
-                shell.cp('-rf', ios_config_xml_project, temp);
-            });
             it('should throw if framework src cannot be found', function() {
                 var frameworks = copyArray(invalid_custom_frameworks);
                 expect(function() {
@@ -264,6 +259,31 @@ describe('ios project handler', function() {
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, proj_files);
                 expect(spy).toHaveBeenCalledWith('-R', path.join(dummyplugin, 'src', 'ios', 'Custom.framework'),
                                                  path.join(temp, 'SampleApp/Plugins/com.phonegap.plugins.dummyplugin'));
+            });
+        });
+        it('of two plugins should apply xcode file changes from both', function(){
+            runs(function() {
+                installPromise(
+                    install('ios', temp, dummyplugin)
+                    .then(function () { install('ios', temp, weblessplugin); })
+                );
+            });
+            waitsFor(function() { return done; }, 'install promise never resolved', 200);
+            runs(function() {
+                var xcode = ios.parseProjectFile(temp).xcode;
+                // from DummyPlugin
+                expect(xcode.hasFile(path.join('Resources', 'DummyPlugin.bundle'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
+                expect(xcode.hasFile('usr/lib/src/ios/libsqlite3.dylib')).toBe(true);
+                expect(xcode.hasFile(path.join('SampleApp','Plugins','com.phonegap.plugins.dummyplugin','Custom.framework'))).toBe(true);
+                // from WeblessPlugin
+                expect(xcode.hasFile(path.join('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
+                expect(xcode.hasFile(path.join('Plugins','com.phonegap.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);
+                expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBe(true);
             });
         });
     });
