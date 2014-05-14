@@ -90,6 +90,7 @@ describe('registry', function() {
             });
 
             npm.commands = fakeNPMCommands;
+            npm.config.set = function(){};
         });
         it('should run config', function() {
             var params = ['set', 'registry', 'http://registry.cordova.io'];

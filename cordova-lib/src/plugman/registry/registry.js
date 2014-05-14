@@ -70,6 +70,9 @@ module.exports = {
             .then(function() {
                 return Q.ninvoke(npm, 'load', settings);
             }).then(function() {
+                // With  no --force we'll get a 409 (conflict) when trying to
+                // overwrite an existing package@version.
+                npm.config.set('force', true);
                 return Q.ninvoke(npm.commands, 'publish', args)
             }).fin(function() {
                 fs.unlink(path.resolve(args[0], 'package.json'));
@@ -101,8 +104,16 @@ module.exports = {
         .then(function(settings) {
             return Q.ninvoke(npm, 'load', settings);
         }).then(function() {
+            // --force is required to delete an entire plugin with all versions.
+            // Without --force npm can only unpublish a specific version.
+            npm.config.set('force', true);
+            // Note, npm.unpublish does not report back errors (at least some)
+            // e.g.: `unpublish non.existent.plugin`
+            // will complete with no errors.
             return Q.ninvoke(npm.commands, 'unpublish', args);
         }).then(function() {
+            // npm.unpublish removes the cache for the unpublished package
+            // cleaning the entire cache might not be necessary.
             return Q.ninvoke(npm.commands, 'cache', ["clean"]);
         });
     },
@@ -117,8 +128,6 @@ module.exports = {
         return initSettings()
         .then(Q.nbind(npm.load, npm))
         .then(function() {
-            // With no --force, npm won't re-download if appropriate version is already cached.
-            npm.config.set('force', false);
             return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
         })
         .then(function(info) {
@@ -139,8 +148,6 @@ module.exports = {
         return initSettings()
         .then(Q.nbind(npm.load, npm))
         .then(function() {
-            // --force is not needed
-            npm.config.set('force', false);
             // Set cache timout limits to 0 to force npm to call the registry
             // even when it has a recent .cache.json file.
             npm.config.set('cache-min', 0);
@@ -177,7 +184,6 @@ function initSettings() {
     module.exports.settings =
     rc('plugman', {
          cache: plugmanCacheDir,
-         force: true,
          registry: 'http://registry.cordova.io',
          logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
          userconfig: path.resolve(plugmanConfigDir, 'config')
