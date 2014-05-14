@@ -15,31 +15,6 @@ var npm = require('npm'),
     plugmanConfigDir = path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
 
-/**
- * @method getPackageInfo
- * @param {String} args Package names
- * @return {Promise.<Object>} Promised package info.
- */
-function getPackageInfo(args) {
-    var thing = args.length ? args.shift().split("@") : [],
-        name = thing.shift(),
-        version = thing.join("@") || 'latest';
-    var settings = module.exports.settings;
-
-    var d = Q.defer();
-    var req = makeRequest('GET', settings.registry + '/' + name + '/' + version, function(err, res, body){
-        if(err || res.statusCode != 200) {
-          d.reject(new Error('Failed to fetch package information for '+name));
-        } else {
-          d.resolve(JSON.parse(body));
-        }
-    });
-    req.on('error', function(err) {
-        d.reject(err);
-    });
-    return d.promise;
-}
-
 
 module.exports = {
     settings: null,
@@ -159,10 +134,25 @@ module.exports = {
      * @param {String} name Plugin name
      * @return {Promise.<Object>} Promised package info.
      */
-    info: function(args) {
+    info: function(plugin) {
+        plugin = plugin.shift();
         return initSettings()
+        .then(Q.nbind(npm.load, npm))
         .then(function() {
-            return getPackageInfo(args);
+            // --force is not needed
+            npm.config.set('force', false);
+            // Set cache timout limits to 0 to force npm to call the registry
+            // even when it has a recent .cache.json file.
+            npm.config.set('cache-min', 0);
+            npm.config.set('cache-max', 0);
+            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true );
+        })
+        .then(function(info) {
+            // Plugin info should be accessed as info[version]. If a version
+            // specifier like >=x.y.z was used when calling npm view, info
+            // can contain several versions, but we take the first one here.
+            var version = Object.keys(info)[0];
+            return info[version];
         });
     }
 }
