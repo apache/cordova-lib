@@ -117,20 +117,6 @@
         <lib-file src="src/blackberry10/simulator/echoJnext.so" target-dir="ext-qnx/cordova.echo/simulator" />
     </platform>
 
-    <!-- wp7 -->
-    <platform name="wp7">
-        <config-file target="config.xml" parent="/*">
-            <feature name="FaultyPlugin">
-                <param name="wp-package" value="FaultyPlugin"/>
-            </feature>
-        </config-file>
-
-        <source-file src="src/wp7/FaultyPlugin.cs" />
-
-        <!-- this doesn't exist -->
-        <source-file src="src/wp7/NotHere.cs" />
-    </platform>
-
     <!-- wp8 -->
     <platform name="wp8">
         <config-file target="config.xml" parent="/*">

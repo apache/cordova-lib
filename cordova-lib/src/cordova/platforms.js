@@ -40,13 +40,6 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
         version: '3.5.0'
     },
-    'wp7' : {
-        hostos : ['win32'],
-        parser : './metadata/wp7_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.5.0',
-        subdirectory: 'wp7'
-    },
     'wp8' : {
         hostos : ['win32'],
         parser : './metadata/wp8_parser',
