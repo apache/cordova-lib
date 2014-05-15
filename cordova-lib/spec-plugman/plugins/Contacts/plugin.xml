@@ -110,21 +110,6 @@
         <dependency id="org.apache.cordova.blackberry10.pimlib" url="https://github.com/blackberry/cordova-blackberry-plugins.git" commit="plugins" subdir="/plugin/org.apache.cordova.blackberry10.pimlib/"/>
     </platform>
 
-    <!-- wp7 -->
-    <platform name="wp7">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Contacts">
-                <param name="wp-package" value="Contacts"/>
-            </feature>
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-            <Capability Name="ID_CAP_CONTACTS" />
-        </config-file>
-
-        <source-file src="src/wp/Contacts.cs" />
-    </platform>
-
     <!-- wp8 -->
     <platform name="wp8">
         <config-file target="config.xml" parent="/*">

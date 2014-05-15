@@ -130,14 +130,12 @@ describe('util module', function() {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
             var ios = path.join(platforms, 'ios');
-            var wp7 = path.join(platforms, 'wp7');
             var atari = path.join(platforms, 'atari');
             shell.mkdir('-p', android);
             shell.mkdir('-p', ios);
-            shell.mkdir('-p', wp7);
             shell.mkdir('-p', atari);
             var res = util.listPlatforms(temp);
-            expect(res.length).toEqual(3);
+            expect(res.length).toEqual(2);
             expect(res.indexOf('atari')).toEqual(-1);
         });
     });
@@ -149,14 +147,12 @@ describe('util module', function() {
             var plugins = path.join(temp, 'plugins');
             var android = path.join(plugins, 'android');
             var ios = path.join(plugins, 'ios');
-            var wp7 = path.join(plugins, 'wp7');
             var atari = path.join(plugins, 'atari');
             shell.mkdir('-p', android);
             shell.mkdir('-p', ios);
-            shell.mkdir('-p', wp7);
             shell.mkdir('-p', atari);
             var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(4);
+            expect(res.length).toEqual(3);
         });
         it('should not return ".svn" directories', function() {
             var plugins = path.join(temp, 'plugins');

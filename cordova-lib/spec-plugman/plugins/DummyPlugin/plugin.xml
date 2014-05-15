@@ -133,18 +133,6 @@
         <framework src="src/ios/Custom.framework" custom="true" />
     </platform>
 
-    <!-- wp7 -->
-    <platform name="wp7">
-        <config-file target="config.xml" parent="/*">
-            <feature id="dummyPlugin" required="true" version="1.0.0.0"/>
-        </config-file>
-
-        <source-file src="src/wp7/DummyPlugin.cs"/>
-        <js-module src="www/dummyplugin.js" name="Dummy">
-            <clobbers target="dummy" />
-        </js-module>
-    </platform>
-
     <!-- wp8 -->
     <platform name="wp8">
         <config-file target="config.xml" parent="/*">

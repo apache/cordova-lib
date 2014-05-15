@@ -5,11 +5,9 @@ var csproj  = require('../../src/plugman/util/csproj'),
     fs      = require('fs'),
     xml_helpers = require('../../src/util/xml-helpers');
 
-var wp7_project     = path.join(__dirname, '..', 'projects', 'wp7'),
-    wp8_project     = path.join(__dirname, '..', 'projects', 'wp8'),
+var wp8_project     = path.join(__dirname, '..', 'projects', 'wp8'),
     temp            = path.join(os.tmpdir(), 'plugman'),
-    example1_csproj  = path.join(wp7_project, 'CordovaAppProj.csproj'),
-    example2_csproj  = path.join(wp8_project, 'CordovaAppProj.csproj'),
+    example1_csproj  = path.join(wp8_project, 'CordovaAppProj.csproj'),
     wpcsproj        = path.join(__dirname, '..', 'plugins', 'WPcsproj');
 
 describe('csproj', function() {
@@ -63,7 +61,7 @@ describe('csproj', function() {
         });
 
         describe('remove method', function() {
-            var test_csproj = new csproj(example2_csproj);
+            var test_csproj = new csproj(example1_csproj);
             it('should properly remove .xaml pages', function() {
                 test_csproj.removeSourceFile(page_test);
                 expect(test_csproj.xml.getroot().find('.//Page[@Include="src\\UI\\PageTest.xaml"]')).toBeFalsy();
