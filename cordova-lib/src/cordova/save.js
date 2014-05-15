@@ -24,7 +24,8 @@ var cordova_util    = require('./util'),
     Q                = require('q'),
     events           = require('./events');
 
-module.exports = function save(target){
+module.exports = function save(target, opts){
+  opts = opts || {};
   var projectHome = cordova_util.cdProjectRoot();
   var configPath = cordova_util.projectConfig(projectHome);
   var configXml = new ConfigParser(configPath);
@@ -53,7 +54,10 @@ module.exports = function save(target){
     var name = readPluginName(currentPluginPath);
     var id = plugin;
     var version = readPluginVersion(currentPluginPath);
-    var params = [{name:"id", value:id},{name:"version", value: version}];
+    var params = [{name:"id", value:id}];
+    if(opts.shrinkwrap){
+        params.push({name:"version", value: version});
+    }
     configXml.addFeature(name,params);
     configXml.write();
     events.emit('results', 'Saved plugin info for "'+plugin+'" to config.xml');
