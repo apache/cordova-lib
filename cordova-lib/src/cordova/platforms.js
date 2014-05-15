@@ -17,6 +17,10 @@
     under the License.
 */
 
+/**
+    This module allows us to define new platforms for cordova to
+    build.
+*/
 module.exports = {
     'ios' : {
         hostos : ['darwin'],
@@ -66,9 +70,14 @@ module.exports = {
         version: '3.5.0'
     },
     'firefoxos':{
-        parser: './metadata/firefoxos_parser',
+        parser : './metadata/firefoxos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
         version: '3.5.0'
+    },
+    'web_server':{
+        parser : './metadata/web_server_parser',
+        url    : 'https://github.com/CollinearGroup/cordova-web',
+        version: 'v0.0.0-alpha' //WHA??
     },
     'windows8':{
         hostos : ['win32'],

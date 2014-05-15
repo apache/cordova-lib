@@ -39,6 +39,11 @@ module.exports = {
         }
 
         var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
+        // This is probably not ok but since our platform is not hosted on apache yet.. 
+        // https://github.com/CollinearGroup/cordova-web/archive/v0.0.0-alpha.tar.gz
+        if (platform === 'web_server') {
+            url = platforms[platform].url + '/archive/' + platforms[platform].version + '.tar.gz';
+        }
         return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
     },
     // Returns a promise for the path to the lazy-loaded directory.
