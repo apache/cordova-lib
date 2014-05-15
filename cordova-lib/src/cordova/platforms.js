@@ -68,10 +68,11 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
         version: '3.5.0'
     },
+    // Because this is our non-apache project, it will be treated slightly different.
     'web_server':{
-        parser : './metadata/web_server_parser',
-        url    : 'https://github.com/CollinearGroup/cordova-web',
-        version: 'v0.0.0-alpha' //WHA??
+        parser  : './metadata/web_server_parser',
+        url     : 'https://github.com/CollinearGroup/cordova-web',
+        version : 'v0.0.0-alpha'
     },
     'windows8':{
         hostos : ['win32'],
