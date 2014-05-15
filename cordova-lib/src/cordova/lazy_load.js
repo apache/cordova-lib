@@ -124,6 +124,10 @@ function cordova_npm(platform) {
         events.emit('verbose', 'Platform files for "' + platform.name + '" previously downloaded not from npm. Using that copy.');
         return Q(git_dload_dir);
     }
+    // TODO: Figure out how this fits into the new architecture
+    // if (platform === 'web_server') {
+        // url = platforms[platform].url + '/archive/' + platforms[platform].version + '.tar.gz';
+    // }
 
     var pkg = 'cordova-' + platform.name + '@' + platform.version;
     return exports.npm_cache_add(pkg);
