@@ -1,3 +1,5 @@
+/* jshint node:true, asi:true, laxcomma:true, sub:true, expr:true */
+
 var path = require('path'),
     fs   = require('fs'),
     action_stack = require('./util/action-stack'),
@@ -218,13 +220,14 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
 
 
 function isPluginInstalled(plugins_dir, platform, plugin_id) {
+    var installed_plugin_id;
     var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (var installed_plugin_id in platform_config.installed_plugins) {
+    for (installed_plugin_id in platform_config.installed_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
     }
-    for (var installed_plugin_id in platform_config.dependent_plugins) {
+    for (installed_plugin_id in platform_config.dependent_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
@@ -370,13 +373,14 @@ function tryFetchDependency(dep, install, options) {
     // The easy case of relative paths is to have a URL of '.' and a different subdir.
     // TODO: Implement the hard case of different repo URLs, rather than the special case of
     // same-repo-different-subdir.
+    var relativePath;
     if ( dep.url == '.' ) {
 
         // Look up the parent plugin's fetch metadata and determine the correct URL.
         var fetchdata = require('./util/metadata').get_fetch_metadata(install.top_plugin_dir);
         if (!fetchdata || !(fetchdata.source && fetchdata.source.type)) {
 
-            var relativePath = dep.subdir || dep.id;
+            relativePath = dep.subdir || dep.id;
 
             events.emit('warn', 'No fetch metadata found for plugin ' + install.top_plugin_id + '. checking for ' + relativePath + ' in '+ options.searchpath.join(','));
 
@@ -445,7 +449,7 @@ function tryFetchDependency(dep, install, options) {
 
     // Test relative to parent folder
     if( dep.url && isRelativePath(dep.url) ) {
-        var relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
+        relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
 
         if( fs.existsSync(relativePath) ) {
            dep.url = relativePath;
@@ -462,11 +466,13 @@ function tryFetchDependency(dep, install, options) {
 
 function installDependency(dep, install, options) {
 
+    var opts;
+
     dep.install_dir = path.join(install.plugins_dir, dep.id);
 
     if ( fs.existsSync(dep.install_dir) ) {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
-        var opts = underscore.extend({}, options, {
+        opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
@@ -476,7 +482,7 @@ function installDependency(dep, install, options) {
     } else {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" not fetched, retrieving then installing.');
 
-        var opts = underscore.extend({}, options, {
+        opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false,
             subdir: dep.subdir,
@@ -492,7 +498,7 @@ function installDependency(dep, install, options) {
                 return runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
             }
         );
-    };
+    }
 }
 
 function handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, www_dir, is_top_level) {
@@ -507,13 +513,13 @@ function handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plu
     var assets = plugin_et.findall('asset');
     if (platformTag) {
 
-
+        assets = assets.concat(platformTag.findall('./asset'));
         var sourceFiles = platformTag.findall('./source-file'),
             headerFiles = platformTag.findall('./header-file'),
             resourceFiles = platformTag.findall('./resource-file'),
             frameworkFiles = platformTag.findall('./framework[@custom="true"]'), // CB-5238 adding only custom frameworks
-            libFiles = platformTag.findall('./lib-file'),
-            assets = assets.concat(platformTag.findall('./asset'));
+            libFiles = platformTag.findall('./lib-file');
+
 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(item) {
@@ -618,13 +624,14 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
 }
 
 function isPluginInstalled(plugins_dir, platform, plugin_id) {
+    var installed_plugin_id;
     var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (var installed_plugin_id in platform_config.installed_plugins) {
+    for (installed_plugin_id in platform_config.installed_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
     }
-    for (var installed_plugin_id in platform_config.dependent_plugins) {
+    for (installed_plugin_id in platform_config.dependent_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
