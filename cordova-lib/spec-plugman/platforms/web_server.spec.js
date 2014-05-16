@@ -1,9 +1,9 @@
 /*
- * Tests the web-server plugman/platforms file.
+ * Tests the web_server plugman/platforms file.
 */
 // Need to require our actual code we are testing as well as a sample project
 // which should reflect the desired project structure.
-var web  = require('../../src/plugman/platforms/web-server'),
+var web  = require('../../src/plugman/platforms/web_server'),
     path = require('path'),
 	fs   = require('fs'),
     web_project = path.join(__dirname, '..', 'projects', 'web');
