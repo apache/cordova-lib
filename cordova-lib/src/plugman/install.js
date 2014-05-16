@@ -8,7 +8,7 @@ var path = require('path'),
     child_process = require('child_process'),
     semver = require('semver'),
     config_changes = require('./util/config-changes'),
-    xml_helpers = require('../util/xml-helpers'),
+    PluginInfo    = require('../PluginInfo'),
     CordovaError  = require('../CordovaError'),
     Q = require('q'),
     platform_modules = require('./platforms'),
@@ -237,23 +237,22 @@ function isPluginInstalled(plugins_dir, platform, plugin_id) {
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise.
 var runInstall = module.exports.runInstall = function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-    var xml_path     = path.join(plugin_dir, 'plugin.xml')
-      , plugin_et    = xml_helpers.parseElementtreeSync(xml_path)
+    var pluginInfo   = new PluginInfo.PluginInfo(plugin_dir)
+      , plugin_et    = pluginInfo._et
       , filtered_variables = {};
-    var plugin_id    = plugin_et.getroot().attrib['id'];
 
     options = options || {};
     options.graph = options.graph || new dep_graph();
 
-    if (isPluginInstalled(plugins_dir, platform, plugin_id)) {
+    if (isPluginInstalled(plugins_dir, platform, pluginInfo.id)) {
         if (options.is_top_level) {
-            events.emit('results', 'Plugin "' + plugin_id + '" already installed on ' + platform + '.');
+            events.emit('results', 'Plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         } else {
-            events.emit('verbose', 'Dependent plugin "' + plugin_id + '" already installed on ' + platform + '.');
+            events.emit('verbose', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
         return Q();
     }
-    events.emit('log', 'Installing "' + plugin_id + '" for ' + platform);
+    events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
     var theEngines = getEngines(plugin_et, platform, project_dir, plugin_dir);
 
@@ -262,7 +261,7 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
         platform: platform,
         project_dir: project_dir,
         plugins_dir: plugins_dir,
-        top_plugin_id: plugin_id,
+        top_plugin_id: pluginInfo.id,
         top_plugin_dir: plugin_dir
     }
 
@@ -298,18 +297,18 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
         }
     ).then(
         function(){
-            var install_plugin_dir = path.join(plugins_dir, plugin_id);
+            var install_plugin_dir = path.join(plugins_dir, pluginInfo.id);
 
             // may need to copy to destination...
             if ( !fs.existsSync(install_plugin_dir) ) {
                 copyPlugin(plugin_dir, plugins_dir, options.link);
             }
 
-            return handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
+            return handleInstall(actions, pluginInfo.id, plugin_et, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
         }
     ).fail(
         function (error) {
-            events.emit('warn', "Failed to install '"+plugin_id+"':"+ error.stack);
+            events.emit('warn', "Failed to install '" + pluginInfo.id + "':" + error.stack);
             throw error;
         }
     );
@@ -595,18 +594,10 @@ function isRelativePath(path) {
     return !isAbsolutePath();
 }
 
-function readId(plugin_dir) {
-    var xml_path = path.join(plugin_dir, 'plugin.xml');
-    events.emit('verbose', 'Fetch is reading plugin.xml from location "' + xml_path + '"...');
-    var et = xml_helpers.parseElementtreeSync(xml_path);
-
-    return et.getroot().attrib.id;
-}
-
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_src_dir, plugins_dir, link) {
-    var plugin_id = readId(plugin_src_dir);
-    var dest = path.join(plugins_dir, plugin_id);
+    var pluginInfo = new PluginInfo.PluginInfo(plugin_src_dir);
+    var dest = path.join(plugins_dir, pluginInfo.id);
     shell.rm('-rf', dest);
 
     if (link) {

@@ -48,14 +48,19 @@ function PluginInfo(dirname) {
 
     self.path = dirname;
     var et = self._et = xml_helpers.parseElementtreeSync(filepath);
-    self.id = et.getroot().attrib.id;
-    self.version = et.getroot().attrib.version;
+    var pelem = et.getroot();
+    self.id = pelem.attrib.id;
+    self.version = pelem.attrib.version;
 
-    var nameTag = et.find('name');
-    self.name = nameTag ? nameTag.text : null;
-
-    var descTag = et.find('description');
-    self.description = descTag ? descTag.text : null;
+    // Optional fields
+    self.name = pelem.findtext('name');
+    self.description = pelem.findtext('description');
+    self.license = pelem.findtext('license');
+    self.repo = pelem.findtext('repo');
+    self.issue = pelem.findtext('issue');
+    self.keywords = pelem.findtext('keywords');
+    if (self.keywords)
+        self.keywords = self.keywords.split(',').map( function(s) { return s.trim() } );
 
     self.deps = {};
     et.findall('dependency').forEach(function (d) {
