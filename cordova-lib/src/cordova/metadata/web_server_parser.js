@@ -73,14 +73,10 @@ module.exports.prototype = {
         @param the config parser object
         @return a promise
     */
-    update_from_config: function (config) {
-        events.emit('verbose', 'Entered update_from_config');
-        if (config instanceof ConfigParser) {
-        } else {
-            return Q.reject(new Error("update_from_config requires a ConfigParser object."));
-        }
+    update_from_config: function () {
+        config = new ConfigParser(this.config_xml());
         // find config and read it in.
-        var file = path.join(this.path, 'package.json');
+        var file = path.join(this.path, 'platform_www', 'package.json');
         var data = fs.readFileSync(file);
         var obj = JSON.parse(data);
         
@@ -89,17 +85,35 @@ module.exports.prototype = {
 
         // write it out.
         fs.writeFileSync(file, JSON.stringify(obj), 'utf8');
+        return Q();
     },
     update_project: function () {
         events.emit('verbose', 'Entered update_project');
-        return 1;
+        // return this.update_from_config()
+        //     .then(function(){
+        //         this.update_overrides();
+        //         util.deleteSvnFolders(this.www_dir());
+        //     }.bind(this));
     },
+    /**
+        Replace the www dir with contents of platform_www and app www.
+    */
     update_www: function () {
         events.emit('verbose', 'Entered update_www');
-        return 1;
+        var projectRoot = util.isCordova(this.path);
+        var app_www = util.projectWww(projectRoot);
+        var platform_www = path.join(this.path, 'platform_www');
+
+        // Clear the www dir
+        shell.rm('-rf', this.www_dir());
+        shell.mkdir(this.www_dir());
+        // Copy over all app www assets
+        shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
+        // Copy over stock platform www assets (cordova.js)
+        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
     www_dir: function () {
         events.emit('verbose', 'Entered www_dir');
-        return path.join(this.path, "..", "www");
+        return path.join(this.path, 'www');
     },
 };
