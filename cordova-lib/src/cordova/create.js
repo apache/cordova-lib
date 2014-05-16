@@ -197,9 +197,6 @@ function create(dir, id, name, cfg) {
 
         // Create basic project structure.
         shell.mkdir(path.join(dir, 'platforms'));
-        if ( !custom_merges) {
-            shell.mkdir(path.join(dir, 'merges'));
-        }
         shell.mkdir(path.join(dir, 'plugins'));
         shell.mkdir(path.join(dir, 'hooks'));
 
