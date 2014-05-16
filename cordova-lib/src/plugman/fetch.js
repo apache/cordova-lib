@@ -114,10 +114,22 @@ function readId(dir) {
     return plugin_id;
 }
 
+function readVersion(dir) {
+    var xml_path = path.join(dir, 'plugin.xml');
+    var et = xml_helpers.parseElementtreeSync(path.join(dir, 'plugin.xml'));
+    var plugin_id = et.getroot().attrib.version;
+    return plugin_id;
+}
+
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expected_id, dir) {
     if ( expected_id ) {
-        var id = readId(dir);
+        // check for plugin version specified (like some.plugin@0.2.3)
+        var id = expected_id.split('@').length == 1 ?
+            readId(dir) :
+            // if id with specific version provided (via '@' symbol), append version to id
+            readId(dir) + "@" + readVersion(dir);
+
         if (expected_id != id) {
             throw new Error('Expected fetched plugin to have ID "' + expected_id + '" but got "' + id + '".');
         }
