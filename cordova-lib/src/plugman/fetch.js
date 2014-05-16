@@ -82,6 +82,11 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
             if (local_dir) {
                 p = Q(local_dir);
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + local_dir);
+            } else if ( options.noregistry ) {
+                p = Q.reject(new CordovaError(
+                        'Plugin ' + plugin_src + ' not found locally. ' +
+                        'Note, plugin registry was disabled by --noregistry flag.'
+                    ));
             } else {
                 // If not found in local search path, fetch from the registry.
                 linkable = false;

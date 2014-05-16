@@ -112,7 +112,7 @@ module.exports = function plugin(command, targets, opts) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
                         var plugman = require('../plugman/plugman');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath});
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry});
                     })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
