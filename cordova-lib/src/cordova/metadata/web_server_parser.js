@@ -29,9 +29,7 @@ var fs              = require('fs'),
 */
 module.exports = function web_server_parser(project) {
     events.emit('verbose', "Project: " + project);
-    // This would be a config option later.
-    this.tech = 'nodejs';
-    this.path = path.join(project, this.tech);
+    this.path = path.join(project);
 };
 
 /**
@@ -46,14 +44,25 @@ module.exports.check_requirements = function(project_root) {
 };
 
 /**
-    Yeah, you know.
+    Since each platform has it's own structure and resources each needs
+    it's own parser to ensure that certain configs and folders are found.
 */
 module.exports.prototype = {
+    /**
+        Just points to the project's config.xml
+        No special handling required for this platform.
+    */
     config_xml: function () {
-        return 1;
+        events.emit('verbose', 'Entered config_xml');
+        return path.join(this.path, 'config.xml');
     },
-    cordovajs_path: function () {
-        return 1;
+    /**
+        Used for creating platform_www in projects created by older versions.
+    */
+    cordovajs_path: function (libDir) {
+        events.emit('verbose', 'Entered cordovajs_path');
+        var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
+        return path.resolve(jsPath);
     },
     /**
         The config.xml comes from the cordova project structure. So this will always come
@@ -65,6 +74,7 @@ module.exports.prototype = {
         @return a promise
     */
     update_from_config: function (config) {
+        events.emit('verbose', 'Entered update_from_config');
         if (config instanceof ConfigParser) {
         } else {
             return Q.reject(new Error("update_from_config requires a ConfigParser object."));
@@ -81,12 +91,15 @@ module.exports.prototype = {
         fs.writeFileSync(file, JSON.stringify(obj), 'utf8');
     },
     update_project: function () {
+        events.emit('verbose', 'Entered update_project');
         return 1;
     },
     update_www: function () {
+        events.emit('verbose', 'Entered update_www');
         return 1;
     },
     www_dir: function () {
+        events.emit('verbose', 'Entered www_dir');
         return path.join(this.path, "..", "www");
     },
 };

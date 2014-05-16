@@ -9,5 +9,5 @@ module.exports = {
     'firefoxos': require('./platforms/firefoxos'),
     'ubuntu': require('./platforms/ubuntu'),
     'tizen': require('./platforms/tizen'),
-    'web-server': require('./platforms/web-server')
+    'web_server': require('./platforms/web_server')
 };
