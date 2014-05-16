@@ -29,7 +29,8 @@ var path          = require('path'),
     tar           = require('tar'),
     URL           = require('url'),
     Q             = require('q'),
-    util          = require('./util');
+    util          = require('./util'),
+    superspawn    = require('./superspawn');
 
 module.exports = {
     // Returns a promise for the path to the lazy-loaded directory.
@@ -38,7 +39,11 @@ module.exports = {
             return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
         }
 
-        var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
+        var url = platforms[platform].url;
+        var uri = URL.parse(url);
+        if (uri.protocol == 'http:' || uri.protocol == 'https:') {
+            url += ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
+        }
         return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
     },
     // Returns a promise for the path to the lazy-loaded directory.
@@ -73,10 +78,12 @@ module.exports = {
             var d = Q.defer();
             npmconf.load(function(err, conf) {
                 // Check if NPM proxy settings are set. If so, include them in the request() call.
-                var proxy;
-                if (uri.protocol == 'https:') {
+                var proxy,
+                    is_https = false;
+                if (uri.protocol == 'https:' || uri.protocol == 'git+https:') {
                     proxy = conf.get('https-proxy');
-                } else if (uri.protocol == 'http:') {
+                    is_https = true;
+                } else if (uri.protocol == 'http:' || uri.protocol == 'git+http:') {
                     proxy = conf.get('proxy');
                 }
                 var strictSSL = conf.get('strict-ssl');
@@ -87,6 +94,51 @@ module.exports = {
                 tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
                 shell.rm('-rf', tmp_dir);
                 shell.mkdir('-p', tmp_dir);
+
+                var onSuccess = function(size) {
+                    events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
+                    events.emit('log', 'Download complete');
+                    var entries = fs.readdirSync(tmp_dir);
+                    var entry = path.join(tmp_dir, entries[0]);
+                    shell.mkdir('-p', download_dir);
+                    shell.mv('-f', path.join(entry, (platform=='blackberry10'?'blackberry10':''), '*'), download_dir);
+                    shell.rm('-rf', tmp_dir);
+                    d.resolve(hooker.fire('after_library_download', {
+                        platform:platform,
+                        url:url,
+                        id:id,
+                        version:version,
+                        path: lib_dir,
+                        size:size,
+                        symlink:false
+                    }));
+                }
+
+                if (uri.protocol == 'git:' || uri.protocol.slice(0, 4) == 'git+') {
+                    events.emit('verbose', 'Cloning ' + url + ' version ' + version + ' (used as git tag)...');
+                    events.emit('log', 'Downloading ' + id + ' library for ' + platform + ' from git repository...');
+
+                    var repo_dir = path.join(tmp_dir, version),
+                        git_url = uri.protocol == 'git:' ? url : url.slice(4, url.length),
+                        cmd = 'git',
+                        // Create a shallow copy to save on disk space and download time.
+                        args = [ 'clone', '-b', version, '--depth', '0', '--recurse-submodules', git_url, repo_dir ],
+                        env = { stdio: 'inherit' };
+
+                    if (proxy) {
+                        env[is_https ? 'https_proxy' : 'http_proxy'] = proxy;
+                    }
+                    if (typeof strictSSL == 'boolean' && !strictSSL) {
+                        env.GIT_SSL_NO_VERIFY = 'true';
+                    }
+                    var execGit = superspawn.spawn(cmd, args, { env: env })
+                        .then(onSuccess.bind(this, 0))
+                        .fail(function() {
+                            shell.rm('-rf', tmp_dir);
+                            d.reject(new Error('Error cloning ' + url + ' version ' + version + ' (used as git tag) for ' + platform));
+                        });
+                    return;
+                }
 
                 var size = 0;
                 var request_options = {uri:url};
@@ -116,24 +168,7 @@ module.exports = {
                     shell.rm('-rf', tmp_dir);
                     d.reject(err);
                 })
-                .on('end', function() {
-                    events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
-                    events.emit('log', 'Download complete');
-                    var entries = fs.readdirSync(tmp_dir);
-                    var entry = path.join(tmp_dir, entries[0]);
-                    shell.mkdir('-p', download_dir);
-                    shell.mv('-f', path.join(entry, (platform=='blackberry10'?'blackberry10':''), '*'), download_dir);
-                    shell.rm('-rf', tmp_dir);
-                    d.resolve(hooker.fire('after_library_download', {
-                        platform:platform,
-                        url:url,
-                        id:id,
-                        version:version,
-                        path: lib_dir,
-                        size:size,
-                        symlink:false
-                    }));
-                });
+                .on('end', onSuccess.bind(this, size));
             });
             return d.promise.then(function () { return lib_dir; });
         });
