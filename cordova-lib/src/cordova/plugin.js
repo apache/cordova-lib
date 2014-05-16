@@ -223,7 +223,7 @@ function list(projectRoot, hooks) {
             p = plugins[i];
             pluginsDict[p.id] = p;
             pluginsList.push(p.id);
-            txt = p.id + ' ' + p.version + ' "' + p.name + '"';
+            txt = p.id + ' ' + p.version + ' "' + (p.name || p.description) + '"';
             lines.push(txt);
         }
         // Add warnings for deps with wrong versions.

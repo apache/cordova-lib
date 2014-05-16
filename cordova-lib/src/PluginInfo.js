@@ -54,6 +54,9 @@ function PluginInfo(dirname) {
     var nameTag = et.find('name');
     self.name = nameTag ? nameTag.text : null;
 
+    var descTag = et.find('description');
+    self.description = descTag ? descTag.text : null;
+
     self.deps = {};
     et.findall('dependency').forEach(function (d) {
         self.deps[d.attrib.id] = _.clone(d.attrib);
