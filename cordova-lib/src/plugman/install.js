@@ -1,4 +1,4 @@
-/* jshint node:true, asi:true, laxcomma:true, sub:true, expr:true */
+/* jshint node:true, asi:true, laxcomma:true, sub:true, expr:true, unused:vars */
 
 var path = require('path'),
     fs   = require('fs'),
@@ -137,7 +137,6 @@ function cleanVersionOutput(version, name){
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
 function callEngineScripts(engines) {
-    var engineScriptVersion;
 
     return Q.all(
         engines.map(function(engine){
@@ -241,7 +240,6 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
     var xml_path     = path.join(plugin_dir, 'plugin.xml')
       , plugin_et    = xml_helpers.parseElementtreeSync(xml_path)
       , filtered_variables = {};
-    var name         = plugin_et.findall('name').text;
     var plugin_id    = plugin_et.getroot().attrib['id'];
 
     options = options || {};
@@ -621,20 +619,4 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
     }
 
     return dest;
-}
-
-function isPluginInstalled(plugins_dir, platform, plugin_id) {
-    var installed_plugin_id;
-    var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (installed_plugin_id in platform_config.installed_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    for (installed_plugin_id in platform_config.dependent_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    return false;
 }
