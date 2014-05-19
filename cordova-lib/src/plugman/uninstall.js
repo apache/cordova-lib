@@ -14,7 +14,8 @@ var path = require('path'),
     underscore = require('underscore'),
     events = require('./events'),
     platform_modules = require('./platforms'),
-    plugman = require('./plugman');
+    plugman = require('./plugman'),
+    pluginHooks = require('./util/hooks');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -211,7 +212,9 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     }
 
     return promise.then(function() {
-        return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level);
+        return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level)
+    }).then(function(){
+        return pluginHooks.fire('uninstall', plugin_id, plugin_et, platform, project_dir, plugin_dir);
     });
 }
 
