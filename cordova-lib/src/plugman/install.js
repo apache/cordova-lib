@@ -17,6 +17,7 @@ var path = require('path'),
     shell   = require('shelljs'),
     events = require('./events'),
     plugman = require('./plugman'),
+    pluginHooks = require('./util/hooks'),
     isWindows = (os.platform().substr(0,3) === 'win');
 
 /* INSTALL FLOW
@@ -305,7 +306,12 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
                 copyPlugin(plugin_dir, plugins_dir, options.link);
             }
 
-            return handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
+            pluginHooks.fire('beforeinstall', plugin_id, plugin_et, platform, project_dir, plugin_dir).then(function() {
+                return handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir,
+                    install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
+            }).then(function(){
+                return pluginHooks.fire('afterinstall', plugin_id, plugin_et, platform, project_dir, plugin_dir);
+            });
         }
     ).fail(
         function (error) {
