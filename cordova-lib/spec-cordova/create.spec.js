@@ -78,7 +78,7 @@ describe('create end-to-end', function() {
 
     function checkProject() {
         // Check if top level dirs exist.
-        var dirs = ['hooks', 'platforms', 'merges', 'plugins', 'www'];
+        var dirs = ['hooks', 'platforms', 'plugins', 'www'];
         dirs.forEach(function(d) {
             expect(path.join(project, d)).toExist();
         });
