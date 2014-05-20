@@ -9,6 +9,7 @@ var fetch   = require('../src/plugman/fetch'),
     test_plugin = path.join(__dirname, 'plugins', 'ChildBrowser'),
     test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'ChildBrowser'),
     plugins = require('../src/plugman/util/plugins'),
+    pluginfo = require('../src/PluginInfo'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
 
@@ -23,7 +24,10 @@ describe('fetch', function() {
         var xml, rm, sym, mkdir, cp, save_metadata;
         beforeEach(function() {
             xml = spyOn(xml_helpers, 'parseElementtreeSync').andReturn({
-                getroot:function() { return {attrib:{id:'id', version:'version'}};}
+                getroot:function() { return {attrib:{id:'id', version:'version'}};},
+            });
+            plugin_info = spyOn(pluginfo, 'PluginInfo').andReturn({
+                id:'id', version:'version'
             });
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
@@ -77,13 +81,16 @@ describe('fetch', function() {
         });
     });
     describe('git plugins', function() {
-        var clone, save_metadata, done, xml;
+        var clone, save_metadata, done, xml, plugin_info;
 
         function fetchPromise(f) {
             f.then(function() { done = true; }, function(err) { done = err; });
         }
 
         beforeEach(function() {
+            plugin_info = spyOn(pluginfo, 'PluginInfo').andReturn({
+                id:'id', version:'version'
+            });
             clone = spyOn(plugins, 'clonePluginGitRepo').andReturn(Q('somedir'));
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             done = false;
@@ -202,10 +209,13 @@ describe('fetch', function() {
     });
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
-        var xml, rm, sym, mkdir, cp, save_metadata;
+        var xml, rm, sym, mkdir, cp, save_metadata, plugin_info;
         beforeEach(function() {
             xml = spyOn(xml_helpers, 'parseElementtreeSync').andReturn({
                 getroot:function() { return {attrib:{id:'id', version:'version'}};}
+            });
+            plugin_info = spyOn(pluginfo, 'PluginInfo').andReturn({
+                id:'id', version:'version'
             });
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
