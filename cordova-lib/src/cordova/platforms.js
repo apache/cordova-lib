@@ -22,6 +22,11 @@
 */
 
 module.exports = {
+    'tizen' : {
+        parser : './metadata/tizen_parser',
+        url    : 'https://api.github.com/repos/gabrielschulhof/cordova-tizen/tarball/tizen?',
+        version: '3.5.0'
+    },
     'ios' : {
         hostos : ['darwin'],
         parser : './metadata/ios_parser',
