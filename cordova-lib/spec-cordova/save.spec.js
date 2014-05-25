@@ -56,7 +56,14 @@ describe('save command', function(){
     parserWriter.andCallThrough();
   });
 
-
-
-
+  it('should not try to add platforms to config.xml', function(){
+    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
+    var call_count =0;
+    ConfigParser.prototype.write = function(){
+      call_count++;
+    }
+    expect(call_count).toEqual(0);
+    cordova.save('platforms');
+    expect(call_count).toEqual(0);
+  });
 });

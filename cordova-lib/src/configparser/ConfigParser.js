@@ -27,11 +27,14 @@ var et = require('elementtree'),
     CordovaError = require('../CordovaError'),
     fs = require('fs');
 
+
 /** Wraps a config.xml file */
 function ConfigParser(path) {
     this.path = path;
     try {
         this.doc = xml.parseElementtreeSync(path);
+        this.cdvNamespacePrefix = getCordovaNamespacePrefix(this.doc);
+        et.register_namespace(this.cdvNamespacePrefix, 'http://cordova.apache.org/ns/1.0');
     } catch (e) {
         console.error('Parsing '+path+' failed');
         throw e;
@@ -53,6 +56,20 @@ function findOrCreate(doc, name) {
         doc.getroot().append(ret);
     }
     return ret;
+}
+
+function getCordovaNamespacePrefix(doc){
+    var rootAtribs = Object.getOwnPropertyNames(doc.getroot().attrib);
+    var prefix = 'cdv';
+    for (var j = 0; j < rootAtribs.length; j++ ) {
+        if(rootAtribs[j].indexOf('xmlns:') === 0 &&
+            doc.getroot().attrib[rootAtribs[j]] === 'http://cordova.apache.org/ns/1.0'){
+            var strings = rootAtribs[j].split(':');
+            prefix = strings[1];
+            break;
+        }
+    }
+    return prefix;
 }
 
 ConfigParser.prototype = {
@@ -121,10 +138,11 @@ ConfigParser.prototype = {
         // root level resources
         staticResources = staticResources.concat(this.doc.findall(resourceName));
         // parse resource elements
+        var that = this;
         staticResources.forEach(function (elt) {
             var res = {};
             res.src = elt.attrib.src;
-            res.density = elt.attrib['density'] || elt.attrib['cdv:density'] || elt.attrib['gap:density'];
+            res.density = elt.attrib['density'] || elt.attrib[that.cdvNamespacePrefix+':density'] || elt.attrib['gap:density'];
             res.platform = elt.platform || null; // null means icon represents default icon (shared between platforms)
             res.width = elt.attrib.width;
             res.height = elt.attrib.height;
@@ -202,6 +220,7 @@ ConfigParser.prototype = {
      *This does not check for duplicate feature entries
      */
     addFeature: function (name, params){
+        if(!name) return;
         var el = new et.Element('feature');
         el.attrib.name = name;
         if (params) {
@@ -213,6 +232,41 @@ ConfigParser.prototype = {
             });
         }
         this.doc.getroot().append(el);
+    },
+
+    /**
+     * Adds an engine. Does not check for duplicates.
+     * @param  {String} id the engine id
+     * @param  {String} version engine version (optional)
+     */
+    addEngine: function(id, version){
+        if(!id) return;
+        var el = et.Element('{http://cordova.apache.org/ns/1.0}engine');
+        el.attrib.id = id;
+        if(version){
+            el.attrib.version = version;
+        }
+        this.doc.getroot().append(el);
+    },
+    /**
+     * Removes all the engines with given id
+     * @param  {String} id the engine id.
+     */
+    removeEngine: function(id){
+         var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine/[@id="' +id+'"]');
+         for(var i=0; i < engines.length; i++){
+            var childs = this.doc.getroot().getchildren();
+            var idx = childs.indexOf(engines[i]);
+            if(idx > -1){
+                childs.splice(idx,1);
+             }
+         }
+    },
+    getEngines: function(){
+        var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine');
+        return engines.map(function(engine){
+           return {'id':engine.attrib.id};
+        });
     },
     write:function() {
         fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');

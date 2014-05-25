@@ -22,15 +22,59 @@
 */
 
 
-var cordova_util    = require('./util'),
-    ConfigParser     = require('../configparser/ConfigParser'),
-    path             = require('path'),
-    xml              = require('../util/xml-helpers'),
+var path             = require('path'),
+    et               = require('elementtree'),
     Q                = require('q'),
-    events           = require('../events');
+    cordova_util     = require('./util'),
+    ConfigParser     = require('../configparser/ConfigParser'),
+    xml              = require('../util/xml-helpers'),
+    events           = require('../events'),
+    superspawn       = require('./superspawn'),
+    CordovaError     = require('../CordovaError');
 
 module.exports = save;
 function save(target, opts){
+    var projectHome = cordova_util.cdProjectRoot();//checks if this is a cordova project
+    if( 'plugins' === target ){
+       return savePlugins(opts);
+    }
+    if( 'platforms' === target ){
+        return savePlatforms(opts);
+    }
+    throw new CordovaError('Unknown target only "plugins" and "platforms" are supported');
+}
+
+function savePlatforms(opts){
+    opts = opts || {};
+    var projectHome = cordova_util.cdProjectRoot();
+    var configPath = cordova_util.projectConfig(projectHome);
+    var configXml = new ConfigParser(configPath);
+    var platforms_on_fs = cordova_util.listPlatforms(projectHome);
+    return Q.all( platforms_on_fs.map(function(p){
+        var promise = new Q({'id':p});
+        if(opts.shrinkwrap){//retrieve and save platform version
+            var script = path.join(projectHome, 'platforms', p, 'cordova', 'version');
+             promise= superspawn.spawn(script).then(function(v){
+                return {'id':p ,'version':v};
+            });
+        }
+        //Clear the engines first
+        var engines = configXml.getEngines();
+        engines.forEach(function(e){
+            configXml.removeEngine(e.id);
+        });
+
+        return Q.when(promise,
+            function(theEngine){
+                configXml.addEngine(theEngine.id,theEngine.version);
+                configXml.write();
+                events.emit('results', 'Saved platform info for "'+p+'" to config.xml');
+            }
+        )
+    }));
+}
+
+function savePlugins(opts){
     opts = opts || {};
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);

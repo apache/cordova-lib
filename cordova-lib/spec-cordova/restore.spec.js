@@ -48,17 +48,27 @@ describe('restore command', function(){
   });
 
   it('should not try to restore features from config.xml', function(){
-
-
-    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
-    var parserWriter = spyOn(ConfigParser.prototype, 'write');
-    expect(ConfigParser.prototype.write).not.toHaveBeenCalled();
-    cordova.restore('plugins');
-    expect(ConfigParser.prototype.write).not.toHaveBeenCalled();
-    parserWriter.andCallThrough();
+      cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
+      var call_count =0;
+      expect(installPluginsFromConfigXML).toBeDefined();
+      function installPluginsFromConfigXML(cfg){
+          call_count++;
+      }
+      expect(call_count).toEqual(0);
+      cordova.restore('plugins');
+      expect(call_count).toEqual(0);
   });
 
-
-
+  it('should not try to restore platforms from config.xml', function(){
+      cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
+      var call_count =0;
+      expect(installPlatformsFromConfigXML).toBeDefined();
+      function installPlatformsFromConfigXML(cfg){
+          call_count++;
+      }
+      expect(call_count).toEqual(0);
+      cordova.restore('platforms');
+      expect(call_count).toEqual(0);
+  });
 
 });

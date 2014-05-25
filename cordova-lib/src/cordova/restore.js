@@ -27,16 +27,36 @@ var cordova_util    = require('./util'),
     Q                = require('q'),
     fs               = require('fs'),
     plugin           = require('./plugin'),
-    events           = require('../events');
+    events           = require('../events'),
+    platform         = require('./platform'),
+    hooker           = require('./hooker'),
+    CordovaError     = require('../CordovaError');
 
 module.exports = restore;
 function restore(target){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var configXml = new ConfigParser(configPath);
-    return installPluginsFromConfigXML(configXml);
+    if( 'plugins' === target ){
+        return installPluginsFromConfigXML(configXml);
+    }
+    if( 'platforms' === target ){
+        return installPlatformsFromConfigXML(configXml);
+    }
+    return Q.reject( new CordovaError('Unknown target only "plugins" and "platforms" are supported'));
 }
 
+function installPlatformsFromConfigXML(cfg){
+    var projectHome = cordova_util.cdProjectRoot();
+    var engines = cfg.getEngines(projectHome);
+    var targets = engines.map(function(engine){
+            return engine.id;
+    });
+    if(!targets || !targets.length  ){
+        return Q.all("No platforms are listed in config.xml to restore");
+    }
+    return platform('add', targets);
+}
 
 //returns a Promise
 function installPluginsFromConfigXML(cfg) {
