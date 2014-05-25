@@ -22,9 +22,53 @@ var cordova_util    = require('./util'),
     path             = require('path'),
     xml              = require('../util/xml-helpers')
     Q                = require('q'),
+    superspawn       = require('./superspawn'),
+    et               = require('elementtree'),
+    CordovaError     = require('../CordovaError'),
     events           = require('./events');
 
 module.exports = function save(target, opts){
+    var projectHome = cordova_util.cdProjectRoot();//checks if this is a cordova project
+    if( 'plugins' === target ){
+       return savePlugins(opts);
+    }
+    if( 'platforms' === target ){
+        return savePlatforms(opts);
+    }
+    throw new CordovaError('Unknown target only "plugins" and "platforms" are supported');
+}
+
+function savePlatforms(opts){
+    opts = opts || {};
+    var projectHome = cordova_util.cdProjectRoot();
+    var configPath = cordova_util.projectConfig(projectHome);
+    var configXml = new ConfigParser(configPath);
+    var platforms_on_fs = cordova_util.listPlatforms(projectHome);
+    return Q.all( platforms_on_fs.map(function(p){
+        var promise = new Q({'id':p});
+        if(opts.shrinkwrap){//retrieve and save platform version
+            var script = path.join(projectHome, 'platforms', p, 'cordova', 'version');
+             promise= superspawn.spawn(script).then(function(v){
+                return {'id':p ,'version':v}; 
+            });
+        }
+        //Clear the engines first
+        var engines = configXml.getEngines();
+        engines.forEach(function(e){
+            configXml.removeEngine(e.id);
+        });
+        
+        return Q.when(promise,
+            function(theEngine){
+                configXml.addEngine(theEngine.id,theEngine.version);
+                configXml.write();
+                events.emit('results', 'Saved platform info for "'+p+'" to config.xml');
+            }
+        )
+    }));
+}
+
+function savePlugins(opts){
   opts = opts || {};
   var projectHome = cordova_util.cdProjectRoot();
   var configPath = cordova_util.projectConfig(projectHome);
