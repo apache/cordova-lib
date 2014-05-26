@@ -107,8 +107,8 @@ exports = module.exports = function prepare(options) {
 
                 // Update platform config.xml based on top level config.xml
                 var platform_cfg = new ConfigParser(parser.config_xml());
-                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
-                platform_cfg.write();
+                exports._mergeXml(platform_cfg.doc.getroot(), cfg.doc.getroot(), platform, true);
+                cfg.write(platform_cfg.path);
 
                 return parser.update_project(cfg);
             });
@@ -120,6 +120,12 @@ exports = module.exports = function prepare(options) {
 
 var BLACKLIST = ["platform"];
 var SINGLETONS = ["content", "author"];
+// Elements which should be compared with partial attribute set
+var comparableAttributes = {
+    'access': [],
+    'preference': ['name']
+};
+
 function mergeXml(src, dest, platform, clobber) {
     if (BLACKLIST.indexOf(src.tag) === -1) {
         //Handle attributes
@@ -157,10 +163,22 @@ function mergeXml(src, dest, platform, clobber) {
                         dest.remove(0, destChild);
                     }
                 } else {
-                    //Check for an exact match and if you find one don't add
-                    Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
-                        query += "[@" + attribute + '="' + srcChild.attrib[attribute] + '"]';
-                    });
+                    // Compose search query
+                    if (!comparableAttributes[srcTag]){
+                        // search for elements in destination XML, which have the same set of attributes
+                        Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
+                            query += "[@" + attribute + '="' + srcChild.attrib[attribute] + '"]';
+                        });
+                    } else {
+                        // or if custom attributes set is defined (see comparableAttributes), search by this set
+                        comparableAttributes[srcTag].forEach(function (attribute) {
+                            // if attribute is not specified in source element we don't merge this element
+                            shouldMerge = !srcChild.attrib[attribute] ? false : shouldMerge;
+                            query += "[@" + attribute + '="' + (srcChild.attrib[attribute] || '') + '"]';
+                        });
+                    }
+                    // Search for element in destination XML. If element already exist it will be leaved as is
+                    // otherwise element from source XML will be appended to destination
                     foundChild = dest.find(query);
                     if (foundChild && textMatch(srcChild, foundChild)) {
                         destChild = foundChild;

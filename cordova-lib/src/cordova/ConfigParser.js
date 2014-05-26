@@ -171,8 +171,8 @@ ConfigParser.prototype = {
         }
         this.doc.getroot().append(el);
     },    
-    write:function() {
-        fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');
+    write:function(path) {
+        fs.writeFileSync(path ? path : this.path, this.doc.write({indent: 4}), 'utf-8');
     }
 };
 

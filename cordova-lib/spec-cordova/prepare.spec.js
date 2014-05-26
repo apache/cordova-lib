@@ -263,7 +263,7 @@ describe('prepare._mergeXml', function () {
     });
 
     it("should append non singelton children", function () {
-        var testXml = et.XML("<widget><preference num='1'/> <preference num='2'/></widget>");
+        var testXml = et.XML("<widget><preference name='1'/> <preference name='2'/></widget>");
 
         prepare._mergeXml(testXml, dstXml, '', true);
         var testElements = dstXml.findall("preference");
