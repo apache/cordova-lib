@@ -24,15 +24,35 @@ var cordova_util    = require('./util'),
     Q                = require('q'),
     fs               = require('fs'),
     plugin           = require('./plugin'),
+    platform         = require('./platform'),
+    hooker           = require('./hooker'),
+    CordovaError     = require('../CordovaError'),
     events           = require('./events');
 
 module.exports = function restore(target){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
-    var configXml = new ConfigParser(configPath);    
-    return installPluginsFromConfigXML(configXml);
+    var configXml = new ConfigParser(configPath);
+    if( 'plugins' === target ){
+        return installPluginsFromConfigXML(configXml);
+    }
+    if( 'platforms' === target ){
+        return installPlatformsFromConfigXML(configXml);
+    }
+    return Q.reject( new CordovaError('Unknown target only "plugins" and "platforms" are supported'));
 }
 
+function installPlatformsFromConfigXML(cfg){
+    var projectHome = cordova_util.cdProjectRoot();
+    var engines = cfg.getEngines(projectHome);
+    var targets = engines.map(function(engine){
+            return engine.id;
+    });
+    if(!targets || !targets.length  ){
+        return Q.all("No platforms are listed in config.xml to restore");
+    }
+    return platform('add', targets);
+}
 
 //returns a Promise
 function installPluginsFromConfigXML(cfg){
@@ -61,10 +81,9 @@ function installPluginsFromConfigXML(cfg){
             if( pluginVersion !== ""){
               pluginId = pluginId +"@"+pluginVersion;
             }
-            events.emit('log', "Discovered "+ pluginId + " in config.xml. Installing to the project")
+            events.emit('log', "Discovered "+ pluginId + " in config.xml. Installing to the project");
             pluginsFromConfig.push(pluginId);
           }
-
         })
         
         //Use cli instead of plugman directly ensuring all the hooks 
