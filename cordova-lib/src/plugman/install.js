@@ -493,7 +493,7 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         var sourceFiles = platformTag.findall('./source-file'),
             headerFiles = platformTag.findall('./header-file'),
             resourceFiles = platformTag.findall('./resource-file'),
-            frameworkFiles = platformTag.findall('./framework[@custom="true"]'), // CB-5238 adding only custom frameworks
+            frameworkFiles = platformTag.findall('./framework'),
             libFiles = platformTag.findall('./lib-file');
 
 

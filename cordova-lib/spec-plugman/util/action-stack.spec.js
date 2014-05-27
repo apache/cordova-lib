@@ -18,9 +18,9 @@ describe('action-stack', function() {
             stack.push(stack.createAction(second_spy, second_args, function(){}, []));
             stack.push(stack.createAction(third_spy, third_args, function(){}, []));
             stack.process('android', 'blah');
-            expect(first_spy).toHaveBeenCalledWith(first_args[0]);
-            expect(second_spy).toHaveBeenCalledWith(second_args[0]);
-            expect(third_spy).toHaveBeenCalledWith(third_args[0]);
+            expect(first_spy).toHaveBeenCalledWith(first_args[0], jasmine.any(Object));
+            expect(second_spy).toHaveBeenCalledWith(second_args[0], jasmine.any(Object));
+            expect(third_spy).toHaveBeenCalledWith(third_args[0], jasmine.any(Object));
         });
         it('should revert processed actions if an exception occurs', function() {
             spyOn(console, 'log');
@@ -47,11 +47,11 @@ describe('action-stack', function() {
             runs(function() {
                 expect(error).toEqual(process_err);
                 // first two actions should have been called, but not the third
-                expect(first_spy).toHaveBeenCalledWith(first_args[0]);
-                expect(second_spy).toHaveBeenCalledWith(second_args[0]);
-                expect(third_spy).not.toHaveBeenCalledWith(third_args[0]);
+                expect(first_spy).toHaveBeenCalledWith(first_args[0], jasmine.any(Object));
+                expect(second_spy).toHaveBeenCalledWith(second_args[0], jasmine.any(Object));
+                expect(third_spy).not.toHaveBeenCalledWith(third_args[0], jasmine.any(Object));
                 // first reverter should have been called after second action exploded
-                expect(first_reverter).toHaveBeenCalledWith(first_reverter_args[0]);
+                expect(first_reverter).toHaveBeenCalledWith(first_reverter_args[0], jasmine.any(Object));
             });
         });
     });

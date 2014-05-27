@@ -125,7 +125,7 @@ module.exports = {
                 custom = framework_el.attrib['custom'],
                 srcFile = path.resolve(plugin_dir, src),
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
-            if (!custom) throw new Error('cannot add non custom frameworks.');
+            if (!custom) return; //non-custom frameworks are processed in config-changes.js
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <framework>');
             if (fs.existsSync(targetDir)) throw new Error('target destination "' + targetDir + '" already exists');
             shell.mkdir('-p', path.dirname(targetDir));

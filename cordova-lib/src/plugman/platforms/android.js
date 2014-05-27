@@ -21,7 +21,11 @@ var fs = require('fs')  // use existsSync in 0.6.x
    , path = require('path')
    , common = require('./common')
    , events = require('../events')
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
+   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
+   , properties_parser = require('properties-parser')
+   , shell = require('shelljs');
+
+var projectFileCache = {};
 
 module.exports = {
     www_dir:function(project_dir) {
@@ -80,10 +84,115 @@ module.exports = {
     },
     "framework": {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.install is not supported for android');
+            var src = source_el.attrib.src;
+            var custom = source_el.attrib.custom;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', "Installing Android library: " + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir;
+            if (custom) {
+                subDir = path.resolve(project_dir, src);
+            } else {
+                var localProperties = properties_parser.createEditor(path.resolve(project_dir, "local.properties"));
+                subDir = path.resolve(localProperties.get("sdk.dir"), src);
+            }
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            projectConfig.addSubProject(parentDir, subDir);
         },
         uninstall:function(source_el, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.uninstall is not supported for android');
+            var src = source_el.attrib.src;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', "Uninstalling Android library: " + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir = path.resolve(project_dir, src);
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            projectConfig.removeSubProject(parentDir, subDir);
         }
+    },
+    parseProjectFile: function(project_dir){
+        if (!projectFileCache[project_dir]) {
+            projectFileCache[project_dir] = {
+                propertiesEditors: {},
+                subProjectDirs : {},
+                addSubProject: function(parentDir, subDir) {
+                    var subProjectFile = path.resolve(subDir, "project.properties");
+                    if (!fs.existsSync(subProjectFile)) throw new Error('cannot find "' + subProjectFile + '" referenced in <framework>');
+
+                    var parentProjectFile = path.resolve(parentDir, "project.properties");
+                    var parentProperties = this._getPropertiesFile(parentProjectFile);
+                    addLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
+
+                    var subProperties = this._getPropertiesFile(subProjectFile);
+                    subProperties.set("target", parentProperties.get("target"));
+
+                    this.subProjectDirs[subDir] = true;
+                    this._dirty = true;
+                },
+                removeSubProject: function(parentDir, subDir) {
+                    var parentProjectFile = path.resolve(parentDir, "project.properties");
+                    var parentProperties = this._getPropertiesFile(parentProjectFile);
+                    removeLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
+                    delete this.subProjectDirs[subDir];
+                    this._dirty = true;
+                },
+                write: function () {
+                    if (!this._dirty) return;
+
+                    for (var filename in this.propertiesEditors) {
+                        fs.writeFileSync(filename, this.propertiesEditors[filename].toString());
+                    }
+
+                    for (var sub_dir in this.subProjectDirs)
+                    {
+                        shell.exec("android update lib-project --path " + sub_dir);
+                    }
+                    this._dirty = false;
+                },
+                _dirty : false,
+                _getPropertiesFile: function (filename) {
+                    if (!this.propertiesEditors[filename])
+                        this.propertiesEditors[filename] = properties_parser.createEditor(filename);
+
+                    return this.propertiesEditors[filename];
+                }
+            };
+        }
+
+        return projectFileCache[project_dir];
+    },
+    purgeProjectFileCache:function(project_dir) {
+        delete projectFileCache[project_dir];
+    },
+    getRelativeLibraryPath: function (parentDir, subDir) {
+        var libraryPath = path.relative(parentDir, subDir);
+        return (path.sep == '\\') ? libraryPath.replace(/\\/g, '/') : libraryPath;
     }
 };
+
+function addLibraryReference(projectProperties, libraryPath) {
+    var i = 1;
+    while (projectProperties.get("android.library.reference." + i))
+        i++;
+
+    projectProperties.set("android.library.reference." + i, libraryPath);
+}
+
+function removeLibraryReference(projectProperties, libraryPath) {
+    var i = 1;
+    var currentLib;
+    while (currentLib = projectProperties.get("android.library.reference." + i)) {
+        if (currentLib === libraryPath) {
+            while (currentLib = projectProperties.get("android.library.reference." + (i + 1))) {
+                projectProperties.set("android.library.reference." + i, currentLib);
+                i++;
+            }
+            projectProperties.set("android.library.reference." + i);
+            break;
+        }
+        i++;
+    }
+}
