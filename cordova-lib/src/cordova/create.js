@@ -27,7 +27,7 @@ var path          = require('path'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
     ConfigParser = require('./ConfigParser'),
-    util          = require('./util');
+    cordova_util  = require('./util');
 
 var DEFAULT_NAME = "HelloCordova",
     DEFAULT_ID   = "io.cordova.hellocordova";
@@ -44,7 +44,7 @@ module.exports = create;
 function create(dir, id, name, cfg) {
     if (!dir ) {
         return Q.reject(new CordovaError(
-            'At least the dir must be provided to create new project. See `corova help`.'
+            'At least the dir must be provided to create new project. See `'+cordova_util.binname+' help`.'
         ));
     }
 
@@ -203,7 +203,7 @@ function create(dir, id, name, cfg) {
         // Add hooks README.md
         shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
 
-        var configPath = util.projectConfig(dir);
+        var configPath = cordova_util.projectConfig(dir);
         // Add template config.xml for apps that are missing it
         if (!fs.existsSync(configPath)) {
             var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');

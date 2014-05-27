@@ -46,6 +46,7 @@ function isRootDir(dir) {
 }
 
 exports = module.exports = {
+    binname: 'cordova',
     globalConfig:global_config_path,
     libDirectory:lib_path,
     // Runs up the directory chain looking for a .cordova directory.
@@ -167,7 +168,7 @@ exports = module.exports = {
         }
         var projectPlatforms = this.listPlatforms(projectRoot);
         if (projectPlatforms.length === 0) {
-            throw new CordovaError('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            throw new CordovaError('No platforms added to this project. Please use `'+exports.binname+' platform add <platform>`.');
         }
         if (result.platforms.length === 0) {
             result.platforms = projectPlatforms;

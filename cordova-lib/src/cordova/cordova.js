@@ -28,6 +28,8 @@ var emit = function() {
 };
 
 exports = module.exports = {
+    get binname() { return cordova_util.binname; },
+    set binname(name) { cordova_util.binname = name; },
     on:        function() {
         cordova_events.on.apply(cordova_events, arguments);
     },
