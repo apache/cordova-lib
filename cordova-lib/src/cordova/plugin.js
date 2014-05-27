@@ -66,7 +66,7 @@ module.exports = function plugin(command, targets, opts) {
     plugins = cordova_util.findPlugins(pluginPath);
     if (!targets || !targets.length) {
         if (command == 'add' || command == 'rm') {
-            return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more plugins!'));
+            return Q.reject(new CordovaError('You need to qualify `'+cordova_util.binname+' plugin add` or `'+cordova_util.binname+' plugin remove` with one or more plugins!'));
         } else {
             targets = [];
         }
@@ -87,7 +87,7 @@ module.exports = function plugin(command, targets, opts) {
     switch(command) {
         case 'add':
             if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See "plugin search".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
             }
 
             var config_json = config(projectRoot, {});
@@ -154,14 +154,14 @@ module.exports = function plugin(command, targets, opts) {
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See "plugin list".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
             return hooks.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See "plugin list".'));
+                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
                     }
 
                     var targetPath = path.join(pluginPath, target);
@@ -224,7 +224,7 @@ function list(projectRoot, hooks) {
     })
     .then(function(plugins) {
         if (plugins.length === 0) {
-            events.emit('results', 'No plugins added. Use `cordova plugin add <plugin>`.');
+            events.emit('results', 'No plugins added. Use `'+cordova_util.binname+' plugin add <plugin>`.');
             return;
         }
         var pluginsDict = {};
