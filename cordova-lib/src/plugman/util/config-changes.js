@@ -305,16 +305,18 @@ function generate_plugin_config_munge(plugin_dir, vars) {
 
         // note down pbxproj framework munges in special section of munge obj
         // CB-5238 this is only for systems frameworks
-        var frameworks = platformTag.findall('framework');
-        frameworks.forEach(function(f) {
-            var custom = f.attrib['custom'];
-            if(!custom) {
-                var file = f.attrib['src'];
-                var weak = ('true' == f.attrib['weak']).toString();
+        if (self.platform === 'ios') {
+            var frameworks = platformTag.findall('framework');
+            frameworks.forEach(function (f) {
+                var custom = f.attrib['custom'];
+                if (!custom) {
+                    var file = f.attrib['src'];
+                    var weak = ('true' == f.attrib['weak']).toString();
 
-                deep_add(munge, 'framework', file, { xml: weak, count: 1 });
-            }
-        });
+                    deep_add(munge, 'framework', file, { xml: weak, count: 1 });
+                }
+            });
+        }
     }
 
     changes.forEach(function(change) {
