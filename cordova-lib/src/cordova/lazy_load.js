@@ -29,11 +29,22 @@ var path          = require('path'),
     tar           = require('tar'),
     URL           = require('url'),
     Q             = require('q'),
+    npm           = require('npm'),
     util          = require('./util');
 
 module.exports = {
     // Returns a promise for the path to the lazy-loaded directory.
-    cordova:function lazy_load(platform) {
+
+    cordova: function(platform, opts) {
+        var use_npm = opts && opts.usenpm && platform != 'www';
+        if ( use_npm ) {
+            return module.exports.cordova_npm(platform);
+        } else {
+            return module.exports.cordova_git(platform);
+        }
+    },
+
+    cordova_git: function lazy_load(platform) {
         if (!(platform in platforms)) {
             return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
         }
@@ -41,6 +52,21 @@ module.exports = {
         var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
         return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
     },
+
+    cordova_npm: function lazy_load_npm(platform) {
+        if (!(platform in platforms)) {
+            return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
+        }
+        var pkg = 'cordova-' + platform + '@' + platforms[platform].version;
+        return Q.nfcall( npm.load, {cache: path.join(util.libDirectory, 'npm_cache') })
+        .then(function() {
+            return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
+        }).then(function(info) {
+            var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
+            return pkgDir;
+        });
+    },
+
     // Returns a promise for the path to the lazy-loaded directory.
     custom:function(url, id, platform, version) {
         var download_dir;
@@ -139,13 +165,13 @@ module.exports = {
         });
     },
     // Returns a promise for the path to the lazy-loaded directory.
-    based_on_config:function(project_root, platform) {
+    based_on_config:function(project_root, platform, opts) {
         var custom_path = config.has_custom_path(project_root, platform);
         if (custom_path) {
             var dot_file = config.read(project_root);
             return module.exports.custom(dot_file.lib[platform].uri, dot_file.lib[platform].id, platform, dot_file.lib[platform].version);
         } else {
-            return module.exports.cordova(platform);
+            return module.exports.cordova(platform, opts);
         }
     }
 };

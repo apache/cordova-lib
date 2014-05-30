@@ -64,7 +64,7 @@ function add(hooks, projectRoot, targets, opts) {
     .then(function() {
         return targets.reduce(function(soFar, t) {
             return soFar.then(function() {
-                return lazy_load.based_on_config(projectRoot, t)
+                return lazy_load.based_on_config(projectRoot, t, opts)
                 .then(function(libDir) {
                     var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
                     var copts = null;
@@ -123,7 +123,7 @@ function update(hooks, projectRoot, targets, opts) {
         // First, lazy_load the latest version.
         return hooks.fire('before_platform_update', opts)
         .then(function() {
-            return lazy_load.based_on_config(projectRoot, plat);
+            return lazy_load.based_on_config(projectRoot, plat, opts);
         }).then(function(libDir) {
             // Call the platform's update script.
             var script = path.join(libDir, 'bin', 'update');
@@ -253,7 +253,7 @@ function list(hooks, projectRoot) {
 }
 
 // Returns a promise.
-module.exports = function platform(command, targets) {
+module.exports = function platform(command, targets, opts) {
     var projectRoot = cordova_util.cdProjectRoot();
 
     var hooks = new hooker(projectRoot);
@@ -274,9 +274,9 @@ module.exports = function platform(command, targets) {
         }
     }
 
-    var opts = {
-        platforms:targets
-    };
+    opts = opts || {};
+    opts.platforms = targets;
+
     switch(command) {
         case 'add':
             return add(hooks, projectRoot, targets, opts);

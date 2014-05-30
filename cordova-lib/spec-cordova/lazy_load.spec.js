@@ -191,7 +191,7 @@ describe('lazy_load module', function() {
         });
         it('should invoke cordova if no custom lib is specified', function(done) {
             lazy_load.based_on_config('yup', 'ios').then(function() {
-                expect(cordova).toHaveBeenCalledWith('ios');
+                expect(cordova).toHaveBeenCalled();
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);
