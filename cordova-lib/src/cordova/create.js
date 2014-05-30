@@ -98,7 +98,12 @@ function create(dir, id, name, cfg) {
         var www_version = config_json.lib.www.version || 'not_versioned';
         var www_id = config_json.lib.www.id || 'dummy_id';
         symlink  = !!config_json.lib.www.link;
-        if ( www_dir.indexOf(path.resolve(config_json.lib.www.uri)) === 0 ) {
+
+        // Make sure that the source www/ is not a direct ancestor of the target www/, or else we will recursively copy forever.
+        // To do this, we make sure that the shortest relative path from source-to-target must start by going up at least one directory.
+        var relative_path_from_source_to_target = path.relative(config_json.lib.www.uri, www_dir);
+        var does_relative_path_go_up_at_least_one_dir = relative_path_from_source_to_target.split(path.sep)[0] == '..';
+        if (!does_relative_path_go_up_at_least_one_dir) {
             throw new CordovaError(
                 'Project must not be created inside the www assets dir.' +
                 '\n    project dir:\t' + dir +
