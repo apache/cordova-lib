@@ -1,7 +1,7 @@
 /*
  * Web server is meant to support standing up a simple web server as a native platform.
  * 
- * This was copied from android but was gutted and stubed every method. Need to now
+ * This was copied from android but was gutted and stubbed every method. Need to now
  * build this up with the appropriate methods.
 */
 

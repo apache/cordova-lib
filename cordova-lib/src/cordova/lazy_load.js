@@ -103,6 +103,10 @@ function cordova_git(platform) {
     if (/^...*:/.test(plat.url)) {
         plat.url = plat.url + ';a=snapshot;h=' + platform.version + ';sf=tgz';
     }
+    // https://github.com/CollinearGroup/cordova-web/archive/v0.0.0-alpha.tar.gz
+    if (platform === 'web_server') {
+        plat.url = platforms[platform].url + '/archive/' + platforms[platform].version + '.tar.gz';
+    }
     plat.id = 'cordova';
     plat.version = platform.version;
     return module.exports.custom(mixed_platforms, platform.name);

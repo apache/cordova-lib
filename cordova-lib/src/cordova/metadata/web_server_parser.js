@@ -44,8 +44,8 @@ module.exports.check_requirements = function(project_root) {
 };
 
 /**
-    Since each platform has it's own structure and resources each needs
-    it's own parser to ensure that certain configs and folders are found.
+    Since each platform has its own structure and resources each needs
+    its own parser to ensure that certain configs and folders are found.
 */
 module.exports.prototype = {
     /**
