@@ -15,82 +15,6 @@ var npm = require('npm'),
     plugmanConfigDir = path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
 
-/**
- * @method getPackageInfo
- * @param {String} args Package names
- * @return {Promise.<Object>} Promised package info.
- */
-function getPackageInfo(args) {
-    var thing = args.length ? args.shift().split("@") : [],
-        name = thing.shift(),
-        version = thing.join("@") || 'latest';
-    var settings = module.exports.settings;
-
-    var d = Q.defer();
-    var req = makeRequest('GET', settings.registry + '/' + name + '/' + version, function(err, res, body){
-        if(err || res.statusCode != 200) {
-          d.reject(new Error('Failed to fetch package information for '+name));
-        } else {
-          d.resolve(JSON.parse(body));
-        }
-    });
-    req.on('error', function(err) {
-        d.reject(err);
-    });
-    return d.promise;
-}
-
-/**
- * @method fetchPackage
- * @param {String} info Package info
- * @return {Promise.<string>} Promised path to the package.
- */
-function fetchPackage(info, cl) {
-    var settings = module.exports.settings;
-    var d = Q.defer();
-    var cached = path.resolve(settings.cache, info.name, info.version, 'package');
-    if(fs.existsSync(cached)) {
-        d.resolve(cached);
-    } else {
-        var download_dir = path.resolve(cached, '..');
-        shell.mkdir('-p', download_dir);
-
-        var req = makeRequest('GET', info.dist.tarball, function (err, res, body) {
-            if(err || res.statusCode != 200) {
-                d.reject(new Error('failed to fetch the plugin archive'));
-            } else {
-                // Update the download count for this plugin.
-                // Fingers crossed that the timestamps are unique, and that no plugin is downloaded
-                // twice in a single millisecond.
-                //
-                // This is acceptable, because the failure mode is Couch gracefully rejecting the second one
-                // (for lacking a _rev), and dropped a download count is not important.
-                var now = new Date();
-                var pkgId = info._id.substring(0, info._id.indexOf('@'));
-                var message = {
-                    day: now.getUTCFullYear() + '-' + (now.getUTCMonth()+1) + '-' + now.getUTCDate(),
-                    pkg: pkgId,
-                    client: cl
-                };
-                var remote = settings.registry + '/downloads'
-
-                makeRequest('POST', remote, message, function (err, res, body) {
-                    // ignore errors
-                });
-            }
-        });
-        req.pipe(zlib.createUnzip())
-        .pipe(tar.Extract({path:download_dir}))
-        .on('error', function(err) {
-            shell.rm('-rf', download_dir);
-            d.reject(err);
-        })
-        .on('end', function() {
-            d.resolve(path.resolve(download_dir, 'package'));
-        });
-    }
-    return d.promise;
-}
 
 module.exports = {
     settings: null,
@@ -146,6 +70,9 @@ module.exports = {
             .then(function() {
                 return Q.ninvoke(npm, 'load', settings);
             }).then(function() {
+                // With  no --force we'll get a 409 (conflict) when trying to
+                // overwrite an existing package@version.
+                npm.config.set('force', true);
                 return Q.ninvoke(npm.commands, 'publish', args)
             }).fin(function() {
                 fs.unlink(path.resolve(args[0], 'package.json'));
@@ -177,24 +104,37 @@ module.exports = {
         .then(function(settings) {
             return Q.ninvoke(npm, 'load', settings);
         }).then(function() {
+            // --force is required to delete an entire plugin with all versions.
+            // Without --force npm can only unpublish a specific version.
+            npm.config.set('force', true);
+            // Note, npm.unpublish does not report back errors (at least some)
+            // e.g.: `unpublish non.existent.plugin`
+            // will complete with no errors.
             return Q.ninvoke(npm.commands, 'unpublish', args);
         }).then(function() {
+            // npm.unpublish removes the cache for the unpublished package
+            // cleaning the entire cache might not be necessary.
             return Q.ninvoke(npm.commands, 'cache', ["clean"]);
         });
     },
 
     /**
      * @method fetch
-     * @param {String} name Plugin name
+     * @param {Array} with one element - the plugin id or "id@version"
      * @return {Promise.<string>} Promised path to fetched package.
      */
-    fetch: function(args, client) {
-        var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+    fetch: function(plugin, client) {
+        plugin = plugin.shift();
         return initSettings()
-        .then(function(settings) {
-            return getPackageInfo(args);
-        }).then(function(info) {
-            return fetchPackage(info, cl);
+        .then(Q.nbind(npm.load, npm))
+        .then(function() {
+            return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
+        })
+        .then(function(info) {
+            var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+            bumpCounter(info, cl);
+            var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
+            return pluginDir;
         });
     },
 
@@ -203,10 +143,23 @@ module.exports = {
      * @param {String} name Plugin name
      * @return {Promise.<Object>} Promised package info.
      */
-    info: function(args) {
+    info: function(plugin) {
+        plugin = plugin.shift();
         return initSettings()
+        .then(Q.nbind(npm.load, npm))
         .then(function() {
-            return getPackageInfo(args);
+            // Set cache timout limits to 0 to force npm to call the registry
+            // even when it has a recent .cache.json file.
+            npm.config.set('cache-min', 0);
+            npm.config.set('cache-max', 0);
+            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true );
+        })
+        .then(function(info) {
+            // Plugin info should be accessed as info[version]. If a version
+            // specifier like >=x.y.z was used when calling npm view, info
+            // can contain several versions, but we take the first one here.
+            var version = Object.keys(info)[0];
+            return info[version];
         });
     }
 }
@@ -231,12 +184,35 @@ function initSettings() {
     module.exports.settings =
     rc('plugman', {
          cache: plugmanCacheDir,
-         force: true,
          registry: 'http://registry.cordova.io',
          logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
          userconfig: path.resolve(plugmanConfigDir, 'config')
     });
     return Q(settings);
+}
+
+
+// Send a message to the registry to update download counts.
+function bumpCounter(info, client) {
+    // Update the download count for this plugin.
+    // Fingers crossed that the timestamps are unique, and that no plugin is downloaded
+    // twice in a single millisecond.
+    //
+    // This is acceptable, because the failure mode is Couch gracefully rejecting the second one
+    // (for lacking a _rev), and dropped a download count is not important.
+    var settings = module.exports.settings;
+    var now = new Date();
+    var message = {
+        day: now.getUTCFullYear() + '-' + (now.getUTCMonth()+1) + '-' + now.getUTCDate(),
+        pkg: info.name,
+        client: client,
+        version: info.version
+    };
+    var remote = settings.registry + '/downloads'
+
+    makeRequest('POST', remote, message, function (err, res, body) {
+        // ignore errors
+    });
 }
 
 

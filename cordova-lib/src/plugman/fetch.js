@@ -3,6 +3,7 @@ var shell   = require('shelljs'),
     url     = require('url'),
     plugins = require('./util/plugins'),
     xml_helpers = require('../util/xml-helpers'),
+    CordovaError  = require('../CordovaError'),
     events = require('./events'),
     metadata = require('./util/metadata'),
     path    = require('path'),
@@ -45,7 +46,7 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
     if ( uri.protocol && uri.protocol != 'file:' && uri.protocol != 'c:' && !plugin_src.match(/^\w+:\\/)) {
         events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
         if (options.link) {
-            return Q.reject(new Error('--link is not supported for git URLs'));
+            return Q.reject(new CordovaError('--link is not supported for git URLs'));
         } else {
             var data = {
                 source: {
@@ -81,6 +82,11 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
             if (local_dir) {
                 p = Q(local_dir);
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + local_dir);
+            } else if ( options.noregistry ) {
+                p = Q.reject(new CordovaError(
+                        'Plugin ' + plugin_src + ' not found locally. ' +
+                        'Note, plugin registry was disabled by --noregistry flag.'
+                    ));
             } else {
                 // If not found in local search path, fetch from the registry.
                 linkable = false;

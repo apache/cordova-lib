@@ -60,14 +60,21 @@ module.exports.prototype = {
     },
 
     findAndroidLaunchModePreference: function(config) {
-        var ret = config.getPreference('AndroidLaunchMode');
-        var valid = ['standard', 'singleTop', 'singleTask', 'singleInstance'].indexOf(ret) !== -1;
-        if (ret && !valid) {
-            events.emit('warn', 'Unknown value for launchMode preference: ' + ret);
-            ret = null;
+        var launchMode = config.getPreference('AndroidLaunchMode');
+        if (!launchMode) {
+            // Return a default value
+            return 'singleTop';
         }
 
-        return ret;
+        var expectedValues = ['standard', 'singleTop', 'singleTask', 'singleInstance'];
+        var valid = expectedValues.indexOf(launchMode) !== -1;
+        if (!valid) {
+            events.emit('warn', 'Unrecognized value for AndroidLaunchMode preference: ' + launchMode);
+            events.emit('warn', '  Expected values are: ' + expectedValues.join(', '));
+            // Note: warn, but leave the launch mode as developer wanted, in case the list of options changes in the future
+        }
+
+        return launchMode;
     },
 
     update_from_config:function(config) {

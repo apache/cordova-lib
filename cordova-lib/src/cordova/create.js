@@ -27,7 +27,7 @@ var path          = require('path'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
     ConfigParser = require('./ConfigParser'),
-    util          = require('./util');
+    cordova_util  = require('./util');
 
 var DEFAULT_NAME = "HelloCordova",
     DEFAULT_ID   = "io.cordova.hellocordova";
@@ -44,7 +44,7 @@ module.exports = create;
 function create(dir, id, name, cfg) {
     if (!dir ) {
         return Q.reject(new CordovaError(
-            'At least the dir must be provided to create new project. See `corova help`.'
+            'At least the dir must be provided to create new project. See `'+cordova_util.binname+' help`.'
         ));
     }
 
@@ -98,7 +98,12 @@ function create(dir, id, name, cfg) {
         var www_version = config_json.lib.www.version || 'not_versioned';
         var www_id = config_json.lib.www.id || 'dummy_id';
         symlink  = !!config_json.lib.www.link;
-        if ( www_dir.indexOf(path.resolve(config_json.lib.www.uri)) === 0 ) {
+
+        // Make sure that the source www/ is not a direct ancestor of the target www/, or else we will recursively copy forever.
+        // To do this, we make sure that the shortest relative path from source-to-target must start by going up at least one directory.
+        var relative_path_from_source_to_target = path.relative(config_json.lib.www.uri, www_dir);
+        var does_relative_path_go_up_at_least_one_dir = relative_path_from_source_to_target.split(path.sep)[0] == '..';
+        if (!does_relative_path_go_up_at_least_one_dir) {
             throw new CordovaError(
                 'Project must not be created inside the www assets dir.' +
                 '\n    project dir:\t' + dir +
@@ -197,16 +202,13 @@ function create(dir, id, name, cfg) {
 
         // Create basic project structure.
         shell.mkdir(path.join(dir, 'platforms'));
-        if ( !custom_merges) {
-            shell.mkdir(path.join(dir, 'merges'));
-        }
         shell.mkdir(path.join(dir, 'plugins'));
         shell.mkdir(path.join(dir, 'hooks'));
 
         // Add hooks README.md
         shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
 
-        var configPath = util.projectConfig(dir);
+        var configPath = cordova_util.projectConfig(dir);
         // Add template config.xml for apps that are missing it
         if (!fs.existsSync(configPath)) {
             var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');

@@ -27,12 +27,23 @@ var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
 
 describe('PluginInfo', function () {
     it('should read a plugin.xml file', function () {
-        var p;
+        var p, prefs, assets, deps, configFiles, infos, srcFiles;
+        var headerFiles, libFiles, resourceFiles;
         expect(function () {
             p = new PluginInfo.PluginInfo(path.join(pluginsDir, 'ChildBrowser'));
+            prefs = p.getPreferences('android');
+            assets = p.getAssets('android');
+            deps = p.getDependencies('android');
+            configFiles = p.getConfigFiles('android');
+            infos = p.getInfo('android');
+            srcFiles = p.getSourceFiles('android');
+            headerFiles = p.getHeaderFiles('android');
+            libFiles = p.getLibFiles('android');
+            resourceFiles = p.getResourceFiles('android');
         }).not.toThrow();
         expect(p).toBeDefined();
         expect(p.name).toEqual('Child Browser');
+        // TODO: Add some expectations for results of getSomething.
     });
     it('should throw when there is no plugin.xml file', function () {
         expect(function () {

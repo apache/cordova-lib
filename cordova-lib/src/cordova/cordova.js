@@ -28,6 +28,8 @@ var emit = function() {
 };
 
 exports = module.exports = {
+    get binname() { return cordova_util.binname; },
+    set binname(name) { cordova_util.binname = name; },
     on:        function() {
         cordova_events.on.apply(cordova_events, arguments);
     },
@@ -64,5 +66,7 @@ addModuleProperty(module, 'platforms', './platform', true);
 addModuleProperty(module, 'compile', './compile', true);
 addModuleProperty(module, 'run', './run', true);
 addModuleProperty(module, 'info', './info', true);
+addModuleProperty(module, 'save', './save', true);
+addModuleProperty(module, 'restore', './restore', true);
 
 

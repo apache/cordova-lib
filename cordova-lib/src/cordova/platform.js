@@ -49,7 +49,7 @@ function add(hooks, projectRoot, targets, opts) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform specified. Please specify a platform to add. See "platform list".'));
+        return Q.reject(new CordovaError('No platform specified. Please specify a platform to add. See `'+cordova_util.binname+' platform list`.'));
     }
     var config_json = config.read(projectRoot);
     var platformsDir = path.join(projectRoot, 'platforms');
@@ -64,7 +64,7 @@ function add(hooks, projectRoot, targets, opts) {
     .then(function() {
         return targets.reduce(function(soFar, t) {
             return soFar.then(function() {
-                return lazy_load.based_on_config(projectRoot, t)
+                return lazy_load.based_on_config(projectRoot, t, opts)
                 .then(function(libDir) {
                     var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
                     var copts = null;
@@ -85,7 +85,7 @@ function add(hooks, projectRoot, targets, opts) {
 
 function remove(hooks, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform[s] specified. Please specify platform[s] to remove. See "platform list".'));
+        return Q.reject(new CordovaError('No platform[s] specified. Please specify platform[s] to remove. See `'+cordova_util.binname+' platform list`.'));
     }
     return hooks.fire('before_platform_rm', opts)
     .then(function() {
@@ -102,7 +102,7 @@ function remove(hooks, projectRoot, targets, opts) {
 function update(hooks, projectRoot, targets, opts) {
     // Shell out to the update script provided by the named platform.
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform specified. Please specify a platform to update. See "platform list".'));
+        return Q.reject(new CordovaError('No platform specified. Please specify a platform to update. See `'+cordova_util.binname+' platform list`.'));
     } else if (targets.length > 1) {
         return Q.reject(new CordovaError('Platform update can only be executed on one platform at a time.'));
     } else {
@@ -110,7 +110,7 @@ function update(hooks, projectRoot, targets, opts) {
         var platformPath = path.join(projectRoot, 'platforms', plat);
         var installed_platforms = cordova_util.listPlatforms(projectRoot);
         if (installed_platforms.indexOf(plat) < 0) {
-            return Q.reject(new CordovaError('Platform "' + plat + '" is not installed. See "platform list".'));
+            return Q.reject(new CordovaError('Platform "' + plat + '" is not installed. See `'+cordova_util.binname+' platform list`.'));
         }
 
         function copyCordovaJs() {
@@ -123,7 +123,7 @@ function update(hooks, projectRoot, targets, opts) {
         // First, lazy_load the latest version.
         return hooks.fire('before_platform_update', opts)
         .then(function() {
-            return lazy_load.based_on_config(projectRoot, plat);
+            return lazy_load.based_on_config(projectRoot, plat, opts);
         }).then(function(libDir) {
             // Call the platform's update script.
             var script = path.join(libDir, 'bin', 'update');
@@ -253,7 +253,7 @@ function list(hooks, projectRoot) {
 }
 
 // Returns a promise.
-module.exports = function platform(command, targets) {
+module.exports = function platform(command, targets, opts) {
     var projectRoot = cordova_util.cdProjectRoot();
 
     var hooks = new hooker(projectRoot);
@@ -264,7 +264,7 @@ module.exports = function platform(command, targets) {
         var err;
         targets.forEach(function(t) {
             if (!(t in platforms)) {
-                err = new CordovaError('Platform "' + t + '" not recognized as a core cordova platform. See "platform list".');
+                err = new CordovaError('Platform "' + t + '" not recognized as a core cordova platform. See `'+cordova_util.binname+' platform list`.');
             }
         });
         if (err) return Q.reject(err);
@@ -274,9 +274,9 @@ module.exports = function platform(command, targets) {
         }
     }
 
-    var opts = {
-        platforms:targets
-    };
+    opts = opts || {};
+    opts.platforms = targets;
+
     switch(command) {
         case 'add':
             return add(hooks, projectRoot, targets, opts);

@@ -1,3 +1,5 @@
+/* jshint node:true, asi:true, laxcomma:true, sub:true, expr:true, unused:vars */
+
 var path = require('path'),
     fs   = require('fs'),
     action_stack = require('./util/action-stack'),
@@ -6,7 +8,8 @@ var path = require('path'),
     child_process = require('child_process'),
     semver = require('semver'),
     config_changes = require('./util/config-changes'),
-    xml_helpers = require('../util/xml-helpers'),
+    PluginInfo    = require('../PluginInfo'),
+    CordovaError  = require('../CordovaError'),
     Q = require('q'),
     platform_modules = require('./platforms'),
     os = require('os'),
@@ -45,7 +48,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new Error(platform + " not supported."));
+        return Q.reject(new CordovaError(platform + " not supported."));
     }
 
     var current_stack = new action_stack();
@@ -87,7 +90,10 @@ function checkEngines(engines) {
         if(semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null){
             // engine ok!
         }else{
-            return Q.reject(new Error('Plugin doesn\'t support this project\'s '+engine.name+' version. '+engine.name+': ' + engine.currentVersion + ', failed version requirement: ' + engine.minVersion));
+            var msg = "Plugin doesn't support this project's " + engine.name + ' version. ' +
+                      engine.name + ': ' + engine.currentVersion +
+                      ', failed version requirement: ' + engine.minVersion;
+            return Q.reject(new CordovaError(msg));
         }
     }
 
@@ -131,7 +137,6 @@ function cleanVersionOutput(version, name){
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
 function callEngineScripts(engines) {
-    var engineScriptVersion;
 
     return Q.all(
         engines.map(function(engine){
@@ -214,13 +219,14 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
 
 
 function isPluginInstalled(plugins_dir, platform, plugin_id) {
+    var installed_plugin_id;
     var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (var installed_plugin_id in platform_config.installed_plugins) {
+    for (installed_plugin_id in platform_config.installed_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
     }
-    for (var installed_plugin_id in platform_config.dependent_plugins) {
+    for (installed_plugin_id in platform_config.dependent_plugins) {
         if (installed_plugin_id == plugin_id) {
             return true;
         }
@@ -231,33 +237,30 @@ function isPluginInstalled(plugins_dir, platform, plugin_id) {
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise.
 var runInstall = module.exports.runInstall = function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-    var xml_path     = path.join(plugin_dir, 'plugin.xml')
-      , plugin_et    = xml_helpers.parseElementtreeSync(xml_path)
+    var pluginInfo   = new PluginInfo.PluginInfo(plugin_dir)
       , filtered_variables = {};
-    var name         = plugin_et.findall('name').text;
-    var plugin_id    = plugin_et.getroot().attrib['id'];
 
     options = options || {};
     options.graph = options.graph || new dep_graph();
 
-    if (isPluginInstalled(plugins_dir, platform, plugin_id)) {
+    if (isPluginInstalled(plugins_dir, platform, pluginInfo.id)) {
         if (options.is_top_level) {
-            events.emit('results', 'Plugin "' + plugin_id + '" already installed on ' + platform + '.');
+            events.emit('results', 'Plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         } else {
-            events.emit('verbose', 'Dependent plugin "' + plugin_id + '" already installed on ' + platform + '.');
+            events.emit('verbose', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
         return Q();
     }
-    events.emit('log', 'Installing "' + plugin_id + '" for ' + platform);
+    events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
-    var theEngines = getEngines(plugin_et, platform, project_dir, plugin_dir);
+    var theEngines = getEngines(pluginInfo._et, platform, project_dir, plugin_dir);
 
     var install = {
         actions: actions,
         platform: platform,
         project_dir: project_dir,
         plugins_dir: plugins_dir,
-        top_plugin_id: plugin_id,
+        top_plugin_id: pluginInfo.id,
         top_plugin_dir: plugin_dir
     }
 
@@ -266,17 +269,10 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
     .then(
         function() {
             // checking preferences, if certain variables are not provided, we should throw.
-            var prefs = plugin_et.findall('./preference') || [];
-            prefs = prefs.concat(plugin_et.findall('./platform[@name="'+platform+'"]/preference'));
-            var missing_vars = [];
-            prefs.forEach(function (pref) {
-                var key = pref.attrib["name"].toUpperCase();
-                options.cli_variables = options.cli_variables || {};
-                if (options.cli_variables[key] === undefined)
-                    missing_vars.push(key)
-                else
-                    filtered_variables[key] = options.cli_variables[key]
-            });
+            var prefs = pluginInfo.getPreferences(platform);
+            options.cli_variables = options.cli_variables || {};
+            filtered_variables = underscore.pick(options.cli_variables, prefs);
+            var missing_vars = underscore.difference(prefs, Object.keys(options.cli_variables));
             install.filtered_variables = filtered_variables;
 
             if (missing_vars.length > 0) {
@@ -284,27 +280,26 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
             }
 
             // Check for dependencies
-            var dependencies = plugin_et.findall('dependency') || [];
-            dependencies = dependencies.concat(plugin_et.findall('./platform[@name="'+platform+'"]/dependency'));
-            if(dependencies && dependencies.length) {
+            var dependencies = pluginInfo.getDependencies(platform);
+            if(dependencies.length) {
                 return installDependencies(install, dependencies, options);
             }
             return Q(true);
         }
     ).then(
         function(){
-            var install_plugin_dir = path.join(plugins_dir, plugin_id);
+            var install_plugin_dir = path.join(plugins_dir, pluginInfo.id);
 
             // may need to copy to destination...
             if ( !fs.existsSync(install_plugin_dir) ) {
                 copyPlugin(plugin_dir, plugins_dir, options.link);
             }
 
-            return handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
+            return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
         }
     ).fail(
         function (error) {
-            events.emit('warn', "Failed to install '"+plugin_id+"':"+ error.stack);
+            events.emit('warn', "Failed to install '" + pluginInfo.id + "':" + error.stack);
             throw error;
         }
     );
@@ -325,22 +320,13 @@ function installDependencies(install, dependencies, options) {
     // b) Scan the top level plugin directory {$top_plugins} for matching id (searchpath)
     // c) Fetch from registry
 
-    return dependencies.reduce(function(soFar, depXml) {
+    return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
-                var dep = {
-                    id: depXml.attrib.id,
-                    subdir: depXml.attrib.subdir || '',
-                    url: depXml.attrib.url || '',
-                    git_ref: depXml.attrib.commit
-                }
+                dep.git_ref = dep.commit
 
-                if (dep.subdir.length) {
+                if (dep.subdir) {
                     dep.subdir = path.normalize(dep.subdir);
-                }
-
-                if (!dep.id) {
-                    throw new Error('<dependency> tag is missing id attribute: ' + elementtree.tostring(depXml, {xml_declaration:false}));
                 }
 
                 // We build the dependency graph only to be able to detect cycles, getChain will throw an error if it detects one
@@ -366,13 +352,14 @@ function tryFetchDependency(dep, install, options) {
     // The easy case of relative paths is to have a URL of '.' and a different subdir.
     // TODO: Implement the hard case of different repo URLs, rather than the special case of
     // same-repo-different-subdir.
+    var relativePath;
     if ( dep.url == '.' ) {
 
         // Look up the parent plugin's fetch metadata and determine the correct URL.
         var fetchdata = require('./util/metadata').get_fetch_metadata(install.top_plugin_dir);
         if (!fetchdata || !(fetchdata.source && fetchdata.source.type)) {
 
-            var relativePath = dep.subdir || dep.id;
+            relativePath = dep.subdir || dep.id;
 
             events.emit('warn', 'No fetch metadata found for plugin ' + install.top_plugin_id + '. checking for ' + relativePath + ' in '+ options.searchpath.join(','));
 
@@ -441,7 +428,7 @@ function tryFetchDependency(dep, install, options) {
 
     // Test relative to parent folder
     if( dep.url && isRelativePath(dep.url) ) {
-        var relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
+        relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
 
         if( fs.existsSync(relativePath) ) {
            dep.url = relativePath;
@@ -458,11 +445,13 @@ function tryFetchDependency(dep, install, options) {
 
 function installDependency(dep, install, options) {
 
+    var opts;
+
     dep.install_dir = path.join(install.plugins_dir, dep.id);
 
     if ( fs.existsSync(dep.install_dir) ) {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
-        var opts = underscore.extend({}, options, {
+        opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
@@ -472,7 +461,7 @@ function installDependency(dep, install, options) {
     } else {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" not fetched, retrieving then installing.');
 
-        var opts = underscore.extend({}, options, {
+        opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false,
             subdir: dep.subdir,
@@ -488,63 +477,60 @@ function installDependency(dep, install, options) {
                 return runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
             }
         );
-    };
+    }
 }
 
-function handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, www_dir, is_top_level) {
+function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, www_dir, is_top_level) {
 
     // @tests - important this event is checked spec/install.spec.js
-    events.emit('verbose', 'Install start for "' + plugin_id + '" on ' + platform + '.');
+    events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     var handler = platform_modules[platform];
     www_dir = www_dir || handler.www_dir(project_dir);
 
-    var platformTag = plugin_et.find('./platform[@name="'+platform+'"]');
-    var assets = plugin_et.findall('asset');
-    if (platformTag) {
-
-
+    var platformTag = pluginInfo._et.find('./platform[@name="'+platform+'"]');
+    if ( pluginInfo.hasPlatformSection(platform) ) {
         var sourceFiles = platformTag.findall('./source-file'),
             headerFiles = platformTag.findall('./header-file'),
             resourceFiles = platformTag.findall('./resource-file'),
             frameworkFiles = platformTag.findall('./framework[@custom="true"]'), // CB-5238 adding only custom frameworks
-            libFiles = platformTag.findall('./lib-file'),
-            assets = assets.concat(platformTag.findall('./asset'));
+            libFiles = platformTag.findall('./lib-file');
+
 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(item) {
             actions.push(actions.createAction(handler["source-file"].install,
-                                              [item, plugin_dir, project_dir, plugin_id],
+                                              [item, plugin_dir, project_dir, pluginInfo.id],
                                               handler["source-file"].uninstall,
-                                              [item, project_dir, plugin_id]));
+                                              [item, project_dir, pluginInfo.id]));
         });
 
         headerFiles && headerFiles.forEach(function(item) {
             actions.push(actions.createAction(handler["header-file"].install,
-                                             [item, plugin_dir, project_dir, plugin_id],
+                                             [item, plugin_dir, project_dir, pluginInfo.id],
                                              handler["header-file"].uninstall,
-                                             [item, project_dir, plugin_id]));
+                                             [item, project_dir, pluginInfo.id]));
         });
 
         resourceFiles && resourceFiles.forEach(function(item) {
             actions.push(actions.createAction(handler["resource-file"].install,
-                                              [item, plugin_dir, project_dir, plugin_id],
+                                              [item, plugin_dir, project_dir, pluginInfo.id],
                                               handler["resource-file"].uninstall,
-                                              [item, project_dir, plugin_id]));
+                                              [item, project_dir, pluginInfo.id]));
         });
         // CB-5238 custom frameworks only
         frameworkFiles && frameworkFiles.forEach(function(item) {
             actions.push(actions.createAction(handler["framework"].install,
-                                             [item, plugin_dir, project_dir, plugin_id],
+                                             [item, plugin_dir, project_dir, pluginInfo.id],
                                              handler["framework"].uninstall,
-                                             [item, project_dir, plugin_id]));
+                                             [item, project_dir, pluginInfo.id]));
         });
 
         libFiles && libFiles.forEach(function(item) {
             actions.push(actions.createAction(handler["lib-file"].install,
-                                                [item, plugin_dir, project_dir, plugin_id],
+                                                [item, plugin_dir, project_dir, pluginInfo.id],
                                                 handler["lib-file"].uninstall,
-                                                [item, project_dir, plugin_id]));
+                                                [item, project_dir, pluginInfo.id]));
 
         });
     }
@@ -553,21 +539,17 @@ function handleInstall(actions, plugin_id, plugin_et, platform, project_dir, plu
     return actions.process(platform, project_dir)
     .then(function(err) {
         // queue up the plugin so prepare knows what to do.
-        config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, plugin_id, platform, filtered_variables, is_top_level);
+        config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, pluginInfo.id, platform, filtered_variables, is_top_level);
         // call prepare after a successful install
         plugman.prepare(project_dir, platform, plugins_dir, www_dir);
 
-        events.emit('verbose', 'Install complete for ' + plugin_id + ' on ' + platform + '.');
+        events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // WIN!
         // Log out plugin INFO element contents in case additional install steps are necessary
-        var info = plugin_et.findall('./info');
-        if(info.length) {
-            events.emit('results', interp_vars(filtered_variables, info[0].text));
-        }
-        info = (platformTag ? platformTag.findall('./info') : []);
-        if(info.length) {
-            events.emit('results', interp_vars(filtered_variables, info[0].text));
-        }
+        var info_strings = pluginInfo.getInfo(platform) || [];
+        info_strings.forEach( function(info) {
+            events.emit('results', interp_vars(filtered_variables, info));
+        });
     });
 }
 
@@ -587,18 +569,10 @@ function isRelativePath(path) {
     return !isAbsolutePath();
 }
 
-function readId(plugin_dir) {
-    var xml_path = path.join(plugin_dir, 'plugin.xml');
-    events.emit('verbose', 'Fetch is reading plugin.xml from location "' + xml_path + '"...');
-    var et = xml_helpers.parseElementtreeSync(xml_path);
-
-    return et.getroot().attrib.id;
-}
-
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_src_dir, plugins_dir, link) {
-    var plugin_id = readId(plugin_src_dir);
-    var dest = path.join(plugins_dir, plugin_id);
+    var pluginInfo = new PluginInfo.PluginInfo(plugin_src_dir);
+    var dest = path.join(plugins_dir, pluginInfo.id);
     shell.rm('-rf', dest);
 
     if (link) {
@@ -611,19 +585,4 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
     }
 
     return dest;
-}
-
-function isPluginInstalled(plugins_dir, platform, plugin_id) {
-    var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (var installed_plugin_id in platform_config.installed_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    for (var installed_plugin_id in platform_config.dependent_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    return false;
 }

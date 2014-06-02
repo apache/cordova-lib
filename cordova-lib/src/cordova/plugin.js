@@ -26,6 +26,8 @@ var cordova_util  = require('./util'),
     config        = require('./config'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
+    ConfigParser  = require('./ConfigParser'),
+    fs            = require('fs'),
     PluginInfo    = require('../PluginInfo'),
     events        = require('./events');
 
@@ -64,7 +66,7 @@ module.exports = function plugin(command, targets, opts) {
     plugins = cordova_util.findPlugins(pluginPath);
     if (!targets || !targets.length) {
         if (command == 'add' || command == 'rm') {
-            return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more plugins!'));
+            return Q.reject(new CordovaError('You need to qualify `'+cordova_util.binname+' plugin add` or `'+cordova_util.binname+' plugin remove` with one or more plugins!'));
         } else {
             targets = [];
         }
@@ -85,7 +87,7 @@ module.exports = function plugin(command, targets, opts) {
     switch(command) {
         case 'add':
             if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See "plugin search".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
             }
 
             var config_json = config(projectRoot, {});
@@ -112,7 +114,7 @@ module.exports = function plugin(command, targets, opts) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
                         var plugman = require('../plugman/plugman');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath});
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry});
                     })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
@@ -152,14 +154,14 @@ module.exports = function plugin(command, targets, opts) {
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See "plugin list".'));
+                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
             return hooks.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See "plugin list".'));
+                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
                     }
 
                     var targetPath = path.join(pluginPath, target);
@@ -173,6 +175,15 @@ module.exports = function plugin(command, targets, opts) {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
                             var platforms = require('./platforms');
                             var parser = new platforms[platform].parser(platformRoot);
+                            //check if plugin is restorable and warn
+                            var configPath = cordova_util.projectConfig(projectRoot);
+                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                                var configXml = new ConfigParser(configPath);
+                                var features = configXml.doc.findall('./feature/param[@name="id"][@value="'+target+'"]/..');
+                                if(features && features.length){
+                                    events.emit('results','"'+target + '" plugin is restorable, call "cordova save plugins" to remove it from restorable plugins list');
+                                }
+                            }                            
                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
                         });
@@ -213,7 +224,7 @@ function list(projectRoot, hooks) {
     })
     .then(function(plugins) {
         if (plugins.length === 0) {
-            events.emit('results', 'No plugins added. Use `cordova plugin add <plugin>`.');
+            events.emit('results', 'No plugins added. Use `'+cordova_util.binname+' plugin add <plugin>`.');
             return;
         }
         var pluginsDict = {};
@@ -223,7 +234,7 @@ function list(projectRoot, hooks) {
             p = plugins[i];
             pluginsDict[p.id] = p;
             pluginsList.push(p.id);
-            txt = p.id + ' ' + p.version + ' "' + p.name + '"';
+            txt = p.id + ' ' + p.version + ' "' + (p.name || p.description) + '"';
             lines.push(txt);
         }
         // Add warnings for deps with wrong versions.
