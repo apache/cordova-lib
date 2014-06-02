@@ -40,7 +40,7 @@ module.exports = {
         version: '3.5.0'
     },
      'amazon-fireos' : {
-        parser : './metadata/amazon_fireos_parser',
+        parser: './metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
         version: '3.5.0'
     },
