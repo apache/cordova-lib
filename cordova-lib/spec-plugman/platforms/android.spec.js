@@ -1,4 +1,5 @@
 var android = require('../../src/plugman/platforms/android'),
+    android_project = require('../../src/plugman/util/android-project'),
     common  = require('../../src/plugman/platforms/common'),
     install = require('../../src/plugman/install'),
     path    = require('path'),
@@ -6,6 +7,7 @@ var android = require('../../src/plugman/platforms/android'),
     shell   = require('shelljs'),
     et      = require('elementtree'),
     os      = require('osenv'),
+    _       = require('underscore'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
@@ -113,6 +115,75 @@ describe('android project handler', function() {
                 }).toThrow('"' + target + '" already exists!');
             });
         });
+        describe('of <framework> elements', function() {
+            afterEach(function() {
+                android.purgeProjectFileCache(temp);
+            });
+            it('should update the main and library projects', function() {
+                var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
+                var subDir = path.resolve(temp, frameworkElement.attrib.src);
+                var mainProjectPropsFile = path.resolve(temp, "project.properties");
+                var subProjectPropsFile = path.resolve(subDir, "project.properties");
+
+                var existsSync = spyOn( fs, 'existsSync').andReturn(true);
+                var writeFileSync = spyOn(fs, 'writeFileSync');
+                var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
+                    if (path.normalize(file) === mainProjectPropsFile) {
+                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
+                    } else if (path.normalize(file) === subProjectPropsFile) {
+                        return '#Some comment\ntarget=android-17\nandroid.library=true';
+                    } else {
+                        throw new Error("Trying to read from an unexpected file " + file);
+                    }
+                })
+                var exec = spyOn(shell, 'exec');
+
+                android['framework'].install(frameworkElement, dummyplugin, temp);
+                android.parseProjectFile(temp).write();
+
+                expect(_.any(writeFileSync.argsForCall, function (callArgs) {
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=LibraryPath\n') > -1;
+                })).toBe(true, 'Reference to library not added');
+                expect(_.any(writeFileSync.argsForCall, function (callArgs) {
+                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19\n') > -1;
+                })).toBe(true, 'target SDK version not copied to library');
+                expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
+            });
+            it('with custom=false should update the main and library projects', function() {
+                var frameworkElement = { attrib: { src: "extras/android/support/v7/appcompat" } };
+                var subDir = path.resolve("~/android-sdk", frameworkElement.attrib.src);
+                var localPropsFile = path.resolve(temp, "local.properties");
+                var mainProjectPropsFile = path.resolve(temp, "project.properties");
+                var subProjectPropsFile = path.resolve(subDir, "project.properties");
+
+                var existsSync = spyOn( fs, 'existsSync').andReturn(true);
+                var writeFileSync = spyOn(fs, 'writeFileSync');
+                var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
+                    if (path.normalize(file) === mainProjectPropsFile) {
+                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
+                    } else if (path.normalize(file) === subProjectPropsFile) {
+                        return '#Some comment\ntarget=android-17\nandroid.library=true';
+                    } else if (path.normalize(file) === localPropsFile) {
+                        return "sdk.dir=~/android-sdk";
+                    } else {
+                        throw new Error("Trying to read from an unexpected file " + file);
+                    }
+                })
+                var exec = spyOn(shell, 'exec');
+
+                android['framework'].install(frameworkElement, dummyplugin, temp);
+                android.parseProjectFile(temp).write();
+
+                var relativePath = android_project.getRelativeLibraryPath(temp, subDir);
+                expect(_.any(writeFileSync.argsForCall, function (callArgs) {
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=' + relativePath + '\n') > -1;
+                })).toBe(true, 'Reference to library not added');
+                expect(_.any(writeFileSync.argsForCall, function (callArgs) {
+                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19\n') > -1;
+                })).toBe(true, 'target SDK version not copied to library');
+                expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
+            });
+        });
     });
 
     describe('uninstallation', function() {
@@ -150,6 +221,30 @@ describe('android project handler', function() {
                     expect(s).toHaveBeenCalledWith(temp, path.join('src', 'com', 'phonegap', 'plugins', 'dummyplugin', 'DummyPlugin.java'));
                     done();
                 });
+            });
+        });
+        describe('of <framework> elements', function() {
+            afterEach(function () {
+                android.purgeProjectFileCache(temp);
+            });
+            it('should remove library reference from the main project', function () {
+                var frameworkElement = { attrib: { src: "LibraryPath" } };
+                var sub_dir = path.resolve(temp, frameworkElement.attrib.src);
+                var mainProjectProps = path.resolve(temp, "project.properties");
+                var existsSync = spyOn(fs, 'existsSync').andReturn(true);
+                var writeFileSync = spyOn(fs, 'writeFileSync');
+                var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
+                    if (path.normalize(file) === mainProjectProps)
+                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=LibraryPath\nandroid.library.reference.3=ExistingLibRef2\n';
+                })
+                var exec = spyOn(shell, 'exec');
+
+                android['framework'].uninstall(frameworkElement, temp);
+                android.parseProjectFile(temp).write();
+
+                expect(_.any(writeFileSync.argsForCall, function (callArgs) {
+                    return callArgs[0] === mainProjectProps && callArgs[1].indexOf('\nandroid.library.reference.2=ExistingLibRef2\n') > -1;
+                })).toBe(true, 'Reference to library not removed');
             });
         });
     });

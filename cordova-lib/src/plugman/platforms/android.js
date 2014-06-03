@@ -21,7 +21,11 @@ var fs = require('fs')  // use existsSync in 0.6.x
    , path = require('path')
    , common = require('./common')
    , events = require('../events')
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
+   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
+   , properties_parser = require('properties-parser')
+   , android_project = require('../util/android-project');
+
+var projectFileCache = {};
 
 module.exports = {
     www_dir:function(project_dir) {
@@ -80,10 +84,44 @@ module.exports = {
     },
     "framework": {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.install is not supported for android');
+            var src = source_el.attrib.src;
+            var custom = source_el.attrib.custom;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', "Installing Android library: " + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir;
+            if (custom) {
+                subDir = path.resolve(project_dir, src);
+            } else {
+                var localProperties = properties_parser.createEditor(path.resolve(project_dir, "local.properties"));
+                subDir = path.resolve(localProperties.get("sdk.dir"), src);
+            }
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            projectConfig.addSubProject(parentDir, subDir);
         },
         uninstall:function(source_el, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.uninstall is not supported for android');
+            var src = source_el.attrib.src;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', "Uninstalling Android library: " + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir = path.resolve(project_dir, src);
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            projectConfig.removeSubProject(parentDir, subDir);
         }
+    },
+    parseProjectFile: function(project_dir){
+        if (!projectFileCache[project_dir]) {
+            projectFileCache[project_dir] = new android_project.AndroidProject();
+        }
+
+        return projectFileCache[project_dir];
+    },
+    purgeProjectFileCache:function(project_dir) {
+        delete projectFileCache[project_dir];
     }
 };
+
