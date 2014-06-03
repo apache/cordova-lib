@@ -27,7 +27,6 @@ var cordova = require('../src/cordova/cordova'),
     android_parser = require('../src/cordova/metadata/android_parser'),
     ios_parser = require('../src/cordova/metadata/ios_parser'),
     blackberry_parser = require('../src/cordova/metadata/blackberry10_parser'),
-    wp7_parser        = require('../src/cordova/metadata/wp7_parser'),
     wp8_parser        = require('../src/cordova/metadata/wp8_parser');
 
 var cwd = process.cwd();

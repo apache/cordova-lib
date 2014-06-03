@@ -23,7 +23,6 @@ var platform_modules = require('./platforms'),
     path            = require('path'),
     config_changes  = require('./util/config-changes'),
     xml_helpers     = require('../util/xml-helpers'),
-    wp7             = require('./platforms/wp7'),
     wp8             = require('./platforms/wp8'),
     windows8        = require('./platforms/windows8'),
     common          = require('./platforms/common');
@@ -75,8 +74,8 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // for windows phone platform we need to add all www resources to the .csproj file
     // first we need to remove them all to prevent duplicates
     var wp_csproj;
-    if(platform == 'wp7' || platform == 'wp8') {
-        wp_csproj = (platform == wp7? wp7.parseProjectFile(project_dir) : wp8.parseProjectFile(project_dir));
+    if(platform == 'wp8') {
+        wp_csproj = wp8.parseProjectFile(project_dir);
         var item_groups = wp_csproj.xml.findall('ItemGroup');
         for (var i = 0, l = item_groups.length; i < l; i++) {
             var group = item_groups[i];
@@ -181,7 +180,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8').replace(/^\ufeff/, ''); // Window BOM
             scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
             fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
-            if(platform == 'wp7' || platform == 'wp8' || platform == "windows8") {
+            if(platform == 'wp8' || platform == "windows8") {
                 wp_csproj.addSourceFile(path.join('www', 'plugins', plugin_id, fsPath));
             }
 
@@ -225,7 +224,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Writing out cordova_plugins.js...');
     fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), final_contents, 'utf-8');
 
-    if(platform == 'wp7' || platform == 'wp8' || platform == "windows8") {
+    if(platform == 'wp8' || platform == "windows8") {
         wp_csproj.addSourceFile(path.join('www', 'cordova_plugins.js'));
         wp_csproj.write();
     }

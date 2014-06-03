@@ -12,8 +12,6 @@ module.exports = function(project_dir){
             { 'platform':'ios', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-blackberry10':
             { 'platform':'blackberry10', 'scriptSrc': path.join(project_dir,'cordova','version') },
-        'cordova-wp7':
-            { 'platform':'wp7', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-wp8':
             { 'platform':'wp8', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-windows8':
@@ -29,8 +27,8 @@ module.exports = function(project_dir){
         'android-sdk' :
             { 'platform':'android', 'scriptSrc': path.join(project_dir,'cordova','android_sdk_version') },
         'windows-os' :
-            { 'platform':'wp7|wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_os_version') },
+            { 'platform':'wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_os_version') },
         'windows-sdk' :
-            { 'platform':'wp7|wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_sdk_version') }
+            { 'platform':'wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_sdk_version') }
     }
 };
