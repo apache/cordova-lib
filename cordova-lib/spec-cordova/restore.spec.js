@@ -36,7 +36,7 @@ describe('restore command', function(){
 
   beforeEach(function(){
     is_cordova = spyOn(cordova_util, 'isCordova').andReturn(project_dir);
-   
+
   });
 
   it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
@@ -47,17 +47,17 @@ describe('restore command', function(){
   });
 
   it('should not try to restore featrues from config.xml', function(){
- 
- 
+
+
    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
- 
+
     var call_count =0;
     ConfigParser.prototype.write = function(){
       call_count++;
     }
 
      expect(call_count).toEqual(0);
-     
+
      cordova.restore('plugins');
 
      expect(call_count).toEqual(0);

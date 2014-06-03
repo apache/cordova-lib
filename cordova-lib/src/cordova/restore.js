@@ -29,7 +29,7 @@ var cordova_util    = require('./util'),
 module.exports = function restore(target){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
-    var configXml = new ConfigParser(configPath);    
+    var configXml = new ConfigParser(configPath);
     return installPluginsFromConfigXML(configXml);
 }
 
@@ -53,7 +53,7 @@ function installPluginsFromConfigXML(cfg){
             if(params[i].attrib.name === 'version'){
               pluginVersion = params[i].attrib.value;
             }
-          } 
+          }
           var pluginPath =  path.join(plugins_dir,pluginId);
           // contents of the plugins folder takes precedence hence
           // we ignore if the correct version is installed or not.
@@ -66,9 +66,9 @@ function installPluginsFromConfigXML(cfg){
           }
 
         })
-        
-        //Use cli instead of plugman directly ensuring all the hooks 
-        // to get fired.  
+
+        //Use cli instead of plugman directly ensuring all the hooks
+        // to get fired.
         if(pluginsFromConfig.length >0){
             return plugin("add",pluginsFromConfig);
         }

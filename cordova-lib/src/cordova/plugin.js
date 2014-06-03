@@ -183,7 +183,7 @@ module.exports = function plugin(command, targets, opts) {
                                 if(features && features.length){
                                     events.emit('results','"'+target + '" plugin is restorable, call "cordova save plugins" to remove it from restorable plugins list');
                                 }
-                            }                            
+                            }
                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
                         });

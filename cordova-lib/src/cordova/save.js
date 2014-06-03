@@ -34,16 +34,16 @@ module.exports = function save(target, opts){
   var features = configXml.doc.findall('./feature/param[@name="id"]/..');
   //clear obsolete features with id params.
   for(var i=0; i<features.length; i++){
-     //somehow elementtree remove fails on me  
+     //somehow elementtree remove fails on me
      var childs = configXml.doc.getroot().getchildren();
      var idx = childs.indexOf(features[i]);
      if(idx > -1){
         childs.splice(idx,1);
       }
   }
-  // persist the removed features here if there are no plugins 
-  // to be added to config.xml otherwise we can delay the 
-  // persist to add feature    
+  // persist the removed features here if there are no plugins
+  // to be added to config.xml otherwise we can delay the
+  // persist to add feature
   if((!plugins || plugins.length<1) &&
         (features && features.length)){
       configXml.write();

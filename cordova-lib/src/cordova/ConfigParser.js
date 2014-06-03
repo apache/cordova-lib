@@ -158,7 +158,7 @@ ConfigParser.prototype = {
     /**
      *This does not check for duplicate feature entries
      */
-    addFeature: function (name, params){ 
+    addFeature: function (name, params){
       var el = new et.Element('feature');
         el.attrib.name = name;
         if(params){
@@ -170,7 +170,7 @@ ConfigParser.prototype = {
           });
         }
         this.doc.getroot().append(el);
-    },    
+    },
     write:function() {
         fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');
     }

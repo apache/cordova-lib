@@ -69,7 +69,7 @@ module.exports.prototype = {
 
         return ret;
     },
-    
+
     update_from_config:function(config) {
         if (config instanceof ConfigParser) {
         } else throw new Error('update_from_config requires a ConfigParser object');
@@ -189,7 +189,7 @@ module.exports.prototype = {
         manifest.getroot().attrib.package = pkg;
 
         var act = manifest.getroot().find('./application/activity');
-        
+
          // Set the orientation in the AndroidManifest
         var orientationPref = this.findOrientationPreference(config);
         if (orientationPref) {
@@ -204,7 +204,7 @@ module.exports.prototype = {
                     act.attrib["android:screenOrientation"] = 'landscape';
             }
         }
-        
+
         // Set android:launchMode in AndroidManifest
         var androidLaunchModePref = this.findAndroidLaunchModePreference(config);
         if (androidLaunchModePref) {

@@ -2,7 +2,7 @@
     Helper for Android projects configuration
 */
 
-var fs = require('fs'), 
+var fs = require('fs'),
     path = require('path'),
     properties_parser = require('properties-parser'),
     shell = require('shelljs');

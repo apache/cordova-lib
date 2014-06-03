@@ -36,7 +36,7 @@ describe('save command', function(){
 
   beforeEach(function(){
     is_cordova = spyOn(cordova_util, 'isCordova').andReturn(project_dir);
-   
+
   });
 
   it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
