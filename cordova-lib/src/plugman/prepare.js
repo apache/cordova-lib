@@ -178,7 +178,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             }
 
             var fsPath = path.join.apply(path, pathParts);
-            var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8');
+            var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8').replace(/^\ufeff/, ''); // Window BOM
             scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
             fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
             if(platform == 'wp7' || platform == 'wp8' || platform == "windows8") {
