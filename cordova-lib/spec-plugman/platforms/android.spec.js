@@ -1,4 +1,5 @@
 var android = require('../../src/plugman/platforms/android'),
+    android_project = require('../../src/plugman/util/android-project'),
     common  = require('../../src/plugman/platforms/common'),
     install = require('../../src/plugman/install'),
     path    = require('path'),
@@ -173,7 +174,7 @@ describe('android project handler', function() {
                 android['framework'].install(frameworkElement, dummyplugin, temp);
                 android.parseProjectFile(temp).write();
 
-                var relativePath = android.getRelativeLibraryPath(temp, subDir);
+                var relativePath = android_project.getRelativeLibraryPath(temp, subDir);
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=' + relativePath + '\n') > -1;
                 })).toBe(true, 'Reference to library not added');
@@ -223,11 +224,14 @@ describe('android project handler', function() {
             });
         });
         describe('of <framework> elements', function() {
-            it('should remove library reference from the main project', function() {
+            afterEach(function () {
+                android.purgeProjectFileCache(temp);
+            });
+            it('should remove library reference from the main project', function () {
                 var frameworkElement = { attrib: { src: "LibraryPath" } };
                 var sub_dir = path.resolve(temp, frameworkElement.attrib.src);
                 var mainProjectProps = path.resolve(temp, "project.properties");
-                var existsSync = spyOn( fs, 'existsSync').andReturn(true);
+                var existsSync = spyOn(fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
                     if (path.normalize(file) === mainProjectProps)
