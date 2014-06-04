@@ -465,7 +465,8 @@
       }
     },
     "properties-parser": {
-      "from": "git://github.com/mbektchiev/node-properties-parser#cordova-lib"
+      "version": "~0.2.2",
+      "from": "properties-parser@0.2.2"
     },
     "q": {
       "version": "0.9.7",

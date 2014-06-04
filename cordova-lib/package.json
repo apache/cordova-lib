@@ -26,7 +26,7 @@
     "npmconf": "0.1.x",
     "osenv": "0.0.x",
     "plist-with-patches": "0.5.x",
-    "properties-parser": "git://github.com/mbektchiev/node-properties-parser",
+    "properties-parser": "~0.2.2",
     "q": "~0.9",
     "rc": "0.3.0",
     "request": "2.22.0",
