@@ -46,7 +46,7 @@ module.exports = function plugin(command, targets, opts) {
     targets = targets || [];
     opts = opts || {};
     if ( opts.length ) {
-        // This is the case with multiple targes as separate arguments and opts is not opts but another target.
+        // This is the case with multiple targets as separate arguments and opts is not opts but another target.
         targets = Array.prototype.slice.call(arguments, 1);
         opts = {};
     }
@@ -54,7 +54,7 @@ module.exports = function plugin(command, targets, opts) {
         // This means we had a single target given as string.
         targets = [targets];
     }
-    opts.options = [];
+    opts.options = opts.options || [];
     opts.plugins = [];
 
     var hooks = new hooker(projectRoot);
@@ -124,12 +124,15 @@ module.exports = function plugin(command, targets, opts) {
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
                                     parser = new platforms[platform].parser(platformRoot),
                                     options = {
-                                        cli_variables: {},
+                                        cli_variables: opts.cli_variables || {},
                                         searchpath: searchPath
                                     },
                                     tokens,
                                     key,
                                     i;
+
+                                // TODO: Remove this. CLI vars are passed as part of the opts object after "nopt" refactoring.
+                                // Keeping for now for compatibility for API users.
                                 //parse variables into cli_variables
                                 for (i=0; i< opts.options.length; i++) {
                                     if (opts.options[i] === "--variable" && typeof opts.options[++i] === "string") {
