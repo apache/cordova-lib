@@ -26,7 +26,7 @@ var path          = require('path'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
-    ConfigParser = require('./ConfigParser'),
+    ConfigParser = require('../configparser/ConfigParser'),
     cordova_util  = require('./util');
 
 var DEFAULT_NAME = "HelloCordova",
