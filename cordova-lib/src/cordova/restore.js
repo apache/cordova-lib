@@ -18,7 +18,7 @@
 */
 
 var cordova_util    = require('./util'),
-    ConfigParser     = require('./ConfigParser'),
+    ConfigParser     = require('../configparser/ConfigParser'),
     path             = require('path'),
     xml              = require('../util/xml-helpers')
     Q                = require('q'),

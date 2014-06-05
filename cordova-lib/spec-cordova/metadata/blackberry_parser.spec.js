@@ -27,7 +27,7 @@ var platforms = require('../../src/cordova/platforms'),
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/cordova/ConfigParser'),
+    ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));

@@ -17,7 +17,7 @@
     under the License.
 */
 var cordova_util      = require('./util'),
-    ConfigParser = require('./ConfigParser'),
+    ConfigParser      = require('../configparser/ConfigParser'),
     path              = require('path'),
     platforms         = require('./platforms'),
     platform          = require('./platform'),

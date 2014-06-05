@@ -24,7 +24,7 @@ var fs            = require('fs'),
     shell         = require('shelljs'),
     project_config= require('../config'),
     Q             = require('q'),
-    ConfigParser  = require('../ConfigParser'),
+    ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
 
 var default_prefs = {

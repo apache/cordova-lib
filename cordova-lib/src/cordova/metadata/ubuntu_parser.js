@@ -27,7 +27,7 @@ var fs            = require('fs'),
     project_config= require('../config'),
     Q             = require('q'),
     os            = require('os'),
-    ConfigParser  = require('../ConfigParser'),
+    ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
 
 module.exports = function(project) {

@@ -21,7 +21,7 @@ var project_dir = path.join(__dirname, 'fixtures', 'base');
 
 var cordova = require('../src/cordova/cordova'),
     cordova_util = require('../src/cordova/util'),
-    ConfigParser = require('../src/cordova/ConfigParser');
+    ConfigParser = require('../src/configparser/ConfigParser');
 
 describe('save command', function(){
   var is_cordova, result, config_add_feature, cd_project;

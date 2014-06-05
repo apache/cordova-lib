@@ -22,7 +22,7 @@ var platforms = require('../../src/cordova/platforms'),
     shell = require('shelljs'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/cordova/ConfigParser'),
+    ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));

@@ -25,7 +25,7 @@ var platforms = require('../../src/cordova/platforms'),
     xmlHelpers = require('../../src/util/xml-helpers'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/cordova/ConfigParser'),
+    ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
 // Create a real config object before mocking out everything.

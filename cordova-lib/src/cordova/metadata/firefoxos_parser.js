@@ -23,7 +23,7 @@ var fs = require('fs'),
     util = require('../util'),
     events = require('../events'),
     Q = require('q'),
-    ConfigParser = require('../ConfigParser');
+    ConfigParser = require('../../configparser/ConfigParser');
 
 module.exports = function firefoxos_parser(project) {
     this.path = project;

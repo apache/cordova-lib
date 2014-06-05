@@ -25,7 +25,7 @@ var fs            = require('fs'),
     shell         = require('shelljs'),
     plist         = require('plist-with-patches'),
     Q             = require('q'),
-    ConfigParser  = require('../ConfigParser'),
+    ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     config        = require('../config');
 

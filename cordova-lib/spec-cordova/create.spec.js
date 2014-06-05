@@ -25,7 +25,7 @@ var helpers = require('./helpers'),
     config = require('../src/cordova/config'),
     events = require('../src/cordova/events'),
     util = require('../src/cordova/util'),
-    ConfigParser = require('../src/cordova/ConfigParser'),
+    ConfigParser = require('../src/configparser/ConfigParser'),
     cordova = require('../src/cordova/cordova');
 
 // A utility function to generate all combinations of elements from 2 arrays.
