@@ -19,16 +19,68 @@
 #
 -->
 
-# cordova-lib
-Contains npm modules used primarily by [cordova](https://github.com/apache/cordova-cli/) and [plugman](https://github.com/apache/cordova-plugman/).
+# Cordova-Lib
 
-## Setup
-* Clone this repository onto your local machine. 
-    `git clone https://git-wip-us.apache.org/repos/asf/cordova-lib.git`
-* In terminal, navigate to the inner cordova-lib directory.
-    `cd cordova-lib/cordova-lib`
-* Install dependencies and npm-link
-    `npm install && npm link`
-* Navigate to CLI and Plugman directories and link cordova-lib
-    `cd ../../cordova-cli && npm link cordova-lib && npm install`
-    `cd ../../cordova-plugman && npm link cordova-lib && npm install`
+## ConfigParser
+
+wraps a valid cordova config.xml file 
+
+### Usage
+
+### Include the ConfigParser module in a projet
+
+    var ConfigParser = require('cordova-lib').configparser;
+
+### Create a new ConfigParser
+
+    var config = new ConfigParser('path/to/config/xml/');
+    
+### Utility Functions
+
+#### packageName(id)
+returns document root 'id' attribute value
+#### Usage
+
+    config.packageName: function(id) 
+
+/*
+ * sets document root element 'id' attribute to @id
+ *
+ * @id - new id value
+ *
+ */
+#### setPackageName(id)
+set document root 'id' attribute to 
+ function(id) {
+        this.doc.getroot().attrib['id'] = id;
+    },
+
+### 
+    name: function() {
+        return getNodeTextSafe(this.doc.find('name'));
+    },
+    setName: function(name) {
+        var el = findOrCreate(this.doc, 'name');
+        el.text = name;
+    },
+
+### read the description element
+    
+    config.description()
+
+    var text = "New and improved description of App"
+    setDescription(text)
+    
+### version management
+    version()
+    android_versionCode()
+    ios_CFBundleVersion()
+    setVersion()
+    
+### read author element
+
+   config.author();
+
+### read preference
+
+    config.getPreference(name);
