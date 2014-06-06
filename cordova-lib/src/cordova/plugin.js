@@ -125,7 +125,8 @@ module.exports = function plugin(command, targets, opts) {
                                     parser = new platforms[platform].parser(platformRoot),
                                     options = {
                                         cli_variables: opts.cli_variables || {},
-                                        searchpath: searchPath
+                                        searchpath: searchPath,
+                                        noregistry: opts.noregistry,
                                     },
                                     tokens,
                                     key,
