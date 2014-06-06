@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, laxcomma:true, strict:false, trailing:true, unused:vars */
+
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -33,6 +36,11 @@ var config            = require('./config'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
     shell             = require('shelljs');
+
+// Expose the platform parsers on top of this command
+for (var p in platforms) {
+    module.exports[p] = platforms[p];
+}
 
 function getVersionFromScript(script, defaultValue) {
     var versionPromise = Q(defaultValue);
@@ -81,7 +89,7 @@ function add(hooks, projectRoot, targets, opts) {
     .then(function() {
         return hooks.fire('after_platform_add', opts);
     });
-};
+}
 
 function remove(hooks, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
@@ -101,46 +109,48 @@ function remove(hooks, projectRoot, targets, opts) {
 
 function update(hooks, projectRoot, targets, opts) {
     // Shell out to the update script provided by the named platform.
-    if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform specified. Please specify a platform to update. See `'+cordova_util.binname+' platform list`.'));
+    var msg;
+    if ( !targets || !targets.length ) {
+        msg = 'No platform specified. Please specify a platform to update. See `' +
+              cordova_util.binname + ' platform list`.';
+        return Q.reject(new CordovaError(msg));
     } else if (targets.length > 1) {
-        return Q.reject(new CordovaError('Platform update can only be executed on one platform at a time.'));
-    } else {
-        var plat = targets[0];
-        var platformPath = path.join(projectRoot, 'platforms', plat);
-        var installed_platforms = cordova_util.listPlatforms(projectRoot);
-        if (installed_platforms.indexOf(plat) < 0) {
-            return Q.reject(new CordovaError('Platform "' + plat + '" is not installed. See `'+cordova_util.binname+' platform list`.'));
-        }
-
-        function copyCordovaJs() {
-            var parser = new platforms[plat].parser(platformPath);
-            var platform_www = path.join(platformPath, 'platform_www');
-            shell.mkdir('-p', platform_www);
-            shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
-        }
-
-        // First, lazy_load the latest version.
-        return hooks.fire('before_platform_update', opts)
-        .then(function() {
-            return lazy_load.based_on_config(projectRoot, plat, opts);
-        }).then(function(libDir) {
-            // Call the platform's update script.
-            var script = path.join(libDir, 'bin', 'update');
-            return superspawn.spawn(script, [platformPath], { stdio: 'inherit' })
-            .then(function() {
-                // Copy the new cordova.js from www -> platform_www.
-                copyCordovaJs();
-                // Leave it to the update script to log out "updated to v FOO".
-            });
-        });
+        msg = 'Platform update can only be executed on one platform at a time.';
+        return Q.reject(new CordovaError(msg));
     }
+    var plat = targets[0];
+    var platformPath = path.join(projectRoot, 'platforms', plat);
+    var installed_platforms = cordova_util.listPlatforms(projectRoot);
+    if (installed_platforms.indexOf(plat) < 0) {
+        msg = 'Platform "' + plat + '" is not installed. See `' +
+              cordova_util.binname + ' platform list`.';
+        return Q.reject(new CordovaError(msg));
+    }
+
+    // First, lazy_load the latest version.
+    return hooks.fire('before_platform_update', opts)
+    .then(function() {
+        return lazy_load.based_on_config(projectRoot, plat, opts);
+    })
+    .then(function(libDir) {
+        // Call the platform's update script.
+        var script = path.join(libDir, 'bin', 'update');
+        return superspawn.spawn(script, [platformPath], { stdio: 'inherit' });
+    })
+    .then(function() {
+         // Copy the new cordova.js from www -> platform_www.
+        var parser = new platforms[plat].parser(platformPath);
+        var platform_www = path.join(platformPath, 'platform_www');
+        shell.mkdir('-p', platform_www);
+        shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
+        // Leave it to the update script to log out "updated to v FOO".
+    });
 }
 
 function check(hooks, projectRoot) {
     var platformsText = [],
         platforms_on_fs = cordova_util.listPlatforms(projectRoot),
-        scratch = path.join(os.tmpdir(), "cordova-platform-check-"+Date.now()),
+        scratch = path.join(os.tmpdir(), 'cordova-platform-check-' + Date.now()),
         listeners = events._events;
         events._events = {};
     var result = Q.defer();
@@ -196,7 +206,7 @@ function check(hooks, projectRoot) {
             events._events = listeners;
             shell.rm('-rf', scratch);
             if (platformsText) {
-                results = platformsText.filter(function (p) {return !!p}).sort().join('\n');
+                results = platformsText.filter(function (p) { return !!p; }).sort().join('\n');
             }
             if (!results) {
                 results = 'All platforms are up-to-date.';
@@ -253,7 +263,8 @@ function list(hooks, projectRoot) {
 }
 
 // Returns a promise.
-module.exports = function platform(command, targets, opts) {
+module.exports = platform;
+function platform(command, targets, opts) {
     var projectRoot = cordova_util.cdProjectRoot();
 
     var hooks = new hooker(projectRoot);
@@ -268,11 +279,10 @@ module.exports = function platform(command, targets, opts) {
             }
         });
         if (err) return Q.reject(err);
-    } else {
-        if (command == 'add' || command == 'rm') {
-            return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more platforms!'));
-        }
+    } else if (command == 'add' || command == 'rm') {
+        return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more platforms!'));
     }
+
 
     opts = opts || {};
     opts.platforms = targets;
@@ -288,12 +298,10 @@ module.exports = function platform(command, targets, opts) {
             return update(hooks, projectRoot, targets, opts);
         case 'check':
             return check(hooks, projectRoot);
-        case 'ls':
-        case 'list':
         default:
             return list(hooks, projectRoot);
     }
-};
+}
 
 /**
  * Check Platform Support.
@@ -321,15 +329,11 @@ function supports(project_root, name) {
 
     // check for platform support
     return platformParser.check_requirements(project_root);
-};
-
-// Expose the platform parsers on top of this command
-for (var p in platforms) {
-    module.exports[p] = platforms[p];
 }
+
 function createOverrides(projectRoot, target) {
     shell.mkdir('-p', path.join(cordova_util.appDir(projectRoot), 'merges', target));
-};
+}
 
 // Returns a promise.
 function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) {
@@ -347,13 +351,14 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
             events.emit('log', 'Creating ' + target + ' project...');
             var bin = path.join(libDir, 'bin', 'create');
             var args = [];
+            var platformVersion;
             if (target == 'android') {
-                var platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
+                platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
                 if (semver.gt(platformVersion, '3.3.0')) {
                     args.push('--cli');
                 }
             } else if (target == 'ios') {
-                var platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
+                platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
                 args.push('--arc');
                 if (semver.gt(platformVersion, '3.3.0')) {
                     args.push('--cli');
@@ -375,7 +380,6 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
                 // Install all currently installed plugins into this new platform.
                 var plugins_dir = path.join(projectRoot, 'plugins');
                 var plugins = cordova_util.findPlugins(plugins_dir);
-                var parser = new platforms[target].parser(output);
                 if (!plugins) return Q();
 
                 var plugman = require('../plugman/plugman');
