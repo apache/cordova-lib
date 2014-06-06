@@ -142,10 +142,10 @@ describe('android project handler', function() {
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=LibraryPath\n') > -1;
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=LibraryPath') > -1;
                 })).toBe(true, 'Reference to library not added');
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19\n') > -1;
+                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
                 })).toBe(true, 'target SDK version not copied to library');
                 expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
             });
@@ -176,10 +176,10 @@ describe('android project handler', function() {
 
                 var relativePath = android_project.getRelativeLibraryPath(temp, subDir);
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=' + relativePath + '\n') > -1;
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=' + relativePath) > -1;
                 })).toBe(true, 'Reference to library not added');
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19\n') > -1;
+                    return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
                 })).toBe(true, 'target SDK version not copied to library');
                 expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
             });
@@ -243,7 +243,7 @@ describe('android project handler', function() {
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectProps && callArgs[1].indexOf('\nandroid.library.reference.2=ExistingLibRef2\n') > -1;
+                    return callArgs[0] === mainProjectProps && callArgs[1].indexOf('\nandroid.library.reference.2=ExistingLibRef2') > -1;
                 })).toBe(true, 'Reference to library not removed');
             });
         });
