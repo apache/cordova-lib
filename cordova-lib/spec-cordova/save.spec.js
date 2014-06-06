@@ -42,7 +42,7 @@ describe('save command', function(){
   it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
      is_cordova.andReturn(false);
      wrapper(cordova.raw.save, function() {
-        expect(result).toEqual(new Error('Current working directory is not a Cordova-based project.'));
+        expect('' + result).toMatch('Current working directory is not a Cordova-based project.');
      });
   });
 
