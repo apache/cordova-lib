@@ -93,7 +93,7 @@ module.exports = {
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
             if (custom) {
-                subDir = path.resolve(project_dir, src);
+                subDir = path.resolve(plugin_dir, src);
             } else {
                 var localProperties = properties_parser.createEditor(path.resolve(project_dir, "local.properties"));
                 subDir = path.resolve(localProperties.get("sdk.dir"), src);

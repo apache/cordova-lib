@@ -119,21 +119,22 @@ describe('android project handler', function() {
             afterEach(function() {
                 android.purgeProjectFileCache(temp);
             });
-            it('should update the main and library projects', function() {
+            it('with custom=true should update the main and library projects', function() {
                 var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var subDir = path.resolve(temp, frameworkElement.attrib.src);
+                var subDir = path.resolve(dummyplugin, frameworkElement.attrib.src);
                 var mainProjectPropsFile = path.resolve(temp, "project.properties");
                 var subProjectPropsFile = path.resolve(subDir, "project.properties");
 
                 var existsSync = spyOn( fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
-                    if (path.normalize(file) === mainProjectPropsFile) {
+                    file = path.normalize(file);
+                    if (file === mainProjectPropsFile) {
                         return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
-                    } else if (path.normalize(file) === subProjectPropsFile) {
+                    } else if (file === subProjectPropsFile) {
                         return '#Some comment\ntarget=android-17\nandroid.library=true';
                     } else {
-                        throw new Error("Trying to read from an unexpected file " + file);
+                        throw new Error("Trying to read from an unexpected file " + file + '\n expected: ' + mainProjectPropsFile + '\n' + subProjectPropsFile);
                     }
                 })
                 var exec = spyOn(shell, 'exec');
@@ -142,7 +143,7 @@ describe('android project handler', function() {
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=LibraryPath') > -1;
+                    return callArgs[0] === mainProjectPropsFile && !!/\nandroid.library.reference.3=.*?LibraryPath/.exec(callArgs[1]);
                 })).toBe(true, 'Reference to library not added');
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
