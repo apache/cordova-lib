@@ -295,7 +295,7 @@ var runInstall = module.exports.runInstall = function runInstall(actions, platfo
                 copyPlugin(plugin_dir, plugins_dir, options.link);
             }
 
-            return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options.www_dir, options.is_top_level);
+            return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
         }
     ).fail(
         function (error) {
@@ -480,13 +480,13 @@ function installDependency(dep, install, options) {
     }
 }
 
-function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, www_dir, is_top_level) {
+function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, options) {
 
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     var handler = platform_modules[platform];
-    www_dir = www_dir || handler.www_dir(project_dir);
+    www_dir = options.www_dir || handler.www_dir(project_dir);
 
     var platformTag = pluginInfo._et.find('./platform[@name="'+platform+'"]');
     if ( pluginInfo.hasPlatformSection(platform) ) {
@@ -539,9 +539,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     return actions.process(platform, project_dir)
     .then(function(err) {
         // queue up the plugin so prepare knows what to do.
-        config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, pluginInfo.id, platform, filtered_variables, is_top_level);
+        config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, pluginInfo.id, platform, filtered_variables, options.is_top_level);
         // call prepare after a successful install
-        plugman.prepare(project_dir, platform, plugins_dir, www_dir);
+        plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
 
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // WIN!
