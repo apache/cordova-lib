@@ -63,7 +63,6 @@ plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
-//addProperty(plugman, 'prepare', './prepare');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);
@@ -120,8 +119,8 @@ plugman.commands =  {
             return console.log(plugman.help());
         }
         
-        cli_opts.browserify === true ?  addProperty(plugman, 'prepare', './src/prepare-browserify') :
-                                        addProperty(plugman, 'prepare', './src/prepare');
+        cli_opts.browserify === true ?  addProperty(plugman, 'prepare', './prepare-browserify') :
+                                        addProperty(plugman, 'prepare', './prepare');
 
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
