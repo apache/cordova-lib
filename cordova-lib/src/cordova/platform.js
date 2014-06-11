@@ -69,23 +69,20 @@ function add(hooks, projectRoot, targets, opts) {
     }
 
     return hooks.fire('before_platform_add', opts)
-    .then(function() {
-        return targets.reduce(function(soFar, t) {
-            return soFar.then(function() {
-                return lazy_load.based_on_config(projectRoot, t, opts)
-                .then(function(libDir) {
-                    var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
-                    var copts = null;
-                    if ('spawnoutput' in opts) {
-                        copts = opts.spawnoutput;
-                    }
-                    return call_into_create(t, projectRoot, cfg, libDir, template, copts);
-                }, function(err) {
-                    throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
-                });
-            });
-        }, Q());
-    })
+    .then(cordova_util.Q_chainmap(targets, function(t) {
+        return lazy_load.based_on_config(projectRoot, t, opts)
+        .fail(function(err) {
+            throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
+        })
+        .then(function(libDir) {
+            var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
+            var copts = null;
+            if ('spawnoutput' in opts) {
+                copts = opts.spawnoutput;
+            }
+            return call_into_create(t, projectRoot, cfg, libDir, template, copts);
+        });
+    }))
     .then(function() {
         return hooks.fire('after_platform_add', opts);
     });
