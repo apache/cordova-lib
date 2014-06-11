@@ -338,61 +338,63 @@ function createOverrides(projectRoot, target) {
 // Returns a promise.
 function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) {
     var output = path.join(projectRoot, 'platforms', target);
+    var msg;
 
     // Check if output directory already exists.
     if (fs.existsSync(output)) {
-        return Q.reject(new CordovaError('Platform ' + target + ' already added'));
-    } else {
-        // Make sure we have minimum requirements to work with specified platform
-        events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
-        /* XXX this is calling the public symbol so that Jasmine Spy can attack it */
-        return module.exports.supports(projectRoot, target)
-        .then(function() {
-            events.emit('log', 'Creating ' + target + ' project...');
-            var bin = path.join(libDir, 'bin', 'create');
-            var args = [];
-            var platformVersion;
-            if (target == 'android') {
-                platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
-                if (semver.gt(platformVersion, '3.3.0')) {
-                    args.push('--cli');
-                }
-            } else if (target == 'ios') {
-                platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
-                args.push('--arc');
-                if (semver.gt(platformVersion, '3.3.0')) {
-                    args.push('--cli');
-                }
-            }
-
-            var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
-            var name = cfg.name();
-            args.push(output, pkg, name);
-            if (template_dir) {
-                args.push(template_dir);
-            }
-            return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
-            .then(function() {
-                return require('./cordova').raw.prepare(target);
-            })
-            .then(function() {
-                createOverrides(projectRoot, target);
-                // Install all currently installed plugins into this new platform.
-                var plugins_dir = path.join(projectRoot, 'plugins');
-                var plugins = cordova_util.findPlugins(plugins_dir);
-                if (!plugins) return Q();
-
-                var plugman = require('../plugman/plugman');
-                // Install them serially.
-                return plugins.reduce(function(soFar, plugin) {
-                    return soFar.then(function() {
-                        events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                        return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
-                    });
-                }, Q());
-            });
-        });
+        msg = 'Platform ' + target + ' already added';
+        return Q.reject(new CordovaError(msg));
     }
+
+    // Make sure we have minimum requirements to work with specified platform
+    events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
+    /* XXX this is calling the public symbol so that Jasmine Spy can attack it */
+    return module.exports.supports(projectRoot, target)
+    .then(function() {
+        events.emit('log', 'Creating ' + target + ' project...');
+        var bin = path.join(libDir, 'bin', 'create');
+        var args = [];
+        var platformVersion;
+        if (target == 'android') {
+            platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
+            if (semver.gt(platformVersion, '3.3.0')) {
+                args.push('--cli');
+            }
+        } else if (target == 'ios') {
+            platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
+            args.push('--arc');
+            if (semver.gt(platformVersion, '3.3.0')) {
+                args.push('--cli');
+            }
+        }
+
+        var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
+        var name = cfg.name();
+        args.push(output, pkg, name);
+        if (template_dir) {
+            args.push(template_dir);
+        }
+        return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
+        .then(function() {
+            return require('./cordova').raw.prepare(target);
+        })
+        .then(function() {
+            createOverrides(projectRoot, target);
+            // Install all currently installed plugins into this new platform.
+            var plugins_dir = path.join(projectRoot, 'plugins');
+            var plugins = cordova_util.findPlugins(plugins_dir);
+            if (!plugins) return Q();
+
+            var plugman = require('../plugman/plugman');
+            // Install them serially.
+            return plugins.reduce(function(soFar, plugin) {
+                return soFar.then(function() {
+                    events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
+                    return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
+                });
+            }, Q());
+        });
+    });
 }
 
 module.exports.add = add;
