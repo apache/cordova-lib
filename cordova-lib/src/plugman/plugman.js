@@ -40,6 +40,7 @@ function addProperty(o, symbol, modulePath, doWrap) {
     } else {
         // The top-level plugman.foo
         Object.defineProperty(o, symbol, {
+            configurable: true,
             get : function() { return val = val || require(modulePath); },
             set : function(v) { val = v; }
         });
@@ -47,6 +48,7 @@ function addProperty(o, symbol, modulePath, doWrap) {
 
     // The plugman.raw.foo
     Object.defineProperty(o.raw, symbol, {
+        configurable: true,
         get : function() { return val = val || require(modulePath); },
         set : function(v) { val = v; }
     });
@@ -63,6 +65,7 @@ plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
+addProperty(plugman, 'prepare', './prepare', true);
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);
