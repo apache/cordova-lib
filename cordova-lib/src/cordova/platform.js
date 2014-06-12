@@ -54,22 +54,26 @@ function getVersionFromScript(script, defaultValue) {
 }
 
 function add(hooks, projectRoot, targets, opts) {
+    var msg;
+    if ( !targets || !targets.length ) {
+        msg = 'No platform specified. Please specify a platform to add. ' +
+              'See `' + cordova_util.binname + ' platform list`.';
+        return Q.reject(new CordovaError(msg));
+    }
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
-    if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform specified. Please specify a platform to add. See `'+cordova_util.binname+' platform list`.'));
-    }
     var config_json = config.read(projectRoot);
     var platformsDir = path.join(projectRoot, 'platforms');
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
-    // cordova platfrom rm <list of all platforms>
+    // cordova platform rm <list of all platforms>
     if ( !fs.existsSync(platformsDir)) {
         shell.mkdir('-p', platformsDir);
     }
 
     return hooks.fire('before_platform_add', opts)
     .then(cordova_util.Q_chainmap(targets, function(t) {
+        // For each platform, download it and call its "create" script.
         return lazy_load.based_on_config(projectRoot, t, opts)
         .fail(function(err) {
             throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
@@ -312,19 +316,19 @@ function supports(project_root, name) {
     // required parameters
     if (!name) return Q.reject(new CordovaError('requires a platform name parameter'));
 
-    // check if platform exists
+    // Check if platform exists.
     var platform = platforms[name];
     if (!platform) {
         return Q.reject(new CordovaError(util.format('"%s" platform does not exist', name)));
     }
 
-    // look up platform meta-data parser
+    // Look up platform meta-data parser.
     var platformParser = platforms[name].parser;
     if (!platformParser) {
         return Q.reject(new Error(util.format('"%s" platform parser does not exist', name)));
     }
 
-    // check for platform support
+    // Check for platform support.
     return platformParser.check_requirements(project_root);
 }
 
