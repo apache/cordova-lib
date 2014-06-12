@@ -76,10 +76,20 @@ function cordova_git(platform) {
 }
 
 function cordova_npm(platform) {
-    if (!(platform in platforms)) {
+    var version;
+    // Check if platform looks like platform@version
+    if (platform.indexOf('@') != -1) {
+        var parts = platform.split('@');
+        platform = parts[0];
+        version = parts[1];
+    }
+    if ( !(platform in platforms) ) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
     }
-    var pkg = 'cordova-' + platform + '@' + platforms[platform].version;
+    // In most cases platfrom does not specify a version and we use
+    // the hard-coded default version from platforms.js
+    version = version || platforms[platform].version;
+    var pkg = 'cordova-' + platform + '@' + version;
     return Q.nfcall( npm.load, {cache: path.join(util.libDirectory, 'npm_cache') })
     .then(function() {
         return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);

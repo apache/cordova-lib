@@ -79,12 +79,18 @@ function add(hooks, projectRoot, targets, opts) {
             throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
         })
         .then(function(libDir) {
-            var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
+            var platform = t;
+            if (platform.indexOf('@') != -1) {
+                // If platform contains @version part, strip it.
+                var parts = platform.split('@');
+                platform = parts[0];
+            }
+            var template = config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
             var copts = null;
             if ('spawnoutput' in opts) {
                 copts = opts.spawnoutput;
             }
-            return call_into_create(t, projectRoot, cfg, libDir, template, copts);
+            return call_into_create(platform, projectRoot, cfg, libDir, template, copts);
         });
     }))
     .then(function() {
@@ -267,21 +273,32 @@ function list(hooks, projectRoot) {
 module.exports = platform;
 function platform(command, targets, opts) {
     var projectRoot = cordova_util.cdProjectRoot();
-
+    var msg;
     var hooks = new hooker(projectRoot);
 
     if (arguments.length === 0) command = 'ls';
+
+    // Verify that targets look like platforms. Examples:
+    // - android
+    // - android@3.5.0
     if (targets) {
         if (!(targets instanceof Array)) targets = [targets];
         var err;
         targets.forEach(function(t) {
-            if (!(t in platforms)) {
-                err = new CordovaError('Platform "' + t + '" not recognized as a core cordova platform. See `'+cordova_util.binname+' platform list`.');
-            }
+            // Trim the @version part if it's there.
+            var p = t.split('@')[0];
+            // OK if it's one of known platform names.
+            if ( p in platforms ) return;
+            var msg = 'Platform "' + t +
+                '" not recognized as a core cordova platform. See `' +
+                cordova_util.binname + ' platform list`.'
+                ;
+            throw new CordovaError(msg);
+
         });
-        if (err) return Q.reject(err);
     } else if (command == 'add' || command == 'rm') {
-        return Q.reject(new CordovaError('You need to qualify `add` or `remove` with one or more platforms!'));
+        msg = 'You need to qualify `add` or `remove` with one or more platforms!';
+        return Q.reject(new CordovaError(msg));
     }
 
 
