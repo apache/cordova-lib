@@ -2,7 +2,7 @@
   "author": "Apache Software Foundation",
   "name": "cordova-lib",
   "description": "Apache Cordova tools core lib and API",
-  "version": "0.21.4-dev",
+  "version": "0.21.5-dev",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
