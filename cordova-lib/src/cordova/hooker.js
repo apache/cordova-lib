@@ -123,7 +123,7 @@ function execute_scripts_serially(scripts, root, dir, opts) {
                 }
             }
 
-            var execOpts = {cwd: root, printCommand: true, stdio: 'inherit'};
+            var execOpts = {cwd: root, printCommand: opts.verbose, stdio: 'inherit'};
             execOpts.env = {};
             execOpts.env.CORDOVA_VERSION = require('../../package').version;
             execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';
