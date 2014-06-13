@@ -65,7 +65,7 @@ plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'prepare', './prepare', true);
+addProperty(plugman, 'prepare', './prepare');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);
@@ -91,8 +91,9 @@ plugman.commands =  {
         if(!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
             return console.log(plugman.help());
         }
-        cli_opts.browserify === true ?  addProperty(plugman, 'prepare', './prepare-browserify') :
-                                        addProperty(plugman, 'prepare', './prepare');
+        if(cli_opts.browserify === true) {
+            plugman.prepare = require('./prepare-browserify');
+        }
         var cli_variables = {}
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
@@ -122,8 +123,9 @@ plugman.commands =  {
             return console.log(plugman.help());
         }
         
-        cli_opts.browserify === true ?  addProperty(plugman, 'prepare', './prepare-browserify') :
-                                        addProperty(plugman, 'prepare', './prepare');
+        if(cli_opts.browserify === true) {
+            plugman.prepare = require('./prepare-browserify');
+        }
 
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
