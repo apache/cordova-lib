@@ -465,8 +465,8 @@
       }
     },
     "properties-parser": {
-      "version": "~0.2.2",
-      "from": "properties-parser@0.2.2"
+      "version": "~0.2.3",
+      "from": "properties-parser@0.2.3"
     },
     "q": {
       "version": "0.9.7",
