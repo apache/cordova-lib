@@ -137,30 +137,32 @@ describe('android project handler', function() {
             afterEach(function() {
                 android.purgeProjectFileCache(temp);
             });
-            it('should update the main and library projects', function() {
+            it('with custom=true should update the main and library projects', function() {
                 var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var subDir = path.resolve(temp, frameworkElement.attrib.src);
+                var subDir = path.resolve(temp, dummy_id, frameworkElement.attrib.src);
                 var mainProjectPropsFile = path.resolve(temp, "project.properties");
                 var subProjectPropsFile = path.resolve(subDir, "project.properties");
 
                 var existsSync = spyOn( fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
+                var copyNewFile = spyOn(common, 'copyNewFile');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
-                    if (path.normalize(file) === mainProjectPropsFile) {
+                    file = path.normalize(file);
+                    if (file === mainProjectPropsFile) {
                         return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
-                    } else if (path.normalize(file) === subProjectPropsFile) {
+                    } else if (file === subProjectPropsFile) {
                         return '#Some comment\ntarget=android-17\nandroid.library=true';
                     } else {
-                        throw new Error("Trying to read from an unexpected file " + file);
+                        throw new Error("Trying to read from an unexpected file " + file + '\n expected: ' + mainProjectPropsFile + '\n' + subProjectPropsFile);
                     }
                 })
                 var exec = spyOn(shell, 'exec');
 
-                android['framework'].install(frameworkElement, dummyplugin, temp);
+                android['framework'].install(frameworkElement, dummyplugin, temp, dummy_id);
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3=LibraryPath') > -1;
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3='+dummy_id+'/LibraryPath') > -1;
                 })).toBe(true, 'Reference to library not added');
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
@@ -176,6 +178,7 @@ describe('android project handler', function() {
 
                 var existsSync = spyOn( fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
+                var copyNewFile = spyOn(common, 'copyNewFile');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
                     if (path.normalize(file) === mainProjectPropsFile) {
                         return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
@@ -189,7 +192,7 @@ describe('android project handler', function() {
                 })
                 var exec = spyOn(shell, 'exec');
 
-                android['framework'].install(frameworkElement, dummyplugin, temp);
+                android['framework'].install(frameworkElement, dummyplugin, temp, dummy_id);
                 android.parseProjectFile(temp).write();
 
                 var relativePath = android_project.getRelativeLibraryPath(temp, subDir);
@@ -246,18 +249,19 @@ describe('android project handler', function() {
                 android.purgeProjectFileCache(temp);
             });
             it('should remove library reference from the main project', function () {
-                var frameworkElement = { attrib: { src: "LibraryPath" } };
-                var sub_dir = path.resolve(temp, frameworkElement.attrib.src);
+                var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
+                var sub_dir = path.resolve(temp, dummy_id, frameworkElement.attrib.src);
                 var mainProjectProps = path.resolve(temp, "project.properties");
                 var existsSync = spyOn(fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
+                var removeFile = spyOn(common, 'removeFile');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
                     if (path.normalize(file) === mainProjectProps)
-                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=LibraryPath\nandroid.library.reference.3=ExistingLibRef2\n';
+                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2='+dummy_id+'/LibraryPath\nandroid.library.reference.3=ExistingLibRef2\n';
                 })
                 var exec = spyOn(shell, 'exec');
 
-                android['framework'].uninstall(frameworkElement, temp);
+                android['framework'].uninstall(frameworkElement, temp, dummy_id);
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
