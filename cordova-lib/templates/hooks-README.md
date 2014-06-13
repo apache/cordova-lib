@@ -80,7 +80,7 @@ cross-platform. Some good examples are shown here:
 
 [http://devgirl.org/2013/11/12/three-hooks-your-cordovaphonegap-project-needs/](http://devgirl.org/2013/11/12/three-hooks-your-cordovaphonegap-project-needs/)
 
-Also, note that even if you are working on Windows, and in case your hook scripts aren't bat files (which is recomended for use the code in a non-windows operating system) Cordova CLI will expect a shebang line as the first line for it to know the interpreter it needs to use to launch the script, if the script is not a bat file. The shebang line should match the following example:
+Also, note that even if you are working on Windows, and in case your hook scripts aren't bat files (which is recommended, if you want your scripts to work in non-Windows operating systems) Cordova CLI will expect a shebang line as the first line for it to know the interpreter it needs to use to launch the script. The shebang line should match the following example:
 
     #!/usr/bin/env [name_of_interpreter_executable]
 
