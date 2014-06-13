@@ -74,17 +74,46 @@ function add(hooks, projectRoot, targets, opts) {
     return hooks.fire('before_platform_add', opts)
     .then(cordova_util.Q_chainmap(targets, function(t) {
         // For each platform, download it and call its "create" script.
-        return lazy_load.based_on_config(projectRoot, t, opts)
-        .fail(function(err) {
-            throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
-        })
-        .then(function(libDir) {
-            var platform = t;
-            if (platform.indexOf('@') != -1) {
-                // If platform contains @version part, strip it.
-                var parts = platform.split('@');
-                platform = parts[0];
+
+        var p;  // The promise to be returned by this function.
+        var platform = t.split('@')[0];
+        // If t is not a platform or platform@version, it must be a dir.
+        // In this case get platform name from package.json in that dir and
+        // skip lazy-load.
+        if( !(platform in platforms) ) {
+            var pPath = path.resolve(t);
+            var pkg;
+            // Prep the message in advance, we might need it in several places.
+            msg = 'The provided path does not seem to contain a ' +
+                  'Cordova platform: ' + t;
+            try {
+                pkg = require(path.join(pPath, 'package'));
+            } catch(e) {
+                throw new CordovaError(msg + '\n' + e.message);
             }
+            if ( !pkg || !pkg.name ) {
+                throw new CordovaError(msg);
+            }
+            // Package names for Cordova platforms look like "cordova-ios".
+            var nameParts = pkg.name.split('-');
+            var name = nameParts[1];
+            if( !platforms[name] ) {
+                throw new CordovaError(msg);
+            }
+            platform = name;
+
+            // Use a fulfilled promise with the path as value to skip dloading.
+            p = Q(pPath);
+        } else {
+            // Using lazy_load for a platform specified by name
+            p = lazy_load.based_on_config(projectRoot, t, opts)
+            .fail(function(err) {
+                throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
+            });
+        }
+
+        return p
+        .then(function(libDir) {
             var template = config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
             var copts = null;
             if ('spawnoutput' in opts) {
@@ -281,14 +310,18 @@ function platform(command, targets, opts) {
     // Verify that targets look like platforms. Examples:
     // - android
     // - android@3.5.0
+    // - ../path/to/dir/with/platform/files
     if (targets) {
         if (!(targets instanceof Array)) targets = [targets];
-        var err;
         targets.forEach(function(t) {
             // Trim the @version part if it's there.
             var p = t.split('@')[0];
             // OK if it's one of known platform names.
             if ( p in platforms ) return;
+            // Not a known platform name, check if its a real path.
+            var pPath = path.resolve(t);
+            if (fs.existsSync(pPath)) return;
+            // Neither path, nor platform name - throw.
             var msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'
