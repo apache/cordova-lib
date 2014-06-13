@@ -82,5 +82,5 @@ cross-platform. Some good examples are shown here:
 
 Also, note that even if you are working on Windows, and in case your hook scripts aren't bat files (which is recomended for use the code in a non-windows operating system) Cordova CLI will expect a shebang line as the first line for it to know the interpreter it needs to use to launch the script, if the script is not a bat file. The shebang line should match the following example:
 
-#!/usr/bin/env [name_of_interpreter_executable]
+    #!/usr/bin/env [name_of_interpreter_executable]
 
