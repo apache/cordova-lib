@@ -107,18 +107,18 @@ ConfigParser.prototype = {
      * @param  {String} platform The platform.
      * @return {Array} Icons for the platform specified.
      */
-    getIcons: function(platform) {
-        var ret = [],
+    getIcons: function(platform, elementName) {
+        var ret = [];
             iconElements = [];
-
+        var name = (elementName) ? elementName : 'icon';
         if (platform) { // platform specific icons
-            this.doc.findall('platform[@name=\'' + platform + '\']/icon').forEach(function(elt){
+            this.doc.findall('platform[@name=\'' + platform + '\']/'+name).forEach(function(elt){
                 elt.platform = platform; // mark as platform specific icon
                 iconElements.push(elt);
             });
         }
         // root level icons
-        iconElements = iconElements.concat(this.doc.findall('icon'));
+        iconElements = iconElements.concat(this.doc.findall(name));
         // parse icon elements
         iconElements.forEach(function (elt) {
             var icon = {};
