@@ -93,41 +93,33 @@ module.exports.prototype = {
 
         var projectRoot = util.isCordova(this.path);
 
-        var splashIcons = config.getIcons('android', 'splash');
-        // if there are icon elements in config.xml
-        if (splashIcons) {
-            events.emit('verbose', "splash icons: " + JSON.stringify(splashIcons));
+        var splashes = config.getSplashScreens('android');
+        // if there are "splash" elements in config.xml
+        if (splashes) {
+            events.emit('verbose', "splash screens: " + JSON.stringify(splashes));
             var res = path.join(this.path, 'res');
             var dirs = fs.readdirSync(res);
+
             for (var i=0; i<dirs.length; i++) {
                 var filename = dirs[i];
                 if (filename.indexOf('drawable-') === 0) {
                     var density = filename.substr(9);
-                    var findByDensity = function(density) {
-                        for (var i=0; i<splashIcons.length; i++) {
-                            var si = splashIcons[i];
-                            if (si.density == density) {
-                                return si;
-                            }
-                        }
-                        return null;
-                    };
-                    var icon = findByDensity(density);
-                    if (icon) {
-                        // copy splash icon. Maybe overwrite template splash icon
+                    var splash = splashes.getByDensity(density);
+                    if (splash) {
+                        // copy splash screens. Maybe overwrite template splash screen
                         var destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
-                        events.emit('verbose', "copying splash icon from " + icon.src + " to " + destfilepath);
-                        shell.cp('-f', icon.src, destfilepath);
+                        events.emit('verbose', "copying splash icon from " + splash.src + " to " + destfilepath);
+                        shell.cp('-f', splash.src, destfilepath);
                     } else {
-                         // remove template splash icon if it exists
-                         var templateSplash = path.join(res, 'drawable-' + density, 'screen.png');
-                         try {
-                             fs.unlink(templateSplash, function() {
+                        // remove template splash icon if it exists
+                        var templateSplash = path.join(res, 'drawable-' + density, 'screen.png');
+                        try {
+                            fs.unlink(templateSplash, function() {
                                 events.emit('verbose', "deleted template splash icon: " + templateSplash);
-                             });
-                         } catch(e) {
-                             events.emit('verbose', "fs.unlink("+templateSplash+") threw: " + e);
-                         }
+                            });
+                        } catch(e) {
+                            events.emit('verbose', "fs.unlink("+templateSplash+") threw: " + e);
+                        }
                     }
                 }
             }

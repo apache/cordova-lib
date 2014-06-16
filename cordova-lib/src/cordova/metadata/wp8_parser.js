@@ -159,7 +159,7 @@ module.exports.prototype = {
         ];
 
         platformIcons.forEach(function (item) {
-            var icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
+            icon = icons.getBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, item.dest);
@@ -168,6 +168,16 @@ module.exports.prototype = {
             }
         });
 
+        // Update splashscreen
+        // Image size for Windows phone devices should be 768 × 1280 px
+        // See http://msdn.microsoft.com/en-us/library/windowsphone/develop/ff769511.aspx for reference
+        var splash = config.getSplashScreens('wp8').getBySize(768, 1280);
+        if (splash){
+            var src = path.join(appRoot, splash.src),
+                dest = path.join(platformRoot, "SplashScreenImage.jpg");
+            events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
+            shell.cp('-f', src, dest);
+        }
     },
     // Returns the platform-specific www directory.
     www_dir:function() {
