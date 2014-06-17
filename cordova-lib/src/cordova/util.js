@@ -17,7 +17,9 @@
     under the License.
 */
 
-/* jshint node:true, laxcomma:true, strict:false, trailing:true, unused:vars */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
 
 var fs            = require('fs'),
     path          = require('path'),
@@ -141,8 +143,8 @@ function findPlugins(pluginPath) {
 
     if (fs.existsSync(pluginPath)) {
         plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
-           stats = fs.statSync(path.join(pluginPath, fileName));
-           return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
+            stats = fs.statSync(path.join(pluginPath, fileName));
+            return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
         });
     }
 

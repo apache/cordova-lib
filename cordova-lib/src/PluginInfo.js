@@ -25,7 +25,10 @@ is compatible with a given engine version.
 TODO (kamrik): refactor this to use no fs sync fnctions and return promises.
 */
 
-/* jshint node:true, laxcomma:true, laxbreak:true, sub:true, strict: false  */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true, laxcomma:true, laxbreak:true
+*/
 
 var path = require('path')
   , fs = require('fs')

@@ -30,7 +30,10 @@
  * reference counts.
  */
 
-/* jshint node:true, sub:true, unused:true, indent:4  */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true
+*/
 
 var fs   = require('fs'),
     path = require('path'),
@@ -80,7 +83,7 @@ exports.process = function(plugins_dir, project_dir, platform) {
 
 exports.get_munge_change = function(munge, keys) {
     return deep_find.apply(null, arguments);
-}
+};
 
 /******************************************************************************/
 
@@ -330,7 +333,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
             // interp vars
             if (vars) {
                 Object.keys(vars).forEach(function(key) {
-                    var regExp = new RegExp("\\$" + key, "g");
+                    var regExp = new RegExp('\\$' + key, 'g');
                     stringified = stringified.replace(regExp, vars[key]);
                 });
             }
@@ -534,8 +537,8 @@ function ConfigFile_save() {
         fs.writeFileSync(self.filepath, self.data.writeSync());
     } else {
         // plist
-        var regExp = new RegExp("<string>[ \t\r\n]+?</string>", "g");
-        fs.writeFileSync(self.filepath, plist.build(self.data).replace(regExp, "<string></string>"));
+        var regExp = new RegExp('<string>[ \t\r\n]+?</string>', 'g');
+        fs.writeFileSync(self.filepath, plist.build(self.data).replace(regExp, '<string></string>'));
     }
     self.is_changed = false;
 }
@@ -715,7 +718,7 @@ function deep_remove(obj, keys /* or key1, key2 .... */ ) {
         return undefined;
     }, keys);
 
-    return typeof result === "undefined" ? true : result;
+    return typeof result === 'undefined' ? true : result;
 }
 
 // search for [key1][key2]...[keyN]
@@ -756,7 +759,7 @@ function process_munge(obj, createParents, func, keys /* or key1, key2 .... */ )
         obj.files[k] = obj.files[k] || { parents: {} };
         return process_munge(obj.files[k], createParents, func, keys.slice(1));
     } else {
-        throw new Error("Invalid key format. Must contain at most 3 elements (file, parent, xmlChild).");
+        throw new Error('Invalid key format. Must contain at most 3 elements (file, parent, xmlChild).');
     }
 }
 

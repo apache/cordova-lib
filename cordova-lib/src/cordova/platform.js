@@ -17,7 +17,11 @@
     under the License.
 */
 
-/* jshint node:true, laxcomma:true, strict:false, trailing:true, unused:vars */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
+
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
@@ -188,7 +192,7 @@ function check(hooks, projectRoot) {
         platforms_on_fs = cordova_util.listPlatforms(projectRoot),
         scratch = path.join(os.tmpdir(), 'cordova-platform-check-' + Date.now()),
         listeners = events._events;
-        events._events = {};
+    events._events = {};
     var result = Q.defer();
     cordova.raw.create(scratch)
     .then(function () {

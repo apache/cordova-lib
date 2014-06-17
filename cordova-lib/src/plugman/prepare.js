@@ -17,7 +17,10 @@
     under the License.
 */
 
-/* jshint node:true */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          expr:true, quotmark:false
+*/
 
 var platform_modules = require('./platforms'),
     path            = require('path'),
@@ -25,13 +28,12 @@ var platform_modules = require('./platforms'),
     xml_helpers     = require('../util/xml-helpers'),
     wp8             = require('./platforms/wp8'),
     windows8        = require('./platforms/windows8'),
-    common          = require('./platforms/common');
+    common          = require('./platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
     util            = require('util'),
     events          = require('../events'),
-    plugman         = require('./plugman'),
-    et              = require('elementtree');
+    plugman         = require('./plugman');
 
 // Called on --prepare.
 // Sets up each plugin's Javascript code to be loaded properly.
@@ -74,19 +76,21 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // for windows phone platform we need to add all www resources to the .csproj file
     // first we need to remove them all to prevent duplicates
     var wp_csproj;
+    var item_groups;
+    var i, j, k, l, file, files, group, new_group;
     if(platform == 'wp8') {
         wp_csproj = wp8.parseProjectFile(project_dir);
-        var item_groups = wp_csproj.xml.findall('ItemGroup');
-        for (var i = 0, l = item_groups.length; i < l; i++) {
-            var group = item_groups[i];
-            var files = group.findall('Content');
-            for (var j = 0, k = files.length; j < k; j++) {
-                var file = files[j];
-                if (file.attrib.Include.substr(0,11) == "www\\plugins" || file.attrib.Include == "www\\cordova_plugins.js") {
+        item_groups = wp_csproj.xml.findall('ItemGroup');
+        for (i = 0, l = item_groups.length; i < l; i++) {
+            group = item_groups[i];
+            files = group.findall('Content');
+            for (j = 0, k = files.length; j < k; j++) {
+                file = files[j];
+                if (file.attrib.Include.substr(0,11) == 'www\\plugins' || file.attrib.Include == 'www\\cordova_plugins.js') {
                     // remove file reference
                     group.remove(0, file);
                     // remove ItemGroup if empty
-                    var new_group = group.findall('Content');
+                    new_group = group.findall('Content');
                     if(new_group.length < 1) {
                         wp_csproj.xml.getroot().remove(0, group);
                     }
@@ -94,19 +98,19 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             }
         }
     }
-    else if(platform == "windows8") {
+    else if(platform == 'windows8') {
         wp_csproj = windows8.parseProjectFile(project_dir);
-        var item_groups = wp_csproj.xml.findall('ItemGroup');
-        for (var i = 0, l = item_groups.length; i < l; i++) {
-            var group = item_groups[i];
-            var files = group.findall('Content');
-            for (var j = 0, k = files.length; j < k; j++) {
-                var file = files[j];
-                if (file.attrib.Include.substr(0,11) == "www\\plugins" || file.attrib.Include == "www\\cordova_plugins.js") {
+        item_groups = wp_csproj.xml.findall('ItemGroup');
+        for (i = 0, l = item_groups.length; i < l; i++) {
+            group = item_groups[i];
+            files = group.findall('Content');
+            for (j = 0, k = files.length; j < k; j++) {
+                file = files[j];
+                if (file.attrib.Include.substr(0,11) == 'www\\plugins' || file.attrib.Include == 'www\\cordova_plugins.js') {
                     // remove file reference
                     group.remove(0, file);
                     // remove ItemGroup if empty
-                    var new_group = group.findall('Content');
+                    new_group = group.findall('Content');
                     if(new_group.length < 1) {
                         wp_csproj.xml.getroot().remove(0, group);
                     }
@@ -180,7 +184,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8').replace(/^\ufeff/, ''); // Window BOM
             scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
             fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
-            if(platform == 'wp8' || platform == "windows8") {
+            if(platform == 'wp8' || platform == 'windows8') {
                 wp_csproj.addSourceFile(path.join('www', 'plugins', plugin_id, fsPath));
             }
 
@@ -224,7 +228,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Writing out cordova_plugins.js...');
     fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), final_contents, 'utf-8');
 
-    if(platform == 'wp8' || platform == "windows8") {
+    if(platform == 'wp8' || platform == 'windows8') {
         wp_csproj.addSourceFile(path.join('www', 'cordova_plugins.js'));
         wp_csproj.write();
     }

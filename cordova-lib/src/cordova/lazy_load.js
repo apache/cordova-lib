@@ -17,7 +17,10 @@
     under the License.
 */
 
-/* jshint node:true, laxcomma:true, strict:false, trailing:true, unused:vars */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 // The URL:true below prevents jshint error "Redefinition or 'URL'."
 /* globals URL:true */
 

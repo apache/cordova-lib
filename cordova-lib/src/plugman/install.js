@@ -16,13 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* jshint node:true, asi:true, laxcomma:true, sub:true, expr:true, unused:vars */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          laxcomma:true, sub:true, expr:true, asi:true, quotmark:false
+*/
 
 var path = require('path'),
     fs   = require('fs'),
     action_stack = require('./util/action-stack'),
     dep_graph = require('dep-graph'),
-    elementtree = require('elementtree'),
     child_process = require('child_process'),
     semver = require('semver'),
     config_changes = require('./util/config-changes'),
@@ -254,7 +257,8 @@ function isPluginInstalled(plugins_dir, platform, plugin_id) {
 
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise.
-var runInstall = module.exports.runInstall = function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
+module.exports.runInstall = runInstall;
+function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
     var pluginInfo   = new PluginInfo.PluginInfo(plugin_dir)
       , filtered_variables = {};
 
@@ -504,7 +508,6 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     var handler = platform_modules[platform];
-    www_dir = options.www_dir || handler.www_dir(project_dir);
 
     var platformTag = pluginInfo._et.find('./platform[@name="'+platform+'"]');
     if ( pluginInfo.hasPlatformSection(platform) ) {
