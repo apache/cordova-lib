@@ -24,7 +24,7 @@ var cordova_util    = require('./util'),
     Q                = require('q'),
     fs               = require('fs'),
     plugin           = require('./plugin'),
-    events           = require('./events');
+    events           = require('../events');
 
 module.exports = function restore(target){
     var projectHome = cordova_util.cdProjectRoot();

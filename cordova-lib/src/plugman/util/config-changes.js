@@ -41,7 +41,7 @@ var fs   = require('fs'),
     _ = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
     platforms = require('./../platforms'),
-    events = require('./../events'),
+    events = require('../../events'),
     plist_helpers = require('./../util/plist-helpers');
 
 

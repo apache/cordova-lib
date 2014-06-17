@@ -29,7 +29,7 @@ var platform_modules = require('./platforms'),
     fs              = require('fs'),
     shell           = require('shelljs'),
     util            = require('util'),
-    events          = require('./events'),
+    events          = require('../events'),
     plugman         = require('./plugman'),
     et              = require('elementtree');
 

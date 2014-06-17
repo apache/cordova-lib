@@ -30,7 +30,7 @@ var path = require('path'),
     Q = require('q'),
     plugins = require('./util/plugins'),
     underscore = require('underscore'),
-    events = require('./events'),
+    events = require('../events'),
     platform_modules = require('./platforms'),
     plugman = require('./plugman');
 

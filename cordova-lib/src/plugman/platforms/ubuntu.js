@@ -29,7 +29,7 @@ function toCamelCase(str) {
 
 var fs = require('fs')
    , path = require('path')
-   , events = require('../events')
+   , events = require('../../events')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
 
 module.exports = {

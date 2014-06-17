@@ -24,7 +24,7 @@ var fs            = require('fs'),
     child_process = require('child_process'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
-    events        = require('../events'),
+    events        = require('../../events'),
     config        = require('../config');
 
 module.exports = function blackberry_parser(project) {

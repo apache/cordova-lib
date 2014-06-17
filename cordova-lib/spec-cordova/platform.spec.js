@@ -25,7 +25,7 @@ var helpers = require('./helpers'),
     superspawn = require('../src/cordova/superspawn'),
     config = require('../src/cordova/config'),
     Q = require('q'),
-    events = require('../src/cordova/events'),
+    events = require('../src/events'),
     cordova = require('../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('platform_test');

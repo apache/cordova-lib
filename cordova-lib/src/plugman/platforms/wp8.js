@@ -22,7 +22,7 @@ var common = require('./common'),
     glob = require('glob'),
     fs = require('fs'),
     csproj = require('../util/csproj'),
-    events = require('../events'),
+    events = require('../../events'),
     xml_helpers = require('../../util/xml-helpers');
 
 module.exports = {

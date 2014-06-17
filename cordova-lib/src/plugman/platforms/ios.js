@@ -23,7 +23,7 @@ var path = require('path')
   , xcode = require('xcode')
   , plist = require('plist-with-patches')
   , shell = require('shelljs')
-  , events = require('../events')
+  , events = require('../../events')
   , cachedProjectFiles = {};
 
 module.exports = {

@@ -19,7 +19,7 @@
 var util  = require('./util'),
     fs    = require('fs'),
     os    = require('os'),
-    events= require('./events'),
+    events= require('../events'),
     superspawn = require('./superspawn'),
     CordovaError = require('../CordovaError'),
     Q     = require('q'),
