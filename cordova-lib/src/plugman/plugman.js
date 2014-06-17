@@ -19,7 +19,7 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-var events = require('./events');
+var events = require('../events');
 var Q = require('q');
 
 function addProperty(o, symbol, modulePath, doWrap) {

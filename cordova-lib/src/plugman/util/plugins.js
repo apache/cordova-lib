@@ -26,7 +26,7 @@ var http = require('http'),
     child_process = require('child_process'),
     Q = require('q'),
     xml_helpers = require('../../util/xml-helpers'),
-    events = require('../events'),
+    events = require('../../events'),
     tmp_dir;
 
 module.exports = {

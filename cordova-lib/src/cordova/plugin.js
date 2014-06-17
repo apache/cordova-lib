@@ -29,7 +29,7 @@ var cordova_util  = require('./util'),
     ConfigParser  = require('../configparser/ConfigParser'),
     fs            = require('fs'),
     PluginInfo    = require('../PluginInfo'),
-    events        = require('./events');
+    events        = require('../events');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {

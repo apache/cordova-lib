@@ -33,7 +33,7 @@ var path = require('path'),
     os = require('os'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
-    events = require('./events'),
+    events = require('../events'),
     plugman = require('./plugman'),
     isWindows = (os.platform().substr(0,3) === 'win');
 

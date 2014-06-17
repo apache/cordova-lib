@@ -20,7 +20,7 @@
 var fs = require('fs')  // use existsSync in 0.6.x
    , path = require('path')
    , common = require('./common')
-   , events = require('../events')
+   , events = require('../../events')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
 
 var TARGETS = ["device", "simulator"];

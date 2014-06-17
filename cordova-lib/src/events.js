@@ -16,5 +16,4 @@
     specific language governing permissions and limitations
     under the License.
 */
-
 module.exports = new (require('events').EventEmitter)();

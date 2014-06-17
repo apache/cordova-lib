@@ -22,7 +22,7 @@ var cordova_util    = require('./util'),
     path             = require('path'),
     xml              = require('../util/xml-helpers')
     Q                = require('q'),
-    events           = require('./events');
+    events           = require('../events');
 
 module.exports = function save(target, opts){
   opts = opts || {};

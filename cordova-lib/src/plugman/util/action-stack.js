@@ -17,7 +17,7 @@
     under the License.
 */
 var platforms = require("../platforms"),
-    events = require('../events'),
+    events = require('../../events'),
     Q = require('q'),
     fs = require('fs');
 

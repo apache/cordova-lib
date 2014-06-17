@@ -25,7 +25,7 @@ var xml_helpers = require('../../util/xml-helpers'),
     et = require('elementtree'),
     fs = require('fs'),
     shell = require('shelljs'),
-    events = require('../events'),
+    events = require('../../events'),
     path = require('path');
 
 var WindowsStoreProjectTypeGUID = "{BC8A1FFA-BEE3-4634-8014-F334798102B3}";  // any of the below, subtype

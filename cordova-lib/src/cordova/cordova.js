@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova_events = require('./events');
+var cordova_events = require('../events');
 var cordova_util = require('./util');
 
 var off = function() {

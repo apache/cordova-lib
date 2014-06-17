@@ -22,7 +22,7 @@ var helpers = require('./helpers'),
     fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
-    events = require('../src/cordova/events'),
+    events = require('../src/events'),
     cordova = require('../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('plugin_test');
