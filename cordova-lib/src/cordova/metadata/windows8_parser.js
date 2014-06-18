@@ -269,10 +269,12 @@ module.exports.prototype = {
             var stat = fs.statSync(path.join(dir, folder_dir[item]));
 
             if(stat.isDirectory()) {
-                var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
-                //Add all subfolder item paths
-                for(sub_item in sub_dir) {
-                    results.push(sub_dir[sub_item]);
+                if (folder_dir[item] !== '.svn') {
+                    var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
+                    //Add all subfolder item paths
+                    for(sub_item in sub_dir) {
+                        results.push(sub_dir[sub_item]);
+                    }
                 }
             }
             else if(stat.isFile()) {
