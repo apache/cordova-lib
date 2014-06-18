@@ -19,7 +19,7 @@
 
 /* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
           indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true, expr:true, asi:true, quotmark:false
+          laxcomma:true, sub:true, expr:true
 */
 
 var path = require('path'),
@@ -69,7 +69,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError(platform + " not supported."));
+        return Q.reject(new CordovaError(platform + ' not supported.'));
     }
 
     var current_stack = new action_stack();
@@ -108,10 +108,10 @@ function checkEngines(engines) {
     for(var i = 0; i < engines.length; i++) {
         var engine = engines[i];
 
-        if(semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null){
+        if ( semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null ) {
             // engine ok!
-        }else{
-            var msg = "Plugin doesn't support this project's " + engine.name + ' version. ' +
+        } else {
+            var msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
                       engine.name + ': ' + engine.currentVersion +
                       ', failed version requirement: ' + engine.minVersion;
             return Q.reject(new CordovaError(msg));
@@ -132,7 +132,7 @@ function cleanVersionOutput(version, name){
     // put a warning about using the dev branch
     if (dev_index > -1) {
         // some platform still lists dev branches as just dev, set to null and continue
-        if(out=="dev"){
+        if(out=='dev'){
             out = null;
         }
         events.emit('verbose', name+' has been detected as using a development branch. Attemping to install anyways.');
@@ -186,7 +186,7 @@ function callEngineScripts(engines) {
             } else {
 
                 if(engine.currentVersion) {
-                    engine.currentVersion = cleanVersionOutput(engine.currentVersion, engine.name)
+                    engine.currentVersion = cleanVersionOutput(engine.currentVersion, engine.name);
                 } else {
                     events.emit('warn', engine.name +' version not detected (lacks script '+ scriptPath +' ), continuing.');
                 }
@@ -206,14 +206,14 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
     // load in known defaults and update when necessary
 
     engines.forEach(function(engine){
-        theName = engine.attrib["name"];
+        theName = engine.attrib['name'];
 
         // check to see if the engine is listed as a default engine
         if(defaultEngines[theName]){
             // make sure engine is for platform we are installing on
             defaultPlatformIndex = defaultEngines[theName].platform.indexOf(platform);
             if(defaultPlatformIndex > -1 || defaultEngines[theName].platform === '*'){
-                defaultEngines[theName].minVersion = defaultEngines[theName].minVersion ? defaultEngines[theName].minVersion : engine.attrib["version"];
+                defaultEngines[theName].minVersion = defaultEngines[theName].minVersion ? defaultEngines[theName].minVersion : engine.attrib['version'];
                 defaultEngines[theName].currentVersion = defaultEngines[theName].currentVersion ? defaultEngines[theName].currentVersion : null;
                 defaultEngines[theName].scriptSrc = defaultEngines[theName].scriptSrc ? defaultEngines[theName].scriptSrc : null;
                 defaultEngines[theName].name = theName;
@@ -226,9 +226,9 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
             }
         // check for other engines
         }else{
-            platformIndex = engine.attrib["platform"].indexOf(platform);
-            if(platformIndex > -1 || engine.attrib["platform"] === '*'){
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.attrib["platform"], 'scriptSrc':path.resolve(plugin_dir, engine.attrib["scriptSrc"]), 'minVersion' :  engine.attrib["version"]});
+            platformIndex = engine.attrib['platform'].indexOf(platform);
+            if(platformIndex > -1 || engine.attrib['platform'] === '*'){
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.attrib['platform'], 'scriptSrc':path.resolve(plugin_dir, engine.attrib['scriptSrc']), 'minVersion' :  engine.attrib['version']});
             }
         }
     });
@@ -284,7 +284,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         plugins_dir: plugins_dir,
         top_plugin_id: pluginInfo.id,
         top_plugin_dir: plugin_dir
-    }
+    };
 
     return callEngineScripts(theEngines)
     .then(checkEngines)
@@ -298,7 +298,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
             install.filtered_variables = filtered_variables;
 
             if (missing_vars.length > 0) {
-                throw new Error('Variable(s) missing: ' + missing_vars.join(", "));
+                throw new Error('Variable(s) missing: ' + missing_vars.join(', '));
             }
 
             // Check for dependencies
@@ -321,7 +321,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         }
     ).fail(
         function (error) {
-            events.emit('warn', "Failed to install '" + pluginInfo.id + "':" + error.stack);
+            events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\':' + error.stack);
             throw error;
         }
     );
@@ -330,7 +330,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 function installDependencies(install, dependencies, options) {
     events.emit('verbose', 'Dependencies detected, iterating through them...');
 
-    var top_plugins = path.join(options.plugin_src_dir || install.top_plugin_dir, '..')
+    var top_plugins = path.join(options.plugin_src_dir || install.top_plugin_dir, '..');
 
     // Add directory of top-level plugin to search path
     options.searchpath = options.searchpath || [];
@@ -345,7 +345,7 @@ function installDependencies(install, dependencies, options) {
     return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
-                dep.git_ref = dep.commit
+                dep.git_ref = dep.commit;
 
                 if (dep.subdir) {
                     dep.subdir = path.normalize(dep.subdir);
@@ -409,7 +409,7 @@ function tryFetchDependency(dep, install, options) {
             return d.promise.then(function(git_repo) {
                 //Clear out the subdir since the url now contains it
                 var url = path.join(git_repo, dep.subdir);
-                dep.subdir = "";
+                dep.subdir = '';
                 return Q(url);
             }).fail(function(error){
 //console.log("Failed to resolve url='.': " + error);
@@ -520,37 +520,37 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler["source-file"].install,
+            actions.push(actions.createAction(handler['source-file'].install,
                                               [item, plugin_dir, project_dir, pluginInfo.id],
-                                              handler["source-file"].uninstall,
+                                              handler['source-file'].uninstall,
                                               [item, project_dir, pluginInfo.id]));
         });
 
         headerFiles && headerFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler["header-file"].install,
+            actions.push(actions.createAction(handler['header-file'].install,
                                              [item, plugin_dir, project_dir, pluginInfo.id],
-                                             handler["header-file"].uninstall,
+                                             handler['header-file'].uninstall,
                                              [item, project_dir, pluginInfo.id]));
         });
 
         resourceFiles && resourceFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler["resource-file"].install,
+            actions.push(actions.createAction(handler['resource-file'].install,
                                               [item, plugin_dir, project_dir, pluginInfo.id],
-                                              handler["resource-file"].uninstall,
+                                              handler['resource-file'].uninstall,
                                               [item, project_dir, pluginInfo.id]));
         });
         // CB-5238 custom frameworks only
         frameworkFiles && frameworkFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler["framework"].install,
+            actions.push(actions.createAction(handler['framework'].install,
                                              [item, plugin_dir, project_dir, pluginInfo.id],
-                                             handler["framework"].uninstall,
+                                             handler['framework'].uninstall,
                                              [item, project_dir, pluginInfo.id]));
         });
 
         libFiles && libFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler["lib-file"].install,
+            actions.push(actions.createAction(handler['lib-file'].install,
                                                 [item, plugin_dir, project_dir, pluginInfo.id],
-                                                handler["lib-file"].uninstall,
+                                                handler['lib-file'].uninstall,
                                                 [item, project_dir, pluginInfo.id]));
 
         });
@@ -576,7 +576,7 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
 function interp_vars(vars, text) {
     vars && Object.keys(vars).forEach(function(key) {
-        var regExp = new RegExp("\\$" + key, "g");
+        var regExp = new RegExp('\\$' + key, 'g');
         text = text.replace(regExp, vars[key]);
     });
     return text;

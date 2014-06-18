@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var xml_helpers = require('../../util/xml-helpers'),
     et = require('elementtree'),
     fs = require('fs'),
@@ -44,9 +49,9 @@ csproj.prototype = {
         hint_path.text = relPath;
         elem.append(hint_path);
 
-        if(extName == ".winmd") {
-            var mdFileTag = new et.Element("IsWinMDFile");
-                mdFileTag.text = "true";
+        if(extName == '.winmd') {
+            var mdFileTag = new et.Element('IsWinMDFile');
+            mdFileTag.text = 'true';
             elem.append(mdFileTag);
         }
 
@@ -56,7 +61,6 @@ csproj.prototype = {
     },
 
     removeReference:function(relPath) {
-        var item = new et.Element('ItemGroup');
         var extName = path.extname(relPath);
         var includeText = path.basename(relPath,extName);
         // <ItemGroup>
@@ -69,33 +73,34 @@ csproj.prototype = {
     },
 
     addSourceFile:function(relative_path) {
+        var compile;
         relative_path = relative_path.split('/').join('\\');
         // make ItemGroup to hold file.
         var item = new et.Element('ItemGroup');
 
         var extName = path.extname(relative_path);
         // check if it's a .xaml page
-        if(extName == ".xaml") {
+        if(extName == '.xaml') {
             var page = new et.Element('Page');
             var sub_type = new et.Element('SubType');
 
-            sub_type.text = "Designer";
+            sub_type.text = 'Designer';
             page.append(sub_type);
             page.attrib.Include = relative_path;
 
             var gen = new et.Element('Generator');
-            gen.text = "MSBuild:Compile";
+            gen.text = 'MSBuild:Compile';
             page.append(gen);
 
             var item_groups = this.xml.findall('ItemGroup');
-            if(item_groups.length == 0) {
+            if(item_groups.length === 0) {
                 item.append(page);
             } else {
                 item_groups[0].append(page);
             }
         }
-        else if (extName == ".cs") {
-            var compile = new et.Element('Compile');
+        else if (extName == '.cs') {
+            compile = new et.Element('Compile');
             compile.attrib.Include = relative_path;
             // check if it's a .xaml.cs page that would depend on a .xaml of the same name
             if (relative_path.indexOf('.xaml.cs', relative_path.length - 8) > -1) {
@@ -108,7 +113,7 @@ csproj.prototype = {
             item.append(compile);
         }
         else { // otherwise add it normally
-            var compile = new et.Element('Content');
+            compile = new et.Element('Content');
             compile.attrib.Include = relative_path;
             item.append(compile);
         }
@@ -132,7 +137,7 @@ csproj.prototype = {
                     if (!item.attrib.Include) return false;
                     return isRegexp ? item.attrib.Include.match(relative_path) :
                         item.attrib.Include == relative_path;
-            });
+                });
 
             // nothing to remove, skip..
             if (filesToRemove.length < 1) return;
@@ -145,7 +150,7 @@ csproj.prototype = {
             // remove ItemGroup if empty
             if(group.findall('*').length < 1) {
                 root.remove(0, group);
-            };
+            }
         });
     }
 };

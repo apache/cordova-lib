@@ -20,6 +20,11 @@
     Helper for Android projects configuration
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          boss:true
+*/
+
 var fs = require('fs'),
     path = require('path'),
     properties_parser = require('properties-parser'),
@@ -28,22 +33,22 @@ var fs = require('fs'),
 
 function addLibraryReference(projectProperties, libraryPath) {
     var i = 1;
-    while (projectProperties.get("android.library.reference." + i))
+    while (projectProperties.get('android.library.reference.' + i))
         i++;
 
-    projectProperties.set("android.library.reference." + i, libraryPath);
+    projectProperties.set('android.library.reference.' + i, libraryPath);
 }
 
 function removeLibraryReference(projectProperties, libraryPath) {
     var i = 1;
     var currentLib;
-    while (currentLib = projectProperties.get("android.library.reference." + i)) {
+    while (currentLib = projectProperties.get('android.library.reference.' + i)) {
         if (currentLib === libraryPath) {
-            while (currentLib = projectProperties.get("android.library.reference." + (i + 1))) {
-                projectProperties.set("android.library.reference." + i, currentLib);
+            while (currentLib = projectProperties.get('android.library.reference.' + (i + 1))) {
+                projectProperties.set('android.library.reference.' + i, currentLib);
                 i++;
             }
-            projectProperties.set("android.library.reference." + i);
+            projectProperties.set('android.library.reference.' + i);
             break;
         }
         i++;
@@ -60,21 +65,21 @@ function AndroidProject() {
 
 AndroidProject.prototype = {
     addSubProject: function(parentDir, subDir) {
-        var subProjectFile = path.resolve(subDir, "project.properties");
+        var subProjectFile = path.resolve(subDir, 'project.properties');
         if (!fs.existsSync(subProjectFile)) throw new Error('cannot find "' + subProjectFile + '" referenced in <framework>');
 
-        var parentProjectFile = path.resolve(parentDir, "project.properties");
+        var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         addLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
 
         var subProperties = this._getPropertiesFile(subProjectFile);
-        subProperties.set("target", parentProperties.get("target"));
+        subProperties.set('target', parentProperties.get('target'));
 
         this._subProjectDirs[subDir] = true;
         this._dirty = true;
     },
     removeSubProject: function(parentDir, subDir) {
-        var parentProjectFile = path.resolve(parentDir, "project.properties");
+        var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         removeLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
         delete this._subProjectDirs[subDir];
@@ -89,7 +94,7 @@ AndroidProject.prototype = {
 
         for (var sub_dir in this._subProjectDirs)
         {
-            shell.exec("android update lib-project --path " + sub_dir);
+            shell.exec('android update lib-project --path ' + sub_dir);
         }
         this._dirty = false;
     },

@@ -17,6 +17,11 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true, laxcomma:true, laxbreak:true
+*/
+
 /*
 A class for holidng the information currently stored in plugin.xml
 It should also be able to answer questions like whether the plugin
@@ -25,10 +30,6 @@ is compatible with a given engine version.
 TODO (kamrik): refactor this to use no fs sync fnctions and return promises.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true, laxcomma:true, laxbreak:true
-*/
 
 var path = require('path')
   , fs = require('fs')

@@ -16,6 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          quotmark:false, unused:false
+*/
+
 /*
   Helper for dealing with Windows Store JS app .jsproj files
 */
@@ -28,10 +34,10 @@ var xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     path = require('path');
 
-var WindowsStoreProjectTypeGUID = "{BC8A1FFA-BEE3-4634-8014-F334798102B3}";  // any of the below, subtype
-var WinCSharpProjectTypeGUID = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";    // .csproj
-var WinVBnetProjectTypeGUID = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}";     // who the ef cares?
-var WinCplusplusProjectTypeGUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}"; // .vcxproj
+var WindowsStoreProjectTypeGUID = "{BC8A1FFA-BEE3-4634-8014-F334798102B3}";  //any of the below, subtype
+var WinCSharpProjectTypeGUID = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";  // .csproj
+var WinVBnetProjectTypeGUID = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}";  // who the ef cares?
+var WinCplusplusProjectTypeGUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";  // .vcxproj
 
 
 function jsproj(location) {
@@ -80,13 +86,13 @@ jsproj.prototype = {
 
         // add hint path with full path
         var hint_path = new et.Element('HintPath');
-            hint_path.text = relPath;
+        hint_path.text = relPath;
 
         elem.append(hint_path);
 
         if(extName == ".winmd") {
             var mdFileTag = new et.Element("IsWinMDFile");
-                mdFileTag.text = "true";
+            mdFileTag.text = "true";
             elem.append(mdFileTag);
         }
 
@@ -115,7 +121,7 @@ jsproj.prototype = {
         var item = new et.Element('ItemGroup');
 
         var content = new et.Element('Content');
-            content.attrib.Include = relative_path;
+        content.attrib.Include = relative_path;
         item.append(content);
 
         this.xml.getroot().append(item);
@@ -149,7 +155,7 @@ jsproj.prototype = {
             // remove ItemGroup if empty
             if(group.findall('*').length < 1) {
                 root.remove(0, group);
-            };
+            }
         });
     },
 
@@ -203,10 +209,9 @@ jsproj.prototype = {
         // Add the ItemGroup/ProjectReference to the cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
         var item = new et.Element('ItemGroup');
-
         var projRef = new et.Element('ProjectReference');
-            projRef.attrib.Include = relative_path;
-            item.append(projRef);
+        projRef.attrib.Include = relative_path;
+        item.append(projRef);
         this.xml.getroot().append(item);
 
     },

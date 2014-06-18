@@ -16,10 +16,15 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          quotmark:false
+*/
+
 var platforms = require("../platforms"),
     events = require('../../events'),
-    Q = require('q'),
-    fs = require('fs');
+    Q = require('q');
 
 function ActionStack() {
     this.stack = [];
@@ -65,7 +70,7 @@ ActionStack.prototype = {
                 handler.apply(null, action_params);
             } catch(e) {
                 events.emit('warn', 'Error during processing of action! Attempting to revert...');
-                var incomplete = this.stack.unshift(action);
+                this.stack.unshift(action);
                 var issue = 'Uh oh!\n';
                 // revert completed tasks
                 while(this.completed.length) {

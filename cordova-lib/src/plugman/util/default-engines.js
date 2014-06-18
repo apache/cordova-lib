@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var path = require('path');
 
 module.exports = function(project_dir){
@@ -48,5 +53,5 @@ module.exports = function(project_dir){
             { 'platform':'wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_os_version') },
         'windows-sdk' :
             { 'platform':'wp8|windows8', 'scriptSrc': path.join(project_dir,'cordova','win_sdk_version') }
-    }
+    };
 };

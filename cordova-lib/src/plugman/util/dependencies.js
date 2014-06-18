@@ -16,10 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          expr:true
+*/
+
 var dep_graph = require('dep-graph'),
     path = require('path'),
-    fs = require('fs'),
-    plugman = require('../plugman'),
     config_changes = require('./config-changes'),
     underscore = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
@@ -70,10 +74,11 @@ module.exports = package = {
 
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
     dependents: function(plugin_id, plugins_dir, platform) {
+        var depsInfo;
         if(typeof plugins_dir == 'object')
-            var depsInfo = plugins_dir;
+            depsInfo = plugins_dir;
         else
-            var depsInfo = package.generate_dependency_info(plugins_dir, platform);
+            depsInfo = package.generate_dependency_info(plugins_dir, platform);
 
         var graph = depsInfo.graph;
         var tlps = depsInfo.top_level_plugins;
@@ -87,10 +92,11 @@ module.exports = package = {
     // Returns a list of plugins which the given plugin depends on, for which it is the only dependent.
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
     danglers: function(plugin_id, plugins_dir, platform) {
+        var depsInfo;
         if(typeof plugins_dir == 'object')
-            var depsInfo = plugins_dir;
+            depsInfo = plugins_dir;
         else
-            var depsInfo = package.generate_dependency_info(plugins_dir, platform);
+            depsInfo = package.generate_dependency_info(plugins_dir, platform);
 
         var graph = depsInfo.graph;
         var dependencies = graph.getChain(plugin_id);
