@@ -17,6 +17,10 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 module.exports = {
     'ios' : {
         hostos : ['darwin'],
@@ -35,7 +39,7 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
         version: '3.5.0'
     },
-     'amazon-fireos' : {
+    'amazon-fireos' : {
         parser : './metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
         version: '3.5.0'

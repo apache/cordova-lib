@@ -17,16 +17,20 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var cordova_util    = require('./util'),
     ConfigParser     = require('../configparser/ConfigParser'),
     path             = require('path'),
-    xml              = require('../util/xml-helpers')
     Q                = require('q'),
     fs               = require('fs'),
     plugin           = require('./plugin'),
     events           = require('../events');
 
-module.exports = function restore(target){
+module.exports = restore;
+function restore(target){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var configXml = new ConfigParser(configPath);
@@ -35,42 +39,41 @@ module.exports = function restore(target){
 
 
 //returns a Promise
-function installPluginsFromConfigXML(cfg){
-        //Install plugins that are listed on config.xml
-        var pluginsFromConfig = new Array();
-        var projectRoot = cordova_util.cdProjectRoot();
-        var plugins_dir = path.join(projectRoot, 'plugins');
+function installPluginsFromConfigXML(cfg) {
+    //Install plugins that are listed on config.xml
+    var pluginsFromConfig = [];
+    var projectRoot = cordova_util.cdProjectRoot();
+    var plugins_dir = path.join(projectRoot, 'plugins');
 
-        var features = cfg.doc.findall('feature');
-        features.forEach(function(feature){
-          var params = feature.findall('param');
-          var pluginId = "";
-          var pluginVersion = "";
-          for( var i =0; i < params.length; i++){
-            if(params[i].attrib.name === 'id'){
-              pluginId = params[i].attrib.value;
+    var features = cfg.doc.findall('feature');
+    features.forEach(function(feature){
+        var params = feature.findall('param');
+        var pluginId = '';
+        var pluginVersion = '';
+        for (var i = 0; i < params.length; i++) {
+            if (params[i].attrib.name === 'id') {
+                pluginId = params[i].attrib.value;
             }
-            if(params[i].attrib.name === 'version'){
-              pluginVersion = params[i].attrib.value;
+            if (params[i].attrib.name === 'version') {
+                pluginVersion = params[i].attrib.value;
             }
-          }
-          var pluginPath =  path.join(plugins_dir,pluginId);
-          // contents of the plugins folder takes precedence hence
-          // we ignore if the correct version is installed or not.
-          if(pluginId !== "" && !fs.existsSync(pluginPath)){
-            if( pluginVersion !== ""){
-              pluginId = pluginId +"@"+pluginVersion;
-            }
-            events.emit('log', "Discovered "+ pluginId + " in config.xml. Installing to the project")
-            pluginsFromConfig.push(pluginId);
-          }
-
-        })
-
-        //Use cli instead of plugman directly ensuring all the hooks
-        // to get fired.
-        if(pluginsFromConfig.length >0){
-            return plugin("add",pluginsFromConfig);
         }
-        return Q.all("No config.xml plugins to install");
+        var pluginPath =  path.join(plugins_dir,pluginId);
+        // contents of the plugins folder takes precedence hence
+        // we ignore if the correct version is installed or not.
+        if (pluginId !== '' && !fs.existsSync(pluginPath)) {
+            if ( pluginVersion !== '') {
+                pluginId = pluginId + '@' + pluginVersion;
+            }
+            events.emit('log', 'Discovered ' + pluginId + ' in config.xml. Installing to the project');
+            pluginsFromConfig.push(pluginId);
+        }
+    });
+
+    //Use cli instead of plugman directly ensuring all the hooks
+    // to get fired.
+    if (pluginsFromConfig.length >0) {
+        return plugin('add', pluginsFromConfig);
+    }
+    return Q.all('No config.xml plugins to install');
 }

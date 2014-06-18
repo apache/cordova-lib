@@ -17,7 +17,9 @@
     under the License.
 */
 
-/* jshint node: true */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
 
 var cordova_util  = require('./util'),
     path          = require('path'),
@@ -29,12 +31,12 @@ var cordova_util  = require('./util'),
     ConfigParser  = require('../configparser/ConfigParser'),
     fs            = require('fs'),
     PluginInfo    = require('../PluginInfo'),
+    plugman       = require('../plugman/plugman'),
     events        = require('../events');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
-    var projectRoot = cordova_util.cdProjectRoot(),
-        err;
+    var projectRoot = cordova_util.cdProjectRoot();
 
     // Dance with all the possible call signatures we've come up over the time. They can be:
     // 1. plugin() -> list the plugins
@@ -113,16 +115,13 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        var plugman = require('../plugman/plugman');
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry});
                     })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
                             return soFar.then(function() {
-                                var platforms = require('./platforms');
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
-                                    parser = new platforms[platform].parser(platformRoot),
                                     options = {
                                         cli_variables: opts.cli_variables || {},
                                         searchpath: searchPath,
@@ -136,7 +135,7 @@ module.exports = function plugin(command, targets, opts) {
                                 // Keeping for now for compatibility for API users.
                                 //parse variables into cli_variables
                                 for (i=0; i< opts.options.length; i++) {
-                                    if (opts.options[i] === "--variable" && typeof opts.options[++i] === "string") {
+                                    if (opts.options[i] === '--variable' && typeof opts.options[++i] === 'string') {
                                         tokens = opts.options[i].split('=');
                                         key = tokens.shift().toUpperCase();
                                         if (/^[\w-_]+$/.test(key)) {
@@ -154,7 +153,6 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooks.fire('after_plugin_add', opts);
             });
-            break;
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
@@ -168,7 +166,6 @@ module.exports = function plugin(command, targets, opts) {
                         return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
                     }
 
-                    var targetPath = path.join(pluginPath, target);
                     // Iterate over all installed platforms and uninstall.
                     // If this is a web-only or dependency-only plugin, then
                     // there may be nothing to do here except remove the
@@ -177,8 +174,6 @@ module.exports = function plugin(command, targets, opts) {
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
-                            var platforms = require('./platforms');
-                            var parser = new platforms[platform].parser(platformRoot);
                             //check if plugin is restorable and warn
                             var configPath = cordova_util.projectConfig(projectRoot);
                             if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
@@ -199,7 +194,6 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooks.fire('after_plugin_rm', opts);
             });
-            break;
         case 'search':
             return hooks.fire('before_plugin_search')
             .then(function() {
@@ -212,8 +206,6 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooks.fire('after_plugin_search');
             });
-        case 'ls':
-        case 'list':
         default:
             return list(projectRoot, hooks);
     }

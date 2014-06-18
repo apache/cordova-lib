@@ -17,10 +17,13 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    platforms     = require('./platforms'),
     events        = require('../events'),
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
@@ -29,8 +32,8 @@ var path          = require('path'),
     ConfigParser = require('../configparser/ConfigParser'),
     cordova_util  = require('./util');
 
-var DEFAULT_NAME = "HelloCordova",
-    DEFAULT_ID   = "io.cordova.hellocordova";
+var DEFAULT_NAME = 'HelloCordova',
+    DEFAULT_ID   = 'io.cordova.hellocordova';
 
 /**
  * Usage:

@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var cordova_events = require('../events');
 var cordova_util = require('./util');
 
@@ -45,7 +50,7 @@ exports = module.exports = {
 
 exports.findProjectRoot = function(opt_startDir) {
     return cordova_util.isCordova(opt_startDir);
-}
+};
 
 // Each of these APIs takes a final parameter that is a callback function.
 // The callback is passed the error object upon failure, or undefined upon success.

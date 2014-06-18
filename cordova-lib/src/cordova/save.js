@@ -17,52 +17,58 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
+
 var cordova_util    = require('./util'),
     ConfigParser     = require('../configparser/ConfigParser'),
     path             = require('path'),
-    xml              = require('../util/xml-helpers')
+    xml              = require('../util/xml-helpers'),
     Q                = require('q'),
     events           = require('../events');
 
-module.exports = function save(target, opts){
-  opts = opts || {};
-  var projectHome = cordova_util.cdProjectRoot();
-  var configPath = cordova_util.projectConfig(projectHome);
-  var configXml = new ConfigParser(configPath);
-  var pluginsPath = path.join(projectHome, 'plugins');
-  var plugins = cordova_util.findPlugins(pluginsPath);
-  var features = configXml.doc.findall('./feature/param[@name="id"]/..');
-  //clear obsolete features with id params.
-  for(var i=0; i<features.length; i++){
-     //somehow elementtree remove fails on me
-     var childs = configXml.doc.getroot().getchildren();
-     var idx = childs.indexOf(features[i]);
-     if(idx > -1){
-        childs.splice(idx,1);
-      }
-  }
-  // persist the removed features here if there are no plugins
-  // to be added to config.xml otherwise we can delay the
-  // persist to add feature
-  if((!plugins || plugins.length<1) &&
-        (features && features.length)){
-      configXml.write();
-  }
-
-  return Q.all(plugins.map(function(plugin){
-    var currentPluginPath = path.join(pluginsPath,plugin);
-    var name = readPluginName(currentPluginPath);
-    var id = plugin;
-    var version = readPluginVersion(currentPluginPath);
-    var params = [{name:"id", value:id}];
-    if(opts.shrinkwrap){
-        params.push({name:"version", value: version});
+module.exports = save;
+function save(target, opts){
+    opts = opts || {};
+    var projectHome = cordova_util.cdProjectRoot();
+    var configPath = cordova_util.projectConfig(projectHome);
+    var configXml = new ConfigParser(configPath);
+    var pluginsPath = path.join(projectHome, 'plugins');
+    var plugins = cordova_util.findPlugins(pluginsPath);
+    var features = configXml.doc.findall('./feature/param[@name="id"]/..');
+    //clear obsolete features with id params.
+    for(var i=0; i<features.length; i++){
+        //somehow elementtree remove fails on me
+        var childs = configXml.doc.getroot().getchildren();
+        var idx = childs.indexOf(features[i]);
+        if(idx > -1){
+            childs.splice(idx,1);
+        }
     }
-    configXml.addFeature(name,params);
-    configXml.write();
-    events.emit('results', 'Saved plugin info for "'+plugin+'" to config.xml');
-    return Q();
-  }));
+    // persist the removed features here if there are no plugins
+    // to be added to config.xml otherwise we can delay the
+    // persist to add feature
+    if((!plugins || plugins.length<1) &&
+          (features && features.length)){
+        configXml.write();
+    }
+
+    return Q.all(plugins.map(function(plugin){
+        var currentPluginPath = path.join(pluginsPath,plugin);
+        var name = readPluginName(currentPluginPath);
+        var id = plugin;
+        var version = readPluginVersion(currentPluginPath);
+        var params = [{name:'id', value:id}];
+        if(opts.shrinkwrap){
+            params.push({ name: 'version', value: version });
+        }
+        configXml.addFeature(name,params);
+        configXml.write();
+        events.emit('results', 'Saved plugin info for "'+plugin+'" to config.xml');
+        return Q();
+    }));
 }
 
 function readPluginName(pluginPath){
@@ -70,9 +76,9 @@ function readPluginName(pluginPath){
     var et = xml.parseElementtreeSync(xml_path);
     var el = et.getroot().find('name');
     if(el && el.text){
-       return el.text.trim();
+        return el.text.trim();
     }
-    return "";
+    return '';
 }
 
 function readPluginVersion(pluginPath){
