@@ -22,10 +22,9 @@ var common = require('./common'),
     glob = require('glob'),
     shell = require('shelljs'),
     fs = require('fs'),
-    w8jsproj = require('../util/w8jsproj'),
+    jsproj = require('../../util/windows/jsproj'),
     events = require('../../events'),
     xml_helpers = require('../../util/xml-helpers');
-
 
 module.exports = {
     platformName:"windows8",
@@ -42,7 +41,7 @@ module.exports = {
         if (project_files.length == 0) {
             throw new Error(this.InvalidProjectPathError);
         }
-        return new w8jsproj(path.join(project_dir, project_files[0]));
+        return new jsproj(path.join(project_dir, project_files[0]));
     },
     "source-file":{
         install:function(source_el, plugin_dir, project_dir, plugin_id, project_file) {

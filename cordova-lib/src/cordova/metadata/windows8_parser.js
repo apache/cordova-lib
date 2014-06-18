@@ -28,7 +28,8 @@ var fs            = require('fs'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
     config        = require('../config'),
-    hooker        = require('../hooker');
+    hooker        = require('../hooker'),
+    jsproj        = require('../../util/windows/jsproj');
 
 module.exports = function windows8_parser(project) {
     try {
@@ -226,38 +227,18 @@ module.exports.prototype = {
 
     // updates the jsproj file to explicitly list all www content.
     update_jsproj:function() {
-        var jsproj_xml = xml.parseElementtreeSync(this.jsproj_path);
+        var projFile = new jsproj(this.jsproj_path);
+
         // remove any previous references to the www files
-        var item_groups = jsproj_xml.findall('ItemGroup');
-        for (var i = 0, l = item_groups.length; i < l; i++) {
-            var group = item_groups[i];
-            var files = group.findall('Content');
-            for (var j = 0, k = files.length; j < k; j++) {
-                var file = files[j];
-                if (file.attrib.Include.substr(0, 3) == 'www') {
-                    // remove file reference
-                    group.remove(0, file);
-                    // remove ItemGroup if empty
-                    var new_group = group.findall('Content');
-                    if(new_group.length < 1) {
-                        jsproj_xml.getroot().remove(0, group);
-                    }
-                }
-            }
-        }
+        projFile.removeSourceFile(new RegExp("www\\\\*", "i"));
 
         // now add all www references back in from the root www folder
-        var project_root = util.isCordova(this.windows8_proj_dir);
         var www_files = this.folder_contents('www', this.www_dir());
         for(file in www_files) {
-            var item = new et.Element('ItemGroup');
-            var content = new et.Element('Content');
-            content.attrib.Include = www_files[file];
-            item.append(content);
-            jsproj_xml.getroot().append(item);
+            projFile.addSourceFile(www_files[file]);
         }
         // save file
-        fs.writeFileSync(this.jsproj_path, jsproj_xml.write({indent:4}), 'utf-8');
+        projFile.write();
     },
     // Returns an array of all the files in the given directory with relative paths
     // - name     : the name of the top level directory (i.e all files will start with this in their path)

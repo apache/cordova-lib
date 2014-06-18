@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var csproj  = require('../../src/plugman/util/csproj'),
+var csproj  = require('../../src/util/windows/csproj'),
     path    = require('path'),
     os      = require('osenv'),
     et      = require('elementtree'),
