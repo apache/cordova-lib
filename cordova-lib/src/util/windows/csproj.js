@@ -116,26 +116,37 @@ csproj.prototype = {
     },
 
     removeSourceFile:function(relative_path) {
-        relative_path = relative_path.split('/').join('\\');
-        var item_groups = this.xml.findall('ItemGroup');
-        for (var i = 0, l = item_groups.length; i < l; i++) {
-            var group = item_groups[i];
-            var files = group.findall('Compile').concat(group.findall('Page')).concat(group.findall('Content'));
-            for (var j = 0, k = files.length; j < k; j++) {
-                var file = files[j];
-                if (file.attrib.Include == relative_path) {
-                    // remove file reference
-                    group.remove(0, file);
-                    // remove ItemGroup if empty
-                    var new_group = group.findall('Compile').concat(group.findall('Page')).concat(group.findall('Content'));
-                    if(new_group.length < 1) {
-                        this.xml.getroot().remove(0, group);
-                    }
-                    return true;
-                }
-            }
+        var isRegexp = relative_path instanceof RegExp;
+
+        if (!isRegexp) {
+            // path.normalize(relative_path);// ??
+            relative_path = relative_path.split('/').join('\\');
         }
-        return false;
+
+        var root = this.xml.getroot();
+        // iterate through all ItemGroup/Content elements and remove all items matched
+        this.xml.findall('ItemGroup').forEach(function(group){
+            // matched files in current ItemGroup
+            var filesToRemove = group.findall('Compile').concat(group.findall('Page'))
+                .concat(group.findall('Content')).filter(function(item) {
+                    if (!item.attrib.Include) return false;
+                    return isRegexp ? item.attrib.Include.match(relative_path) :
+                        item.attrib.Include == relative_path;
+            });
+
+            // nothing to remove, skip..
+            if (filesToRemove.length < 1) return;
+
+            filesToRemove.forEach(function(file){
+                // remove file reference
+                group.remove(0, file);
+            });
+
+            // remove ItemGroup if empty
+            if(group.findall('*').length < 1) {
+                root.remove(0, group);
+            };
+        });
     }
 };
 
