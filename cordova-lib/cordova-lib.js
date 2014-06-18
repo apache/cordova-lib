@@ -27,6 +27,7 @@ exports = module.exports = {
     },
     plugman: require('./src/plugman/plugman'),
     cordova: require('./src/cordova/cordova'),
+    events: require('./src/events'),
     configparser: require('./src/configparser/ConfigParser.js'),
     cordova_platforms: require('./src/cordova/platforms'),
     ////  MAIN CORDOVA TOOLS API
