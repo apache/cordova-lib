@@ -248,15 +248,13 @@ module.exports.prototype = {
         var folder_dir = fs.readdirSync(dir);
         for(item in folder_dir) {
             var stat = fs.statSync(path.join(dir, folder_dir[item]));
-
-            if(stat.isDirectory()) {
+            // Add all subfolder item paths if it's not a .svn dir.
+            if( stat.isDirectory() && (folder_dir[item] !== '.svn') ) {
                 var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
-                //Add all subfolder item paths
                 for(sub_item in sub_dir) {
                     results.push(sub_dir[sub_item]);
                 }
-            }
-            else if(stat.isFile()) {
+            } else if(stat.isFile()) {
                 results.push(path.join(name, folder_dir[item]));
             }
             // else { it is a FIFO, or a Socket, Symbolic Link or something ... }
