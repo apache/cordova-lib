@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var Q = require('q'),
     fs = require('fs'),
     path = require('path'),
@@ -24,14 +29,13 @@ var Q = require('q'),
     CordovaError  = require('../CordovaError');
 
 module.exports = function create( name, id, version, pluginPath, options ) {
-    var cwd = pluginPath + "/" + name + "/",
+    var cwd = pluginPath + '/' + name + '/',
         templatesDir = path.join(__dirname, '..', '..', 'templates/'),
         baseJS,
         root,
         pluginName,
         clobber,
-        jsMod,
-        pluginxml;
+        jsMod;
 
     //check we are not already in a plugin
     if( fs.existsSync( cwd + 'plugin.xml' ) ) {
@@ -46,20 +50,20 @@ module.exports = function create( name, id, version, pluginPath, options ) {
     root.set( 'version', version );
 
     //Add the name tag
-    pluginName = et.XML( "<name>" );
+    pluginName = et.XML( '<name>' );
     pluginName.text = name;
     root.append( pluginName );
 
     //loop through the options( variables ) for other tags
     for( var key in options ) {
-        var temp = et.XML( "<" + key + ">");
+        var temp = et.XML( '<' + key + '>');
         temp.text = options[ key ];
         root.append( temp );
     }
 
     //setup the directory structure
-    shell.mkdir( '-p', cwd + "www" );
-    shell.mkdir( '-p', cwd + "src" );
+    shell.mkdir( '-p', cwd + 'www' );
+    shell.mkdir( '-p', cwd + 'src' );
 
     //create a base plugin.js file
     baseJS = fs.readFileSync( templatesDir + 'base.js', 'utf-8').replace( /%pluginName%/g, name );
@@ -76,7 +80,7 @@ module.exports = function create( name, id, version, pluginPath, options ) {
     root.append( jsMod );
 
     //Write out the plugin.xml file
-    fs.writeFileSync( cwd + "plugin.xml", new et.ElementTree( root ).write( {indent: 4} ), 'utf-8' );
+    fs.writeFileSync( cwd + 'plugin.xml', new et.ElementTree( root ).write( {indent: 4} ), 'utf-8' );
 
     return Q();
 };

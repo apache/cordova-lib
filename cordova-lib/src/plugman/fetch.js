@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var shell   = require('shelljs'),
     fs      = require('fs'),
     url     = require('url'),
@@ -127,7 +132,7 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
 
 function readId(dir) {
     var xml_path = path.join(dir, 'plugin.xml');
-    var et = xml_helpers.parseElementtreeSync(path.join(dir, 'plugin.xml'));
+    var et = xml_helpers.parseElementtreeSync(xml_path);
     var plugin_id = et.getroot().attrib.id;
     return plugin_id;
 }
@@ -190,8 +195,8 @@ function copyPlugin(plugin_dir, plugins_dir, link) {
 
     var data = {
         source: {
-        type: 'local',
-              path: plugin_dir
+            type: 'local',
+            path: plugin_dir
         }
     };
     metadata.save_fetch_metadata(dest, data);

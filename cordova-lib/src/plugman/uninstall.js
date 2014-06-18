@@ -1,4 +1,4 @@
-/**
+    /**
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
     distributed with this work for additional information
@@ -17,9 +17,13 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          laxcomma:true, sub:true, expr:true
+*/
+
 var path = require('path'),
     fs   = require('fs'),
-    et   = require('elementtree'),
     shell= require('shelljs'),
     config_changes = require('./util/config-changes'),
     xml_helpers = require('../util/xml-helpers'),
@@ -28,7 +32,6 @@ var path = require('path'),
     CordovaError  = require('../CordovaError'),
     underscore = require('underscore'),
     Q = require('q'),
-    plugins = require('./util/plugins'),
     underscore = require('underscore'),
     events = require('../events'),
     platform_modules = require('./platforms'),
@@ -36,7 +39,8 @@ var path = require('path'),
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
-module.exports = function(platform, project_dir, id, plugins_dir, options) {
+module.exports = uninstall;
+function uninstall(platform, project_dir, id, plugins_dir, options) {
     options = options || {};
     options.is_top_level = true;
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
@@ -44,7 +48,7 @@ module.exports = function(platform, project_dir, id, plugins_dir, options) {
     // Allow path to file to grab an ID
     var xml_path = path.join(id, 'plugin.xml');
     if ( fs.existsSync(xml_path) ) {
-        var plugin_et  = xml_helpers.parseElementtreeSync(xml_path),
+        var plugin_et  = xml_helpers.parseElementtreeSync(xml_path);
         id = plugin_et._root.attrib['id'];
     }
 
@@ -61,7 +65,7 @@ module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_d
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError(platform + " not supported."));
+        return Q.reject(new CordovaError(platform + ' not supported.'));
     }
 
     var plugin_dir = path.join(plugins_dir, id);
@@ -126,8 +130,8 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     var dependList = {};
     platforms.forEach(function(platform) {
         var depsInfo = dependencies.generate_dependency_info(plugins_dir, platform);
-        var tlps = depsInfo.top_level_plugins,
-            deps, i;
+        var tlps = depsInfo.top_level_plugins;
+        var deps;
 
         // Top-level deps must always be explicitely asked to remove by user
         tlps.forEach(function(plugin_id){
@@ -144,7 +148,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
 
             var i = deps.indexOf(top_plugin_id);
             if(i >= 0)
-                 deps.splice(i, 1); // remove current/top-level plugin as blocking uninstall
+                deps.splice(i, 1); // remove current/top-level plugin as blocking uninstall
 
             if(deps.length) {
                 dependList[plugin] = deps.join(', ');
@@ -195,11 +199,11 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     var dependents = dependencies.dependents(plugin_id, depsInfo, platform);
 
     if(options.is_top_level && dependents && dependents.length > 0) {
-        var msg = "The plugin '"+ plugin_id +"' is required by (" + dependents.join(', ') + ")";
+        var msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
         if(options.force) {
-            events.emit("info", msg + " but forcing removal");
+            events.emit('info', msg + ' but forcing removal');
         } else {
-            return Q.reject( new CordovaError(msg + ", skipping uninstallation.") );
+            return Q.reject( new CordovaError(msg + ', skipping uninstallation.') );
         }
     }
 
@@ -246,44 +250,44 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         var sourceFiles = platformTag.findall('./source-file'),
             headerFiles = platformTag.findall('./header-file'),
             libFiles = platformTag.findall('./lib-file'),
-            resourceFiles = platformTag.findall('./resource-file');
+            resourceFiles = platformTag.findall('./resource-file'),
             frameworkFiles = platformTag.findall('./framework[@custom="true"]');
         assets = assets.concat(platformTag.findall('./asset'));
 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(source) {
-            actions.push(actions.createAction(handler["source-file"].uninstall,
+            actions.push(actions.createAction(handler['source-file'].uninstall,
                                              [source, project_dir, plugin_id],
-                                             handler["source-file"].install,
+                                             handler['source-file'].install,
                                              [source, plugin_dir, project_dir, plugin_id]));
         });
 
         headerFiles && headerFiles.forEach(function(header) {
-            actions.push(actions.createAction(handler["header-file"].uninstall,
+            actions.push(actions.createAction(handler['header-file'].uninstall,
                                              [header, project_dir, plugin_id],
-                                             handler["header-file"].install,
+                                             handler['header-file'].install,
                                              [header, plugin_dir, project_dir, plugin_id]));
         });
 
         resourceFiles && resourceFiles.forEach(function(resource) {
-            actions.push(actions.createAction(handler["resource-file"].uninstall,
+            actions.push(actions.createAction(handler['resource-file'].uninstall,
                                               [resource, project_dir, plugin_id],
-                                              handler["resource-file"].install,
+                                              handler['resource-file'].install,
                                               [resource, plugin_dir, project_dir]));
         });
 
         // CB-5238 custom frameworks only
         frameworkFiles && frameworkFiles.forEach(function(framework) {
-            actions.push(actions.createAction(handler["framework"].uninstall,
+            actions.push(actions.createAction(handler['framework'].uninstall,
                                               [framework, project_dir, plugin_id],
-                                              handler["framework"].install,
+                                              handler['framework'].install,
                                               [framework, plugin_dir, project_dir]));
         });
 
         libFiles && libFiles.forEach(function(source) {
-            actions.push(actions.createAction(handler["lib-file"].uninstall,
+            actions.push(actions.createAction(handler['lib-file'].uninstall,
                                               [source, project_dir, plugin_id],
-                                              handler["lib-file"].install,
+                                              handler['lib-file'].install,
                                               [source, plugin_dir, project_dir, plugin_id]));
         });
     }

@@ -453,7 +453,7 @@ function tryFetchDependency(dep, install, options) {
         relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
 
         if( fs.existsSync(relativePath) ) {
-           dep.url = relativePath;
+            dep.url = relativePath;
         }
     }
 
@@ -478,7 +478,7 @@ function installDependency(dep, install, options) {
             is_top_level: false
         });
 
-       return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
+        return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" not fetched, retrieving then installing.');

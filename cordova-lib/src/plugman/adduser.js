@@ -16,8 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
-var registry = require('./registry/registry')
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
+var registry = require('./registry/registry');
 
 module.exports = function() {
     return registry.adduser(null);
-}
+};

@@ -16,6 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          quotmark:false
+*/
+
 var Q = require('q'),
     et = require('elementtree'),
     fs = require('fs'),
@@ -60,7 +66,7 @@ module.exports = {
         }
 
         //Get the current plugin.xml file
-        pluginxml = et.parse( fs.readFileSync('plugin.xml', 'utf-8') );
+        var pluginxml = et.parse( fs.readFileSync('plugin.xml', 'utf-8') );
 
         //Check if this platform exists
         if( !pluginxml.find("./platform/[@name='"+ platformName +"']") ) {

@@ -17,7 +17,10 @@
     under the License.
 */
 
-/* jshint node:true */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          unused:false, expr:true
+*/
 
 var platform_modules   = require('./platforms'),
     path               = require('path'),
@@ -25,7 +28,7 @@ var platform_modules   = require('./platforms'),
     xml_helpers        = require('../util/xml-helpers'),
     wp8                = require('./platforms/wp8'),
     windows8           = require('./platforms/windows8'),
-    common             = require('./platforms/common');
+    common             = require('./platforms/common'),
     fs                 = require('fs'),
     shell              = require('shelljs'),
     util               = require('util'),
@@ -63,21 +66,21 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile) {
     var time = new Date().valueOf();
 
     writeLicenseHeader(outReleaseFileStream, platform, commitId);
-    
-    releaseBundle = libraryRelease.bundle();
+
+    var releaseBundle = libraryRelease.bundle();
 
     releaseBundle.pipe(outReleaseFileStream);
 
     outReleaseFileStream.on('finish', function() {
-      var newtime = new Date().valueOf() - time;
-      plugman.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
-      // TODO clean up all the *.browserify files
+        var newtime = new Date().valueOf() - time;
+        plugman.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
+        // TODO clean up all the *.browserify files
     });
 
     outReleaseFileStream.on('error', function(err) {
-      var newtime = new Date().valueOf() - time;
-      console.log('error while generating cordova_b.js');
-      plugman.emit('verbose', 'error while generating cordova.js');
+        var newtime = new Date().valueOf() - time;
+        console.log('error while generating cordova_b.js');
+        plugman.emit('verbose', 'error while generating cordova.js');
     });
 
 }
@@ -180,15 +183,15 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             scripts.push(scriptPath);
         });
     });
-    
+
     libraryRelease.transform(requireTr.transform);
 
     scripts.forEach(function(script) {
         libraryRelease.add(script);
     });
-        
+
     var outReleaseFile = path.join(wwwDir, 'cordova.js');
-    
+
     generateFinalBundle(platform, libraryRelease, outReleaseFile);
 
 };
