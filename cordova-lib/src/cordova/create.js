@@ -108,9 +108,10 @@ function create(dir, id, name, cfg) {
         var does_relative_path_go_up_at_least_one_dir = relative_path_from_source_to_target.split(path.sep)[0] == '..';
         if (!does_relative_path_go_up_at_least_one_dir) {
             throw new CordovaError(
-                'Project must not be created inside the www assets dir.' +
-                '\n    project dir:\t' + dir +
-                '\n    www assets dir:\t' + config_json.lib.www.uri
+                'Project dir "' +
+                dir +
+                '" must not be created at/inside the template used to create the project "' +
+                config_json.lib.www.uri + '".'
             );
         }
         if(symlink) {
