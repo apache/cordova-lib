@@ -38,7 +38,22 @@ var path          = require('path'),
     URL           = require('url'),
     Q             = require('q'),
     npm           = require('npm'),
-    util          = require('./util');
+    util          = require('./util'),
+    stubplatform  = {
+        url    : undefined,
+        version: undefined,
+        altplatform: undefined,
+        subdirectory: ''
+    };
+
+function mixin(mix, into) {
+    Object.getOwnPropertyNames(mix).forEach(function (prop) {
+        if (Object.hasOwnProperty.call(mix, prop)) {
+            Object.defineProperty(into, prop, Object.getOwnPropertyDescriptor(mix, prop));
+        }
+    });
+    return into;
+}
 
 
 exports.cordova = cordova;
@@ -47,13 +62,14 @@ exports.cordova_npm = cordova_npm;
 exports.custom = custom;
 exports.based_on_config = based_on_config;
 
-
 // Returns a promise for the path to the lazy-loaded directory.
 function based_on_config(project_root, platform, opts) {
     var custom_path = config.has_custom_path(project_root, platform);
     if (custom_path) {
-        var dot_file = config.read(project_root);
-        return module.exports.custom(dot_file.lib[platform].uri, dot_file.lib[platform].id, platform, dot_file.lib[platform].version);
+        var dot_file = config.read(project_root),
+            mixed_platforms = mixin(platforms, {});
+        mixed_platforms[platform] = mixin(dot_file.lib && dot_file.lib[platform] || {}, mixed_platforms[platform] || {});
+        return module.exports.custom(mixed_platforms, platform);
     } else {
         return module.exports.cordova(platform, opts);
     }
@@ -70,12 +86,15 @@ function cordova(platform, opts) {
 }
 
 function cordova_git(platform) {
+    var mixed_platforms = mixin(platforms, {}),
+        plat;
     if (!(platform in platforms)) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
     }
-
-    var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
-    return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
+    plat = mixed_platforms[platform];
+    plat.url = plat.url + ';a=snapshot;h=' + plat.version + ';sf=tgz';
+    plat.id = 'cordova';
+    return module.exports.custom(mixed_platforms, platform);
 }
 
 function cordova_npm(platform) {
@@ -103,28 +122,41 @@ function cordova_npm(platform) {
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
-function custom(url, id, platform, version) {
+function custom(platforms, platform) {
+    var plat;
+    var id;
+    var uri;
+    var url;
+    var version;
+    var subdir;
+    var platdir;
     var download_dir;
     var tmp_dir;
     var lib_dir;
+    var isUri;
+    if (!(platform in platforms)) {
+        return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
+    }
 
+    plat = mixin(platforms[platform], mixin(stubplatform, {}));
+    version = plat.version;
+    url = plat.url;
+    id = plat.id;
+    subdir = plat.subdirectory;
+    platdir = plat.altplatform || platform;
     // Return early for already-cached remote URL, or for local URLs.
-    var uri = URL.parse(url);
-    var isUri = uri.protocol && uri.protocol[1] != ':'; // second part of conditional is for awesome windows support. fuuu windows
+    uri = URL.parse(url);
+    isUri = uri.protocol && uri.protocol[1] != ':'; // second part of conditional is for awesome windows support. fuuu windows
     if (isUri) {
-        download_dir = (platform == 'wp8' ? path.join(util.libDirectory, 'wp', id, version) :
-                        path.join(util.libDirectory, platform, id, version));
-        lib_dir = download_dir;
-        if (platforms[platform] && platforms[platform].subdirectory && platform !== 'blackberry10') {
-            lib_dir =  path.join(download_dir, platforms[platform].subdirectory);
-        }
+        download_dir = path.join(util.libDirectory, platdir, id, version);
+        lib_dir = path.join(download_dir, subdir);
         if (fs.existsSync(download_dir)) {
             events.emit('verbose', id + ' library for "' + platform + '" already exists. No need to download. Continuing.');
             return Q(lib_dir);
         }
     } else {
         // Local path.
-        lib_dir = platforms[platform] && platforms[platform].subdirectory ? path.join(url, platforms[platform].subdirectory) : url;
+        lib_dir = path.join(url, subdir);
         return Q(lib_dir);
     }
     return hooker.fire('before_library_download', {
@@ -153,7 +185,7 @@ function custom(url, id, platform, version) {
             shell.mkdir('-p', tmp_dir);
 
             var size = 0;
-            var request_options = {uri:url};
+            var request_options = {url:url};
             if (proxy) {
                 request_options.proxy = proxy;
             }
@@ -173,7 +205,6 @@ function custom(url, id, platform, version) {
                     size = body.length;
                 }
             });
-
             req.pipe(zlib.createUnzip())
             .pipe(tar.Extract({path:tmp_dir}))
             .on('error', function(err) {
@@ -186,7 +217,7 @@ function custom(url, id, platform, version) {
                 var entries = fs.readdirSync(tmp_dir);
                 var entry = path.join(tmp_dir, entries[0]);
                 shell.mkdir('-p', download_dir);
-                shell.mv('-f', path.join(entry, (platform=='blackberry10'?'blackberry10':''), '*'), download_dir);
+                shell.mv('-f', path.join(entry, '*'), download_dir);
                 shell.rm('-rf', tmp_dir);
                 d.resolve(hooker.fire('after_library_download', {
                     platform:platform,
