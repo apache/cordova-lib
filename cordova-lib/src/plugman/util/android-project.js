@@ -94,7 +94,7 @@ AndroidProject.prototype = {
 
         for (var sub_dir in this._subProjectDirs)
         {
-            shell.exec('android update lib-project --path ' + sub_dir);
+            shell.exec('android update lib-project --path "' + sub_dir + '"');
         }
         this._dirty = false;
     },
