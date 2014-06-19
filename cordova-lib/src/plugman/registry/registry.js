@@ -16,19 +16,20 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          laxcomma:true
+*/
+
 var npm = require('npm'),
     path = require('path'),
-    http = require('http'),
     url = require('url'),
     fs = require('fs'),
     manifest = require('./manifest'),
-    os = require('os'),
     rc = require('rc'),
     Q = require('q'),
     request = require('request'),
-    zlib = require('zlib'),
-    tar = require('tar'),
-    shell = require('shelljs'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     plugmanConfigDir = path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
@@ -43,7 +44,7 @@ module.exports = {
      */
     config: function(args) {
         return initSettings().then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings)
+            return Q.ninvoke(npm, 'load', settings);
         })
         .then(function() {
             return Q.ninvoke(npm.commands, 'config', args);
@@ -69,7 +70,7 @@ module.exports = {
      */
     adduser: function(args) {
         return initSettings().then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings)
+            return Q.ninvoke(npm, 'load', settings);
         })
         .then(function() {
             return Q.ninvoke(npm.commands, 'adduser', args);
@@ -91,7 +92,7 @@ module.exports = {
                 // With  no --force we'll get a 409 (conflict) when trying to
                 // overwrite an existing package@version.
                 npm.config.set('force', true);
-                return Q.ninvoke(npm.commands, 'publish', args)
+                return Q.ninvoke(npm.commands, 'publish', args);
             }).fin(function() {
                 fs.unlink(path.resolve(args[0], 'package.json'));
             });
@@ -132,7 +133,7 @@ module.exports = {
         }).then(function() {
             // npm.unpublish removes the cache for the unpublished package
             // cleaning the entire cache might not be necessary.
-            return Q.ninvoke(npm.commands, 'cache', ["clean"]);
+            return Q.ninvoke(npm.commands, 'cache', ['clean']);
         });
     },
 
@@ -180,7 +181,7 @@ module.exports = {
             return info[version];
         });
     }
-}
+};
 
 /**
  * @method initSettings
@@ -189,7 +190,7 @@ module.exports = {
 function initSettings() {
     var settings = module.exports.settings;
     // check if settings already set
-    if(settings != null) return Q(settings);
+    if(settings !== null) return Q(settings);
 
     // setting up settings
     // obviously if settings dir does not exist settings is going to be empty
@@ -201,10 +202,10 @@ function initSettings() {
     settings =
     module.exports.settings =
     rc('plugman', {
-         cache: plugmanCacheDir,
-         registry: 'http://registry.cordova.io',
-         logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
-         userconfig: path.resolve(plugmanConfigDir, 'config')
+        cache: plugmanCacheDir,
+        registry: 'http://registry.cordova.io',
+        logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
+        userconfig: path.resolve(plugmanConfigDir, 'config')
     });
     return Q(settings);
 }
@@ -226,7 +227,7 @@ function bumpCounter(info, client) {
         client: client,
         version: info.version
     };
-    var remote = settings.registry + '/downloads'
+    var remote = settings.registry + '/downloads';
 
     makeRequest('POST', remote, message, function (err, res, body) {
         // ignore errors
@@ -235,50 +236,55 @@ function bumpCounter(info, client) {
 
 
 function makeRequest (method, where, what, cb_) {
-  var settings = module.exports.settings
-  var remote = url.parse(where)
-  if (typeof cb_ !== "function") cb_ = what, what = null
-  var cbCalled = false
-  function cb () {
-    if (cbCalled) return
-    cbCalled = true
-    cb_.apply(null, arguments)
-  }
-
-  var strict = settings['strict-ssl']
-  if (strict === undefined) strict = true
-  var opts = { url: remote
-             , method: method
-             , ca: settings.ca
-             , strictSSL: strict }
-    , headers = opts.headers = {}
-
-  headers.accept = "application/json"
-
-  headers["user-agent"] = settings['user-agent'] ||
-                          'node/' + process.version
-
-  var p = settings.proxy
-  var sp = settings['https-proxy'] || p
-  opts.proxy = remote.protocol === "https:" ? sp : p
-
-  // figure out wth 'what' is
-  if (what) {
-    if (Buffer.isBuffer(what) || typeof what === "string") {
-      opts.body = what
-      headers["content-type"] = "application/json"
-      headers["content-length"] = Buffer.byteLength(what)
-    } else {
-      opts.json = what
+    var settings = module.exports.settings;
+    var remote = url.parse(where);
+    if (typeof cb_ !== 'function') {
+        cb_ = what;
+        what = null;
     }
-  }
+    var cbCalled = false;
+    function cb () {
+        if (cbCalled) return;
+        cbCalled = true;
+        cb_.apply(null, arguments);
+    }
 
-  var req = request(opts, cb)
+    var strict = settings['strict-ssl'];
+    if (strict === undefined) strict = true;
+    var opts = { url: remote
+               , method: method
+               , ca: settings.ca
+               , strictSSL: strict
+               };
 
-  req.on("error", cb)
-  req.on("socket", function (s) {
-    s.on("error", cb)
-  })
+    var headers = opts.headers = {};
 
-  return req
+    headers.accept = 'application/json';
+
+    headers['user-agent'] = settings['user-agent'] ||
+                            'node/' + process.version;
+
+    var p = settings.proxy;
+    var sp = settings['https-proxy'] || p;
+    opts.proxy = remote.protocol === 'https:' ? sp : p;
+
+    // figure out wth 'what' is
+    if (what) {
+        if (Buffer.isBuffer(what) || typeof what === 'string') {
+            opts.body = what;
+            headers['content-type'] = 'application/json';
+            headers['content-length'] = Buffer.byteLength(what);
+        } else {
+            opts.json = what;
+        }
+    }
+
+    var req = request(opts, cb);
+
+    req.on('error', cb);
+    req.on('socket', function (s) {
+        s.on('error', cb);
+    });
+
+    return req;
 }

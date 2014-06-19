@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 module.exports = [
     'org.apache.cordova.splashscreen',
     'org.apache.cordova.network-information',
@@ -36,4 +41,4 @@ module.exports = [
     'org.apache.cordova.device-motion',
     'org.apache.cordova.battery-status',
     'org.apache.cordova.statusbar'
-]
+];

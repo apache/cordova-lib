@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var xml_helpers = require('../../util/xml-helpers'),
     path = require('path'),
     Q = require('q'),
@@ -59,12 +64,12 @@ function generatePackageJsonFromPluginXml(plugin_path) {
             issue = pluginElm.findtext('issue'),
             engines = pluginElm.findall('engines/engine'),
             platformsElm = pluginElm.findall('platform'),
-            englishdoc = "",
+            englishdoc = '',
             platforms = [];
 
         platformsElm.forEach(function(plat){
             platforms.push(plat.attrib.name);
-        })
+        });
         if(!version) throw new Error('`version` required');
 
         package_json.version = version;
