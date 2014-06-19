@@ -35,7 +35,7 @@ module.exports = function firefoxos_parser(project) {
 };
 
 // Returns a promise.
-module.exports.check_requirements = function(project_root) {
+module.exports.check_requirements = function(project_root, lib_path) {
     return Q(); // Requirements always met.
 };
 

@@ -31,7 +31,7 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    config        = require('../config'),
+    lazy_load     = require('../lazy_load'),
     hooker        = require('../hooker'),
     jsproj        = require('../../util/windows/jsproj');
 
@@ -60,16 +60,13 @@ module.exports = function windows_parser(project) {
 };
 
 // Returns a promise
-module.exports.check_requirements = function(project_root) {
-    events.emit('log', 'Checking windows requirements...');
-    var lib_path = path.join(util.libDirectory, 'windows', 'cordova',
-                    require('../platforms').windows.version, 'windows');
-
-    var custom_path = config.has_custom_path(project_root, 'windows8') ||
-        config.has_custom_path(project_root, 'windows');
-    if (custom_path) {
-        lib_path = path.join(custom_path, 'windows');
+module.exports.check_requirements = function(project_root, lib_path) {
+    if (lib_path === undefined) {
+        return lazy_load.based_on_config(project_root, 'windows8').then(function (lib_path) {
+            return module.exports.check_requirements(project_root, lib_path);
+        });
     }
+    events.emit('log', 'Checking windows8 requirements...');
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
     events.emit('verbose', 'Running "' + command + '" (output to follow)');
     var d = Q.defer();
