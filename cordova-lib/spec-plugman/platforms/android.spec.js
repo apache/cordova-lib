@@ -167,7 +167,7 @@ describe('android project handler', function() {
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
                 })).toBe(true, 'target SDK version not copied to library');
-                expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
+                expect(exec).toHaveBeenCalledWith('android update lib-project --path "' + subDir + '"');
             });
             it('with custom=false should update the main and library projects', function() {
                 var frameworkElement = { attrib: { src: "extras/android/support/v7/appcompat" } };
@@ -202,7 +202,7 @@ describe('android project handler', function() {
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
                 })).toBe(true, 'target SDK version not copied to library');
-                expect(exec).toHaveBeenCalledWith('android update lib-project --path ' + subDir);
+                expect(exec).toHaveBeenCalledWith('android update lib-project --path "' + subDir + '"');
             });
         });
     });
