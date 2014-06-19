@@ -16,6 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true
+*/
+
 var et = require('elementtree'),
     xml= require('../util/xml-helpers'),
     CordovaError = require('../CordovaError'),
@@ -44,7 +50,7 @@ function findOrCreate(doc, name) {
     var ret = doc.find(name);
     if (!ret) {
         ret = new et.Element(name);
-        doc.getroot().append(content);
+        doc.getroot().append(ret);
     }
     return ret;
 }
@@ -67,8 +73,8 @@ ConfigParser.prototype = {
         return this.doc.find('description').text.trim();
     },
     setDescription: function(text) {
-        this.doc.find('description').text = text;
         var el = findOrCreate(this.doc, 'description');
+        el.text = text;
     },
     version: function() {
         return this.doc.getroot().attrib['version'];
@@ -102,13 +108,13 @@ ConfigParser.prototype = {
      * @return {Array} Icons for the platform specified.
      */
     getIcons: function(platform) {
-        var ret = [];
+        var ret = [],
             iconElements = [];
 
         if (platform) { // platform specific icons
             this.doc.findall('platform[@name=\'' + platform + '\']/icon').forEach(function(elt){
                 elt.platform = platform; // mark as platform specific icon
-                iconElements.push(elt)
+                iconElements.push(elt);
             });
         }
         // root level icons
@@ -151,7 +157,7 @@ ConfigParser.prototype = {
         /** Returns default icons */
         ret.getDefault = function() {
             return ret.defaultIcon;
-        }
+        };
 
         return ret;
     },
@@ -159,15 +165,15 @@ ConfigParser.prototype = {
      *This does not check for duplicate feature entries
      */
     addFeature: function (name, params){
-      var el = new et.Element('feature');
+        var el = new et.Element('feature');
         el.attrib.name = name;
-        if(params){
-          params.forEach(function(param){
-            var p = new et.Element('param');
-            p.attrib.name = param.name;
-            p.attrib.value = param.value;
-            el.append(p);
-          });
+        if (params) {
+            params.forEach(function(param){
+                var p = new et.Element('param');
+                p.attrib.name = param.name;
+                p.attrib.value = param.value;
+                el.append(p);
+            });
         }
         this.doc.getroot().append(el);
     },
