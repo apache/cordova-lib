@@ -39,11 +39,12 @@
   },
   "devDependencies": {
     "temp": "0.6.x",
+    "jshint": "2.5.x",
     "jasmine-node": "~1"
   },
   "scripts": {
     "test": "npm run jasmine && npm run jshint",
-    "jshint": "jshint src",
+    "jshint": "node node_modules/jshint/bin/jshint src",
     "jasmine": "jasmine-node --color spec-plugman spec-cordova"
   },
   "contributors": [
