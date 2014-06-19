@@ -43,7 +43,7 @@
   },
   "scripts": {
     "test": "npm run jasmine && npm run jshint",
-    "jshint": "jshint src/cordova/*.js src/plugman/*.js",
+    "jshint": "jshint src",
     "jasmine": "jasmine-node --color spec-plugman spec-cordova"
   },
   "contributors": [
