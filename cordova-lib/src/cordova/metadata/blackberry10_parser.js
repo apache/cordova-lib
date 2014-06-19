@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var fs            = require('fs'),
     path          = require('path'),
     shell         = require('shelljs'),
@@ -46,7 +51,7 @@ module.exports.check_requirements = function(project_root) {
         lib_path = path.join(util.libDirectory, 'blackberry10', 'cordova', require('../platforms').blackberry10.version);
     }
     var d = Q.defer();
-    child_process.exec("\"" + path.join(lib_path, 'bin', 'check_reqs') + "\"", function(err, output, stderr) {
+    child_process.exec('"' + path.join(lib_path, 'bin', 'check_reqs') + '"', function(err, output, stderr) {
         if (err) {
             d.reject(new CordovaError('Requirements check failed: ' + output + stderr));
         } else {

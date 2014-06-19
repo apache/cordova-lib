@@ -16,21 +16,21 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var fs            = require('fs'),
     path          = require('path'),
     xml           = require('../../util/xml-helpers'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
-    project_config= require('../config'),
     Q             = require('q'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
 
-var default_prefs = {
-    "useBrowserHistory":"true",
-    "exit-on-suspend":"false"
-};
 
 module.exports = function android_parser(project) {
     if (!fs.existsSync(path.join(project, 'AndroidManifest.xml'))) {
@@ -78,6 +78,9 @@ module.exports.prototype = {
     },
 
     update_from_config:function(config) {
+        // TODO: share code for this func with Android. Or fix it and remove
+        // the below JSHint hacks line.
+        // jshint unused:false, indent:false, undef:true, loopfunc:true, shadow:true, quotmark:false
         if (config instanceof ConfigParser) {
         } else throw new Error('update_from_config requires a ConfigParser object');
 
@@ -143,7 +146,7 @@ module.exports.prototype = {
                     max_density = density;
                   } else {
                     if (max_size < size) {
-                      max_size = size
+                      max_size = size;
                       max_density = density;
                     }
                   }
@@ -227,7 +230,7 @@ module.exports.prototype = {
         var java_files = fs.readdirSync(orig_pkgDir).filter(function(f) {
           return f.indexOf('.svn') == -1 && f.indexOf('.java') >= 0 && fs.readFileSync(path.join(orig_pkgDir, f), 'utf-8').match(/extends\s+CordovaActivity/);
         });
-        if (java_files.length == 0) {
+        if (java_files.length === 0) {
           throw new Error('No Java files found which extend CordovaActivity.');
         } else if(java_files.length > 1) {
           events.emit('log', 'Multiple candidate Java files (.java files which extend CordovaActivity) found. Guessing at the first one, ' + java_files[0]);
@@ -304,7 +307,7 @@ module.exports.prototype = {
 // PATCH + MINOR * 100 + MAJOR * 10000
 // see http://developer.android.com/tools/publishing/versioning.html
 function default_versionCode(version) {
-    nums = version.split('-')[0].split('.').map(Number);
+    var nums = version.split('-')[0].split('.').map(Number);
     var versionCode = nums[0] * 10000 + nums[1] * 100 + nums[2];
     return versionCode;
 }

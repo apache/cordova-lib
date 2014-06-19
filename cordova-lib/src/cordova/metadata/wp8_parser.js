@@ -16,9 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc, sub:true
+*/
+
 var fs            = require('fs'),
     path          = require('path'),
-    et            = require('elementtree'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
@@ -84,10 +88,10 @@ module.exports.prototype = {
         var name = config.name();
         var prev_name = manifest.find('.//App[@Title]')['attrib']['Title'];
         if(prev_name != name) {
-            //console.log("Updating app name from " + prev_name + " to " + name);
+            //console.log('Updating app name from ' + prev_name + " to " + name);
             manifest.find('.//App').attrib.Title = name;
-            manifest.find('.//App').attrib.Publisher = name + " Publisher";
-            manifest.find('.//App').attrib.Author = name + " Author";
+            manifest.find('.//App').attrib.Publisher = name + ' Publisher';
+            manifest.find('.//App').attrib.Author = name + ' Author';
             manifest.find('.//PrimaryToken').attrib.TokenID = name;
             //update name of sln and csproj.
             name = name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); //make it a ligitamate name
@@ -96,7 +100,7 @@ module.exports.prototype = {
             var sln_name = fs.readdirSync(this.wp8_proj_dir).filter(function(e) { return e.match(/\.sln$/i); })[0];
             var sln_path = path.join(this.wp8_proj_dir, sln_name);
             var sln_file = fs.readFileSync(sln_path, 'utf-8');
-            var name_regex = new RegExp(prev_name, "g");
+            var name_regex = new RegExp(prev_name, 'g');
             fs.writeFileSync(sln_path, sln_file.replace(name_regex, name), 'utf-8');
             shell.mv('-f', this.csproj_path, path.join(this.wp8_proj_dir, name + '.csproj'));
             this.csproj_path = path.join(this.wp8_proj_dir, name + '.csproj');
@@ -111,10 +115,10 @@ module.exports.prototype = {
          *  - App.xaml
          *  - App.xaml.cs
          */
-         var pkg = config.packageName();
-         var csproj = xml.parseElementtreeSync(this.csproj_path);
-         prev_name = csproj.find('.//RootNamespace').text;
-         if(prev_name != pkg) {
+        var pkg = config.packageName();
+        var csproj = xml.parseElementtreeSync(this.csproj_path);
+        prev_name = csproj.find('.//RootNamespace').text;
+        if(prev_name != pkg) {
             //console.log("Updating package name from " + prev_name + " to " + pkg);
             //CordovaAppProj.csproj
             csproj.find('.//RootNamespace').text = pkg;
@@ -137,10 +141,10 @@ module.exports.prototype = {
             //App.xaml.cs
             var appCS = fs.readFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), 'utf-8');
             fs.writeFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), appCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
-         }
+        }
 
-         //Write out manifest
-         fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');
+        //Write out manifest
+        fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');
 
         // Update icons
         var icons = config.getIcons('wp8');
@@ -150,12 +154,12 @@ module.exports.prototype = {
         // icons, that should be added to platform
         // @param dest {string} Path to copy icon to, relative to platform root
         var platformIcons = [
-            {dest: "ApplicationIcon.png", width: 99, height: 99},
-            {dest: "Background.png", width: 159, height: 159},
+            {dest: 'ApplicationIcon.png', width: 99, height: 99},
+            {dest: 'Background.png', width: 159, height: 159},
         ];
 
         platformIcons.forEach(function (item) {
-            icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
+            var icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, item.dest);
@@ -212,11 +216,11 @@ module.exports.prototype = {
         var projFile = new csproj(this.csproj_path);
 
         // remove any previous references to the www files
-        projFile.removeSourceFile(new RegExp("www\\\\*", "i"));
+        projFile.removeSourceFile(new RegExp('www\\\\*', 'i'));
 
         // now add all www references back in from the root www folder
         var www_files = this.folder_contents('www', this.www_dir());
-        for(file in www_files) {
+        for(var file in www_files) {
             projFile.addSourceFile(www_files[file]);
         }
         // save file
@@ -228,13 +232,13 @@ module.exports.prototype = {
     folder_contents:function(name, dir) {
         var results = [];
         var folder_dir = fs.readdirSync(dir);
-        for(item in folder_dir) {
+        for(var item in folder_dir) {
             var stat = fs.statSync(path.join(dir, folder_dir[item]));
 
             if(stat.isDirectory()) {
                 var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
                 //Add all subfolder item paths
-                for(sub_item in sub_dir) {
+                for(var sub_item in sub_dir) {
                     results.push(sub_dir[sub_item]);
                 }
             }

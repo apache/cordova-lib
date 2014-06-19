@@ -16,6 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true
+*/
+
 var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
@@ -48,9 +54,9 @@ module.exports.prototype = {
         // overwrite properties existing in config.xml
         var contentNode = config.doc.find('content');
         var contentSrc = contentNode.attrib['src'];
-        manifest.launch_path = path.join("/", contentSrc) || "/index.html";
+        manifest.launch_path = path.join('/', contentSrc) || '/index.html';
 
-        manifest.installs_allowed_from = manifest.installs_allowed_from || ["*"];
+        manifest.installs_allowed_from = manifest.installs_allowed_from || ['*'];
         manifest.version = config.version();
         manifest.name = config.name();
         manifest.pkgName = config.packageName();
@@ -101,7 +107,7 @@ module.exports.prototype = {
                     manifest.permissions[permissionName].access = node.attrib['access'];
                 }
 
-                if (node.attrib['privileged'] === "true") {
+                if (node.attrib['privileged'] === 'true') {
                     privileged = true;
                 }
             });
@@ -122,22 +128,22 @@ module.exports.prototype = {
                 var size = icon.width;
                 var sizeInt = parseInt(size);
 
-                events.emit('verbose', "icon[" + i + "]:" + JSON.stringify(icon));
+                events.emit('verbose', 'icon[' + i + ']:' + JSON.stringify(icon));
 
                 if (size && !isNaN(sizeInt)) {
                     if (icon.src) {
-                        var destfilepath = path.join(this.www_dir(), "icon", "icon-" + size + ".png");
+                        var destfilepath = path.join(this.www_dir(), 'icon', 'icon-' + size + '.png');
 
-                        manifest.icons[sizeInt] = "/icon/icon-" + size + ".png";
+                        manifest.icons[sizeInt] = '/icon/icon-' + size + '.png';
 
                         if (!fs.existsSync(icon.src)) {
-                            events.emit('verbose', "ignoring icon[" + i + "] icon. File " + icon.src + " not found.");
+                            events.emit('verbose', 'ignoring icon[' + i + '] icon. File ' + icon.src + ' not found.');
                         } else {
                             events.emit('verbose', 'Copying icon from ' + icon.src + ' to ' + destfilepath);
                             shell.cp('-f', icon.src, destfilepath);
                         }
                     } else {
-                        events.emit('warn', "ignoring icon[" + i + "] no src attribute:" + JSON.stringify(icon));
+                        events.emit('warn', 'ignoring icon[' + i + '] no src attribute:' + JSON.stringify(icon));
                     }
                 }
             }

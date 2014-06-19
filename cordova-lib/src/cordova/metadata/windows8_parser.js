@@ -16,9 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc, sub:true
+*/
+
 var fs            = require('fs'),
     path          = require('path'),
-    et            = require('elementtree'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
@@ -53,7 +57,7 @@ module.exports.check_requirements = function(project_root) {
 
     var custom_path = config.has_custom_path(project_root, 'windows8');
     if (custom_path) {
-        lib_path = path.join(custom_path, "windows8");
+        lib_path = path.join(custom_path, 'windows8');
     }
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
     events.emit('verbose', 'Running "' + command + '" (output to follow)');
@@ -168,13 +172,13 @@ module.exports.prototype = {
 
         // Icons, that should be added to platform
         var platformIcons = [
-            {dest: "images/logo.png", width: 150, height: 150},
-            {dest: "images/smalllogo.png", width: 30, height: 30},
-            {dest: "images/storelogo.png", width: 50, height: 50},
+            {dest: 'images/logo.png', width: 150, height: 150},
+            {dest: 'images/smalllogo.png', width: 30, height: 30},
+            {dest: 'images/storelogo.png', width: 50, height: 50},
         ];
 
         platformIcons.forEach(function (item) {
-            icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
+            var icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, item.dest);
@@ -189,7 +193,7 @@ module.exports.prototype = {
         return path.join(this.windows8_proj_dir, 'www');
     },
     config_xml:function() {
-        return path.join(this.windows8_proj_dir,"config.xml");
+        return path.join(this.windows8_proj_dir,'config.xml');
     },
     // copy files from merges directory to actual www dir
     copy_merges:function(merges_sub_path) {
@@ -202,7 +206,7 @@ module.exports.prototype = {
 
     // Used for creating platform_www in projects created by older versions.
     cordovajs_path:function(libDir) {
-        var jsPath = path.join(libDir, "template", 'www', 'cordova.js');
+        var jsPath = path.join(libDir, 'template', 'www', 'cordova.js');
         return path.resolve(jsPath);
     },
 
@@ -230,11 +234,11 @@ module.exports.prototype = {
         var projFile = new jsproj(this.jsproj_path);
 
         // remove any previous references to the www files
-        projFile.removeSourceFile(new RegExp("www\\\\*", "i"));
+        projFile.removeSourceFile(new RegExp('www\\\\*', 'i'));
 
         // now add all www references back in from the root www folder
         var www_files = this.folder_contents('www', this.www_dir());
-        for(file in www_files) {
+        for(var file in www_files) {
             projFile.addSourceFile(www_files[file]);
         }
         // save file
@@ -246,12 +250,12 @@ module.exports.prototype = {
     folder_contents:function(name, dir) {
         var results = [];
         var folder_dir = fs.readdirSync(dir);
-        for(item in folder_dir) {
+        for(var item in folder_dir) {
             var stat = fs.statSync(path.join(dir, folder_dir[item]));
             // Add all subfolder item paths if it's not a .svn dir.
             if( stat.isDirectory() && (folder_dir[item] !== '.svn') ) {
                 var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
-                for(sub_item in sub_dir) {
+                for(var sub_item in sub_dir) {
                     results.push(sub_dir[sub_item]);
                 }
             } else if(stat.isFile()) {

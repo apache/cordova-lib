@@ -17,6 +17,11 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          sub:true
+*/
+
 var fs            = require('fs'),
     path          = require('path'),
     xcode         = require('xcode'),
@@ -26,8 +31,7 @@ var fs            = require('fs'),
     plist         = require('plist-with-patches'),
     Q             = require('q'),
     ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError'),
-    config        = require('../config');
+    CordovaError  = require('../../CordovaError');
 
 module.exports = function ios_parser(project) {
     try {
@@ -83,24 +87,24 @@ module.exports.prototype = {
         var appRoot = util.isCordova(platformRoot);
 
         var platformIcons = [
-            {dest: "icon-60.png", width: 60, height: 60},
-            {dest: "icon-60@2x.png", width: 120, height: 120},
-            {dest: "icon-76.png", width: 76, height: 76},
-            {dest: "icon-76@2x.png", width: 152, height: 152},
-            {dest: "icon-small.png", width: 29, height: 29},
-            {dest: "icon-small@2x.png", width: 58, height: 58},
-            {dest: "icon-40.png", width: 40, height: 40},
-            {dest: "icon-40@2x.png", width: 80, height: 80},
-            {dest: "icon.png", width: 57, height: 57},
-            {dest: "icon@2x.png", width: 114, height: 114},
-            {dest: "icon-72.png", width: 72, height: 72},
-            {dest: "icon-72@2x.png", width: 144, height: 144},
-            {dest: "icon-50.png", width: 50, height: 50},
-            {dest: "icon-50@2x.png", width: 100, height: 100}
+            {dest: 'icon-60.png', width: 60, height: 60},
+            {dest: 'icon-60@2x.png', width: 120, height: 120},
+            {dest: 'icon-76.png', width: 76, height: 76},
+            {dest: 'icon-76@2x.png', width: 152, height: 152},
+            {dest: 'icon-small.png', width: 29, height: 29},
+            {dest: 'icon-small@2x.png', width: 58, height: 58},
+            {dest: 'icon-40.png', width: 40, height: 40},
+            {dest: 'icon-40@2x.png', width: 80, height: 80},
+            {dest: 'icon.png', width: 57, height: 57},
+            {dest: 'icon@2x.png', width: 114, height: 114},
+            {dest: 'icon-72.png', width: 72, height: 72},
+            {dest: 'icon-72@2x.png', width: 144, height: 144},
+            {dest: 'icon-50.png', width: 50, height: 50},
+            {dest: 'icon-50@2x.png', width: 100, height: 100}
         ];
 
         platformIcons.forEach(function (item) {
-            icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
+            var icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, 'Resources/icons/', item.dest);
