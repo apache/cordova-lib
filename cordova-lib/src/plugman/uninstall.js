@@ -116,7 +116,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     // Recursively remove plugins which were installed as dependents (that are not top-level)
     // optional?
     var recursive = true;
-    var toDelete = recursive ? plugin_et.findall('dependency') : [];
+    var toDelete = recursive ? plugin_et.findall('.//dependency') : [];
     toDelete = toDelete && toDelete.length ? toDelete.map(function(p) { return p.attrib.id; }) : [];
     toDelete.push(top_plugin_id);
 

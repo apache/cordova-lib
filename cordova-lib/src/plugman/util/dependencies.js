@@ -52,7 +52,7 @@ module.exports = package = {
             tlps.push(plugin_id);
 
             var xml = xml_helpers.parseElementtreeSync( package.resolveConfig(plugin_id, plugins_dir) );
-            var deps = xml.findall('dependency');
+            var deps = xml.findall('.//dependency');
 
             deps && deps.forEach(function(dep) {
                 graph.add(plugin_id, dep.attrib.id);
@@ -60,7 +60,7 @@ module.exports = package = {
         });
         Object.keys(json.dependent_plugins).forEach(function(plugin_id) {
             var xml = xml_helpers.parseElementtreeSync( package.resolveConfig(plugin_id, plugins_dir) );
-            var deps = xml.findall('dependency');
+            var deps = xml.findall('.//dependency');
             deps && deps.forEach(function(dep) {
                 graph.add(plugin_id, dep.attrib.id);
             });
