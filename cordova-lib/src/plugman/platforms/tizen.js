@@ -16,6 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc,
+          laxcomma:true, sub:true
+*/
+
 var path = require('path')
     , fs = require('fs')
     , common = require('./common')
@@ -29,9 +35,10 @@ module.exports = {
     package_name:function(project_dir) {
         // preferred location if cordova >= 3.4
         var preferred_path = path.join(project_dir, 'config.xml');
+        var config_path;
         if (!fs.existsSync(preferred_path)) {
             // older location
-            old_config_path = path.join(module.exports.www_dir(project_dir), 'config.xml');
+            var old_config_path = path.join(module.exports.www_dir(project_dir), 'config.xml');
             if (!fs.existsSync(old_config_path)) {
                 // output newer location and fail reading
                 config_path = preferred_path;
@@ -45,7 +52,7 @@ module.exports = {
         var widget_doc = xml_helpers.parseElementtreeSync(config_path);
         return widget_doc._root.attrib['id'];
     },
-    "source-file":{
+    'source-file':{
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.copyFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
@@ -55,7 +62,7 @@ module.exports = {
             common.removeFile(project_dir, dest);
         }
     },
-    "header-file": {
+    'header-file': {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'header-fileinstall is not supported for firefoxos');
         },
@@ -63,7 +70,7 @@ module.exports = {
             events.emit('verbose', 'header-file.uninstall is not supported for firefoxos');
         }
     },
-    "resource-file":{
+    'resource-file':{
         install:function(el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'resource-file.install is not supported for firefoxos');
         },
@@ -71,7 +78,7 @@ module.exports = {
             events.emit('verbose', 'resource-file.uninstall is not supported for firefoxos');
         }
     },
-    "framework": {
+    'framework': {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'framework.install is not supported for firefoxos');
         },
@@ -79,7 +86,7 @@ module.exports = {
             events.emit('verbose', 'framework.uninstall is not supported for firefoxos');
         }
     },
-    "lib-file": {
+    'lib-file': {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'lib-file.install is not supported for firefoxos');
         },

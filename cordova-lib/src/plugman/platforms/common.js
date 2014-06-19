@@ -16,6 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 var shell = require('shelljs'),
     path  = require('path'),
     fs    = require('fs'),
@@ -74,7 +79,7 @@ module.exports = common = {
         var curDir = path.dirname(file);
 
         while(curDir !== path.resolve(project_dir, 'src')) {
-            if(fs.existsSync(curDir) && fs.readdirSync(curDir) == 0) {
+            if(fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
                 fs.rmdirSync(curDir);
                 curDir = path.resolve(curDir, '..');
             } else {
