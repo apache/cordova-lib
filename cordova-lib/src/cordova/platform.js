@@ -386,10 +386,6 @@ function supports(project_root, name) {
     return platformParser.check_requirements(project_root);
 }
 
-function createOverrides(projectRoot, target) {
-    shell.mkdir('-p', path.join(cordova_util.appDir(projectRoot), 'merges', target));
-}
-
 // Returns a promise.
 function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) {
     var output = path.join(projectRoot, 'platforms', target);
@@ -434,7 +430,6 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
             return require('./cordova').raw.prepare(target);
         })
         .then(function() {
-            createOverrides(projectRoot, target);
             // Install all currently installed plugins into this new platform.
             var plugins_dir = path.join(projectRoot, 'plugins');
             var plugins = cordova_util.findPlugins(plugins_dir);
