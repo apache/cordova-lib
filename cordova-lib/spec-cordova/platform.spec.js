@@ -101,7 +101,6 @@ describe('platform end-to-end', function() {
         }).then(function() {
             // Check the platform add was successful.
             expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
-            expect(path.join(project, 'merges', helpers.testPlatform)).toExist();
             expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
         }).then(fullPlatformList) // Check for it in platform ls.
         .then(function() {
