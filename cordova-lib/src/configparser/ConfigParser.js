@@ -110,7 +110,7 @@ ConfigParser.prototype = {
      * @return {Array}               Resources for the platform specified.
      */
     getStaticResources: function(platform, resourceName) {
-        var ret = [];
+        var ret = [],
             staticResources = [];
         if (platform) { // platform specific icons
             this.doc.findall('platform[@name=\'' + platform + '\']/' + resourceName).forEach(function(elt){
@@ -144,7 +144,7 @@ ConfigParser.prototype = {
          */
         ret.getBySize = function(width, height) {
             if (!width && !height){
-                throw "One of width or height must be defined";
+                throw 'One of width or height must be defined';
             }
             for (var idx in this){
                 var res = this[idx];
@@ -186,7 +186,7 @@ ConfigParser.prototype = {
      * @return {Resource[]}      Array of icon objects.
      */
     getIcons: function(platform) {
-        return this.getStaticResources(platform, "icon");
+        return this.getStaticResources(platform, 'icon');
     },
 
     /**
@@ -195,7 +195,7 @@ ConfigParser.prototype = {
      * @return {Resource[]}      Array of Splash objects.
      */
     getSplashScreens: function(platform) {
-        return this.getStaticResources(platform, "splash");
+        return this.getStaticResources(platform, 'splash');
     },
 
     /**
