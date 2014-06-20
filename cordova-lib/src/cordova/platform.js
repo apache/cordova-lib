@@ -118,7 +118,7 @@ function add(hooks, projectRoot, targets, opts) {
 
         return p
         .then(function(libDir) {
-            var template = config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
+            var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
             var copts = null;
             if ('spawnoutput' in opts) {
                 copts = opts.spawnoutput;
@@ -383,7 +383,10 @@ function supports(project_root, name) {
     }
 
     // Check for platform support.
-    return platformParser.check_requirements(project_root);
+    return lazy_load.based_on_config(project_root, name)
+        .then(function(libDir) {
+        return platformParser.check_requirements(project_root, libDir);
+    });
 }
 
 // Returns a promise.

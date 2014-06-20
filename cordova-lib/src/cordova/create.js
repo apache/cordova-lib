@@ -97,29 +97,29 @@ function create(dir, id, name, cfg) {
     var custom_hooks;
 
     if (config_json.lib && config_json.lib.www) {
-        events.emit('log', 'Using custom www assets from '+config_json.lib.www.uri);
+        events.emit('log', 'Using custom www assets from '+config_json.lib.www.url);
         // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
-        var www_version = config_json.lib.www.version || 'not_versioned';
-        var www_id = config_json.lib.www.id || 'dummy_id';
+        config_json.lib.www.version = config_json.lib.www.version || 'not_versioned';
+        config_json.lib.www.id = config_json.lib.www.id || 'dummy_id';
         symlink  = !!config_json.lib.www.link;
 
         // Make sure that the source www/ is not a direct ancestor of the target www/, or else we will recursively copy forever.
         // To do this, we make sure that the shortest relative path from source-to-target must start by going up at least one directory.
-        var relative_path_from_source_to_target = path.relative(config_json.lib.www.uri, www_dir);
+        var relative_path_from_source_to_target = path.relative(config_json.lib.www.url, www_dir);
         var does_relative_path_go_up_at_least_one_dir = relative_path_from_source_to_target.split(path.sep)[0] == '..';
         if (!does_relative_path_go_up_at_least_one_dir) {
             throw new CordovaError(
                 'Project dir "' +
                 dir +
                 '" must not be created at/inside the template used to create the project "' +
-                config_json.lib.www.uri + '".'
+                config_json.lib.www.url + '".'
             );
         }
         if(symlink) {
-            p = Q(config_json.lib.www.uri);
+            p = Q(config_json.lib.www.url);
             events.emit('verbose', 'Symlinking custom www assets into "' + www_dir + '"');
         } else {
-            p = lazy_load.custom(config_json.lib.www.uri, www_id, 'www', www_version)
+            p = lazy_load.custom(config_json.lib, 'www')
             .then(function(d) {
                 events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
                 return d;
