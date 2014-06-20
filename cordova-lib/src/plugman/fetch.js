@@ -140,7 +140,10 @@ function readId(dir) {
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expected_id, dir) {
     if ( expected_id ) {
-        var id = readId(dir);
+        var info = require('../PluginInfo').PluginInfo(dir);
+        // check for plugin version specified (like some.plugin@0.2.3)
+        // if id with specific version provided (via '@' symbol), append version to id
+        var id = expected_id.split('@').length == 1 ? info.id : info.id + "@" + info.version;
         if (expected_id != id) {
             throw new Error('Expected fetched plugin to have ID "' + expected_id + '" but got "' + id + '".');
         }
