@@ -23,7 +23,6 @@
 
 var fs            = require('fs'),
     path          = require('path'),
-    Q             = require('q'),
     CordovaError  = require('../CordovaError'),
     shell         = require('shelljs');
 
@@ -48,7 +47,6 @@ exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
-exports.Q_chainmap = Q_chainmap;
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -234,16 +232,4 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
             set : function(v) { val = v; }
         });
     }
-}
-
-// Given a function and an array of values, creates a chain of promises that
-// will sequentially execute func(args[i]).
-function Q_chainmap(args, func) {
-    return function(inValue) {
-        return args.reduce(function(soFar, arg) {
-            return soFar.then(function(val) {
-                return func(arg, val);
-            });
-        }, Q(inValue));
-    };
 }
