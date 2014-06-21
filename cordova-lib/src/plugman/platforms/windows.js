@@ -30,19 +30,30 @@ var common = require('./common'),
     xml_helpers = require('../../util/xml-helpers');
 
 module.exports = {
-    platformName: 'windows8',
-    InvalidProjectPathError: 'does not appear to be a Windows Store JS project (no .jsproj file)',
-    www_dir: function(project_dir) {
+    platformName:"windows",
+    InvalidProjectPathError:'does not appear to be a Windows 8 or Unified Windows Store project (no .projitems|jsproj file)',
+    www_dir:function(project_dir) {
         return path.join(project_dir, 'www');
     },
-    package_name: function(project_dir) {
-        var manifest = xml_helpers.parseElementtreeSync(path.join(project_dir, 'package.appxmanifest'));
-        return manifest.find('Properties/DisplayName').text;
+    package_name:function(project_dir) {
+        // CB-6976 Windows Universal Apps. To make platform backward compatible
+        // with old template we look for package.appxmanifest file as well.
+        var manifestPath = fs.existsSync(path.join(project_dir, 'package.store.appxmanifest')) ?
+            path.join(project_dir, 'package.store.appxmanifest') :
+            path.join(project_dir, 'package.appxmanifest');
+
+        var manifest = xml_helpers.parseElementtreeSync(manifestPath);
+        return manifest.find("Properties/DisplayName").text;
     },
-    parseProjectFile: function(project_dir) {
-        var project_files = glob.sync('*.jsproj', { cwd:project_dir });
+    parseProjectFile:function(project_dir) {
+        var project_files = glob.sync('*.projitems', { cwd:project_dir });
         if (project_files.length === 0) {
-            throw new Error(this.InvalidProjectPathError);
+            // Windows8.1: for smooth transition and to prevent
+            // plugin handling failures we search for old *.jsproj also.
+            project_files = glob.sync('*.jsproj', { cwd:project_dir });
+            if (project_files.length === 0) {
+                throw new Error(this.InvalidProjectPathError);
+            }
         }
         return new jsproj(path.join(project_dir, project_files[0]));
     },
@@ -107,7 +118,7 @@ module.exports = {
                 // if(isCustom) {}
                 dest = path.join('plugins', plugin_id, path.basename(src));
                 common.copyFile(plugin_dir, src, project_dir, dest);
-                project_file.addReference(dest,src);
+                project_file.addReference(dest, src);
             }
 
         },
@@ -131,6 +142,5 @@ module.exports = {
                 project_file.removeReference(src);
             }
         }
-
     }
 };

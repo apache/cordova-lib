@@ -166,6 +166,13 @@ function update(hooks, projectRoot, targets, opts) {
               cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
+    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform 
+    if (plat == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
+        var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
+        fs.renameSync(platformPath, platformPathWindows)
+        plat = 'windows';
+        platformPath = platformPathWindows;
+    }
 
     // First, lazy_load the latest version.
     return hooks.fire('before_platform_update', opts)
@@ -344,6 +351,11 @@ function platform(command, targets, opts) {
 
     switch(command) {
         case 'add':
+            // CB-6976 Windows Universal Apps. windows8 is now alias for windows
+            var idxWindows8 = targets.indexOf('windows8');
+            if (idxWindows8 >=0) {
+                targets[idxWindows8] = 'windows';
+            }
             return add(hooks, projectRoot, targets, opts);
         case 'rm':
         case 'remove':
