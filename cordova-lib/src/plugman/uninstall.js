@@ -35,7 +35,8 @@ var path = require('path'),
     underscore = require('underscore'),
     events = require('../events'),
     platform_modules = require('./platforms'),
-    plugman = require('./plugman');
+    plugman = require('./plugman'),
+    promiseutil = require('../util/promise-util');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -216,18 +217,16 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
         // @tests - important this event is checked spec/uninstall.spec.js
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
-        promise = Q.all(
-            danglers.map(function(dangler) {
-                var dependent_path = dependencies.resolvePath(dangler, plugins_dir);
+        promise = promiseutil.Q_chainmap(danglers, function(dangler) {
+            var dependent_path = dependencies.resolvePath(dangler, plugins_dir);
 
-                var opts = underscore.extend({}, options, {
-                    is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
-                    depsInfo: depsInfo
-                });
+            var opts = underscore.extend({}, options, {
+                is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
+                depsInfo: depsInfo
+            });
 
-                return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);
-            })
-        );
+            return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);
+        });
     } else {
         promise = Q();
     }
@@ -242,6 +241,11 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
     var platform_modules = require('./platforms');
     var handler = platform_modules[platform];
     var platformTag = plugin_et.find('./platform[@name="'+platform+'"]');
+    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
+    // we allow using windows8 tag for new windows platform
+    if (platform == 'windows' && !platformTag) {
+         platformTag = plugin_et.find('platform[@name="' + 'windows8' + '"]');
+    }
     www_dir = www_dir || handler.www_dir(project_dir);
     events.emit('log', 'Uninstalling ' + plugin_id + ' from ' + platform);
 

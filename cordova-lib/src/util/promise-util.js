@@ -21,15 +21,20 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-module.exports = {
-    'android': require('./platforms/android'),
-    'amazon-fireos': require('./platforms/amazon-fireos'),
-    'ios': require('./platforms/ios'),
-    'blackberry10': require('./platforms/blackberry10'),
-    'wp8': require('./platforms/wp8'),
-    'windows8' : require('./platforms/windows'),
-    'windows' : require('./platforms/windows'),
-    'firefoxos': require('./platforms/firefoxos'),
-    'ubuntu': require('./platforms/ubuntu'),
-    'tizen': require('./platforms/tizen')
-};
+var Q = require('q');
+
+// Given a function and an array of values, creates a chain of promises that
+// will sequentially execute func(args[i]).
+// Returns a promise.
+//
+function Q_chainmap(args, func) {
+    return Q.when().then(function(inValue) {
+        return args.reduce(function(soFar, arg) {
+            return soFar.then(function(val) {
+                return func(arg, val);
+            });
+        }, Q(inValue));
+    });
+}
+
+exports.Q_chainmap = Q_chainmap;

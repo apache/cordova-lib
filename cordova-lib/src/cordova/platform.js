@@ -37,6 +37,7 @@ var config            = require('./config'),
     CordovaError      = require('../CordovaError'),
     Q                 = require('q'),
     platforms         = require('./platforms'),
+    promiseutil       = require('../util/promise-util'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
     shell             = require('shelljs');
@@ -76,56 +77,58 @@ function add(hooks, projectRoot, targets, opts) {
     }
 
     return hooks.fire('before_platform_add', opts)
-    .then(cordova_util.Q_chainmap(targets, function(t) {
-        // For each platform, download it and call its "create" script.
+    .then(function() {
+        return promiseutil.Q_chainmap(targets, function(t) {
+            // For each platform, download it and call its "create" script.
 
-        var p;  // The promise to be returned by this function.
-        var platform = t.split('@')[0];
-        // If t is not a platform or platform@version, it must be a dir.
-        // In this case get platform name from package.json in that dir and
-        // skip lazy-load.
-        if( !(platform in platforms) ) {
-            var pPath = path.resolve(t);
-            var pkg;
-            // Prep the message in advance, we might need it in several places.
-            msg = 'The provided path does not seem to contain a ' +
-                  'Cordova platform: ' + t;
-            try {
-                pkg = require(path.join(pPath, 'package'));
-            } catch(e) {
-                throw new CordovaError(msg + '\n' + e.message);
-            }
-            if ( !pkg || !pkg.name ) {
-                throw new CordovaError(msg);
-            }
-            // Package names for Cordova platforms look like "cordova-ios".
-            var nameParts = pkg.name.split('-');
-            var name = nameParts[1];
-            if( !platforms[name] ) {
-                throw new CordovaError(msg);
-            }
-            platform = name;
+            var p;  // The promise to be returned by this function.
+            var platform = t.split('@')[0];
+            // If t is not a platform or platform@version, it must be a dir.
+            // In this case get platform name from package.json in that dir and
+            // skip lazy-load.
+            if( !(platform in platforms) ) {
+                var pPath = path.resolve(t);
+                var pkg;
+                // Prep the message in advance, we might need it in several places.
+                msg = 'The provided path does not seem to contain a ' +
+                      'Cordova platform: ' + t;
+                try {
+                    pkg = require(path.join(pPath, 'package'));
+                } catch(e) {
+                    throw new CordovaError(msg + '\n' + e.message);
+                }
+                if ( !pkg || !pkg.name ) {
+                    throw new CordovaError(msg);
+                }
+                // Package names for Cordova platforms look like "cordova-ios".
+                var nameParts = pkg.name.split('-');
+                var name = nameParts[1];
+                if( !platforms[name] ) {
+                    throw new CordovaError(msg);
+                }
+                platform = name;
 
-            // Use a fulfilled promise with the path as value to skip dloading.
-            p = Q(pPath);
-        } else {
-            // Using lazy_load for a platform specified by name
-            p = lazy_load.based_on_config(projectRoot, t, opts)
-            .fail(function(err) {
-                throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
+                // Use a fulfilled promise with the path as value to skip dloading.
+                p = Q(pPath);
+            } else {
+                // Using lazy_load for a platform specified by name
+                p = lazy_load.based_on_config(projectRoot, t, opts)
+                .fail(function(err) {
+                    throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
+                });
+            }
+
+            return p
+            .then(function(libDir) {
+                var template = config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
+                var copts = null;
+                if ('spawnoutput' in opts) {
+                    copts = opts.spawnoutput;
+                }
+                return call_into_create(platform, projectRoot, cfg, libDir, template, copts);
             });
-        }
-
-        return p
-        .then(function(libDir) {
-            var template = config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
-            var copts = null;
-            if ('spawnoutput' in opts) {
-                copts = opts.spawnoutput;
-            }
-            return call_into_create(platform, projectRoot, cfg, libDir, template, copts);
         });
-    }))
+    })
     .then(function() {
         return hooks.fire('after_platform_add', opts);
     });
@@ -165,6 +168,13 @@ function update(hooks, projectRoot, targets, opts) {
         msg = 'Platform "' + plat + '" is not installed. See `' +
               cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
+    }
+    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform 
+    if (plat == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
+        var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
+        fs.renameSync(platformPath, platformPathWindows)
+        plat = 'windows';
+        platformPath = platformPathWindows;
     }
 
     // First, lazy_load the latest version.
@@ -344,6 +354,11 @@ function platform(command, targets, opts) {
 
     switch(command) {
         case 'add':
+            // CB-6976 Windows Universal Apps. windows8 is now alias for windows
+            var idxWindows8 = targets.indexOf('windows8');
+            if (idxWindows8 >=0) {
+                targets[idxWindows8] = 'windows';
+            }
             return add(hooks, projectRoot, targets, opts);
         case 'rm':
         case 'remove':

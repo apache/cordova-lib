@@ -75,6 +75,10 @@ function cordova_git(platform) {
     }
 
     var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
+    var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';
+    if (platform == 'windows' || platform == 'windows8') {
+        url = platforms[platform].url; // TODO tmp hack for win81. Must be removed.
+    }
     return module.exports.custom(url, 'cordova', platform, platforms[platform].version);
 }
 
