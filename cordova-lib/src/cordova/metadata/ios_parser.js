@@ -23,6 +23,7 @@
 */
 
 var fs            = require('fs'),
+    unorm         = require('unorm'),
     path          = require('path'),
     xcode         = require('xcode'),
     util          = require('../util'),
@@ -39,11 +40,14 @@ module.exports = function ios_parser(project) {
         if (!xcodeproj_dir) throw new CordovaError('The provided path "' + project + '" is not a Cordova iOS project.');
         this.xcodeproj = path.join(project, xcodeproj_dir);
         this.originalName = this.xcodeproj.substring(this.xcodeproj.lastIndexOf(path.sep)+1, this.xcodeproj.indexOf('.xcodeproj'));
+        // CB-6992 it is necessary to normalize characters
+        // because node and shell scripts handles unicode symbols differently
+        this.originalName = unorm.nfd(this.originalName);
         this.cordovaproj = path.join(project, this.originalName);
     } catch(e) {
         throw new CordovaError('The provided path "'+project+'" is not a Cordova iOS project.');
     }
-    this.path = project;
+    this.path = unorm.nfd(project);
     this.pbxproj = path.join(this.xcodeproj, 'project.pbxproj');
     this.config_path = path.join(this.cordovaproj, 'config.xml');
 };
