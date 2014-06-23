@@ -195,7 +195,7 @@ module.exports.prototype = {
         ];
 
         platformIcons.forEach(function (item) {
-            icon = icons.getBySize(item.width, item.height) || icons.getDefault();
+            var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, item.dest);
@@ -210,7 +210,7 @@ module.exports.prototype = {
         var splash = config.getSplashScreens('windows8').getBySize(620, 300);
         if (splash){
             var src = path.join(appRoot, splash.src),
-                dest = path.join(platformRoot, "images/splashscreen.png");
+                dest = path.join(platformRoot, 'images/splashscreen.png');
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }

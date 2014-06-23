@@ -187,10 +187,10 @@ module.exports.prototype = {
         var destfilepath;
         // copy the default icon to the drawable folder
         if (default_icon) {
-           srcfilepath = path.join(projectRoot, default_icon.src);
-           destfilepath = path.join(this.path, 'res', 'drawable', 'icon.png');
-           events.emit('verbose', 'Copying default icon from ' + srcfilepath + ' to ' + destfilepath);
-           shell.cp('-f', srcfilepath, destfilepath);
+            srcfilepath = path.join(projectRoot, default_icon.src);
+            destfilepath = path.join(this.path, 'res', 'drawable', 'icon.png');
+            events.emit('verbose', 'Copying default icon from ' + srcfilepath + ' to ' + destfilepath);
+            shell.cp('-f', srcfilepath, destfilepath);
         }
         // copyIcon does the actual copying into the drawable folders
         var copyIcon = function(density) {
@@ -200,10 +200,10 @@ module.exports.prototype = {
                 events.emit('verbose', 'Copying icon from ' + srcfilepath + ' to ' + destfilepath);
                 shell.cp('-f', srcfilepath, destfilepath);
             }
-          }.bind(this);
-          for (var j=0; j<densities.length; j++) {
-              copyIcon(densities[j]);
-          }
+        }.bind(this);
+        for (var j=0; j<densities.length; j++) {
+            copyIcon(densities[j]);
+        }
     },
 
     update_from_config:function(config) {

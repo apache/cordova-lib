@@ -106,7 +106,7 @@ module.exports.prototype = {
         ];
 
         platformIcons.forEach(function (item) {
-            icon = icons.getBySize(item.width, item.height) || icons.getDefault();
+            var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, 'Resources/icons/', item.dest);
@@ -118,17 +118,17 @@ module.exports.prototype = {
         // Update splashscreens
         var splashScreens = config.getSplashScreens('ios');
         var platformSplashScreens = [
-            {dest: "Resources/splash/Default~iphone.png", width: 320, height: 480},
-            {dest: "Resources/splash/Default@2x~iphone.png", width: 640, height: 960},
-            {dest: "Resources/splash/Default-Portrait~ipad.png", width: 768, height: 1024},
-            {dest: "Resources/splash/Default-Portrait@2x~ipad.png", width: 1536, height: 2048},
-            {dest: "Resources/splash/Default-Landscape~ipad.png", width: 1024, height: 768},
-            {dest: "Resources/splash/Default-Landscape@2x~ipad.png", width: 2048, height: 1536},
-            {dest: "Resources/splash/Default-568h@2x~iphone.png", width: 640, height: 1136}
+            {dest: 'Resources/splash/Default~iphone.png', width: 320, height: 480},
+            {dest: 'Resources/splash/Default@2x~iphone.png', width: 640, height: 960},
+            {dest: 'Resources/splash/Default-Portrait~ipad.png', width: 768, height: 1024},
+            {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
+            {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
+            {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
+            {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136}
         ];
 
         platformSplashScreens.forEach(function(item) {
-            splash = splashScreens.getBySize(item.width, item.height);
+            var splash = splashScreens.getBySize(item.width, item.height);
             if (splash){
                 var src = path.join(appRoot, splash.src),
                     dest = path.join(platformRoot, item.dest);
