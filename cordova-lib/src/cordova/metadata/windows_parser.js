@@ -195,7 +195,7 @@ module.exports.prototype = {
         ];
 
         platformIcons.forEach(function (item) {
-            var icon = icons.getIconBySize(item.width, item.height) || icons.getDefault();
+            icon = icons.getBySize(item.width, item.height) || icons.getDefault();
             if (icon){
                 var src = path.join(appRoot, icon.src),
                     dest = path.join(platformRoot, item.dest);
@@ -203,6 +203,17 @@ module.exports.prototype = {
                 shell.cp('-f', src, dest);
             }
         });
+
+        // Update splashscreen
+        // Image size for Windows 8 should be 620 x 300 px
+        // See http://msdn.microsoft.com/en-us/library/windows/apps/hh465338.aspx for reference
+        var splash = config.getSplashScreens('windows8').getBySize(620, 300);
+        if (splash){
+            var src = path.join(appRoot, splash.src),
+                dest = path.join(platformRoot, "images/splashscreen.png");
+            events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
+            shell.cp('-f', src, dest);
+        }
     },
 
     // Returns the platform-specific www directory.

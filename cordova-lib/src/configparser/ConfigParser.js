@@ -103,64 +103,101 @@ ConfigParser.prototype = {
         return ret;
     },
     /**
-     * Returns all icons for the platform specified.
-     * @param  {String} platform The platform.
-     * @return {Array} Icons for the platform specified.
+     * Returns all resources for the platform specified.
+     * @param  {String} platform     The platform.
+     * @param {string}  resourceName Type of static resources to return.
+     *                               "icon" and "splash" currently supported.
+     * @return {Array}               Resources for the platform specified.
      */
-    getIcons: function(platform) {
+    getStaticResources: function(platform, resourceName) {
         var ret = [],
-            iconElements = [];
-
+            staticResources = [];
         if (platform) { // platform specific icons
-            this.doc.findall('platform[@name=\'' + platform + '\']/icon').forEach(function(elt){
-                elt.platform = platform; // mark as platform specific icon
-                iconElements.push(elt);
+            this.doc.findall('platform[@name=\'' + platform + '\']/' + resourceName).forEach(function(elt){
+                elt.platform = platform; // mark as platform specific resource
+                staticResources.push(elt);
             });
         }
-        // root level icons
-        iconElements = iconElements.concat(this.doc.findall('icon'));
-        // parse icon elements
-        iconElements.forEach(function (elt) {
-            var icon = {};
-            icon.src = elt.attrib.src;
-            icon.density = elt.attrib['density'] || elt.attrib['cdv:density'] || elt.attrib['gap:density'];
-            icon.platform = elt.platform || null; // null means icon represents default icon (shared between platforms)
-            icon.width = elt.attrib.width;
-            icon.height = elt.attrib.height;
-            // If one of width or Height is undefined, assume they are equal.
-            icon.width = icon.width || icon.height;
-            icon.height = icon.height || icon.width;
+        // root level resources
+        staticResources = staticResources.concat(this.doc.findall(resourceName));
+        // parse resource elements
+        staticResources.forEach(function (elt) {
+            var res = {};
+            res.src = elt.attrib.src;
+            res.density = elt.attrib['density'] || elt.attrib['cdv:density'] || elt.attrib['gap:density'];
+            res.platform = elt.platform || null; // null means icon represents default icon (shared between platforms)
+            res.width = elt.attrib.width;
+            res.height = elt.attrib.height;
 
             // default icon
-            if (!icon.width && !icon.height && !icon.density) {
-                ret.defaultIcon = icon;
+            if (!res.width && !res.height && !res.density) {
+                ret.defaultResource = res;
             }
-            ret.push(icon);
+            ret.push(res);
         });
 
         /**
-         * Returns icon with specified width and height
-         * @param  {number} w  Width of icon
-         * @param  {number} h  Height of icon
-         * @return {Icon}      Icon object or null if not found
+         * Returns resource with specified width and/or height.
+         * @param  {number} width Width of resource.
+         * @param  {number} height Height of resource.
+         * @return {Resource} Resource object or null if not found.
          */
-        ret.getIconBySize = function(w, h){
-            // If only one of width and height is given
-            // then we assume that they are equal.
-            var width = w || h, height = h || w;
-            for (var idx in this) {
-                var icon = this[idx];
-                if (width == icon.width && height == icon.width) return icon;
+        ret.getBySize = function(width, height) {
+            if (!width && !height){
+                throw 'One of width or height must be defined';
+            }
+            for (var idx in this){
+                var res = this[idx];
+                // If only one of width or height is not specified, use another parameter for comparation
+                // If both specified, compare both.
+                if ((!width || (width == res.width)) &&
+                    (!height || (height == res.height))){
+                    return res;
+                }
             }
             return null;
         };
+
+        /**
+         * Returns resource with specified density.
+         * @param  {string} density Density of resource.
+         * @return {Resource}       Resource object or null if not found.
+         */
+        ret.getByDensity = function (density) {
+            for (var idx in this) {
+                if (this[idx].density == density) {
+                    return this[idx];
+                }
+            }
+            return null;
+        };
+
         /** Returns default icons */
         ret.getDefault = function() {
-            return ret.defaultIcon;
+            return ret.defaultResource;
         };
 
         return ret;
     },
+
+    /**
+     * Returns all icons for specific platform.
+     * @param  {string} platform Platform name
+     * @return {Resource[]}      Array of icon objects.
+     */
+    getIcons: function(platform) {
+        return this.getStaticResources(platform, 'icon');
+    },
+
+    /**
+     * Returns all splash images for specific platform.
+     * @param  {string} platform Platform name
+     * @return {Resource[]}      Array of Splash objects.
+     */
+    getSplashScreens: function(platform) {
+        return this.getStaticResources(platform, 'splash');
+    },
+
     /**
      *This does not check for duplicate feature entries
      */
