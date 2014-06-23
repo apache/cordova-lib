@@ -68,7 +68,7 @@ module.exports.check_requirements = function(project_root) {
     var custom_path = config.has_custom_path(project_root, 'windows8') ||
         config.has_custom_path(project_root, 'windows');
     if (custom_path) {
-        lib_path = path.join(custom_path, "windows");
+        lib_path = path.join(custom_path, 'windows');
     }
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
     events.emit('verbose', 'Running "' + command + '" (output to follow)');
@@ -276,7 +276,7 @@ module.exports.prototype = {
 
         // now add all www references back in from the root www folder
         var www_files = this.folder_contents('www', this.www_dir());
-        for(file in www_files) {
+        for(var file in www_files) {
             projFile.addSourceFile(www_files[file]);
         }
         // save file

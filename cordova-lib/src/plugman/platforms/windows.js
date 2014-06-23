@@ -24,14 +24,15 @@
 
 var common = require('./common'),
     path = require('path'),
+    fs   = require('fs'),
     glob = require('glob'),
     jsproj = require('../../util/windows/jsproj'),
     events = require('../../events'),
     xml_helpers = require('../../util/xml-helpers');
 
 module.exports = {
-    platformName:"windows",
-    InvalidProjectPathError:'does not appear to be a Windows 8 or Unified Windows Store project (no .projitems|jsproj file)',
+    platformName: 'windows',
+    InvalidProjectPathError: 'does not appear to be a Windows 8 or Unified Windows Store project (no .projitems|jsproj file)',
     www_dir:function(project_dir) {
         return path.join(project_dir, 'www');
     },
@@ -43,7 +44,7 @@ module.exports = {
             path.join(project_dir, 'package.appxmanifest');
 
         var manifest = xml_helpers.parseElementtreeSync(manifestPath);
-        return manifest.find("Properties/DisplayName").text;
+        return manifest.find('Properties/DisplayName').text;
     },
     parseProjectFile:function(project_dir) {
         var project_files = glob.sync('*.projitems', { cwd:project_dir });

@@ -244,7 +244,7 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
     // we allow using windows8 tag for new windows platform
     if (platform == 'windows' && !platformTag) {
-         platformTag = plugin_et.find('platform[@name="' + 'windows8' + '"]');
+        platformTag = plugin_et.find('platform[@name="' + 'windows8' + '"]');
     }
     www_dir = www_dir || handler.www_dir(project_dir);
     events.emit('log', 'Uninstalling ' + plugin_id + ' from ' + platform);

@@ -169,10 +169,10 @@ function update(hooks, projectRoot, targets, opts) {
               cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
-    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform 
+    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform
     if (plat == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
         var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
-        fs.renameSync(platformPath, platformPathWindows)
+        fs.renameSync(platformPath, platformPathWindows);
         plat = 'windows';
         platformPath = platformPathWindows;
     }
