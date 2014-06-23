@@ -18,7 +18,7 @@
  */
 
 var platforms = require( "../../src/cordova/platforms" ),
-	config_parser = require( "../../src/cordova/ConfigParser" ),
+	config_parser = require( "../../src/configparser/ConfigParser" ),
 	cordovaCreate = require( "../../src/cordova/create" ),
 	os = require( "os" ),
 	fs = require( "fs" ),
