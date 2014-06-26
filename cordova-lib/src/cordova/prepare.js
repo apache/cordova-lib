@@ -114,9 +114,9 @@ exports = module.exports = function prepare(options) {
 
                 // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
                 // we allow using windows8 tag for new windows platform
-                if (platform == 'windows') {
-                    exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
-                }
+                // if (platform == 'windows') {
+                //     exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
+                // }
 
                 platform_cfg.write();
 

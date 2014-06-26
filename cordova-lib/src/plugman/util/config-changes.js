@@ -193,15 +193,15 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
             continue;
         }
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
-        if (self.platform == 'windows' && file == 'package.appxmanifest' &&
-            !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            // New windows template separate manifest files for Windows8, Windows8.1 and WP8.1
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
-            for (var subst in substs) {
-                events.emit('verbose', 'Applying munge to ' + substs[subst]);
-                self.apply_file_munge(substs[subst], munge.files[file], true);
-            }
-        }
+        // if (self.platform == 'windows' && file == 'package.appxmanifest' &&
+        //     !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
+        //     // New windows template separate manifest files for Windows8, Windows8.1 and WP8.1
+        //     var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+        //     for (var subst in substs) {
+        //         events.emit('verbose', 'Applying munge to ' + substs[subst]);
+        //         self.apply_file_munge(substs[subst], munge.files[file], true);
+        //     }
+        // }
         self.apply_file_munge(file, munge.files[file], /* remove = */ true);
     }
 
@@ -253,14 +253,14 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
             continue;
         }
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
-        if (self.platform == 'windows' && file == 'package.appxmanifest' &&
-            !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
-            for (var subst in substs) {
-                events.emit('verbose', 'Applying munge to ' + substs[subst]);
-                self.apply_file_munge(substs[subst], munge.files[file]);
-            }
-        }
+        // if (self.platform == 'windows' && file == 'package.appxmanifest' &&
+        //     !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
+        //     var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+        //     for (var subst in substs) {
+        //         events.emit('verbose', 'Applying munge to ' + substs[subst]);
+        //         self.apply_file_munge(substs[subst], munge.files[file]);
+        //     }
+        // }
         self.apply_file_munge(file, munge.files[file]);
     }
 
@@ -320,9 +320,9 @@ function generate_plugin_config_munge(plugin_dir, vars) {
     var platformTag = plugin_xml.find('platform[@name="' + self.platform + '"]');
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
     // we allow using windows8 tag for new windows platform
-    if (self.platform == 'windows' && !platformTag) {
-        platformTag = plugin_xml.find('platform[@name="' + 'windows8' + '"]');
-    }
+    // if (self.platform == 'windows' && !platformTag) {
+    //     platformTag = plugin_xml.find('platform[@name="' + 'windows8' + '"]');
+    // }
 
     var changes = [];
     // add platform-agnostic config changes
