@@ -114,9 +114,9 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
         // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
         // we allow using windows8 tag for new windows platform
-        if (platform == 'windows' && !platformTag) {
-            platformTag = xml.find('platform[@name="' + 'windows8' + '"]');
-        }
+        // if (platform == 'windows' && !platformTag) {
+        //     platformTag = xml.find('platform[@name="' + 'windows8' + '"]');
+        // }
 
         if (platformTag) {
             assets = assets.concat(platformTag.findall('./asset'));

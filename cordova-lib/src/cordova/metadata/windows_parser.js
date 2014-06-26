@@ -62,13 +62,17 @@ module.exports = function windows_parser(project) {
 // Returns a promise
 module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking windows requirements...');
-    var lib_path = path.join(util.libDirectory, 'windows', 'cordova',
-                    require('../platforms').windows.version, 'windows');
-
+    var lib_path = path.join(util.libDirectory, 'windows8', 'cordova',
+                    require('../platforms').windows8.version, 'windows8');
+    // CB-6976 Windows Universal Apps.
+    // var lib_path = path.join(util.libDirectory, 'windows', 'cordova',
+    //                 require('../platforms').windows.version, 'windows');
     var custom_path = config.has_custom_path(project_root, 'windows8') ||
         config.has_custom_path(project_root, 'windows');
     if (custom_path) {
-        lib_path = path.join(custom_path, 'windows');
+        // CB-6976 Windows Universal Apps.
+        //lib_path = path.join(custom_path, 'windows');
+        lib_path = path.join(custom_path, 'windows8');
     }
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
     events.emit('verbose', 'Running "' + command + '" (output to follow)');
