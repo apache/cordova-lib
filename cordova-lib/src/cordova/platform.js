@@ -209,47 +209,63 @@ function check(hooks, projectRoot) {
         var h = new hooker(scratch);
         // Acquire the version number of each platform we have installed, and output that too.
         Q.all(platforms_on_fs.map(function(p) {
-            var d = Q.defer();
+            var d = Q.defer(),
+                d_avail = Q.defer(),
+                d_cur = Q.defer();
             add(h, scratch, [p], {spawnoutput: {stdio: 'ignore'}})
             .then(function() {
-                var d_avail = Q.defer(),
-                    d_cur = Q.defer();
                 getVersionFromScript(path.join(scratch, 'platforms', p, 'cordova', 'version'), null)
                 .then(function(avail) {
                     if (!avail) {
                         /* Platform version script was silent, we can't work with this */
-                        d_avail.resolve('');
+                        d_avail.resolve('version-empty');
                     } else {
                         d_avail.resolve(avail);
                     }
                 })
                 .catch(function () {
                     /* Platform version script failed, we can't work with this */
-                    d_avail.resolve('');
+                    d_avail.resolve('version-failed');
                 });
-                getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
-                .catch(function () {
-                    d_cur.resolve('broken');
-                }).then(function(v) {
-                    d_cur.resolve(v || '');
-                });
-                Q.all([d_avail.promise, d_cur.promise]).spread(function (avail, v) {
-                    var m;
-                    if (avail && (!v || v == 'broken' || semver.gt(avail, v))) {
-                        m = p + ' @ ' + (v || 'unknown') + ' could be updated to: ' + avail;
-                        platformsText.push(m);
+            }).catch(function () {
+                /* If a platform doesn't install, then we can't realistically suggest updating */
+                d_avail.resolve('install-failed');
+            });
+
+            getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
+            .then(function(v) {
+                d_cur.resolve(v || '');
+            }).catch(function () {
+                d_cur.resolve('broken');
+            });
+
+            Q.all([d_avail.promise, d_cur.promise]).spread(function (avail, v) {
+                var m, prefix = p + ' @ ' + (v || 'unknown');
+                switch (avail) {
+                case 'install-failed':
+                    m = prefix + '; current did not install, and thus its version cannot be deterimined';
+                    break;
+                case 'version-failed':
+                    m = prefix + '; current version script failed, and thus its version cannot be deterimined';
+                    break;
+                case 'version-empty':
+                    m = prefix + '; current version script failed to return a version, and thus its version cannot be deterimined';
+                    break;
+                default:
+                    if (!v || v === 'broken' || semver.gt(avail, v)) {
+                        m = prefix + ' could be updated to: ' + avail;
                     }
-                    d.resolve(m);
-                })
-                .catch(function () {
-                    return '?';
-                })
-                .done();
+                }
+                if (m) {
+                    platformsText.push(m);
+                }
+                d.resolve(m);
             })
             .catch(function () {
-                /* If a platform doesn't install, then we can't realistically suggest updating */
-                d.resolve();
-            });
+                d.resolve(p + ' ?');
+            })
+            .done();
+
             return d.promise;
         })).then(function() {
             var results = '';
