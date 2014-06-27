@@ -27,7 +27,7 @@ var platform_modules = require('./platforms'),
     config_changes  = require('./util/config-changes'),
     xml_helpers     = require('../util/xml-helpers'),
     wp8             = require('./platforms/wp8'),
-    windows        = require('./platforms/windows'),
+    windows8        = require('./platforms/windows8'),
     common          = require('./platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
@@ -76,11 +76,11 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // for windows phone and windows8 platforms we need to add all www resources to the .csproj(.jsproj) file
     // first we need to remove them all to prevent duplicates
     var projFile;
-    if (platform == 'wp8' || platform == 'windows8' || platform == 'windows') {
+    if (platform == 'wp8' || platform == 'windows8') {
         projFile = (platform == 'wp8') ? wp8.parseProjectFile(project_dir) :
-            windows.parseProjectFile(project_dir);
+            windows8.parseProjectFile(project_dir);
         // remove reference to cordova_plugins.js and all files inside plugins folder
-        projFile.removeSourceFile(/^(\$\(MSBuildThisFileDirectory\))?www\\(cordova_plugins.js|plugins\\)/i);
+        projFile.removeSourceFile(new RegExp("^www\\\\(cordova_plugins.js|plugins\\\\)", "i"));
     }
 
     platform_json = config_changes.get_platform_json(plugins_dir, platform);
@@ -112,11 +112,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         var jsModules = xml.findall('./js-module');
         var assets = xml.findall('asset');
         var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
-        // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-        // we allow using windows8 tag for new windows platform
-        if (platform == 'windows' && !platformTag) {
-            platformTag = xml.find('platform[@name="' + 'windows8' + '"]');
-        }
 
         if (platformTag) {
             assets = assets.concat(platformTag.findall('./asset'));
@@ -196,7 +191,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Writing out cordova_plugins.js...');
     fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), final_contents, 'utf-8');
 
-    if(platform == 'wp8' || platform == 'windows8' || platform == 'windows') {
+    if(platform == 'wp8' || platform == 'windows8') {
         projFile.addSourceFile(path.join('www', 'cordova_plugins.js'));
         projFile.write();
     }
