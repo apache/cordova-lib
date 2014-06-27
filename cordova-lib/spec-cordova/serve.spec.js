@@ -46,7 +46,7 @@ describe('serve command', function() {
 
         expect(function() {
             cordova.serve('android');
-        }).toThrow();
+        }).toThrow("Current working directory is not a Cordova-based project.");
     });
 
     xdescribe('`serve`', function() {
