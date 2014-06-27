@@ -69,17 +69,10 @@ module.exports = {
     },
     'windows8':{
         hostos : ['win32'],
-        parser: './metadata/windows_parser',
+        parser: './metadata/windows8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: 'master',
-        subdirectory: 'windows'
-    },
-    'windows':{
-        hostos : ['win32'],
-        parser: './metadata/windows_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: 'master',
-        subdirectory: 'windows'
+        version: '3.5.0',
+        subdirectory: 'windows8'
     }
 };
 

@@ -74,8 +74,8 @@ describe('windows8 project parser', function() {
         it('should create an instance with path, manifest properties', function() {
             expect(function() {
                 var parser = new platforms.windows8.parser(proj);
-                expect(parser.projDir).toEqual(proj);
-                expect(parser.manifestPath).toEqual(path.join(proj, 'package.appxmanifest'));
+                expect(parser.windows8_proj_dir).toEqual(proj);
+                expect(parser.manifest_path).toEqual(path.join(proj, 'package.appxmanifest'));
             }).not.toThrow();
         });
     });

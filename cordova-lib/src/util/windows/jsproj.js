@@ -41,14 +41,9 @@ var WinCplusplusProjectTypeGUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";  // 
 
 
 function jsproj(location) {
-    if (!location) {
-        throw new Error('Project file location can\'t be null or empty' );
-    }
     events.emit('verbose','creating jsproj from project at : ' + location);
     this.location = location;
     this.xml = xml_helpers.parseElementtreeSync(location);
-    // Detect universal Windows app project template
-    this.isUniversalWindowsApp = location.match(/\.(projitems|shproj)$/i);
     return this;
 }
 
@@ -82,8 +77,6 @@ jsproj.prototype = {
 
         events.emit('verbose','addReference::' + relPath);
 
-        relPath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relPath : relPath;
-
         var item = new et.Element('ItemGroup');
         var extName = path.extname(relPath);
 
@@ -110,8 +103,6 @@ jsproj.prototype = {
     removeReference:function(relPath) {
         events.emit('verbose','removeReference::' + relPath);
 
-        relPath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relPath : relPath;
-
         var extName = path.extname(relPath);
         var includeText = path.basename(relPath,extName);
         // <ItemGroup>
@@ -126,8 +117,6 @@ jsproj.prototype = {
     addSourceFile:function(relative_path) {
 
         relative_path = relative_path.split('/').join('\\');
-        relative_path = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relative_path : relative_path;
-
         // make ItemGroup to hold file.
         var item = new et.Element('ItemGroup');
 
@@ -140,10 +129,10 @@ jsproj.prototype = {
 
     removeSourceFile: function(relative_path) {
         var isRegexp = relative_path instanceof RegExp;
+
         if (!isRegexp) {
             // path.normalize(relative_path);// ??
             relative_path = relative_path.split('/').join('\\');
-            relative_path = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relative_path : relative_path;
         }
 
         var root = this.xml.getroot();
@@ -159,7 +148,7 @@ jsproj.prototype = {
             // nothing to remove, skip..
             if (filesToRemove.length < 1) return;
 
-            filesToRemove.forEach(function(file) {
+            filesToRemove.forEach(function(file){
                 // remove file reference
                 group.remove(0, file);
             });
