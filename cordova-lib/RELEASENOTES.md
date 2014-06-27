@@ -23,7 +23,6 @@
 
 ### 0.21.4 (Jun 23, 2014)
 * CB-3571, CB-2606: support for splashscreens
-* CB-6976 Add support for Windows Universal apps (Windows 8.1 and WP 8.1)
 * Use Plugininfo module to determine plugin id and version
 * Fix plugin check error, when plugin dependency with specific version is given
 * CB-6709 Do not create merges/ folder when adding a platform
