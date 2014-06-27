@@ -187,6 +187,12 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise
 function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
+
+    // If this plugin is not really installed, return (CB-7004).
+    if (!fs.existsSync(plugin_dir)) {
+        return Q();
+    }
+
     options = options || {};
 
     var xml_path     = path.join(plugin_dir, 'plugin.xml');
