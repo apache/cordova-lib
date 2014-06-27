@@ -43,7 +43,7 @@ function genPackageId() {
 
 module.exports = function tizen_parser( project ) {
 	this.path = project;
-}
+};
 
 // Returns a promise
 module.exports.check_requirements = function( project_root ) {
@@ -59,7 +59,7 @@ module.exports.check_requirements = function( project_root ) {
 
 	// Requirements met successfully
 	return deferred.promise;
-}
+};
 
 module.exports.prototype = {
 	config_xml: function() {
