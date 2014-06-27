@@ -428,7 +428,7 @@ describe('install', function() {
 
     });
 
-    xdescribe('failure', function() {
+    describe('failure', function() {
         it('should throw if platform is unrecognized', function() {
             runs(function() {
                 installPromise( install('atari', project, 'SomePlugin') );
@@ -449,6 +449,7 @@ describe('install', function() {
         });
         it('should throw if git is not found on the path and a remote url is requested', function() {
             spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
+            fetchSpy.andCallThrough();
             var which_spy = spyOn(shell, 'which').andReturn(null);
             runs(function() {
                 installPromise( install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git') );
