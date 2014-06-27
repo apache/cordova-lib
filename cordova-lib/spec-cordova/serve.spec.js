@@ -31,7 +31,7 @@ var cordova = require('../src/cordova/cordova'),
 
 var cwd = process.cwd();
 
-xdescribe('serve command', function() {
+describe('serve command', function() {
     beforeEach(function() {
         // Make a temp directory
         shell.rm('-rf', tempDir);
@@ -49,8 +49,7 @@ xdescribe('serve command', function() {
         }).toThrow();
     });
 
-
-    describe('`serve`', function() {
+    xdescribe('`serve`', function() {
         var payloads = {
             android: 'This is the Android test file.',
             ios: 'This is the iOS test file.'
