@@ -286,10 +286,10 @@ describe('install', function() {
                 var plugmanVersion = require('../package.json').version;
 
                 expect(spy.calls.length).toBe(4);
-                expect(spy.calls[0].args).toEqual([ '', '>=2.3.0' ]);
+                expect(spy.calls[0].args).toEqual([ null, '>=2.3.0' ]);
                 expect(spy.calls[1].args).toEqual([ plugmanVersion, '>=0.10.0' ]);
-                expect(spy.calls[2].args).toEqual([ '', '>=1.0.0' ]);
-                expect(spy.calls[3].args).toEqual([ '', '>=3.0.0' ]);
+                expect(spy.calls[2].args).toEqual([ null, '>=1.0.0' ]);
+                expect(spy.calls[3].args).toEqual([ null, '>=3.0.0' ]);
             });
         });
         it('should not check custom engine version that is not supported for platform', function() {
