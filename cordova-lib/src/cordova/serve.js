@@ -28,6 +28,7 @@ var cordova_util = require('./util'),
     platforms     = require('./platforms'),
     ConfigParser = require('../configparser/ConfigParser'),
     hooker        = require('./hooker'),
+    Q = require('q'),
     fs = require('fs'),
     http = require('http'),
     url = require('url'),
@@ -35,18 +36,21 @@ var cordova_util = require('./util'),
     zlib = require('zlib');
 
 function launchServer(projectRoot, port) {
-    var server = http.createServer(function(request, response) {
+    var server = http.createServer(
+    function(request, response) {
         function do404() {
             console.log('404 ' + request.url);
             response.writeHead(404, {'Content-Type': 'text/plain'});
             response.write('404 Not Found\n');
             response.end();
+            return '';
         }
         function do302(where) {
             console.log('302 ' + request.url);
             response.setHeader('Location', where);
             response.writeHead(302, {'Content-Type': 'text/plain'});
             response.end();
+            return '';
         }
         function doRoot() {
             var p;
@@ -77,6 +81,7 @@ function launchServer(projectRoot, port) {
             response.write('</ul>');
             response.write('</body></html>');
             response.end();
+            return '';
         }
 
         var urlPath = url.parse(request.url).pathname;
@@ -104,7 +109,7 @@ function launchServer(projectRoot, port) {
             filePath = parser.config_xml();
         } else if (urlPath == '/project.json') {
             processAddRequest(request, response, platformId, projectRoot);
-            return;
+            return '';
         } else if (/^\/www\//.test(urlPath)) {
             filePath = path.join(parser.www_dir(), urlPath.slice(5));
         } else if (/^\/+[^\/]*$/.test(urlPath)) {
@@ -114,55 +119,55 @@ function launchServer(projectRoot, port) {
         }
 
         fs.exists(filePath, function(exists) {
-            if (exists) {
-                if (fs.statSync(filePath).isDirectory()) {
-                    var index = path.join(filePath, 'index.html');
-                    try {
-                        if (fs.statSync(index)) {
-                            filePath = index;
-                        }
-                    } catch (e) {}
-                }
-                if (fs.statSync(filePath).isDirectory()) {
-                    if (!/\/$/.test(urlPath)) {
-                        return do302('/' + platformId + urlPath + '/');
-                    }
-                    console.log('200 ' + request.url);
-                    response.writeHead(200, {'Content-Type': 'text/html'});
-                    response.write('<html><head><title>Directory listing of '+ urlPath + '</title></head>');
-                    response.write('<h3>Items in this directory</h3>');
-                    var items = fs.readdirSync(filePath);
-                    response.write('<ul>');
-                    for (var i in items) {
-                        var file = items[i];
-                        if (file) {
-                            response.write('<li><a href="'+file+'">'+file+'</a></li>\n');
-                        }
-                    }
-                    response.write('</ul>');
-                    response.end();
-                } else {
-                    var mimeType = mime.lookup(filePath);
-                    var respHeaders = {
-                        'Content-Type': mimeType
-                    };
-                    var readStream = fs.createReadStream(filePath);
-
-                    var acceptEncoding = request.headers['accept-encoding'] || '';
-                    if (acceptEncoding.match(/\bgzip\b/)) {
-                        respHeaders['content-encoding'] = 'gzip';
-                        readStream = readStream.pipe(zlib.createGzip());
-                    } else if (acceptEncoding.match(/\bdeflate\b/)) {
-                        respHeaders['content-encoding'] = 'deflate';
-                        readStream = readStream.pipe(zlib.createDeflate());
-                    }
-                    console.log('200 ' + request.url);
-                    response.writeHead(200, respHeaders);
-                    readStream.pipe(response);
-                }
-            } else {
+            if (!exists) {
                 return do404();
             }
+            if (fs.statSync(filePath).isDirectory()) {
+                var index = path.join(filePath, 'index.html');
+                try {
+                    if (fs.statSync(index)) {
+                        filePath = index;
+                    }
+                } catch (e) {}
+            }
+            if (fs.statSync(filePath).isDirectory()) {
+                if (!/\/$/.test(urlPath)) {
+                    return do302('/' + platformId + urlPath + '/');
+                }
+                console.log('200 ' + request.url);
+                response.writeHead(200, {'Content-Type': 'text/html'});
+                response.write('<html><head><title>Directory listing of '+ urlPath + '</title></head>');
+                response.write('<h3>Items in this directory</h3>');
+                var items = fs.readdirSync(filePath);
+                response.write('<ul>');
+                for (var i in items) {
+                    var file = items[i];
+                    if (file) {
+                        response.write('<li><a href="'+file+'">'+file+'</a></li>\n');
+                    }
+                }
+                response.write('</ul>');
+                response.end();
+            } else {
+                var mimeType = mime.lookup(filePath);
+                var respHeaders = {
+                    'Content-Type': mimeType
+                };
+                var readStream = fs.createReadStream(filePath);
+
+                var acceptEncoding = request.headers['accept-encoding'] || '';
+                if (acceptEncoding.match(/\bgzip\b/)) {
+                    respHeaders['content-encoding'] = 'gzip';
+                    readStream = readStream.pipe(zlib.createGzip());
+                } else if (acceptEncoding.match(/\bdeflate\b/)) {
+                    respHeaders['content-encoding'] = 'deflate';
+                    readStream = readStream.pipe(zlib.createDeflate());
+                }
+                console.log('200 ' + request.url);
+                response.writeHead(200, respHeaders);
+                readStream.pipe(response);
+            }
+            return '';
         });
     }).on('listening', function () {
         console.log('Static file server running on port ' + port + ' (i.e. http://localhost:' + port + ')\nCTRL + C to shut down');
@@ -218,17 +223,21 @@ function processAddRequest(request, response, platformId, projectRoot) {
 }
 
 module.exports = function server(port) {
+    var d = Q.defer();
     var projectRoot = cordova_util.cdProjectRoot();
     port = +port || 8000;
 
     var hooks = new hooker(projectRoot);
-    return hooks.fire('before_serve')
+    hooks.fire('before_serve')
     .then(function() {
         // Run a prepare first!
         return require('./cordova').raw.prepare([]);
     }).then(function() {
-        launchServer(projectRoot, port);
-        return hooks.fire('after_serve');
+        var server = launchServer(projectRoot, port);
+        hooks.fire('after_serve').then(function () {
+            d.resolve(server);
+        });
     });
+    return d.promise;
 };
 
