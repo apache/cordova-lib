@@ -59,7 +59,6 @@ module.exports.prototype = {
         manifest.installs_allowed_from = manifest.installs_allowed_from || ['*'];
         manifest.version = config.version();
         manifest.name = config.name();
-        manifest.pkgName = config.packageName();
         manifest.description = config.description();
         manifest.developer = {
             name: config.author()
