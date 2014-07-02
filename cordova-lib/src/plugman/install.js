@@ -177,7 +177,7 @@ function callEngineScripts(engines) {
                         engine.currentVersion = null;
                     } else {
                         engine.currentVersion = cleanVersionOutput(stdout, engine.name);
-                        if (engine.currentVersion === "") {
+                        if (engine.currentVersion === '') {
                             events.emit('warn', engine.name +' version check returned nothing ('+ scriptPath +'), continuing anyways.');
                             engine.currentVersion = null;
                         }
