@@ -25,6 +25,7 @@
 /* globals URL:true */
 
 var path          = require('path'),
+    _             = require('underscore'),
     fs            = require('fs'),
     shell         = require('shelljs'),
     platforms     = require('./platforms'),
@@ -46,16 +47,6 @@ var path          = require('path'),
         subdirectory: ''
     };
 
-function mixin(mix, into) {
-    Object.getOwnPropertyNames(mix).forEach(function (prop) {
-        if (Object.hasOwnProperty.call(mix, prop)) {
-            Object.defineProperty(into, prop, Object.getOwnPropertyDescriptor(mix, prop));
-        }
-    });
-    return into;
-}
-
-
 exports.cordova = cordova;
 exports.cordova_git = cordova_git;
 exports.cordova_npm = cordova_npm;
@@ -70,8 +61,8 @@ function based_on_config(project_root, platform, opts) {
     }
     if (custom_path) {
         var dot_file = config.read(project_root),
-            mixed_platforms = mixin(platforms, {});
-        mixed_platforms[platform] = mixin(dot_file.lib && dot_file.lib[platform] || {}, mixed_platforms[platform] || {});
+            mixed_platforms = _.extend({}, platforms);
+        mixed_platforms[platform] = _.extend(mixed_platforms[platform] || {}, dot_file.lib && dot_file.lib[platform] || {});
         return module.exports.custom(mixed_platforms, platform);
     } else {
         return module.exports.cordova(platform, opts);
@@ -89,7 +80,7 @@ function cordova(platform, opts) {
 }
 
 function cordova_git(platform) {
-    var mixed_platforms = mixin(platforms, {}),
+    var mixed_platforms = _.extend({}, platforms),
         plat;
     if (!(platform in platforms)) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
@@ -141,7 +132,7 @@ function custom(platforms, platform) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
     }
 
-    plat = mixin(platforms[platform], mixin(stubplatform, {}));
+    plat = _.extend({}, stubplatform, platforms[platform]);
     version = plat.version;
     url = plat.url;
     id = plat.id;
