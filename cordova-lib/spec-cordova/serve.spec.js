@@ -24,7 +24,7 @@ var cordova = require('../src/cordova/cordova'),
     Q = require('q'),
     util = require('../src/cordova/util'),
     hooker = require('../src/cordova/hooker'),
-    tempDir = path.join(__dirname, '..', 'temp'),
+    tempDir,
     http = require('http'),
     firefoxos_parser = require('../src/cordova/metadata/firefoxos_parser'),
     android_parser = require('../src/cordova/metadata/android_parser'),
@@ -39,6 +39,7 @@ describe('serve command', function() {
         consoleSpy;
     beforeEach(function() {
         // Make a temp directory
+        tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
         shell.rm('-rf', tempDir);
         shell.mkdir('-p', tempDir);
         consoleSpy = spyOn(console, 'log');
@@ -48,7 +49,7 @@ describe('serve command', function() {
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
     })
-    iit('should not run outside of a Cordova-based project', function() {
+    it('should not run outside of a Cordova-based project', function() {
         process.chdir(tempDir);
 
         expect(function() {
@@ -72,9 +73,9 @@ describe('serve command', function() {
 
         function cit(cond) {
             if (cond) {
-                return iit;
+                return it;
             }
-            return it;
+            return xit;
         }
         function itifapps(apps) {
             return cit(apps.every(function (bin) {return shell.which(bin);}));
@@ -164,7 +165,7 @@ describe('serve command', function() {
             };
         };
 
-        iit('should serve from top-level www if the file exists there', function() {
+        it('should serve from top-level www if the file exists there', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -174,7 +175,7 @@ describe('serve command', function() {
             })();
         });
 
-        iit('should honour a custom port setting', function() {
+        it('should honour a custom port setting', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -210,7 +211,7 @@ describe('serve command', function() {
             test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
         });
 
-        iit('should fall back to www on firefoxos', function() {
+        it('should fall back to www on firefoxos', function() {
             payloads.firefoxos = 'This is the firefoxos test file.';
             test_serve('firefoxos', '/test.html', payloads.firefoxos)();
         });
