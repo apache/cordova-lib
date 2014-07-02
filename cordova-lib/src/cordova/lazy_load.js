@@ -62,7 +62,7 @@ function based_on_config(project_root, platform, opts) {
     if (custom_path) {
         var dot_file = config.read(project_root),
             mixed_platforms = _.extend({}, platforms);
-        mixed_platforms[platform] = _.extend(mixed_platforms[platform] || {}, dot_file.lib && dot_file.lib[platform] || {});
+        mixed_platforms[platform] = _.extend({}, mixed_platforms[platform], dot_file.lib && dot_file.lib[platform] || {});
         return module.exports.custom(mixed_platforms, platform);
     } else {
         return module.exports.cordova(platform, opts);
