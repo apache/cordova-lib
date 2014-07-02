@@ -111,13 +111,6 @@ exports = module.exports = function prepare(options) {
                 // Update platform config.xml based on top level config.xml
                 var platform_cfg = new ConfigParser(parser.config_xml());
                 exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
-
-                // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-                // we allow using windows8 tag for new windows platform
-                if (platform == 'windows') {
-                    exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
-                }
-
                 platform_cfg.write();
 
                 return parser.update_project(cfg);
