@@ -56,7 +56,7 @@ exports.based_on_config = based_on_config;
 // Returns a promise for the path to the lazy-loaded directory.
 function based_on_config(project_root, platform, opts) {
     var custom_path = config.has_custom_path(project_root, platform);
-    if (custom_path === undefined && platform === 'windows') {
+    if (custom_path === false && platform === 'windows') {
         custom_path = config.has_custom_path(project_root, 'windows8');
     }
     if (custom_path) {
