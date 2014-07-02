@@ -48,7 +48,7 @@ describe('serve command', function() {
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
     })
-    it('should not run outside of a Cordova-based project', function() {
+    iit('should not run outside of a Cordova-based project', function() {
         process.chdir(tempDir);
 
         expect(function() {
@@ -70,7 +70,18 @@ describe('serve command', function() {
             payloads = {};
         });
 
+        function cit(cond) {
+            if (cond) {
+                return iit;
+            }
+            return it;
+        }
+        function itifapps(apps) {
+            return cit(apps.every(function (bin) {return shell.which(bin);}));
+        }
+
         function test_serve(platform, ref, expectedContents, opts) {
+            var timeout = opts && 'timeout' in opts && opts.timeout || 1000;
             return function() {
                 var server;
                 runs(function() {
@@ -82,7 +93,7 @@ describe('serve command', function() {
                             var d = Q.defer();
                             plats.push(d.promise);
                             cordova.raw.platform('add', plat, {spawnoutput:'ignore'}).then(function () {
-                                var dir = path.join(tempDir, 'merges', plat, plat == 'android' ? 'assets' : '');
+                                var dir = path.join(tempDir, 'merges', plat);
                                 shell.mkdir('-p', dir);
                                 // Write testing HTML files into the directory.
                                 fs.writeFileSync(path.join(dir, 'test.html'), payloads[plat]);
@@ -109,7 +120,7 @@ describe('serve command', function() {
 
                 waitsFor(function() {
                     return server || failed;
-                }, 'the server should start', 1000);
+                }, 'the server should start', timeout);
 
                 var done, errorCB;
                 runs(function() {
@@ -129,8 +140,10 @@ describe('serve command', function() {
                             response += data;
                         });
                         res.on('end', function() {
-                            expect(res.statusCode).toEqual(200);
-                            expect(response).toEqual(expectedContents);
+                            expect(response).toEqual(expectedContents)
+                            if (response === expectedContents) {
+                                expect(res.statusCode).toEqual(200);
+                            }
                             done = true;
                         });
                     }).on('error', errorCB);
@@ -138,7 +151,7 @@ describe('serve command', function() {
 
                 waitsFor(function() {
                     return done || failed;
-                }, 'the HTTP request should complete', 1000);
+                }, 'the HTTP request should complete', timeout);
 
                 runs(function() {
                     if (!failed) {
@@ -151,7 +164,7 @@ describe('serve command', function() {
             };
         };
 
-        it('should serve from top-level www if the file exists there', function() {
+        iit('should serve from top-level www if the file exists there', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -161,7 +174,7 @@ describe('serve command', function() {
             })();
         });
 
-        it('should honour a custom port setting', function() {
+        iit('should honour a custom port setting', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -172,17 +185,32 @@ describe('serve command', function() {
             })();
         });
 
-        it('should fall back to assets/www on Android', function() {
+        itifapps([
+            'android',
+            'ant',
+        ])('should fall back to assets/www on Android', function() {
             payloads.android = 'This is the Android test file.';
-            test_serve('android', '/test.html', payloads.android)();
+            test_serve('android', '/test.html', payloads.android, {timeout: 20000})();
         });
 
-        it('should fall back to www on iOS', function() {
+        itifapps([
+            'blackberry-nativepackager',
+            'blackberry-deploy',
+            'blackberry-signer',
+            'blackberry-debugtokenrequest',
+        ])('should fall back to www on BlackBerry10', function() {
+            payloads.blackberry10 = 'This is the BlackBerry10 test file.';
+            test_serve('blackberry10', '/test.html', payloads.blackberry10, {timeout: 10000})();
+        });
+
+        itifapps([
+            'xcodebuild',
+        ])('should fall back to www on iOS', function() {
             payloads.ios = 'This is the iOS test file.';
-            test_serve('ios', '/test.html', payloads.ios)();
+            test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
         });
 
-        it('should fall back to www on firefoxos', function() {
+        iit('should fall back to www on firefoxos', function() {
             payloads.firefoxos = 'This is the firefoxos test file.';
             test_serve('firefoxos', '/test.html', payloads.firefoxos)();
         });
