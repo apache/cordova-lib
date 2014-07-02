@@ -86,7 +86,9 @@ function cordova_git(platform) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
     }
     plat = mixed_platforms[platform];
-    plat.url = plat.url + ';a=snapshot;h=' + plat.version + ';sf=tgz';
+    if (/^...*:/.test(plat.url)) {
+        plat.url = plat.url + ';a=snapshot;h=' + plat.version + ';sf=tgz';
+    }
     plat.id = 'cordova';
     return module.exports.custom(mixed_platforms, platform);
 }
