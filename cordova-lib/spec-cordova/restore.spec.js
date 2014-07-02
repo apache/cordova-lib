@@ -17,11 +17,12 @@
     under the License.
 */
 
-var project_dir = path.join(__dirname, 'fixtures', 'base');
-
-var cordova = require('../src/cordova/cordova'),
+var path = require('path'),
+    Q = require('Q'),
+    cordova = require('../src/cordova/cordova'),
     cordova_util = require('../src/cordova/util'),
-    ConfigParser = require('../src/configparser/ConfigParser');
+    ConfigParser = require('../src/configparser/ConfigParser'),
+    project_dir = path.join(__dirname, 'fixtures', 'base');
 
 describe('restore command', function(){
   var is_cordova, result, config_add_feature, cd_project;
@@ -46,21 +47,15 @@ describe('restore command', function(){
      });
   });
 
-  it('should not try to restore featrues from config.xml', function(){
+  it('should not try to restore features from config.xml', function(){
 
 
-   cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
-
-    var call_count =0;
-    ConfigParser.prototype.write = function(){
-      call_count++;
-    }
-
-     expect(call_count).toEqual(0);
-
-     cordova.restore('plugins');
-
-     expect(call_count).toEqual(0);
+    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
+    var parserWriter = spyOn(ConfigParser.prototype, 'write');
+    expect(ConfigParser.prototype.write).not.toHaveBeenCalled();
+    cordova.restore('plugins');
+    expect(ConfigParser.prototype.write).not.toHaveBeenCalled();
+    parserWriter.andCallThrough();
   });
 
 
