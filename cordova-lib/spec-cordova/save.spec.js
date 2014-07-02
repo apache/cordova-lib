@@ -18,7 +18,7 @@
 */
 
 var path = require('path'),
-    Q = require('Q'),
+    Q = require('q'),
     cordova = require('../src/cordova/cordova'),
     cordova_util = require('../src/cordova/util'),
     ConfigParser = require('../src/configparser/ConfigParser'),
