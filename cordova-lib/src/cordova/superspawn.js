@@ -108,11 +108,17 @@ exports.spawn = function(cmd, args, opts) {
     if (child.stdout) {
         child.stdout.setEncoding('utf8');
         child.stdout.on('data', function(data) {
+            if (opts && 'onstdout' in opts) {
+                if (opts.onstdout(data)) { return; }
+            }
             capturedOut += data;
         });
 
         child.stderr.setEncoding('utf8');
         child.stderr.on('data', function(data) {
+            if (opts && 'onstderr' in opts) {
+                if (opts.onstderr(data)) { return; }
+            }
             capturedErr += data;
         });
     }
