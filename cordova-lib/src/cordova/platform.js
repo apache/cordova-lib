@@ -123,7 +123,7 @@ function add(hooks, projectRoot, targets, opts) {
                 var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
                 var copts = null;
                 if ('spawnoutput' in opts) {
-                    copts = opts.spawnoutput;
+                    copts = { stdio: opts.spawnoutput };
                 }
                 return call_into_create(platform, projectRoot, cfg, libDir, template, copts);
             });
