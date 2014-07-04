@@ -97,6 +97,8 @@ function create(dir, id, name, cfg) {
     var custom_hooks;
 
     if (config_json.lib && config_json.lib.www) {
+        // This was changed from "uri" to "url", but checking uri for backwards compatibility.
+        config_json.lib.www.url = config_json.lib.www.url || config_json.lib.www.uri;
         events.emit('log', 'Using custom www assets from '+config_json.lib.www.url);
         // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
         config_json.lib.www.version = config_json.lib.www.version || 'not_versioned';
