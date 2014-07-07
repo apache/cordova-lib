@@ -8,7 +8,8 @@ var path = require('path')
   , superspawn = require('./src/cordova/superspawn')
   , jasmine = require('jasmine-node')
   , specs = require('jasmine-node/lib/jasmine-node/spec-collection')
-  , d = Q.defer()
+  , scheduled = Q.defer()
+  , jobs = [scheduled.promise]
   , terminalReporter
   , specFolders = []
   , showColors = true
@@ -31,7 +32,8 @@ var path = require('path')
   , cargs = ['node_modules/jasmine-node/bin/jasmine-node']
   , failureLine = /^(\s+)\d+(\).*)/
   , failureNumber = 0
-  , failures = [];
+  , failures = []
+  ;
 
 // Disable if we're not on a TTY
 if (!process.stdout.isTTY) {
@@ -43,13 +45,18 @@ var extensions = "js"
   , matchall = false
   , forceExit = false
   , args = process.argv.slice(2)
-  , existsSync = fs.existsSync || path.existsSync;
+  , existsSync = fs.existsSync || path.existsSync
+  , j = 1
+  ;
 
 while(args.length) {
   var arg = args.shift();
 
   switch(arg)
   {
+    case '-j':
+        j = args.shift();
+        break;
     case '--version':
         printVersion();
         break;
@@ -174,6 +181,7 @@ function help(){
   , '  --config NAME VALUE- set a global variable in process.env'
   , '  --noStack          - suppress the stack trace generated from a test failure'
   , '  --version          - show the current version'
+  , '  -j JOBLIMIT        - like make -j JOBLIMIT'
   , '  -h, --help         - display this help and exit'
   , ''
   ].join("\n"));
@@ -271,12 +279,27 @@ function run(s){
     return child;
 }
 
-function work() {
-    if (!specList.length) {
-        d.resolve();
+scheduled.promise.then(function () {
+    Q.allSettled(jobs)
+    .finally(report);
+});
+
+function addOne() {
+    var task = specList.pop();
+    if (!task) {
+        scheduled.resolve();
+        return;
     }
-    run(specList.shift())
-    .finally(work);
+    var d = run(task);
+    jobs.push(d);
+    d.finally(addOne);
+}
+
+function work() {
+    var jobs = [];
+    for (var i = 0; i < j; i++) {
+        addOne();
+    }
 }
 
 function plural(n, word) {
@@ -300,7 +323,5 @@ function report() {
         : colors[' ']));
     process.stdout.write('\n\n');
 }
-
-d.promise.then(report);
 
 work();
