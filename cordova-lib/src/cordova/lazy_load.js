@@ -137,7 +137,7 @@ function custom(platforms, platform) {
     plat = _.extend({}, stubplatform, platforms[platform]);
     version = plat.version;
     // Older tools can still provide uri (as opposed to url) as part of extra
-    // cofnig to create, it should override the default url provided in
+    // config to create, it should override the default url provided in
     // platfroms.js
     url = plat.uri || plat.url;
     id = plat.id;
