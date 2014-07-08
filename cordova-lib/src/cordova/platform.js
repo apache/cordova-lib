@@ -27,7 +27,6 @@ var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
     ConfigParser      = require('../configparser/ConfigParser'),
-    util              = require('util'),
     fs                = require('fs'),
     os                = require('os'),
     path              = require('path'),
@@ -65,6 +64,15 @@ function add(hooks, projectRoot, targets, opts) {
               'See `' + cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
+
+    targets.forEach(function(platform) {
+        if ( !hostSupports(platform) ) {
+            msg = 'Applications for platform ' + platform +
+                  ' can not be built on this OS - ' + process.platform + '.';
+            throw new CordovaError(msg);
+        }
+    });
+
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
@@ -305,17 +313,7 @@ function list(hooks, projectRoot) {
         }));
     }).then(function(platformsText) {
         var results = 'Installed platforms: ' + platformsText.sort().join(', ') + '\n';
-        var available = Object.getOwnPropertyNames(platforms).filter(function(p) {
-            var platform = platforms[p] || {},
-                hostos = platform.hostos || null;
-            if (!hostos)
-                return true;
-            if (hostos.indexOf('*') >= 0)
-                return true;
-            if (hostos.indexOf(process.platform) >= 0)
-                return true;
-            return false;
-        });
+        var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
             return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
@@ -389,35 +387,18 @@ function platform(command, targets, opts) {
     }
 }
 
-/**
- * Check Platform Support.
- *
- *   - {String} `name` of the platform to test.
- *   - Returns a promise, which shows any errors.
- *
- */
-
-function supports(project_root, name) {
-    // required parameters
-    if (!name) return Q.reject(new CordovaError('requires a platform name parameter'));
-
-    // Check if platform exists.
-    var platform = platforms[name];
-    if (!platform) {
-        return Q.reject(new CordovaError(util.format('"%s" platform does not exist', name)));
-    }
-
-    // Look up platform meta-data parser.
-    var platformParser = platforms[name].parser;
-    if (!platformParser) {
-        return Q.reject(new Error(util.format('"%s" platform parser does not exist', name)));
-    }
-
-    // Check for platform support.
-    return lazy_load.based_on_config(project_root, name)
-        .then(function(libDir) {
-        return platformParser.check_requirements(project_root, libDir);
-    });
+// Used to prevent attempts of installing platforms that are not supported on
+// the host OS. E.g. ios on linux.
+function hostSupports(platform) {
+    var p = platforms[platform] || {},
+        hostos = p.hostos || null;
+    if (!hostos)
+        return true;
+    if (hostos.indexOf('*') >= 0)
+        return true;
+    if (hostos.indexOf(process.platform) >= 0)
+        return true;
+    return false;
 }
 
 // Returns a promise.
@@ -431,53 +412,48 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
         return Q.reject(new CordovaError(msg));
     }
 
-    // Make sure we have minimum requirements to work with specified platform
-    events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
-    /* XXX this is calling the public symbol so that Jasmine Spy can attack it */
-    return module.exports.supports(projectRoot, target)
+    events.emit('log', 'Creating ' + target + ' project...');
+    var bin = path.join(libDir, 'bin', 'create');
+    var args = [];
+    var platformVersion;
+    if (target == 'android') {
+        platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
+        if (semver.gt(platformVersion, '3.3.0')) {
+            args.push('--cli');
+        }
+    } else if (target == 'ios') {
+        platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
+        args.push('--arc');
+        if (semver.gt(platformVersion, '3.3.0')) {
+            args.push('--cli');
+        }
+    }
+
+    var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
+    var name = cfg.name();
+    args.push(output, pkg, name);
+    if (template_dir) {
+        args.push(template_dir);
+    }
+
+    return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
     .then(function() {
-        events.emit('log', 'Creating ' + target + ' project...');
-        var bin = path.join(libDir, 'bin', 'create');
-        var args = [];
-        var platformVersion;
-        if (target == 'android') {
-            platformVersion = fs.readFileSync(path.join(libDir, 'VERSION'), 'UTF-8').trim();
-            if (semver.gt(platformVersion, '3.3.0')) {
-                args.push('--cli');
-            }
-        } else if (target == 'ios') {
-            platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
-            args.push('--arc');
-            if (semver.gt(platformVersion, '3.3.0')) {
-                args.push('--cli');
-            }
-        }
+        return require('./cordova').raw.prepare(target);
+    })
+    .then(function() {
+        // Install all currently installed plugins into this new platform.
+        var plugins_dir = path.join(projectRoot, 'plugins');
+        var plugins = cordova_util.findPlugins(plugins_dir);
+        if (!plugins) return Q();
 
-        var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
-        var name = cfg.name();
-        args.push(output, pkg, name);
-        if (template_dir) {
-            args.push(template_dir);
-        }
-        return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
-        .then(function() {
-            return require('./cordova').raw.prepare(target);
-        })
-        .then(function() {
-            // Install all currently installed plugins into this new platform.
-            var plugins_dir = path.join(projectRoot, 'plugins');
-            var plugins = cordova_util.findPlugins(plugins_dir);
-            if (!plugins) return Q();
-
-            var plugman = require('../plugman/plugman');
-            // Install them serially.
-            return plugins.reduce(function(soFar, plugin) {
-                return soFar.then(function() {
-                    events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                    return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
-                });
-            }, Q());
-        });
+        var plugman = require('../plugman/plugman');
+        // Install them serially.
+        return plugins.reduce(function(soFar, plugin) {
+            return soFar.then(function() {
+                events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
+                return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
+            });
+        }, Q());
     });
 }
 
@@ -486,4 +462,3 @@ module.exports.remove = remove;
 module.exports.update = update;
 module.exports.check = check;
 module.exports.list = list;
-module.exports.supports = supports;
