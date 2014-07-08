@@ -124,17 +124,22 @@ jsproj.prototype = {
     },
 
     addSourceFile:function(relative_path) {
-
-        relative_path = relative_path.split('/').join('\\');
-        relative_path = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relative_path : relative_path;
-
+        // we allow multiple paths to be passed at once as array so that
+        // we don't create separate ItemGroup for each source file, CB-6874
+        if (!(relative_path instanceof Array)) {
+            relative_path = [relative_path];
+        }
         // make ItemGroup to hold file.
         var item = new et.Element('ItemGroup');
 
-        var content = new et.Element('Content');
-        content.attrib.Include = relative_path;
-        item.append(content);
-
+        relative_path.forEach(function(filePath) {
+            filePath = filePath.split('/').join('\\');
+            filePath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + filePath : filePath;
+            
+            var content = new et.Element('Content');
+            content.attrib.Include = filePath;
+            item.append(content);
+        });
         this.xml.getroot().append(item);
     },
 

@@ -230,9 +230,7 @@ module.exports.prototype = {
 
         // now add all www references back in from the root www folder
         var www_files = this.folder_contents('www', this.www_dir());
-        for(var file in www_files) {
-            projFile.addSourceFile(www_files[file]);
-        }
+        projFile.addSourceFile(www_files);
         // save file
         projFile.write();
     },
