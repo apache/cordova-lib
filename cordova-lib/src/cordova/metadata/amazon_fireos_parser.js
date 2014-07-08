@@ -42,12 +42,6 @@ module.exports = function android_parser(project) {
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
 };
 
-// Returns a promise.
-module.exports.check_requirements = function(project_root, lib_path) {
-    // Rely on platform's bin/create script to check requirements.
-    return Q(true);
-};
-
 module.exports.prototype = {
     findOrientationPreference: function(config) {
         var ret = config.getPreference('orientation');

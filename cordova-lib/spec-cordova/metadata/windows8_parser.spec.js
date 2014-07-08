@@ -90,33 +90,6 @@ describe('windows8 project parser', function() {
         });
     });
 
-    describe('check_requirements', function() {
-        it('should fire a callback if there is an error during shelling out', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(50, 'there was an errorz!', '');
-            });
-            errorWrapper(platforms.windows8.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('there was an errorz!');
-            });
-        });
-        it('should check by calling check_reqs on the stock lib path if no custom path is defined', function(done) {
-            wrapper(platforms.windows8.parser.check_requirements(proj), done, function() {
-                expect(exec.mostRecentCall.args[0]).toContain(util.libDirectory);
-                expect(exec.mostRecentCall.args[0]).toMatch(/check_reqs"$/);
-            });
-        });
-        it('should check by calling check_reqs on a custom path if it is so defined', function(done) {
-            var custom_path = path.join('some','custom','path','to','windows8','lib');
-            custom.andReturn(custom_path);
-            wrapper(platforms.windows8.parser.check_requirements(proj),done, function() {
-                expect(exec.mostRecentCall.args[0]).toContain(custom_path);
-                expect(exec.mostRecentCall.args[0]).toMatch(/check_reqs"$/);
-            });
-            done();
-        });
-    });
-
     describe('instance', function() {
         var parser, cp, rm, is_cordova, write, read, mv, mkdir;
         var windows8_proj = path.join(proj, 'platforms', 'windows8');

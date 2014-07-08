@@ -25,12 +25,10 @@
 var fs            = require('fs'),
     path          = require('path'),
     util          = require('../util'),
-    events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),
     os            = require('os'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError');
+    ConfigParser  = require('../../configparser/ConfigParser');
 
 module.exports = function(project) {
     this.path = project;
@@ -41,26 +39,6 @@ module.exports = function(project) {
 function sanitize(str) {
     return str.replace(/\n/g, ' ').replace(/^\s+|\s+$/g, '');
 }
-
-// Returns a promise.
-module.exports.check_requirements = function(project_root, lib_path) {
-    // jshint quotmark:false
-    var d = Q.defer();
-
-    events.emit('log', 'Checking ubuntu requirements...');
-    var command = "dpkg-query -Wf'${db:Status-abbrev}' cmake debhelper libx11-dev libicu-dev pkg-config qtbase5-dev qtchooser qtdeclarative5-dev qtfeedback5-dev qtlocation5-dev qtmultimedia5-dev qtpim5-dev qtsensors5-dev qtsystems5-dev 2>/dev/null | grep -q '^i'";
-    events.emit('log', 'Running "' + command + '" (output to follow)');
-    shell.exec(command, {silent:true, async:true}, function(code, output) {
-        events.emit('log', output);
-        if (code !== 0) {
-            d.reject(new CordovaError('Make sure you have the following packages installed: ' + output));
-        } else {
-            d.resolve();
-        }
-    });
-
-    return d.promise;
-};
 
 module.exports.prototype = {
     // Returns a promise.

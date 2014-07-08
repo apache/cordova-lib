@@ -26,12 +26,10 @@ var fs            = require('fs'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
-    child_process = require('child_process'),
     Q             = require('q'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    lazy_load     = require('../lazy_load'),
     hooker        = require('../hooker'),
     csproj = require('../../util/windows/csproj');
 
@@ -47,28 +45,6 @@ module.exports = function wp8_parser(project) {
         throw new CordovaError('The provided path "' + project + '" is not a Windows Phone 8 project. ' + e);
     }
     this.manifest_path  = path.join(this.wp8_proj_dir, 'Properties', 'WMAppManifest.xml');
-};
-
-// Returns a promise.
-module.exports.check_requirements = function(project_root, lib_path) {
-    if (lib_path === undefined) {
-        return lazy_load.based_on_config(project_root, 'wp8').then(function (lib_path) {
-            return module.exports.check_requirements(project_root, lib_path);
-        });
-    }
-    events.emit('log', 'Checking wp8 requirements...');
-    var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
-    events.emit('verbose', 'Running "' + command + '" (output to follow)');
-    var d = Q.defer();
-    child_process.exec(command, function(err, output, stderr) {
-        events.emit('verbose', output);
-        if (err) {
-            d.reject(new CordovaError('Requirements check failed: ' + output + stderr));
-        } else {
-            d.resolve();
-        }
-    });
-    return d.promise;
 };
 
 module.exports.prototype = {

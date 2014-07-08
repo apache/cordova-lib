@@ -27,11 +27,9 @@ var fs            = require('fs'),
     events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),
-    child_process = require('child_process'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    lazy_load     = require('../lazy_load'),
     hooker        = require('../hooker'),
     jsproj        = require('../../util/windows/jsproj');
 
@@ -57,29 +55,6 @@ module.exports = function windows_parser(project) {
     } catch(e) {
         throw new CordovaError('The provided path "' + project + '" is not a Windows project. ' + e);
     }
-};
-
-// Returns a promise
-module.exports.check_requirements = function(project_root, lib_path) {
-    if (lib_path === undefined) {
-        return lazy_load.based_on_config(project_root, 'windows8').then(function (lib_path) {
-            return module.exports.check_requirements(project_root, lib_path);
-        });
-    }
-    events.emit('log', 'Checking windows8 requirements...');
-    var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
-    events.emit('verbose', 'Running "' + command + '" (output to follow)');
-    var d = Q.defer();
-
-    child_process.exec(command, function(err, output, stderr) {
-        events.emit('verbose', output);
-        if (err) {
-            d.reject(new CordovaError('Requirements check failed: ' + output + stderr));
-        } else {
-            d.resolve();
-        }
-    });
-    return d.promise;
 };
 
 module.exports.prototype = {
