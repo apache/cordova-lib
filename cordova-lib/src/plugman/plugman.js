@@ -69,7 +69,7 @@ var plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'prepare', './prepare');
+addProperty(plugman, 'prepare', './prepare/prepare');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);

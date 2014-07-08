@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platforms = require('../src/plugman/platforms'),
-    prepare = require('../src/plugman/prepare'),
-    common  = require('../src/plugman/platforms/common');
+var platforms = require('../../src/plugman/platforms'),
+    prepare = require('../../src/plugman/prepare/prepare'),
+    common  = require('../../src/plugman/platforms/common');
     fs      = require('fs'),
     os      = require('osenv'),
     path    = require('path'),
     shell   = require('shelljs'),
-    config_changes = require('../src/plugman/util/config-changes'),
+    config_changes = require('../../src/plugman/util/config-changes'),
     temp    = __dirname,
     plugins_dir = path.join(temp, 'plugins');
 

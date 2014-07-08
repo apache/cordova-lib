@@ -22,18 +22,18 @@
           expr:true, quotmark:false
 */
 
-var platform_modules = require('./platforms'),
+var platform_modules = require('../platforms'),
     path            = require('path'),
-    config_changes  = require('./util/config-changes'),
-    xml_helpers     = require('../util/xml-helpers'),
-    wp8             = require('./platforms/wp8'),
-    windows        = require('./platforms/windows'),
-    common          = require('./platforms/common'),
+    config_changes  = require('../util/config-changes'),
+    xml_helpers     = require('../../util/xml-helpers'),
+    wp8             = require('../platforms/wp8'),
+    windows        = require('../platforms/windows'),
+    common          = require('../platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
     util            = require('util'),
-    events          = require('../events'),
-    plugman         = require('./plugman');
+    events          = require('../../events'),
+    plugman         = require('../plugman');
 
 // Called on --prepare.
 // Sets up each plugin's Javascript code to be loaded properly.
