@@ -16,9 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-var publish = require('../src/plugman/publish'),
+var publish = require('../../src/plugman/publish/publish'),
     Q = require('q'),
-    registry = require('../src/plugman/registry/registry');
+    registry = require('../../src/plugman/registry/registry');
 
 describe('publish', function() {
     it('should publish a plugin', function() {

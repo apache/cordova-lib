@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var registry = require('./registry/registry');
+var registry = require('../registry/registry');
 
 module.exports = function(plugin_path) {
     // plugin_path is an array of paths

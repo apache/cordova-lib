@@ -16,9 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-var unpublish = require('../src/plugman/unpublish'),
+var unpublish = require('../../src/plugman/publish/unpublish'),
     Q = require('q'),
-    registry = require('../src/plugman/registry/registry');
+    registry = require('../../src/plugman/registry/registry');
 
 describe('unpublish', function() {
     it('should unpublish a plugin', function() {
