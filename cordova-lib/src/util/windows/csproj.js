@@ -36,7 +36,24 @@ csproj.prototype = {
     write:function() {
         fs.writeFileSync(this.location, this.xml.write({indent:4}), 'utf-8');
     },
+    // add/remove the item group for SDKReference
+    // example :
+    // <ItemGroup><SDKReference Include="MSAdvertising, Version=6.1" /></ItemGroup>
+    addSDKRef:function(incText) {
+        var item_group = new et.Element('ItemGroup');
+        var elem = new et.Element('SDKReference');
+        elem.attrib.Include = incText;
 
+        item_group.append(elem);
+        this.xml.getroot().append(item_group);
+    },
+
+    removeSDKRef:function(incText) {
+        var item_group = this.xml.find('ItemGroup/SDKReference[@Include="' + incText + '"]/..');
+        if(item_group) {
+            this.xml.getroot().remove(0, item_group);
+        }
+    },
     addReference:function(relPath) {
         var item = new et.Element('ItemGroup');
         var extName = path.extname(relPath);

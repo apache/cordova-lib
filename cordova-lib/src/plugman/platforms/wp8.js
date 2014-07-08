@@ -107,11 +107,15 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            events.emit('verbose', 'lib-file.install is not supported for wp8');
+        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+            events.emit('verbose', 'wp8 lib-file install :: ' + plugin_id);
+            var inc  = el.attrib['Include'];
+            project_file.addSDKRef(inc);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
-            events.emit('verbose', 'lib-file.uninstall is not supported for wp8');
+        uninstall:function(el, project_dir, plugin_id, project_file) {
+            events.emit('verbose', 'wp8 lib-file uninstall :: ' + plugin_id);
+            var inc = el.attrib['Include'];
+            project_file.removeSDKRef(inc);
         }
     }
 };
