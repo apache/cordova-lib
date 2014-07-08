@@ -50,6 +50,7 @@ var path          = require('path'),
 exports.cordova = cordova;
 exports.cordova_git = cordova_git;
 exports.cordova_npm = cordova_npm;
+exports.npm_cache_add = npm_cache_add;
 exports.custom = custom;
 exports.based_on_config = based_on_config;
 
@@ -71,11 +72,11 @@ function based_on_config(project_root, platform, opts) {
 
 // Returns a promise for the path to the lazy-loaded directory.
 function cordova(platform, opts) {
-    var use_npm = opts && opts.usenpm && platform != 'www';
-    if ( use_npm ) {
-        return module.exports.cordova_npm(platform);
-    } else {
+    var use_git = opts && opts.usegit || platform === 'www';
+    if ( use_git ) {
         return module.exports.cordova_git(platform);
+    } else {
+        return module.exports.cordova_npm(platform);
     }
 }
 
@@ -104,11 +105,35 @@ function cordova_npm(platform) {
     if ( !(platform in platforms) ) {
         return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
     }
-    // In most cases platfrom does not specify a version and we use
+    // In most cases platform does not specify a version and we use
     // the hard-coded default version from platforms.js
     version = version || platforms[platform].version;
+
+    // Check if this version was already downloaded from git, if yes, use that copy.
+    // TODO: remove this once we fully switch to npm workflow.
+    var platdir = platforms[platform].altplatform || platform;
+    var git_dload_dir = path.join(util.libDirectory, platdir, 'cordova', version);
+    if (fs.existsSync(git_dload_dir)) {
+        var subdir = platforms[platform].subdirectory;
+        if (subdir) {
+            git_dload_dir = path.join(git_dload_dir, subdir);
+        }
+        events.emit('verbose', 'Platform files for "' + platform + '" previously downloaded not from npm. Using that copy.');
+        return Q(git_dload_dir);
+    }
+
     var pkg = 'cordova-' + platform + '@' + version;
-    return Q.nfcall( npm.load, {cache: path.join(util.libDirectory, 'npm_cache') })
+    return exports.npm_cache_add(pkg);
+}
+
+// Equivalent to a command like
+// npm cache add cordova-android@3.5.0
+// Returns a promise that resolves to directory containing the package.
+function npm_cache_add(pkg) {
+    var npm_cache_dir = path.join(util.libDirectory, 'npm_cache');
+    // 'cache-min' is the time in seconds npm considers the files fresh and
+    // does not ask the registry if it got a fresher version.
+    return Q.nfcall( npm.load, { 'cache-min': 3600*24, cache: npm_cache_dir })
     .then(function() {
         return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
     }).then(function(info) {
