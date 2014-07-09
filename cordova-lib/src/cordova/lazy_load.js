@@ -186,6 +186,7 @@ function custom(platforms, platform) {
         lib_dir = path.join(url, subdir);
         return Q(lib_dir);
     }
+    // TODO: Replace with unified Hooker
     return hooker.fire('before_library_download', {
         platform:platform,
         url:url,

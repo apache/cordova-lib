@@ -31,6 +31,7 @@ module.exports = function compile(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
+    // TODO: Replace with unified Hooker
     var hooks = new hooker(projectRoot);
     var ret = hooks.fire('before_compile', options);
     options.platforms.forEach(function(platform) {

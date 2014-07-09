@@ -247,6 +247,7 @@ module.exports = function server(port) {
     var projectRoot = cordova_util.cdProjectRoot();
     port = +port || 8000;
 
+    // TODO: Replace with unified Hooker
     var hooks = new hooker(projectRoot);
     hooks.fire('before_serve')
     .then(function() {

@@ -38,7 +38,9 @@ var path = require('path'),
     shell   = require('shelljs'),
     events = require('../events'),
     plugman = require('./plugman'),
-    isWindows = (os.platform().substr(0,3) === 'win');
+    Hooker = require('../hooks/Hooker'),
+    isWindows = (os.platform().substr(0,3) === 'win'),
+    cordovaUtil = require('../cordova/util');
 
 /* INSTALL FLOW
    ------------
@@ -319,7 +321,27 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                 copyPlugin(plugin_dir, plugins_dir, options.link);
             }
 
-            return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
+            var projectRoot = cordovaUtil.isCordova();
+
+            // using unified hooker
+            var hookOptions = {
+                projectRoot: projectRoot,
+                cordova: { platforms: [ platform ], plugins: options.plugins },
+                plugin: {
+                    id: pluginInfo.id,
+                    pluginInfo: pluginInfo,
+                    platform: install.platform,
+                    dir: install.top_plugin_dir
+                }
+            };
+
+            var hooker = new Hooker(projectRoot);
+
+            hooker.fire('before_plugin_install', hookOptions).then(function() {
+                return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
+            }).then(function(){
+                return hooker.fire('after_plugin_install', hookOptions);
+            });
         }
     ).fail(
         function (error) {
