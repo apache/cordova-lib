@@ -21,12 +21,12 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('./util'),
-    hooker            = require('./hooker');
+var cordovaUtil      = require('./util'),
+    Hooker           = require('../hooks/Hooker');
 
 // Returns a promise.
 module.exports = function build(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
+    var projectRoot = cordovaUtil.cdProjectRoot();
 
     if (!options) {
         options = {
@@ -36,16 +36,18 @@ module.exports = function build(options) {
         };
     }
 
-    options = cordova_util.preProcessOptions(options);
+    options = cordovaUtil.preProcessOptions(options);
+
+    var hookOptions = { projectRoot: projectRoot, cordova: options };
 
     // fire build hooks
-    var hooks = new hooker(projectRoot);
-    return hooks.fire('before_build', options)
+    var hooker = new Hooker(projectRoot);
+    return hooker.fire('before_build', hookOptions)
     .then(function() {
         return require('./cordova').raw.prepare(options);
     }).then(function() {
         return require('./cordova').raw.compile(options);
     }).then(function() {
-        return hooks.fire('after_build', options);
+        return hooker.fire('after_build', hookOptions);
     });
 };

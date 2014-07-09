@@ -203,6 +203,7 @@ function check(hooks, projectRoot) {
     var result = Q.defer();
     cordova.raw.create(scratch)
     .then(function () {
+        // TODO: Replace with unified Hooker
         var h = new hooker(scratch);
         // Acquire the version number of each platform we have installed, and output that too.
         Q.all(platforms_on_fs.map(function(p) {

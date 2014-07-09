@@ -32,6 +32,7 @@ module.exports = function emulate(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
+    // TODO: Replace with unified Hooker
     var hooks = new hooker(projectRoot);
     return hooks.fire('before_emulate', options)
     .then(function() {

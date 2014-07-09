@@ -228,6 +228,29 @@ ConfigParser.prototype = {
     getSplashScreens: function(platform) {
         return this.getStaticResources(platform, 'splash');
     },
+    
+    /**
+     * Returns all hook scripts for the hook type specified.
+     * @param  {String} hook     The hook type.
+     * @param {Array}  platforms Platforms to look for scripts into (root scripts will be included as well).
+     * @return {Array}               Script elements.
+     */
+    getHookScripts: function(hook, platforms) {
+        var self = this;
+        var scriptElements = self.doc.findall('./script');
+
+        if(platforms) {
+            platforms.forEach(function (platform) {
+                scriptElements = scriptElements.concat(self.doc.findall('./platform[@name="' + platform + '"]/script'));
+            });
+        }
+
+        function filterScriptByHookType(el) {
+            return el.attrib.src && el.attrib.type && el.attrib.type.toLowerCase() === hook;
+        }
+
+        return scriptElements.filter(filterScriptByHookType);
+    },
 
     /**
      * Returns a list of features (IDs)
@@ -315,6 +338,7 @@ ConfigParser.prototype = {
             return result;
         }
     },
+
 
     /**
      *This does not check for duplicate feature entries

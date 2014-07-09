@@ -59,6 +59,7 @@ module.exports = function plugin(command, targets, opts) {
     opts.options = opts.options || [];
     opts.plugins = [];
 
+    // TODO: Replace with unified Hooker
     var hooks = new hooker(projectRoot);
     var platformList = cordova_util.listPlatforms(projectRoot);
 

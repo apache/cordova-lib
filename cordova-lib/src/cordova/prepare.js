@@ -56,6 +56,7 @@ function prepare(options) {
     });
     options.paths = paths;
 
+    // TODO: Replace with unified Hooker
     var hooks = new hooker(projectRoot);
     return hooks.fire('before_prepare', options)
     .then(function() {

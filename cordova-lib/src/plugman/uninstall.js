@@ -32,11 +32,13 @@ var path = require('path'),
     CordovaError  = require('../CordovaError'),
     underscore = require('underscore'),
     Q = require('q'),
-    underscore = require('underscore'),
     events = require('../events'),
     platform_modules = require('./platforms'),
     plugman = require('./plugman'),
-    promiseutil = require('../util/promise-util');
+    promiseutil = require('../util/promise-util'),
+    Hooker = require('../hooks/Hooker'),
+    PluginInfo = require('../PluginInfo'),
+    cordovaUtil      = require('../cordova/util');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -237,8 +239,29 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         promise = Q();
     }
 
+    var projectRoot = cordovaUtil.isCordova();
+    var pluginInfo = new PluginInfo.PluginInfo(plugin_dir);
+
+    // using unified hooker
+    var hookerOptions = {
+        projectRoot: projectRoot,
+        cordova: { platforms: [ platform ], plugins: options.plugins },
+        plugin: {
+            id: pluginInfo.id,
+            pluginInfo: pluginInfo,
+            platform: platform,
+            dir: plugin_dir
+        }
+    };
+
+    var hooker = new Hooker(projectRoot);
+
     return promise.then(function() {
+        return hooker.fire('before_plugin_uninstall', hookerOptions);
+    }).then(function() {
         return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level, options);
+    }).then(function(){
+        return hooker.fire('after_plugin_uninstall', hookerOptions);
     });
 }
 

@@ -200,6 +200,26 @@ function PluginInfo(dirname) {
         var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, cloneAttribs);
         return libFiles;
     }
+    
+    // <script>
+    // Example:
+    // <script type="before_build" src="scripts/beforeBuild.js" />
+    self.getHookScripts = getHookScripts;
+    function getHookScripts(hook, platforms) {
+        var scriptElements =  self._et.findall('./script');
+
+        if(platforms) {
+            platforms.forEach(function (platform) {
+                scriptElements = scriptElements.concat(self._et.findall('./platform[@name="' + platform + '"]/script'));
+            });
+        }
+
+        function filterScriptByHookType(el) {
+            return el.attrib.src && el.attrib.type && el.attrib.type.toLowerCase() === hook;
+        }
+
+        return scriptElements.filter(filterScriptByHookType);
+    }
     ///// End of PluginInfo methods /////
 
 
