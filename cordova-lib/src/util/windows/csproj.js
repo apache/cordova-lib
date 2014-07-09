@@ -73,50 +73,58 @@ csproj.prototype = {
     },
 
     addSourceFile:function(relative_path) {
+        // we allow multiple paths to be passed at once as array so that
+        // we don't create separate ItemGroup for each source file, CB-6874
+        if (!(relative_path instanceof Array)) {
+            relative_path = [relative_path];
+        }
         var compile;
-        relative_path = relative_path.split('/').join('\\');
         // make ItemGroup to hold file.
         var item = new et.Element('ItemGroup');
+        var me = this;
+        relative_path.forEach(function(filePath) {
 
-        var extName = path.extname(relative_path);
-        // check if it's a .xaml page
-        if(extName == '.xaml') {
-            var page = new et.Element('Page');
-            var sub_type = new et.Element('SubType');
+            filePath = filePath.split('/').join('\\');
+            var extName = path.extname(filePath);
+            // check if it's a .xaml page
+            if(extName == '.xaml') {
+                var page = new et.Element('Page');
+                var sub_type = new et.Element('SubType');
 
-            sub_type.text = 'Designer';
-            page.append(sub_type);
-            page.attrib.Include = relative_path;
+                sub_type.text = 'Designer';
+                page.append(sub_type);
+                page.attrib.Include = filePath;
 
-            var gen = new et.Element('Generator');
-            gen.text = 'MSBuild:Compile';
-            page.append(gen);
+                var gen = new et.Element('Generator');
+                gen.text = 'MSBuild:Compile';
+                page.append(gen);
+                var item_groups = me.xml.findall('ItemGroup');
+                if(item_groups.length === 0) {
+                    item.append(page);
+                } else {
+                    item_groups[0].append(page);
+                }
 
-            var item_groups = this.xml.findall('ItemGroup');
-            if(item_groups.length === 0) {
-                item.append(page);
-            } else {
-                item_groups[0].append(page);
             }
-        }
-        else if (extName == '.cs') {
-            compile = new et.Element('Compile');
-            compile.attrib.Include = relative_path;
-            // check if it's a .xaml.cs page that would depend on a .xaml of the same name
-            if (relative_path.indexOf('.xaml.cs', relative_path.length - 8) > -1) {
-                var dep = new et.Element('DependentUpon');
-                var parts = relative_path.split('\\');
-                var xaml_file = parts[parts.length - 1].substr(0, parts[parts.length - 1].length - 3); // Benn, really !?
-                dep.text = xaml_file;
-                compile.append(dep);
+            else if (extName == '.cs') {
+                compile = new et.Element('Compile');
+                compile.attrib.Include = filePath;
+                // check if it's a .xaml.cs page that would depend on a .xaml of the same name
+                if (filePath.indexOf('.xaml.cs', filePath.length - 8) > -1) {
+                    var dep = new et.Element('DependentUpon');
+                    var parts = filePath.split('\\');
+                    var xaml_file = parts[parts.length - 1].substr(0, parts[parts.length - 1].length - 3); // Benn, really !?
+                    dep.text = xaml_file;
+                    compile.append(dep);
+                }
+                item.append(compile);
             }
-            item.append(compile);
-        }
-        else { // otherwise add it normally
-            compile = new et.Element('Content');
-            compile.attrib.Include = relative_path;
-            item.append(compile);
-        }
+            else { // otherwise add it normally
+                compile = new et.Element('Content');
+                compile.attrib.Include = filePath;
+                item.append(compile);
+            }
+        });
         this.xml.getroot().append(item);
     },
 
