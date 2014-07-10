@@ -80,6 +80,11 @@ describe('config.xml parser', function () {
                 expect(cfg.getPreference('zimzooo!')).toEqual(undefined);
             });
         });
+        describe('platform specific preference', function() {
+            it('should get value of existing platform specific preference', function() {
+                expect(cfg.getPreference('android-minSdkVersion', 'android')).toEqual('10');
+            });
+        });
         describe('feature',function(){
             it('should allow adding a new feature', function(){
                 cfg.addFeature('myfeature');
