@@ -24,20 +24,20 @@
 
 var path = require('path'),
     fs   = require('fs'),
-    action_stack = require('./util/action-stack'),
+    action_stack = require('../util/action-stack'),
     dep_graph = require('dep-graph'),
     child_process = require('child_process'),
     semver = require('semver'),
-    config_changes = require('./util/config-changes'),
-    PluginInfo    = require('../PluginInfo'),
-    CordovaError  = require('../CordovaError'),
+    config_changes = require('../util/config-changes'),
+    PluginInfo    = require('../../PluginInfo'),
+    CordovaError  = require('../../CordovaError'),
     Q = require('q'),
-    platform_modules = require('./platforms'),
+    platform_modules = require('../platforms'),
     os = require('os'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
-    events = require('../events'),
-    plugman = require('./plugman'),
+    events = require('../../events'),
+    plugman = require('../plugman'),
     isWindows = (os.platform().substr(0,3) === 'win');
 
 /* INSTALL FLOW
@@ -204,7 +204,7 @@ function callEngineScripts(engines) {
 // return only the engines we care about/need
 function getEngines(pluginElement, platform, project_dir, plugin_dir){
     var engines = pluginElement.findall('engines/engine');
-    var defaultEngines = require('./util/default-engines')(project_dir);
+    var defaultEngines = require('../util/default-engines')(project_dir);
     var uncheckedEngines = [];
     var cordovaEngineIndex, cordovaPlatformEngineIndex, theName, platformIndex, defaultPlatformIndex;
     // load in known defaults and update when necessary
@@ -382,7 +382,7 @@ function tryFetchDependency(dep, install, options) {
     if ( dep.url == '.' ) {
 
         // Look up the parent plugin's fetch metadata and determine the correct URL.
-        var fetchdata = require('./util/metadata').get_fetch_metadata(install.top_plugin_dir);
+        var fetchdata = require('../util/metadata').get_fetch_metadata(install.top_plugin_dir);
         if (!fetchdata || !(fetchdata.source && fetchdata.source.type)) {
 
             relativePath = dep.subdir || dep.id;

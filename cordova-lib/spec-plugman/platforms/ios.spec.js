@@ -17,7 +17,7 @@
     under the License.
 */
 var ios = require('../../src/plugman/platforms/ios'),
-    install = require('../../src/plugman/install'),
+    install = require('../../src/plugman/install/install'),
     path = require('path'),
     fs = require('fs'),
     et = require('elementtree'),

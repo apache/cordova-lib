@@ -66,8 +66,8 @@ var plugman = {
     raw:                {}
 };
 
-addProperty(plugman, 'install', './install', true);
-addProperty(plugman, 'uninstall', './uninstall', true);
+addProperty(plugman, 'install', './install/install', true);
+addProperty(plugman, 'uninstall', './install/uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
 addProperty(plugman, 'prepare', './prepare/prepare');
 addProperty(plugman, 'config', './config', true);

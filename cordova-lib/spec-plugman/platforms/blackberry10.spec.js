@@ -18,7 +18,7 @@
 */
 var blackberry10 = require('../../src/plugman/platforms/blackberry10'),
     common = require('../../src/plugman/platforms/common'),
-    install = require('../../src/plugman/install'),
+    install = require('../../src/plugman/install/install'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),

@@ -25,18 +25,18 @@
 var path = require('path'),
     fs   = require('fs'),
     shell= require('shelljs'),
-    config_changes = require('./util/config-changes'),
-    xml_helpers = require('../util/xml-helpers'),
-    action_stack = require('./util/action-stack'),
-    dependencies = require('./util/dependencies'),
-    CordovaError  = require('../CordovaError'),
+    config_changes = require('../util/config-changes'),
+    xml_helpers = require('../../util/xml-helpers'),
+    action_stack = require('../util/action-stack'),
+    dependencies = require('../util/dependencies'),
+    CordovaError  = require('../../CordovaError'),
     underscore = require('underscore'),
     Q = require('q'),
     underscore = require('underscore'),
-    events = require('../events'),
-    platform_modules = require('./platforms'),
-    plugman = require('./plugman'),
-    promiseutil = require('../util/promise-util');
+    events = require('../../events'),
+    platform_modules = require('../platforms'),
+    plugman = require('../plugman'),
+    promiseutil = require('../../util/promise-util');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -244,7 +244,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
 // Returns a promise.
 function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, www_dir, plugins_dir, plugin_dir, is_top_level) {
-    var platform_modules = require('./platforms');
+    var platform_modules = require('../platforms');
     var handler = platform_modules[platform];
     var platformTag = plugin_et.find('./platform[@name="'+platform+'"]');
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
@@ -303,7 +303,7 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
     }
 
     // queue up asset installation
-    var common = require('./platforms/common');
+    var common = require('../platforms/common');
     assets && assets.forEach(function(asset) {
         actions.push(actions.createAction(common.asset.uninstall, [asset, www_dir, plugin_id], common.asset.install, [asset, plugin_dir, www_dir]));
     });

@@ -19,7 +19,7 @@
 var android = require('../../src/plugman/platforms/android'),
     android_project = require('../../src/plugman/util/android-project'),
     common  = require('../../src/plugman/platforms/common'),
-    install = require('../../src/plugman/install'),
+    install = require('../../src/plugman/install/install'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),

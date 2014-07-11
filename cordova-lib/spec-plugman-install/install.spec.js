@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var install = require('../src/plugman/install'),
+var install = require('../src/plugman/install/install'),
     actions = require('../src/plugman/util/action-stack'),
     config_changes = require('../src/plugman/util/config-changes'),
     xml_helpers = require('../src/util/xml-helpers'),

@@ -18,7 +18,7 @@
 */
 var amazon_fireos = require('../../src/plugman/platforms/amazon-fireos'),
     common  = require('../../src/plugman/platforms/common'),
-    install = require('../../src/plugman/install'),
+    install = require('../../src/plugman/install/install'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
