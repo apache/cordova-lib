@@ -16,13 +16,15 @@
     specific language governing permissions and limitations
     under the License.
 */
+var config = require('../src/plugman/misc/config'),
+    Q = require('q'),
+    registry = require('../src/plugman/registry/registry');
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
-var registry = require('./registry/registry');
-
-module.exports = function(params) {
-    return registry.config(params);
-};
+describe('config', function() {
+    it('should run config', function() {
+        var sConfig = spyOn(registry, 'config').andReturn(Q());
+        var params = ['set', 'registry', 'http://registry.cordova.io'];
+        config(params);
+        expect(sConfig).toHaveBeenCalledWith(params);
+    });
+});

@@ -16,15 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
-var owner = require('../src/plugman/owner'),
-    Q = require('q'),
-    registry = require('../src/plugman/registry/registry');
 
-describe('owner', function() {
-    it('should run owner', function() {
-        var sOwner = spyOn(registry, 'owner').andReturn(Q());
-        var params = ['add', 'anis', 'com.phonegap.plugins.dummyplugin'];
-        owner(params);
-        expect(sOwner).toHaveBeenCalledWith(params);
-    });
-});
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
+var registry = require('../registry/registry');
+
+module.exports = function() {
+    return registry.adduser(null);
+};

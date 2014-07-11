@@ -21,9 +21,9 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var registry = require('./registry/registry');
+var registry = require('../registry/registry');
 
 // Returns a promise.
-module.exports = function(plugin) {
-    return registry.info(plugin);
+module.exports = function(args) {
+    return registry.owner(args);
 };

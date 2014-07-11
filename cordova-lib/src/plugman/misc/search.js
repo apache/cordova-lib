@@ -21,8 +21,8 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var registry = require('./registry/registry');
+var registry = require('../registry/registry');
 
-module.exports = function() {
-    return registry.adduser(null);
+module.exports = function(search_opts) {
+    return registry.search(search_opts);
 };

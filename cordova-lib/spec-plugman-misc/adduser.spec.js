@@ -16,18 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var search = require('../src/plugman/info'),
+var adduser = require('../src/plugman/misc/adduser'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
 
-describe('info', function() {
-    it('should show plugin info', function() {
-        var sSearch = spyOn(registry, 'info').andReturn(Q({
-            name: 'fakePlugin',
-            version: '1.0.0',
-            engines: [{ name: 'plugman', version: '>=0.11' }]
-        }));
-        search(new Array('myplugin'));
-        expect(sSearch).toHaveBeenCalledWith(['myplugin']);
+describe('adduser', function() {
+    it('should add a user', function() {
+        var sAddUser = spyOn(registry, 'adduser').andReturn(Q());
+        adduser();
+        expect(sAddUser).toHaveBeenCalled();
     });
 });

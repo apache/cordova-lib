@@ -21,8 +21,9 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var registry = require('./registry/registry');
+var registry = require('../registry/registry');
 
-module.exports = function(search_opts) {
-    return registry.search(search_opts);
+// Returns a promise.
+module.exports = function(plugin) {
+    return registry.info(plugin);
 };

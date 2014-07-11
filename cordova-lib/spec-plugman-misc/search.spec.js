@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var adduser = require('../src/plugman/adduser'),
+var search = require('../src/plugman/misc/search'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
 
-describe('adduser', function() {
-    it('should add a user', function() {
-        var sAddUser = spyOn(registry, 'adduser').andReturn(Q());
-        adduser();
-        expect(sAddUser).toHaveBeenCalled();
+describe('search', function() {
+    it('should search a plugin', function() {
+        var sSearch = spyOn(registry, 'search').andReturn(Q());
+        search(new Array('myplugin', 'keyword'));
+        expect(sSearch).toHaveBeenCalledWith(['myplugin', 'keyword']);
     });
 });
