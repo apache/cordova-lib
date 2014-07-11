@@ -20,23 +20,17 @@
 -->
 # Cordova Hooks
 
-This directory may contain scripts used to customize cordova commands. This
-directory used to exist at `.cordova/hooks`, but has now been moved to the
-project root. Any scripts you add to these directories will be executed before
-and after the commands corresponding to the directory name. Useful for
-integrating your own build systems or integrating with version control systems.
-Hook scripts can also be defined in `config.xml` and `plugins/.../plugin.xml` 
-and will be run serially in the following order: 
-* Application hooks from `.cordova/hooks`;
+Cordova Hooks represent special scripts which could be added by application and plugin developers or even by your own build system  to customize cordova commands. Hook scripts could be defined by adding them to the special predefined folder (`/hooks`) or via configuration files (`config.xml` and `plugin.xml`) and run serially in the following order: 
 * Application hooks from `/hooks`;
 * Application hooks from `config.xml`;
 * Plugin hooks from `plugins/.../plugin.xml`.
 
 __Remember__: Make your scripts executable.
 
-## Ways to define hooks
-### Hook Directories
-The following subdirectories of `.cordova/hooks` and `/hooks` will be used for hooks:
+__Note__: `.cordova/hooks` directory is also supported for backward compatibility, but we don't recommend using it as it is deprecated.
+
+## Supported hook types
+The following hook types are supported:
 
     after_build/
     after_compile/
@@ -71,9 +65,17 @@ The following subdirectories of `.cordova/hooks` and `/hooks` will be used for h
     before_serve/
     pre_package/ <-- Windows 8 and Windows Phone only.
 
+## Ways to define hooks
+### Via '/hooks' directory
+To execute custom action when corresponding hook type is fired, use hook type as a name for a subfolder inside 'hooks' directory and place you script file here, for example:
+
+    # script file will be automatically executed after each build
+    hooks/after_build/after_build_custom_action.js
+
+
 ### Config.xml
 
-Hooks can be defined in project's `config.xml` in the following way:
+Hooks can be defined in project's `config.xml` using `<script>` elements, for example:
 
     <script type="before_build" src="scripts/appBeforeBuild.bat" />
     <script type="before_build" src="scripts/appBeforeBuild.js" />
@@ -175,8 +177,8 @@ var et = context.requireCordovaModule('elementtree');
 var xmlHelpers = context.requireCordovaModule('../util/xml-helpers');
 ```
 
-New module loader script interface is used for the `.js` files defined via `config.xml` or `plugin.xml` only. 
-For compatibility reasons hook files specified via `.cordova/hooks` and `/hooks` folders are run via Node child_process spawn, see 'Non-javascript' section below.
+__Note__:  new module loader script interface is used for the `.js` files defined via `config.xml` or `plugin.xml` only. 
+For compatibility reasons hook files specified via `/hooks` folders are run via Node child_process spawn, see 'Non-javascript' section below.
 
 ### Non-javascript
 
@@ -200,4 +202,3 @@ cross-platform. Some good examples are shown here:
 Also, note that even if you are working on Windows, and in case your hook scripts aren't bat files (which is recommended, if you want your scripts to work in non-Windows operating systems) Cordova CLI will expect a shebang line as the first line for it to know the interpreter it needs to use to launch the script. The shebang line should match the following example:
 
     #!/usr/bin/env [name_of_interpreter_executable]
-
