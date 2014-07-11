@@ -136,15 +136,6 @@ describe('prepare command', function() {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
-        it('should invoke lazy_load for each platform to make sure platform libraries are loaded', function(done) {
-            prepare().then(function() {
-                supported_platforms.forEach(function(p) {
-                    expect(load).toHaveBeenCalledWith(project_dir, p);
-                });
-            }, function(err) {
-                expect(err).toBeUndefined();
-            }).fin(done);
-        });
         describe('plugman integration', function() {
             it('should invoke plugman.prepare after update_project', function(done) {
                 prepare().then(function() {
@@ -171,9 +162,9 @@ describe('prepare command', function() {
             });
             it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare('android').then(function() {
-                     expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
+                    expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
                 }, function(err) {
-                    expect(err).toBeUndefined();
+                    expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err);
                 }).fin(done);
             });
         });

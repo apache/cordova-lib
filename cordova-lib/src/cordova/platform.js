@@ -196,11 +196,8 @@ function update(hooks, projectRoot, targets, opts) {
         return superspawn.spawn(script, [platformPath], { stdio: 'inherit' });
     })
     .then(function() {
-         // Copy the new cordova.js from www -> platform_www.
-        var parser = new platforms[plat].parser(platformPath);
-        var platform_www = path.join(platformPath, 'platform_www');
-        shell.mkdir('-p', platform_www);
-        shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
+        // Copy the new cordova.js from www -> platform_www.
+        copy_cordova_js(projectRoot, plat);
         // Leave it to the update script to log out "updated to v FOO".
     });
 }
@@ -438,6 +435,9 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
 
     return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
     .then(function() {
+        copy_cordova_js(projectRoot, target);
+    })
+    .then(function() {
         return require('./cordova').raw.prepare(target);
     })
     .then(function() {
@@ -455,6 +455,17 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
             });
         }, Q());
     });
+}
+
+
+// Copty the cordova.js file to platforms/<platform>/platform_www/
+// The www dir is nuked on each prepare so we keep cordova.js in platform_www
+function copy_cordova_js(projectRoot, platform) {
+    var platformPath = path.join(projectRoot, 'platforms', platform);
+    var parser = new platforms[platform].parser(platformPath);
+    var platform_www = path.join(platformPath, 'platform_www');
+    shell.mkdir('-p', platform_www);
+    shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
 }
 
 module.exports.add = add;

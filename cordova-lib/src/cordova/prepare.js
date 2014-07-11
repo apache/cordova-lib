@@ -29,14 +29,16 @@ var cordova_util      = require('./util'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
     hooker            = require('./hooker'),
-    lazy_load         = require('./lazy_load'),
     events            = require('../events'),
     Q                 = require('q'),
     plugman           = require('../plugman/plugman');
 
 // Returns a promise.
-exports = module.exports = function prepare(options) {
+exports = module.exports = prepare;
+function prepare(options) {
     var projectRoot = cordova_util.cdProjectRoot();
+    var xml = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(xml);
 
     if (!options) {
         options = {
@@ -48,7 +50,6 @@ exports = module.exports = function prepare(options) {
 
     options = cordova_util.preProcessOptions(options);
 
-    var xml = cordova_util.projectConfig(projectRoot);
     var paths = options.platforms.map(function(p) {
         var platform_path = path.join(projectRoot, 'platforms', p);
         var parser = (new platforms[p].parser(platform_path));
@@ -59,74 +60,65 @@ exports = module.exports = function prepare(options) {
     var hooks = new hooker(projectRoot);
     return hooks.fire('before_prepare', options)
     .then(function() {
-        var cfg = new ConfigParser(xml);
+
 
         // Iterate over each added platform
         return Q.all(options.platforms.map(function(platform) {
             var platformPath = path.join(projectRoot, 'platforms', platform);
-            return lazy_load.based_on_config(projectRoot, platform)
-            .then(function(libDir) {
-                var parser = new platforms[platform].parser(platformPath),
-                    defaults_xml_path = path.join(platformPath, 'cordova', 'defaults.xml');
-                //If defaults.xml is present, overwrite platform config.xml with it
-                //Otherwise save whatever is there as defaults so it can be restored
-                //or copy project config into platform if none exists
-                if (fs.existsSync(defaults_xml_path)) {
-                    shell.cp('-f', defaults_xml_path, parser.config_xml());
-                    events.emit('verbose', 'Generating config.xml from defaults for platform "' + platform + '"');
-                } else {
-                    if(fs.existsSync(parser.config_xml())){
-                        shell.cp('-f', parser.config_xml(), defaults_xml_path);
-                    }else{
-                        shell.cp('-f',xml,parser.config_xml());
-                    }
+
+            var parser = new platforms[platform].parser(platformPath),
+                defaults_xml_path = path.join(platformPath, 'cordova', 'defaults.xml');
+            // If defaults.xml is present, overwrite platform config.xml with
+            // it Otherwise save whatever is there as defaults so it can be
+            // restored or copy project config into platform if none exists.
+            if (fs.existsSync(defaults_xml_path)) {
+                shell.cp('-f', defaults_xml_path, parser.config_xml());
+                events.emit('verbose', 'Generating config.xml from defaults for platform "' + platform + '"');
+            } else {
+                if(fs.existsSync(parser.config_xml())){
+                    shell.cp('-f', parser.config_xml(), defaults_xml_path);
+                }else{
+                    shell.cp('-f', xml, parser.config_xml());
                 }
+            }
 
-                var stagingPath = path.join(platformPath, '.staging');
-                if (fs.existsSync(stagingPath)) {
-                    events.emit('log', 'Deleting now-obsolete intermediate directory: ' + stagingPath);
-                    shell.rm('-rf', stagingPath);
-                }
+            var stagingPath = path.join(platformPath, '.staging');
+            if (fs.existsSync(stagingPath)) {
+                events.emit('log', 'Deleting now-obsolete intermediate directory: ' + stagingPath);
+                shell.rm('-rf', stagingPath);
+            }
 
-                var platform_www = path.join(platformPath, 'platform_www');
-                // Create platfom_www if project was created with older version.
-                if (!fs.existsSync(platform_www)) {
-                    shell.mkdir(platform_www);
-                    shell.cp(parser.cordovajs_path(libDir), path.join(platform_www, 'cordova.js'));
-                }
+            // Replace the existing web assets with the app master versions
+            parser.update_www();
 
-                // Replace the existing web assets with the app master versions
-                parser.update_www();
+            // Call plugman --prepare for this platform. sets up js-modules appropriately.
+            var plugins_dir = path.join(projectRoot, 'plugins');
+            events.emit('verbose', 'Calling plugman.prepare for platform "' + platform + '"');
+            plugman.prepare(platformPath, platform, plugins_dir);
 
-                // Call plugman --prepare for this platform. sets up js-modules appropriately.
-                var plugins_dir = path.join(projectRoot, 'plugins');
-                events.emit('verbose', 'Calling plugman.prepare for platform "' + platform + '"');
-                plugman.prepare(platformPath, platform, plugins_dir);
+            // Make sure that config changes for each existing plugin is in place
+            var munger = new plugman.config_changes.PlatformMunger(platform, platformPath, plugins_dir);
+            munger.reapply_global_munge();
+            munger.save_all();
 
-                // Make sure that config changes for each existing plugin is in place
-                var munger = new plugman.config_changes.PlatformMunger(platform, platformPath, plugins_dir);
-                munger.reapply_global_munge();
-                munger.save_all();
+            // Update platform config.xml based on top level config.xml
+            var platform_cfg = new ConfigParser(parser.config_xml());
+            exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
 
-                // Update platform config.xml based on top level config.xml
-                var platform_cfg = new ConfigParser(parser.config_xml());
-                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
+            // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
+            // we allow using windows8 tag for new windows platform
+            if (platform == 'windows') {
+                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
+            }
 
-                // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-                // we allow using windows8 tag for new windows platform
-                if (platform == 'windows') {
-                    exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
-                }
+            platform_cfg.write();
 
-                platform_cfg.write();
-
-                return parser.update_project(cfg);
-            });
+            return parser.update_project(cfg);
         })).then(function() {
             return hooks.fire('after_prepare', options);
         });
     });
-};
+}
 
 var BLACKLIST = ['platform'];
 var SINGLETONS = ['content', 'author'];
