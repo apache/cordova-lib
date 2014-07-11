@@ -24,14 +24,15 @@
 var shell   = require('shelljs'),
     fs      = require('fs'),
     url     = require('url'),
-    PluginInfo    = require('../PluginInfo'),
-    plugins = require('./util/plugins'),
-    CordovaError  = require('../CordovaError'),
-    events = require('../events'),
-    metadata = require('./util/metadata'),
+    PluginInfo    = require('../../PluginInfo'),
+    plugins = require('../util/plugins'),
+    xml_helpers = require('../../util/xml-helpers'),
+    CordovaError  = require('../../CordovaError'),
+    events = require('../../events'),
+    metadata = require('../util/metadata'),
     path    = require('path'),
     Q       = require('q'),
-    registry = require('./registry/registry');
+    registry = require('../registry/registry');
 
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;

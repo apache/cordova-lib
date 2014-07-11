@@ -68,7 +68,7 @@ var plugman = {
 
 addProperty(plugman, 'install', './install/install', true);
 addProperty(plugman, 'uninstall', './install/uninstall', true);
-addProperty(plugman, 'fetch', './fetch', true);
+addProperty(plugman, 'fetch', './create/fetch', true);
 addProperty(plugman, 'prepare', './prepare/prepare');
 addProperty(plugman, 'config', './misc/config', true);
 addProperty(plugman, 'owner', './misc/owner', true);
@@ -77,7 +77,7 @@ addProperty(plugman, 'publish', './publish/publish', true);
 addProperty(plugman, 'unpublish', './publish/unpublish', true);
 addProperty(plugman, 'search', './misc/search', true);
 addProperty(plugman, 'info', './misc/info', true);
-addProperty(plugman, 'create', './create', true);
+addProperty(plugman, 'create', './create/create', true);
 addProperty(plugman, 'platform', './platform_operation', true);
 addProperty(plugman, 'config_changes', './util/config-changes');
 

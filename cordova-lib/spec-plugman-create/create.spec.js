@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var create = require('../src/plugman/create'),
+var create = require('../src/plugman/create/create'),
     Q = require('q'),
     fs = require('fs'),
     shell = require('shelljs'),

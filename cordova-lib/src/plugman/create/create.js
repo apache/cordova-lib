@@ -26,11 +26,11 @@ var Q = require('q'),
     path = require('path'),
     shell = require('shelljs'),
     et = require('elementtree'),
-    CordovaError  = require('../CordovaError');
+    CordovaError  = require('../../CordovaError');
 
 module.exports = function create( name, id, version, pluginPath, options ) {
     var cwd = pluginPath + '/' + name + '/',
-        templatesDir = path.join(__dirname, '..', '..', 'templates/'),
+        templatesDir = path.join(__dirname, '..', '..', '..', 'templates/'),
         baseJS,
         root,
         pluginName,

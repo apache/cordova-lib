@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var fetch   = require('../src/plugman/fetch'),
+var fetch   = require('../src/plugman/create/fetch'),
     fs      = require('fs'),
     os      = require('osenv'),
     path    = require('path'),
