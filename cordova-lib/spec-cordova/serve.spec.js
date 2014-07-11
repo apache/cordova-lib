@@ -34,7 +34,7 @@ var cordova = require('../src/cordova/cordova'),
 
 var cwd = process.cwd();
 
-describe('serve command', function() {
+xdescribe('serve command', function() {
     var payloads = {},
         consoleSpy;
     beforeEach(function() {
