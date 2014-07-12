@@ -54,6 +54,17 @@ exports.npm_cache_add = npm_cache_add;
 exports.custom = custom;
 exports.based_on_config = based_on_config;
 
+function Platform(platformString) {
+    if (platformString.indexOf('@') != -1) {
+        var parts = platformString.split('@');
+        this.name = parts[0];
+        this.version = parts[1];
+    } else {
+      this.name = platformString;
+      if (platforms[this.name]) this.version = platforms[this.name].version;
+    }
+}
+
 // Returns a promise for the path to the lazy-loaded directory.
 function based_on_config(project_root, platform, opts) {
     var custom_path = config.has_custom_path(project_root, platform);
@@ -72,7 +83,8 @@ function based_on_config(project_root, platform, opts) {
 
 // Returns a promise for the path to the lazy-loaded directory.
 function cordova(platform, opts) {
-    var use_git = opts && opts.usegit || platform === 'www';
+    platform = new Platform(platform);
+    var use_git = opts && opts.usegit || platform.name === 'www';
     if ( use_git ) {
         return module.exports.cordova_git(platform);
     } else {
@@ -83,46 +95,36 @@ function cordova(platform, opts) {
 function cordova_git(platform) {
     var mixed_platforms = _.extend({}, platforms),
         plat;
-    if (!(platform in platforms)) {
-        return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
+    if (!(platform.name in platforms)) {
+        return Q.reject(new Error('Cordova library "' + platform.name + '" not recognized.'));
     }
-    plat = mixed_platforms[platform];
+    plat = mixed_platforms[platform.name];
     if (/^...*:/.test(plat.url)) {
-        plat.url = plat.url + ';a=snapshot;h=' + plat.version + ';sf=tgz';
+        plat.url = plat.url + ';a=snapshot;h=' + platform.version + ';sf=tgz';
     }
     plat.id = 'cordova';
-    return module.exports.custom(mixed_platforms, platform);
+    plat.version = platform.version;
+    return module.exports.custom(mixed_platforms, platform.name);
 }
 
 function cordova_npm(platform) {
-    var version;
-    // Check if platform looks like platform@version
-    if (platform.indexOf('@') != -1) {
-        var parts = platform.split('@');
-        platform = parts[0];
-        version = parts[1];
+    if ( !(platform.name in platforms) ) {
+        return Q.reject(new Error('Cordova library "' + platform.name + '" not recognized.'));
     }
-    if ( !(platform in platforms) ) {
-        return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
-    }
-    // In most cases platform does not specify a version and we use
-    // the hard-coded default version from platforms.js
-    version = version || platforms[platform].version;
-
     // Check if this version was already downloaded from git, if yes, use that copy.
     // TODO: remove this once we fully switch to npm workflow.
-    var platdir = platforms[platform].altplatform || platform;
-    var git_dload_dir = path.join(util.libDirectory, platdir, 'cordova', version);
+    var platdir = platforms[platform.name].altplatform || platform.name;
+    var git_dload_dir = path.join(util.libDirectory, platdir, 'cordova', platform.version);
     if (fs.existsSync(git_dload_dir)) {
-        var subdir = platforms[platform].subdirectory;
+        var subdir = platforms[platform.name].subdirectory;
         if (subdir) {
             git_dload_dir = path.join(git_dload_dir, subdir);
         }
-        events.emit('verbose', 'Platform files for "' + platform + '" previously downloaded not from npm. Using that copy.');
+        events.emit('verbose', 'Platform files for "' + platform.name + '" previously downloaded not from npm. Using that copy.');
         return Q(git_dload_dir);
     }
 
-    var pkg = 'cordova-' + platform + '@' + version;
+    var pkg = 'cordova-' + platform.name + '@' + platform.version;
     return exports.npm_cache_add(pkg);
 }
 
