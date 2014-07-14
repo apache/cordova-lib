@@ -22,9 +22,9 @@
 */
 
 var path              = require('path'),
-    cordova_util      = require('./util'),
-    hooker            = require('./hooker'),
-    superspawn        = require('./superspawn');
+    cordova_util      = require('../util'),
+    hooker            = require('../hooker'),
+    superspawn        = require('../superspawn');
 
 // Returns a promise.
 module.exports = function compile(options) {

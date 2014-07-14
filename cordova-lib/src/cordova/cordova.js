@@ -57,8 +57,8 @@ exports.findProjectRoot = function(opt_startDir) {
 // To use a promise instead, call the APIs via cordova.raw.FOO(), which returns
 // a promise instead of using a final-parameter-callback.
 var addModuleProperty = cordova_util.addModuleProperty;
-addModuleProperty(module, 'prepare', './prepare', true);
-addModuleProperty(module, 'build', './build', true);
+addModuleProperty(module, 'prepare', './build/prepare', true);
+addModuleProperty(module, 'build', './build/build', true);
 addModuleProperty(module, 'help', './help');
 addModuleProperty(module, 'config', './config');
 addModuleProperty(module, 'create', './create', true);
@@ -68,7 +68,7 @@ addModuleProperty(module, 'plugins', './plugin', true);
 addModuleProperty(module, 'serve', './serve');
 addModuleProperty(module, 'platform', './platform', true);
 addModuleProperty(module, 'platforms', './platform', true);
-addModuleProperty(module, 'compile', './compile', true);
+addModuleProperty(module, 'compile', './build/compile', true);
 addModuleProperty(module, 'run', './run', true);
 addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'save', './save', true);

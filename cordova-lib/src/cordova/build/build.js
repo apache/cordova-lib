@@ -21,8 +21,8 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('./util'),
-    hooker            = require('./hooker');
+var cordova_util      = require('../util'),
+    hooker            = require('../hooker');
 
 // Returns a promise.
 module.exports = function build(options) {
@@ -42,9 +42,9 @@ module.exports = function build(options) {
     var hooks = new hooker(projectRoot);
     return hooks.fire('before_build', options)
     .then(function() {
-        return require('./cordova').raw.prepare(options);
+        return require('../cordova').raw.prepare(options);
     }).then(function() {
-        return require('./cordova').raw.compile(options);
+        return require('../cordova').raw.compile(options);
     }).then(function() {
         return hooks.fire('after_build', options);
     });

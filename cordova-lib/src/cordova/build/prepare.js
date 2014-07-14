@@ -21,17 +21,17 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('./util'),
-    ConfigParser      = require('../configparser/ConfigParser'),
+var cordova_util      = require('../util'),
+    ConfigParser      = require('../../configparser/ConfigParser'),
     path              = require('path'),
-    platforms         = require('./platforms'),
+    platforms         = require('../platforms'),
     fs                = require('fs'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
-    hooker            = require('./hooker'),
-    events            = require('../events'),
+    hooker            = require('../hooker'),
+    events            = require('../../events'),
     Q                 = require('q'),
-    plugman           = require('../plugman/plugman');
+    plugman           = require('../../plugman/plugman');
 
 // Returns a promise.
 exports = module.exports = prepare;
