@@ -61,17 +61,17 @@ addModuleProperty(module, 'prepare', './build/prepare', true);
 addModuleProperty(module, 'build', './build/build', true);
 addModuleProperty(module, 'help', './help');
 addModuleProperty(module, 'config', './config');
-addModuleProperty(module, 'create', './create', true);
-addModuleProperty(module, 'emulate', './emulate', true);
+addModuleProperty(module, 'create', './project/create', true);
+addModuleProperty(module, 'emulate', './project/emulate', true);
 addModuleProperty(module, 'plugin', './plugin', true);
 addModuleProperty(module, 'plugins', './plugin', true);
 addModuleProperty(module, 'serve', './serve');
 addModuleProperty(module, 'platform', './platform', true);
 addModuleProperty(module, 'platforms', './platform', true);
 addModuleProperty(module, 'compile', './build/compile', true);
-addModuleProperty(module, 'run', './run', true);
+addModuleProperty(module, 'run', './project/run', true);
 addModuleProperty(module, 'info', './info', true);
-addModuleProperty(module, 'save', './save', true);
-addModuleProperty(module, 'restore', './restore', true);
+addModuleProperty(module, 'save', './project/save', true);
+addModuleProperty(module, 'restore', './project/restore', true);
 
 

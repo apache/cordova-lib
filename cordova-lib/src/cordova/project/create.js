@@ -24,13 +24,13 @@
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    events        = require('../events'),
-    config        = require('./config'),
-    lazy_load     = require('./lazy_load'),
+    events        = require('../../events'),
+    config        = require('../config'),
+    lazy_load     = require('../lazy_load'),
     Q             = require('q'),
-    CordovaError  = require('../CordovaError'),
-    ConfigParser = require('../configparser/ConfigParser'),
-    cordova_util  = require('./util');
+    CordovaError  = require('../../CordovaError'),
+    ConfigParser = require('../../configparser/ConfigParser'),
+    cordova_util  = require('../util');
 
 var DEFAULT_NAME = 'HelloCordova',
     DEFAULT_ID   = 'io.cordova.hellocordova';
@@ -220,13 +220,13 @@ function create(dir, id, name, cfg) {
         if (!custom_hooks) {
           shell.mkdir(path.join(dir, 'hooks'));
           // Add hooks README.md
-          shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
+          shell.cp(path.join(__dirname, '..', '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
         }
 
         // Add template config.xml for apps that are missing it
         var configPath = cordova_util.projectConfig(dir);
         if (!fs.existsSync(configPath)) {
-            var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');
+            var template_config_xml = path.join(__dirname, '..', '..', '..', 'templates', 'config.xml');
             shell.cp(template_config_xml, configPath);
             // Write out id and name to config.xml
             var conf = new ConfigParser(configPath);

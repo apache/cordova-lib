@@ -22,12 +22,12 @@
 */
 
 
-var cordova_util    = require('./util'),
-    ConfigParser     = require('../configparser/ConfigParser'),
+var cordova_util    = require('../util'),
+    ConfigParser     = require('../../configparser/ConfigParser'),
     path             = require('path'),
-    xml              = require('../util/xml-helpers'),
+    xml              = require('../../util/xml-helpers'),
     Q                = require('q'),
-    events           = require('../events');
+    events           = require('../../events');
 
 module.exports = save;
 function save(target, opts){

@@ -21,13 +21,13 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util    = require('./util'),
-    ConfigParser     = require('../configparser/ConfigParser'),
+var cordova_util    = require('../util'),
+    ConfigParser     = require('../../configparser/ConfigParser'),
     path             = require('path'),
     Q                = require('q'),
     fs               = require('fs'),
-    plugin           = require('./plugin'),
-    events           = require('../events');
+    plugin           = require('../plugin'),
+    events           = require('../../events');
 
 module.exports = restore;
 function restore(target){

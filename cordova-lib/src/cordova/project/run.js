@@ -21,10 +21,10 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('./util'),
+var cordova_util      = require('../util'),
     path              = require('path'),
-    hooker            = require('./hooker'),
-    superspawn        = require('./superspawn'),
+    hooker            = require('../hooker'),
+    superspawn        = require('../superspawn'),
     Q                 = require('q');
 
 // Returns a promise.
@@ -36,7 +36,7 @@ module.exports = function run(options) {
     return hooks.fire('before_run', options)
     .then(function() {
         // Run a prepare first, then shell out to run
-        return require('./cordova').raw.prepare(options.platforms);
+        return require('../cordova').raw.prepare(options.platforms);
     }).then(function() {
         // Deploy in parallel (output gets intermixed though...)
         return Q.all(options.platforms.map(function(platform) {
