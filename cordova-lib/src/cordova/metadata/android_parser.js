@@ -42,6 +42,12 @@ module.exports = function android_parser(project) {
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
 };
 
+// Returns a promise.
+module.exports.check_requirements = function(project_root) {
+    // Rely on platform's bin/create script to check requirements.
+    return Q(true);
+};
+
 module.exports.prototype = {
     findOrientationPreference: function(config) {
         var ret = config.getPreference('orientation');
@@ -83,7 +89,7 @@ module.exports.prototype = {
             if (filename.indexOf('drawable-') === 0) {
                 var density = filename.substr(9);
                 densities.push(density);
-                var template = path.join(filename, name);
+                var template = path.join(res, filename, name);
                 try {
                     fs.unlinkSync(template);
                     events.emit('verbose', 'deleted: ' + template);
@@ -103,6 +109,11 @@ module.exports.prototype = {
             events.emit('verbose', 'splash screens: ' + JSON.stringify(resources));
             var res = path.join(this.path, 'res');
 
+            if (resources.defaultResource) {
+                var destfilepath = path.join(res, 'drawable', 'screen.png');
+                events.emit('verbose', 'copying splash icon from ' + resources.defaultResource.src + ' to ' + destfilepath);
+                shell.cp('-f', resources.defaultResource.src, destfilepath);
+            }
             for (var i=0; i<densities.length; i++) {
                 var density = densities[i];
                 var resource = resources.getByDensity(density);
