@@ -34,7 +34,7 @@
     "shelljs": "0.1.x",
     "tar": "0.1.x",
     "underscore": "1.4.4",
-    "xcode": "0.6.6",
+    "xcode": "0.6.7",
     "cordova-js": "3.x.x",
     "unorm": ">=1.3"
   },

@@ -239,14 +239,13 @@ module.exports.prototype = {
                 d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
                 return;
             }
-            var buildConfiguration = proj.pbxXCBuildConfigurationSection();
             if (targetDevice) {
-                // TODO: replace propReplace with proj.updateBuildProperty after below is release
-                // https://github.com/alunny/node-xcode/pull/33
-                propReplace(buildConfiguration, 'TARGETED_DEVICE_FAMILY', targetDevice);
+                events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
+                proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
             }
             if (deploymentTarget) {
-                propReplace(buildConfiguration, 'IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
+                events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
+                proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
             }
             fs.writeFileSync(me.pbxproj, proj.writeSync(), 'utf-8');
             d.resolve();
@@ -270,16 +269,4 @@ function parseTargetDevicePreference(value) {
     }
     events.emit('warn', 'Unknown target-device preference value: "' + value + '".');
     return null;
-}
-// helper recursive prop search+replace
-function propReplace(obj, prop, value) {
-    for (var p in obj) {
-        if (obj.hasOwnProperty(p)) {
-            if (typeof obj[p] == 'object') {
-                propReplace(obj[p], prop, value);
-            } else if (p == prop) {
-                obj[p] = value;
-            }
-        }
-    }
 }
