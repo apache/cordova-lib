@@ -56,7 +56,7 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
         if (result) {
             if (result[1])
                 options.git_ref = result[1];
-            if(result[2])
+            if (result[2])
                 options.subdir = result[2];
 
             // Recurse and exit with the new options and truncated URL.
@@ -120,13 +120,12 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
 
         return p
         .then(function(dir) {
-                options.plugin_src_dir = dir;
-
-                return copyPlugin(dir, plugins_dir, options.link && linkable);
-            })
+            options.plugin_src_dir = dir;
+            return copyPlugin(dir, plugins_dir, options.link && linkable);
+        })
         .then(function(dir) {
-                return checkID(options.expected_id, dir);
-            });
+            return checkID(options.expected_id, dir);
+        });
     }
 };
 
