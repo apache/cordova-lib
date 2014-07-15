@@ -18,7 +18,7 @@
 */
 var lazy_load = require('../src/cordova/lazy_load'),
     config = require('../src/cordova/config'),
-    util = require('../src/cordova/util'),
+    util = require('../src/cordova/project/util'),
     shell = require('shelljs'),
     npmconf = require('npmconf');
     path = require('path'),

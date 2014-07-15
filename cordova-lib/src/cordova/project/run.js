@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('../util'),
+var cordova_util      = require('./util'),
     path              = require('path'),
     hooker            = require('../hooker'),
     superspawn        = require('../superspawn'),

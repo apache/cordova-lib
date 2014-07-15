@@ -39,7 +39,7 @@ var path          = require('path'),
     URL           = require('url'),
     Q             = require('q'),
     npm           = require('npm'),
-    util          = require('./util'),
+    util          = require('./project/util'),
     stubplatform  = {
         url    : undefined,
         version: undefined,

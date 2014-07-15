@@ -20,7 +20,7 @@ var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     path = require('path'),
     fs = require('fs'),
-    util = require('../src/cordova/util'),
+    util = require('../src/cordova/project/util'),
     temp = path.join(__dirname, '..', 'temp'),
     fixtures = path.join(__dirname, 'fixtures');
 

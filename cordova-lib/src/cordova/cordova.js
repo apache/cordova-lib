@@ -22,7 +22,7 @@
 */
 
 var cordova_events = require('../events');
-var cordova_util = require('./util');
+var cordova_util = require('./project/util');
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);

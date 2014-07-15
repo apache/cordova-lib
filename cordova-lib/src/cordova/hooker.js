@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var util  = require('./util'),
+var util  = require('./project/util'),
     fs    = require('fs'),
     os    = require('os'),
     events= require('../events'),

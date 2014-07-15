@@ -22,7 +22,7 @@
 */
 
 var path              = require('path'),
-    cordova_util      = require('../util'),
+    cordova_util      = require('../project/util'),
     hooker            = require('../hooker'),
     superspawn        = require('../superspawn');
 

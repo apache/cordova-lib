@@ -22,7 +22,7 @@ var cordova = require('../src/cordova/cordova'),
     fs = require('fs'),
     hooker = require('../src/cordova/hooker'),
     superspawn = require('../src/cordova/superspawn'),
-    util = require('../src/cordova/util'),
+    util = require('../src/cordova/project/util'),
     Q = require('q'),
     os = require('os');
 

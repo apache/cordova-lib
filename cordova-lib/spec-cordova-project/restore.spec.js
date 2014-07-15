@@ -20,7 +20,7 @@
 var path = require('path'),
     Q = require('q'),
     cordova = require('../src/cordova/cordova'),
-    cordova_util = require('../src/cordova/util'),
+    cordova_util = require('../src/cordova/project/util'),
     ConfigParser = require('../src/configparser/ConfigParser'),
     project_dir = path.join(__dirname, 'fixtures', 'base');
 

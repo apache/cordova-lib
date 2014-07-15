@@ -17,7 +17,7 @@
     under the License.
 */
 var platforms = require('../../src/cordova/platforms'),
-    util = require('../../src/cordova/util'),
+    util = require('../../src/cordova/project/util'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),

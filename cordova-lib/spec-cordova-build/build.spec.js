@@ -23,7 +23,7 @@ var cordova = require('../src/cordova/cordova'),
     fs = require('fs'),
     hooker = require('../src/cordova/hooker'),
     Q = require('q'),
-    util = require('../src/cordova/util');
+    util = require('../src/cordova/project/util');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 

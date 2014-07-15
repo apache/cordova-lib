@@ -24,7 +24,7 @@
 var fs            = require('fs'),
     path          = require('path'),
     xml           = require('../../util/xml-helpers'),
-    util          = require('../util'),
+    util          = require('../project/util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),

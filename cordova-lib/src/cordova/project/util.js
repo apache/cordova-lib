@@ -23,7 +23,7 @@
 
 var fs            = require('fs'),
     path          = require('path'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('../../CordovaError'),
     shell         = require('shelljs');
 
 // Global configuration paths
@@ -123,7 +123,7 @@ function deleteSvnFolders(dir) {
 }
 
 function listPlatforms(project_dir) {
-    var core_platforms = require('./platforms');
+    var core_platforms = require('../platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
     if ( !fs.existsSync(platforms_dir)) {
         return [];

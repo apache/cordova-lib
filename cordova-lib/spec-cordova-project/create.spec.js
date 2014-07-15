@@ -24,7 +24,7 @@ var helpers = require('../spec-cordova/helpers'),
     Q = require('q'),
     config = require('../src/cordova/config'),
     events = require('../src/events'),
-    util = require('../src/cordova/util'),
+    util = require('../src/cordova/project/util'),
     ConfigParser = require('../src/configparser/ConfigParser'),
     cordova = require('../src/cordova/cordova');
 

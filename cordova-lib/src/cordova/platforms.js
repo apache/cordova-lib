@@ -83,7 +83,7 @@ module.exports = {
     }
 };
 
-var addModuleProperty = require('./util').addModuleProperty;
+var addModuleProperty = require('./project/util').addModuleProperty;
 Object.keys(module.exports).forEach(function(key) {
     var obj = module.exports[key];
     if (obj.parser) {

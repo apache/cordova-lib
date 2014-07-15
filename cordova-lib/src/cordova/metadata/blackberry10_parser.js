@@ -24,7 +24,7 @@
 var fs            = require('fs'),
     path          = require('path'),
     shell         = require('shelljs'),
-    util          = require('../util'),
+    util          = require('../project/util'),
     Q             = require('q'),
     child_process = require('child_process'),
     ConfigParser  = require('../../configparser/ConfigParser'),

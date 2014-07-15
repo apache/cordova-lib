@@ -22,7 +22,7 @@
 */
 
 
-var cordova_util    = require('../util'),
+var cordova_util    = require('./util'),
     ConfigParser     = require('../../configparser/ConfigParser'),
     path             = require('path'),
     xml              = require('../../util/xml-helpers'),

@@ -25,7 +25,7 @@
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
-    cordova_util      = require('./util'),
+    cordova_util      = require('./project/util'),
     ConfigParser      = require('../configparser/ConfigParser'),
     fs                = require('fs'),
     os                = require('os'),

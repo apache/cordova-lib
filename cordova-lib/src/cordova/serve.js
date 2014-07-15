@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util = require('./util'),
+var cordova_util = require('./project/util'),
     crypto = require('crypto'),
     path = require('path'),
     shell = require('shelljs'),

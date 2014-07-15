@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util    = require('../util'),
+var cordova_util    = require('./util'),
     ConfigParser     = require('../../configparser/ConfigParser'),
     path             = require('path'),
     Q                = require('q'),

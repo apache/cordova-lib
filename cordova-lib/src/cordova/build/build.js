@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util      = require('../util'),
+var cordova_util      = require('../project/util'),
     hooker            = require('../hooker');
 
 // Returns a promise.
