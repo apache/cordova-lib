@@ -26,7 +26,7 @@ var cordova_util    = require('./util'),
     path             = require('path'),
     Q                = require('q'),
     fs               = require('fs'),
-    plugin           = require('../plugin'),
+    plugin           = require('../plugins/plugin'),
     events           = require('../../events');
 
 module.exports = restore;

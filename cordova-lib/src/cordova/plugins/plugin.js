@@ -21,18 +21,18 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util  = require('./project/util'),
+var cordova_util  = require('../project/util'),
     path          = require('path'),
     semver        = require('semver'),
-    hooker        = require('./hooker'),
-    config        = require('./config'),
+    hooker        = require('../hooker'),
+    config        = require('../config'),
     Q             = require('q'),
-    CordovaError  = require('../CordovaError'),
-    ConfigParser  = require('../configparser/ConfigParser'),
+    CordovaError  = require('../../CordovaError'),
+    ConfigParser  = require('../../configparser/ConfigParser'),
     fs            = require('fs'),
-    PluginInfo    = require('../PluginInfo'),
-    plugman       = require('../plugman/plugman'),
-    events        = require('../events');
+    PluginInfo    = require('../../PluginInfo'),
+    plugman       = require('../../plugman/plugman'),
+    events        = require('../../events');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -170,7 +170,7 @@ module.exports = function plugin(command, targets, opts) {
                     // If this is a web-only or dependency-only plugin, then
                     // there may be nothing to do here except remove the
                     // reference from the platform's plugin config JSON.
-                    var plugman = require('../plugman/plugman');
+                    var plugman = require('../../plugman/plugman');
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
@@ -197,7 +197,7 @@ module.exports = function plugin(command, targets, opts) {
         case 'search':
             return hooks.fire('before_plugin_search')
             .then(function() {
-                var plugman = require('../plugman/plugman');
+                var plugman = require('../../plugman/plugman');
                 return plugman.raw.search(opts.plugins);
             }).then(function(plugins) {
                 for(var plugin in plugins) {

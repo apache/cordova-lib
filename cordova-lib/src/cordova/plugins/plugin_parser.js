@@ -21,7 +21,7 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var xml = require('../util/xml-helpers');
+var xml = require('../../util/xml-helpers');
 
 function plugin_parser(xmlPath) {
     this.path = xmlPath;
