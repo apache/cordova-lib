@@ -46,7 +46,7 @@
   "scripts": {
     "test": "npm run jasmine && npm run jshint",
     "jshint": "node node_modules/jshint/bin/jshint src",
-    "jasmine": "jasmine-node --captureExceptions --color spec-plugman spec-cordova"
+    "jasmine": "jasmine-node --captureExceptions --color spec-plugman* spec-cordova*"
   },
   "contributors": [
     {

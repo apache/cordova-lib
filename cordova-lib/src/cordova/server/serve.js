@@ -21,13 +21,13 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var cordova_util = require('./project/util'),
+var cordova_util = require('../project/util'),
     crypto = require('crypto'),
     path = require('path'),
     shell = require('shelljs'),
-    platforms     = require('./platforms'),
-    ConfigParser = require('../configparser/ConfigParser'),
-    hooker        = require('./hooker'),
+    platforms     = require('../platforms'),
+    ConfigParser = require('../../configparser/ConfigParser'),
+    hooker        = require('../hooker'),
     Q = require('q'),
     fs = require('fs'),
     http = require('http'),
@@ -231,7 +231,7 @@ module.exports = function server(port) {
     hooks.fire('before_serve')
     .then(function() {
         // Run a prepare first!
-        return require('./cordova').raw.prepare([]);
+        return require('../cordova').raw.prepare([]);
     }).then(function() {
         var server = launchServer(projectRoot, port);
         hooks.fire('after_serve').then(function () {

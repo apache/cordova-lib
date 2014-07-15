@@ -37,7 +37,7 @@ var config            = require('./config'),
     Q                 = require('q'),
     platforms         = require('./platforms'),
     promiseutil       = require('../util/promise-util'),
-    superspawn        = require('./superspawn'),
+    superspawn        = require('./server/superspawn'),
     semver            = require('semver'),
     shell             = require('shelljs');
 

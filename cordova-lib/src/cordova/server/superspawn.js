@@ -27,7 +27,7 @@ var path = require('path');
 var _ = require('underscore');
 var Q = require('q');
 var shell = require('shelljs');
-var events = require('../events');
+var events = require('../../events');
 var iswin32 = process.platform == 'win32';
 
 // On Windows, spawn() for batch files requires absolute path & having the extension.

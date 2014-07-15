@@ -27,7 +27,7 @@ when submitting a help request.
 Outputs to a file
  */
 var cordova_util = require('./project/util'),
-    superspawn   = require('./superspawn'),
+    superspawn   = require('./server/superspawn'),
     package      = require('../../package'),
     path         = require('path'),
     fs           = require('fs'),
