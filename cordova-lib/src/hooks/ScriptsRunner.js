@@ -22,7 +22,6 @@ var Q = require('q'),
     os = require('os'),
     path = require('path'),
     superspawn = require('../cordova/superspawn'),
-    CordovaError = require('../CordovaError'),
     Context = require('./Context');
 
 var isWindows = os.platform().slice(0, 3) === 'win';
@@ -125,7 +124,7 @@ function runScriptViaChildProcessSpawn(script, context) {
             if (!isWindows && err.code == 'EACCES') {
                 events.emit('verbose', 'skipped non-executable file: ' + script.fullPath);
             } else {
-                throw new CordovaError('Hook failed with error code ' + err.code + ': ' + script.fullPath);
+                throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
             }
         });
 }

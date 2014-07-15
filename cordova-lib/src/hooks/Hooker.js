@@ -22,8 +22,7 @@ var util  = require('../cordova/util'),
     plugin  = require('../cordova/plugin'),
     ScriptsFinder = require('./ScriptsFinder'),
     ScriptsRunner = require('./ScriptsRunner'),
-    Context = require('./Context'),
-    CordovaError = require('../CordovaError');
+    Context = require('./Context');
 
 /**
  * Tries to create a hooker for passed project root.
@@ -31,7 +30,7 @@ var util  = require('../cordova/util'),
  */
 function Hooker(projectRoot) {
     if (!util.isCordova(projectRoot)) {
-        throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
+        throw new Error('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
     }
 }
 
@@ -42,12 +41,10 @@ function Hooker(projectRoot) {
 Hooker.prototype.fire = function fire(hook, opts) {
     // args check
     if (!hook) {
-        throw new CordovaError('hook type is not specified');
+        throw new Error('hook type is not specified');
     }
     // execute hook event listeners first
-    return setPluginsProperty(opts).then(function(){
-        setCordovaVersionProperty(opts);
-
+    return this.prepareOptions(opts).then(function(){
         var handlers = events.listeners(hook);
         return executeHandlersSerially(handlers, opts);
     // then execute hook script files
@@ -55,6 +52,16 @@ Hooker.prototype.fire = function fire(hook, opts) {
         var scripts = ScriptsFinder.getHookScripts(hook, opts);
         var context = new Context(hook, opts);
         return ScriptsRunner.runScriptsSerially(scripts, context);
+    });
+};
+
+/**
+ * Set all unset options.
+ * Returns a promise.
+ */
+Hooker.prototype.prepareOptions = function(opts) {
+    return setPluginsProperty(opts).then(function() {
+        setCordovaVersionProperty(opts);
     });
 };
 

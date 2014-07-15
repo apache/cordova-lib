@@ -25,7 +25,6 @@ var path = require('path'),
     plugin  = require('../cordova/plugin'),
     PluginInfo = require('../PluginInfo'),
     ConfigParser = require('../configparser/ConfigParser'),
-    CordovaError = require('../CordovaError'),
     Context = require('./Context');
 
 /**
@@ -39,7 +38,7 @@ module.exports  = {
     getHookScripts: function(hook, opts) {
         // args check
         if (!hook) {
-            throw new CordovaError('hook type is not specified');
+            throw new Error('hook type is not specified');
         }
         return getApplicationHookScripts(hook, opts)
             .concat(getPluginsHookScripts(hook, opts));
@@ -53,7 +52,7 @@ module.exports  = {
 function getApplicationHookScripts(hook, opts) {
     // args check
     if (!hook) {
-        throw new CordovaError('hook type is not specified');
+        throw new Error('hook type is not specified');
     }
     return getApplicationHookScriptsFromDir(path.join(opts.projectRoot, '.cordova', 'hooks', hook))
         .concat(getApplicationHookScriptsFromDir(path.join(opts.projectRoot, 'hooks', hook)))
@@ -66,7 +65,7 @@ function getApplicationHookScripts(hook, opts) {
 function getPluginsHookScripts(hook, opts) {
     // args check
     if (!hook) {
-        throw new CordovaError('hook type is not specified');
+        throw new Error('hook type is not specified');
     }
 
     // In case before_plugin_install, after_plugin_install, before_plugin_uninstall hooks we receive opts.plugin and
