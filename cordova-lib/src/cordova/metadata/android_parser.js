@@ -98,7 +98,7 @@ module.exports.prototype = {
     handleSplashes:function(config) {
         var resources = config.getSplashScreens('android');
         // if there are "splash" elements in config.xml
-        if (resources) {
+        if (resources.length > 0) {
             var densities = this.deleteDefaultResource('screen.png');
             events.emit('verbose', 'splash screens: ' + JSON.stringify(resources));
             var res = path.join(this.path, 'res');
@@ -124,7 +124,7 @@ module.exports.prototype = {
     handleIcons: function(config) {
         var icons = config.getIcons('android');
         // if there are icon elements in config.xml
-        if (!icons) {
+        if (icons.length === 0) {
             events.emit('verbose', 'This app does not have launcher icons defined');
             return;
         }
