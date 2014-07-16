@@ -18,7 +18,7 @@
 */
 var path = require('path'),
     fs = require('fs'),
-    ConfigParser = require('../src/cordova/ConfigParser'),
+    ConfigParser = require('../src/configparser/ConfigParser'),
     xml = path.join(__dirname, 'test-config.xml'),
     xml_contents = fs.readFileSync(xml, 'utf-8');
 
@@ -81,16 +81,75 @@ describe('config.xml parser', function () {
             });
         });
         describe('feature',function(){
+            it('should read feature id list', function() {
+               var expectedList = [
+                   "org.apache.cordova.featurewithvars",
+                   "org.apache.cordova.featurewithurl",
+                   "org.apache.cordova.featurewithversion",
+                   "org.apache.cordova.featurewithurlandversion",
+                   "org.apache.cordova.justafeature"
+               ];
+               var list = cfg.getFeatureIdList();
+               expect(list.length).toEqual(expectedList.length);
+               expectedList.forEach(function(feature){
+                   expect(list).toContain(feature);
+               });
+            });
+            it('should read feature given id', function(){
+                var feature = cfg.getFeature("org.apache.cordova.justafeature");
+                expect(feature).toBeDefined();
+                expect(feature.name).toEqual("A simple feature");
+                expect(feature.id).toEqual("org.apache.cordova.justafeature");
+                expect(feature.params).toBeDefined();
+                expect(feature.params.id).toBeDefined();
+                expect(feature.params.id).toEqual("org.apache.cordova.justafeature");
+            });
+            it('should not read feature given undefined id', function(){
+                var feature = cfg.getFeature("org.apache.cordova.undefinedfeature");
+                expect(feature).not.toBeDefined();
+            });
+            it('should read feature with url and set \'url\' param', function(){
+                var feature = cfg.getFeature("org.apache.cordova.featurewithurl");
+                expect(feature.url).toEqual("http://cordova.apache.org/featurewithurl");
+                expect(feature.params).toBeDefined();
+                expect(feature.params.url).toBeDefined();
+                expect(feature.params.url).toEqual("http://cordova.apache.org/featurewithurl");
+            });
+            it('should read feature with version and set \'version\' param', function(){
+                var feature = cfg.getFeature("org.apache.cordova.featurewithversion");
+                expect(feature.version).toEqual("1.1.1");
+                expect(feature.params).toBeDefined();
+                expect(feature.params.version).toBeDefined();
+                expect(feature.params.version).toEqual("1.1.1");
+            });
+            it('should read feature variables', function () {
+                var feature = cfg.getFeature("org.apache.cordova.featurewithvars");
+                expect(feature.variables).toBeDefined();
+                expect(feature.variables.var).toBeDefined();
+                expect(feature.variables.var).toEqual("varvalue");
+            });
             it('should allow adding a new feature', function(){
                 cfg.addFeature('myfeature');
                 var features = cfg.doc.findall('feature');
-                expect(features[0].attrib.name).toEqual('myfeature');
+                var featureNames = features.map(function(feature){
+                    return feature.attrib.name;
+                });
+                expect(featureNames).toContain('myfeature');
             });
             it('should allow adding features with params', function(){
                 cfg.addFeature('afeature', JSON.parse('[{"name":"paraname", "value":"paravalue"}]'));
                 var features = cfg.doc.findall('feature');
-                expect(features[0].attrib.name).toEqual('afeature');
-                var params = features[0].findall('param');
+                var feature  = (function(){
+                    var i = features.length;
+                    var f;
+                    while (--i >= 0) {
+                        f = features[i];
+                        if ('afeature' === f.attrib.name) return f;
+                    }
+                    return undefined;
+                })();
+                expect(feature).toBeDefined();
+                var params = feature.findall('param');
                 expect(params[0].attrib.name).toEqual('paraname');
                 expect(params[0].attrib.value).toEqual('paravalue');
             });

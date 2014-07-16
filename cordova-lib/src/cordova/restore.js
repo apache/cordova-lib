@@ -60,39 +60,41 @@ function installPlatformsFromConfigXML(cfg){
 //returns a Promise
 function installPluginsFromConfigXML(cfg) {
     //Install plugins that are listed on config.xml
-    var pluginsFromConfig = [];
     var projectRoot = cordova_util.cdProjectRoot();
     var plugins_dir = path.join(projectRoot, 'plugins');
 
-    var features = cfg.doc.findall('feature');
-    features.forEach(function(feature){
-        var params = feature.findall('param');
-        var pluginId = '';
-        var pluginVersion = '';
-        for (var i = 0; i < params.length; i++) {
-            if (params[i].attrib.name === 'id') {
-                pluginId = params[i].attrib.value;
-            }
-            if (params[i].attrib.name === 'version') {
-                pluginVersion = params[i].attrib.value;
-            }
-        }
-        var pluginPath =  path.join(plugins_dir,pluginId);
-        // contents of the plugins folder takes precedence hence
-        // we ignore if the correct version is installed or not.
-        if (pluginId !== '' && !fs.existsSync(pluginPath)) {
-            if ( pluginVersion !== '') {
-                pluginId = pluginId + '@' + pluginVersion;
-            }
-            events.emit('log', 'Discovered ' + pluginId + ' in config.xml. Installing to the project');
-            pluginsFromConfig.push(pluginId);
-        }
-    });
-
-    //Use cli instead of plugman directly ensuring all the hooks
-    // to get fired.
-    if (pluginsFromConfig.length >0) {
-        return plugin('add', pluginsFromConfig);
+    // Get all configured plugins
+    var features = cfg.getFeatureIdList();
+    if (0 === features.length) {
+        return Q.all('No config.xml plugins to install');
     }
-    return Q.all('No config.xml plugins to install');
+
+    return features.reduce(function(soFar, featureId) {
+
+        var pluginPath =  path.join(plugins_dir, featureId);
+        if (fs.existsSync(pluginPath)) {
+            // Plugin already exists
+            return soFar;
+        }
+
+        return soFar.then(function() {
+            events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
+
+            var feature = cfg.getFeature(featureId);
+
+            // Install from given URL if defined or using a plugin id
+            var installFrom = feature.url;
+            if (!installFrom) {
+                installFrom = feature.id;
+                if (!!feature.version) {
+                    installFrom += ('@' + feature.version);
+                }
+            }
+
+            // Add feature preferences as CLI variables if have any
+            var options = 'undefined' !== typeof feature.variables ? {cli_variables: feature.variables} : null;
+
+            return plugin('add', installFrom, options);
+        });
+    }, Q());
 }
