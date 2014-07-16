@@ -262,12 +262,16 @@ function _getTagsInPlatform(pelem, tag, platform, transform) {
     return tags;
 }
 
-// Given a dir containing multiple plugins, create a PluginInfo objec for
+// Given a dir containing multiple plugins, create a PluginInfo object for
 // each of them and return as array.
 // Should load them all in parallel and return a promise, but not yet.
 function loadPluginsDir(dirname) {
     if ( !fs.existsSync(dirname) ){
         return [];
+    }
+    // If dir itself is a plugin, return it in an array with one element.
+    if (fs.existsSync(path.join(dirname, 'plugin.xml'))) {
+        return [new PluginInfo(dirname)];
     }
     var subdirs = fs.readdirSync(dirname);
     var plugins = [];

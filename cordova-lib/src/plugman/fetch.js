@@ -24,18 +24,22 @@
 var shell   = require('shelljs'),
     fs      = require('fs'),
     url     = require('url'),
+    PluginInfo    = require('../PluginInfo'),
     plugins = require('./util/plugins'),
-    xml_helpers = require('../util/xml-helpers'),
     CordovaError  = require('../CordovaError'),
     events = require('../events'),
     metadata = require('./util/metadata'),
     path    = require('path'),
     Q       = require('q'),
     registry = require('./registry/registry');
-// XXX: leave the require('./plugman') because jasmine shits itself if you declare it up top
+
+// Cache of PluginInfo objects for plugins in search path.
+var localPlugins = null;
+
 // possible options: link, subdir, git_ref, client, expected_id
 // Returns a promise.
-module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
+module.exports = fetchPlugin;
+function fetchPlugin(plugin_src, plugins_dir, options) {
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 
@@ -82,7 +86,8 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
 
             return plugins.clonePluginGit(plugin_src, plugins_dir, options)
             .then(function(dir) {
-                return checkID(options.expected_id, dir);
+                checkID(options.expected_id, dir);
+                return dir;
             })
             .then(function(dir) {
                 metadata.save_fetch_metadata(dir, data);
@@ -101,10 +106,11 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
         } else {
             // If there is no such local path, it's a plugin id.
             // First look for it in the local search path (if provided).
-            var local_dir = findLocalPlugin(plugin_src, options.searchpath);
-            if (local_dir) {
-                p = Q(local_dir);
-                events.emit('verbose', 'Found ' + plugin_src + ' at ' + local_dir);
+            loadLocalPlugins(options.searchpath);
+            var pinfo = localPlugins[plugin_src];
+            if (pinfo) {
+                p = Q(pinfo.dir);
+                events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
             } else if ( options.noregistry ) {
                 p = Q.reject(new CordovaError(
                         'Plugin ' + plugin_src + ' not found locally. ' +
@@ -124,75 +130,44 @@ module.exports = function fetchPlugin(plugin_src, plugins_dir, options) {
             return copyPlugin(dir, plugins_dir, options.link && linkable);
         })
         .then(function(dir) {
-            return checkID(options.expected_id, dir);
+            checkID(options.expected_id, dir);
+            return dir;
         });
     }
-};
-
-function readId(dir) {
-    var xml_path = path.join(dir, 'plugin.xml');
-    var et = xml_helpers.parseElementtreeSync(xml_path);
-    var plugin_id = et.getroot().attrib.id;
-    return plugin_id;
-}
-
-function readVersion(dir) {
-    var xml_path = path.join(dir, 'plugin.xml');
-    var et = xml_helpers.parseElementtreeSync(xml_path);
-    var plugin_id = et.getroot().attrib.version;
-    return plugin_id;
 }
 
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expected_id, dir) {
-    if ( expected_id ) {
-        var id = readId(dir);
-        // if id with specific version provided, append version to id
-        if (expected_id.split('@').length > 1) {
-            id = id + '@' + readVersion(dir);
-        }
-        if (expected_id != id) {
-            throw new Error('Expected fetched plugin to have ID "' + expected_id + '" but got "' + id + '".');
-        }
+    if (!expected_id) return;
+    var pinfo = new PluginInfo.PluginInfo(dir);
+    var id = pinfo.id;
+    // if id with specific version provided, append version to id
+    if (expected_id.split('@').length > 1) {
+        id = id + '@' + pinfo.version;
     }
-    return dir;
+    if (expected_id != id) {
+        throw new Error('Expected fetched plugin to have ID "' + expected_id + '" but got "' + id + '".');
+    }
 }
 
-var idCache = Object.create(null);
-// Look for plugin in local search path.
-function findLocalPlugin(plugin_id, searchpath) {
-    function tryPath(p) {
-        if (!(p in idCache)) {
-            var id = null;
-            if (fs.existsSync(path.join(p, 'plugin.xml'))) {
-                id = readId(p);
-            }
-            idCache[p] = id;
-        }
-        return (plugin_id === idCache[p]);
-    }
-
-    for (var i = 0; i < searchpath.length; i++) {
-        // Allow search path to point right to a plugin.
-        if (tryPath(searchpath[i])) {
-            return searchpath[i];
-        }
-        var files = fs.readdirSync(searchpath[i]);
-        for (var j = 0; j < files.length; j++) {
-            var pluginPath = path.join(searchpath[i], files[j]);
-            if (tryPath(pluginPath)) {
-                return pluginPath;
-            }
-        }
-    }
-    return null;
+// Note, there is no cache invalidation logic for local plugins.
+// As of this writing loadLocalPlugins() is never called with different
+// search paths and such case would not be handled properly.
+function loadLocalPlugins(searchpath) {
+    if (localPlugins) return;
+    localPlugins = {};
+    searchpath.forEach(function(dir) {
+        var ps = PluginInfo.loadPluginsDir(dir);
+        ps.forEach(function(p) {
+            localPlugins[p.id] = p;
+        });
+    });
 }
-
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_dir, plugins_dir, link) {
-    var plugin_id = readId(plugin_dir);
-    var dest = path.join(plugins_dir, plugin_id);
+    var pinfo = new PluginInfo.PluginInfo(plugin_dir);
+    var dest = path.join(plugins_dir, pinfo.id);
     shell.rm('-rf', dest);
     if (link) {
         events.emit('verbose', 'Linking plugin "' + plugin_dir + '" => "' + dest + '"');
