@@ -454,7 +454,22 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
         return plugins.reduce(function(soFar, plugin) {
             return soFar.then(function() {
                 events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
+                plugin = path.basename(plugin);
+                var options = (function(){
+                    // Get plugin preferences from config features if have any
+                    // Pass them as cli_variables to plugman
+                    var feature = cfg.getFeature(plugin);
+                    var variables = feature && feature.variables;
+                    if (!!variables) {
+                        events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
+                        return {
+                            cli_variables: variables
+                        };
+                    }
+                    return null;
+                })();
+
+                return plugman.raw.install(target, output, plugin, plugins_dir, options);
             });
         }, Q());
     });
