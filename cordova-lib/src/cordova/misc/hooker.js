@@ -21,12 +21,12 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var util  = require('./project/util'),
+var util  = require('../project/util'),
     fs    = require('fs'),
     os    = require('os'),
-    events= require('../events'),
-    superspawn = require('./server/superspawn'),
-    CordovaError = require('../CordovaError'),
+    events= require('../../events'),
+    superspawn = require('../server/superspawn'),
+    CordovaError = require('../../CordovaError'),
     Q     = require('q'),
     path  = require('path');
 
@@ -136,7 +136,7 @@ function execute_scripts_serially(scripts, root, dir, opts) {
 
             var execOpts = {cwd: root, printCommand: opts.verbose, stdio: 'inherit'};
             execOpts.env = {};
-            execOpts.env.CORDOVA_VERSION = require('../../package').version;
+            execOpts.env.CORDOVA_VERSION = require('../../../package').version;
             execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';
             execOpts.env.CORDOVA_PLUGINS = opts.plugins?opts.plugins.join():'';
             execOpts.env.CORDOVA_HOOK = fullpath;

@@ -26,9 +26,9 @@ A utility funciton to help output the information needed
 when submitting a help request.
 Outputs to a file
  */
-var cordova_util = require('./project/util'),
-    superspawn   = require('./server/superspawn'),
-    package      = require('../../package'),
+var cordova_util = require('../project/util'),
+    superspawn   = require('../server/superspawn'),
+    package      = require('../../../package'),
     path         = require('path'),
     fs           = require('fs'),
     Q            = require('q');

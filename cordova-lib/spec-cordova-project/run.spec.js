@@ -21,7 +21,7 @@ var cordova = require('../src/cordova/cordova'),
     superspawn = require('../src/cordova/server/superspawn'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/cordova/hooker'),
+    hooker = require('../src/cordova/misc/hooker'),
     Q = require('q'),
     util = require('../src/cordova/project/util');
 

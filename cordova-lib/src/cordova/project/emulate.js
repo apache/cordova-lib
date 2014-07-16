@@ -23,7 +23,7 @@
 
 var cordova_util      = require('./util'),
     path              = require('path'),
-    hooker            = require('../hooker'),
+    hooker            = require('../misc/hooker'),
     superspawn        = require('../server/superspawn'),
     Q                 = require('q');
 

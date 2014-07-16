@@ -22,7 +22,7 @@
 */
 
 var cordova_util      = require('../project/util'),
-    hooker            = require('../hooker');
+    hooker            = require('../misc/hooker');
 
 // Returns a promise.
 module.exports = function build(options) {

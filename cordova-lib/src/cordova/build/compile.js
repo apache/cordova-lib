@@ -23,7 +23,7 @@
 
 var path              = require('path'),
     cordova_util      = require('../project/util'),
-    hooker            = require('../hooker'),
+    hooker            = require('../misc/hooker'),
     superspawn        = require('../server/superspawn');
 
 // Returns a promise.

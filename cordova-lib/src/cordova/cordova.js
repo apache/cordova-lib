@@ -70,7 +70,7 @@ addModuleProperty(module, 'platform', './platform', true);
 addModuleProperty(module, 'platforms', './platform', true);
 addModuleProperty(module, 'compile', './build/compile', true);
 addModuleProperty(module, 'run', './project/run', true);
-addModuleProperty(module, 'info', './info', true);
+addModuleProperty(module, 'info', './project/info', true);
 addModuleProperty(module, 'save', './project/save', true);
 addModuleProperty(module, 'restore', './project/restore', true);
 

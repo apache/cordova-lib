@@ -24,7 +24,7 @@
 var cordova_util  = require('../project/util'),
     path          = require('path'),
     semver        = require('semver'),
-    hooker        = require('../hooker'),
+    hooker        = require('../misc/hooker'),
     config        = require('../config'),
     Q             = require('q'),
     CordovaError  = require('../../CordovaError'),

@@ -30,7 +30,7 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     events        = require('../../events'),
-    lazy_load     = require('../lazy_load');
+    lazy_load     = require('../misc/lazy_load');
 
 module.exports = function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {

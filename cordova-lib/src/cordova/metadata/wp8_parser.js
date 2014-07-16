@@ -30,7 +30,7 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    hooker        = require('../hooker'),
+    hooker        = require('../misc/hooker'),
     csproj = require('../../util/windows/csproj');
 
 module.exports = function wp8_parser(project) {

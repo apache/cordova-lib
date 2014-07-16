@@ -19,7 +19,7 @@
 
 
 var cordova = require('../src/cordova/cordova'),
-    hooker = require('../src/cordova/hooker'),
+    hooker = require('../src/cordova/misc/hooker'),
     shell  = require('shelljs'),
     path   = require('path'),
     fs     = require('fs'),
