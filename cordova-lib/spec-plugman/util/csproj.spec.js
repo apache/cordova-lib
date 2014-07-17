@@ -18,7 +18,7 @@
 */
 var csproj  = require('../../src/util/windows/csproj'),
     path    = require('path'),
-    os      = require('osenv'),
+    os      = require('../../src/plugman/node_modules/osenv'),
     et      = require('elementtree'),
     fs      = require('fs'),
     xml_helpers = require('../../src/util/xml-helpers');

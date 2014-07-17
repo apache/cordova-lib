@@ -18,7 +18,7 @@
 var tizen = require('../../src/plugman/platforms/tizen'),
 	common = require('../../src/plugman/platforms/common'),
 	temp = require('temp'),
-	os = require('osenv'),
+	os = require('../../src/plugman/node_modules/osenv'),
 	fs = require('fs'),
 	et = require('elementtree'),
 	path = require('path'),

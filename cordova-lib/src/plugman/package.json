@@ -17,21 +17,7 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "bplist-parser": "0.0.x",
-    "dep-graph": "1.1.0",
-    "elementtree": "0.1.5",
-    "glob": "3.2.x",
-    "npm": "1.3.4",
-    "npmconf": "0.1.x",
-    "plist-with-patches": "0.5.x",
-    "properties-parser": "~0.2.3",
-    "q": "~0.9",
-    "rc": "0.3.0",
-    "request": "2.22.0",
-    "semver": "2.0.x",
-    "shelljs": "0.1.x",
-    "underscore": "1.4.4",
-    "xcode": "0.6.6"
+    "osenv": "0.0.x"
   },
   "devDependencies": {
     "temp": "0.6.x",
@@ -40,8 +26,8 @@
   },
   "scripts": {
     "test": "npm run jasmine && npm run jshint",
-    "jshint": "node node_modules/jshint/bin/jshint src",
-    "jasmine": "jasmine-node --captureExceptions --color spec-plugman* spec-cordova*"
+    "jshint": "node node_modules/jshint/bin/jshint ../../src",
+    "jasmine": "jasmine-node --captureExceptions --color ../../spec-plugman*"
   },
   "contributors": [
     {

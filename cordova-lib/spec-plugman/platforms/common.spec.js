@@ -18,7 +18,7 @@
 var common = require('../../src/plugman/platforms/common')
   , path = require('path')
   , fs = require('fs')
-  , osenv = require('osenv')
+  , osenv = require('../../src/plugman/node_modules/osenv')
   , shell = require('shelljs')
   , test_dir = path.join(osenv.tmpdir(), 'test_plugman')
   , project_dir = path.join(test_dir, 'project')

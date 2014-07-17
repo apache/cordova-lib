@@ -18,7 +18,7 @@
 */
 var fetch   = require('../src/plugman/create/fetch'),
     fs      = require('fs'),
-    os      = require('osenv'),
+    os      = require('../src/plugman/node_modules/osenv'),
     path    = require('path'),
     shell   = require('shelljs'),
     realrm = shell.rm,
