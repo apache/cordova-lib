@@ -1,0 +1,15 @@
+# appveyor file
+# http://www.appveyor.com/docs/appveyor-yml
+
+nodejs_version: 0.10
+
+install:
+  - cd cordova-lib
+  - npm install
+
+build: off
+
+test_script:
+  - node --version
+  - npm --version
+  - npm test
