@@ -22,7 +22,7 @@ var path = require('path'),
     cordova = require('../src/cordova/cordova'),
     cordova_util = require('../src/cordova/project/util'),
     ConfigParser = require('../src/configparser/ConfigParser'),
-    project_dir = path.join(__dirname, 'fixtures', 'base');
+    project_dir = path.join(__dirname, '..', 'fixtures-cordova', 'base');
 
 describe('restore command', function(){
   var is_cordova, result, config_add_feature, cd_project;

@@ -76,7 +76,7 @@ describe('xml-helpers', function(){
         var config_xml;
 
         beforeEach(function() {
-            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'projects', 'android_two', 'res', 'xml', 'config.xml'));
+            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'android_two', 'res', 'xml', 'config.xml'));
         });
 
         it('should remove any children that match the specified selector', function() {
@@ -105,8 +105,8 @@ describe('xml-helpers', function(){
         var config_xml, plugin_xml;
 
         beforeEach(function() {
-            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'projects', 'android_two', 'res', 'xml', 'config.xml'));
-            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'plugins', 'ChildBrowser', 'plugin.xml'));
+            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'android_two', 'res', 'xml', 'config.xml'));
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'ChildBrowser', 'plugin.xml'));
         });
 
         it('should add children to the specified selector', function() {

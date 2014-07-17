@@ -39,7 +39,7 @@ xdescribe('serve command', function() {
         consoleSpy;
     beforeEach(function() {
         // Make a temp directory
-        tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
+        tempDir = path.join(__dirname, '../temp-' + Date.now());
         shell.rm('-rf', tempDir);
         shell.mkdir('-p', tempDir);
         consoleSpy = spyOn(console, 'log');

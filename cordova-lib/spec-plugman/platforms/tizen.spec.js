@@ -22,10 +22,10 @@ var tizen = require('../../src/plugman/platforms/tizen'),
 	fs = require('fs'),
 	et = require('elementtree'),
 	path = require('path'),
-	tizen_project = path.join(__dirname, '..', 'projects', 'tizen'),
+	tizen_project = path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'tizen'),
 	destination = temp.path(),
 	shell = require('shelljs'),
-	dummyPluginPath = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
+	dummyPluginPath = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'DummyPlugin'),
 	dummyPlugin = et.XML(fs.readFileSync(
 		path.join(dummyPluginPath, 'plugin.xml'), {encoding: "utf-8"})),
 	dummySources = dummyPlugin

@@ -51,7 +51,7 @@ describe('dependency module', function() {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generate_dependency_info(path.join(__dirname, '..', 'plugins', 'dependencies'), 'android');
+            var obj = dependencies.generate_dependency_info(path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'dependencies'), 'android');
             expect(obj.graph.getChain('A')).toEqual(['C','D']);
             expect(obj.graph.getChain('B')).toEqual(['D', 'E']);
         });

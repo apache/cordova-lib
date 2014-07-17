@@ -22,7 +22,7 @@ var cordova = require('../src/cordova/cordova'),
     fs = require('fs'),
     util = require('../src/cordova/project/util'),
     temp = path.join(__dirname, '..', 'temp'),
-    fixtures = path.join(__dirname, 'fixtures');
+    fixtures = path.join(__dirname, '..', 'fixtures-cordova');
 
 var cwd = process.cwd();
 var home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];

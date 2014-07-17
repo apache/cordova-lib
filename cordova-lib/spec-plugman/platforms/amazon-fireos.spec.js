@@ -28,11 +28,11 @@ var amazon_fireos = require('../../src/plugman/platforms/amazon-fireos'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    variableplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
-    amazon_fireos_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
-    amazon_fireos_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*');
+    dummyplugin = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'DummyPlugin'),
+    faultyplugin = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'FaultyPlugin'),
+    variableplugin = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'VariablePlugin'),
+    amazon_fireos_one_project = path.join(__dirname, '..', 'fixtures-plugman', '..', 'projects', 'android_one', '*'),
+    amazon_fireos_two_project = path.join(__dirname, '..', 'fixtures-plugman', '..', 'projects', 'android_two', '*');
 
 var xml_path     = path.join(dummyplugin, 'plugin.xml')
   , xml_text     = fs.readFileSync(xml_path, 'utf-8')

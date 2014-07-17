@@ -36,7 +36,7 @@ var path = require('path')
 describe('xml-helpers', function(){
     describe('parseElementtreeSync', function() {
         it('should parse xml with a byte order mark', function() {
-            var xml_path = path.join(__dirname, 'fixtures', 'projects', 'windows', 'bom_test.xml');
+            var xml_path = path.join(__dirname, '..', 'fixtures-cordova', 'projects', 'windows', 'bom_test.xml');
             expect(function() {
                 xml_helpers.parseElementtreeSync(xml_path);
             }).not.toThrow();
@@ -85,7 +85,7 @@ describe('xml-helpers', function(){
         var config_xml;
 
         beforeEach(function() {
-            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, 'fixtures', 'projects', 'android', 'res', 'xml', 'config.xml'));
+            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'fixtures-cordova', 'projects', 'android', 'res', 'xml', 'config.xml'));
         });
 
         it('should remove any children that match the specified selector', function() {
@@ -114,8 +114,8 @@ describe('xml-helpers', function(){
         var config_xml, plugin_xml;
 
         beforeEach(function() {
-            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, 'fixtures', 'projects', 'android', 'res', 'xml', 'config.xml'));
-            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, 'fixtures', 'plugins', 'ChildBrowser', 'plugin.xml'));
+            config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'fixtures-cordova', 'projects', 'android', 'res', 'xml', 'config.xml'));
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'fixtures-cordova', 'plugins', 'ChildBrowser', 'plugin.xml'));
         });
 
         it('should add children to the specified selector', function() {

@@ -21,7 +21,7 @@ var cordova = require('../src/cordova/cordova'),
     fs = require('fs'),
     plugin_parser = require('../src/cordova/plugins/plugin_parser'),
     et = require('elementtree'),
-    xml = path.join(__dirname, 'fixtures', 'plugins', 'test', 'plugin.xml');
+    xml = path.join(__dirname, '..', 'fixtures-cordova', 'plugins', 'test', 'plugin.xml');
 
 var xml_contents = fs.readFileSync(xml, 'utf-8');
 

@@ -26,7 +26,7 @@ var cordova = require('../src/cordova/cordova'),
     os     = require('os'),
     Q      = require('q'),
     child_process = require('child_process'),
-    helpers = require('./helpers');
+    helpers = require('../fixtures-cordova/helpers');
 
 var platform = os.platform();
 var tmpDir = helpers.tmpDir('hooks_test');
@@ -39,9 +39,9 @@ var ext = platform.match(/(win32|win64)/)?'bat':'sh';
 // copy fixture
 shell.rm('-rf', project);
 shell.mkdir('-p', project);
-shell.cp('-R', path.join(__dirname, 'fixtures', 'base', '*'), project);
+shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'base', '*'), project);
 shell.mkdir('-p', dotCordova);
-shell.cp('-R', path.join(__dirname, 'fixtures', 'hooks_' + ext), dotCordova);
+shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'hooks_' + ext), dotCordova);
 shell.mv(path.join(dotCordova, 'hooks_' + ext), hooksDir);
 shell.chmod('-R', 'ug+x', hooksDir);
 

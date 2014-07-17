@@ -23,7 +23,7 @@
 var PluginInfo = require('../src/PluginInfo'),
     path = require('path');
 
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+var pluginsDir = path.join(__dirname, '..', 'fixtures-cordova', 'plugins');
 
 describe('PluginInfo', function () {
     it('should read a plugin.xml file', function () {

@@ -17,7 +17,7 @@
     under the License.
 */
 
-var helpers = require('./helpers'),
+var helpers = require('../fixtures-cordova/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
@@ -27,7 +27,7 @@ var helpers = require('./helpers'),
 
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+var pluginsDir = path.join(__dirname, '..', 'fixtures-cordova', 'plugins');
 var pluginId = 'org.apache.cordova.fakeplugin1';
 
 describe('plugin end-to-end', function() {
@@ -47,10 +47,10 @@ describe('plugin end-to-end', function() {
     it('should successfully run', function(done) {
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
 
         events.on('results', function(res) { results = res; });

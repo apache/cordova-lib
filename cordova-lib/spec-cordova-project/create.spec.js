@@ -17,7 +17,7 @@
     under the License.
 */
 
-var helpers = require('../spec-cordova/helpers'),
+var helpers = require('../fixtures-cordova/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
@@ -50,7 +50,7 @@ var cordovaDir = path.join(project, '.cordova');
 var configNormal = {
       lib: {
         www: {
-          url: path.join(__dirname, 'fixtures', 'base', 'www'),
+          url: path.join(__dirname, '..', 'fixtures-cordova', 'base', 'www'),
           version: "testCordovaCreate",
           id: appName
         }
@@ -59,7 +59,7 @@ var configNormal = {
 var configSymlink = {
       lib: {
         www: {
-          url: path.join(__dirname, 'fixtures', 'base'), // "create" should copy or link the www child of this dir and not the dir itself.
+          url: path.join(__dirname, '..', 'fixtures-cordova', 'base'), // "create" should copy or link the www child of this dir and not the dir itself.
           link: true
         }
       }

@@ -28,11 +28,11 @@ var blackberry10 = require('../../src/plugman/platforms/blackberry10'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*'),
+    blackberry10_project = path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'blackberry10', '*'),
     plugins = {
-        dummy: parsePlugin(path.join(__dirname, '..', 'plugins', 'DummyPlugin')),
-        faulty: parsePlugin(path.join(__dirname, '..', 'plugins', 'FaultyPlugin')),
-        echo: parsePlugin(path.join(__dirname, '..', 'plugins', 'cordova.echo'))
+        dummy: parsePlugin(path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'DummyPlugin')),
+        faulty: parsePlugin(path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'FaultyPlugin')),
+        echo: parsePlugin(path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'cordova.echo'))
     };
 
 function copyArray(arr) {
