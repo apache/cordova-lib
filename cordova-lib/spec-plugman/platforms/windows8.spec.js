@@ -18,19 +18,19 @@
 */
 var windows8 = require('../../src/plugman/platforms/windows'),
     common  = require('../../src/plugman/platforms/common'),
-    install = require('../../src/plugman/install'),
+    install = require('../../src/plugman/install/install'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
     et      = require('elementtree'),
-    os      = require('osenv'),
+    os      = require('../../src/plugman/node_modules/osenv'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    windows8_project = path.join(__dirname, '..', 'projects', 'windows8');
+    dummyplugin = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'DummyPlugin'),
+    faultyplugin = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'FaultyPlugin'),
+    windows8_project = path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'windows8');
 
 var xml_path     = path.join(dummyplugin, 'plugin.xml')
   , xml_text     = fs.readFileSync(xml_path, 'utf-8')

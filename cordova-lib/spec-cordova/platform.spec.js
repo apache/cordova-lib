@@ -17,12 +17,12 @@
     under the License.
 */
 
-var helpers = require('./helpers'),
+var helpers = require('../fixtures-cordova/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
     platforms = require('../src/cordova/platforms'),
-    superspawn = require('../src/cordova/superspawn'),
+    superspawn = require('../src/cordova/server/superspawn'),
     config = require('../src/cordova/config'),
     Q = require('q'),
     events = require('../src/events'),
@@ -68,14 +68,14 @@ describe('platform end-to-end', function() {
     it('should successfully run', function(done) {
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         process.chdir(project);
 
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
         // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
         var c = config.read(project);
-        c.lib[helpers.testPlatform].url = path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform + '-lib');
+        c.lib[helpers.testPlatform].url = path.join(__dirname, '..', 'fixtures-cordova', 'platforms', helpers.testPlatform + '-lib');
         config.write(project, c);
 
         // The config.json in the fixture project points at fake "local" paths.
@@ -83,7 +83,7 @@ describe('platform end-to-end', function() {
         spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
+                shell.cp('-R', path.join(__dirname, '..', 'fixtures-cordova', 'platforms', 'android'), path.join(project, 'platforms'));
             } else if(cmd.match(/version\b/)) {
                 return Q('3.3.0');
             } else if(cmd.match(/update\b/)) {

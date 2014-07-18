@@ -22,7 +22,7 @@
 */
 
 var cordova_events = require('../events');
-var cordova_util = require('./util');
+var cordova_util = require('./project/util');
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -57,21 +57,21 @@ exports.findProjectRoot = function(opt_startDir) {
 // To use a promise instead, call the APIs via cordova.raw.FOO(), which returns
 // a promise instead of using a final-parameter-callback.
 var addModuleProperty = cordova_util.addModuleProperty;
-addModuleProperty(module, 'prepare', './prepare', true);
-addModuleProperty(module, 'build', './build', true);
+addModuleProperty(module, 'prepare', './build/prepare', true);
+addModuleProperty(module, 'build', './build/build', true);
 addModuleProperty(module, 'help', './help');
 addModuleProperty(module, 'config', './config');
-addModuleProperty(module, 'create', './create', true);
-addModuleProperty(module, 'emulate', './emulate', true);
-addModuleProperty(module, 'plugin', './plugin', true);
-addModuleProperty(module, 'plugins', './plugin', true);
-addModuleProperty(module, 'serve', './serve');
+addModuleProperty(module, 'create', './project/create', true);
+addModuleProperty(module, 'emulate', './project/emulate', true);
+addModuleProperty(module, 'plugin', './plugins/plugin', true);
+addModuleProperty(module, 'plugins', './plugins/plugin', true);
+addModuleProperty(module, 'serve', './server/serve');
 addModuleProperty(module, 'platform', './platform', true);
 addModuleProperty(module, 'platforms', './platform', true);
-addModuleProperty(module, 'compile', './compile', true);
-addModuleProperty(module, 'run', './run', true);
-addModuleProperty(module, 'info', './info', true);
-addModuleProperty(module, 'save', './save', true);
-addModuleProperty(module, 'restore', './restore', true);
+addModuleProperty(module, 'compile', './build/compile', true);
+addModuleProperty(module, 'run', './project/run', true);
+addModuleProperty(module, 'info', './project/info', true);
+addModuleProperty(module, 'save', './project/save', true);
+addModuleProperty(module, 'restore', './project/restore', true);
 
 

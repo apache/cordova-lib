@@ -25,19 +25,19 @@
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
-    cordova_util      = require('./util'),
+    cordova_util      = require('./project/util'),
     ConfigParser      = require('../configparser/ConfigParser'),
     fs                = require('fs'),
     os                = require('os'),
     path              = require('path'),
-    hooker            = require('./hooker'),
+    hooker            = require('./misc/hooker'),
     events            = require('../events'),
-    lazy_load         = require('./lazy_load'),
+    lazy_load         = require('./misc/lazy_load'),
     CordovaError      = require('../CordovaError'),
     Q                 = require('q'),
     platforms         = require('./platforms'),
     promiseutil       = require('../util/promise-util'),
-    superspawn        = require('./superspawn'),
+    superspawn        = require('./server/superspawn'),
     semver            = require('semver'),
     shell             = require('shelljs');
 

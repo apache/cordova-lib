@@ -18,7 +18,7 @@
 */
 
 var http   = require('http'),
-    osenv  = require('osenv'),
+    osenv  = require('../../src/plugman/node_modules/osenv'),
     path   = require('path'),
     fs     = require('fs'),
     temp   = path.join(osenv.tmpdir(), 'plugman'),

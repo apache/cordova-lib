@@ -18,15 +18,15 @@
 */
 var csproj  = require('../../src/util/windows/csproj'),
     path    = require('path'),
-    os      = require('osenv'),
+    os      = require('../../src/plugman/node_modules/osenv'),
     et      = require('elementtree'),
     fs      = require('fs'),
     xml_helpers = require('../../src/util/xml-helpers');
 
-var wp8_project     = path.join(__dirname, '..', 'projects', 'wp8'),
+var wp8_project     = path.join(__dirname, '..', '..', 'fixtures-plugman', 'projects', 'wp8'),
     temp            = path.join(os.tmpdir(), 'plugman'),
     example_csproj  = path.join(wp8_project, 'CordovaAppProj.csproj'),
-    wpcsproj        = path.join(__dirname, '..', 'plugins', 'WPcsproj');
+    wpcsproj        = path.join(__dirname, '..', '..', 'fixtures-plugman', 'plugins', 'WPcsproj');
 
 describe('csproj', function() {
     it('should throw if passed in an invalid xml file path ref', function() {

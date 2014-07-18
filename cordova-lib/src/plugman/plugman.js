@@ -66,18 +66,18 @@ var plugman = {
     raw:                {}
 };
 
-addProperty(plugman, 'install', './install', true);
-addProperty(plugman, 'uninstall', './uninstall', true);
-addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'prepare', './prepare');
-addProperty(plugman, 'config', './config', true);
-addProperty(plugman, 'owner', './owner', true);
-addProperty(plugman, 'adduser', './adduser', true);
-addProperty(plugman, 'publish', './publish', true);
-addProperty(plugman, 'unpublish', './unpublish', true);
-addProperty(plugman, 'search', './search', true);
-addProperty(plugman, 'info', './info', true);
-addProperty(plugman, 'create', './create', true);
+addProperty(plugman, 'install', './install/install', true);
+addProperty(plugman, 'uninstall', './install/uninstall', true);
+addProperty(plugman, 'fetch', './create/fetch', true);
+addProperty(plugman, 'prepare', './prepare/prepare');
+addProperty(plugman, 'config', './misc/config', true);
+addProperty(plugman, 'owner', './misc/owner', true);
+addProperty(plugman, 'adduser', './misc/adduser', true);
+addProperty(plugman, 'publish', './publish/publish', true);
+addProperty(plugman, 'unpublish', './publish/unpublish', true);
+addProperty(plugman, 'search', './misc/search', true);
+addProperty(plugman, 'info', './misc/info', true);
+addProperty(plugman, 'create', './create/create', true);
 addProperty(plugman, 'platform', './platform_operation', true);
 addProperty(plugman, 'config_changes', './util/config-changes');
 

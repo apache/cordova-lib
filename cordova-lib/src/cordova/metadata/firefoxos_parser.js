@@ -26,7 +26,7 @@ var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
     events = require('../../events'),
-    util = require('../util'),
+    util = require('../project/util'),
     Q = require('q'),
     ConfigParser = require('../../configparser/ConfigParser');
 

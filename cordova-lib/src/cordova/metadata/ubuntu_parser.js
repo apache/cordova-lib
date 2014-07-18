@@ -24,7 +24,7 @@
 
 var fs            = require('fs'),
     path          = require('path'),
-    util          = require('../util'),
+    util          = require('../project/util'),
     shell         = require('shelljs'),
     Q             = require('q'),
     os            = require('os'),

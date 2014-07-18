@@ -24,13 +24,13 @@
 var fs            = require('fs'),
     path          = require('path'),
     shell         = require('shelljs'),
-    util          = require('../util'),
+    util          = require('../project/util'),
     Q             = require('q'),
     child_process = require('child_process'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     events        = require('../../events'),
-    lazy_load     = require('../lazy_load');
+    lazy_load     = require('../misc/lazy_load');
 
 module.exports = function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {
