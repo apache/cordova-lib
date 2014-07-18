@@ -34,8 +34,8 @@ var install = require('../src/plugman/install'),
     spec    = __dirname,
     done    = false,
     srcProject = path.join(spec, 'projects', 'android_install'),
-    project = path.join(os.tmpdir(), 'plugman-test', 'android_install'),
-
+    temp_dir = path.join(os.tmpdir(), 'plugman-test'),
+    project = path.join(temp_dir, 'android_install'),
     plugins_dir = path.join(spec, 'plugins'),
     plugins_install_dir = path.join(project, 'cordova', 'plugins'),
     plugins = {
@@ -53,6 +53,10 @@ var install = require('../src/plugman/install'),
     promise,
     results = {},
     dummy_id = 'com.phonegap.plugins.dummyplugin';
+
+
+// Pre-crete the temp dir, without it the test fails.
+shell.mkdir('-p', temp_dir);
 
 function installPromise(f) {
   f.then(function(res) { done = true; }, function(err) { done = err; });
@@ -486,7 +490,7 @@ describe('end', function() {
             if(err)
                 events.emit('error', err);
 
-            shell.rm('-rf', project);
+            shell.rm('-rf', temp_dir);
             done = true;
         });
 
