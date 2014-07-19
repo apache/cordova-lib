@@ -202,7 +202,7 @@ describe('lazy_load module', function() {
                     }
                 };
                 lazy_load.custom(mock_platforms, 'X').then(function(dir) {
-                    expect(dir).toEqual('/some/random/lib');
+                    expect(path.normpath(dir)).toEqual('/some/random/lib');
                 }, function(err) {
                     expect(err).toBeUndefined();
                 }).fin(done);
