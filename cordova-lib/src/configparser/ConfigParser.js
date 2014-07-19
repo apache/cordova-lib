@@ -27,6 +27,15 @@ var et = require('elementtree'),
     CordovaError = require('../CordovaError'),
     fs = require('fs');
 
+/**
+ * Array of 'feature' params that are set as properties
+ * @type {string[]}
+ */
+var FEATURE_SPECIAL_PARAMS = [
+  "id",
+  "url",
+  "version"
+];
 
 /** Wraps a config.xml file */
 function ConfigParser(path) {
@@ -214,6 +223,94 @@ ConfigParser.prototype = {
      */
     getSplashScreens: function(platform) {
         return this.getStaticResources(platform, 'splash');
+    },
+
+    /**
+     * Returns a list of features (IDs)
+     * @return {string[]} Array of feature IDs
+     */
+    getFeatureIdList: function () {
+        var features = this.doc.findall('feature'),
+            feature, idTag, id,
+            result = [];
+
+        // Check for valid features that have IDs set
+        for (var i = 0, l = features.length; i < l; ++i) {
+            feature = features[i];
+            idTag = feature.find('./param[@name="id"]');
+            if (null === idTag) {
+                // Invalid feature
+                continue;
+            }
+            id = idTag.attrib.value;
+            if (!!id) {
+                // Has id and id is non-empty
+                result.push(id);
+            }
+        }
+
+        return result;
+    },
+
+    /**
+     * Gets feature info
+     * @param {string} id Feature id
+     * @returns {Feature} Feature object
+     */
+    getFeature: function(id) {
+        console.log(id);
+        if (!id) {
+            return undefined;
+        }
+        var feature = this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
+        if (null === feature) {
+            return;
+        }
+
+        var result = {};
+        result.id = id;
+        result.name = feature.attrib.name;
+
+        // Iterate params and fill-in 'params' structure
+        // For special cases like 'id', 'url, 'version' - copy to the main space
+        result.params = processChildren (
+            'param',
+            function(name, value) {
+                if (!!~FEATURE_SPECIAL_PARAMS.indexOf(name)) {
+                    result[name] = value;
+                }
+            }
+        );
+
+        // Iterate preferences
+        result.preferences = processChildren('preference');
+
+        return result;
+
+        /**
+         * Processes a set of children
+         * having a pair of 'name' and 'value' attributes
+         * filling in 'output' object
+         * @param {string} xPath Search expression
+         * @param {function} [specialProcessing] Performs some additional actions on each valid element
+         * @return {object} A transformed object
+         */
+        function processChildren (xPath, specialProcessing) {
+            var result = {};
+            var needsProcessing = "function" === typeof specialProcessing;
+            var nodes = feature.findall(xPath);
+            nodes.forEach(function(param){
+                var name = param.attrib.name;
+                var value = param.attrib.value;
+                if (name) {
+                    result[name] = value;
+                    if (needsProcessing) {
+                        specialProcessing(name, value);
+                    }
+                }
+            });
+            return result;
+        }
     },
 
     /**
