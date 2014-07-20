@@ -258,13 +258,12 @@ ConfigParser.prototype = {
      * @returns {Feature} Feature object
      */
     getFeature: function(id) {
-        console.log(id);
         if (!id) {
             return undefined;
         }
         var feature = this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
         if (null === feature) {
-            return;
+            return undefined;
         }
 
         var result = {};
