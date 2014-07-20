@@ -64,70 +64,40 @@ function installPluginsFromConfigXML(cfg) {
     var projectRoot = cordova_util.cdProjectRoot();
     var plugins_dir = path.join(projectRoot, 'plugins');
 
-    var features = cfg.doc.findall('feature');
-    // Seems that we have no way to pass preferences per plugin at the moment
-    // As plugin("add") accepts a single options object
-    // If per-plugin preferences are to be done - install plugins
-    // one-by one rather than in a batch way
-    // Using a single var object for all features may lead to preference conflicts
-    var prefVars = {};
-
-    features.forEach(function(feature){
-        var params = feature.findall('param');
-        var param;
-        var pluginId = '';
-        var pluginUrl = '';
-        var pluginVersion = '';
-        var i;
-        for (i = 0; i < params.length; i++) {
-            param = params[i];
-            if (param.attrib.name === 'url') {
-                pluginUrl = param.attrib.value;
-            }
-            if (param.attrib.name === 'id') {
-                pluginId = param.attrib.value;
-            }
-            if (param.attrib.name === 'version') {
-                pluginVersion = param.attrib.value;
-            }
-        }
-
-        // Find plugin preferencies inside features
-        var preferencies = feature.findall('preference');
-        // See above statement on batch installing
-        // var prefVars = {};
-        var pref, prefName, prefVal;
-        for (i = 0; i < preferencies.length; i++) {
-            pref = preferencies[i];
-            prefName = pref.attrib.name;
-            prefVal = pref.attrib.value;
-            // Check format
-            if (typeof prefName === 'string' && typeof prefVal === 'string') {
-                prefVars[prefName] = prefVal;
-            }
-        }
-
-        if (pluginId !== '') {
-            var pluginPath =  path.join(plugins_dir,pluginId);
-            // contents of the plugins folder takes precedence hence
-            // we ignore if the correct version is installed or not.
-            if (!fs.existsSync(pluginPath)) {
-                if ( pluginVersion !== '') {
-                    pluginId = pluginId + '@' + pluginVersion;
-                }
-                events.emit('log', 'Discovered ' + pluginId + ' in config.xml. Installing to the project');
-                // If URL parameter passed - take as a point from where to install
-                pluginsFromConfig.push(pluginUrl !== '' ? pluginUrl : pluginId);
-            }
-        }
-    });
-
-    // Use cli instead of plugman directly ensuring all the hooks
-    // to get fired.
-    // Pass preferences as CLI variables. As described above
-    // the single list of variables used for the whole plugin group
-    if (pluginsFromConfig.length >0) {
-        return plugin('add', pluginsFromConfig, {cli_variables:prefVars});
+    // Get all configured plugins
+    var features = cfg.getFeatureIdList();
+    if (0 === features.length) {
+        return Q.all('No config.xml plugins to install');
     }
-    return Q.all('No config.xml plugins to install');
+
+    return features.reduce(function(soFar, featureId) {
+
+        var pluginPath =  path.join(plugins_dir, featureId);
+        if (fs.existsSync(pluginPath)) {
+            // Plugin already exists
+            return soFar;
+        }
+
+        return soFar.then(function() {
+            events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
+
+            var feature = cfg.getFeature(featureId);
+
+            // Install from given URL if defined or using a plugin id
+            var installFrom = feature.url;
+            if (!installFrom) {
+                installFrom = feature.id;
+                if (!!feature.version) {
+                    installFrom += ('@' + feature.version);
+                }
+            }
+
+            // Add feature preferences as CLI variables if have any
+            var options = "undefined" !== typeof feature.preferences
+                        ? {cli_variables:feature.preferences}
+                        : null;
+
+            return plugin('add', installFrom, options);
+        });
+    }, Q());
 }
