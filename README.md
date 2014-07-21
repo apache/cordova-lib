@@ -19,8 +19,9 @@
 #
 -->
 
+[![Build status](https://ci.appveyor.com/api/projects/status/q9s459ssqvs1t7j6/branch/master)](https://ci.appveyor.com/project/Humbedooh/cordova-lib)
 [![Build Status](https://travis-ci.org/apache/cordova-lib.svg?branch=master)](https://travis-ci.org/apache/cordova-lib)
-&nbsp; [![npm version](http://b.adge.me/npm/v/cordova-lib.svg)](https://www.npmjs.org/package/cordova-lib)
+[![npm version](http://b.adge.me/npm/v/cordova-lib.svg)](https://www.npmjs.org/package/cordova-lib)
 
 # cordova-lib
 Contains npm modules used primarily by [cordova](https://github.com/apache/cordova-cli/) and [plugman](https://github.com/apache/cordova-plugman/).
