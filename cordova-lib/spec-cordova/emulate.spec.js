@@ -21,7 +21,7 @@ var cordova = require('../src/cordova/cordova'),
     superspawn = require('../src/cordova/superspawn'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/cordova/hooker'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     Q = require('q'),
     util = require('../src/cordova/util'),
     os = require('os');
@@ -45,7 +45,7 @@ describe('emulate command', function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
         spyOn(superspawn, 'spawn').andCallFake(Q);
     });

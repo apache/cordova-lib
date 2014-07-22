@@ -26,7 +26,7 @@ var cordova = require('../src/cordova/cordova'),
     lazy_load = require('../src/cordova/lazy_load'),
     ConfigParser = require('../src/configparser/ConfigParser'),
     platforms = require('../src/cordova/platforms'),
-    hooker = require('../src/cordova/hooker'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     xmlHelpers = require('../src/util/xml-helpers'),
     fixtures = path.join(__dirname, 'fixtures'),
     et = require('elementtree'),
@@ -71,7 +71,7 @@ describe('prepare command', function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         supported_platforms.forEach(function(p) {
             parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
             spyOn(platforms[p], 'parser').andReturn({

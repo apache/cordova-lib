@@ -20,7 +20,7 @@ var cordova = require('../src/cordova/cordova'),
     platforms = require('../src/cordova/platforms'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/cordova/hooker'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     superspawn = require('../src/cordova/superspawn'),
     util = require('../src/cordova/util'),
     Q = require('q'),
@@ -45,7 +45,7 @@ describe('compile command', function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         spyOn(superspawn, 'spawn').andCallFake(function() { return Q() });
     });
     describe('failure', function() {
