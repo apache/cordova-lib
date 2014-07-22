@@ -33,7 +33,7 @@ var path          = require('path'),
     events        = require('../events'),
     request       = require('request'),
     config        = require('./config'),
-    hooker        = require('./hooker'),
+    HooksRunner        = require('../hooks/HooksRunner'),
     zlib          = require('zlib'),
     tar           = require('tar'),
     URL           = require('url'),
@@ -186,8 +186,8 @@ function custom(platforms, platform) {
         lib_dir = path.join(url, subdir);
         return Q(lib_dir);
     }
-    // TODO: Replace with unified Hooker
-    return hooker.fire('before_library_download', {
+
+    return HooksRunner.fire('before_library_download', {
         platform:platform,
         url:url,
         id:id,
@@ -247,7 +247,7 @@ function custom(platforms, platform) {
                 shell.mkdir('-p', download_dir);
                 shell.mv('-f', path.join(entry, '*'), download_dir);
                 shell.rm('-rf', tmp_dir);
-                d.resolve(hooker.fire('after_library_download', {
+                d.resolve(HooksRunner.fire('after_library_download', {
                     platform:platform,
                     url:url,
                     id:id,

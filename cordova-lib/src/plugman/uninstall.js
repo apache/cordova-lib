@@ -36,7 +36,7 @@ var path = require('path'),
     platform_modules = require('./platforms'),
     plugman = require('./plugman'),
     promiseutil = require('../util/promise-util'),
-    Hooker = require('../hooks/Hooker'),
+    HooksRunner = require('../hooks/HooksRunner'),
     PluginInfo = require('../PluginInfo'),
     cordovaUtil      = require('../cordova/util');
 
@@ -240,29 +240,33 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     }
 
     var projectRoot = cordovaUtil.isCordova();
-    var pluginInfo = new PluginInfo.PluginInfo(plugin_dir);
 
-    // using unified hooker
-    var hookerOptions = {
-        projectRoot: projectRoot,
-        cordova: { platforms: [ platform ], plugins: options.plugins },
-        plugin: {
-            id: pluginInfo.id,
-            pluginInfo: pluginInfo,
-            platform: platform,
-            dir: plugin_dir
-        }
-    };
+    if(projectRoot) {
+        var pluginInfo = new PluginInfo.PluginInfo(plugin_dir);
 
-    var hooker = new Hooker(projectRoot);
+        // using unified hooksRunner
+        var hooksRunnerOptions = {
+            cordova: { platforms: [ platform ] },
+            plugin: {
+                id: pluginInfo.id,
+                pluginInfo: pluginInfo,
+                platform: platform,
+                dir: plugin_dir
+            }
+        };
 
-    return promise.then(function() {
-        return hooker.fire('before_plugin_uninstall', hookerOptions);
-    }).then(function() {
+        var hooksRunner = new HooksRunner(projectRoot);
+
+        return promise.then(function() {
+            return hooksRunner.fire('before_plugin_uninstall', hooksRunnerOptions);
+        }).then(function() {
+            return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level, options);
+        });
+    } else {
+        // TODO: Need review here - this condition added for plugman install.spec.js and uninstall.spec.js passing -
+        // where should we get projectRoot - via going up from project_dir?
         return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level, options);
-    }).then(function(){
-        return hooker.fire('after_plugin_uninstall', hookerOptions);
-    });
+    }
 }
 
 // Returns a promise.

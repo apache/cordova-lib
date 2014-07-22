@@ -23,7 +23,7 @@
 
 var cordova_util      = require('./util'),
     path              = require('path'),
-    hooker            = require('./hooker'),
+    HooksRunner            = require('../hooks/HooksRunner'),
     superspawn        = require('./superspawn'),
     Q                 = require('q');
 
@@ -32,9 +32,8 @@ module.exports = function emulate(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
-    // TODO: Replace with unified Hooker
-    var hooks = new hooker(projectRoot);
-    return hooks.fire('before_emulate', options)
+    var hooksRunner = new HooksRunner(projectRoot);
+    return hooksRunner.fire('before_emulate', options)
     .then(function() {
         // Run a prepare first!
         return require('./cordova').raw.prepare(options.platforms);
@@ -47,6 +46,6 @@ module.exports = function emulate(options) {
             return superspawn.spawn(cmd, args, {stdio: 'inherit', printCommand: true});
         }));
     }).then(function() {
-        return hooks.fire('after_emulate', options);
+        return hooksRunner.fire('after_emulate', options);
     });
 };

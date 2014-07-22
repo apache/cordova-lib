@@ -33,12 +33,7 @@ function Context(hook, opts) {
     this.hook = hook;
     this.opts = opts;
     this.cmdLine =  process.argv.join(' ');
-    this.commonModules = {
-        Q: Q, fs: fs, path: path, os: os,
-        events: events, plugin: require('../cordova/plugin'),
-        util: require('util'),
-        cordovaUtil: require('../cordova/util')
-    };
+    this.cordova = require('../cordova/cordova');
 }
 
 /**

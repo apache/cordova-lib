@@ -237,11 +237,11 @@ ConfigParser.prototype = {
      */
     getHookScripts: function(hook, platforms) {
         var self = this;
-        var scriptElements = self.doc.findall('./script');
+        var scriptElements = self.doc.findall('./hook');
 
         if(platforms) {
             platforms.forEach(function (platform) {
-                scriptElements = scriptElements.concat(self.doc.findall('./platform[@name="' + platform + '"]/script'));
+                scriptElements = scriptElements.concat(self.doc.findall('./platform[@name="' + platform + '"]/hook'));
             });
         }
 

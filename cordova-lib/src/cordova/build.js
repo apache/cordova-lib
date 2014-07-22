@@ -22,7 +22,7 @@
 */
 
 var cordovaUtil      = require('./util'),
-    Hooker           = require('../hooks/Hooker');
+    HooksRunner           = require('../hooks/HooksRunner');
 
 // Returns a promise.
 module.exports = function build(options) {
@@ -38,16 +38,14 @@ module.exports = function build(options) {
 
     options = cordovaUtil.preProcessOptions(options);
 
-    var hookOptions = { projectRoot: projectRoot, cordova: options };
-
     // fire build hooks
-    var hooker = new Hooker(projectRoot);
-    return hooker.fire('before_build', hookOptions)
+    var hooksRunner = new HooksRunner(projectRoot);
+    return hooksRunner.fire('before_build', options)
     .then(function() {
         return require('./cordova').raw.prepare(options);
     }).then(function() {
         return require('./cordova').raw.compile(options);
     }).then(function() {
-        return hooker.fire('after_build', hookOptions);
+        return hooksRunner.fire('after_build', options);
     });
 };

@@ -28,7 +28,7 @@ var cordova_util      = require('./util'),
     fs                = require('fs'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
-    hooker            = require('./hooker'),
+    HooksRunner            = require('../hooks/HooksRunner'),
     events            = require('../events'),
     Q                 = require('q'),
     plugman           = require('../plugman/plugman');
@@ -56,9 +56,8 @@ function prepare(options) {
     });
     options.paths = paths;
 
-    // TODO: Replace with unified Hooker
-    var hooks = new hooker(projectRoot);
-    return hooks.fire('before_prepare', options)
+    var hooksRunner = new HooksRunner(projectRoot);
+    return hooksRunner.fire('before_prepare', options)
     .then(function() {
 
 
@@ -122,7 +121,7 @@ function prepare(options) {
 
             return parser.update_project(cfg);
         })).then(function() {
-            return hooks.fire('after_prepare', options);
+            return hooksRunner.fire('after_prepare', options);
         });
     });
 }

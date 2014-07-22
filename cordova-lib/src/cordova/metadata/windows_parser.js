@@ -30,7 +30,7 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    hooker        = require('../hooker');
+    HooksRunner        = require('../../hooks/HooksRunner');
 
 module.exports = function windows_parser(project) {
     try {
@@ -244,9 +244,8 @@ module.exports.prototype = {
         var that = this;
         var projectRoot = util.isCordova(process.cwd());
 
-        // TODO: Replace with unified Hooker
-        var hooks = new hooker(projectRoot);
-        return hooks.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
         .then(function() {
             // overrides (merges) are handled in update_www()
             that.add_bom();

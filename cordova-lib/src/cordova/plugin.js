@@ -24,7 +24,7 @@
 var cordova_util  = require('./util'),
     path          = require('path'),
     semver        = require('semver'),
-    hooker        = require('./hooker'),
+    HooksRunner        = require('../hooks/HooksRunner'),
     config        = require('./config'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
@@ -59,8 +59,10 @@ module.exports = function plugin(command, targets, opts) {
     opts.options = opts.options || [];
     opts.plugins = [];
 
-    // TODO: Replace with unified Hooker
-    var hooks = new hooker(projectRoot);
+    // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
+    var HooksRunner = require('../hooks/HooksRunner');
+    var hooksRunner = new HooksRunner(projectRoot);
+
     var platformList = cordova_util.listPlatforms(projectRoot);
 
     // Massage plugin name(s) / path(s)
@@ -105,7 +107,8 @@ module.exports = function plugin(command, targets, opts) {
                 searchPath = undefined;
             }
 
-            return hooks.fire('before_plugin_add', opts)
+            opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+            return hooksRunner.fire('before_plugin_add', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     var pluginsDir = path.join(projectRoot, 'plugins');
@@ -153,14 +156,17 @@ module.exports = function plugin(command, targets, opts) {
                     });
                 }, Q()); // end Q.all
             }).then(function() {
-                return hooks.fire('after_plugin_add', opts);
+                opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+                return hooksRunner.fire('after_plugin_add', opts);
             });
         case 'rm':
         case 'remove':
             if (!targets || !targets.length) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
-            return hooks.fire('before_plugin_rm', opts)
+
+            opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+            return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
                     // Check if we have the plugin.
@@ -194,10 +200,11 @@ module.exports = function plugin(command, targets, opts) {
                     });
                 }, Q());
             }).then(function() {
-                return hooks.fire('after_plugin_rm', opts);
+                opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+                return hooksRunner.fire('after_plugin_rm', opts);
             });
         case 'search':
-            return hooks.fire('before_plugin_search')
+            return hooksRunner.fire('before_plugin_search')
             .then(function() {
                 var plugman = require('../plugman/plugman');
                 return plugman.raw.search(opts.plugins);
@@ -206,16 +213,16 @@ module.exports = function plugin(command, targets, opts) {
                     events.emit('results', plugins[plugin].name, '-', plugins[plugin].description || 'no description provided');
                 }
             }).then(function() {
-                return hooks.fire('after_plugin_search');
+                return hooksRunner.fire('after_plugin_search');
             });
         default:
-            return list(projectRoot, hooks);
+            return list(projectRoot, hooksRunner);
     }
 };
 
-function list(projectRoot, hooks) {
+function list(projectRoot, hooksRunner) {
     var pluginsList = [];
-    return hooks.fire('before_plugin_ls')
+    return hooksRunner.fire('before_plugin_ls')
     .then(function() {
         var pluginsDir = path.join(projectRoot, 'plugins');
         return PluginInfo.loadPluginsDir(pluginsDir);
@@ -258,7 +265,7 @@ function list(projectRoot, hooks) {
         events.emit('results', lines.join('\n'));
     })
     .then(function() {
-        return hooks.fire('after_plugin_ls');
+        return hooksRunner.fire('after_plugin_ls');
     })
     .then(function() {
         return pluginsList;

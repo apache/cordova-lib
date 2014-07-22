@@ -24,8 +24,7 @@ var path = require('path'),
     Q = require('q'),
     plugin  = require('../cordova/plugin'),
     PluginInfo = require('../PluginInfo'),
-    ConfigParser = require('../configparser/ConfigParser'),
-    Context = require('./Context');
+    ConfigParser = require('../configparser/ConfigParser');
 
 /**
  * Implements logic to retrieve hook script files defined in special folders and configuration
