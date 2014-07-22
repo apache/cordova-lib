@@ -191,6 +191,7 @@ module.exports = {
         var xcode_dir = path.dirname(config_file);
         var pluginsDir = path.resolve(xcode_dir, 'Plugins');
         var resourcesDir = path.resolve(xcode_dir, 'Resources');
+        var cordovaVersion = fs.readFileSync(path.join(project_dir, 'CordovaLib', 'VERSION'), 'utf8').trim();
 
         cachedProjectFiles[project_dir] = {
             plugins_dir:pluginsDir,
@@ -200,7 +201,8 @@ module.exports = {
             pbx: pbxPath,
             write: function () {
                 fs.writeFileSync(pbxPath, xcodeproj.writeSync());
-            }
+            },
+            cordovaVersion: cordovaVersion
         };
 
         return cachedProjectFiles[project_dir];
@@ -208,7 +210,6 @@ module.exports = {
     purgeProjectFileCache:function(project_dir) {
         delete cachedProjectFiles[project_dir];
     }
-
 };
 
 function getRelativeDir(file) {

@@ -41,6 +41,7 @@ var fs   = require('fs'),
     plist = require('plist-with-patches'),
     bplist = require('bplist-parser'),
     et   = require('elementtree'),
+    semver = require('semver'),
     _ = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
     platforms = require('./../platforms'),
@@ -52,7 +53,6 @@ var fs   = require('fs'),
 var keep_these_frameworks = [
     'MobileCoreServices.framework',
     'CoreGraphics.framework',
-    'CoreLocation.framework',
     'AssetsLibrary.framework'
 ];
 
@@ -138,6 +138,11 @@ function PlatformMunger_apply_file_munge(file, munge, remove) {
     if ( file === 'framework' && self.platform === 'ios' ) {
         // ios pbxproj file
         var pbxproj = self.config_keeper.get(self.project_dir, self.platform, 'framework');
+        // CoreLocation dependency removed in cordova-ios@3.6.0.
+        var keepFrameworks = keep_these_frameworks;
+        if (semver.lt(pbxproj.cordovaVersion, '3.6.0-dev')) {
+            keepFrameworks = keepFrameworks.concat(['CoreLocation.framework']);
+        }
         for (var src in munge.parents) {
             for (xml_child in munge.parents[src]) {
                 var xml = munge.parents[src][xml_child].xml;
@@ -539,7 +544,9 @@ function ConfigFile_load() {
         self.data = xml_helpers.parseElementtreeSync(filepath);
     } else if (ext == '.pbxproj') {
         self.type = 'pbxproj';
-        self.data = platforms.ios.parseProjectFile(self.project_dir).xcode;
+        var projectFile = platforms.ios.parseProjectFile(self.project_dir);
+        self.data = projectFile.xcode;
+        self.cordovaVersion = projectFile.cordovaVersion;
     } else {
         // plist file
         self.type = 'plist';
