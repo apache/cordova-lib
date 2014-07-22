@@ -206,11 +206,11 @@ function PluginInfo(dirname) {
     // <script type="before_build" src="scripts/beforeBuild.js" />
     self.getHookScripts = getHookScripts;
     function getHookScripts(hook, platforms) {
-        var scriptElements =  self._et.findall('./script');
+        var scriptElements =  self._et.findall('./hook');
 
         if(platforms) {
             platforms.forEach(function (platform) {
-                scriptElements = scriptElements.concat(self._et.findall('./platform[@name="' + platform + '"]/script'));
+                scriptElements = scriptElements.concat(self._et.findall('./platform[@name="' + platform + '"]/hook'));
             });
         }
 

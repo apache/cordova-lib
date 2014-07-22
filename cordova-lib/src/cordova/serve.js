@@ -27,7 +27,7 @@ var cordova_util = require('./util'),
     shell = require('shelljs'),
     platforms     = require('./platforms'),
     ConfigParser = require('../configparser/ConfigParser'),
-    hooker        = require('./hooker'),
+    HooksRunner        = require('../hooks/HooksRunner'),
     Q = require('q'),
     fs = require('fs'),
     http = require('http'),
@@ -247,15 +247,14 @@ module.exports = function server(port) {
     var projectRoot = cordova_util.cdProjectRoot();
     port = +port || 8000;
 
-    // TODO: Replace with unified Hooker
-    var hooks = new hooker(projectRoot);
-    hooks.fire('before_serve')
+    var hooksRunner = new HooksRunner(projectRoot);
+    hooksRunner.fire('before_serve')
     .then(function() {
         // Run a prepare first!
         return require('./cordova').raw.prepare([]);
     }).then(function() {
         var server = launchServer(projectRoot, port);
-        hooks.fire('after_serve').then(function () {
+        hooksRunner.fire('after_serve').then(function () {
             d.resolve(server);
         });
     });

@@ -38,7 +38,7 @@ var path = require('path'),
     shell   = require('shelljs'),
     events = require('../events'),
     plugman = require('./plugman'),
-    Hooker = require('../hooks/Hooker'),
+    HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     cordovaUtil = require('../cordova/util');
 
@@ -323,25 +323,28 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
             var projectRoot = cordovaUtil.isCordova();
 
-            // using unified hooker
-            var hookOptions = {
-                projectRoot: projectRoot,
-                cordova: { platforms: [ platform ], plugins: options.plugins },
-                plugin: {
-                    id: pluginInfo.id,
-                    pluginInfo: pluginInfo,
-                    platform: install.platform,
-                    dir: install.top_plugin_dir
-                }
-            };
+            if(projectRoot) {
+                // using unified hooksRunner
+                var hookOptions = {
+                    cordova: { platforms: [ platform ] },
+                    plugin: {
+                        id: pluginInfo.id,
+                        pluginInfo: pluginInfo,
+                        platform: install.platform,
+                        dir: install.top_plugin_dir
+                    }
+                };
 
-            var hooker = new Hooker(projectRoot);
+                var hooksRunner = new HooksRunner(projectRoot);
 
-            hooker.fire('before_plugin_install', hookOptions).then(function() {
+                hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
+                    return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
+                }).then(function(){
+                    return hooksRunner.fire('after_plugin_install', hookOptions);
+                });
+            } else {
                 return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
-            }).then(function(){
-                return hooker.fire('after_plugin_install', hookOptions);
-            });
+            }
         }
     ).fail(
         function (error) {

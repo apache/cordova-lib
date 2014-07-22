@@ -16,43 +16,114 @@
  specific language governing permissions and limitations
  under the License.
  */
-
-var Q = require('q'),
+var cordovaUtil  = require('../cordova/util'),
+    events = require('../events'),
+    Q = require('q'),
+    scriptsFinder = require('./scriptsFinder'),
+    Context = require('./Context'),
+    CordovaError = require('../CordovaError'),
+    path = require('path'),
     fs = require('fs'),
     os = require('os'),
-    path = require('path'),
-    superspawn = require('../cordova/superspawn'),
-    Context = require('./Context');
+    superspawn = require('../cordova/superspawn');
 
 var isWindows = os.platform().slice(0, 3) === 'win';
 
-module.exports = {
-    /**
-     * Serially fires scripts either via Q(require(pathToScript)(context)) or via child_process.spawn.
-     * Returns promise.
-     */
-    runScriptsSerially: function(scripts, context) {
-        var deferral = new Q.defer();
+/**
+ * Tries to create a HooksRunner for passed project root.
+ * @constructor
+ */
+function HooksRunner(projectRoot) {
+    var root = cordovaUtil.isCordova(projectRoot);
+    if (!root) throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
+    else this.projectRoot = root;
+}
 
-        function executePendingScript() {
-            try {
-                if (scripts.length === 0) {
-                    deferral.resolve();
-                    return;
-                }
-                var nextScript = scripts[0];
-                scripts.shift();
-
-                runScript(nextScript, context).then(executePendingScript, function(err){
-                    deferral.reject(err);
-                });
-            } catch (ex) {
-                deferral.reject(ex);
-            }
-        }
-        executePendingScript();
-        return deferral.promise;
+/**
+ * Fires all event handlers and scripts for a passed hook type.
+ * Returns a promise.
+ */
+HooksRunner.prototype.fire = function fire(hook, opts) {
+    // args check
+    if (!hook) {
+        throw new Error('hook type is not specified');
     }
+    opts = this.prepareOptions(opts);
+
+    // execute hook event listeners first
+    return executeEventHandlersSerially(hook, opts).then(function() {
+        // then execute hook script files
+        var scripts = scriptsFinder.getHookScripts(hook, opts);
+        var context = new Context(hook, opts);
+        return runScriptsSerially(scripts, context);
+    });
+};
+
+/**
+ * Refines passed options so that all required parameters are set.
+ * Returns a promise.
+ */
+HooksRunner.prototype.prepareOptions = function(opts) {
+    opts = opts || {};
+    opts.projectRoot = this.projectRoot;
+    opts.cordova = opts.cordova || {};
+    opts.cordova.platforms = opts.cordova.platforms || opts.platforms || cordovaUtil.listPlatforms(opts.projectRoot);
+    opts.cordova.plugins = opts.cordova.plugins || opts.plugins || cordovaUtil.findPlugins(path.join(opts.projectRoot, 'plugins'));
+    opts.cordova.version = opts.cordova.version || require('../../package').version;
+
+    return opts;
+};
+
+module.exports = HooksRunner;
+
+/**
+ * Executes hook event handlers serially. Doesn't require a HooksRunner to be constructed.
+ * Returns a promise.
+ */
+module.exports.fire = globalFire;
+function globalFire(hook, opts) {
+    opts = opts || {};
+    return executeEventHandlersSerially(hook, opts);
+}
+
+// Returns a promise.
+function executeEventHandlersSerially(hook, opts) {
+    var handlers = events.listeners(hook);
+    if (handlers.length) {
+        // Chain the handlers in series.
+        return handlers.reduce(function(soFar, f) {
+            return soFar.then(function() { return f(opts); });
+        }, Q());
+    } else {
+        return Q(); // Nothing to do.
+    }
+}
+
+/**
+ * Serially fires scripts either via Q(require(pathToScript)(context)) or via child_process.spawn.
+ * Returns promise.
+ */
+function runScriptsSerially (scripts, context) {
+    var deferral = new Q.defer();
+
+    function executePendingScript() {
+        try {
+            if (scripts.length === 0) {
+                deferral.resolve();
+                return;
+            }
+            var nextScript = scripts[0];
+            scripts.shift();
+
+            runScript(nextScript, context).then(executePendingScript, function(err){
+                deferral.reject(err);
+            });
+        } catch (ex) {
+            deferral.reject(ex);
+        }
+    }
+    executePendingScript();
+    return deferral.promise;
 };
 
 /**
@@ -100,6 +171,12 @@ function runScriptViaChildProcessSpawn(script, context) {
     var opts = context.opts;
     var command = script.fullPath;
     var args = [opts.projectRoot];
+
+    if (fs.statSync(script.fullPath).isDirectory()) {
+        events.emit('verbose', 'skipped directory "' + script.fullPath + '" within hook directory');
+        return Q();
+    }
+
     if (isWindows) {
         // TODO: Make shebang sniffing a setting (not everyone will want this).
         var interpreter = extractSheBangInterpreter(script.fullPath);
@@ -113,8 +190,8 @@ function runScriptViaChildProcessSpawn(script, context) {
     var execOpts = {cwd: opts.projectRoot, printCommand: true, stdio: 'inherit'};
     execOpts.env = {};
     execOpts.env.CORDOVA_VERSION = require('../../package').version;
-    execOpts.env.CORDOVA_PLATFORMS = opts.cordova.platforms ? opts.cordova.platforms.join() : '';
-    execOpts.env.CORDOVA_PLUGINS = opts.cordova.plugins ? opts.cordova.plugins.join() : '';
+    execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';
+    execOpts.env.CORDOVA_PLUGINS = opts.plugins ? opts.plugins.join() : '';
     execOpts.env.CORDOVA_HOOK = script.fullPath;
     execOpts.env.CORDOVA_CMDLINE = process.argv.join(' ');
 
