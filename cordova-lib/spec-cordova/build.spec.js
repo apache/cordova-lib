@@ -21,7 +21,7 @@ var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     path = require('path'),
     fs = require('fs'),
-    hooker = require('../src/cordova/hooker'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     Q = require('q'),
     util = require('../src/cordova/util');
 
@@ -49,7 +49,7 @@ describe('build command', function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
         compile_spy = spyOn(cordova.raw, 'compile').andReturn(Q());
     });

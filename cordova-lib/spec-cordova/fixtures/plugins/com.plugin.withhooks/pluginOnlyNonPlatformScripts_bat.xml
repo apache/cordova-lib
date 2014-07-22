@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="com.plugin.withhooks"
+        version="0.0.1">
+    <name>Plugin with hooks</name>
+
+    <hook type="before_plugin_install" src="scripts/beforeInstall01.js" />
+    <hook type="before_plugin_install" src="scripts/beforeInstall2.js" />
+    <hook type="before_plugin_install" src="scripts/beforeInstall.bat" />
+    <hook type="before_plugin_uninstall" src="scripts/beforeUninstall.js" />
+    <hook type="before_build" src="scripts/beforeBuild.js" />
+    <hook type="before_build" src="scripts/beforeBuild.bat" />
+</plugin>

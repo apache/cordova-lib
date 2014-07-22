@@ -22,7 +22,7 @@ var lazy_load = require('../src/cordova/lazy_load'),
     shell = require('shelljs'),
     npmconf = require('npmconf');
     path = require('path'),
-    hooker = require('../src/cordova/hooker'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     request = require('request'),
     fs = require('fs'),
     Q = require('q'),
@@ -78,7 +78,7 @@ describe('lazy_load module', function() {
             mv = spyOn(shell, 'mv');
             exists = spyOn(fs, 'existsSync').andReturn(false);
             readdir = spyOn(fs, 'readdirSync').andReturn(['somefile.txt']);
-            fire = spyOn(hooker, 'fire').andReturn(Q());
+            fire = spyOn(HooksRunner, 'fire').andReturn(Q());
         });
 
         it('should callback with no errors and not fire event hooks if library already exists', function(done) {
