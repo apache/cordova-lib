@@ -75,36 +75,36 @@ To execute custom action when corresponding hook type is fired, use hook type as
 
 ### Config.xml
 
-Hooks can be defined in project's `config.xml` using `<script>` elements, for example:
+Hooks can be defined in project's `config.xml` using `<hook>` elements, for example:
 
-    <script type="before_build" src="scripts/appBeforeBuild.bat" />
-    <script type="before_build" src="scripts/appBeforeBuild.js" />
-    <script type="before_plugin_install" src="scripts/appBeforePluginInstall.js" />
+    <hook type="before_build" src="scripts/appBeforeBuild.bat" />
+    <hook type="before_build" src="scripts/appBeforeBuild.js" />
+    <hook type="before_plugin_install" src="scripts/appBeforePluginInstall.js" />
 
     <platform name="wp8">
-        <script type="before_build" src="scripts/wp8/appWP8BeforeBuild.bat" />
-        <script type="before_build" src="scripts/wp8/appWP8BeforeBuild.js" />
-        <script type="before_plugin_install" src="scripts/wp8/appWP8BeforePluginInstall.js" />
+        <hook type="before_build" src="scripts/wp8/appWP8BeforeBuild.bat" />
+        <hook type="before_build" src="scripts/wp8/appWP8BeforeBuild.js" />
+        <hook type="before_plugin_install" src="scripts/wp8/appWP8BeforePluginInstall.js" />
         ...
     </platform>
 
     <platform name="windows8">
-        <script type="before_build" src="scripts/windows8/appWin8BeforeBuild.bat" />
-        <script type="before_build" src="scripts/windows8/appWin8BeforeBuild.js" />
-        <script type="before_plugin_install" src="scripts/windows8/appWin8BeforePluginInstall.js" />
+        <hook type="before_build" src="scripts/windows8/appWin8BeforeBuild.bat" />
+        <hook type="before_build" src="scripts/windows8/appWin8BeforeBuild.js" />
+        <hook type="before_plugin_install" src="scripts/windows8/appWin8BeforePluginInstall.js" />
         ...
     </platform>
 
 ### Plugin hooks (plugin.xml)
 
-As a plugin developer you can define hook scripts using `<script>` elements in a `plugin.xml` like that:
+As a plugin developer you can define hook scripts using `<hook>` elements in a `plugin.xml` like that:
 
-    <script type="before_plugin_install" src="scripts/beforeInstall.js" />
-    <script type="after_build" src="scripts/afterBuild.js" />
+    <hook type="before_plugin_install" src="scripts/beforeInstall.js" />
+    <hook type="after_build" src="scripts/afterBuild.js" />
 
     <platform name="wp8">
-        <script type="before_plugin_install" src="scripts/wp8BeforeInstall.js" />
-        <script type="before_build" src="scripts/wp8BeforeBuild.js" />
+        <hook type="before_plugin_install" src="scripts/wp8BeforeInstall.js" />
+        <hook type="before_build" src="scripts/wp8BeforeBuild.js" />
         ...
     </platform>
 
@@ -121,11 +121,11 @@ module.exports = function(context) {
 }
 ```
 
-You can make your scipts async using Q, which can be retrieved from `context.commonModules`:
+You can make your scipts async using Q:
 ```javascript
 module.exports = function(context) {
-    var Q = context.commonModules.Q;
-	var deferral = new Q.defer();
+    var Q = context.requireCordovaModule('q');
+    var deferral = new Q.defer();
 
     setTimeout(function(){
     	console.log('hook.js>> end');
@@ -136,7 +136,7 @@ module.exports = function(context) {
 }
 ```
 
-`context` object contains hook type, executed script full path, hook options, common modules, and command-line arguments passed to Cordova:
+`context` object contains hook type, executed script full path, hook options, command-line arguments passed to Cordova and top-level "cordova" object:
 ```json
 {
 	"hook": "before_plugin_install",
@@ -158,14 +158,7 @@ module.exports = function(context) {
 			"dir": "C:\\path\\to\\the\\project\\plugins\\com.plugin.withhooks"
 		}
 	},
-	"commonModules": { 
-		"fs": { ... },
-		"path": { ... },
-		"os": { ... },
-		"events": { ... },
-		"util": { ... },
-		"cordovaUtil": { ... }
-	}
+	"cordova": {...}
 }
 
 ```
@@ -173,8 +166,7 @@ module.exports = function(context) {
 
 You can also require additional Cordova modules in your script using `context.requireCordovaModule` in the following way:
 ```javascript
-var et = context.requireCordovaModule('elementtree');
-var xmlHelpers = context.requireCordovaModule('../util/xml-helpers');
+var Q = context.requireCordovaModule('q');
 ```
 
 __Note__:  new module loader script interface is used for the `.js` files defined via `config.xml` or `plugin.xml` only. 
