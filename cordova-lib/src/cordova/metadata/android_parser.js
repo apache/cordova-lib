@@ -97,6 +97,7 @@ module.exports.prototype = {
 
     handleSplashes:function(config) {
         var resources = config.getSplashScreens('android');
+        var destfilepath;
         // if there are "splash" elements in config.xml
         if (resources.length > 0) {
             var densities = this.deleteDefaultResource('screen.png');
@@ -104,7 +105,7 @@ module.exports.prototype = {
             var res = path.join(this.path, 'res');
 
             if (resources.defaultResource) {
-                var destfilepath = path.join(res, 'drawable', 'screen.png');
+                destfilepath = path.join(res, 'drawable', 'screen.png');
                 events.emit('verbose', 'copying splash icon from ' + resources.defaultResource.src + ' to ' + destfilepath);
                 shell.cp('-f', resources.defaultResource.src, destfilepath);
             }
@@ -113,7 +114,7 @@ module.exports.prototype = {
                 var resource = resources.getByDensity(density);
                 if (resource) {
                     // copy splash screens.
-                    var destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
+                    destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
                     events.emit('verbose', 'copying splash icon from ' + resource.src + ' to ' + destfilepath);
                     shell.cp('-f', resource.src, destfilepath);
                 }

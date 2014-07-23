@@ -253,19 +253,19 @@ ConfigParser.prototype = {
      * @param  {String} id the engine id.
      */
     removeEngine: function(id){
-         var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine/[@id="' +id+'"]');
-         for(var i=0; i < engines.length; i++){
+        var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine/[@id="' +id+'"]');
+        for(var i=0; i < engines.length; i++){
             var childs = this.doc.getroot().getchildren();
             var idx = childs.indexOf(engines[i]);
             if(idx > -1){
                 childs.splice(idx,1);
-             }
-         }
+            }
+        }
     },
     getEngines: function(){
         var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine');
         return engines.map(function(engine){
-           return {'id':engine.attrib.id};
+            return {'id':engine.attrib.id};
         });
     },
     write:function() {

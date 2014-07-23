@@ -218,9 +218,9 @@ function create(dir, id, name, cfg) {
 
         // Add template hooks/ for apps that are missing it
         if (!custom_hooks) {
-          shell.mkdir(path.join(dir, 'hooks'));
-          // Add hooks README.md
-          shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
+            shell.mkdir(path.join(dir, 'hooks'));
+            // Add hooks README.md
+            shell.cp(path.join(__dirname, '..', '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
         }
 
         // Add template config.xml for apps that are missing it

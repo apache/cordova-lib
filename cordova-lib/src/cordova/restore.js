@@ -29,7 +29,6 @@ var cordova_util    = require('./util'),
     plugin           = require('./plugin'),
     events           = require('../events'),
     platform         = require('./platform'),
-    hooker           = require('./hooker'),
     CordovaError     = require('../CordovaError');
 
 module.exports = restore;
@@ -51,9 +50,9 @@ function installPlatformsFromConfigXML(cfg){
     var engines = cfg.getEngines(projectHome);
     var targets = engines.map(function(engine){
             return engine.id;
-    });
+        });
     if(!targets || !targets.length  ){
-        return Q.all("No platforms are listed in config.xml to restore");
+        return Q.all('No platforms are listed in config.xml to restore');
     }
     return platform('add', targets);
 }

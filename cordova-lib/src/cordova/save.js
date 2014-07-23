@@ -23,7 +23,6 @@
 
 
 var path             = require('path'),
-    et               = require('elementtree'),
     Q                = require('q'),
     cordova_util     = require('./util'),
     ConfigParser     = require('../configparser/ConfigParser'),
@@ -34,9 +33,9 @@ var path             = require('path'),
 
 module.exports = save;
 function save(target, opts){
-    var projectHome = cordova_util.cdProjectRoot();//checks if this is a cordova project
+    cordova_util.cdProjectRoot();//checks if this is a cordova project
     if( 'plugins' === target ){
-       return savePlugins(opts);
+        return savePlugins(opts);
     }
     if( 'platforms' === target ){
         return savePlatforms(opts);
@@ -54,7 +53,7 @@ function savePlatforms(opts){
         var promise = new Q({'id':p});
         if(opts.shrinkwrap){//retrieve and save platform version
             var script = path.join(projectHome, 'platforms', p, 'cordova', 'version');
-             promise= superspawn.spawn(script).then(function(v){
+            promise= superspawn.spawn(script).then(function(v){
                 return {'id':p ,'version':v};
             });
         }
@@ -70,7 +69,7 @@ function savePlatforms(opts){
                 configXml.write();
                 events.emit('results', 'Saved platform info for "'+p+'" to config.xml');
             }
-        )
+        );
     }));
 }
 

@@ -60,8 +60,8 @@ function Platform(platformString) {
         this.name = parts[0];
         this.version = parts[1];
     } else {
-      this.name = platformString;
-      if (platforms[this.name]) this.version = platforms[this.name].version;
+        this.name = platformString;
+        if (platforms[this.name]) this.version = platforms[this.name].version;
     }
 }
 
