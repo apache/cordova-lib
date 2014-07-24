@@ -24,7 +24,6 @@
 var cordova_util  = require('./util'),
     path          = require('path'),
     semver        = require('semver'),
-    HooksRunner        = require('../hooks/HooksRunner'),
     config        = require('./config'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),

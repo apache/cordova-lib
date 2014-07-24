@@ -64,16 +64,20 @@ shell.chmod('-R', 'ug+x', hooksDir);
 shell.chmod('-R', 'ug+x', hooksDirDot);
 shell.chmod('-R', 'ug+x', scriptsDir);
 
-jasmine.getEnv().defaultTimeoutInterval = 3000;
-process.chdir(project);
-
-
 describe('HooksRunner', function() {
     var hooksRunner;
     var hookOptions;
     var testPluginInstalledPath;
     var projectRoot;
     var fire;
+
+    beforeEach(function() {
+        process.chdir(project);
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
+    });
 
     it('should throw if provided directory is not a cordova project', function() {
         expect(function() {
@@ -590,10 +594,8 @@ describe('HooksRunner', function() {
             }).fin(done);
         });
     });
-});
 
-describe('cleanup', function() {
-// Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
+    // Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
     it('should not fail during cleanup', function () {
         process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
         if (ext == 'sh') {

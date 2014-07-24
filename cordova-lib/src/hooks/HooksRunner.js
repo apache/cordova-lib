@@ -69,7 +69,13 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     opts.cordova = opts.cordova || {};
     opts.cordova.platforms = opts.cordova.platforms || opts.platforms || cordovaUtil.listPlatforms(opts.projectRoot);
     opts.cordova.plugins = opts.cordova.plugins || opts.plugins || cordovaUtil.findPlugins(path.join(opts.projectRoot, 'plugins'));
-    opts.cordova.version = opts.cordova.version || require('../../package').version;
+
+    try {
+        opts.cordova.version = opts.cordova.version || require('../../package').version;
+    } catch(ex) {
+        events.emit('err', 'HooksRunner could not load package.json: ' + ex.message);
+        console.log('HooksRunner could not load package.json: ' + ex.message);
+    }
 
     return opts;
 };
@@ -124,7 +130,7 @@ function runScriptsSerially (scripts, context) {
     }
     executePendingScript();
     return deferral.promise;
-};
+}
 
 /**
  * Async runs single script file.
