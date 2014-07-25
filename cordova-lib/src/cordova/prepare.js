@@ -120,7 +120,7 @@ function prepare(options) {
     });
 }
 
-var BLACKLIST = ['platform'];
+var BLACKLIST = ['platform', 'feature'];
 var SINGLETONS = ['content', 'author'];
 function mergeXml(src, dest, platform, clobber) {
     // Do nothing for blacklisted tags.
