@@ -456,11 +456,11 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
                     // Get plugin preferences from config features if have any
                     // Pass them as cli_variables to plugman
                     var feature = cfg.getFeature(plugin);
-                    var preferences = feature && feature.preferences;
-                    if (!!preferences) {
-                        events.emit('verbose', 'Found preferences for "' + plugin + '". Processing as cli_variables.');
+                    var variables = feature && feature.variables;
+                    if (!!variables) {
+                        events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                         return {
-                            cli_variables:preferences
+                            cli_variables: variables
                         }
                     }
                     return null;

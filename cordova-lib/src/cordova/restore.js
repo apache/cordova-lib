@@ -93,8 +93,8 @@ function installPluginsFromConfigXML(cfg) {
             }
 
             // Add feature preferences as CLI variables if have any
-            var options = "undefined" !== typeof feature.preferences
-                        ? {cli_variables:feature.preferences}
+            var options = "undefined" !== typeof feature.variables
+                ? {cli_variables: feature.variables}
                         : null;
 
             return plugin('add', installFrom, options);

@@ -83,7 +83,7 @@ describe('config.xml parser', function () {
         describe('feature',function(){
             it('should read feature id list', function() {
                var expectedList = [
-                   "org.apache.cordova.featurewithpreference",
+                   "org.apache.cordova.featurewithvars",
                    "org.apache.cordova.featurewithurl",
                    "org.apache.cordova.featurewithversion",
                    "org.apache.cordova.featurewithurlandversion",
@@ -122,11 +122,11 @@ describe('config.xml parser', function () {
                 expect(feature.params.version).toBeDefined();
                 expect(feature.params.version).toEqual("1.1.1");
             });
-            it('should read feature preferences', function(){
-                var feature = cfg.getFeature("org.apache.cordova.featurewithpreference");
-                expect(feature.preferences).toBeDefined();
-                expect(feature.preferences.pref).toBeDefined();
-                expect(feature.preferences.pref).toEqual("prefvalue");
+            it('should read feature variables', function () {
+                var feature = cfg.getFeature("org.apache.cordova.featurewithvars");
+                expect(feature.variables).toBeDefined();
+                expect(feature.variables.var).toBeDefined();
+                expect(feature.variables.var).toEqual("varvalue");
             });
             it('should allow adding a new feature', function(){
                 cfg.addFeature('myfeature');

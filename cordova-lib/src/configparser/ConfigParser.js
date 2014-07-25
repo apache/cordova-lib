@@ -282,7 +282,7 @@ ConfigParser.prototype = {
         );
 
         // Iterate preferences
-        result.preferences = processChildren('preference');
+        result.variables = processChildren('variable');
 
         return result;
 
