@@ -596,7 +596,7 @@ function isAbsolutePath(path) {
 }
 
 function isRelativePath(path) {
-    return !isAbsolutePath();
+    return !isAbsolutePath(path);
 }
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
