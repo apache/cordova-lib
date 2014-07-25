@@ -63,6 +63,7 @@ function Platform(platformString) {
         this.name = platformString;
         if (platforms[this.name]) this.version = platforms[this.name].version;
     }
+    this.source = 'source' in platforms[this.name] ? platforms[this.name].source : 'npm';
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
@@ -84,7 +85,7 @@ function based_on_config(project_root, platform, opts) {
 // Returns a promise for the path to the lazy-loaded directory.
 function cordova(platform, opts) {
     platform = new Platform(platform);
-    var use_git = opts && opts.usegit || platform.name === 'www';
+    var use_git = opts && opts.usegit || platform.source === 'git';
     if ( use_git ) {
         return module.exports.cordova_git(platform);
     } else {

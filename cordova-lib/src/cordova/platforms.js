@@ -60,6 +60,7 @@ module.exports = {
     'www':{
         hostos : [],
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git',
+        source : 'git',
         version: '3.5.0'
     },
     'firefoxos':{
