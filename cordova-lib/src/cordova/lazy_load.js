@@ -63,7 +63,7 @@ function Platform(platformString) {
         this.name = platformString;
         if (platforms[this.name]) this.version = platforms[this.name].version;
     }
-    this.source = 'source' in platforms[this.name] ? platforms[this.name].source : 'npm';
+    this.source = (this.name in platforms && 'source' in platforms[this.name]) ? platforms[this.name].source : 'npm';
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
