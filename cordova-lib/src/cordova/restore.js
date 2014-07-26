@@ -60,7 +60,6 @@ function installPlatformsFromConfigXML(cfg){
 //returns a Promise
 function installPluginsFromConfigXML(cfg) {
     //Install plugins that are listed on config.xml
-    var pluginsFromConfig = [];
     var projectRoot = cordova_util.cdProjectRoot();
     var plugins_dir = path.join(projectRoot, 'plugins');
 
@@ -93,9 +92,7 @@ function installPluginsFromConfigXML(cfg) {
             }
 
             // Add feature preferences as CLI variables if have any
-            var options = "undefined" !== typeof feature.variables
-                ? {cli_variables: feature.variables}
-                        : null;
+            var options = 'undefined' !== typeof feature.variables ? {cli_variables: feature.variables} : null;
 
             return plugin('add', installFrom, options);
         });

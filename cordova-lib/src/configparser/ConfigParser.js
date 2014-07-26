@@ -32,9 +32,9 @@ var et = require('elementtree'),
  * @type {string[]}
  */
 var FEATURE_SPECIAL_PARAMS = [
-  "id",
-  "url",
-  "version"
+    'id',
+    'url',
+    'version'
 ];
 
 /** Wraps a config.xml file */
@@ -275,7 +275,7 @@ ConfigParser.prototype = {
         result.params = processChildren (
             'param',
             function(name, value) {
-                if (!!~FEATURE_SPECIAL_PARAMS.indexOf(name)) {
+                if (FEATURE_SPECIAL_PARAMS.indexOf(name) >= 0) {
                     result[name] = value;
                 }
             }
@@ -296,7 +296,7 @@ ConfigParser.prototype = {
          */
         function processChildren (xPath, specialProcessing) {
             var result = {};
-            var needsProcessing = "function" === typeof specialProcessing;
+            var needsProcessing = 'function' === typeof specialProcessing;
             var nodes = feature.findall(xPath);
             nodes.forEach(function(param){
                 var name = param.attrib.name;

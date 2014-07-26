@@ -461,7 +461,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
                         events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                         return {
                             cli_variables: variables
-                        }
+                        };
                     }
                     return null;
                 })();
