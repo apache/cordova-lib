@@ -16,17 +16,13 @@ var path = require('path')
   , fileMatcher = regExpSpec || new RegExp(".(js)$", "i")
   , specList
   , finished = /^Finished in ([0-9.]+) seconds/
-  , summary = /^(\d+) tests?, (\d+) assertions?, (\d+) failures?, (\d+) skipped/
+  , summary = /^(\d+) tests?, (\d+) assertions?, (\d+) failures?(?:, (\d+) skipped|)/
   , result = /^([.F-]+)$/
   , stats = {
         '.': 0
       , 'F': 0
       , '-': 0
       , '@': 0
-      , 't': 0
-      , 'a': 0
-      , 'f': 0
-      , 's': 0
     }
   , colors
   , cargs = ['node_modules/jasmine-node/bin/jasmine-node']
@@ -78,6 +74,7 @@ while(args.length) {
         match = args.shift();
         break;
     case '--matchall':
+        cargs.push(arg);
         matchall = true;
         break;
     case '--junitreport':
@@ -209,6 +206,12 @@ function prettyPrint(data) {
     terminalReporter.print_(terminalReporter.stringWithColor_(data, colors[data]));
 }
 
+function accum(notes, field, record) {
+    if (notes[record] !== undefined) {
+        stats[field] = (field in stats && stats[field] || 0) + +notes[record];
+    }
+}
+
 function count(data) {
     switch (data) {
     case '.':
@@ -225,10 +228,10 @@ function count(data) {
         if (time) {
             stats['@'] += +time[1] * 1000;
         } else if (notes) {
-            stats.t += +notes[1];
-            stats.a += +notes[2];
-            stats.f += +notes[3];
-            stats.s += +notes[4];
+            accum(notes, 't', 1);
+            accum(notes, 'a', 2);
+            accum(notes, 'f', 3);
+            accum(notes, 's', 4);
         }
     }
 }
@@ -308,10 +311,26 @@ function plural(n, word) {
 
 function report() {
     var time = 'Finished in ' + stats['@'] / 1000 + ' seconds\n'
-      , summary = [ plural(stats.t, 'test')
-                  , plural(stats.a, 'assertion')
-                  , plural(stats.f, 'failure')
-                  , stats.s + ' skipped\n'].join(', ');
+      , summary = []
+      , labels = {
+         't': ['test', plural],
+         'a': ['assertion', plural],
+         'f': ['failure', plural],
+         's': ['skipped']
+      }
+      ;
+    Object.keys(labels).forEach(function (v) {
+        if (v in stats) {
+            var label = labels[v][0]
+              , val = stats[v];
+            if (labels[v].length > 1) {
+                summary.push(labels[v][1](val, label));
+            } else {
+                summary.push(val + ' ' + label);
+            }
+        }
+    });
+    summary = summary.join(', ') + '\n';
     process.stdout.write('\n\n');
     process.stdout.write(failures.join('\n'));
     process.stdout.write('\n\n');
