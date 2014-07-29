@@ -85,9 +85,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 function possiblyFetch(id, plugins_dir, options) {
 
     // if plugin is a relative path, check if it already exists
-    var plugin_src_dir = path.join(plugins_dir, id);
-    if( isAbsolutePath(id) )
-        plugin_src_dir = id;
+    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, id);
 
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
