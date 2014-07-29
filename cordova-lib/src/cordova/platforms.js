@@ -81,6 +81,11 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
         version: 'master',
         subdirectory: 'windows'
+    },
+    'browser':{
+        parser : './metadata/browser_parser',
+        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git',
+        version: 'master'
     }
 };
 
