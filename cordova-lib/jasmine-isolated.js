@@ -25,10 +25,14 @@ var path = require('path')
       , '@': 0
     }
   , colors
-  , cargs = ['node_modules/jasmine-node/bin/jasmine-node']
+  , cargs = [
+      'node_modules/jasmine-node/bin/jasmine-node'
+    , '--noColor'
+    ]
   , failureLine = /^(\s+)\d+(\).*)/
   , failureNumber = 0
   , failures = []
+  , started
   ;
 
 // Disable if we're not on a TTY
@@ -288,7 +292,8 @@ scheduled.promise.then(function () {
 });
 
 function addOne() {
-    var task = specList.pop();
+    //var task = specList.pop();
+    var task = specList.splice(Math.floor(Math.random() * specList.length), 1)[0];
     if (!task) {
         scheduled.resolve();
         return;
@@ -310,7 +315,9 @@ function plural(n, word) {
 }
 
 function report() {
-    var time = 'Finished in ' + stats['@'] / 1000 + ' seconds\n'
+    var ellapsed = (Date.now() - started)
+      , time = 'Finished in ' + ellapsed / 1000 + ' seconds\n'
+      + 'Internal test time would be ' + stats['@'] / 1000 + ' seconds\n'
       , summary = []
       , labels = {
          't': ['test', plural],
@@ -343,4 +350,5 @@ function report() {
     process.stdout.write('\n\n');
 }
 
+started = Date.now();
 work();
