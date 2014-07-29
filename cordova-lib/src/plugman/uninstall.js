@@ -238,12 +238,12 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     }
 
     return promise.then(function() {
-        return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level);
+        return handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, options.www_dir, plugins_dir, plugin_dir, options.is_top_level, options);
     });
 }
 
 // Returns a promise.
-function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, www_dir, plugins_dir, plugin_dir, is_top_level) {
+function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, www_dir, plugins_dir, plugin_dir, is_top_level, options) {
     var platform_modules = require('./platforms');
     var handler = platform_modules[platform];
     var platformTag = plugin_et.find('./platform[@name="'+platform+'"]');
@@ -316,6 +316,10 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         // queue up the plugin so prepare can remove the config changes
         config_changes.add_uninstalled_plugin_to_prepare_queue(plugins_dir, plugin_id, platform, is_top_level);
         // call prepare after a successful uninstall
-        plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
+        if (options.browserify) {
+            plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
+        } else {
+            plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
+        }
     });
 }

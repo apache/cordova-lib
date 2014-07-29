@@ -124,6 +124,7 @@ module.exports = function plugin(command, targets, opts) {
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
                                     options = {
                                         cli_variables: opts.cli_variables || {},
+                                        browserify: opts.browserify || false,
                                         searchpath: searchPath,
                                         noregistry: opts.noregistry,
                                     },
