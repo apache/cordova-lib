@@ -24,6 +24,8 @@
 var shell   = require('shelljs'),
     fs      = require('fs'),
     url     = require('url'),
+    underscore = require('underscore'),
+    semver = require('semver'),
     PluginInfo    = require('../PluginInfo'),
     plugins = require('./util/plugins'),
     CordovaError  = require('../CordovaError'),
@@ -104,10 +106,9 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         if (fs.existsSync(plugin_dir)) {
             p = Q(plugin_dir);
         } else {
-            // If there is no such local path, it's a plugin id.
+            // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
-            loadLocalPlugins(options.searchpath);
-            var pinfo = localPlugins[plugin_src];
+            var pinfo = findLocalPlugin(plugin_src, options.searchpath);
             if (pinfo) {
                 p = Q(pinfo.dir);
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
@@ -154,15 +155,72 @@ function checkID(expected_id, dir) {
 // As of this writing loadLocalPlugins() is never called with different
 // search paths and such case would not be handled properly.
 function loadLocalPlugins(searchpath) {
-    if (localPlugins) return;
+    if (localPlugins) {
+        // localPlugins already populated, nothing to do.
+        // just in case, make sure it was loaded with the same search path
+        if ( !underscore.isEqual(localPlugins.searchpath, searchpath) ) {
+            var msg =
+                'loadLocalPlugins called twice with different search paths.' +
+                'Support for this is not implemented.';
+            throw new Error(msg);
+        }
+        return;
+    }
+
+    // Populate localPlugins object.
     localPlugins = {};
+    localPlugins.searchpath = searchpath;
+    localPlugins.plugins = {};
+
     searchpath.forEach(function(dir) {
         var ps = PluginInfo.loadPluginsDir(dir);
         ps.forEach(function(p) {
-            localPlugins[p.id] = p;
+            var versions = localPlugins.plugins[p.id] || [];
+            versions.push(p);
+            localPlugins.plugins[p.id] = versions;
         });
     });
 }
+
+
+// If a plugin is fund in local search path, return a PluginInfo for it.
+// Ignore plugins that don't satisfy the required version spec.
+// If several versions are present in search path, return the latest.
+// Examples of accepted plugin_src strings:
+//      org.apache.cordova.file
+//      org.apache.cordova.file@>=1.2.0
+function findLocalPlugin(plugin_src, searchpath) {
+    loadLocalPlugins(searchpath);
+    var id = plugin_src;
+    var versionspec = '*';
+    if (plugin_src.indexOf('@') != -1) {
+        var parts = plugin_src.split('@');
+        id = parts[0];
+        versionspec = parts[1];
+    }
+
+    var latest = null;
+    var versions = localPlugins.plugins[id];
+
+    if (!versions) return null;
+
+    versions.forEach(function(pinfo) {
+        // Ignore versions that don't satisfy the the requested version range.
+        if (!semver.satisfies(pinfo.version, versionspec)) {
+            return;
+        }
+        if (!latest) {
+            latest = pinfo;
+            return;
+        }
+        if (semver.gt(pinfo.version, latest.version)) {
+            latest = pinfo;
+        }
+
+    });
+    return latest;
+}
+
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_dir, plugins_dir, link) {
