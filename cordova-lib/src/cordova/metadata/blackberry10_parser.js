@@ -29,8 +29,7 @@ var fs            = require('fs'),
     child_process = require('child_process'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
-    events        = require('../../events'),
-    lazy_load     = require('../lazy_load');
+    events        = require('../../events');
 
 module.exports = function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {
@@ -39,24 +38,6 @@ module.exports = function blackberry_parser(project) {
     this.path = project;
     this.config_path = path.join(this.path, 'www', 'config.xml');
     this.xml = new ConfigParser(this.config_path);
-};
-
-// Returns a promise.
-module.exports.check_requirements = function(project_root, lib_path) {
-    if (lib_path === undefined) {
-        return lazy_load.based_on_config(project_root, 'blackberry10').then(function (lib_path) {
-            return module.exports.check_requirements(project_root, lib_path);
-        });
-    }
-    var d = Q.defer();
-    child_process.exec('"' + path.join(lib_path, 'bin', 'check_reqs') + '"', function(err, output, stderr) {
-        if (err) {
-            d.reject(new CordovaError('Requirements check failed: ' + output + stderr));
-        } else {
-            d.resolve();
-        }
-    });
-    return d.promise;
 };
 
 module.exports.prototype = {
