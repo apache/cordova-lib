@@ -25,7 +25,6 @@ var platforms = require('../../src/cordova/platforms'),
     et = require('elementtree'),
     xmlHelpers = require('../../src/util/xml-helpers'),
     Q = require('q'),
-    child_process = require('child_process'),
     config = require('../../src/cordova/config'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
@@ -52,13 +51,10 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
 
 describe('blackberry10 project parser', function() {
     var proj = '/some/path';
-    var exists, custom, sh;
+    var exists, custom;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
         custom = spyOn(config, 'has_custom_path').andReturn(false);
-        sh = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
-            (cb || opts)(0, '', '');
-        });
         spyOn(ConfigParser.prototype, 'write');
         spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function() {
             return new et.ElementTree(et.XML(TEST_XML));
