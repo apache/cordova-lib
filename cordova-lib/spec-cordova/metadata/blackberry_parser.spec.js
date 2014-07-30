@@ -93,21 +93,6 @@ describe('blackberry10 project parser', function() {
         });
     });
 
-    describe('check_requirements', function() {
-        it('should fire a callback if the blackberry-deploy shell-out fails', function(done) {
-            sh.andCallFake(function(cmd, opts, cb) {
-                (cb || opts)(1, 'no bb-deploy dewd!');
-            });
-            errorWrapper(platforms.blackberry10.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('no bb-deploy dewd');
-            });
-        });
-        it('should fire a callback with no error if shell out is successful', function(done) {
-            wrapper(platforms.blackberry10.parser.check_requirements(proj), done, function() {
-                expect(1).toBe(1);
-            });
-        });
-    });
     describe('instance', function() {
         var p, cp, rm, mkdir, is_cordova, write, read;
         var bb_proj = path.join(proj, 'platforms', 'blackberry10');
