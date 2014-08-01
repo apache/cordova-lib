@@ -29,7 +29,8 @@ var platforms = require('../../src/cordova/platforms'),
     config = require('../../src/cordova/config'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     CordovaError = require('../../src/CordovaError'),
-    cordova = require('../../src/cordova/cordova');
+    cordova = require('../../src/cordova/cordova'),
+    HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
@@ -158,12 +159,13 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, svn;
+            var config, www, overrides, svn, fire;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 svn = spyOn(util, 'deleteSvnFolders');
                 exists.andReturn(false);
+                fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
             });
             it('should call update_from_config', function(done) {
                 wrapper(p.update_project(), done, function() {

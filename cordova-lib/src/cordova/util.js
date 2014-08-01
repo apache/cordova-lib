@@ -74,7 +74,7 @@ function isCordova(dir) {
         // Prefer PWD over cwd so that symlinked dirs within your PWD work correctly (CB-5687).
         var pwd = process.env.PWD;
         var cwd = process.cwd();
-        if (pwd && pwd != cwd) {
+        if (pwd && pwd != cwd && pwd != 'undefined') {
             return this.isCordova(pwd) || this.isCordova(cwd);
         }
         return this.isCordova(cwd);
