@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-throw Error('test error');
+process.exit(1);

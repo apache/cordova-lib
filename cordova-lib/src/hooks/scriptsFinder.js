@@ -107,15 +107,7 @@ function getApplicationHookScriptsFromDir(dir) {
  */
 function getScriptsFromConfigXml(hook, opts) {
     var configPath = cordovaUtil.projectConfig(opts.projectRoot);
-    var configXml;
-
-    try {
-        configXml = new ConfigParser(configPath);
-    } catch(ex) {
-        events.emit('err', 'scriptsFinder could not load config.xml: ' + ex.message);
-        console.log('scriptsFinder could not load config.xml: ' + ex.message);
-        return [];
-    }
+    var configXml = new ConfigParser(configPath);
 
     return configXml.getHookScripts(hook, opts.cordova.platforms).map(function(scriptElement) {
         return {
