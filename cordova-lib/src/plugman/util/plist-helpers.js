@@ -23,12 +23,12 @@
 
 // contains PLIST utility functions
 
-var plist = require('plist-with-patches');
+var plist = require('plist');
 
 // adds node to doc at selector
 module.exports.graftPLIST = graftPLIST;
 function graftPLIST(doc, xml, selector) {
-    var obj = plist.parseStringSync('<plist>'+xml+'</plist>');
+    var obj = plist.parse('<plist>'+xml+'</plist>');
 
     var node = doc[selector];
     if (node && Array.isArray(node) && Array.isArray(obj))
@@ -42,7 +42,7 @@ function graftPLIST(doc, xml, selector) {
 // removes node from doc at selector
 module.exports.prunePLIST = prunePLIST;
 function prunePLIST(doc, xml, selector) {
-    var obj = plist.parseStringSync('<plist>'+xml+'</plist>');
+    var obj = plist.parse('<plist>'+xml+'</plist>');
 
     pruneOBJECT(doc, selector, obj);
 
