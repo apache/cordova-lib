@@ -29,7 +29,7 @@ var fs            = require('fs'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
-    plist         = require('plist-with-patches'),
+    plist         = require('plist'),
     Q             = require('q'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
@@ -65,7 +65,7 @@ module.exports.prototype = {
 
         // Update package id (bundle id)
         var plistFile = path.join(this.cordovaproj, this.originalName + '-Info.plist');
-        var infoPlist = plist.parseFileSync(plistFile);
+        var infoPlist = plist.parse(fs.readFileSync(plistFile, 'utf8'));
         infoPlist['CFBundleIdentifier'] = pkg;
 
         // Update version (bundle version)
