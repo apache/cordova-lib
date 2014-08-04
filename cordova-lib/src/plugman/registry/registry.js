@@ -31,6 +31,7 @@ var npm = require('npm'),
     Q = require('q'),
     request = require('request'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
+    events = require('../../events'),
     plugmanConfigDir = path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
 
@@ -91,10 +92,13 @@ module.exports = {
             }).then(function() {
                 // With  no --force we'll get a 409 (conflict) when trying to
                 // overwrite an existing package@version.
-                npm.config.set('force', true);
+                //npm.config.set('force', true);
+                events.emit('log', 'attempting to publish plugin to registry');
                 return Q.ninvoke(npm.commands, 'publish', args);
-            }).fin(function() {
+            }).then(function() {
                 fs.unlink(path.resolve(args[0], 'package.json'));
+            }).catch(function(err){
+                return err;
             });
         });
     },
@@ -125,10 +129,11 @@ module.exports = {
         }).then(function() {
             // --force is required to delete an entire plugin with all versions.
             // Without --force npm can only unpublish a specific version.
-            npm.config.set('force', true);
+            //npm.config.set('force', true);
             // Note, npm.unpublish does not report back errors (at least some)
             // e.g.: `unpublish non.existent.plugin`
             // will complete with no errors.
+            events.emit('log', 'attempting to unpublish plugin from registry');
             return Q.ninvoke(npm.commands, 'unpublish', args);
         }).then(function() {
             // npm.unpublish removes the cache for the unpublished package
@@ -177,6 +182,7 @@ module.exports = {
             // Plugin info should be accessed as info[version]. If a version
             // specifier like >=x.y.z was used when calling npm view, info
             // can contain several versions, but we take the first one here.
+            console.log(info);
             var version = Object.keys(info)[0];
             return info[version];
         });

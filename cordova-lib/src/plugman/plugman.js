@@ -178,9 +178,13 @@ plugman.commands =  {
         if(!plugin_path) {
             return console.log(plugman.help());
         }
-        plugman.publish(plugin_path, function(err) {
-            if (err) throw err;
-            else console.log('Plugin published');
+        plugman.publish(plugin_path, function(arg1, err) {
+            if (err) {
+                console.log('Error Code: '+err.code);
+                throw err;
+            } else {
+                console.log('Plugin published');
+            }
         });
     },
 
@@ -189,8 +193,11 @@ plugman.commands =  {
         if(!plugin) {
             return console.log(plugman.help());
         }
-        plugman.unpublish(plugin, function(err) {
-            if (err) throw err;
+        plugman.unpublish(plugin, function(arg1, err) {
+            if (err) {
+                console.log('Error Code: ' + err.code);
+                throw err;
+            }
             else console.log('Plugin unpublished');
         });
     },
