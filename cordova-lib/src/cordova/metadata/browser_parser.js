@@ -30,7 +30,7 @@ var fs = require('fs'),
     Q = require('q'),
     ConfigParser = require('../../configparser/ConfigParser');
 
-module.exports = function firefoxos_parser(project) {
+module.exports = function browser_parser(project) {
     this.path = project;
 };
 
@@ -114,7 +114,7 @@ module.exports.prototype = {
             delete manifest.type;
         }
 
-        var icons = config.getIcons('firefoxos');
+        var icons = config.getIcons('browser');
         // if there are icon elements in config.xml
         if (icons) {
             manifest.icons = {};
@@ -176,7 +176,7 @@ module.exports.prototype = {
 
     update_overrides: function() {
         var projectRoot = util.isCordova(this.path);
-        var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'firefoxos');
+        var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'browser');
         if(fs.existsSync(mergesPath)) {
             var overrides = path.join(mergesPath, '*');
             shell.cp('-rf', overrides, this.www_dir());
