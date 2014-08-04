@@ -38,7 +38,7 @@
 var fs   = require('fs'),
     path = require('path'),
     glob = require('glob'),
-    plist = require('plist-with-patches'),
+    plist = require('plist'),
     bplist = require('bplist-parser'),
     et   = require('elementtree'),
     semver = require('semver'),
@@ -554,8 +554,9 @@ function ConfigFile_load() {
         //       We always write out text plist, not binary.
         //       Do we still need to support binary plist?
         //       If yes, use plist.parseStringSync() and read the file once.
-        self.plist_module = (isBinaryPlist(filepath) ? bplist : plist);
-        self.data = self.plist_module.parseFileSync(filepath);
+        self.data = isBinaryPlist(filepath) ?
+                bplist.parseBuffer(fs.readFileSync(filepath)) :
+                plist.parse(fs.readFileSync(filepath, 'utf8'));
     }
 }
 
