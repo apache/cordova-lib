@@ -97,8 +97,10 @@ function prepare(options) {
 
             if (options.browserify) {
                 plugman.prepare = require('../plugman/prepare-browserify');
+                plugman.prepare(platformPath, platform, plugins_dir, false, true);
+            } else {
+                plugman.prepare(platformPath, platform, plugins_dir);
             }
-            plugman.prepare(platformPath, platform, plugins_dir);
 
             // Make sure that config changes for each existing plugin is in place
             var munger = new plugman.config_changes.PlatformMunger(platform, platformPath, plugins_dir);
