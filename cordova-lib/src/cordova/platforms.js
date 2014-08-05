@@ -31,7 +31,7 @@ module.exports = {
     'android' : {
         parser : './metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.5.0'
+        version: '3.5.1'
     },
     'ubuntu' : {
         hostos : ['linux'],
