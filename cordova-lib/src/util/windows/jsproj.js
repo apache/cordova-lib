@@ -135,7 +135,7 @@ jsproj.prototype = {
         relative_path.forEach(function(filePath) {
             filePath = filePath.split('/').join('\\');
             filePath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + filePath : filePath;
-            
+
             var content = new et.Element('Content');
             content.attrib.Include = filePath;
             item.append(content);

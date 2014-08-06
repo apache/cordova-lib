@@ -357,7 +357,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
         var parent = change.attrib['parent'];
         var after = change.attrib['after'];
         var xmls = change.getchildren();
-		xmls.forEach(function(xml) {
+        xmls.forEach(function(xml) {
             // 1. stringify each xml
             var stringified = (new et.ElementTree(xml)).write({xml_declaration:false});
             // interp vars

@@ -102,10 +102,10 @@ plugman.commands =  {
         var cli_variables = {};
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
-                    var tokens = variable.split('=');
-                    var key = tokens.shift().toUpperCase();
-                    if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
-                });
+                var tokens = variable.split('=');
+                var key = tokens.shift().toUpperCase();
+                if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
+            });
         }
         var opts = {
             subdir: '.',
@@ -208,10 +208,10 @@ plugman.commands =  {
         var cli_variables = {};
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
-                    var tokens = variable.split('=');
-                    var key = tokens.shift().toUpperCase();
-                    if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
-                });
+                var tokens = variable.split('=');
+                var key = tokens.shift().toUpperCase();
+                if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
+            });
         }
         plugman.create( cli_opts.name, cli_opts.plugin_id, cli_opts.plugin_version, cli_opts.path || '.', cli_variables );
     },
