@@ -20,6 +20,8 @@
 -->
 # Cordova-lib Release Notes
 
+### 0.21.7 (Aug 05, 2014)
+* CB-7260 Get cordova-android 3.5.1 instead of 3.5.0
 
 ### 0.21.4 (Jun 23, 2014)
 * CB-3571, CB-2606: support for splashscreens
