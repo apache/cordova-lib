@@ -94,7 +94,13 @@ function prepare(options) {
             // Call plugman --prepare for this platform. sets up js-modules appropriately.
             var plugins_dir = path.join(projectRoot, 'plugins');
             events.emit('verbose', 'Calling plugman.prepare for platform "' + platform + '"');
-            plugman.prepare(platformPath, platform, plugins_dir);
+
+            if (options.browserify) {
+                plugman.prepare = require('../plugman/prepare-browserify');
+                plugman.prepare(platformPath, platform, plugins_dir, false, true);
+            } else {
+                plugman.prepare(platformPath, platform, plugins_dir);
+            }
 
             // Make sure that config changes for each existing plugin is in place
             var munger = new plugman.config_changes.PlatformMunger(platform, platformPath, plugins_dir);

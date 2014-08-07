@@ -569,7 +569,11 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         // queue up the plugin so prepare knows what to do.
         config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, pluginInfo.id, platform, filtered_variables, options.is_top_level);
         // call prepare after a successful install
-        plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+        if (options.browserify) {
+            plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+        } else {
+            plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+        }
 
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // WIN!

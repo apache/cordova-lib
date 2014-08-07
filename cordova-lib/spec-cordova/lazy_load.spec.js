@@ -43,9 +43,15 @@ describe('lazy_load module', function() {
         };
     });
     describe('cordova method (loads stock cordova libs)', function() {
-        var custom;
+        var custom,
+            version;
         beforeEach(function() {
             custom = spyOn(lazy_load, 'custom').andReturn(Q(path.join('lib','dir')));
+            version = platforms.android.version;
+            platforms.android.version = "3.14.15.9265";
+        });
+        afterEach(function () {
+            platforms.android.version = version;
         });
         it('should throw if platform is not a stock cordova platform', function(done) {
             lazy_load.cordova('atari').then(function() {

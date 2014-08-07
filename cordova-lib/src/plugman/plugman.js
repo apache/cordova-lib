@@ -70,6 +70,7 @@ addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
 addProperty(plugman, 'prepare', './prepare');
+addProperty(plugman, 'prepareBrowserify', './prepare-browserify');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);
@@ -101,10 +102,10 @@ plugman.commands =  {
         var cli_variables = {};
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
-                    var tokens = variable.split('=');
-                    var key = tokens.shift().toUpperCase();
-                    if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
-                });
+                var tokens = variable.split('=');
+                var key = tokens.shift().toUpperCase();
+                if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
+            });
         }
         var opts = {
             subdir: '.',
@@ -177,9 +178,13 @@ plugman.commands =  {
         if(!plugin_path) {
             return console.log(plugman.help());
         }
-        plugman.publish(plugin_path, function(err) {
-            if (err) throw err;
-            else console.log('Plugin published');
+        plugman.publish(plugin_path, function(arg1, err) {
+            if (err) {
+                console.log('Error Code: '+err.code);
+                throw err;
+            } else {
+                console.log('Plugin published');
+            }
         });
     },
 
@@ -188,8 +193,11 @@ plugman.commands =  {
         if(!plugin) {
             return console.log(plugman.help());
         }
-        plugman.unpublish(plugin, function(err) {
-            if (err) throw err;
+        plugman.unpublish(plugin, function(arg1, err) {
+            if (err) {
+                console.log('Error Code: ' + err.code);
+                throw err;
+            }
             else console.log('Plugin unpublished');
         });
     },
@@ -200,10 +208,10 @@ plugman.commands =  {
         var cli_variables = {};
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
-                    var tokens = variable.split('=');
-                    var key = tokens.shift().toUpperCase();
-                    if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
-                });
+                var tokens = variable.split('=');
+                var key = tokens.shift().toUpperCase();
+                if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
+            });
         }
         plugman.create( cli_opts.name, cli_opts.plugin_id, cli_opts.plugin_version, cli_opts.path || '.', cli_variables );
     },

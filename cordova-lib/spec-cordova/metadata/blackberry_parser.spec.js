@@ -25,7 +25,6 @@ var platforms = require('../../src/cordova/platforms'),
     et = require('elementtree'),
     xmlHelpers = require('../../src/util/xml-helpers'),
     Q = require('q'),
-    child_process = require('child_process'),
     config = require('../../src/cordova/config'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
@@ -52,13 +51,10 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
 
 describe('blackberry10 project parser', function() {
     var proj = '/some/path';
-    var exists, custom, sh;
+    var exists, custom;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
         custom = spyOn(config, 'has_custom_path').andReturn(false);
-        sh = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
-            (cb || opts)(0, '', '');
-        });
         spyOn(ConfigParser.prototype, 'write');
         spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function() {
             return new et.ElementTree(et.XML(TEST_XML));
@@ -93,21 +89,6 @@ describe('blackberry10 project parser', function() {
         });
     });
 
-    describe('check_requirements', function() {
-        it('should fire a callback if the blackberry-deploy shell-out fails', function(done) {
-            sh.andCallFake(function(cmd, opts, cb) {
-                (cb || opts)(1, 'no bb-deploy dewd!');
-            });
-            errorWrapper(platforms.blackberry10.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('no bb-deploy dewd');
-            });
-        });
-        it('should fire a callback with no error if shell out is successful', function(done) {
-            wrapper(platforms.blackberry10.parser.check_requirements(proj), done, function() {
-                expect(1).toBe(1);
-            });
-        });
-    });
     describe('instance', function() {
         var p, cp, rm, mkdir, is_cordova, write, read;
         var bb_proj = path.join(proj, 'platforms', 'blackberry10');
