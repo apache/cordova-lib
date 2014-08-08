@@ -55,6 +55,130 @@ function removeLibraryReference(projectProperties, libraryPath) {
     }
 }
 
+function updateGradleSettingsFile(settingsFile, updateFn) {
+    try {
+        var settings = fs.readFileSync(settingsFile, {encoding: 'utf8'});
+        var lines = settings.split('\n');
+        for (var i = 0; i < lines.length; ++i) {
+            var line = lines[i].trim();
+            if (line.substr(0,8) == 'include ') {
+                var libs = line.substr(8).split(/,\s*/);
+                updateFn(libs);
+                lines[i] = 'include ' + libs.join(', ');
+                break;
+            }
+        }
+        fs.writeFileSync(settingsFile, lines.join('\n'), {encoding: 'utf8'});
+    } catch (e) {
+        if (e.code != 'ENOENT') {
+            throw e;
+        }
+    }
+}
+
+function addGradleLibraryToSettings(settingsFile, gradleLibraryPath) {
+    updateGradleSettingsFile(settingsFile, function(libs) {
+        var exists = false;
+        var index;
+        for (index = 0; index < libs.length; ++index) {
+            if (libs[index] == gradleLibraryPath) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            libs.splice(1, 0, gradleLibraryPath);
+        }
+    });
+}
+
+function removeGradleLibraryFromSettings(settingsFile, gradleLibraryPath) {
+    updateGradleSettingsFile(settingsFile, function(libs) {
+        var exists = false;
+        var index;
+        for (index = 0; index < libs.length; ++index) {
+            if (libs[index] == gradleLibraryPath) {
+                exists = true;
+                break;
+            }
+        }
+        if (exists) {
+            libs.splice(index, 1);
+        }
+    });
+}
+
+function updateGradleLibrariesFile(librariesFile, updateFn) {
+    try {
+        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'});
+        var lines = libraries.split('\n');
+        var openLine, closeLine;
+        var exists = false;
+        for (var i = 0; i < lines.length; ++i) {
+            var line = lines[i];
+            if (line.indexOf('dependencies {') > -1) {
+                openLine = i;
+            }
+            if ((typeof closeLine == 'undefined') && (typeof openLine !== 'undefined') && line.indexOf('}') > -1) {
+                closeLine = i;
+                break;
+            }
+        }
+        if ((typeof closeLine !== 'undefined') && (typeof openLine !== 'undefined')) {
+            updateFn(lines, openLine, closeLine);
+            fs.writeFileSync(librariesFile, lines.join('\n'), {encoding: 'utf8'});
+        } else {
+            console.log('Cannot update libraries.gradle');
+        }
+    } catch (e) {
+        if (e.code != 'ENOENT') {
+            throw e;
+        }
+    }
+}
+
+function addGradleLibraryToLibraries(librariesFile, gradleLibraryPath) {
+    updateGradleLibrariesFile(librariesFile, function(lines, openLine, closeLine) {
+        var exists = false;
+        for (var i = openLine; i < closeLine; ++i) {
+            if (lines[i].indexOf('compile project(' + gradleLibraryPath + ')') > -1) {
+                exists = true;
+            }
+        }
+        if (!exists) {
+            lines.splice(closeLine, 0, '    compile project(' + gradleLibraryPath + ')');
+        }
+    });
+}
+
+function removeGradleLibraryFromLibraries(librariesFile, gradleLibraryPath) {
+    updateGradleLibrariesFile(librariesFile, function(lines, openLine, closeLine) {
+        var foundLine;
+        var exists = false;
+        for (var i = 0; i < lines.length; ++i) {
+            if (lines[i].indexOf('compile project(' + gradleLibraryPath + ')') > -1) {
+                exists = true;
+                foundLine = i;
+            }
+        }
+        if (exists) {
+            lines.splice(foundLine, 1);
+        }
+    });
+}
+
+function addGradleLibraryReference(settingsFile, librariesFile, libraryPathComponents) {
+    var gradleLibraryPath = '\':' + libraryPathComponents.join(':') + '\'';
+    addGradleLibraryToSettings(settingsFile, gradleLibraryPath);
+    addGradleLibraryToLibraries(librariesFile, gradleLibraryPath);
+}
+
+function removeGradleLibraryReference(settingsFile, librariesFile, libraryPathComponents) {
+    var gradleLibraryPath = '\':' + libraryPathComponents.join(':') + '\'';
+    removeGradleLibraryFromSettings(settingsFile, gradleLibraryPath);
+    removeGradleLibraryFromLibraries(librariesFile, gradleLibraryPath);
+}
+
 function AndroidProject() {
     this._propertiesEditors = {};
     this._subProjectDirs = {};
@@ -75,6 +199,10 @@ AndroidProject.prototype = {
         var subProperties = this._getPropertiesFile(subProjectFile);
         subProperties.set('target', parentProperties.get('target'));
 
+        var gradleSettingsFile = path.resolve(parentDir, 'settings.gradle');
+        var gradleLibrariesFile = path.resolve(parentDir, 'libraries.gradle');
+        addGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
+
         this._subProjectDirs[subDir] = true;
         this._dirty = true;
     },
@@ -82,6 +210,9 @@ AndroidProject.prototype = {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         removeLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
+        var gradleSettingsFile = path.resolve(parentDir, 'settings.gradle');
+        var gradleLibrariesFile = path.resolve(parentDir, 'libraries.gradle');
+        removeGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
         delete this._subProjectDirs[subDir];
         this._dirty = true;
     },
