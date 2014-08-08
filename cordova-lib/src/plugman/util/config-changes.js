@@ -421,8 +421,8 @@ ConfigKeeper.prototype.get = ConfigKeeper_get;
 function ConfigKeeper_get(project_dir, platform, file) {
     var self = this;
 
-    //This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
-    //https://issues.apache.org/jira/browse/CB-6414
+    // This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
+    // https://issues.apache.org/jira/browse/CB-6414
     if(file == 'config.xml' && platform == 'android'){
         file = 'res/xml/config.xml';
     }
