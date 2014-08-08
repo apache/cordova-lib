@@ -797,7 +797,7 @@ function process_munge(obj, createParents, func, keys /* or key1, key2 .... */ )
 }
 
 // All values from munge are added to base as
-// base[file][selector][child] += base[file][selector][child]
+// base[file][selector][child] += munge[file][selector][child]
 // Returns a munge object containing values that exist in munge
 // but not in base.
 function increment_munge(base, munge) {
@@ -820,7 +820,7 @@ function increment_munge(base, munge) {
 }
 
 // Update the base munge object as
-// base[file][selector][child] -= base[file][selector][child]
+// base[file][selector][child] -= munge[file][selector][child]
 // nodes that reached zero value are removed from base and added to the returned munge
 // object.
 function decrement_munge(base, munge) {
