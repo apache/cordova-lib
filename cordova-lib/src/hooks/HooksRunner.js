@@ -61,7 +61,6 @@ HooksRunner.prototype.fire = function fire(hook, opts) {
 
 /**
  * Refines passed options so that all required parameters are set.
- * Returns a promise.
  */
 HooksRunner.prototype.prepareOptions = function(opts) {
     opts = opts || {};
@@ -110,26 +109,11 @@ function executeEventHandlersSerially(hook, opts) {
  * Returns promise.
  */
 function runScriptsSerially (scripts, context) {
-    var deferral = new Q.defer();
-
-    function executePendingScript() {
-        try {
-            if (scripts.length === 0) {
-                deferral.resolve();
-                return;
-            }
-            var nextScript = scripts[0];
-            scripts.shift();
-
-            runScript(nextScript, context).then(executePendingScript, function(err){
-                deferral.reject(err);
-            });
-        } catch (ex) {
-            deferral.reject(ex);
-        }
-    }
-    executePendingScript();
-    return deferral.promise;
+    return scripts.reduce(function(prevScriptPromise, nextScript) {
+        return prevScriptPromise.then(function() { 
+            return runScript(nextScript, context);
+        });
+    }, Q());
 }
 
 /**

@@ -71,8 +71,8 @@ function getPluginsHookScripts(hook, opts) {
     // retrieve scripts exclusive for this plugin.
     if(opts.plugin) {
         events.emit('debug', 'Executing "' + hook + '"  hook for "' + opts.plugin.id + '" on ' + opts.plugin.platform + '.');
-
-        return getPluginScriptFiles(opts.plugin, hook, [ opts.plugin.platform ]);
+        // if plugin hook is not run for specific platform then use all available platforms
+        return getPluginScriptFiles(opts.plugin, hook, opts.plugin.platform  ? [opts.plugin.platform] : opts.cordova.platforms);
     }
 
     events.emit('debug', 'Executing "' + hook + '"  hook for all plugins.');
