@@ -62,10 +62,13 @@ function uninstallQueuedPlugins(platform_json, wwwDir) {
 function generateFinalBundle(platform, libraryRelease, outReleaseFile) {
 
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
+    //TODO: Need to generate commitID
     var commitId = 'N/A';
     var time = new Date().valueOf();
+    //TODO: Need to generate platform version
+    var platformVersion = '3.6.0';
 
-    writeLicenseHeader(outReleaseFileStream, platform, commitId);
+    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
     var releaseBundle = libraryRelease.bundle();
 
@@ -110,7 +113,9 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     if(!is_top_level) return;
 
     requireTr.platform = platform;
-    var libraryRelease = bundle(platform, false, 'N/A');
+    var platformVersion = '3.6.0';
+    var commitId = '10';
+    var libraryRelease = bundle(platform, false, commitId, platformVersion);
 
     platform_json = config_changes.get_platform_json(plugins_dir, platform);
     var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
