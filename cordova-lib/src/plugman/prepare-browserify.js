@@ -30,6 +30,7 @@ var platform_modules   = require('./platforms'),
     windows            = require('./platforms/windows'),
     common             = require('./platforms/common'),
     fs                 = require('fs'),
+    childProcess       = require('child_process'),
     shell              = require('shelljs'),
     util               = require('util'),
     events             = require('../events'),
@@ -38,7 +39,8 @@ var platform_modules   = require('./platforms'),
     prepareNamespace   = require('./util/prepare-namespace'),
     bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
     requireTr          = require('cordova-js/tasks/lib/require-tr'),
-    writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header');
+    writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
+    computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id');
 
 function uninstallQueuedPlugins(platform_json, wwwDir) {
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
@@ -59,13 +61,12 @@ function uninstallQueuedPlugins(platform_json, wwwDir) {
     }
 }
 
-function generateFinalBundle(platform, libraryRelease, outReleaseFile) {
+function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
 
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
-    var commitId = 'N/A';
     var time = new Date().valueOf();
 
-    writeLicenseHeader(outReleaseFileStream, platform, commitId);
+    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
     var releaseBundle = libraryRelease.bundle();
 
@@ -110,88 +111,101 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     if(!is_top_level) return;
 
     requireTr.platform = platform;
-    var libraryRelease = bundle(platform, false, 'N/A');
-
-    platform_json = config_changes.get_platform_json(plugins_dir, platform);
-    var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
-    events.emit('verbose', 'Iterating over installed plugins:', plugins);
-
-    plugins && plugins.forEach(function(plugin) {
-        var pluginDir = path.join(plugins_dir, plugin),
-            pluginXML = path.join(pluginDir, 'plugin.xml');
-        if (!fs.existsSync(pluginXML)) {
-            plugman.emit('warn', 'Missing file: ' + pluginXML);
-            return;
-        }
-        var xml = xml_helpers.parseElementtreeSync(pluginXML);
-
-        var plugin_id = xml.getroot().attrib.id;
-
-        // add the plugins dir to the platform's www.
-        var platformPluginsDir = path.join(wwwDir, 'plugins');
-        // XXX this should not be here if there are no js-module. It leaves an empty plugins/ directory
-        shell.mkdir('-p', platformPluginsDir);
-
-        var jsModules = xml.findall('./js-module');
-        var assets = xml.findall('asset');
-        var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
-
-        if (platformTag) {
-            assets = assets.concat(platformTag.findall('./asset'));
-            jsModules = jsModules.concat(platformTag.findall('./js-module'));
-        }
-
-        // Copy www assets described in <asset> tags.
-        assets = assets || [];
-        assets.forEach(function(asset) {
-            common.asset.install(asset, pluginDir, wwwDir);
-        });
-        jsModules.forEach(function(module) {
-            // Copy the plugin's files into the www directory.
-            // NB: We can't always use path.* functions here, because they will use platform slashes.
-            // But the path in the plugin.xml and in the cordova_plugins.js should be always forward slashes.
-            var pathParts = module.attrib.src.split('/');
-
-            var fsDirname = path.join.apply(path, pathParts.slice(0, -1));
-            var fsDir = path.join(platformPluginsDir, plugin_id, fsDirname);
-            shell.mkdir('-p', fsDir);
-
-            // Read in the file, prepend the cordova.define, and write it back out.
-            var moduleName = plugin_id + '.';
-            if (module.attrib.name) {
-                moduleName += module.attrib.name;
+    var platformVersion;
+    computeCommitId(function(commitId) { 
+        //run version script for each platform to get platformVersion
+        childProcess.exec(path.join(process.cwd(), 'platforms/' + platform + '/cordova/version'), function(err, stdout, stderr) {
+            if (err) {
+                platformVersion = 'N/A';
+                console.log('Error running platform version script');
             } else {
-                moduleName += path.basename(module.attrib.src, '.js');
-            }
+                platformVersion = stdout.trim();
+                console.log('platformVersion: ' + platformVersion);
+                
+                var libraryRelease = bundle(platform, false, commitId, platformVersion);
 
-            var fsPath = path.join.apply(path, pathParts);
-            var scriptPath = path.join(pluginDir, fsPath);
+                platform_json = config_changes.get_platform_json(plugins_dir, platform);
+                var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
+                events.emit('verbose', 'Iterating over installed plugins:', plugins);
 
-            requireTr.addModule({symbol: moduleName, path: scriptPath});
+                plugins && plugins.forEach(function(plugin) {
+                    var pluginDir = path.join(plugins_dir, plugin),
+                        pluginXML = path.join(pluginDir, 'plugin.xml');
+                    if (!fs.existsSync(pluginXML)) {
+                        plugman.emit('warn', 'Missing file: ' + pluginXML);
+                        return;
+                    }
+                    var xml = xml_helpers.parseElementtreeSync(pluginXML);
 
-            module.getchildren().forEach(function(child) {
-                if (child.tag.toLowerCase() == 'clobbers') {
-                    fs.appendFileSync(scriptPath,
-                      prepareNamespace(child.attrib.target, 'c'),
-                      'utf-8');
-                } else if (child.tag.toLowerCase() == 'merges') {
-                    fs.appendFileSync(scriptPath,
-                      prepareNamespace(child.attrib.target, 'm'),
-                      'utf-8');
-                }
-            });
-            scripts.push(scriptPath);
+                    var plugin_id = xml.getroot().attrib.id;
+
+                    // add the plugins dir to the platform's www.
+                    var platformPluginsDir = path.join(wwwDir, 'plugins');
+                    // XXX this should not be here if there are no js-module. It leaves an empty plugins/ directory
+                    shell.mkdir('-p', platformPluginsDir);
+
+                    var jsModules = xml.findall('./js-module');
+                    var assets = xml.findall('asset');
+                    var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
+
+                    if (platformTag) {
+                        assets = assets.concat(platformTag.findall('./asset'));
+                        jsModules = jsModules.concat(platformTag.findall('./js-module'));
+                    }
+
+                    // Copy www assets described in <asset> tags.
+                    assets = assets || [];
+                    assets.forEach(function(asset) {
+                        common.asset.install(asset, pluginDir, wwwDir);
+                    });
+                    jsModules.forEach(function(module) {
+                        // Copy the plugin's files into the www directory.
+                        // NB: We can't always use path.* functions here, because they will use platform slashes.
+                        // But the path in the plugin.xml and in the cordova_plugins.js should be always forward slashes.
+                        var pathParts = module.attrib.src.split('/');
+
+                        var fsDirname = path.join.apply(path, pathParts.slice(0, -1));
+                        var fsDir = path.join(platformPluginsDir, plugin_id, fsDirname);
+                        shell.mkdir('-p', fsDir);
+
+                        // Read in the file, prepend the cordova.define, and write it back out.
+                        var moduleName = plugin_id + '.';
+                        if (module.attrib.name) {
+                            moduleName += module.attrib.name;
+                        } else {
+                            moduleName += path.basename(module.attrib.src, '.js');
+                        }
+
+                        var fsPath = path.join.apply(path, pathParts);
+                        var scriptPath = path.join(pluginDir, fsPath);
+
+                        requireTr.addModule({symbol: moduleName, path: scriptPath});
+
+                        module.getchildren().forEach(function(child) {
+                            if (child.tag.toLowerCase() == 'clobbers') {
+                                fs.appendFileSync(scriptPath,
+                                  prepareNamespace(child.attrib.target, 'c'),
+                                  'utf-8');
+                            } else if (child.tag.toLowerCase() == 'merges') {
+                                fs.appendFileSync(scriptPath,
+                                  prepareNamespace(child.attrib.target, 'm'),
+                                  'utf-8');
+                            }
+                        });
+                        scripts.push(scriptPath);
+                    });
+                });
+
+                libraryRelease.transform(requireTr.transform);
+
+                scripts.forEach(function(script) {
+                    libraryRelease.add(script);
+                });
+
+                var outReleaseFile = path.join(wwwDir, 'cordova.js');
+
+                generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
+            } 
         });
     });
-
-    libraryRelease.transform(requireTr.transform);
-
-    scripts.forEach(function(script) {
-        libraryRelease.add(script);
-    });
-
-    var outReleaseFile = path.join(wwwDir, 'cordova.js');
-
-    generateFinalBundle(platform, libraryRelease, outReleaseFile);
-
 };
