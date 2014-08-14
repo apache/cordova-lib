@@ -111,6 +111,9 @@ function add(hooks, projectRoot, targets, opts) {
                 // Package names for Cordova platforms look like "cordova-ios".
                 var nameParts = pkg.name.split('-');
                 var name = nameParts[1];
+                if (name == 'amazon') {
+                    name = 'amazon-fireos';
+                }
                 if( !platforms[name] ) {
                     throw new CordovaError(msg);
                 }
