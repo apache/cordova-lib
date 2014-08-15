@@ -147,7 +147,6 @@ describe('windows8 project parser', function() {
             beforeEach(function() {
                 config = spyOn(parser, 'update_from_config');
                 www = spyOn(parser, 'update_www');
-                www = spyOn(parser, 'update_project');
                 shellls = spyOn(shell, 'ls').andReturn([]);
                 svn = spyOn(util, 'deleteSvnFolders');
                 exists.andReturn(false);
