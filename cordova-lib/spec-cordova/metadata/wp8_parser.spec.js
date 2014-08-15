@@ -147,9 +147,9 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_www method', function() {
-            var update_csproj;
+            var update_proj;
             beforeEach(function() {
-                update_csproj = spyOn(p, 'update_csproj');
+                update_proj = spyOn(p, 'update_proj');
             });
             it('should rm project-level www and cp in platform agnostic www', function() {
                 p.update_www();
@@ -163,7 +163,7 @@ describe('wp8 project parser', function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 svn = spyOn(util, 'deleteSvnFolders');
-                csproj = spyOn(p, 'update_csproj');
+                csproj = spyOn(p, 'update_proj');
                 exists.andReturn(false);
             });
             it('should call update_from_config', function(done) {
