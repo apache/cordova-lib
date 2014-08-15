@@ -227,8 +227,8 @@ handleIcons: function(config) {
         // Update the version by changing the AndroidManifest android:versionName
         var version = config.version();
         var versionCode = config.android_versionCode() || default_versionCode(version);
-        manifest.getroot().attrib["android:versionName"] = version;
-        manifest.getroot().attrib["android:versionCode"] = versionCode;
+        manifest.getroot().attrib['android:versionName'] = version;
+        manifest.getroot().attrib['android:versionCode'] = versionCode;
 
         // Update package name by changing the AndroidManifest id and moving the entry class around to the proper package directory
         var pkg = config.packageName();
@@ -243,22 +243,22 @@ handleIcons: function(config) {
         if (orientationPref) {
             switch (orientationPref) {
                 case 'default':
-                    delete act.attrib["android:screenOrientation"];
+                    delete act.attrib['android:screenOrientation'];
                     break;
                 case 'portrait':
-                    act.attrib["android:screenOrientation"] = 'portrait';
+                    act.attrib['android:screenOrientation'] = 'portrait';
                     break;
                 case 'landscape':
-                    act.attrib["android:screenOrientation"] = 'landscape';
+                    act.attrib['android:screenOrientation'] = 'landscape';
             }
         }
 
         // Set android:launchMode in AndroidManifest
         var androidLaunchModePref = this.findAndroidLaunchModePreference(config);
         if (androidLaunchModePref) {
-            act.attrib["android:launchMode"] = androidLaunchModePref;
+            act.attrib['android:launchMode'] = androidLaunchModePref;
         } else { // User has (explicitly) set an invalid value for AndroidLaunchMode preference
-            delete act.attrib["android:launchMode"]; // use Android default value (standard)
+            delete act.attrib['android:launchMode']; // use Android default value (standard)
         }
 
         // Write out AndroidManifest.xml
