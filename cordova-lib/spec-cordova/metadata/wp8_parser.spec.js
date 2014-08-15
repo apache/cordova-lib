@@ -158,12 +158,11 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, svn, proj;
+            var config, www, overrides, svn;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 svn = spyOn(util, 'deleteSvnFolders');
-                proj = spyOn(p, 'update_project');
                 exists.andReturn(false);
             });
             it('should call update_from_config', function(done) {
