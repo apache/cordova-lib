@@ -39,8 +39,8 @@ module.exports = {
     package_name:function(project_dir) {
         // CB-6976 Windows Universal Apps. To make platform backward compatible
         // with old template we look for package.appxmanifest file as well.
-        var manifestPath = fs.existsSync(path.join(project_dir, 'package.store.appxmanifest')) ?
-            path.join(project_dir, 'package.store.appxmanifest') :
+        var manifestPath = fs.existsSync(path.join(project_dir, 'package.windows.appxmanifest')) ?
+            path.join(project_dir, 'package.windows.appxmanifest') :
             path.join(project_dir, 'package.appxmanifest');
 
         var manifest = xml_helpers.parseElementtreeSync(manifestPath);

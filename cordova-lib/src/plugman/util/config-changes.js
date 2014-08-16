@@ -201,7 +201,7 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
             // New windows template separate manifest files for Windows8, Windows8.1 and WP8.1
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
             for (var subst in substs) {
                 events.emit('verbose', 'Applying munge to ' + substs[subst]);
                 self.apply_file_munge(substs[subst], munge.files[file], true);
@@ -260,7 +260,7 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
             for (var subst in substs) {
                 events.emit('verbose', 'Applying munge to ' + substs[subst]);
                 self.apply_file_munge(substs[subst], munge.files[file]);
