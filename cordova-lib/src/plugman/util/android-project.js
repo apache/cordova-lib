@@ -201,7 +201,9 @@ AndroidProject.prototype = {
 
         var gradleSettingsFile = path.resolve(parentDir, 'settings.gradle');
         var gradleLibrariesFile = path.resolve(parentDir, 'libraries.gradle');
-        addGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
+        if (fs.existsSync(gradleSettingsFile)) {
+            addGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
+        }
 
         this._subProjectDirs[subDir] = true;
         this._dirty = true;
@@ -212,7 +214,9 @@ AndroidProject.prototype = {
         removeLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
         var gradleSettingsFile = path.resolve(parentDir, 'settings.gradle');
         var gradleLibrariesFile = path.resolve(parentDir, 'libraries.gradle');
-        removeGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
+        if (fs.existsSync(gradleSettingsFile)) {
+            removeGradleLibraryReference(gradleSettingsFile, gradleLibrariesFile, module.exports.getRelativeLibraryPath(parentDir, subDir).split('/'));
+        }
         delete this._subProjectDirs[subDir];
         this._dirty = true;
     },
