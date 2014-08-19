@@ -61,7 +61,7 @@ module.exports.prototype = {
         };
 
         var authorNode = config.doc.find('author');
-        var authorUrl = authorNode.attrib['href'];
+        var authorUrl = authorNode && authorNode.attrib['href'];
 
         if (authorUrl) {
             manifest.developer.url = authorUrl;
