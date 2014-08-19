@@ -40,6 +40,7 @@ var path          = require('path'),
     Q             = require('q'),
     npm           = require('npm'),
     util          = require('./util'),
+    superspawn    = require('./superspawn'),
     stubplatform  = {
         url    : undefined,
         version: undefined,
@@ -55,15 +56,22 @@ exports.custom = custom;
 exports.based_on_config = based_on_config;
 
 function Platform(platformString) {
+    var name,
+        platform,
+        parts,
+        version;
     if (platformString.indexOf('@') != -1) {
-        var parts = platformString.split('@');
-        this.name = parts[0];
-        this.version = parts[1];
+        parts = platformString.split('@');
+        name = parts[0];
+        version = parts[1];
     } else {
-        this.name = platformString;
-        if (platforms[this.name]) this.version = platforms[this.name].version;
+        name = platformString;
     }
-    this.source = (this.name in platforms && 'source' in platforms[this.name]) ? platforms[this.name].source : 'npm';
+    platform = _.extend({}, platforms[name]);
+    this.name = name;
+    this.version = version || platform.version;
+    this.package = 'package' in platform ? platform.package : 'cordova-' + name;
+    this.source = 'source' in platform ? platform.source : 'npm';
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
@@ -125,7 +133,7 @@ function cordova_npm(platform) {
         return Q(git_dload_dir);
     }
 
-    var pkg = 'cordova-' + platform.name + '@' + platform.version;
+    var pkg = platform.package + '@' + platform.version;
     return exports.npm_cache_add(pkg);
 }
 
@@ -141,7 +149,11 @@ function npm_cache_add(pkg) {
         return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
     }).then(function(info) {
         var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
-        return pkgDir;
+        var d = Q.defer();
+        superspawn.spawn('npm', ['install', '--production'], {cwd: pkgDir}).then(function () {
+            d.resolve(pkgDir);
+        });
+        return d.promise;
     });
 }
 
