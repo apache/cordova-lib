@@ -53,10 +53,16 @@ module.exports = {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var dest = path.join('build', 'src', 'plugins', plugin_id, path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
+
+            var cmake = path.join(project_dir, 'build', 'CMakeLists.txt');
+            shell.exec('touch ' + cmake);
         },
         uninstall:function(source_el, project_dir, plugin_id) {
             var dest = path.join(project_dir, 'build', 'src', 'plugins', plugin_id);
             shell.rm(path.join(dest, path.basename(source_el.attrib.src)));
+
+            var cmake = path.join(project_dir, 'build', 'CMakeLists.txt');
+            shell.exec('touch ' + cmake);
         }
     },
     'header-file':{
