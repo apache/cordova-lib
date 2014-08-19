@@ -350,12 +350,16 @@ function platform(command, targets, opts) {
             var pPath = path.resolve(t);
             if (fs.existsSync(pPath)) return;
             // Neither path, nor platform name - throw.
-            var msg = 'Platform "' + t +
+            var msg;
+            if (/[~:/\\.]/.test(t)) {
+                msg = 'Platform path "' + t + '" not found.';
+            } else {
+                msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'
                 ;
+            }
             throw new CordovaError(msg);
-
         });
     } else if (command == 'add' || command == 'rm') {
         msg = 'You need to qualify `add` or `remove` with one or more platforms!';
