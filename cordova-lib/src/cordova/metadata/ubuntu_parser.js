@@ -87,14 +87,18 @@ module.exports.prototype = {
                          architecture: arch,
                          description: sanitize(this.config.description()) };
 
-        var name = this.config.name().replace(/\n/g, ' '); //FIXME: escaping
-        var content = '[Desktop Entry]\nName=' + name + '\nExec=./cordova-ubuntu www/\nIcon=qmlscene\nTerminal=false\nType=Application\nX-Ubuntu-Touch=true';
+        var name = sanitize(this.config.name()); //FIXME: escaping
+        var content = '[Desktop Entry]\nName=' + name + '\nExec=./cordova-ubuntu www/\nTerminal=false\nType=Application\nX-Ubuntu-Touch=true';
 
-        name = sanitize(this.config.name()); //FIXME: escaping
-        content = '[Desktop Entry]\nName=' + name + '\nExec=./cordova-ubuntu www/\nTerminal=false\nType=Application\nX-Ubuntu-Touch=true';
-
-        if (this.config.doc.find('icon') && this.config.doc.find('icon').attrib.src && fs.existsSync(path.join(this.path, 'www', this.config.doc.find('icon').attrib.src))) {
-            content += '\nIcon=www/' + this.config.doc.find('icon').attrib.src;
+        if (this.config.doc.find('icon') && this.config.doc.find('icon').attrib.src) {
+            var iconPath = path.join(this.path, 'www', this.config.doc.find('icon').attrib.src);
+            if (fs.existsSync(iconPath))
+                content += '\nIcon=www/' + this.config.doc.find('icon').attrib.src;
+            else
+                return Q.reject(new Error('icon does not exist: ' + iconPath));
+        } else {
+            content += '\nIcon=qmlscene';
+            console.warn('missing icon element in config.xml');
         }
         fs.writeFileSync(path.join(this.path, 'manifest.json'), JSON.stringify(manifest));
         fs.writeFileSync(path.join(this.path, 'cordova.desktop'), content);
