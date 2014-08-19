@@ -92,10 +92,14 @@ module.exports = {
     'resource-file':{
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var dest = path.join('qml', path.basename(source_el.attrib.src));
+            if (source_el.attrib['target-dir'])
+                dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
         },
         uninstall:function(source_el, project_dir, plugin_id) {
             var dest = path.join(project_dir, 'qml');
+            if (source_el.attrib['target-dir'])
+                dest = path.join(project_dir, source_el.attrib['target-dir']);
             shell.rm(path.join(dest, path.basename(source_el.attrib.src)));
         }
     },
