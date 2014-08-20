@@ -22,5 +22,6 @@
     <icon id="logo" src="logo.png" width="255" height="255" />
     <platform name="android">
         <icon src="logo-android.png" width="255" height="255" density="mdpi" />
-    </platform>    
+        <preference name="android-minSdkVersion" value="10" />
+    </platform>
 </widget>
