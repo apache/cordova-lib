@@ -200,13 +200,6 @@ function PluginInfo(dirname) {
         var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, cloneAttribs);
         return libFiles;
     }
-
-    // Tell whether there is a <platform> section for the given platform.
-    self.hasPlatformSection = hasPlatformSection;
-    function hasPlatformSection(platform) {
-        var platformTag = pelem.find('./platform[@name="' + platform + '"]');
-        return !!platformTag;
-    }
     ///// End of PluginInfo methods /////
 
 
