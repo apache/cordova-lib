@@ -131,10 +131,10 @@ jsproj.prototype = {
         }
         // make ItemGroup to hold file.
         var item = new et.Element('ItemGroup');
-
+        var me = this;
         relative_path.forEach(function(filePath) {
             filePath = filePath.split('/').join('\\');
-            filePath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + filePath : filePath;
+            filePath = me.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + filePath : filePath;
 
             var content = new et.Element('Content');
             content.attrib.Include = filePath;

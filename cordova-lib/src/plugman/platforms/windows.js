@@ -69,7 +69,7 @@ module.exports = {
         },
         uninstall:function(source_el, project_dir, plugin_id, project_file) {
             var dest = path.join('www', 'plugins', plugin_id,
-                                 source_el.attrib['target-dir'] ? source_el.attrib['target-dir'] : '',
+                                 source_el.attrib['target-dir'] || '',
                                  path.basename(source_el.attrib['src']));
             common.removeFile(project_dir, dest);
             // remove reference to this file from csproj.
