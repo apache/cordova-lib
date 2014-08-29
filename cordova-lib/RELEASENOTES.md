@@ -79,3 +79,104 @@
 
 ### 0.21.1
 Initial release v0.21.1 (picks up from the same version number as plugman was).
+
+### 0.21.8 (Aug 29, 2014)
+* CB-5535: Remove "--arc" from ios platform creation args
+* CB-7416 Fixes file path reference when adding new source file
+* CB-7416 handleInstall tests for null platformTag. removed uncalled 'hasPlatformSection' from PluginInfo.js
+* Remove use of path.join for manifest.launch_path
+* CB-7347 Improve cordova platform add /path/to handling
+* CB-7118 (fix jshint warnings)
+* CB-7114 Android: add support of min/max/target SDK to config.xml
+* CB-7118 Use updated version of node-xcode
+* CB-7118 iOS: add target-device and MinimumOSVersion support to config.xml
+* ubuntu: support incremental builds
+* ubuntu: support target-dir for resource-file
+* ubuntu: use common.copyFile
+* ubuntu: check icon existence
+* ffos: Make author url optional
+* CB-7142 Add <variable> to <feature> for "plugin restore" command
+* Set git clone depth to 10 for Travis to make it faster
+* windows: update as per changed manifest file names
+* Don't spy and expect it to call the other spy ...
+* Well that looks like an error
+* Fixing failing tests: update_proj should be update_project
+* Fix failing tests. update_jsproj and update_csproj are now just update_proj
+* Fix jshint errors in amazon_fireos_parser : mixed single/double quotes
+* CB-6699 Include files from www folder via single element (use ** glob pattern)
+* Allow plugin modules to be .json files
+* Taking care of dashes in amazon-fireos platform name.
+* Upleveled amazon-fireos changes.
+* Fix link/copy parent check for windows
+* Style fixes - comments
+* Fix error in comments for munge functions
+* Add link to BuildBot at ci.cordova.io in README
+* CB-7255 Fixed writing plist unescaped
+* Style fixes - white space only
+* Add JSCS config file
+* CB-7228: Fixed issue with "cordova prepare --browserify"
+* CB-7001: Create a --browserify option for run action
+* CB-7228: Cordova prepare --browserify runs on all installed plugins
+* CB-7190: Add browserify support in cordova-lib/cordova-cli
+* CB-7260 Get cordova-android 3.5.1 instead of 3.5.0
+* CB-7001: Create a --browserify option for run action
+* CB-7228: Cordova prepare --browserify runs on all installed plugins
+* CB-7190: Add browserify support in cordova-lib/cordova-cli
+* CB-7234 added better outputs for plugin registry workflows
+* CB-7100: Use npm based lazy-load by default
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7140 Check plugin versions in local search path
+* small refactor for missing code block after conditional statement
+* CB-7203 isRelativePath needs to pass path through
+* CB-7199 control git/npm using platform.js
+* CB-7199 control git/npm using platform.js
+* Fix style errors - make jshint happy
+* CB-6756 Adds save and restore command for platforms.
+* Add VERSION files to fix failing tests (forgot to git add in b7781cb)
+* CB-7132 Fix regression regarding default resources
+* CB-7187 Make CoreLocation a required library only for cordova-ios < 3.6.0
+* Add AppVeyor badge to README
+* Add Travis and npm badges to README.md
+* fix(tests): cordova/lazy_load spec on Windows
+* Fix plugman/install spec
+* build configuration for AppVeyor
+* build configurations for Travis
+* CB-7124 Wrap the cordova platform string in Platform object
+* CB-7140: Switch to using PluginInfo in plugman/fetch.js
+* Minor style fixes in fetch.js
+* CB-7078: Disable serve.spec.js
+* CB-6512: platform add <path> was using wrong www/cordova.js
+* CB-7083 Missing SDKReference support on Windows Phone
+* CB-6874 Consolidate <Content> tag additions into 1 ItemGroup
+* CB-7100: Use npm based lazy-load by default
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7091: Don't call check_requirements during platform add
+* Fix typo in comment.
+* CB-7087 Retire blackberry10/ directory
+* CB-6776: Fix uri/url renaming bug
+* Remove npm-shrinkwrap.json
+* Look at the old uri in config.json in addition to the new url (i vs. l).
+* Add --captureExceptions flag to jasmine
+* CB-6992 Fix ios platform add/prepare when app name contains unicode chars
+* CB-7070 Don't create hooks/ if it already exists
+* CB-6357 (fix latent bug)
+* CB-6776 (correct windows8 fallback path)
+* CB-6776 (avoid stomping on global platforms properties)
+* CB-7065 lazy_load: do not append tgz for non urls
+* CB-7063 (fix case of Q)
+* CB-6776 (use .extend instead of custom mixin function)
+* CB-6776 Make project/.cordova/config.json integrate with platforms.js
+* CB-7056 make tests conditional using it/xit instead of iit/it
+* CB-7045 (fix up quotes to make jshint happy)
+* CB-7063 save.spec and restore.spec use a proper spy
+* CB-7056 serve: fix Android test, make tests conditional
+* CB-7037 platform check doesn't warn when it can't install a platform
+* removed extra whitespace
+* removed "pkgName "
+* CB-7056 serve: return promise of server
+* CB-7045 plugman.install: engine.currentVersion should be a semver or null
+* CB-7045 plugman.install.spec: shell.which depends on plugman.raw.fetch actually being called
+* CB-7042 serve.spec: really expect not a Cordova-based project exception
+* CB-7042 serve.spec: enable basic serve test
+* CB-6879 fix cordova serve
