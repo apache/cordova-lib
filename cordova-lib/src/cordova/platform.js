@@ -427,7 +427,6 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
         }
     } else if (target == 'ios') {
         platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
-        args.push('--arc');
         if (semver.gt(platformVersion, '3.3.0')) {
             args.push('--cli');
         }
