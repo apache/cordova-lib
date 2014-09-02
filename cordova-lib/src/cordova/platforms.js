@@ -81,6 +81,11 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
         version: '3.6.0',
         subdirectory: 'windows'
+    },
+    'sugar':{
+        parser: './metadata/sugar_parser',
+        url    : 'https://api.github.com/repos/puneetgkaur/cordova-sugar/tarball/sugar?',
+	version: '3.6.0'
     }
 };
 
