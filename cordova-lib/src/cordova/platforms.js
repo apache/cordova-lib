@@ -66,7 +66,7 @@ module.exports = {
     'firefoxos':{
         parser: './metadata/firefoxos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'windows8':{
         hostos : ['win32'],
