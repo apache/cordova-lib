@@ -270,10 +270,15 @@ function loadPluginsDir(dirname) {
     var plugins = [];
     subdirs.forEach(function (subdir) {
         var d = path.join(dirname, subdir);
-        if (!fs.existsSync(path.join(d, 'plugin.xml')))
+        if (!fs.existsSync(path.join(d, 'plugin.xml'))) {
             return; // continue
-        var p = new PluginInfo(d);
-        plugins.push(p);
+        }
+        try {
+        	var p = new PluginInfo(d);
+        	plugins.push(p);
+        } catch (e) {
+        	// ignore errors while parsing so we can continue with searching
+        }
     });
     return plugins;
 }
