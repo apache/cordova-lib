@@ -61,14 +61,14 @@ module.exports = {
     'source-file': {
         install:function(source_el, plugin_dir, project_dir, plugin_id, project_file) {
             var targetDir = source_el.attrib['target-dir'] || '';
-            var dest = path.join('www', 'plugins', plugin_id, targetDir, path.basename(source_el.attrib['src']));
+            var dest = path.join('plugins', plugin_id, targetDir, path.basename(source_el.attrib['src']));
 
             common.copyNewFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
             // add reference to this file to jsproj.
             project_file.addSourceFile(dest);
         },
         uninstall:function(source_el, project_dir, plugin_id, project_file) {
-            var dest = path.join('www', 'plugins', plugin_id,
+            var dest = path.join('plugins', plugin_id,
                                  source_el.attrib['target-dir'] || '',
                                  path.basename(source_el.attrib['src']));
             common.removeFile(project_dir, dest);
