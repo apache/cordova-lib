@@ -103,6 +103,10 @@ function cordova_git(platform) {
     if (/^...*:/.test(plat.url)) {
         plat.url = plat.url + ';a=snapshot;h=' + platform.version + ';sf=tgz';
     }
+    // https://github.com/CollinearGroup/cordova-web/archive/v0.0.0-alpha.tar.gz
+    if (platform === 'web_server') {
+        plat.url = platforms[platform].url + '/archive/' + platforms[platform].version + '.tar.gz';
+    }
     plat.id = 'cordova';
     plat.version = platform.version;
     return module.exports.custom(mixed_platforms, platform.name);
@@ -124,6 +128,10 @@ function cordova_npm(platform) {
         events.emit('verbose', 'Platform files for "' + platform.name + '" previously downloaded not from npm. Using that copy.');
         return Q(git_dload_dir);
     }
+    // TODO: Figure out how this fits into the new architecture
+    // if (platform === 'web_server') {
+        // url = platforms[platform].url + '/archive/' + platforms[platform].version + '.tar.gz';
+    // }
 
     var pkg = 'cordova-' + platform.name + '@' + platform.version;
     return exports.npm_cache_add(pkg);

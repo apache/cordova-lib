@@ -31,5 +31,6 @@ module.exports = {
     'windows' : require('./platforms/windows'),
     'firefoxos': require('./platforms/firefoxos'),
     'ubuntu': require('./platforms/ubuntu'),
-    'tizen': require('./platforms/tizen')
+    'tizen': require('./platforms/tizen'),
+    'web_server': require('./platforms/web_server')
 };
