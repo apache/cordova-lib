@@ -33,6 +33,7 @@ var path          = require('path'),
     cordova_util  = require('./util');
 
 var DEFAULT_NAME = 'HelloCordova',
+    DEFAULT_PROJECT_NAME = DEFAULT_NAME,
     DEFAULT_ID   = 'io.cordova.hellocordova';
 
 /**
@@ -58,6 +59,7 @@ function create(dir, id, name, cfg) {
     cfg = cfg || {};
     id = id || cfg.id || DEFAULT_ID;
     name = name || cfg.name || DEFAULT_NAME;
+    var projectname = cfg.projectname || DEFAULT_PROJECT_NAME;
 
     // Make absolute.
     dir = path.resolve(dir);
@@ -232,10 +234,12 @@ function create(dir, id, name, cfg) {
         if (!fs.existsSync(configPath)) {
             var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');
             shell.cp(template_config_xml, configPath);
-            // Write out id and name to config.xml
+            // Write out id, name and projectname to config.xml
             var conf = new ConfigParser(configPath);
             conf.setPackageName(id);
             conf.setName(name);
+            // Note that this will be written only if custom config.xml is not provided as a part of custom www folder
+            conf.setProjectName(projectname);
             conf.write();
         }
     });

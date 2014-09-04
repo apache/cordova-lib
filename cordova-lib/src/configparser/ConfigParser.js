@@ -95,6 +95,13 @@ ConfigParser.prototype = {
         var el = findOrCreate(this.doc, 'name');
         el.text = name;
     },
+    projectname: function() {
+        return getNodeTextSafe(this.doc.find('projectname'));
+    },
+    setProjectName: function(projectname) {
+        var el = findOrCreate(this.doc, 'projectname');
+        el.text = projectname;
+    },
     description: function() {
         return this.doc.find('description').text.trim();
     },
