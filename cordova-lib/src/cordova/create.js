@@ -33,7 +33,6 @@ var path          = require('path'),
     cordova_util  = require('./util');
 
 var DEFAULT_NAME = 'HelloCordova',
-    DEFAULT_PROJECT_NAME = DEFAULT_NAME,
     DEFAULT_ID   = 'io.cordova.hellocordova';
 
 /**
@@ -45,7 +44,7 @@ var DEFAULT_NAME = 'HelloCordova',
  **/
 // Returns a promise.
 module.exports = create;
-function create(dir, id, name, cfg) {
+function create(dir, id, name, cfg, projectname) {
     if (!dir ) {
         return Q.reject(new CordovaError(
             'At least the dir must be provided to create new project. See `'+cordova_util.binname+' help`.'
@@ -59,7 +58,6 @@ function create(dir, id, name, cfg) {
     cfg = cfg || {};
     id = id || cfg.id || DEFAULT_ID;
     name = name || cfg.name || DEFAULT_NAME;
-    var projectname = cfg.projectname || DEFAULT_PROJECT_NAME;
 
     // Make absolute.
     dir = path.resolve(dir);
@@ -238,8 +236,9 @@ function create(dir, id, name, cfg) {
             var conf = new ConfigParser(configPath);
             conf.setPackageName(id);
             conf.setName(name);
-            // Note that this will be written only if custom config.xml is not provided as a part of custom www folder
-            conf.setProjectName(projectname);
+            if (projectname) {
+                conf.setProjectName(projectname);
+            }
             conf.write();
         }
     });

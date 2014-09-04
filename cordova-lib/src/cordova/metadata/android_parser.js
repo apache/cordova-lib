@@ -225,6 +225,16 @@ module.exports.prototype = {
         this.handleIcons(config);
 
         var manifest = xml.parseElementtreeSync(this.manifest);
+
+        // Update main class name
+        var projectname = config.projectName();
+        // Note that if <projectname> element is removed after at least one successful build
+        // this will be skipped, and main class/activity name remains unchanged
+        if (projectname) {
+            manifest.getroot().find('./application/activity').attrib['android:name'] = projectname;
+            events.emit('verbose', 'Wrote out Android main activity name to "' + projectname + '"');
+        }
+
         // Update the version by changing the AndroidManifest android:versionName
         var version = config.version();
         var versionCode = config.android_versionCode() || default_versionCode(version);
@@ -290,14 +300,28 @@ module.exports.prototype = {
         }
 
         var orig_java_class = java_files[0];
+        // Handle <projectname> option in config.xml
+        // Note that if <projectname> element is removed after at least one successful build
+        // this will be skipped, and main class/activity name remains unchanged
+        var new_java_class = config.projectName() ? config.projectName() + '.java' : orig_java_class;
         var pkgDir = path.join(this.path, 'src', path.join.apply(null, pkg.split('.')));
         shell.mkdir('-p', pkgDir);
         var orig_javs = path.join(orig_pkgDir, orig_java_class);
-        var new_javs = path.join(pkgDir, orig_java_class);
+        var new_javs = path.join(pkgDir, new_java_class);
         var javs_contents = fs.readFileSync(orig_javs, 'utf-8');
         javs_contents = javs_contents.replace(/package [\w\.]*;/, 'package ' + pkg + ';');
+        // if <projectname> is specified, we also need to replace main class name with projectname value
+        // Note that if <projectname> element is removed after at least one successful build
+        // this will be skipped, and main class/activity name remains unchanged
+        if (config.projectName()) {
+            javs_contents = javs_contents.replace(/class\s+(.*?)\s+extends CordovaActivity/, 'class ' + config.projectName() + ' extends CordovaActivity');
+        }
         events.emit('verbose', 'Wrote out Android package name to "' + pkg + '"');
         fs.writeFileSync(new_javs, javs_contents, 'utf-8');
+        // Remove old java class file
+        if (orig_javs != new_javs) {
+            shell.rm('-f', orig_javs);
+        }
     },
 
     // Returns the platform-specific www directory.
