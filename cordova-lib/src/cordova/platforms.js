@@ -48,9 +48,8 @@ module.exports = {
         hostos : ['win32'],
         parser : './metadata/wp8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.6.0',
-        altplatform: 'wp',
-        subdirectory: 'wp8'
+        version: '3.6.1',
+        altplatform: 'wp'
     },
     'blackberry10' : {
         parser : './metadata/blackberry10_parser',
