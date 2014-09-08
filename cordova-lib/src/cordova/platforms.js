@@ -26,23 +26,23 @@ module.exports = {
         hostos : ['darwin'],
         parser : './metadata/ios_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'android' : {
         parser : './metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'ubuntu' : {
         hostos : ['linux'],
         parser : './metadata/ubuntu_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'amazon-fireos' : {
         parser : './metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'wp8' : {
         hostos : ['win32'],
@@ -54,13 +54,13 @@ module.exports = {
     'blackberry10' : {
         parser : './metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'www':{
         hostos : [],
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git',
         source : 'git',
-        version: '3.6.0'
+        version: '3.6.1'
     },
     'firefoxos':{
         parser: './metadata/firefoxos_parser',
@@ -71,14 +71,14 @@ module.exports = {
         hostos : ['win32'],
         parser: './metadata/windows_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.0',
+        version: '3.6.1',
         subdirectory: 'windows'
     },
     'windows':{
         hostos : ['win32'],
         parser: './metadata/windows_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.0',
+        version: '3.6.1',
         subdirectory: 'windows'
     },
     'browser':{
