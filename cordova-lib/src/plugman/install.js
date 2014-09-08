@@ -93,7 +93,6 @@ function possiblyFetch(id, plugins_dir, options) {
     }
 
     var opts = underscore.extend({}, options, {
-        link: false,
         client: 'plugman'
     });
 
