@@ -85,7 +85,7 @@ module.exports = {
     'browser':{
         parser : './metadata/browser_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git',
-        version: 'master'
+        version: '3.5.1'
     }
 };
 
