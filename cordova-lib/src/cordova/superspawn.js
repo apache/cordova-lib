@@ -141,3 +141,10 @@ exports.spawn = function(cmd, args, opts) {
     return d.promise;
 };
 
+exports.maybeSpawn = function(cmd, args, opts) {
+    if (fs.existsSync(cmd)) {
+        return exports.spawn(cmd, args, opts);
+    }
+    return Q(null);
+};
+

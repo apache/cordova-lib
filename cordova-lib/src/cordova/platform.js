@@ -46,17 +46,6 @@ for (var p in platforms) {
     module.exports[p] = platforms[p];
 }
 
-function getVersionFromScript(script, defaultValue) {
-    var versionPromise = Q(defaultValue);
-    if (fs.existsSync(script)) {
-        versionPromise = superspawn.spawn(script);
-    } else {
-        /* if you are here, it's probably because you're in Jasmine: fix your existsSync stub */
-        versionPromise = Q(defaultValue);
-    }
-    return versionPromise;
-}
-
 function add(hooks, projectRoot, targets, opts) {
     var msg;
     if ( !targets || !targets.length ) {
@@ -222,7 +211,7 @@ function check(hooks, projectRoot) {
                 d_cur = Q.defer();
             add(h, scratch, [p], {spawnoutput: {stdio: 'ignore'}})
             .then(function() {
-                getVersionFromScript(path.join(scratch, 'platforms', p, 'cordova', 'version'), null)
+                superspawn.maybeSpawn(path.join(scratch, 'platforms', p, 'cordova', 'version'))
                 .then(function(avail) {
                     if (!avail) {
                         /* Platform version script was silent, we can't work with this */
@@ -240,7 +229,7 @@ function check(hooks, projectRoot) {
                 d_avail.resolve('install-failed');
             });
 
-            getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
+            superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
             .then(function(v) {
                 d_cur.resolve(v || '');
             }).catch(function () {
@@ -303,7 +292,7 @@ function list(hooks, projectRoot) {
     .then(function() {
         // Acquire the version number of each platform we have installed, and output that too.
         return Q.all(platforms_on_fs.map(function(p) {
-            return getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
+            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
             .then(function(v) {
                 if (!v) return p;
                 return p + ' ' + v;
