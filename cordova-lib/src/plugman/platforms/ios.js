@@ -26,7 +26,7 @@ var path = require('path')
   , fs   = require('fs')
   , glob = require('glob')
   , xcode = require('xcode')
-  , plist = require('plist')
+  , plist = require('plist-with-patches')
   , shell = require('shelljs')
   , events = require('../../events')
   , cachedProjectFiles = {}
@@ -38,7 +38,7 @@ module.exports = {
     },
     package_name:function(project_dir) {
         var plist_file = glob.sync(path.join(project_dir, '**', '*-Info.plist'))[0];
-        return plist.parse(fs.readFileSync(plist_file, 'utf8')).CFBundleIdentifier;
+        return plist.parseFileSync(plist_file).CFBundleIdentifier;
     },
     'source-file':{
         install:function(source_el, plugin_dir, project_dir, plugin_id, project) {

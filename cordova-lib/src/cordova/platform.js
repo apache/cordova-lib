@@ -46,6 +46,17 @@ for (var p in platforms) {
     module.exports[p] = platforms[p];
 }
 
+function getVersionFromScript(script, defaultValue) {
+    var versionPromise = Q(defaultValue);
+    if (fs.existsSync(script)) {
+        versionPromise = superspawn.spawn(script);
+    } else {
+        /* if you are here, it's probably because you're in Jasmine: fix your existsSync stub */
+        versionPromise = Q(defaultValue);
+    }
+    return versionPromise;
+}
+
 function add(hooks, projectRoot, targets, opts) {
     var msg;
     if ( !targets || !targets.length ) {
@@ -100,9 +111,6 @@ function add(hooks, projectRoot, targets, opts) {
                 // Package names for Cordova platforms look like "cordova-ios".
                 var nameParts = pkg.name.split('-');
                 var name = nameParts[1];
-                if (name == 'amazon') {
-                    name = 'amazon-fireos';
-                }
                 if( !platforms[name] ) {
                     throw new CordovaError(msg);
                 }
@@ -211,7 +219,7 @@ function check(hooks, projectRoot) {
                 d_cur = Q.defer();
             add(h, scratch, [p], {spawnoutput: {stdio: 'ignore'}})
             .then(function() {
-                superspawn.maybeSpawn(path.join(scratch, 'platforms', p, 'cordova', 'version'))
+                getVersionFromScript(path.join(scratch, 'platforms', p, 'cordova', 'version'), null)
                 .then(function(avail) {
                     if (!avail) {
                         /* Platform version script was silent, we can't work with this */
@@ -229,7 +237,7 @@ function check(hooks, projectRoot) {
                 d_avail.resolve('install-failed');
             });
 
-            superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
+            getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
             .then(function(v) {
                 d_cur.resolve(v || '');
             }).catch(function () {
@@ -292,7 +300,7 @@ function list(hooks, projectRoot) {
     .then(function() {
         // Acquire the version number of each platform we have installed, and output that too.
         return Q.all(platforms_on_fs.map(function(p) {
-            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
+            return getVersionFromScript(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), null)
             .then(function(v) {
                 if (!v) return p;
                 return p + ' ' + v;
@@ -339,16 +347,12 @@ function platform(command, targets, opts) {
             var pPath = path.resolve(t);
             if (fs.existsSync(pPath)) return;
             // Neither path, nor platform name - throw.
-            var msg;
-            if (/[~:/\\.]/.test(t)) {
-                msg = 'Platform path "' + t + '" not found.';
-            } else {
-                msg = 'Platform "' + t +
+            var msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'
                 ;
-            }
             throw new CordovaError(msg);
+
         });
     } else if (command == 'add' || command == 'rm') {
         msg = 'You need to qualify `add` or `remove` with one or more platforms!';
@@ -416,6 +420,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
         }
     } else if (target == 'ios') {
         platformVersion = fs.readFileSync(path.join(libDir, 'CordovaLib', 'VERSION'), 'UTF-8').trim();
+        args.push('--arc');
         if (semver.gt(platformVersion, '3.3.0')) {
             args.push('--cli');
         }
@@ -446,22 +451,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
         return plugins.reduce(function(soFar, plugin) {
             return soFar.then(function() {
                 events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                plugin = path.basename(plugin);
-                var options = (function(){
-                    // Get plugin preferences from config features if have any
-                    // Pass them as cli_variables to plugman
-                    var feature = cfg.getFeature(plugin);
-                    var variables = feature && feature.variables;
-                    if (!!variables) {
-                        events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
-                        return {
-                            cli_variables: variables
-                        };
-                    }
-                    return null;
-                })();
-
-                return plugman.raw.install(target, output, plugin, plugins_dir, options);
+                return plugman.raw.install(target, output, path.basename(plugin), plugins_dir);
             });
         }, Q());
     });

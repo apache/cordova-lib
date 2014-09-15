@@ -105,15 +105,11 @@ function create(dir, id, name, cfg) {
         config_json.lib.www.id = config_json.lib.www.id || 'dummy_id';
         symlink  = !!config_json.lib.www.link;
 
-        // Make sure that the source www/ is not a direct ancestor of the
-        // target www/, or else we will recursively copy forever. To do this,
-        // we make sure that the shortest relative path from source-to-target
-        // must start by going up at least one directory or with a drive
-        // letter for Windows.
-        var rel_path = path.relative(config_json.lib.www.url, www_dir);
-        var goes_up = rel_path.split(path.sep)[0] == '..';
-
-        if (!(goes_up || rel_path[1] == ':')) {
+        // Make sure that the source www/ is not a direct ancestor of the target www/, or else we will recursively copy forever.
+        // To do this, we make sure that the shortest relative path from source-to-target must start by going up at least one directory.
+        var relative_path_from_source_to_target = path.relative(config_json.lib.www.url, www_dir);
+        var does_relative_path_go_up_at_least_one_dir = relative_path_from_source_to_target.split(path.sep)[0] == '..';
+        if (!does_relative_path_go_up_at_least_one_dir) {
             throw new CordovaError(
                 'Project dir "' +
                 dir +

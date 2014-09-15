@@ -22,28 +22,5 @@
     <icon id="logo" src="logo.png" width="255" height="255" />
     <platform name="android">
         <icon src="logo-android.png" width="255" height="255" density="mdpi" />
-        <preference name="android-minSdkVersion" value="10" />
-    </platform>
-
-    <!-- Features -->
-    <feature name="A feature with preference">
-        <param name="id" value="org.apache.cordova.featurewithvars"/>
-        <variable name="var" value="varvalue"/>
-    </feature>
-    <feature name="A feature with url">
-        <param name="id" value="org.apache.cordova.featurewithurl" />
-        <param name="url" value="http://cordova.apache.org/featurewithurl" />
-    </feature>
-    <feature name="A feature with version">
-        <param name="id" value="org.apache.cordova.featurewithversion" />
-        <param name="version" value="1.1.1" />
-    </feature>
-    <feature name="A feature with url and version">
-        <param name="id" value="org.apache.cordova.featurewithurlandversion" />
-        <param name="version" value="1.1.1" />
-        <param name="url" value="http://cordova.apache.org/featurewithurlandversion" />
-    </feature>
-    <feature name="A simple feature">
-        <param name="id" value="org.apache.cordova.justafeature" />
-    </feature>
+    </platform>    
 </widget>

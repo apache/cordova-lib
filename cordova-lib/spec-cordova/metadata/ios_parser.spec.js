@@ -20,7 +20,7 @@ var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
-    plist = require('plist'),
+    plist = require('plist-with-patches'),
     xcode = require('xcode'),
     et = require('elementtree'),
     fs = require('fs'),
@@ -89,7 +89,7 @@ describe('ios project parser', function () {
             var update_name, xc_write;
             beforeEach(function() {
                 mv = spyOn(shell, 'mv');
-                plist_parse = spyOn(plist, 'parse').andReturn({
+                plist_parse = spyOn(plist, 'parseFileSync').andReturn({
                 });
                 plist_build = spyOn(plist, 'build').andReturn('');
                 update_name = jasmine.createSpy('update_name');

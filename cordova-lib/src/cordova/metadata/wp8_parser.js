@@ -30,7 +30,8 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    hooker        = require('../hooker');
+    hooker        = require('../hooker'),
+    csproj = require('../../util/windows/csproj');
 
 module.exports = function wp8_parser(project) {
     try {
@@ -196,6 +197,43 @@ module.exports.prototype = {
         shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
 
+    // updates the csproj file to explicitly list all www content.
+    update_csproj:function() {
+        var projFile = new csproj(this.csproj_path);
+
+        // remove any previous references to the www files
+        projFile.removeSourceFile(new RegExp('www\\\\*', 'i'));
+
+        // now add all www references back in from the root www folder
+        var www_files = this.folder_contents('www', this.www_dir());
+        projFile.addSourceFile(www_files);
+        // save file
+        projFile.write();
+    },
+    // Returns an array of all the files in the given directory with relative paths
+    // - name     : the name of the top level directory (i.e all files will start with this in their path)
+    // - dir     : the directory whos contents will be listed under 'name' directory
+    folder_contents:function(name, dir) {
+        var results = [];
+        var folder_dir = fs.readdirSync(dir);
+        for(var item in folder_dir) {
+            var stat = fs.statSync(path.join(dir, folder_dir[item]));
+
+            if(stat.isDirectory()) {
+                var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
+                //Add all subfolder item paths
+                for(var sub_item in sub_dir) {
+                    results.push(sub_dir[sub_item]);
+                }
+            }
+            else if(stat.isFile()) {
+                results.push(path.join(name, folder_dir[item]));
+            }
+            // else { it is a FIFO, or a Socket or something ... }
+        }
+        return results;
+    },
+
     // calls the nessesary functions to update the wp8 project
     // Returns a promise.
     update_project:function(cfg) {
@@ -212,6 +250,7 @@ module.exports.prototype = {
         var hooks = new hooker(projectRoot);
         return hooks.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8']  })
         .then(function() {
+            that.update_csproj();
             util.deleteSvnFolders(that.www_dir());
         });
     }

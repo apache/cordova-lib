@@ -37,38 +37,38 @@ module.exports = function create( name, id, version, pluginPath, options ) {
         clobber,
         jsMod;
 
-    // Check we are not already in a plugin
+    //check we are not already in a plugin
     if( fs.existsSync( cwd + 'plugin.xml' ) ) {
         return Q.reject( new CordovaError( 'plugin.xml already exists. Are you already in a plugin?' ) );
     }
 
-    // Create a plugin.xml file
+    //Create a plugin.xml file
     root = et.Element( 'plugin' );
     root.set( 'xmlns', 'http://apache.org/cordova/ns/plugins/1.0' );
     root.set( 'xmlns:android', 'http://schemas.android.com/apk/res/android' );
     root.set( 'id', id );
     root.set( 'version', version );
 
-    // Add the name tag
+    //Add the name tag
     pluginName = et.XML( '<name>' );
     pluginName.text = name;
     root.append( pluginName );
 
-    // Loop through the options( variables ) for other tags
+    //loop through the options( variables ) for other tags
     for( var key in options ) {
         var temp = et.XML( '<' + key + '>');
         temp.text = options[ key ];
         root.append( temp );
     }
 
-    // Setup the directory structure
+    //setup the directory structure
     shell.mkdir( '-p', cwd + 'www' );
     shell.mkdir( '-p', cwd + 'src' );
 
-    // Create a base plugin.js file
+    //create a base plugin.js file
     baseJS = fs.readFileSync( templatesDir + 'base.js', 'utf-8').replace( /%pluginName%/g, name );
     fs.writeFileSync( cwd + 'www/' + name + '.js', baseJS, 'utf-8' );
-    // Add it to the xml as a js module
+    //Add it to the xml as a js module
     jsMod = et.Element( 'js-module' );
     jsMod.set( 'src', 'www/' + name + '.js' );
     jsMod.set( 'name', name );
@@ -79,7 +79,7 @@ module.exports = function create( name, id, version, pluginPath, options ) {
 
     root.append( jsMod );
 
-    // Write out the plugin.xml file
+    //Write out the plugin.xml file
     fs.writeFileSync( cwd + 'plugin.xml', new et.ElementTree( root ).write( {indent: 4} ), 'utf-8' );
 
     return Q();

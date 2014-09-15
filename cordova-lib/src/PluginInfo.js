@@ -200,6 +200,13 @@ function PluginInfo(dirname) {
         var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, cloneAttribs);
         return libFiles;
     }
+
+    // Tell whether there is a <platform> section for the given platform.
+    self.hasPlatformSection = hasPlatformSection;
+    function hasPlatformSection(platform) {
+        var platformTag = pelem.find('./platform[@name="' + platform + '"]');
+        return !!platformTag;
+    }
     ///// End of PluginInfo methods /////
 
 
@@ -270,15 +277,10 @@ function loadPluginsDir(dirname) {
     var plugins = [];
     subdirs.forEach(function (subdir) {
         var d = path.join(dirname, subdir);
-        if (!fs.existsSync(path.join(d, 'plugin.xml'))) {
+        if (!fs.existsSync(path.join(d, 'plugin.xml')))
             return; // continue
-        }
-        try {
-        	var p = new PluginInfo(d);
-        	plugins.push(p);
-        } catch (e) {
-        	// ignore errors while parsing so we can continue with searching
-        }
+        var p = new PluginInfo(d);
+        plugins.push(p);
     });
     return plugins;
 }

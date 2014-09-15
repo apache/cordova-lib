@@ -26,6 +26,8 @@ var platform_modules = require('./platforms'),
     path            = require('path'),
     config_changes  = require('./util/config-changes'),
     xml_helpers     = require('../util/xml-helpers'),
+    wp8             = require('./platforms/wp8'),
+    windows        = require('./platforms/windows'),
     common          = require('./platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
@@ -70,6 +72,16 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
     config_changes.process(plugins_dir, project_dir, platform);
+
+    // for windows phone and windows8 platforms we need to add all www resources to the .csproj(.jsproj) file
+    // first we need to remove them all to prevent duplicates
+    var projFile;
+    if (platform == 'wp8' || platform == 'windows8' || platform == 'windows') {
+        projFile = (platform == 'wp8') ? wp8.parseProjectFile(project_dir) :
+            windows.parseProjectFile(project_dir);
+        // remove reference to cordova_plugins.js and all files inside plugins folder
+        projFile.removeSourceFile(/^(\$\(MSBuildThisFileDirectory\))?www\\(cordova_plugins.js|plugins\\)/i);
+    }
 
     platform_json = config_changes.get_platform_json(plugins_dir, platform);
     // This array holds all the metadata for each module and ends up in cordova_plugins.json
@@ -138,11 +150,11 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
             var fsPath = path.join.apply(path, pathParts);
             var scriptContent = fs.readFileSync(path.join(pluginDir, fsPath), 'utf-8').replace(/^\ufeff/, ''); // Window BOM
-            if (fsPath.match(/.*\.json$/)) {
-                scriptContent = 'module.exports = ' + scriptContent;
-            }
             scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
             fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
+            if(platform == 'wp8' || platform == 'windows8') {
+                projFile.addSourceFile(path.join('www', 'plugins', plugin_id, fsPath));
+            }
 
             // Prepare the object for cordova_plugins.json.
             var obj = {
@@ -183,4 +195,9 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
     events.emit('verbose', 'Writing out cordova_plugins.js...');
     fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), final_contents, 'utf-8');
+
+    if(platform == 'wp8' || platform == 'windows8' || platform == 'windows') {
+        projFile.addSourceFile(path.join('www', 'cordova_plugins.js'));
+        projFile.write();
+    }
 };

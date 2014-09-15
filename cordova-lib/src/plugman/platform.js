@@ -33,23 +33,23 @@ module.exports = {
         var pluginxml,
             platform;
 
-        // Check to make sure we are in the plugin first
+        //check to make sure we are in the plugin first
         if( !fs.existsSync( 'plugin.xml' ) ) {
             return Q.reject( new Error( "can't find a plugin.xml.  Are you in the plugin?" ) );
         }
 
-        // Get the current plugin.xml file
+        //Get the current plugin.xml file
         pluginxml = et.parse( fs.readFileSync('plugin.xml', 'utf-8') );
 
-        // Check if this platform exists
+        //Check if this platform exists
         if( pluginxml.find("./platform/[@name='"+ platformName +"']") ) {
             return Q.reject( new Error( "platform: " + platformName + " already added"  ) );
         }
 
-        // Get the platform specific elements
+        //Get the platform specific elements
         platform = doPlatform( platformName, pluginxml.find("./name").text, pluginxml.getroot().get( "id" ) );
 
-        // Make sure we support it
+        //Make sure we support it
         if( !platform ) {
             return Q.reject( new Error( "platform: " + platformName + " not yet supported"  ) );
         }
@@ -60,26 +60,26 @@ module.exports = {
         return Q();
     },
     remove: function( platformName ) {
-        // Check to make sure we are in the plugin first
+        //check to make sure we are in the plugin first
         if( !fs.existsSync( 'plugin.xml' ) ) {
             return Q.reject( new Error( "can't find a plugin.xml.  Are you in the plugin?" ) );
         }
 
-        // Get the current plugin.xml file
+        //Get the current plugin.xml file
         var pluginxml = et.parse( fs.readFileSync('plugin.xml', 'utf-8') );
 
-        // Check if this platform exists
+        //Check if this platform exists
         if( !pluginxml.find("./platform/[@name='"+ platformName +"']") ) {
             return Q.reject( new Error( "platform: " + platformName + " hasn't been added"  ) );
         }
 
-        // Remove the Platform in question
+        //Remove the Platform in question
         pluginxml.getroot().remove( 0, pluginxml.find("./platform/[@name='"+ platformName +"']") );
 
-        // Rewrite the plugin.xml file back out
+        //Rewrite the plugin.xml file back out
         fs.writeFileSync( "plugin.xml", pluginxml.write( "plugin.xml", {indent: 4} ), 'utf-8' );
 
-        // Remove the src/"platform"
+        //Remove the src/"platform"
         shell.rm( '-rf', 'src/' + platformName );
 
         return Q();
@@ -107,7 +107,7 @@ function doPlatform( platformName, pluginName, pluginID, pluginVersion ) {
 }
 
 function doPlatformBase( templatesDir, platformName, pluginName, pluginID, pluginVersion ) {
-    // Create the default plugin file
+    //Create the default plugin file
     var baseFiles = [],
         i = 0;
 

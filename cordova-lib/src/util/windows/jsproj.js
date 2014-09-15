@@ -82,6 +82,8 @@ jsproj.prototype = {
 
         events.emit('verbose','addReference::' + relPath);
 
+        relPath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relPath : relPath;
+
         var item = new et.Element('ItemGroup');
         var extName = path.extname(relPath);
 
@@ -108,6 +110,8 @@ jsproj.prototype = {
     removeReference:function(relPath) {
         events.emit('verbose','removeReference::' + relPath);
 
+        relPath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relPath : relPath;
+
         var extName = path.extname(relPath);
         var includeText = path.basename(relPath,extName);
         // <ItemGroup>
@@ -130,6 +134,7 @@ jsproj.prototype = {
 
         relative_path.forEach(function(filePath) {
             filePath = filePath.split('/').join('\\');
+            filePath = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + filePath : filePath;
 
             var content = new et.Element('Content');
             content.attrib.Include = filePath;
@@ -143,6 +148,7 @@ jsproj.prototype = {
         if (!isRegexp) {
             // path.normalize(relative_path);// ??
             relative_path = relative_path.split('/').join('\\');
+            relative_path = this.isUniversalWindowsApp ? '$(MSBuildThisFileDirectory)' + relative_path : relative_path;
         }
 
         var root = this.xml.getroot();

@@ -29,7 +29,6 @@ var fs = require('fs'),
     path = require('path'),
     properties_parser = require('properties-parser'),
     shell = require('shelljs');
-var semver = require('semver');
 
 
 function addLibraryReference(projectProperties, libraryPath) {
@@ -86,22 +85,16 @@ AndroidProject.prototype = {
         delete this._subProjectDirs[subDir];
         this._dirty = true;
     },
-    write: function(platformVersion) {
+    write: function () {
         if (!this._dirty) return;
 
         for (var filename in this._propertiesEditors) {
             fs.writeFileSync(filename, this._propertiesEditors[filename].toString());
         }
 
-        // Starting with 3.6.0, the build scripts set ANDROID_HOME, so there is
-        // no reason to keep run this command. Plus - we really want to avoid
-        // relying on the presense of native SDKs within plugman.
-        var needsUpdateProject = !platformVersion || semver.lt(platformVersion, '3.6.0');
-        if (needsUpdateProject) {
-            for (var sub_dir in this._subProjectDirs)
-            {
-                shell.exec('android update lib-project --path "' + sub_dir + '"');
-            }
+        for (var sub_dir in this._subProjectDirs)
+        {
+            shell.exec('android update lib-project --path "' + sub_dir + '"');
         }
         this._dirty = false;
     },
