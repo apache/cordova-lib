@@ -29,7 +29,9 @@ var path             = require('path'),
     xml              = require('../util/xml-helpers'),
     events           = require('../events'),
     superspawn       = require('./superspawn'),
-    CordovaError     = require('../CordovaError');
+    CordovaError     = require('../CordovaError'),
+    plugman_metadata = require('../plugman/util/metadata'),
+    config_changes   = require('../plugman/util/config-changes');
 
 module.exports = save;
 function save(target, opts){
@@ -102,9 +104,37 @@ function savePlugins(opts){
         var currentPluginPath = path.join(pluginsPath,plugin);
         var name = readPluginName(currentPluginPath);
         var id = plugin;
-        var version = readPluginVersion(currentPluginPath);
+        // filter out the dependency plugins. Top-level plugins list is not always accurate. 
+        if(isDependencyPlugin(id)){
+            events.emit('log', 'Skipping ' + plugin+ ', not a top-level plugin');
+            return Q();
+        }
+        //save id
         var params = [{name:'id', value:id}];
+        var fetchData = plugman_metadata.get_fetch_metadata(currentPluginPath);
+        if(fetchData.source){
+            var fetchSource = fetchData.source;
+            if(fetchSource.type === 'git'){
+                //restore the git url
+                var restoredUrl = fetchSource.url;
+                if(fetchSource.ref || fetchSource.subdir){
+                    restoredUrl += '#';
+                    if(fetchSource.ref){
+                        restoredUrl += fetchSource.ref;
+                    }
+                    if(fetchSource.subdir){
+                        restoredUrl += ':'+fetchSource.subdir;
+                    }
+                }
+                params.push({name:'url', value:restoredUrl});
+            }else
+            if(fetchSource.type === 'local'){
+                params.push({name:'installPath', value:fetchSource.path});
+            }
+        }
+        //save version if shrinkwrapped
         if(opts.shrinkwrap){
+            var version = readPluginVersion(currentPluginPath);
             params.push({ name: 'version', value: version });
         }
         configXml.addFeature(name,params);
@@ -112,6 +142,27 @@ function savePlugins(opts){
         events.emit('results', 'Saved plugin info for "'+plugin+'" to config.xml');
         return Q();
     }));
+}
+
+function isDependencyPlugin(pluginId){
+    var projectHome = cordova_util.cdProjectRoot();
+    var pluginsPath = path.join(projectHome, 'plugins');
+    var platforms = cordova_util.listPlatforms(projectHome);
+    //If platforms do not exists it is best (but not necessarily accurate) to 
+    //assume that this is a top level plugin. Because installed_plugins (top-level)
+    //info is kept with the platform. Removing platform(s) causes the top-level info 
+    //to be lost.
+    if(platforms.length === 0 ){
+        return false;
+    }
+    for(var i= 0; i< platforms.length; i++){
+        var platform_config = config_changes.get_platform_json(pluginsPath, platforms[i]);
+        if(platform_config.dependent_plugins[pluginId])
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 function readPluginName(pluginPath){

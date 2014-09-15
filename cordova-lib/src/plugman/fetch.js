@@ -42,6 +42,7 @@ var localPlugins = null;
 // Returns a promise.
 module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
+     var data = {};//data to be saved to .fetch.json
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 
@@ -77,7 +78,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         if (options.link) {
             return Q.reject(new CordovaError('--link is not supported for git URLs'));
         } else {
-            var data = {
+            data = {
                 source: {
                     type: 'git',
                     url:  plugin_src,
@@ -98,19 +99,31 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         }
     } else {
         // If it's not a network URL, it's either a local path or a plugin ID.
-
+       
         var p,  // The Q promise to be returned.
             linkable = true,
             plugin_dir = path.join(plugin_src, options.subdir);
 
         if (fs.existsSync(plugin_dir)) {
             p = Q(plugin_dir);
+            data = {
+                  source: {
+                    type: 'local',
+                    path: plugin_dir
+                    }
+                };
         } else {
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath);
             if (pinfo) {
                 p = Q(pinfo.dir);
+                data = {
+                  source: {
+                    type: 'local',
+                    path: pinfo.dir
+                    }
+                };
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
             } else if ( options.noregistry ) {
                 p = Q.reject(new CordovaError(
@@ -122,6 +135,12 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 linkable = false;
                 events.emit('log', 'Fetching plugin "' + plugin_src + '" via plugin registry');
                 p = registry.fetch([plugin_src], options.client);
+                data = {
+                  source: {
+                    type: 'registry',
+                    id: plugin_src
+                    }
+                };
             }
         }
 
@@ -129,6 +148,9 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         .then(function(dir) {
             options.plugin_src_dir = dir;
             return copyPlugin(dir, plugins_dir, options.link && linkable);
+        }).then(function(dest){
+             metadata.save_fetch_metadata(dest, data);
+             return dest;
         })
         .then(function(dir) {
             checkID(options.expected_id, dir);
@@ -235,13 +257,5 @@ function copyPlugin(plugin_dir, plugins_dir, link) {
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
         shell.cp('-R', path.join(plugin_dir, '*') , dest);
     }
-
-    var data = {
-        source: {
-            type: 'local',
-            path: plugin_dir
-        }
-    };
-    metadata.save_fetch_metadata(dest, data);
     return dest;
 }

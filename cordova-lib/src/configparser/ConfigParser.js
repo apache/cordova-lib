@@ -34,7 +34,8 @@ var et = require('elementtree'),
 var FEATURE_SPECIAL_PARAMS = [
     'id',
     'url',
-    'version'
+    'version',
+    'installPath'
 ];
 
 /** Wraps a config.xml file */
