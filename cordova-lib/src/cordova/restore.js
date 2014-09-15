@@ -70,29 +70,22 @@ function installPluginsFromConfigXML(cfg) {
     }
 
     return features.reduce(function(soFar, featureId) {
-
         var pluginPath =  path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
             return soFar;
         }
-
         return soFar.then(function() {
             events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
-
             var feature = cfg.getFeature(featureId);
 
             // Install from given URL if defined or using a plugin id
-            var installFrom = feature.url;
-            if (!installFrom) {
-                installFrom = feature.id;
-                if (!!feature.version) {
-                    installFrom += ('@' + feature.version);
-                }
+            var installFrom = feature.url || feature.installPath || feature.id;
+            if( feature.version && !feature.url && !feature.installPath ){
+                installFrom += ('@' + feature.version);
             }
-
             // Add feature preferences as CLI variables if have any
-            var options = 'undefined' !== typeof feature.variables ? {cli_variables: feature.variables} : null;
+            var options = {cli_variables: feature.variables };
 
             return plugin('add', installFrom, options);
         });
