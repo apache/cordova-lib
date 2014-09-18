@@ -245,7 +245,7 @@ module.exports.prototype = {
         var projectRoot = util.isCordova(process.cwd());
 
         var hooks = new hooker(projectRoot);
-        return hooks.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['windows8'] })
+        return hooks.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
         .then(function() {
             // overrides (merges) are handled in update_www()
             that.add_bom();
