@@ -223,7 +223,10 @@ module.exports.prototype = {
         shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
 
         // Copy all files from merges directory.
+        // CB-6976 Windows Universal Apps. For smooth transition from 'windows8' platform
+        // we allow using 'windows8' merges for new 'windows' platform
         this.copy_merges('windows8');
+        this.copy_merges('windows');
 
         // Copy over stock platform www assets (cordova.js)
         shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
