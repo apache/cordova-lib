@@ -20,6 +20,15 @@
 -->
 # Cordova-lib Release Notes
 
+### 0.21.13
+* remove shrinkwrap
+
+### 0.21.12
+* CB-7383: depend on a newer version of cordova-js, bump self version
+
+### 0.21.11
+* bump version numbers of platforms to 3.6.3
+
 ### 0.21.10 (Sep 05, 2014)
 * CB-7457 - cordova plugin add --searchpath does not recurse through subfolders when a plugin.xml is malformed in one of them
 * CB-7457 - Add malformed plugin for tests
