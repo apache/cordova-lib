@@ -35,6 +35,11 @@ var cordova_util = require('./util'),
     mime = require('mime'),
     zlib = require('zlib');
 
+//extends Date object
+//used only for RFC 2822 formatting
+require('d8');
+require('d8/locale/en-US');
+
 function launchServer(projectRoot, port) {
     var server = http.createServer(
     function(request, response) {
@@ -51,6 +56,17 @@ function launchServer(projectRoot, port) {
             response.writeHead(302, {'Content-Type': 'text/plain'});
             response.end();
             return '';
+        }
+        function do304() {
+            console.log('304 ' + request.url);
+            response.writeHead(304, {'Content-Type': 'text/plain'});
+            response.end();
+            return '';
+        }
+        function isFileChanged(path) {
+            var mtime = fs.statSync(path).mtime,
+                itime = request.headers['if-modified-since'];
+            return !itime || new Date(mtime) > new Date(itime);
         }
         function doRoot() {
             var p;
@@ -148,6 +164,8 @@ function launchServer(projectRoot, port) {
                 }
                 response.write('</ul>');
                 response.end();
+            } else if (!isFileChanged(filePath)) {
+               do304();
             } else {
                 var mimeType = mime.lookup(filePath);
                 var respHeaders = {
@@ -163,6 +181,8 @@ function launchServer(projectRoot, port) {
                     respHeaders['content-encoding'] = 'deflate';
                     readStream = readStream.pipe(zlib.createDeflate());
                 }
+
+                respHeaders['Last-Modified'] = new Date(fs.statSync(filePath).mtime).format('r');
                 console.log('200 ' + request.url);
                 response.writeHead(200, respHeaders);
                 readStream.pipe(response);
