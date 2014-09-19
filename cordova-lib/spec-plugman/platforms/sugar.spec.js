@@ -24,13 +24,7 @@ var sugar = require('../../src/plugman/platforms/sugar'),
 	path = require('path'),
 	sugar_project = path.join(__dirname, '..', 'projects', 'sugar'),
 	destination = temp.path(),
-	shell = require('shelljs'),
-	dummyPluginPath = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-	dummyPlugin = et.XML(fs.readFileSync(
-		path.join(dummyPluginPath, 'plugin.xml'), {encoding: "utf-8"})),
-	dummySources = dummyPlugin
-		.find('./platform[@name="sugar"]')
-		.findall('./source-file');
+	shell = require('shelljs');
 
 describe('Sugar project handler', function() {
 	describe('www_dir method', function() {

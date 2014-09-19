@@ -46,4 +46,25 @@ describe('sugar project parser', function() {
         });
     });
 
+    describe('instance', function() {
+        var p, cp, rm, is_cordova, write, read;
+        var sugar_proj = path.join(proj, 'platforms', 'sugar');
+        beforeEach(function() {
+            p = new platforms.sugar.parser(sugar_proj);
+            cp = spyOn(shell, 'cp');
+            rm = spyOn(shell, 'rm');
+            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            write = spyOn(fs, 'writeFileSync');
+            read = spyOn(fs, 'readFileSync').andReturn('');
+        });
+
+        describe('update_from_config method', function() {
+            beforeEach(function() {
+                cfg.name = function() { return 'sugar_testname'; };
+                cfg.packageName = function() { return 'sugar_testpkg'; };
+                cfg.version = function() { return '1.0'; };
+            });
+
+        });
+    });
 });
