@@ -38,7 +38,6 @@ exports = module.exports = prepare;
 function prepare(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
 
     if (!options) {
         options = {
@@ -108,6 +107,7 @@ function prepare(options) {
             munger.save_all();
 
             // Update platform config.xml based on top level config.xml
+            var cfg = new ConfigParser(xml);
             var platform_cfg = new ConfigParser(parser.config_xml());
             exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
 
