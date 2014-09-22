@@ -29,7 +29,7 @@ var fs            = require('fs'),
     util          = require('../util'),
     events        = require('../../events'),
     shell         = require('shelljs'),
-    plist         = require('plist-with-patches'),
+    plist         = require('plist'),
     Q             = require('q'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
@@ -65,7 +65,7 @@ module.exports.prototype = {
 
         // Update package id (bundle id)
         var plistFile = path.join(this.cordovaproj, this.originalName + '-Info.plist');
-        var infoPlist = plist.parseFileSync(plistFile);
+        var infoPlist = plist.parse(fs.readFileSync(plistFile, 'utf8'));
         infoPlist['CFBundleIdentifier'] = pkg;
 
         // Update version (bundle version)
@@ -134,11 +134,17 @@ module.exports.prototype = {
                 shell.cp('-f', src, dest);
             }
         });
+        
+        var me = this;
+        return this.update_build_settings(config).then(function() {
+            if (name == me.originalName) {
+                events.emit('verbose', 'iOS Product Name has not changed (still "' + me.originalName + '")');
+                return Q();
+            }
 
-        if (name != this.originalName) {
             // Update product name inside pbxproj file
-            var proj = new xcode.project(this.pbxproj);
-            var parser = this;
+            var proj = new xcode.project(me.pbxproj);
+            var parser = me;
             var d = Q.defer();
             proj.parse(function(err,hash) {
                 if (err) {
@@ -163,10 +169,7 @@ module.exports.prototype = {
                 }
             });
             return d.promise;
-        } else {
-            events.emit('verbose', 'iOS Product Name has not changed (still "' + this.originalName + '")');
-            return Q();
-        }
+        });
     },
 
     // Returns the platform-specific www directory.
@@ -217,6 +220,37 @@ module.exports.prototype = {
             self.update_overrides();
             util.deleteSvnFolders(self.www_dir());
         });
+    },
+
+    update_build_settings:function(config) {
+        var targetDevice = parseTargetDevicePreference(config.getPreference('target-device', 'ios'));
+        var deploymentTarget = config.getPreference('deployment-target', 'ios');
+
+        // no build settings provided, we don't need to parse and update .pbxproj file
+        if (!targetDevice && !deploymentTarget) {
+            return Q();
+        }
+
+        var me = this;
+        var d = Q.defer();
+        var proj = new xcode.project(this.pbxproj);
+        proj.parse(function(err,hash) {
+            if (err) {
+                d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+                return;
+            }
+            if (targetDevice) {
+                events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
+                proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
+            }
+            if (deploymentTarget) {
+                events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
+                proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
+            }
+            fs.writeFileSync(me.pbxproj, proj.writeSync(), 'utf-8');
+            d.resolve();
+        });
+        return d.promise;
     }
 };
 
@@ -225,4 +259,15 @@ module.exports.prototype = {
 // -rclabel stripped=.
 function default_CFBundleVersion(version) {
     return version.split('-')[0];
+}
+
+// Converts cordova specific representation of target device to XCode value
+function parseTargetDevicePreference(value) {
+    if (!value) return null;
+    var map = { 'universal': '"1,2"', 'handset': '"1"', 'tablet': '"2"'};
+    if (map[value.toLowerCase()]) {
+        return map[value.toLowerCase()];
+    }
+    events.emit('warn', 'Unknown target-device preference value: "' + value + '".');
+    return null;
 }

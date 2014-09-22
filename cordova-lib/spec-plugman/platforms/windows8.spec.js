@@ -108,7 +108,7 @@ describe('windows8 project handler', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
                 windows8['source-file'].install(source[0], dummyplugin, temp, dummy_id, proj_files);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/windows8/dummer.js', temp, path.join('www', 'plugins', 'com.phonegap.plugins.dummyplugin', 'dummer.js'));
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/windows8/dummer.js', temp, path.join('plugins', 'com.phonegap.plugins.dummyplugin', 'dummer.js'));
             });
             it('should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
@@ -118,7 +118,7 @@ describe('windows8 project handler', function() {
             });
             it('should throw if source-file target already exists', function() {
                 var source = copyArray(valid_source);
-                var target = path.join(temp, 'www', 'plugins', dummy_id, 'dummer.js');
+                var target = path.join(temp, 'plugins', dummy_id, 'dummer.js');
                 shell.mkdir('-p', path.dirname(target));
                 fs.writeFileSync(target, 'some bs', 'utf-8');
                 expect(function() {
@@ -144,7 +144,7 @@ describe('windows8 project handler', function() {
                 .then(function() {
                     var source = copyArray(valid_source);
                     windows8['source-file'].uninstall(source[0], temp, dummy_id, proj_files);
-                    expect(s).toHaveBeenCalledWith(temp, path.join('www', 'plugins',  'com.phonegap.plugins.dummyplugin', 'dummer.js'));
+                    expect(s).toHaveBeenCalledWith(temp, path.join('plugins',  'com.phonegap.plugins.dummyplugin', 'dummer.js'));
                     done();
                 });
             });

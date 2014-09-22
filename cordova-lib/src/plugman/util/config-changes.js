@@ -38,7 +38,7 @@
 var fs   = require('fs'),
     path = require('path'),
     glob = require('glob'),
-    plist = require('plist-with-patches'),
+    plist = require('plist'),
     bplist = require('bplist-parser'),
     et   = require('elementtree'),
     semver = require('semver'),
@@ -201,7 +201,7 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
             // New windows template separate manifest files for Windows8, Windows8.1 and WP8.1
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
             for (var subst in substs) {
                 events.emit('verbose', 'Applying munge to ' + substs[subst]);
                 self.apply_file_munge(substs[subst], munge.files[file], true);
@@ -260,7 +260,7 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            var substs = ['package.phone.appxmanifest', 'package.store.appxmanifest', 'package.store80.appxmanifest'];
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
             for (var subst in substs) {
                 events.emit('verbose', 'Applying munge to ' + substs[subst]);
                 self.apply_file_munge(substs[subst], munge.files[file]);
@@ -421,8 +421,8 @@ ConfigKeeper.prototype.get = ConfigKeeper_get;
 function ConfigKeeper_get(project_dir, platform, file) {
     var self = this;
 
-    //This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
-    //https://issues.apache.org/jira/browse/CB-6414
+    // This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
+    // https://issues.apache.org/jira/browse/CB-6414
     if(file == 'config.xml' && platform == 'android'){
         file = 'res/xml/config.xml';
     }
@@ -554,8 +554,9 @@ function ConfigFile_load() {
         //       We always write out text plist, not binary.
         //       Do we still need to support binary plist?
         //       If yes, use plist.parseStringSync() and read the file once.
-        self.plist_module = (isBinaryPlist(filepath) ? bplist : plist);
-        self.data = self.plist_module.parseFileSync(filepath);
+        self.data = isBinaryPlist(filepath) ?
+                bplist.parseBuffer(fs.readFileSync(filepath)) :
+                plist.parse(fs.readFileSync(filepath, 'utf8'));
     }
 }
 
@@ -796,7 +797,7 @@ function process_munge(obj, createParents, func, keys /* or key1, key2 .... */ )
 }
 
 // All values from munge are added to base as
-// base[file][selector][child] += base[file][selector][child]
+// base[file][selector][child] += munge[file][selector][child]
 // Returns a munge object containing values that exist in munge
 // but not in base.
 function increment_munge(base, munge) {
@@ -819,7 +820,7 @@ function increment_munge(base, munge) {
 }
 
 // Update the base munge object as
-// base[file][selector][child] -= base[file][selector][child]
+// base[file][selector][child] -= munge[file][selector][child]
 // nodes that reached zero value are removed from base and added to the returned munge
 // object.
 function decrement_munge(base, munge) {

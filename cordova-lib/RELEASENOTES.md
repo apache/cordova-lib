@@ -20,6 +20,149 @@
 -->
 # Cordova-lib Release Notes
 
+### 0.21.10 (Sep 05, 2014)
+* CB-7457 - cordova plugin add --searchpath does not recurse through subfolders when a plugin.xml is malformed in one of them
+* CB-7457 - Add malformed plugin for tests
+* [Windows8] Fix failing test to match updated functionality
+* CB-7420 Windows. Plugin <resource-file>s are removed from platform during prepare
+* Windows helper. Removes unnecessary $(MSBuildThisFileDirectory)
+* updated Releasenotes.md
+* updated version to 0.21.10-dev
+* CB-7457 - cordova plugin add --searchpath does not recurse through subfolders when a plugin.xml is malformed in one of them
+* CB-7457 - Add malformed plugin for tests
+* [Windows8] Fix failing test to match updated functionality
+* updated Releasenotes.md
+* updated version to 0.21.10-dev
+* updated version, updated ffos to use 3.6.1, updated cordova-js dependency to be strcit
+* CB-7383 Incremented package version to -dev
+* updated platforms.js to use 3.6.0
+*  Updated version and RELEASENOTES.md for release 0.21.8
+* CB-5535: Remove "--arc" from ios platform creation args
+* Windows helper. Removes unnecessary $(MSBuildThisFileDirectory)
+* CB-7420 Windows. Plugin <resource-file>s are removed from platform during prepare
+* CB-7416 Fixes file path reference when adding new source file
+* CB-7416 handleInstall tests for null platformTag. removed uncalled 'hasPlatformSection' from PluginInfo.js
+* Remove use of path.join for manifest.launch_path
+* CB-7347 Improve cordova platform add /path/to handling
+* CB-7118 (fix jshint warnings)
+* CB-7114 Android: add support of min/max/target SDK to config.xml
+* CB-7118 Use updated version of node-xcode
+* CB-7118 iOS: add target-device and MinimumOSVersion support to config.xml
+* ubuntu: support incremental builds
+* ubuntu: support target-dir for resource-file
+* ubuntu: use common.copyFile
+* ubuntu: check icon existence
+* ffos: Make author url optional
+* CB-7142 Add <variable> to <feature> for "plugin restore" command
+* Set git clone depth to 10 for Travis to make it faster
+* windows: update as per changed manifest file names
+* Don't spy and expect it to call the other spy ...
+* Well that looks like an error
+* Fixing failing tests: update_proj should be update_project
+* Fix failing tests. update_jsproj and update_csproj are now just update_proj
+* Fix jshint errors in amazon_fireos_parser : mixed single/double quotes
+* CB-6699 Include files from www folder via single element (use ** glob pattern)
+* Taking care of dashes in amazon-fireos platform name.
+* Upleveled amazon-fireos changes.
+* Fix link/copy parent check for windows
+* Style fixes - comments
+* Fix error in comments for munge functions
+* Add link to BuildBot at ci.cordova.io in README
+* CB-7255 Fixed writing plist unescaped
+* Allow plugin modules to be .json files
+* Style fixes - white space only
+* Add JSCS config file
+* CB-7260 Get cordova-android 3.5.1 instead of 3.5.0
+* CB-7228: Fixed issue with "cordova prepare --browserify"
+* CB-7234 added better outputs for plugin registry workflows
+* CB-7100: Use npm based lazy-load by default
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7140 Check plugin versions in local search path
+* CB-7001: Create a --browserify option for run action
+* CB-7228: Cordova prepare --browserify runs on all installed plugins
+* CB-7190: Add browserify support in cordova-lib/cordova-cli
+* Remove references to "firefoxos"
+* Browser platform is now being created from cli
+* Created new files for browser
+
+### 0.21.8 (Aug 29, 2014)
+* CB-5535: Remove "--arc" from ios platform creation args
+* CB-7416 Fixes file path reference when adding new source file
+* CB-7416 handleInstall tests for null platformTag. removed uncalled 'hasPlatformSection' from PluginInfo.js
+* Remove use of path.join for manifest.launch_path
+* CB-7347 Improve cordova platform add /path/to handling
+* CB-7118 (fix jshint warnings)
+* CB-7114 Android: add support of min/max/target SDK to config.xml
+* CB-7118 Use updated version of node-xcode
+* CB-7118 iOS: add target-device and MinimumOSVersion support to config.xml
+* ubuntu: support incremental builds
+* ubuntu: support target-dir for resource-file
+* ubuntu: use common.copyFile
+* ubuntu: check icon existence
+* ffos: Make author url optional
+* CB-7142 Add <variable> to <feature> for "plugin restore" command
+* Set git clone depth to 10 for Travis to make it faster
+* windows: update as per changed manifest file names
+* Don't spy and expect it to call the other spy ...
+* Well that looks like an error
+* Fixing failing tests: update_proj should be update_project
+* Fix failing tests. update_jsproj and update_csproj are now just update_proj
+* Fix jshint errors in amazon_fireos_parser : mixed single/double quotes
+* CB-6699 Include files from www folder via single element (use ** glob pattern)
+* Allow plugin modules to be .json files
+* Taking care of dashes in amazon-fireos platform name.
+* Upleveled amazon-fireos changes.
+* Fix link/copy parent check for windows
+* Style fixes - comments
+* Fix error in comments for munge functions
+* Add link to BuildBot at ci.cordova.io in README
+* CB-7255 Fixed writing plist unescaped
+* Style fixes - white space only
+* Add JSCS config file
+* CB-7228: Fixed issue with "cordova prepare --browserify"
+* CB-7001: Create a --browserify option for run action
+* CB-7228: Cordova prepare --browserify runs on all installed plugins
+* CB-7190: Add browserify support in cordova-lib/cordova-cli
+* CB-7260 Get cordova-android 3.5.1 instead of 3.5.0
+* CB-7001: Create a --browserify option for run action
+* CB-7228: Cordova prepare --browserify runs on all installed plugins
+* CB-7190: Add browserify support in cordova-lib/cordova-cli
+* CB-7234 added better outputs for plugin registry workflows
+* CB-7100: Use npm based lazy-load by default
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7140 Check plugin versions in local search path
+* small refactor for missing code block after conditional statement
+* CB-7203 isRelativePath needs to pass path through
+* CB-7199 control git/npm using platform.js
+* CB-7199 control git/npm using platform.js
+* Fix style errors - make jshint happy
+* CB-6756 Adds save and restore command for platforms.
+* Add VERSION files to fix failing tests (forgot to git add in b7781cb)
+* CB-7132 Fix regression regarding default resources
+* CB-7187 Make CoreLocation a required library only for cordova-ios < 3.6.0
+* Add AppVeyor badge to README
+* Add Travis and npm badges to README.md
+* fix(tests): cordova/lazy_load spec on Windows
+* Fix plugman/install spec
+* build configuration for AppVeyor
+* build configurations for Travis
+* CB-7124 Wrap the cordova platform string in Platform object
+* CB-7140: Switch to using PluginInfo in plugman/fetch.js
+* Minor style fixes in fetch.js
+* CB-7078: Disable serve.spec.js
+* CB-6512: platform add <path> was using wrong www/cordova.js
+* CB-7083 Missing SDKReference support on Windows Phone
+* CB-6874 Consolidate <Content> tag additions into 1 ItemGroup
+* CB-7100: Use npm based lazy-load by default
+* CB-7091: Remove check_requirements() funcs from platform parsers
+* CB-7091: Don't call check_requirements during platform add
+* Fix typo in comment.
+* CB-7087 Retire blackberry10/ directory
+* CB-6776: Fix uri/url renaming bug
+* Remove npm-shrinkwrap.json
+
 
 ### 0.21.4 (Jun 23, 2014)
 * CB-3571, CB-2606: support for splashscreens
@@ -79,3 +222,4 @@
 
 ### 0.21.1
 Initial release v0.21.1 (picks up from the same version number as plugman was).
+

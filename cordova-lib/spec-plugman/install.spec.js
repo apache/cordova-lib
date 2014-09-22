@@ -52,7 +52,8 @@ var install = require('../src/plugman/install'),
     },
     promise,
     results = {},
-    dummy_id = 'com.phonegap.plugins.dummyplugin';
+    dummy_id = 'com.phonegap.plugins.dummyplugin',
+    superspawn = require('../src/cordova/superspawn');
 
 
 // Pre-crete the temp dir, without it the test fails.
@@ -147,6 +148,7 @@ describe('start', function() {
 
 describe('install', function() {
     var chmod, exec, proc, add_to_queue, prepare, actions_push, c_a, mkdir, cp, rm, fetchSpy, emit;
+    var spawnSpy;
 
     beforeEach(function() {
         prepare = spyOn(plugman, 'prepare').andReturn( Q(true) );
@@ -154,6 +156,7 @@ describe('install', function() {
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, cb) {
             cb(false, '', '');
         });
+        spawnSpy = spyOn(superspawn, 'spawn').andReturn(Q('3.1.0'));
         spyOn(fs, 'mkdirSync').andReturn(true);
         spyOn(shell, 'mkdir').andReturn(true);
         spyOn(platforms, 'copyFile').andReturn(true);

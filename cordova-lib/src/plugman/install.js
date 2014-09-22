@@ -512,18 +512,18 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     var handler = platform_modules[platform];
 
     var platformTag = pluginInfo._et.find('./platform[@name="'+platform+'"]');
+
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
     // we allow using windows8 tag for new windows platform
     if (platform == 'windows' && !platformTag) {
         platformTag = pluginInfo._et.find('platform[@name="' + 'windows8' + '"]');
     }
-    if ( pluginInfo.hasPlatformSection(platform) ) {
+    if (platformTag) {
         var sourceFiles = platformTag.findall('./source-file'),
             headerFiles = platformTag.findall('./header-file'),
             resourceFiles = platformTag.findall('./resource-file'),
             frameworkFiles = platformTag.findall('./framework'),
             libFiles = platformTag.findall('./lib-file');
-
 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(item) {

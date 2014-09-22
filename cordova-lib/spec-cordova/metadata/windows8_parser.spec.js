@@ -132,9 +132,9 @@ describe('windows8 project parser', function() {
             });
         });
         describe('update_www method', function() {
-            var update_jsproj;
+            var update_project;
             beforeEach(function() {
-                update_jsproj = spyOn(parser, 'update_jsproj');
+                update_project = spyOn(parser, 'update_project');
             });
             it('should rm project-level www and cp in platform agnostic www', function() {
                 parser.update_www(path.join('lib','dir'));
@@ -147,7 +147,6 @@ describe('windows8 project parser', function() {
             beforeEach(function() {
                 config = spyOn(parser, 'update_from_config');
                 www = spyOn(parser, 'update_www');
-                www = spyOn(parser, 'update_jsproj');
                 shellls = spyOn(shell, 'ls').andReturn([]);
                 svn = spyOn(util, 'deleteSvnFolders');
                 exists.andReturn(false);

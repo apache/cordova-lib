@@ -49,8 +49,8 @@ module.exports.prototype = {
 
         // overwrite properties existing in config.xml
         var contentNode = config.doc.find('content');
-        var contentSrc = contentNode.attrib['src'];
-        manifest.launch_path = path.join('/', contentSrc) || '/index.html';
+        var contentSrc = contentNode && contentNode.attrib['src'] || 'index.html';
+        manifest.launch_path = '/' + contentSrc;
 
         manifest.installs_allowed_from = manifest.installs_allowed_from || ['*'];
         manifest.version = config.version();
@@ -61,7 +61,7 @@ module.exports.prototype = {
         };
 
         var authorNode = config.doc.find('author');
-        var authorUrl = authorNode.attrib['href'];
+        var authorUrl = authorNode && authorNode.attrib['href'];
 
         if (authorUrl) {
             manifest.developer.url = authorUrl;

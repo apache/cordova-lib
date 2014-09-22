@@ -30,8 +30,7 @@ var fs            = require('fs'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
-    hooker        = require('../hooker'),
-    jsproj        = require('../../util/windows/jsproj');
+    hooker        = require('../hooker');
 
 module.exports = function windows_parser(project) {
     try {
@@ -232,42 +231,6 @@ module.exports.prototype = {
         shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
 
-    // Returns an array of all the files in the given directory with relative paths
-    // - name     : the name of the top level directory (i.e all files will start with this in their path)
-    // - dir     : the directory whos contents will be listed under 'name' directory
-    folder_contents:function(name, dir) {
-        var results = [];
-        var folder_dir = fs.readdirSync(dir);
-        for(var item in folder_dir) {
-            var stat = fs.statSync(path.join(dir, folder_dir[item]));
-            // Add all subfolder item paths if it's not a .svn dir.
-            if( stat.isDirectory() && (folder_dir[item] !== '.svn') ) {
-                var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
-                for(var sub_item in sub_dir) {
-                    results.push(sub_dir[sub_item]);
-                }
-            } else if(stat.isFile()) {
-                results.push(path.join(name, folder_dir[item]));
-            }
-            // else { it is a FIFO, or a Socket, Symbolic Link or something ... }
-        }
-        return results;
-    },
-
-    // updates the jsproj file to explicitly list all www content.
-    update_jsproj:function() {
-        var projFile = new jsproj(this.projFilePath);
-        // remove any previous references to the www files
-        projFile.removeSourceFile(/^(\$\(MSBuildThisFileDirectory\))?www\\/i);
-
-        // now add all www references back in from the root www folder
-        var www_files = this.folder_contents('www', this.www_dir());
-        projFile.addSourceFile(www_files);
-
-        // save file
-        projFile.write();
-    },
-
     // calls the nessesary functions to update the windows8 project
     update_project:function(cfg) {
         // console.log("Updating windows8 project...");
@@ -285,7 +248,6 @@ module.exports.prototype = {
         return hooks.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
         .then(function() {
             // overrides (merges) are handled in update_www()
-            that.update_jsproj();
             that.add_bom();
             util.deleteSvnFolders(that.www_dir());
         });

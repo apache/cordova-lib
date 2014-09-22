@@ -88,7 +88,7 @@ function generatePackageJsonFromPluginXml(plugin_path) {
         if(keywords)     package_json.keywords     = keywords.split(',');
         if(platforms)    package_json.platforms    = platforms;
 
-        // adding engines
+        // Adding engines
         if(engines) {
             package_json.engines = [];
             for(var i = 0, j = engines.length ; i < j ; i++) {
@@ -96,10 +96,10 @@ function generatePackageJsonFromPluginXml(plugin_path) {
             }
         }
 
-        //set docs_path to doc/index.md exists
+        // Set docs_path to doc/index.md exists
         var docs_path = path.resolve(plugin_path, 'doc/index.md');
         if(!(fs.existsSync(docs_path))){
-            //set docs_path to doc/en/index.md
+            // Set docs_path to doc/en/index.md
             docs_path = path.resolve(plugin_path, 'doc/en/index.md');
         }
         if(fs.existsSync(docs_path)){
@@ -107,9 +107,8 @@ function generatePackageJsonFromPluginXml(plugin_path) {
             package_json.englishdoc = englishdoc;
         }
 
-        // write package.json
+        // Write package.json
         var package_json_path = path.resolve(plugin_path, 'package.json');
-        //console.log('about to write package.json');
         fs.writeFileSync(package_json_path, JSON.stringify(package_json, null, 4), 'utf8');
         return package_json;
     });
