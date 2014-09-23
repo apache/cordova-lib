@@ -29,6 +29,7 @@ var path = require('path')
   , plist = require('plist-with-patches')
   , shell = require('shelljs')
   , events = require('../../events')
+  , xml = require('libxmljs')
   , cachedProjectFiles = {}
   ;
 
@@ -183,17 +184,27 @@ function createProject(project_dir, plugin_id) {
     var plugin_path = path.join(project_dir, plugin_name, plugin_name + '.xcodeproj');
     var pbxPath = path.join(plugin_path, 'project.pbxproj');
 
-    if (!fs.existsSync(pbxPath)) {
-        shell.mkdir('-p', plugin_path);
-        shell.cp(path.join(project_dir, 'plugin.pbxproj'), pbxPath);
-        shell.sed('-i', /_target_/g, plugin_name, pbxPath);
-    }
-
     var project_files = glob.sync(path.join(project_dir, '*.xcodeproj', 'project.pbxproj'));
 
     if (project_files.length === 0) {
         throw new Error('does not appear to be an xcode project (no xcode project file)');
     }
+    
+    if (!fs.existsSync(pbxPath)) {
+        shell.mkdir('-p', plugin_path);
+        shell.cp(path.join(project_dir, 'plugin.pbxproj'), pbxPath);
+        shell.sed('-i', /_target_/g, plugin_name, pbxPath);
+        
+        var workspace = glob.sync(path.join(project_dir, '*.xcworkspace', 'contents.xcworkspacedata'))[0];
+        var xmlDoc = xml.parseXml(fs.readFileSync(workspace));
+        xmlDoc.root().node('FileRef').attr({location: 'group:' + plugin_name + '/' + plugin_name + '.xcodeproj'});
+        fs.writeFileSync(workspace, xmlDoc.toString());
+        
+        var proj = xcode.project(project_files[0]).parseSync();
+        proj.addFramework('lib' + plugin_name + '.a');
+        fs.writeFileSync(project_files[0], proj.writeSync());
+    }
+
     var xcodeproj = xcode.project(pbxPath);
     xcodeproj.parseSync();
     

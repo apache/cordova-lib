@@ -87,6 +87,7 @@
 				D97813DC19CB223B00F44206 /* Sources */,
 				D97813DD19CB223B00F44206 /* Frameworks */,
 				D97813DE19CB223B00F44206 /* CopyFiles */,
+                571A463614DB0A1B007FEAC7 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -129,7 +130,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		D97813E219CB223B00F44206 /* Resources */ = {
+		571A463614DB0A1B007FEAC7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
