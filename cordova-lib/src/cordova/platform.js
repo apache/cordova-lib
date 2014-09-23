@@ -427,6 +427,12 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
     if (template_dir) {
         args.push(template_dir);
     }
+    var projectName = cfg.projectName();
+    // Additional check for android is necessary because this feature may cause create script failure
+    // on other platforms due to some of them doesn't support arbitrary arguments
+    if (projectName && target == 'android') {
+        args.push('--projectname="' + projectName + '"');
+    }
 
     return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
     .then(function() {

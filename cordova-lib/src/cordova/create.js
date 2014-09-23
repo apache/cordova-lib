@@ -44,7 +44,7 @@ var DEFAULT_NAME = 'HelloCordova',
  **/
 // Returns a promise.
 module.exports = create;
-function create(dir, id, name, cfg) {
+function create(dir, id, name, cfg, projectname) {
     if (!dir ) {
         return Q.reject(new CordovaError(
             'At least the dir must be provided to create new project. See `'+cordova_util.binname+' help`.'
@@ -232,10 +232,13 @@ function create(dir, id, name, cfg) {
         if (!fs.existsSync(configPath)) {
             var template_config_xml = path.join(__dirname, '..', '..', 'templates', 'config.xml');
             shell.cp(template_config_xml, configPath);
-            // Write out id and name to config.xml
+            // Write out id, name and projectname to config.xml
             var conf = new ConfigParser(configPath);
             conf.setPackageName(id);
             conf.setName(name);
+            if (projectname) {
+                conf.setProjectName(projectname);
+            }
             conf.write();
         }
     });
