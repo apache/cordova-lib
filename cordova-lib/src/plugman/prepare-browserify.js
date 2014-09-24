@@ -80,8 +80,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
 
     outReleaseFileStream.on('error', function(err) {
         var newtime = new Date().valueOf() - time;
-        console.log('error while generating cordova_b.js');
-        plugman.emit('verbose', 'error while generating cordova.js');
+        events.emit('log', 'error while generating cordova.js');
     });
 
 }
@@ -112,26 +111,16 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
     requireTr.platform = platform;
     var platformVersion;
-    //console.log(project_dir);
     computeCommitId(function(commitId) { 
         //run version script for each platform to get platformVersion
         var versionPath = path.join(project_dir, '/cordova/version');
-        if(!fs.existsSync(versionPath)) {
-            //non cli project
-            console.log('non cli'); 
-            console.log(project_dir);
-            versionPath = path.join(project_dir, '/cordova/version'); 
-            console.log(platform);
-        }
         childProcess.exec(versionPath, function(err, stdout, stderr) {
-            console.log(versionPath);
             if (err) {
                 platformVersion = 'N/A';
-                console.log('Error running platform version script');
-                console.log(err);
+                events.emit('log', 'Error running platform version script');
+                events.emit('log', err);
             } else {
                 platformVersion = stdout.trim();
-                console.log('platformVersion: ' + platformVersion);
                 
                 var libraryRelease = bundle(platform, false, commitId, platformVersion);
 
