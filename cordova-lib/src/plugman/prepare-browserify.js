@@ -112,12 +112,23 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
     requireTr.platform = platform;
     var platformVersion;
+    //console.log(project_dir);
     computeCommitId(function(commitId) { 
         //run version script for each platform to get platformVersion
-        childProcess.exec(path.join(process.cwd(), 'platforms/' + platform + '/cordova/version'), function(err, stdout, stderr) {
+        var versionPath = path.join(project_dir, '/cordova/version');
+        if(!fs.existsSync(versionPath)) {
+            //non cli project
+            console.log('non cli'); 
+            console.log(project_dir);
+            versionPath = path.join(project_dir, '/cordova/version'); 
+            console.log(platform);
+        }
+        childProcess.exec(versionPath, function(err, stdout, stderr) {
+            console.log(versionPath);
             if (err) {
                 platformVersion = 'N/A';
                 console.log('Error running platform version script');
+                console.log(err);
             } else {
                 platformVersion = stdout.trim();
                 console.log('platformVersion: ' + platformVersion);
