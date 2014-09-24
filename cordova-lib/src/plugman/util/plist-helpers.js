@@ -31,8 +31,16 @@ function graftPLIST(doc, xml, selector) {
     var obj = plist.parse('<plist>'+xml+'</plist>');
 
     var node = doc[selector];
-    if (node && Array.isArray(node) && Array.isArray(obj))
-        doc[selector] = node.concat(obj);
+    if (node && Array.isArray(node) && Array.isArray(obj)){
+        node.concat(obj);
+        for(var i =0;i<node.length; i++){
+          for(var j=i+1; j<node.length; ++j) {
+            if(node[i] === node[j])
+              node.splice(j--,1);
+          }
+        }
+        doc[selector] = node;
+    }
     else
         doc[selector] = obj;
 
