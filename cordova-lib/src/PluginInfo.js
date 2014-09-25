@@ -201,9 +201,9 @@ function PluginInfo(dirname) {
         return libFiles;
     }
     
-    // <script>
+    // <hook>
     // Example:
-    // <script type="before_build" src="scripts/beforeBuild.js" />
+    // <hook type="before_build" src="scripts/beforeBuild.js" />
     self.getHookScripts = getHookScripts;
     function getHookScripts(hook, platforms) {
         var scriptElements =  self._et.findall('./hook');
