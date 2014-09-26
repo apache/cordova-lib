@@ -32,5 +32,6 @@ module.exports = {
     'firefoxos': require('./platforms/firefoxos'),
     'ubuntu': require('./platforms/ubuntu'),
     'tizen': require('./platforms/tizen'),
-    'browser': require('./platforms/browser')
+    'browser': require('./platforms/browser'),
+    'sugar': require('./platforms/sugar')
 };
