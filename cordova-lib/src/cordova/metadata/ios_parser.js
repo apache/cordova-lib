@@ -122,7 +122,10 @@ module.exports.prototype = {
             {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
             {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
             {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
-            {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136}
+            {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136},
+            {dest: 'Resources/splash/Default-667h.png', width: 750, height: 1334},
+            {dest: 'Resources/splash/Default-736h.png', width: 1242, height: 2208},
+            {dest: 'Resources/splash/Default-Landscape-736h.png', width: 2208, height: 1242}
         ];
 
         platformSplashScreens.forEach(function(item) {
