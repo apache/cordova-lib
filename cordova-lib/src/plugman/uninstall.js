@@ -117,11 +117,19 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     var top_plugin_id = id;
 
     // Recursively remove plugins which were installed as dependents (that are not top-level)
-    // optional?
-    var recursive = true;
-    var toDelete = recursive ? plugin_et.findall('.//dependency') : [];
-    toDelete = toDelete && toDelete.length ? toDelete.map(function(p) { return p.attrib.id; }) : [];
+    var toDelete = [];
     toDelete.push(top_plugin_id);
+    function findDependencies(pluginId) {
+        var config = xml_helpers.parseElementtreeSync(path.join(plugin_dir, '..', pluginId, 'plugin.xml')),
+            deps = config.findall('.//dependency').map(function (p) { return p.attrib.id; });
+        deps.forEach(function (d) {
+            if (toDelete.indexOf(d) === -1) {
+                toDelete.push(d);
+                findDependencies(d);
+            }
+        });
+    }
+    findDependencies(top_plugin_id);
 
     // Okay, now we check if any of these are depended on, or top-level.
     // Find the installed platforms by whether they have a metadata file.
