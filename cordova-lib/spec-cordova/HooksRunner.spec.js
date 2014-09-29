@@ -106,8 +106,6 @@ describe('HooksRunner', function() {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
-            } else if(cmd.match(/version\b/)) {
-                return Q('3.3.0');
             } else if(cmd.match(/update\b/)) {
                 fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
             }
