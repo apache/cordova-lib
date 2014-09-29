@@ -261,6 +261,20 @@ handleIcons: function(config) {
             delete act.attrib['android:launchMode']; // use Android default value (standard)
         }
 
+	// Set min/max/target SDK version
+        //<uses-sdk android:minSdkVersion="10" android:targetSdkVersion="19" ... />
+        var usesSdk = manifest.getroot().find('./uses-sdk');
+        ['minSdkVersion', 'maxSdkVersion', 'targetSdkVersion'].forEach(function(sdkPrefName) {
+            var sdkPrefValue = config.getPreference('android-' + sdkPrefName, 'android');
+            if (!sdkPrefValue) return;
+            
+            if (!usesSdk) { // if there is no required uses-sdk element, we should create it first
+                usesSdk = new et.Element('uses-sdk');
+                manifest.getroot().append(usesSdk);
+            }
+            usesSdk.attrib['android:' + sdkPrefName] = sdkPrefValue;
+        });
+
         // Write out AndroidManifest.xml
         fs.writeFileSync(this.manifest, manifest.write({indent: 4}), 'utf-8');
 
