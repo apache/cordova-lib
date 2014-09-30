@@ -84,7 +84,6 @@ function installPluginsFromConfigXML(cfg) {
             if( feature.version && !feature.url && !feature.installPath ){
                 installFrom += ('@' + feature.version);
             }
-            console.log('Install from ' + installFrom);
             // Add feature preferences as CLI variables if have any
             var options = {cli_variables: feature.variables };
 
