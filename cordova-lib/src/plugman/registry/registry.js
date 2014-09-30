@@ -150,7 +150,15 @@ module.exports = {
     fetch: function(plugin, client) {
         plugin = plugin.shift();
         return initSettings()
-        .then(Q.nbind(npm.load, npm))
+        .then(function (settings) {
+            return Q.nfcall(npm.load)
+            // configure npm here instead of passing parameters to npm.load due to CB-7670
+            .then(function () {
+                for (var prop in settings){
+                    npm.config.set(prop, settings[prop]);
+                }
+            });
+        })
         .then(function() {
             return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
         })

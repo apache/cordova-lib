@@ -136,7 +136,19 @@ function npm_cache_add(pkg) {
     var npm_cache_dir = path.join(util.libDirectory, 'npm_cache');
     // 'cache-min' is the time in seconds npm considers the files fresh and
     // does not ask the registry if it got a fresher version.
-    return Q.nfcall( npm.load, { 'cache-min': 3600*24, cache: npm_cache_dir })
+    var platformNpmConfig = {
+        'cache-min': 3600*24,
+        cache: npm_cache_dir,
+        registry: 'https://registry.npmjs.org'
+    };
+
+    return Q.nfcall(npm.load)
+    .then(function () {
+        // configure npm here instead of passing parameters to npm.load due to CB-7670
+        for (var prop in platformNpmConfig) {
+            npm.config.set(prop, platformNpmConfig[prop]);
+        }
+    })
     .then(function() {
         return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
     }).then(function(info) {
