@@ -676,6 +676,17 @@ function resolveConfigFilePath(project_dir, platform, file) {
         // handle wildcards in targets using glob.
         matches = glob.sync(path.join(project_dir, '**', file));
         if (matches.length) filepath = matches[0];
+        
+        // [CB-5989] multiple Info.plist files may exist. default to $PROJECT_NAME-Info.plist
+        if(matches.length > 1 && file.indexOf("-Info.plist")>-1){
+            var plistName =  getIOSProjectname(project_dir)+'-Info.plist';
+            for (var i=0; i < matches.length; i++) {
+                if(matches[i].indexOf(plistName) > -1){
+                    filepath = matches[i];
+                    break;
+                }
+            }    
+        }
         return filepath;
     }
 
