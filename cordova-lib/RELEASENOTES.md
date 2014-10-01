@@ -20,6 +20,33 @@
 -->
 # Cordova-lib Release Notes
 
+### 3.7.0 (Oct 01, 2014)
+* Bumped version to 3.7.0 to be semVer complient and to match cli version
+* updated platforms.js for 3.6.4
+* CB-5390 Uninstall - recursively remove dependencies of dependencies
+* fixes HooksRunner test - should run before_plugin_uninstall
+* CB-6481 getPluginsHookScripts to work if plugin platform not defined
+* CB-6481 Context opts should copy not reference
+* CB-6481 Fixed tests - removed output
+* CB-6481 Fixed HooksRunner and tests Avoided issue with parallel tests running Added checks for handling mocked config.xml and package.json in HooksRunner and scriptsFinder Addressed jshint issues Renamed ScriptsFinder to scriptsFinder
+* CB-6481 Addressed community review notes: Removed commonModules from Context Renamed Hooker and subclasses to HooksRunner and scriptsFinder Moved scriptsRunner code into HooksRunner
+* CB-6481 Replaced CordovaError throwings with Error per @kamrik review Extracted prepareOptions Hooker method
+* CB-6481 Docs: deprecated .cordova/hooks + other minor updates
+* CB-6481 Updated hooks documentation
+* CB-6481 Added unified hooks support for cordova app and plugins
+* CB-7572 Serve - respond with 304 when resource not modified
+* computeCommitId for browserify workflow fixed to handle cli and non cli workflows:q
+* CB-7219 prepare-browserify now supports commitId and platformVersion for cordovajs
+* CB-7219: initial work for cordova.js platformVersion
+* CB-7219 prepare-browserify now supports commitId and platformVersion for cordovajs
+* CB-7219: initial work for cordova.js platformVersion
+* CB-7383 Updated version and RELEASENOTES.md for release 0.21.13
+* Fix CB-7615 Read config.xml after pre-prepare hooks fire
+* CB-7578 Windows. Fix platform name reported by pre_package hook
+* CB-7576 Support 'windows' merges folder for Windows platform
+* Revert "Merge branch 'browserPlatform' of https://github.com/surajpindoria/cordova-lib"
+* Added tests for browser platform
+
 ### 0.21.13
 * remove shrinkwrap
 
@@ -231,4 +258,3 @@
 
 ### 0.21.1
 Initial release v0.21.1 (picks up from the same version number as plugman was).
-
