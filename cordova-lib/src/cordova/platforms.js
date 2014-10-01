@@ -31,7 +31,7 @@ module.exports = {
     'android' : {
         parser : './metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.6.3'
+        version: '3.6.4'
     },
     'ubuntu' : {
         hostos : ['linux'],
@@ -48,7 +48,7 @@ module.exports = {
         hostos : ['win32'],
         parser : './metadata/wp8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.6.3',
+        version: '3.6.4',
         altplatform: 'wp',
         subdirectory: 'wp8'
     },
@@ -72,20 +72,20 @@ module.exports = {
         hostos : ['win32'],
         parser: './metadata/windows_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.3',
+        version: '3.6.4',
         subdirectory: 'windows'
     },
     'windows':{
         hostos : ['win32'],
         parser: './metadata/windows_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.3',
+        version: '3.6.4',
         subdirectory: 'windows'
     },
     'browser':{
         parser : './metadata/browser_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git',
-        version: '3.5.2'
+        version: '3.6.0'
     }
 };
 

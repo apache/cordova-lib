@@ -1,5 +1,6 @@
 node_modules
 npm-debug.log
+../npm-debug.log
 temp
 .DS_Store
 spec-cordova/fixtures/projects/native
