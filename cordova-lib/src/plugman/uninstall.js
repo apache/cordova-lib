@@ -96,8 +96,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         return Q();
     }
 
-    var xml_path  = path.join(plugin_dir, 'plugin.xml')
-      , plugin_et = xml_helpers.parseElementtreeSync(xml_path);
+   // var xml_path  = path.join(plugin_dir, 'plugin.xml'), plugin_et = xml_helpers.parseElementtreeSync(xml_path);
 
     var doDelete = function(id) {
         var plugin_dir = path.join(plugins_dir, id);
