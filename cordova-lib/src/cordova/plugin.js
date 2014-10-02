@@ -29,6 +29,7 @@ var cordova_util  = require('./util'),
     CordovaError  = require('../CordovaError'),
     ConfigParser  = require('../configparser/ConfigParser'),
     fs            = require('fs'),
+    shell         = require('shelljs'),
     PluginInfo    = require('../PluginInfo'),
     plugman       = require('../plugman/plugman'),
     events        = require('../events');
@@ -121,6 +122,16 @@ module.exports = function plugin(command, targets, opts) {
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry});
                     })
                     .then(function(dir) {
+                        // Validate top-level required variables
+                        var pluginVariables = new PluginInfo.PluginInfo(dir).getPreferences(),
+                            missingVariables = pluginVariables.filter(function (v) {
+                                return !(v in opts.cli_variables);
+                            });
+                        if (missingVariables.length) {
+                            shell.rm('-rf', dir);
+                            events.emit('results', 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).');
+                            return;
+                        }
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
                             return soFar.then(function() {
