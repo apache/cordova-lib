@@ -114,8 +114,16 @@ module.exports.prototype = {
                 var density = densities[i];
                 var resource = resources.getByDensity(density);
                 if (resource) {
+                    var destname = 'screen.png';
+
+                    // If it's a nine-patch image (*.9.png) we need to preserve
+                    // that extension
+                    if (resource.src.match(/\.9\.png$/)) {
+                        destname = 'screen.9.png';
+                    }
+
                     // copy splash screens.
-                    destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
+                    destfilepath = path.join(res, 'drawable-' + density, destname);
                     events.emit('verbose', 'copying splash icon from ' + resource.src + ' to ' + destfilepath);
                     shell.cp('-f', resource.src, destfilepath);
                 }
