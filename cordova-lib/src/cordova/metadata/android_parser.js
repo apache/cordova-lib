@@ -125,7 +125,12 @@ module.exports.prototype = {
                 if (!resource.density) {
                     return;
                 }
-                me.copyImage(path.join(projectRoot, resource.src), resource.density, 'screen.png');
+                var screenname = 'screen.png';
+                if (resource.src.match(/\.9\.png$/)) {
+                    screenname = 'screen.9.png';
+                }
+
+                me.copyImage(path.join(projectRoot, resource.src), resource.density, screenname);
             });
         }
     },
