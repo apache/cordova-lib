@@ -270,11 +270,16 @@ module.exports.prototype = {
         var files = shell.ls('-R', www);
 
         files.forEach(function (file) {
-            if (!file.match(/\.(js|html|css|json)/)) {
+            if (!file.match(/\.(js|html|css|json)$/i)) {
                 return;
             }
 
             var filePath = path.join(www, file);
+            // skip if this is a folder
+            if (!fs.lstatSync(filePath).isFile()) {
+                return;
+            }
+
             var content = fs.readFileSync(filePath);
 
             if (content[0] !== 0xEF && content[1] !== 0xBE && content[2] !== 0xBB) {
