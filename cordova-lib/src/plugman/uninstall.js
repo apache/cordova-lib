@@ -105,7 +105,12 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
             return Q();
         }
 
-        shell.rm('-rf', plugin_dir);
+        if (fs.lstatSync(plugin_dir).isSymbolicLink()) {
+            fs.unlinkSync(plugin_dir);
+        } else {
+            shell.rm('-rf', plugin_dir);
+        }
+
         events.emit('verbose', 'Deleted "'+ id +'"');
     };
 
