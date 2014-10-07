@@ -337,7 +337,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
                 var hooksRunner = new HooksRunner(projectRoot);
 
-                hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
+                return hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
                     return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
                 }).then(function(){
                     return hooksRunner.fire('after_plugin_install', hookOptions);
