@@ -95,7 +95,6 @@ function possiblyFetch(id, plugins_dir, options) {
     }
 
     var opts = underscore.extend({}, options, {
-        link: false,
         client: 'plugman'
     });
 
@@ -634,7 +633,8 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
 
     if (link) {
         events.emit('verbose', 'Symlinking from location "' + plugin_src_dir + '" to location "' + dest + '"');
-        fs.symlinkSync(plugin_src_dir, dest, 'dir');
+		shell.mkdir('-p', path.dirname(dest));
+		fs.symlinkSync(plugin_src_dir, dest, 'dir');
     } else {
         shell.mkdir('-p', dest);
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');

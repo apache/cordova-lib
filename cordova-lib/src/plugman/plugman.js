@@ -111,7 +111,8 @@ plugman.commands =  {
             subdir: '.',
             cli_variables: cli_variables,
             www_dir: cli_opts.www,
-            searchpath: cli_opts.searchpath
+            searchpath: cli_opts.searchpath,
+            link: cli_opts.link
         };
 
         var p = Q();
