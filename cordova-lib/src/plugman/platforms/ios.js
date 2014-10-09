@@ -29,7 +29,7 @@ var path = require('path')
   , plist = require('plist-with-patches')
   , shell = require('shelljs')
   , events = require('../../events')
-  , xml = require('libxmljs')
+  , xml = require('../util/xml-helpers')
   , cachedProjectFiles = {}
   ;
 
@@ -196,8 +196,8 @@ function createProject(project_dir, plugin_id) {
         shell.sed('-i', /_target_/g, plugin_name, pbxPath);
         
         var workspace = glob.sync(path.join(project_dir, '*.xcworkspace', 'contents.xcworkspacedata'))[0];
-        var xmlDoc = xml.parseXml(fs.readFileSync(workspace));
-        xmlDoc.root().node('FileRef').attr({location: 'group:' + plugin_name + '/' + plugin_name + '.xcodeproj'});
+        var xmlDoc = xml.parseElementtreeSync(fs.readFileSync(workspace));
+        xmlDoc.getroot().Element('FileRef', {location: 'group:' + plugin_name + '/' + plugin_name + '.xcodeproj'});
         fs.writeFileSync(workspace, xmlDoc.toString());
         
         var proj = xcode.project(project_files[0]).parseSync();
