@@ -47,6 +47,7 @@ var fs   = require('fs'),
     platforms = require('./../platforms'),
     events = require('../../events'),
     plist_helpers = require('./../util/plist-helpers');
+var shelljs = require('shelljs');
 
 
 // These frameworks are required by cordova-ios by default. We should never add/remove them.
@@ -473,6 +474,7 @@ exports.save_platform_json = save_platform_json;
 function save_platform_json(config, plugins_dir, platform) {
     checkPlatform(platform);
     var filepath = path.join(plugins_dir, platform + '.json');
+    shelljs.mkdir('-p', plugins_dir);
     fs.writeFileSync(filepath, JSON.stringify(config, null, 4), 'utf-8');
 }
 
