@@ -20,8 +20,9 @@
 -->
 # Cordova-lib Release Notes
 
-### 3.7.0 (Oct 01, 2014)
-* Bumped version to 3.7.0 to be semVer complient and to match cli version
+### 4.0.0 (Oct 10, 2014)
+* Bumped version to 4.0.0 to be semVer complient and to match cli version
+* Pinned dependencies in package.json
 * updated platforms.js for 3.6.4
 * CB-5390 Uninstall - recursively remove dependencies of dependencies
 * fixes HooksRunner test - should run before_plugin_uninstall
