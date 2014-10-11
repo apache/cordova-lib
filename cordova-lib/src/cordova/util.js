@@ -18,7 +18,7 @@
 */
 
 /* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
+          indent:4, unused:vars, latedef:nofunc, sub:true
 */
 
 var fs            = require('fs'),
@@ -27,8 +27,12 @@ var fs            = require('fs'),
     shell         = require('shelljs');
 
 // Global configuration paths
-var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
-var global_config_path = path.join(HOME, '.cordova');
+var global_config_path = process.env['CORDOVA_HOME'];
+if (!global_config_path) {
+	var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
+    global_config_path = path.join(HOME, '.cordova');
+}
+
 var lib_path = path.join(global_config_path, 'lib');
 shell.mkdir('-p', lib_path);
 
