@@ -89,6 +89,12 @@ ConfigParser.prototype = {
     setPackageName: function(id) {
         this.doc.getroot().attrib['id'] = id;
     },
+    android_packageName: function() {
+        return this.doc.getroot().attrib['android-packageName'];
+    },
+    ios_CFBundleIdentifier: function() {
+        return this.doc.getroot().attrib['ios-CFBundleIdentifier'];
+    },
     name: function() {
         return getNodeTextSafe(this.doc.find('name'));
     },

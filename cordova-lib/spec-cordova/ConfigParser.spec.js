@@ -53,6 +53,18 @@ describe('config.xml parser', function () {
             });
         });
 
+        describe('package name / android-packageName', function() {
+            it('should get the android packagename', function() {
+                expect(cfg.android_packageName()).toEqual('io.cordova.hellocordova.android');
+            });
+        });
+
+        describe('package name / ios-CFBundleIdentifier', function() {
+            it('should get the ios packagename', function() {
+                expect(cfg.ios_CFBundleIdentifier()).toEqual('io.cordova.hellocordova.ios');
+            });
+        });
+
         describe('version', function() {
             it('should get the version', function() {
                 expect(cfg.version()).toEqual('0.0.1');

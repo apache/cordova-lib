@@ -60,7 +60,7 @@ module.exports.prototype = {
             return Q.reject(new Error('update_from_config requires a ConfigParser object'));
         }
         var name = config.name();
-        var pkg = config.packageName();
+        var pkg = config.ios_CFBundleIdentifier() || config.packageName();
         var version = config.version();
 
         // Update package id (bundle id)

@@ -117,8 +117,15 @@ describe('ios project parser', function () {
                 });
             });
             it('should write out the app id to info plist as CFBundleIdentifier', function(done) {
+                cfg.ios_CFBundleIdentifier = function() { return null };
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleIdentifier).toEqual('testpkg');
+                });
+            });
+            it('should write out the app id to info plist as CFBundleIdentifier with ios-CFBundleIdentifier', function(done) {
+                cfg.ios_CFBundleIdentifier = function() { return 'testpkg_ios' };
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].CFBundleIdentifier).toEqual('testpkg_ios');
                 });
             });
             it('should write out the app version to info plist as CFBundleVersion', function(done) {
