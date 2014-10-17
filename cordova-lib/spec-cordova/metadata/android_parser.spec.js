@@ -139,8 +139,14 @@ describe('android project parser', function() {
                 expect(stringsRoot.getroot().find('string').text).toEqual('testname');
             });
             it('should write out the app id to androidmanifest.xml and update the cordova-android entry Java class', function() {
+                cfg.android_packageName = function () { return null };
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().attrib.package).toEqual('testpkg');
+            });
+            it('should write out the app id to androidmanifest.xml and update the cordova-android entry Java class with android_packageName', function() {
+                cfg.android_packageName = function () { return 'testpkg_android' };
+                p.update_from_config(cfg);
+                expect(manifestRoot.getroot().attrib.package).toEqual('testpkg_android');
             });
             it('should write out the app version to androidmanifest.xml', function() {
                 p.update_from_config(cfg);

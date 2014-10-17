@@ -226,7 +226,7 @@ module.exports.prototype = {
         manifest.getroot().attrib["android:versionCode"] = versionCode;
 
         // Update package name by changing the AndroidManifest id and moving the entry class around to the proper package directory
-        var pkg = config.packageName();
+        var pkg = config.android_packageName() || config.packageName();
         pkg = pkg.replace(/-/g, '_'); // Java packages cannot support dashes
         var orig_pkg = manifest.getroot().attrib.package;
         manifest.getroot().attrib.package = pkg;
