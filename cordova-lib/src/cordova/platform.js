@@ -54,13 +54,13 @@ function add(hooksRunner, projectRoot, targets, opts) {
         return Q.reject(new CordovaError(msg));
     }
 
-    targets.forEach(function(platform) {
-        if ( !hostSupports(platform) ) {
-            msg = 'Applications for platform ' + platform +
+    for(var i= 0 ; i< targets.length; i++){
+        if ( !hostSupports(targets[i]) ) {
+            msg = 'Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
-            throw new CordovaError(msg);
+            return Q.reject( new CordovaError(msg));
         }
-    });
+    }
 
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
