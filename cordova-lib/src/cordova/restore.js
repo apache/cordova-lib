@@ -54,7 +54,21 @@ function installPlatformsFromConfigXML(cfg){
     if(!targets || !targets.length  ){
         return Q.all('No platforms are listed in config.xml to restore');
     }
-    return platform('add', targets);
+    
+    // Run platform add for all the platforms seperately 
+    // so that failure on one does not affect the other.
+    var promises = targets.map(function(target){
+        return platform('add',target);
+    });
+    return Q.allSettled(promises).then(
+        function (results) {
+            for(var i =0; i<results.length; i++){
+                //log the rejections otherwise they are lost
+                if(results[i].state ==='rejected'){
+                    events.emit('log', results[i].reason.message);
+                }
+            }
+        });
 }
 
 //returns a Promise
