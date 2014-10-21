@@ -52,6 +52,7 @@ module.exports = {
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <source-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
+            project_ref = fixPathSep(project_ref);
 
             if (is_framework) {
                 var weak = source_el.attrib['weak'];
@@ -72,6 +73,8 @@ module.exports = {
             var is_framework = source_el.attrib['framework'] && (source_el.attrib['framework'] == 'true' || source_el.attrib['framework'] === true);
 
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
+            project_ref = fixPathSep(project_ref);
+            
             project.xcode.removeSourceFile(project_ref);
             if (is_framework) {
                 var project_relative = path.join(path.basename(project.xcode_path), project_ref);
@@ -93,7 +96,11 @@ module.exports = {
             var destFile = path.resolve(targetDir, path.basename(src));
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <header-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
-            project.xcode.addHeaderFile(path.join('Plugins', path.relative(project.plugins_dir, destFile)));
+            
+            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
+            project_ref = fixPathSep(project_ref);
+            
+            project.xcode.addHeaderFile(project_ref);
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
         },
@@ -101,7 +108,11 @@ module.exports = {
             var src = header_el.attrib['src'];
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
             var destFile = path.resolve(targetDir, path.basename(src));
-            project.xcode.removeHeaderFile(path.join('Plugins', path.relative(project.plugins_dir, destFile)));
+            
+            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
+            project_ref = fixPathSep(project_ref);
+            
+            project.xcode.removeHeaderFile(project_ref);
             shell.rm('-rf', destFile);
             if(fs.existsSync(targetDir) && fs.readdirSync(targetDir).length>0){
                 shell.rm('-rf', targetDir);
@@ -219,4 +230,9 @@ function getRelativeDir(file) {
     } else {
         return '';
     }
+}
+
+var pathSepFix = new RegExp(path.sep.replace(/\\/,'\\\\'),'g');
+function fixPathSep(file) {
+    return file.replace(pathSepFix, '/');
 }
