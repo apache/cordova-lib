@@ -354,7 +354,16 @@ module.exports.prototype = {
 // PATCH + MINOR * 100 + MAJOR * 10000
 // see http://developer.android.com/tools/publishing/versioning.html
 function default_versionCode(version) {
-    var nums = version.split('-')[0].split('.').map(Number);
-    var versionCode = nums[0] * 10000 + nums[1] * 100 + nums[2];
+    var nums = version.split('-')[0].split('.');
+    var versionCode = 0;
+    if (+nums[0]) {
+        versionCode += +nums[0] * 10000;
+    }
+    if (+nums[1]) {
+        versionCode += +nums[1] * 100;
+    }
+    if (+nums[2]) {
+        versionCode += +nums[2];
+    }
     return versionCode;
 }
