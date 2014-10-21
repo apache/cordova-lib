@@ -240,13 +240,13 @@ function check(hooksRunner, projectRoot) {
                 var m, prefix = p + ' @ ' + (v || 'unknown');
                 switch (avail) {
                 case 'install-failed':
-                    m = prefix + '; current did not install, and thus its version cannot be deterimined';
+                    m = prefix + '; current did not install, and thus its version cannot be determined';
                     break;
                 case 'version-failed':
-                    m = prefix + '; current version script failed, and thus its version cannot be deterimined';
+                    m = prefix + '; current version script failed, and thus its version cannot be determined';
                     break;
                 case 'version-empty':
-                    m = prefix + '; current version script failed to return a version, and thus its version cannot be deterimined';
+                    m = prefix + '; current version script failed to return a version, and thus its version cannot be determined';
                     break;
                 default:
                     if (!v || v === 'broken' || semver.gt(avail, v)) {
