@@ -272,7 +272,7 @@ function check(hooksRunner, projectRoot) {
                 results = platformsText.filter(function (p) { return !!p; }).sort().join('\n');
             }
             if (!results) {
-                results = 'All platforms are up-to-date.';
+                results = 'No platforms can be updated at this time.';
             }
             events.emit('results', results);
             result.resolve();
