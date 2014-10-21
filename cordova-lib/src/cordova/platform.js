@@ -201,6 +201,29 @@ function check(hooksRunner, projectRoot) {
         listeners = events._events;
     events._events = {};
     var result = Q.defer();
+    var updateCordova = Q.defer();
+    superspawn.spawn('npm',
+                     ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'],
+                     {cwd: path.dirname(require.main.filename)}
+                    ).then(
+        function (output) {
+            var vers;
+            try {
+                var json = JSON.parse(output)['cordova-lib'];
+                vers = [json.latest, json.current];
+            } catch (e) {
+                vers = ('' || output).match(/cordova-lib@(\S+)\s+\S+\s+current=(\S+)/);
+            }
+            if (vers) {
+                updateCordova.resolve([vers[1], vers[2]]);
+            } else {
+                updateCordova.resolve();
+            }
+        }
+    ).catch(function (){
+        /* oh well */
+        updateCordova.resolve();
+    });
     cordova.raw.create(scratch)
     .then(function () {
         var h = new HooksRunner(scratch);
@@ -266,16 +289,27 @@ function check(hooksRunner, projectRoot) {
             return d.promise;
         })).then(function() {
             var results = '';
+            var resultQ = Q.defer();
             events._events = listeners;
             shell.rm('-rf', scratch);
+            updateCordova.promise.then(function (versions) {
+                var message = '';
+                if (versions && semver.gt(versions[0], versions[1])) {
+                    message = 'An update of cordova is available: ' + versions[0] + '\n';
+                }
+                resultQ.promise.then(function (output) {
+                    var results = message + output;
+                    events.emit('results', results);
+                    result.resolve();
+                });
+            });
             if (platformsText) {
                 results = platformsText.filter(function (p) { return !!p; }).sort().join('\n');
             }
             if (!results) {
                 results = 'No platforms can be updated at this time.';
             }
-            events.emit('results', results);
-            result.resolve();
+            resultQ.resolve(results);
         })
         .done();
     }).catch(function (){
