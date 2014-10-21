@@ -29,7 +29,7 @@ var path = require('path')
   , plist = require('plist-with-patches')
   , shell = require('shelljs')
   , events = require('../../events')
-  , xml = require('../util/xml-helpers')
+  , xml = require('../../util/xml-helpers')
   , cachedProjectFiles = {}
   ;
 
