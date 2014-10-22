@@ -141,15 +141,15 @@ function getAllPluginsHookScriptFiles(hook, opts) {
     var pluginInfo;
     var currentPluginOptions;
 
-    opts.cordova.plugins.forEach(function(pluginId) {
-        pluginDir = path.join(opts.projectRoot, 'plugins', pluginId);
+    var plugins = PluginInfo.loadPluginsDir(path.join(opts.projectRoot, 'plugins'));
 
+    plugins.forEach(function(pluginInfo) {
         currentPluginOptions = {
-            id: pluginId,
-            pluginInfo: new PluginInfo.PluginInfo(pluginDir),
-            dir: pluginDir
+            id: pluginInfo.id,
+            pluginInfo: pluginInfo,
+            dir: pluginInfo.dir
         };
-        
+
         scripts = scripts.concat(getPluginScriptFiles(currentPluginOptions, hook, opts.cordova.platforms));
     });
     return scripts;
