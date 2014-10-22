@@ -118,7 +118,13 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     // Recursively remove plugins which were installed as dependents (that are not top-level)
     var toDelete = [];
     function findDependencies(pluginId) {
-        var config = xml_helpers.parseElementtreeSync(path.join(plugin_dir, '..', pluginId, 'plugin.xml')),
+        var depPluginDir = path.join(plugin_dir, '..', pluginId);
+        // Skip plugin check for dependencies if it does not exist (CB-7846).
+        if (!fs.existsSync(depPluginDir) ) {
+            events.emit('verbose', 'Plugin "'+ pluginId +'" does not exist ('+ depPluginDir +')');
+            return;
+        }
+        var config = xml_helpers.parseElementtreeSync(path.join(depPluginDir, 'plugin.xml')),
             deps = config.findall('.//dependency').map(function (p) { return p.attrib.id; });
         deps.forEach(function (d) {
             if (toDelete.indexOf(d) === -1) {
@@ -139,7 +145,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     // Can have missing plugins on some platforms when not supported..
     var dependList = {};
     platforms.forEach(function(platform) {
-        var depsInfo = dependencies.generate_dependency_info(plugins_dir, platform);
+        var depsInfo = dependencies.generateDependencyInfo(plugins_dir, platform);
         var tlps = depsInfo.top_level_plugins;
         var deps;
 
@@ -209,7 +215,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     var plugin_id    = plugin_et._root.attrib['id'];
 
     // Deps info can be passed recusively
-    var depsInfo = options.depsInfo || dependencies.generate_dependency_info(plugins_dir, platform, 'remove');
+    var depsInfo = options.depsInfo || dependencies.generateDependencyInfo(plugins_dir, platform, 'remove');
 
     // Check that this plugin has no dependents.
     var dependents = dependencies.dependents(plugin_id, depsInfo, platform);
