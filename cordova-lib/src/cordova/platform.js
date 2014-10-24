@@ -39,6 +39,7 @@ var config            = require('./config'),
     promiseutil       = require('../util/promise-util'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
+    unorm             = require('unorm'),
     shell             = require('shelljs');
 
 // Expose the platform parsers on top of this command
@@ -456,7 +457,10 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
     }
 
     var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
-    var name = cfg.name();
+    // CB-6992 it is necessary to normalize characters
+    // because node and shell scripts handles unicode symbols differently
+    // We need to normalize the name to NFD form since iOS uses NFD unicode form
+    var name = target == 'ios' ? unorm.nfd(cfg.name()) : cfg.name();
     args.push(output, pkg, name);
     if (template_dir) {
         args.push(template_dir);
