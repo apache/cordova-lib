@@ -38,6 +38,7 @@ var configChanges = require('../../src/plugman/util/config-changes'),
     shareddepsplugin = path.join(__dirname, '..', 'plugins', 'shared-deps-multi-child'),
     configplugin = path.join(__dirname, '..', 'plugins', 'ConfigTestPlugin'),
     varplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
+    plistplugin = path.join(__dirname, '..', 'plugins', 'PlistPlugin'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*'),
     android_two_no_perms_project = path.join(__dirname, '..', 'projects', 'android_two_no_perms', '*'),
     ios_plist_project = path.join(__dirname, '..', 'projects', 'ios-plist', '*'),
@@ -321,6 +322,15 @@ describe('config-changes module', function() {
                     configChanges.add_installed_plugin_to_prepare_queue(plugins_dir, 'VariablePlugin', 'ios', {});
                     configChanges.process(plugins_dir, temp, 'ios');
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
+                });
+            });
+            describe('plist merge dictionaries', function() {
+                it('should write empty string nodes with no whitespace', function() {
+                    shell.cp('-rf', ios_config_xml, temp);
+                    shell.cp('-rf', plistplugin, plugins_dir);
+                    configChanges.add_installed_plugin_to_prepare_queue(plugins_dir, 'PlistPlugin', 'ios', {});
+                    configChanges.process(plugins_dir, temp, 'ios');
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>UINewsstandIcon<\/key>[\s\S]*<key>CFBundlePrimaryIcon<\/key>/);
                 });
             });
             describe('of pbxproject framework files', function() {
