@@ -20,6 +20,7 @@
     "bplist-parser": "0.0.5",
     "dep-graph": "1.1.0",
     "elementtree": "0.1.5",
+    "fs-extra": "^0.12.0",
     "glob": "3.2.11",
     "mime": "1.2.11",
     "npm": "1.3.4",

@@ -24,6 +24,7 @@ var uninstall = require('../src/plugman/uninstall'),
     plugman = require('../src/plugman/plugman'),
     common  = require('./common'),
     fs      = require('fs'),
+    fsext   = require('fs-extra'),
     path    = require('path'),
     shell   = require('shelljs'),
     Q       = require('q'),
@@ -52,8 +53,8 @@ function uninstallPromise(f) {
 describe('start', function() {
 
     it('start', function() {
-        shell.rm('-rf', project);
-        shell.rm('-rf', project2);
+        fsext.removeSync(project);
+        fsext.removeSync(project2);
         shell.cp('-R', path.join(srcProject, '*'), project);
         shell.cp('-R', path.join(srcProject, '*'), project2);
 
