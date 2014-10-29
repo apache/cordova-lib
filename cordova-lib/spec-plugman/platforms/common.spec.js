@@ -25,7 +25,9 @@ var common = require('../../src/plugman/platforms/common')
   , src = path.join(project_dir, 'src')
   , dest = path.join(project_dir, 'dest')
   , java_dir = path.join(src, 'one', 'two', 'three')
-  , java_file = path.join(java_dir, 'test.java');
+  , java_file = path.join(java_dir, 'test.java')
+  , symlink_file = path.join(java_dir, 'symlink')
+  , non_plugin_file = path.join(osenv.tmpdir(), 'non_plugin_file');
 
 describe('common platform handler', function() {
     describe('resolveSrcPath', function() {
@@ -51,14 +53,48 @@ describe('common platform handler', function() {
     });
 
     describe('copyFile', function() {
-        it('should throw if source path cannot be resolved', function(){
-            expect(function(){common.copyFile(test_dir, src, project_dir, dest)}).toThrow();
+        it('should throw if source path not found', function(){
+            expect(function(){common.copyFile(test_dir, src, project_dir, dest)}).
+                toThrow(new Error('"' + src + '" not found!'));
+        });
+
+        it('should throw if src not in plugin directory', function(){
+            shell.mkdir('-p', project_dir);
+            fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
+            expect(function(){common.copyFile(test_dir, "../non_plugin_file", project_dir, dest)}).
+                toThrow(new Error('"' + non_plugin_file + '" not located within plugin!'));
+            shell.rm('-rf', test_dir);
+        });
+
+        it('should allow symlink src, if inside plugin', function(){
+            shell.mkdir('-p', java_dir);
+            fs.writeFileSync(java_file, 'contents', 'utf-8');
+            fs.symlinkSync(java_file, symlink_file);
+            common.copyFile(test_dir, symlink_file, project_dir, dest)
+            shell.rm('-rf', project_dir);
+        });
+
+        it('should throw if symlink is linked to a file outside the plugin', function(){
+            shell.mkdir('-p', java_dir);
+            fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
+            fs.symlinkSync(non_plugin_file, symlink_file);
+            expect(function(){common.copyFile(test_dir, symlink_file, project_dir, dest)}).
+                toThrow(new Error('"' + symlink_file + '" not located within plugin!'));
+            shell.rm('-rf', project_dir);
         });
 
         it('should throw if target path exists', function(){
             shell.mkdir('-p', dest);
             expect(function(){common.copyFile(test_dir, src, project_dir, dest)}).toThrow();
             shell.rm('-rf', dest);
+        });
+
+        it('should throw if dest is outside the project directory', function(){
+            shell.mkdir('-p', java_dir);
+            fs.writeFileSync(java_file, 'contents', 'utf-8');
+            expect(function(){common.copyFile(test_dir, java_file, project_dir, non_plugin_file)}).
+                toThrow(new Error('"' + non_plugin_file + '" not located within project!'));
+            shell.rm('-rf', project_dir);
         });
 
         it('should call mkdir -p on target path', function(){
