@@ -21,78 +21,14 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-module.exports = {
-    'ios' : {
-        hostos : ['darwin'],
-        parser : './metadata/ios_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
-        version: '3.6.3'
-    },
-    'android' : {
-        parser : './metadata/android_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.6.4'
-    },
-    'ubuntu' : {
-        hostos : ['linux'],
-        parser : './metadata/ubuntu_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
-        version: '3.6.3'
-    },
-    'amazon-fireos' : {
-        parser : './metadata/amazon_fireos_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
-        version: '3.6.3'
-    },
-    'wp8' : {
-        hostos : ['win32'],
-        parser : './metadata/wp8_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.6.4',
-        altplatform: 'wp',
-        subdirectory: 'wp8'
-    },
-    'blackberry10' : {
-        parser : './metadata/blackberry10_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.6.3'
-    },
-    'www':{
-        hostos : [],
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git',
-        source : 'git',
-        version: '3.6.3'
-    },
-    'firefoxos':{
-        parser: './metadata/firefoxos_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
-        version: '3.6.3'
-    },
-    'windows8':{
-        hostos : ['win32'],
-        parser: './metadata/windows_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.4',
-        subdirectory: 'windows'
-    },
-    'windows':{
-        hostos : ['win32'],
-        parser: './metadata/windows_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.6.4',
-        subdirectory: 'windows'
-    },
-    'browser':{
-        parser : './metadata/browser_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git',
-        version: '3.6.0'
-    }
-};
+var platforms = require('./platformsConfig.json');
 
 var addModuleProperty = require('./util').addModuleProperty;
-Object.keys(module.exports).forEach(function(key) {
-    var obj = module.exports[key];
+Object.keys(platforms).forEach(function(key) {
+    var obj = platforms[key];
     if (obj.parser) {
         addModuleProperty(module, 'parser', obj.parser, false, obj);
     }
 });
+
+module.exports = platforms;

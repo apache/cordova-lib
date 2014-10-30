@@ -31,6 +31,7 @@ exports = module.exports = {
     configparser: require('./src/configparser/ConfigParser.js'),
     cordova_platforms: require('./src/cordova/platforms'),
     ////  MAIN CORDOVA TOOLS API
+    PluginInfo: require('./src/PluginInfo'),
     CordovaError: require('./src/CordovaError')
 }
 
