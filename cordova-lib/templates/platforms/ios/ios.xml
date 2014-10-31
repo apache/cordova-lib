@@ -5,5 +5,5 @@
         </feature>
     </config-file>
 
-    <source-file src="src/ios/CDV%pluginName%.m" />
+    <source-file src="src/ios/%pluginName%.m" />
 </platform>
