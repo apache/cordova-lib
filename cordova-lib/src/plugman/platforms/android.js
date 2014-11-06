@@ -107,7 +107,13 @@ module.exports = {
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            projectConfig.addSubProject(parentDir, subDir);
+            var type = source_el.attrib.type;
+            if (type == 'gradleReference') {
+                //add reference to build.gradle
+                projectConfig.addGradleReference(parentDir, subDir);
+            } else {
+                projectConfig.addSubProject(parentDir, subDir);
+            }
         },
         uninstall:function(source_el, project_dir, plugin_id) {
             var src = source_el.attrib.src;
@@ -130,7 +136,12 @@ module.exports = {
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            projectConfig.removeSubProject(parentDir, subDir);
+            var type = source_el.attrib.type;
+            if (type == 'gradleReference') {
+                projectConfig.removeGradleReference(parentDir, subDir);
+            } else {
+                projectConfig.removeSubProject(parentDir, subDir);
+            }
         }
     },
     parseProjectFile: function(project_dir){

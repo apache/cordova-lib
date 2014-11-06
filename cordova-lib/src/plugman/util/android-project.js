@@ -113,7 +113,6 @@ function updateGradleLibrariesFile(librariesFile, updateFn) {
         var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'});
         var lines = libraries.split('\n');
         var openLine, closeLine;
-        var exists = false;
         for (var i = 0; i < lines.length; ++i) {
             var line = lines[i];
             if (line.indexOf('dependencies {') > -1) {
@@ -157,6 +156,64 @@ function removeGradleLibraryFromLibraries(librariesFile, gradleLibraryPath) {
         var exists = false;
         for (var i = 0; i < lines.length; ++i) {
             if (lines[i].indexOf('compile project(' + gradleLibraryPath + ')') > -1) {
+                exists = true;
+                foundLine = i;
+            }
+        }
+        if (exists) {
+            lines.splice(foundLine, 1);
+        }
+    });
+}
+
+function updateBuildGradleFile(librariesFile, updateFn) {
+    try {
+        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'});
+        var lines = libraries.split('\n');
+        var openLine, closeLine;
+        for (var i = 0; i < lines.length; ++i) {
+            var line = lines[i];
+            if (line.indexOf('// PLUGIN GRADLE EXTENSIONS START') > -1) {
+                openLine = i;
+            }
+            if ((typeof openLine !== 'undefined') && line.indexOf('// PLUGIN GRADLE EXTENSIONS END') > -1) {
+                closeLine = i;
+                break;
+            }
+        }
+        if ((typeof closeLine !== 'undefined') && (typeof openLine !== 'undefined')) {
+            updateFn(lines, openLine, closeLine);
+            fs.writeFileSync(librariesFile, lines.join('\n'), {encoding: 'utf8'});
+        } else {
+            console.log('Cannot update build.gradle');
+        }
+    } catch (e) {
+        if (e.code != 'ENOENT') {
+            throw e;
+        }
+    }
+}
+
+function addReferenceToGradle(librariesFile, gradlePath) {
+    updateBuildGradleFile(librariesFile, function(lines, openLine, closeLine) {
+        var exists = false;
+        for (var i = openLine; i < closeLine; ++i) {
+            if (lines[i].indexOf('apply from: \'' + gradlePath + '\'') > -1) {
+                exists = true;
+            }
+        }
+        if (!exists) {
+            lines.splice(closeLine, 0, 'apply from: \'' + gradlePath + '\'');
+        }
+    });
+}
+
+function removeReferenceFromGradle(librariesFile, gradlePath) {
+    updateBuildGradleFile(librariesFile, function(lines, openLine, closeLine) {
+        var foundLine;
+        var exists = false;
+        for (var i = 0; i < lines.length; ++i) {
+            if (lines[i].indexOf('apply from: \'' + gradlePath + '\'') > -1) {
                 exists = true;
                 foundLine = i;
             }
@@ -219,6 +276,20 @@ AndroidProject.prototype = {
         }
         delete this._subProjectDirs[subDir];
         this._dirty = true;
+    },
+    addGradleReference: function(parentDir, subDir) {
+        var gradleExtrasFile = path.resolve(parentDir, 'build.gradle');
+        var gradleReference = module.exports.getRelativeLibraryPath(parentDir, subDir);
+        if (fs.existsSync(gradleExtrasFile)) {
+            addReferenceToGradle(gradleExtrasFile, gradleReference);
+        }
+    },
+    removeGradleReference: function(parentDir, subDir) {
+        var gradleExtrasFile = path.resolve(parentDir, 'build.gradle');
+        var gradleReference = module.exports.getRelativeLibraryPath(parentDir, subDir);
+        if (fs.existsSync(gradleExtrasFile)) {
+            removeReferenceFromGradle(gradleExtrasFile, gradleReference);
+        }
     },
     write: function () {
         if (!this._dirty) return;
