@@ -20,6 +20,20 @@
 -->
 # Cordova-lib Release Notes
 
+### 4.0.1 (Nov 7, 2014)
+* CB-7988: Update platform versions for iOS, wp8 & Windows to 3.7.0
+* CB-7846 Fix plugin deletion when dependency plugin does not exist
+* CB-6992 Fix build issue on iOS when app name contains accented characters
+* CB-7884 moved platform metadata to platformsConfig.json
+* Amazon Specific changes: Added support for SdkVersion
+* Expose PluginInfo from cordova-lib
+* CB-7839 android: Fix versionCode logic when version is less than 3 digits
+* CB-7033 Improve cordova platform check
+* CB-7311 Fix xcode project manipulation on Windows host
+* CB-7820 Make cordova platfrom restore not stop if a platforms fails to restore
+* Enable platform-specific id for android and ios
+* Check for a CORDOVA_HOME environment variable to create a global config path
+
 ### 4.0.0 (Oct 10, 2014)
 * Bumped version to 4.0.0 to be semVer complient and to match cli version
 * Pinned dependencies in package.json
