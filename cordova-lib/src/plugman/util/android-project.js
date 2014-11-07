@@ -58,7 +58,7 @@ function removeLibraryReference(projectProperties, libraryPath) {
 
 function updateGradleSettingsFile(settingsFile, updateFn) {
     try {
-        var settings = fs.readFileSync(settingsFile, {encoding: 'utf8'});
+        var settings = fs.readFileSync(settingsFile, {encoding: 'utf8'}) + '';
         var lines = settings.split('\n');
         for (var i = 0; i < lines.length; ++i) {
             var line = lines[i].trim();
@@ -111,7 +111,7 @@ function removeGradleLibraryFromSettings(settingsFile, gradleLibraryPath) {
 
 function updateGradleLibrariesFile(librariesFile, updateFn) {
     try {
-        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'});
+        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'}) + '';
         var lines = libraries.split('\n');
         var openLine, closeLine;
         for (var i = 0; i < lines.length; ++i) {
@@ -169,7 +169,7 @@ function removeGradleLibraryFromLibraries(librariesFile, gradleLibraryPath) {
 
 function updateBuildGradleFile(librariesFile, updateFn) {
     try {
-        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'});
+        var libraries = fs.readFileSync(librariesFile, {encoding: 'utf8'}) + '';
         var lines = libraries.split('\n');
         var openLine, closeLine;
         for (var i = 0; i < lines.length; ++i) {
@@ -177,17 +177,19 @@ function updateBuildGradleFile(librariesFile, updateFn) {
             if (line.indexOf('// PLUGIN GRADLE EXTENSIONS START') > -1) {
                 openLine = i;
             }
-            if ((typeof openLine !== 'undefined') && line.indexOf('// PLUGIN GRADLE EXTENSIONS END') > -1) {
+            if ((typeof openLine != 'undefined') && line.indexOf('// PLUGIN GRADLE EXTENSIONS END') > -1) {
                 closeLine = i;
                 break;
             }
         }
-        if ((typeof closeLine !== 'undefined') && (typeof openLine !== 'undefined')) {
-            updateFn(lines, openLine, closeLine);
-            fs.writeFileSync(librariesFile, lines.join('\n'), {encoding: 'utf8'});
-        } else {
-            console.log('Cannot update build.gradle');
+        if ((typeof closeLine == 'undefined') && (typeof openLine == 'undefined')) {
+            openLine = closeLine = lines.length -1;
+            lines.splice(openLine, 0, '// PLUGIN GRADLE EXTENSIONS START');
+            closeLine += 1;
+            lines.splice(closeLine, 0, '// PLUGIN GRADLE EXTENSIONS END');
         }
+        updateFn(lines, openLine, closeLine);
+        fs.writeFileSync(librariesFile, lines.join('\n'), {encoding: 'utf8'});
     } catch (e) {
         if (e.code != 'ENOENT') {
             throw e;
