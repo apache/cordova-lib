@@ -20,7 +20,7 @@
 -->
 # Cordova-lib Release Notes
 
-### 4.0.1 (Nov 7, 2014)
+### 4.1.0 (Nov 7, 2014)
 * CB-7988: Update platform versions for iOS, wp8 & Windows to 3.7.0
 * CB-7846 Fix plugin deletion when dependency plugin does not exist
 * CB-6992 Fix build issue on iOS when app name contains accented characters
