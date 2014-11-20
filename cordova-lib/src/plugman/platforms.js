@@ -30,6 +30,7 @@ module.exports = {
     'windows8' : require('./platforms/windows'),
     'windows' : require('./platforms/windows'),
     'firefoxos': require('./platforms/firefoxos'),
+    'webos': require('./platforms/webos'),
     'ubuntu': require('./platforms/ubuntu'),
     'tizen': require('./platforms/tizen'),
     'browser': require('./platforms/browser')
