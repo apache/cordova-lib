@@ -22,7 +22,7 @@
 */
 
 // contains PLIST utility functions
-var _     = require('underscore');
+var __     = require('underscore');
 var plist = require('plist');
 
 // adds node to doc at selector
@@ -33,18 +33,18 @@ function graftPLIST(doc, xml, selector) {
     var node = doc[selector];
     if (node && Array.isArray(node) && Array.isArray(obj)){
         node.concat(obj);
-        for(var i =0;i<node.length; i++){
-          for(var j=i+1; j<node.length; ++j) {
-            if(node[i] === node[j])
+        for (var i =0;i<node.length; i++){
+          for (var j=i+1; j<node.length; ++j) {
+            if (node[i] === node[j])
               node.splice(j--,1);
           }
         }
         doc[selector] = node;
-    }else{
-        //plist uses objects for <dict>. If we have two dicts we merge them instead of 
+    } else {
+        //plist uses objects for <dict>. If we have two dicts we merge them instead of
         // overriding the old one. See CB-6472
-        if(node && _.isObject(node) && _.isObject(obj) && !_.isDate(node) && !_.isDate(obj)){//arrays checked above
-            _.extend(obj,node);
+        if (node && __.isObject(node) && __.isObject(obj) && !__.isDate(node) && !__.isDate(obj)){//arrays checked above
+            __.extend(obj,node);
         }
         doc[selector] = obj;
     }
