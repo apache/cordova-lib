@@ -48,19 +48,19 @@ module.exports.prototype = {
         }
 
         // overwrite properties existing in config.xml
-        manifest.id = config.packageName() || 'com.yourdomain.app';
+        manifest.id = config.packageName() || 'org.apache.cordova.example';
         var contentNode = config.doc.find('content');
         var contentSrc = contentNode && contentNode.attrib['src'] || 'index.html';
         manifest.main = contentSrc;
         manifest.version = config.version() || '0.0.1';
-        manifest.title = config.name() || "Hello World";
-        manifest.appDescription = config.description() || "";
-        manifest.vendor = config.author() || "My Company";
+        manifest.title = config.name() || 'CordovaExample';
+        manifest.appDescription = config.description() || '';
+        manifest.vendor = config.author() || 'My Company';
 
         var authorNode = config.doc.find('author');
         var authorUrl = authorNode && authorNode.attrib['href'];
         if (authorUrl) {
-            manifest.developer.vendorurl = authorUrl;
+            manifest.vendorurl = authorUrl;
         }
 
         var icons = config.getIcons('webos');
@@ -77,8 +77,8 @@ module.exports.prototype = {
                     }
                 }
             };
-            setIcon(icons, 'icon', 80, 80);
-            setIcon(icons, 'largeIcon', 130, 130);
+            setIcon('icon', 80, 80);
+            setIcon('largeIcon', 130, 130);
         }
 
         var splash = config.getSplashScreens('webos');
@@ -120,10 +120,14 @@ module.exports.prototype = {
             if(fs.existsSync(path.join(real_www, 'build/enyo.js'))) {
                 // symlinked Enyo bootplate; resolve to bootplate root for
                 // ares-webos-sdk to handle the minification
-                if(fs.existsSync(path.join(real_www, '../enyo')) {
+                if(fs.existsSync(path.join(real_www, '../enyo'))) {
                     app_www = path.join(real_www, '..');
-                } else if (fs.existsSync(path.join(real_www, '../..'))) {
+                } else if (fs.existsSync(path.join(real_www, '../../enyo'))) {
                     app_www = path.join(real_www, '../..');
+                }
+                //double check existence of deploy
+                if(!fs.existsSync(path.join(app_www, "deploy"))) {
+                    app_www = real_www; //fallback
                 }
             }
         }
