@@ -35,8 +35,8 @@ var cordova_util = require('./util'),
     mime = require('mime'),
     zlib = require('zlib');
 
-//extends Date object
-//used only for RFC 2822 formatting
+// d8 is a date parsing and formatting micro-framework
+// Used only for RFC 2822 formatting
 require('d8');
 require('d8/locale/en-US');
 
@@ -165,7 +165,7 @@ function launchServer(projectRoot, port) {
                 response.write('</ul>');
                 response.end();
             } else if (!isFileChanged(filePath)) {
-               do304();
+                do304();
             } else {
                 var mimeType = mime.lookup(filePath);
                 var respHeaders = {
