@@ -32,12 +32,12 @@ var cordova_util    = require('./util'),
     CordovaError     = require('../CordovaError');
 
 module.exports = restore;
-function restore(target){
+function restore(target, args){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var configXml = new ConfigParser(configPath);
     if( 'plugins' === target ){
-        return installPluginsFromConfigXML(configXml);
+        return installPluginsFromConfigXML(configXml, args);
     }
     if( 'platforms' === target ){
         return installPlatformsFromConfigXML(configXml);
@@ -72,7 +72,7 @@ function installPlatformsFromConfigXML(cfg){
 }
 
 //returns a Promise
-function installPluginsFromConfigXML(cfg) {
+function installPluginsFromConfigXML(cfg, args) {
     //Install plugins that are listed on config.xml
     var projectRoot = cordova_util.cdProjectRoot();
     var plugins_dir = path.join(projectRoot, 'plugins');
@@ -99,7 +99,8 @@ function installPluginsFromConfigXML(cfg) {
                 installFrom += ('@' + feature.version);
             }
             // Add feature preferences as CLI variables if have any
-            var options = {cli_variables: feature.variables };
+            var options = {cli_variables: feature.variables, 
+                            searchpath: args.searchpath };
 
             return plugin('add', installFrom, options);
         });
