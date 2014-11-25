@@ -30,7 +30,8 @@ var path          = require('path'),
     Q             = require('q'),
     CordovaError  = require('../CordovaError'),
     ConfigParser = require('../configparser/ConfigParser'),
-    cordova_util  = require('./util');
+    cordova_util  = require('./util'),
+    validateIdentifier = require('../util/valid-identifier');
 
 var DEFAULT_NAME = 'HelloCordova',
     DEFAULT_ID   = 'io.cordova.hellocordova';
@@ -48,6 +49,12 @@ function create(dir, id, name, cfg) {
     if (!dir ) {
         return Q.reject(new CordovaError(
             'At least the dir must be provided to create new project. See `'+cordova_util.binname+' help`.'
+        ));
+    }
+
+    if(id && !validateIdentifier(id)) {
+        return Q.reject(new CordovaError(
+            "App id contains a reserved word, or is not a valid identifier."
         ));
     }
 
