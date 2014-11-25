@@ -54,7 +54,7 @@ function create(dir, id, name, cfg) {
 
     if(id && !validateIdentifier(id)) {
         return Q.reject(new CordovaError(
-            "App id contains a reserved word, or is not a valid identifier."
+            'App id contains a reserved word, or is not a valid identifier.'
         ));
     }
 
