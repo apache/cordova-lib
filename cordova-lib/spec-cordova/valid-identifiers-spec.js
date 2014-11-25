@@ -61,7 +61,7 @@ describe('cordova create checks valid-identifier', function(done) {
 	it('should reject reserved words from start of id', function(done) {
 		cordova.raw.create("projectPath", "int.bob", "appName")
 		.fail(function(err) {
-		    expect(err.message).toBe("Identifier contains a reserved word.");
+		    expect(err.message).toBe("App id contains a reserved word, or is not a valid identifier.");
 		})
 		.fin(done);
 	});
@@ -69,7 +69,7 @@ describe('cordova create checks valid-identifier', function(done) {
 	it('should reject reserved words from end of id', function(done) {
 		cordova.raw.create("projectPath", "bob.class", "appName")
 		.fail(function(err) {
-		    expect(err.message).toBe("Identifier contains a reserved word.");
+		    expect(err.message).toBe("App id contains a reserved word, or is not a valid identifier.");
 		})
 		.fin(done);
 	});
