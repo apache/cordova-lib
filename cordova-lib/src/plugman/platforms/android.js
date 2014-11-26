@@ -165,6 +165,7 @@ module.exports = {
     },
     getCustomSubprojectRelativeDir: function (plugin_id, project_dir, src) {
         // All custom subprojects are prefixed with the last portion of the package id.
+        // This is to avoid collisions when opening multiple projects in Eclipse that have subprojects with the same name.
         var prefix = module.exports.package_suffix(project_dir);
         var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
         return subRelativeDir;
