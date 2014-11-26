@@ -39,10 +39,15 @@ module.exports = {
     // reads the package name out of the Android Manifest file
     // @param string project_dir the absolute path to the directory containing the project
     // @return string the name of the package
-    package_name:function (project_dir) {
+    package_name:function(project_dir) {
         var mDoc = xml_helpers.parseElementtreeSync(path.join(project_dir, 'AndroidManifest.xml'));
 
         return mDoc._root.attrib['package'];
+    },
+    package_suffix:function(project_dir) {
+        var packageName = module.exports.package_name(project_dir);
+        var lastDotIndex = packageName.lastIndexOf('.');
+        return packageName.substring(lastDotIndex + 1);
     },
     'source-file':{
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
@@ -95,10 +100,11 @@ module.exports = {
 
             events.emit('verbose', 'Installing Android library: ' + src);
             var parent = source_el.attrib.parent;
-            var parentDir = parent ? path.resolve(project_dir, module.exports.getCustomSubprojectRelativeDir(plugin_id, parent)) : project_dir;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
+
             if (custom) {
-                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, src);
+                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
                 common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir);
                 subDir = path.resolve(project_dir, subRelativeDir);
             } else {
@@ -123,11 +129,10 @@ module.exports = {
             events.emit('verbose', 'Uninstalling Android library: ' + src);
             var parent = source_el.attrib.parent;
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
-            var subRelativeDir = path.join(plugin_id, path.basename(src));
             var subDir;
 
             if (custom) {
-                subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, src);
+                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
                 common.removeFile(project_dir, subRelativeDir);
                 subDir = path.resolve(project_dir, subRelativeDir);
             } else {
@@ -158,8 +163,10 @@ module.exports = {
         var localProperties = properties_parser.createEditor(path.resolve(project_dir, 'local.properties'));
         return localProperties.get('sdk.dir');
     },
-    getCustomSubprojectRelativeDir: function (plugin_id, src) {
-        var subRelativeDir = path.join(plugin_id, path.basename(src));
+    getCustomSubprojectRelativeDir: function (plugin_id, project_dir, src) {
+        // All custom subprojects are prefixed with the last portion of the package id.
+        var prefix = module.exports.package_suffix(project_dir);
+        var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
         return subRelativeDir;
     }
 };
