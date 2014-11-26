@@ -31,7 +31,7 @@ var path          = require('path'),
     CordovaError  = require('../CordovaError'),
     ConfigParser = require('../configparser/ConfigParser'),
     cordova_util  = require('./util'),
-    validateIdentifier = require('../util/valid-identifier');
+    validateIdentifier = require('valid-identifier');
 
 var DEFAULT_NAME = 'HelloCordova',
     DEFAULT_ID   = 'io.cordova.hellocordova';
