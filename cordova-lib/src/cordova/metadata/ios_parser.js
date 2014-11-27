@@ -40,9 +40,6 @@ module.exports = function ios_parser(project) {
         if (!xcodeproj_dir) throw new CordovaError('The provided path "' + project + '" is not a Cordova iOS project.');
         this.xcodeproj = path.join(project, xcodeproj_dir);
         this.originalName = this.xcodeproj.substring(this.xcodeproj.lastIndexOf(path.sep)+1, this.xcodeproj.indexOf('.xcodeproj'));
-        // CB-6992 it is necessary to normalize characters
-        // because node and shell scripts handles unicode symbols differently
-        this.originalName = unorm.nfd(this.originalName);
         this.cordovaproj = path.join(project, this.originalName);
     } catch(e) {
         throw new CordovaError('The provided path "'+project+'" is not a Cordova iOS project.');
@@ -59,7 +56,10 @@ module.exports.prototype = {
         } else {
             return Q.reject(new Error('update_from_config requires a ConfigParser object'));
         }
-        var name = config.name();
+        // CB-6992 it is necessary to normalize characters
+        // because node and shell scripts handles unicode symbols differently
+        // We need to normalize the name to NFD form since iOS uses NFD unicode form
+        var name = unorm.nfd(config.name());
         var pkg = config.ios_CFBundleIdentifier() || config.packageName();
         var version = config.version();
 

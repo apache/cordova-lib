@@ -28,7 +28,7 @@ var xml_helpers = require('../../util/xml-helpers'),
     whitelist = require('./whitelist');
 
 function validateName(name) {
-    if (!name.match(/^(\w+\.){2,}.*$/)) {
+    if (!name.match(/^(\S+\.){2,}.*$/)) {
         throw new Error('Invalid plugin ID. It has to follow the reverse domain `com.domain.plugin` format');
     }
 

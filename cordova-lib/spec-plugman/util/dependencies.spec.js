@@ -22,7 +22,7 @@ var dependencies = require('../../src/plugman/util/dependencies'),
     config = require('../../src/plugman/util/config-changes');
 
 describe('dependency module', function() {
-    describe('generate_dependency_info method', function() {
+    describe('generateDependencyInfo method', function() {
         it('should return a list of top-level plugins based on what is inside a platform.json file', function() {
             var tlps = {
                 "hello":"",
@@ -34,7 +34,7 @@ describe('dependency module', function() {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generate_dependency_info('some dir');
+            var obj = dependencies.generateDependencyInfo('some dir');
             expect(obj.top_level_plugins).toEqual(Object.keys(tlps));
         });
         it('should return a dependency graph for the plugins', function() {
@@ -51,7 +51,7 @@ describe('dependency module', function() {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generate_dependency_info(path.join(__dirname, '..', 'plugins', 'dependencies'), 'android');
+            var obj = dependencies.generateDependencyInfo(path.join(__dirname, '..', 'plugins', 'dependencies'), 'android');
             expect(obj.graph.getChain('A')).toEqual(['C','D']);
             expect(obj.graph.getChain('B')).toEqual(['D', 'E']);
         });

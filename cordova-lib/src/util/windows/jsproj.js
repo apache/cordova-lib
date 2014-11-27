@@ -34,11 +34,14 @@ var xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     path = require('path');
 
-var WindowsStoreProjectTypeGUID = "{BC8A1FFA-BEE3-4634-8014-F334798102B3}";  //any of the below, subtype
 var WinCSharpProjectTypeGUID = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";  // .csproj
-var WinVBnetProjectTypeGUID = "{F184B08F-C81C-45F6-A57F-5ABD9991F28F}";  // who the ef cares?
 var WinCplusplusProjectTypeGUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";  // .vcxproj
 
+// Match a JavaScript Project
+var JsProjectRegEx = /(Project\("\{262852C6-CD72-467D-83FE-5EEB1973A190}"\)\s*=\s*"[^"]+",\s*"[^"]+",\s*"\{[0-9a-f\-]+}"[^\r\n]*[\r\n]*)/gi;
+
+// Chars in a string that need to be escaped when used in a RegExp
+var RegExpEscRegExp = /([.?*+\^$\[\]\\(){}|\-])/g;
 
 function jsproj(location) {
     if (!location) {
@@ -59,6 +62,7 @@ jsproj.prototype = {
     write:function() {
         fs.writeFileSync(this.location, this.xml.write({indent:4}), 'utf-8');
     },
+
     // add/remove the item group for SDKReference
     // example :
     // <ItemGroup><SDKReference Include="Microsoft.VCLibs, version=12.0" /></ItemGroup>
@@ -78,8 +82,7 @@ jsproj.prototype = {
         }
     },
 
-    addReference:function(relPath,src) {
-
+    addReference:function(relPath) {
         events.emit('verbose','addReference::' + relPath);
 
         var item = new et.Element('ItemGroup');
@@ -170,51 +173,56 @@ jsproj.prototype = {
     },
 
     // relative path must include the project file, so we can determine .csproj, .jsproj, .vcxproj...
-    addProjectReference:function(relative_path) {
-        events.emit('verbose','adding project reference to ' + relative_path);
+    addProjectReference: function (relative_path) {
+        events.emit('verbose', 'adding project reference to ' + relative_path);
 
         relative_path = relative_path.split('/').join('\\');
-        // read the solution path from the base directory
-        var solutionPath = shell.ls(path.join(path.dirname(this.location),"*.sln"))[0];// TODO:error handling
-        // note we may not have a solution, in which case just add a project reference, I guess ..
-        // get the project extension to figure out project type
-        var projectExt = path.extname(relative_path);
 
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
+
         // find the guid + name of the referenced project
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
         var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
 
-        var preInsertText = "ProjectSection(ProjectDependencies) = postProject\n\r" +
-                             projectGuid + "=" + projectGuid + "\n\r" +
-                            "EndProjectSection\n\r";
-
-        // read in the solution file
-        var solText = fs.readFileSync(solutionPath,{encoding:"utf8"});
-        var splitText = solText.split("EndProject");
-        if(splitText.length != 2) {
-            throw new Error("too many projects in solution.");
-        }
-
-        var projectTypeGuid = null;
-        if(projectExt == ".vcxproj") {
-            projectTypeGuid = WinCplusplusProjectTypeGUID;
-        }
-        else if(projectExt == ".csproj") {
-            projectTypeGuid = WinCSharpProjectTypeGUID;
-        }
-
-        if(!projectTypeGuid) {
+        // get the project type
+        var projectTypeGuid = getProjectTypeGuid(relative_path);
+        if (!projectTypeGuid) {
             throw new Error("unrecognized project type");
         }
 
-        var postInsertText = 'Project("' + projectTypeGuid + '") = "' +
-                         projName + '", "' + relative_path + '",' +
-                        '"' + projectGuid + '"\n\r EndProject\n\r';
+        var preInsertText = "\tProjectSection(ProjectDependencies) = postProject\r\n" +
+            "\t\t" + projectGuid + "=" + projectGuid + "\r\n" +
+            "\tEndProjectSection\r\n";
+        var postInsertText = '\r\nProject("' + projectTypeGuid + '") = "' +
+            projName + '", "' + relative_path + '", ' +
+            '"' + projectGuid + '"\r\nEndProject';
 
-        solText = splitText[0] + preInsertText + "EndProject\n\r" + postInsertText + splitText[1];
-        fs.writeFileSync(solutionPath,solText,{encoding:"utf8"});
+        // There may be multiple solutions (for different VS versions) - process them all
+        getSolutionPaths(this.location).forEach(function (solutionPath) {
+            var solText = fs.readFileSync(solutionPath, {encoding: "utf8"});
 
+            // Insert a project dependency into each jsproj in the solution.
+            var jsProjectFound = false;
+            solText = solText.replace(JsProjectRegEx, function (match) {
+                jsProjectFound = true;
+                return match + preInsertText;
+            });
+
+            if (!jsProjectFound) {
+                throw new Error("no jsproj found in solution");
+            }
+
+            // Add the project after existing projects. Note that this fairly simplistic check should be fine, since the last
+            // EndProject in the file should actually be an EndProject (and not an EndProjectSection, for example).
+            var pos = solText.lastIndexOf("EndProject");
+            if (pos === -1) {
+                throw new Error("no EndProject found in solution");
+            }
+            pos += 10; // Move pos to the end of EndProject text
+            solText = solText.slice(0, pos) + postInsertText + solText.slice(pos);
+
+            fs.writeFileSync(solutionPath, solText, {encoding: "utf8"});
+        });
 
         // Add the ItemGroup/ProjectReference to the cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
@@ -223,56 +231,82 @@ jsproj.prototype = {
         projRef.attrib.Include = relative_path;
         item.append(projRef);
         this.xml.getroot().append(item);
-
     },
-    removeProjectReference:function(relative_path) {
-        events.emit('verbose','removing project reference to ' + relative_path);
+
+    removeProjectReference: function (relative_path) {
+        events.emit('verbose', 'removing project reference to ' + relative_path);
 
         // find the guid + name of the referenced project
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
         var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
 
-        // get the project extension to figure out project type
-        var projectExt = path.extname(relative_path);
         // get the project type
-        var projectTypeGuid = null;
-        if(projectExt == ".vcxproj") {
-            projectTypeGuid = WinCplusplusProjectTypeGUID;
-        }
-        else if(projectExt == ".csproj") {
-            projectTypeGuid = WinCSharpProjectTypeGUID;
-        }
-
-        if(!projectTypeGuid) {
+        var projectTypeGuid = getProjectTypeGuid(relative_path);
+        if (!projectTypeGuid) {
             throw new Error("unrecognized project type");
         }
 
-        var preInsertText = "ProjectSection(ProjectDependencies) = postProject\n\r" +
-                             projectGuid + "=" + projectGuid + "\n\r" +
-                            "EndProjectSection\n\r";
+        var preInsertTextRegExp = getProjectReferencePreInsertRegExp(projectGuid);
+        var postInsertTextRegExp = getProjectReferencePostInsertRegExp(projName, projectGuid, relative_path, projectTypeGuid);
 
-        var postInsertText = 'Project("' + projectTypeGuid + '") = "' +
-                              projName + '", "' + relative_path + '",' +
-                              '"' + projectGuid + '"\n\r EndProject\n\r';
+        // There may be multiple solutions (for different VS versions) - process them all
+        getSolutionPaths(this.location).forEach(function (solutionPath) {
+            var solText = fs.readFileSync(solutionPath, {encoding: "utf8"});
 
-        // find and read in the solution file
-        var solutionPath = shell.ls(path.join(path.dirname(this.location),"*.sln"))[0];  // TODO:error handling
-        var solText = fs.readFileSync(solutionPath,{encoding:"utf8"});
-        var splitText = solText.split(preInsertText);
+            // To be safe (to handle subtle changes in formatting, for example), use a RegExp to find and remove
+            // preInsertText and postInsertText
 
-        solText = splitText.join("").split(postInsertText);
-        solText = solText.join("");
+            solText = solText.replace(preInsertTextRegExp, function () {
+                return "";
+            });
 
-        fs.writeFileSync(solutionPath,solText,{encoding:"utf8"});
+            solText = solText.replace(postInsertTextRegExp, function () {
+                return "";
+            });
+
+            fs.writeFileSync(solutionPath, solText, {encoding: "utf8"});
+        });
 
         // select first ItemsGroups with a ChildNode ProjectReference
         // ideally select all, and look for @attrib 'Include'= projectFullPath
         var projectRefNodesPar = this.xml.find("ItemGroup/ProjectReference[@Include='" + relative_path + "']/..");
-        if(projectRefNodesPar) {
+        if (projectRefNodesPar) {
             this.xml.getroot().remove(0, projectRefNodesPar);
         }
     }
 };
+
+function getProjectReferencePreInsertRegExp(projectGuid) {
+    projectGuid = escapeRegExpString(projectGuid);
+    return new RegExp("\\s*ProjectSection\\(ProjectDependencies\\)\\s*=\\s*postProject\\s*" + projectGuid + "\\s*=\\s*" + projectGuid + "\\s*EndProjectSection", "gi");
+}
+
+function getProjectReferencePostInsertRegExp(projName, projectGuid, relative_path, projectTypeGuid) {
+    projName = escapeRegExpString(projName);
+    projectGuid = escapeRegExpString(projectGuid);
+    relative_path = escapeRegExpString(relative_path);
+    projectTypeGuid = escapeRegExpString(projectTypeGuid);
+    return new RegExp('\\s*Project\\("' + projectTypeGuid + '"\\)\\s*=\\s*"' + projName + '"\\s*,\\s*"' + relative_path + '"\\s*,\\s*"' + projectGuid + '"\\s*EndProject', 'gi');
+}
+
+function getSolutionPaths(jsprojLocation) {
+    return shell.ls(path.join(path.dirname(jsprojLocation), "*.sln")); // TODO:error handling
+}
+
+function escapeRegExpString(regExpString) {
+    return regExpString.replace(RegExpEscRegExp, "\\$1");
+}
+
+function getProjectTypeGuid(projectPath) {
+    switch (path.extname(projectPath)) {
+        case ".vcxproj":
+            return WinCplusplusProjectTypeGUID;
+
+        case ".csproj":
+            return WinCSharpProjectTypeGUID;
+    }
+    return null;
+}
 
 module.exports = jsproj;

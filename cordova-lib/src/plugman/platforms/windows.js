@@ -130,10 +130,12 @@ module.exports = {
             // technically it is not possible to get here without isCustom == true -jm
             // var isCustom = el.attrib.custom == 'true';
             var type = el.attrib['type'];
-            // unfortunately we have to generate the plugin_dir path because it is not passed to uninstall
-            var plugin_dir = path.join(project_dir, 'cordova/plugins', plugin_id,src);
 
             if(type == 'projectReference') {
+                // unfortunately we have to generate the plugin_dir path because it is not passed to uninstall. Note
+                // that project_dir is the windows project directory ([project]\platforms\windows) - we need to get to
+                // [project]\plugins\[plugin_id]
+                var plugin_dir = path.join(project_dir, '..', '..', 'plugins', plugin_id, src);
                 project_file.removeProjectReference(plugin_dir);
             }
             else {
