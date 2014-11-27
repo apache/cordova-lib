@@ -39,6 +39,7 @@ var config            = require('./config'),
     promiseutil       = require('../util/promise-util'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
+    unorm             = require('unorm'),
     shell             = require('shelljs');
 
 // Expose the platform parsers on top of this command
@@ -66,6 +67,9 @@ function add(hooksRunner, projectRoot, targets, opts) {
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
     var platformsDir = path.join(projectRoot, 'platforms');
+    opts = opts || {};
+    opts.searchpath = opts.searchpath || config_json.plugin_search_path;
+
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
@@ -121,11 +125,7 @@ function add(hooksRunner, projectRoot, targets, opts) {
             return p
             .then(function(libDir) {
                 var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
-                var copts = null;
-                if ('spawnoutput' in opts) {
-                    copts = { stdio: opts.spawnoutput };
-                }
-                return call_into_create(platform, projectRoot, cfg, libDir, template, copts);
+                return call_into_create(platform, projectRoot, cfg, libDir, template, opts);
             });
         });
     })
@@ -456,13 +456,20 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
     }
 
     var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
-    var name = cfg.name();
+    // CB-6992 it is necessary to normalize characters
+    // because node and shell scripts handles unicode symbols differently
+    // We need to normalize the name to NFD form since iOS uses NFD unicode form
+    var name = target == 'ios' ? unorm.nfd(cfg.name()) : cfg.name();
     args.push(output, pkg, name);
     if (template_dir) {
         args.push(template_dir);
     }
 
-    return superspawn.spawn(bin, args, opts || { stdio: 'inherit' })
+    var copts = { stdio: 'inherit' };
+    if ('spawnoutput' in opts) {
+        copts = { stdio: opts.spawnoutput };
+    }
+    return superspawn.spawn(bin, args, copts)
     .then(function() {
         copy_cordova_js(projectRoot, target);
     })
@@ -492,8 +499,9 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir, opts) 
                             cli_variables: variables
                         };
                     }
-                    return null;
+                    return {};
                 })();
+                options.searchpath = opts.searchpath;
 
                 return plugman.raw.install(target, output, plugin, plugins_dir, options);
             });

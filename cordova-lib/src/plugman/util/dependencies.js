@@ -24,9 +24,11 @@
 
 var dep_graph = require('dep-graph'),
     path = require('path'),
+    fs = require('fs'),
     config_changes = require('./config-changes'),
     underscore = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
+    events = require('../../events'),
     package;
 
 module.exports = package = {
@@ -41,7 +43,7 @@ module.exports = package = {
         return path.join(plugins_dir, plugin_id, 'plugin.xml');
     },
 
-    generate_dependency_info:function(plugins_dir, platform) {
+    generateDependencyInfo:function(plugins_dir, platform) {
         var json = config_changes.get_platform_json(plugins_dir, platform);
 
         // TODO: store whole dependency tree in plugins/[platform].json
@@ -59,7 +61,14 @@ module.exports = package = {
             });
         });
         Object.keys(json.dependent_plugins).forEach(function(plugin_id) {
-            var xml = xml_helpers.parseElementtreeSync( package.resolveConfig(plugin_id, plugins_dir) );
+            var configPath = package.resolveConfig(plugin_id, plugins_dir);
+            // dependency plugin does not exist (CB-7846)
+            if (!fs.existsSync(configPath)) {
+                events.emit('verbose', 'Plugin "'+ plugin_id +'" does not exist ('+ configPath +')');
+                return;
+            }
+
+            var xml = xml_helpers.parseElementtreeSync(configPath);
             var deps = xml.findall('.//dependency');
             deps && deps.forEach(function(dep) {
                 graph.add(plugin_id, dep.attrib.id);
@@ -78,7 +87,7 @@ module.exports = package = {
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generate_dependency_info(plugins_dir, platform);
+            depsInfo = package.generateDependencyInfo(plugins_dir, platform);
 
         var graph = depsInfo.graph;
         var tlps = depsInfo.top_level_plugins;
@@ -96,7 +105,7 @@ module.exports = package = {
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generate_dependency_info(plugins_dir, platform);
+            depsInfo = package.generateDependencyInfo(plugins_dir, platform);
 
         var graph = depsInfo.graph;
         var dependencies = graph.getChain(plugin_id);

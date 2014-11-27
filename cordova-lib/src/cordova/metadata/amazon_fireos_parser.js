@@ -74,136 +74,130 @@ module.exports.prototype = {
     
     // remove the default resource name from all drawable folders
     // return the array of the densities in this project
-deleteDefaultResource:function(name) {
-    var densities = [];
-    var res = path.join(this.path, 'res');
-    var dirs = fs.readdirSync(res);
-    
-    for (var i=0; i<dirs.length; i++) {
-        var filename = dirs[i];
-        if (filename.indexOf('drawable-') === 0) {
-            var density = filename.substr(9);
-            densities.push(density);
-            var template = path.join(res, filename, name);
-            try {
-                fs.unlinkSync(template);
-                events.emit('verbose', 'deleted: ' + template);
-            } catch(e) {
-                // ignored. template screen does probably not exist
-            }
-        }
-    }
-    return densities;
-},
-    
-handleSplashes:function(config) {
-    var resources = config.getSplashScreens('android');
-    var destfilepath;
-    // if there are "splash" elements in config.xml
-    if (resources.length > 0) {
-        var densities = this.deleteDefaultResource('screen.png');
-        events.emit('verbose', 'splash screens: ' + JSON.stringify(resources));
+    deleteDefaultResource:function (name) {
+        var densities = [];
         var res = path.join(this.path, 'res');
-        
-        if (resources.defaultResource) {
-            destfilepath = path.join(res, 'drawable', 'screen.png');
-            events.emit('verbose', 'copying splash icon from ' + resources.defaultResource.src + ' to ' + destfilepath);
-            shell.cp('-f', resources.defaultResource.src, destfilepath);
-        }
-        for (var i=0; i<densities.length; i++) {
-            var density = densities[i];
-            var resource = resources.getByDensity(density);
-            if (resource) {
-                // copy splash screens.
-                destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
-                events.emit('verbose', 'copying splash icon from ' + resource.src + ' to ' + destfilepath);
-                shell.cp('-f', resource.src, destfilepath);
-            }
-        }
-    }
-},
-    
-handleIcons: function(config) {
-    var icons = config.getIcons('android');
-    // if there are icon elements in config.xml
-    if (icons.length === 0) {
-        events.emit('verbose', 'This app does not have launcher icons defined');
-        return;
-    }
-    
-    var densities = this.deleteDefaultResource('icon.png');
-    
-    var android_icons = {};
-    var default_icon;
-    // http://developer.android.com/design/style/iconography.html
-    var densityToSizeMap = {
-        'ldpi' : 36,
-        'mdpi' : 48,
-        'hdpi' : 72,
-        'xhdpi' : 96
-    };
-    // find the best matching icon for a given density or size
-    // @output android_icons
-    var parseIcon = function(icon, icon_size, size, density) {
-        // do I have a platform icon for that density already
-        var previous = android_icons[density];
-        if (previous && previous.platform) {
-            return;
-        }
-        // already have one but this one is a platform icon
-        if (previous && icon.platform && icon.density == density) {
-            android_icons[density] = icon;
-            return;
-        }
-        // if density is explicitly defined take this one
-        if (density === icon.density) {
-            android_icons[density] = icon;
-            return;
-        }
-        if (size === parseInt(icon_size)) {
-            android_icons[density] = icon;
-        }
-    };
-    // iterate over all icon elements to find the default icon and call parseIcon
-    for (var i=0; i<icons.length; i++) {
-        var icon = icons[i];
-        var size = icon.width;
-        if (!size) {
-            size = icon.height;
-        }
-        if (!size && !icon.density) {
-            if (default_icon) {
-                events.emit('verbose', 'more than one default icon: ' + JSON.stringify(icon));
-            } else {
-                default_icon = icon;
-            }
-        } else {
-            for (var k=0; k<densities.length; k++) {
-                    parseIcon(icon, size, densityToSizeMap[densities[k]], densities[k]);
+        var dirs = fs.readdirSync(res);
+
+        for (var i = 0; i < dirs.length; i++) {
+            var filename = dirs[i];
+            if (filename.indexOf('drawable-') === 0) {
+                var density = filename.substr(9);
+                densities.push(density);
+                var template = path.join(res, filename, name);
+                try {
+                    fs.unlinkSync(template);
+                    events.emit('verbose', 'deleted: ' + template);
+                } catch (e) {
+                    // ignored. template screen does probably not exist
                 }
             }
         }
-        var projectRoot = util.isCordova(this.path);
-        var srcfilepath;
+        return densities;
+    },
+
+    copyImage: function(src, density, name) {
+        var destFolder = path.join(this.path, 'res', (density ? 'drawable-': 'drawable') + density);
+        var destFilePath = path.join(destFolder, name);
+
+        // default template does not have default asset for this density
+        if (!fs.existsSync(destFolder)) {
+            fs.mkdirSync(destFolder);
+        }
+        events.emit('verbose', 'copying image from ' + src + ' to ' + destFilePath);
+        shell.cp('-f', src, destFilePath);
+    },
+
+    handleSplashes:function (config) {
+        var resources = config.getSplashScreens('android');
         var destfilepath;
+        // if there are "splash" elements in config.xml
+        if (resources.length > 0) {
+            var densities = this.deleteDefaultResource('screen.png');
+            events.emit('verbose', 'splash screens: ' + JSON.stringify(resources));
+            var res = path.join(this.path, 'res');
+
+            if (resources.defaultResource) {
+                destfilepath = path.join(res, 'drawable', 'screen.png');
+                events.emit('verbose', 'copying splash icon from ' + resources.defaultResource.src + ' to ' + destfilepath);
+                shell.cp('-f', resources.defaultResource.src, destfilepath);
+            }
+            for (var i = 0; i < densities.length; i++) {
+                var density = densities[i];
+                var resource = resources.getByDensity(density);
+                if (resource) {
+                    // copy splash screens.
+                    destfilepath = path.join(res, 'drawable-' + density, 'screen.png');
+                    events.emit('verbose', 'copying splash icon from ' + resource.src + ' to ' + destfilepath);
+                    shell.cp('-f', resource.src, destfilepath);
+                }
+            }
+        }
+    },
+
+    handleIcons: function(config) {
+        var icons = config.getIcons('android');
+
+        // if there are icon elements in config.xml
+        if (icons.length === 0) {
+            events.emit('verbose', 'This app does not have launcher icons defined');
+            return;
+        }
+
+        this.deleteDefaultResource('icon.png');
+
+        var android_icons = {};
+        var default_icon;
+        // http://developer.android.com/design/style/iconography.html
+        var sizeToDensityMap = {
+            36: 'ldpi',
+            48: 'mdpi',
+            72: 'hdpi',
+            96: 'xhdpi',
+            144: 'xxhdpi',
+            192: 'xxxhdpi'
+        };
+        // find the best matching icon for a given density or size
+        // @output android_icons
+        var parseIcon = function(icon, icon_size) {
+            // do I have a platform icon for that density already
+            var density = icon.density || sizeToDensityMap[icon_size];
+            if (!density) {
+                // invalid icon defition ( or unsupported size)
+                return;
+            }
+            var previous = android_icons[density];
+            if (previous && previous.platform) {
+                return;
+            }
+            android_icons[density] = icon;
+        };
+
+        // iterate over all icon elements to find the default icon and call parseIcon
+        for (var i=0; i<icons.length; i++) {
+            var icon = icons[i];
+            var size = icon.width;
+            if (!size) {
+                size = icon.height;
+            }
+            if (!size && !icon.density) {
+                if (default_icon) {
+                    events.emit('verbose', 'more than one default icon: ' + JSON.stringify(icon));
+                } else {
+                    default_icon = icon;
+                }
+            } else {
+                parseIcon(icon, size);
+            }
+        }
+        var projectRoot = util.isCordova(this.path);
         // copy the default icon to the drawable folder
         if (default_icon) {
-            srcfilepath = path.join(projectRoot, default_icon.src);
-            destfilepath = path.join(this.path, 'res', 'drawable', 'icon.png');
-            events.emit('verbose', 'Copying default icon from ' + srcfilepath + ' to ' + destfilepath);
-            shell.cp('-f', srcfilepath, destfilepath);
+            this.copyImage(path.join(projectRoot, default_icon.src), '', 'icon.png');
         }
-        // copyIcon does the actual copying into the drawable folders
-        var copyIcon = function(density) {
-            if (android_icons[density]) {
-                srcfilepath = path.join(projectRoot, android_icons[density].src);
-                destfilepath = path.join(this.path, 'res', 'drawable-'+density, 'icon.png');
-                events.emit('verbose', 'Copying icon from ' + srcfilepath + ' to ' + destfilepath);
-                shell.cp('-f', srcfilepath, destfilepath);
-            }
-        }.bind(this);
-        for (var j=0; j<densities.length; j++) {
-            copyIcon(densities[j]);
+
+        for (var density in android_icons) {
+            this.copyImage(path.join(projectRoot, android_icons[density].src), density, 'icon.png');
         }
     },
     
@@ -232,7 +226,7 @@ handleIcons: function(config) {
         manifest.getroot().attrib['android:versionCode'] = versionCode;
 
         // Update package name by changing the AndroidManifest id and moving the entry class around to the proper package directory
-        var pkg = config.packageName();
+        var pkg = config.android_packageName() || config.packageName();
         pkg = pkg.replace(/-/g, '_'); // Java packages cannot support dashes
         var orig_pkg = manifest.getroot().attrib.package;
         manifest.getroot().attrib.package = pkg;
@@ -340,7 +334,6 @@ handleIcons: function(config) {
         }
     },
 
-
     // Returns a promise.
     update_project:function(cfg) {
         var platformWww = path.join(this.path, 'assets');
@@ -356,11 +349,21 @@ handleIcons: function(config) {
     }
 };
 
+
 // Consturct the default value for versionCode as
 // PATCH + MINOR * 100 + MAJOR * 10000
 // see http://developer.android.com/tools/publishing/versioning.html
 function default_versionCode(version) {
-    var nums = version.split('-')[0].split('.').map(Number);
-    var versionCode = nums[0] * 10000 + nums[1] * 100 + nums[2];
+    var nums = version.split('-')[0].split('.');
+    var versionCode = 0;
+    if (+nums[0]) {
+        versionCode += +nums[0] * 10000;
+    }
+    if (+nums[1]) {
+        versionCode += +nums[1] * 100;
+    }
+    if (+nums[2]) {
+        versionCode += +nums[2];
+    }
     return versionCode;
 }
