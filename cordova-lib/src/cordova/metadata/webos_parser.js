@@ -134,6 +134,35 @@ module.exports.prototype = {
         shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
         // Copy over stock platform www assets (cordova.js)
         shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
+
+        // prepare and update deploy.json for cordova components
+        var deploy = path.join(this.www_dir(), "deploy.json");
+        if(fs.existsSync(deploy)) {
+            try {
+                // make stub file entries to guarantee the dir/files are there
+                shell.mkdir('-p', path.join(this.www_dir(), "plugins"));
+                var pluginFile = path.join(this.www_dir(), "cordova_plugins.js");
+                if(!fs.existsSync(pluginFile)) {
+                    fs.writeFileSync(pluginFile, "");
+                }
+                // add to json if not already there, so they don't get minified out during build
+                var obj = JSON.parse(fs.readFileSync(deploy, {encoding:"utf8"}));
+                obj.assets = obj.assets || [];
+                var assets = ["plugins", "cordova.js", "cordova_plugins.js"];
+                for(var i=0; i<assets.length; i++) {
+                    var index = obj.assets.indexOf(assets[i]);
+                    if(index<0) {
+                        index = obj.assets.indexOf("./" + assets[i]);
+                    }
+                    if(index<0) {
+                        obj.assets.push("./" + assets[i]);
+                    }
+                    fs.writeFileSync(deploy, JSON.stringify(obj, null, "\t"));
+                }
+            } catch(e) {
+                console.error("Unable to update deploy.json: " + e)
+            }
+        }
     },
 
     update_overrides: function() {
