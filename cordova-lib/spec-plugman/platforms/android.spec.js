@@ -157,7 +157,7 @@ describe('android project handler', function() {
                         return '#Some comment\ntarget=android-17\nandroid.library=true';
                     } else if (file === mainProjectManifestFile) {
                         return '<manifest package="' + packageId + '">';
-                    }{
+                    } else {
                         throw new Error("Trying to read from an unexpected file " + file + '\n expected: ' + mainProjectPropsFile + '\n' + subProjectPropsFile);
                     }
                 })
