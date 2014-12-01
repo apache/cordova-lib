@@ -57,9 +57,9 @@ function add(hooksRunner, projectRoot, targets, opts) {
 
     for(var i= 0 ; i< targets.length; i++){
         if ( !hostSupports(targets[i]) ) {
-            msg = 'Applications for platform ' + targets[i] +
+            msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
-            return Q.reject( new CordovaError(msg));
+            events.emit('log', msg);
         }
     }
 

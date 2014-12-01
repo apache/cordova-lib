@@ -24,6 +24,7 @@
 var cordova_util      = require('./util'),
     path              = require('path'),
     HooksRunner            = require('../hooks/HooksRunner'),
+    events            = require('../events'),
     superspawn        = require('./superspawn'),
     Q                 = require('q');
 
@@ -45,5 +46,7 @@ module.exports = function run(options) {
         }));
     }).then(function() {
         return hooksRunner.fire('after_run', options);
+    }, function(error) {
+        events.emit('log', 'ERROR running one or more of the platforms: ' + error + '\nYou may not have the required environment or OS to run this project');
     });
 };

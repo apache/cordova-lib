@@ -24,6 +24,7 @@
 var path              = require('path'),
     cordova_util      = require('./util'),
     HooksRunner            = require('../hooks/HooksRunner'),
+    events        = require('../events'),
     superspawn        = require('./superspawn');
 
 // Returns a promise.
@@ -41,6 +42,8 @@ module.exports = function compile(options) {
     });
     ret = ret.then(function() {
         return hooksRunner.fire('after_compile', options);
+    }, function(error) {
+        events.emit('log', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
     });
     return ret;
 };
