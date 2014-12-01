@@ -138,9 +138,12 @@ describe('android project handler', function() {
                 android.purgeProjectFileCache(temp);
             });
             it('with custom=true should update the main and library projects', function() {
+                var packageIdSuffix = "PlugmanTest";
+                var packageId = "io.cordova." + packageIdSuffix;
                 var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var subDir = path.resolve(temp, dummy_id, frameworkElement.attrib.src);
+                var subDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.attrib.src);
                 var mainProjectPropsFile = path.resolve(temp, "project.properties");
+                var mainProjectManifestFile = path.resolve(temp, "AndroidManifest.xml");
                 var subProjectPropsFile = path.resolve(subDir, "project.properties");
 
                 var existsSync = spyOn( fs, 'existsSync').andReturn(true);
@@ -152,7 +155,9 @@ describe('android project handler', function() {
                         return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2=ExistingLibRef2';
                     } else if (file === subProjectPropsFile) {
                         return '#Some comment\ntarget=android-17\nandroid.library=true';
-                    } else {
+                    } else if (file === mainProjectManifestFile) {
+                        return '<manifest package="' + packageId + '">';
+                    }{
                         throw new Error("Trying to read from an unexpected file " + file + '\n expected: ' + mainProjectPropsFile + '\n' + subProjectPropsFile);
                     }
                 })
@@ -162,7 +167,7 @@ describe('android project handler', function() {
                 android.parseProjectFile(temp).write();
 
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
-                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3='+dummy_id+'/LibraryPath') > -1;
+                    return callArgs[0] === mainProjectPropsFile && callArgs[1].indexOf('\nandroid.library.reference.3='+dummy_id+'/'+packageIdSuffix+'-LibraryPath') > -1;
                 })).toBe(true, 'Reference to library not added');
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === subProjectPropsFile && callArgs[1].indexOf('\ntarget=android-19') > -1;
@@ -249,15 +254,21 @@ describe('android project handler', function() {
                 android.purgeProjectFileCache(temp);
             });
             it('should remove library reference from the main project', function () {
+                var packageIdSuffix = "PlugmanTest";
+                var packageId = "io.cordova." + packageIdSuffix;
                 var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var sub_dir = path.resolve(temp, dummy_id, frameworkElement.attrib.src);
+                var sub_dir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.attrib.src);
                 var mainProjectProps = path.resolve(temp, "project.properties");
+                var mainProjectManifest = path.resolve(temp, "AndroidManifest.xml");
                 var existsSync = spyOn(fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
                 var removeFile = spyOn(common, 'removeFile');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
-                    if (path.normalize(file) === mainProjectProps)
-                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2='+dummy_id+'/LibraryPath\nandroid.library.reference.3=ExistingLibRef2\n';
+                    if (path.normalize(file) === mainProjectProps) {
+                        return '#Some comment\ntarget=android-19\nandroid.library.reference.1=ExistingLibRef1\nandroid.library.reference.2='+dummy_id+'/'+packageIdSuffix+'-LibraryPath\nandroid.library.reference.3=ExistingLibRef2\n';
+                    } else if (path.normalize(file) === mainProjectManifest) {
+                        return '<manifest package="' + packageId + '">';
+                    }
                 })
                 var exec = spyOn(shell, 'exec');
 
