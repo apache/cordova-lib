@@ -59,7 +59,7 @@ function add(hooksRunner, projectRoot, targets, opts) {
         if ( !hostSupports(targets[i]) ) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
-            console.log(msg);
+            events.emit('log', msg);
         }
     }
 
