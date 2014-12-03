@@ -141,7 +141,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             if (fsPath.match(/.*\.json$/)) {
                 scriptContent = 'module.exports = ' + scriptContent;
             }
-            scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
+            scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) {\n\t' + scriptContent.replace(/\n/g, '\n\t') + '\n});\n';
             fs.writeFileSync(path.join(platformPluginsDir, plugin_id, fsPath), scriptContent, 'utf-8');
 
             // Prepare the object for cordova_plugins.json.
