@@ -35,7 +35,8 @@ var npm = require('npm'),
     unpack = require('../../util/unpack'),
     // if PLUGMAN_HOME env var is specified use it as config directory (see CB-8190)
     plugmanConfigDir = process.env.PLUGMAN_HOME || path.resolve(home, '.plugman'),
-    plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
+    plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache'),
+    oneDay = 3600*24;
 
 
 module.exports = {
@@ -223,7 +224,8 @@ function initSettings() {
         cache: plugmanCacheDir,
         registry: 'http://registry.cordova.io',
         logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
-        userconfig: path.resolve(plugmanConfigDir, 'config')
+        userconfig: path.resolve(plugmanConfigDir, 'config'),
+        'cache-min': oneDay
     });
     return Q(settings);
 }
