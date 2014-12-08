@@ -34,7 +34,8 @@ var npm = require('npm'),
     events = require('../../events'),
     unpack = require('../../util/unpack'),
     plugmanConfigDir = path.resolve(home, '.plugman'),
-    plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
+    plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache'),
+    oneDay = 3600*24;
 
 
 module.exports = {
@@ -222,7 +223,8 @@ function initSettings() {
         cache: plugmanCacheDir,
         registry: 'http://registry.cordova.io',
         logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
-        userconfig: path.resolve(plugmanConfigDir, 'config')
+        userconfig: path.resolve(plugmanConfigDir, 'config'),
+        'cache-min': oneDay
     });
     return Q(settings);
 }
