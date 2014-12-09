@@ -37,3 +37,13 @@ Contains npm modules used primarily by [cordova](https://github.com/apache/cordo
 * Navigate to CLI and Plugman directories and link cordova-lib
     `cd ../../cordova-cli && npm link cordova-lib && npm install`
     `cd ../../cordova-plugman && npm link cordova-lib && npm install`
+
+## NPM commands
+
+This package exposes the following commands;
+
+* `npm run jshint` - runs jshint check against all js files 
+* `npm run jasmine` - runs jasmine tests from spec-plugman and spec-cordova directories
+* `npm run cover` - runs istanbul code coverage tool to measure tests coverage
+
+* `npm test` - shortcut for `npm run jshint && npm run jasmine`
