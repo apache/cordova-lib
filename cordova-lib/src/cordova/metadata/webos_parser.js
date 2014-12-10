@@ -39,7 +39,8 @@ module.exports.prototype = {
     // Returns a promise.
     update_from_config: function() {
         var config = new ConfigParser(this.config_xml());
-        var manifestPath = path.join(this.www_dir(), 'appinfo.json');
+        var www = this.www_dir();
+        var manifestPath = path.join(www, 'appinfo.json');
         var manifest = {type: "web", uiRevision:2};
 
         // Load existing manifest
@@ -63,17 +64,32 @@ module.exports.prototype = {
             manifest.vendorurl = authorUrl;
         }
 
+        var projectRoot = util.isCordova(this.path);
+        var copyImg = function(src, type) {
+            var index = src.indexOf("www");
+            if(index===0 || index===1) {
+                return src.substring(index+4);
+            } else {
+                var newSrc = "assets/" + type + ".png";
+                if(type==="icon") {
+                    newSrc = "icon.png";
+                }
+                shell.cp("-f", path.join(projectRoot, src), path.join(www, newSrc));
+                return newSrc;
+            }
+        }
+
         var icons = config.getIcons('webos');
         // if there are icon elements in config.xml
         if (icons) {
             var setIcon = function(type, size) {
                 var item = icons.getBySize(size, size);
                 if(item && item.src) {
-                    manifest[type] = item.src;
+                    manifest[type] = copyImg(item.src, type);
                 } else {
                     item = icons.getDefault();
                     if(item && item.src) {
-                        manifest[type] = item.src;
+                        manifest[type] = copyImg(item.src, type);
                     }
                 }
             };
@@ -86,7 +102,7 @@ module.exports.prototype = {
         if (splash) {
             var splashImg = splash.getBySize(1920, 1080);
             if(splashImg && splashImg.src) {
-                manifest.splashBackground = splashImg.src;
+                manifest.splashBackground = copyImg(splashImg.src, "splash");
             }
         }
 
