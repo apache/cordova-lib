@@ -26,7 +26,11 @@ var path = require('path')
    , common = require('./common')
    , events = require('../../events')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
+   , properties_parser = require('properties-parser')
+   , android_project = require('../util/android-project')
    ;
+
+var projectFileCache = {};
 
 module.exports = {
     www_dir:function(project_dir) {
@@ -84,10 +88,80 @@ module.exports = {
     },
     'framework': {
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.install is not supported for amazon-fireos');
+            var src = source_el.attrib.src;
+            var custom = source_el.attrib.custom;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', 'Installing Android library: ' + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir;
+
+            if (custom) {
+                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
+                common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir);
+                subDir = path.resolve(project_dir, subRelativeDir);
+            } else {
+                var sdk_dir = module.exports.getProjectSdkDir(project_dir);
+                subDir = path.resolve(sdk_dir, src);
+            }
+
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            var type = source_el.attrib.type;
+            if (type == 'gradleReference') {
+                //add reference to build.gradle
+                projectConfig.addGradleReference(parentDir, subDir);
+            } else {
+                projectConfig.addSubProject(parentDir, subDir);
+            }
         },
         uninstall:function(source_el, project_dir, plugin_id) {
-            events.emit('verbose', 'framework.uninstall is not supported for amazon-fireos');
+            var src = source_el.attrib.src;
+            var custom = source_el.attrib.custom;
+            if (!src) throw new Error('src not specified in framework element');
+
+            events.emit('verbose', 'Uninstalling Android library: ' + src);
+            var parent = source_el.attrib.parent;
+            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var subDir;
+
+            if (custom) {
+                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
+                common.removeFile(project_dir, subRelativeDir);
+                subDir = path.resolve(project_dir, subRelativeDir);
+            } else {
+                var sdk_dir = module.exports.getProjectSdkDir(project_dir);
+                subDir = path.resolve(sdk_dir, src);
+            }
+
+            var projectConfig = module.exports.parseProjectFile(project_dir);
+            var type = source_el.attrib.type;
+            if (type == 'gradleReference') {
+                projectConfig.removeGradleReference(parentDir, subDir);
+            } else {
+                projectConfig.removeSubProject(parentDir, subDir);
+            }
         }
+    },
+    parseProjectFile: function(project_dir){
+        if (!projectFileCache[project_dir]) {
+            projectFileCache[project_dir] = new android_project.AndroidProject();
+        }
+
+        return projectFileCache[project_dir];
+    },
+    purgeProjectFileCache:function(project_dir) {
+        delete projectFileCache[project_dir];
+    },
+    getProjectSdkDir: function (project_dir) {
+        var localProperties = properties_parser.createEditor(path.resolve(project_dir, 'local.properties'));
+        return localProperties.get('sdk.dir');
+    },
+    getCustomSubprojectRelativeDir: function (plugin_id, project_dir, src) {
+        // All custom subprojects are prefixed with the last portion of the package id.
+        // This is to avoid collisions when opening multiple projects in Eclipse that have subprojects with the same name.
+        var prefix = module.exports.package_suffix(project_dir);
+        var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
+        return subRelativeDir;
     }
 };
