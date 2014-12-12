@@ -192,15 +192,6 @@ describe('fetch', function() {
                 expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
             });
         });
-        it('should throw if used with url and `link` param', function() {
-            runs(function() {
-                fetch("https://github.com/bobeast/GAPlugin.git", temp, {link:true}).then(null, function(err) { done = err; });
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
-                expect(''+done).toContain('--link is not supported for git URLs');
-            });
-        });
         it('should fail when the expected ID doesn\'t match', function(done) {
             fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: 'wrongID' })
             .then(function() {
