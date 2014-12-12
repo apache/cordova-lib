@@ -32,6 +32,7 @@ var npm = require('npm'),
     request = require('request'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('../../events'),
+    unpack = require('../../util/unpack'),
     plugmanConfigDir = path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
 
@@ -166,7 +167,9 @@ module.exports = {
             var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
             bumpCounter(info, cl);
             var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
-            return pluginDir;
+            // Unpack the plugin that was added to the cache (CB-8154)
+            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+            return unpack.unpackTgz(package_tgz, pluginDir);
         });
     },
 
