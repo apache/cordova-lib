@@ -61,12 +61,12 @@ function uninstallQueuedPlugins(platform_json, wwwDir) {
     }
 }
 
-function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
+function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, symbolList) {
 
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
 
-    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
+    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion, symbolList);
 
     var releaseBundle = libraryRelease.bundle();
 
@@ -204,7 +204,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
                 var outReleaseFile = path.join(wwwDir, 'cordova.js');
 
-                generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
+                generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules());
             } 
         });
     });
