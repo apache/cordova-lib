@@ -25,7 +25,6 @@
 var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
-    events = require('../../events'),
     util = require('../util'),
     Q = require('q'),
     ConfigParser = require('../../configparser/ConfigParser');
@@ -41,7 +40,7 @@ module.exports.prototype = {
         var config = new ConfigParser(this.config_xml());
         var www = this.www_dir();
         var manifestPath = path.join(www, 'appinfo.json');
-        var manifest = {type: "web", uiRevision:2};
+        var manifest = {type: 'web', uiRevision:2};
 
         // Load existing manifest
         if (fs.existsSync(manifestPath)) {
@@ -66,18 +65,18 @@ module.exports.prototype = {
 
         var projectRoot = util.isCordova(this.path);
         var copyImg = function(src, type) {
-            var index = src.indexOf("www");
+            var index = src.indexOf('www');
             if(index===0 || index===1) {
                 return src.substring(index+4);
             } else {
-                var newSrc = "assets/" + type + ".png";
-                if(type==="icon") {
-                    newSrc = "icon.png";
+                var newSrc = 'assets/' + type + '.png';
+                if(type==='icon') {
+                    newSrc = 'icon.png';
                 }
-                shell.cp("-f", path.join(projectRoot, src), path.join(www, newSrc));
+                shell.cp('-f', path.join(projectRoot, src), path.join(www, newSrc));
                 return newSrc;
             }
-        }
+        };
 
         var icons = config.getIcons('webos');
         // if there are icon elements in config.xml
@@ -102,11 +101,11 @@ module.exports.prototype = {
         if (splash) {
             var splashImg = splash.getBySize(1920, 1080);
             if(splashImg && splashImg.src) {
-                manifest.splashBackground = copyImg(splashImg.src, "splash");
+                manifest.splashBackground = copyImg(splashImg.src, 'splash');
             }
         }
 
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, "\t"));
+        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, '\t'));
 
         return Q();
     },
@@ -142,7 +141,7 @@ module.exports.prototype = {
                     app_www = path.join(real_www, '../..');
                 }
                 //double check existence of deploy
-                if(!fs.existsSync(path.join(app_www, "deploy"))) {
+                if(!fs.existsSync(path.join(app_www, 'deploy'))) {
                     app_www = real_www; //fallback
                 }
             }
@@ -152,31 +151,31 @@ module.exports.prototype = {
         shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
 
         // prepare and update deploy.json for cordova components
-        var deploy = path.join(this.www_dir(), "deploy.json");
+        var deploy = path.join(this.www_dir(), 'deploy.json');
         if(fs.existsSync(deploy)) {
             try {
                 // make stub file entries to guarantee the dir/files are there
-                shell.mkdir('-p', path.join(this.www_dir(), "plugins"));
-                var pluginFile = path.join(this.www_dir(), "cordova_plugins.js");
+                shell.mkdir('-p', path.join(this.www_dir(), 'plugins'));
+                var pluginFile = path.join(this.www_dir(), 'cordova_plugins.js');
                 if(!fs.existsSync(pluginFile)) {
-                    fs.writeFileSync(pluginFile, "");
+                    fs.writeFileSync(pluginFile, '');
                 }
                 // add to json if not already there, so they don't get minified out during build
-                var obj = JSON.parse(fs.readFileSync(deploy, {encoding:"utf8"}));
+                var obj = JSON.parse(fs.readFileSync(deploy, {encoding:'utf8'}));
                 obj.assets = obj.assets || [];
-                var assets = ["plugins", "cordova.js", "cordova_plugins.js"];
+                var assets = ['plugins', 'cordova.js', 'cordova_plugins.js'];
                 for(var i=0; i<assets.length; i++) {
                     var index = obj.assets.indexOf(assets[i]);
                     if(index<0) {
-                        index = obj.assets.indexOf("./" + assets[i]);
+                        index = obj.assets.indexOf('./' + assets[i]);
                     }
                     if(index<0) {
-                        obj.assets.push("./" + assets[i]);
+                        obj.assets.push('./' + assets[i]);
                     }
-                    fs.writeFileSync(deploy, JSON.stringify(obj, null, "\t"));
+                    fs.writeFileSync(deploy, JSON.stringify(obj, null, '\t'));
                 }
             } catch(e) {
-                console.error("Unable to update deploy.json: " + e)
+                console.error('Unable to update deploy.json: ' + e);
             }
         }
     },
