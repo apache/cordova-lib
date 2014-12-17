@@ -14,7 +14,7 @@
         "hostos": ["linux"],
         "parser": "./metadata/ubuntu_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "3.6.3"
+        "version": "4.0.0"
     },
     "amazon-fireos": {
         "parser": "./metadata/amazon_fireos_parser",
