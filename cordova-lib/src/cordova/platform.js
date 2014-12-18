@@ -21,8 +21,6 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-
-
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -55,7 +53,7 @@ function add(hooksRunner, projectRoot, targets, opts) {
         return Q.reject(new CordovaError(msg));
     }
 
-    for(var i= 0 ; i< targets.length; i++){
+    for (var i= 0 ; i < targets.length; i++) {
         if ( !hostSupports(targets[i]) ) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
@@ -70,7 +68,6 @@ function add(hooksRunner, projectRoot, targets, opts) {
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
-
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
     if ( !fs.existsSync(platformsDir)) {
@@ -79,22 +76,21 @@ function add(hooksRunner, projectRoot, targets, opts) {
 
     return hooksRunner.fire('before_platform_add', opts)
     .then(function() {
-        return promiseutil.Q_chainmap(targets, function(t) {
+        return promiseutil.Q_chainmap(targets, function (t) {
             // For each platform, download it and call its "create" script.
-
             var p;  // The promise to be returned by this function.
             var platform = t.split('@')[0];
             // If t is not a platform or platform@version, it must be a dir.
             // In this case get platform name from package.json in that dir and
             // skip lazy-load.
             if( !(platform in platforms) ) {
-                var pPath = path.resolve(t);
+                var pPath = resolvePath(t);
                 var pkg;
                 // Prep the message in advance, we might need it in several places.
                 msg = 'The provided path does not seem to contain a ' +
                       'Cordova platform: ' + t;
                 try {
-                    pkg = require(path.join(pPath, 'package'));
+                    pkg = getPackageJsonContent(pPath);
                 } catch(e) {
                     throw new CordovaError(msg + '\n' + e.message);
                 }
@@ -132,6 +128,14 @@ function add(hooksRunner, projectRoot, targets, opts) {
     .then(function() {
         return hooksRunner.fire('after_platform_add', opts);
     });
+}
+
+function resolvePath(pPath){
+    return path.resolve(pPath);
+}
+
+function getPackageJsonContent(pPath) {
+    return require(path.join(pPath, 'package'));
 }
 
 function remove(hooksRunner, projectRoot, targets, opts) {
