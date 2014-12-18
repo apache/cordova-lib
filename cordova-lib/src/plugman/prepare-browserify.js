@@ -24,6 +24,7 @@
 
 var platform_modules   = require('./platforms'),
     path               = require('path'),
+    through            = require('through2'),
     config_changes     = require('./util/config-changes'),
     xml_helpers        = require('../util/xml-helpers'),
     wp8                = require('./platforms/wp8'),
@@ -61,12 +62,25 @@ function uninstallQueuedPlugins(platform_json, wwwDir) {
     }
 }
 
-function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, symbolList) {
+function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
 
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
+    var symbolList = null;
 
-    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion, symbolList);
+    var addSymbolList = through.obj(function(row, enc, next) {
+        if(symbolList === null) {
+            symbolList = requireTr.getModules();
+            this.push(util.format("var symbolList = %s;\n%s\n", JSON.stringify(symbolList), row));
+        } else {
+            this.push(row);
+        }
+        next();
+    });
+
+    libraryRelease.pipeline.get('wrap').push(addSymbolList);
+    
+    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
     var releaseBundle = libraryRelease.bundle();
 
@@ -77,6 +91,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
         plugman.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
         // TODO clean up all the *.browserify files
     });
+    
 
     outReleaseFileStream.on('error', function(err) {
         var newtime = new Date().valueOf() - time;
@@ -108,8 +123,8 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     config_changes.process(plugins_dir, project_dir, platform);
 
     if(!is_top_level) return;
+    requireTr.init(platform);
 
-    requireTr.platform = platform;
     var platformVersion;
     computeCommitId(function(commitId) { 
         //run version script for each platform to get platformVersion
@@ -178,7 +193,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
                         var fsPath = path.join.apply(path, pathParts);
                         var scriptPath = path.join(pluginDir, fsPath);
-
                         requireTr.addModule({symbol: moduleName, path: scriptPath});
 
                         module.getchildren().forEach(function(child) {
@@ -203,7 +217,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 });
 
                 var outReleaseFile = path.join(wwwDir, 'cordova.js');
-
                 generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules());
             } 
         });
