@@ -193,7 +193,10 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
                         var fsPath = path.join.apply(path, pathParts);
                         var scriptPath = path.join(pluginDir, fsPath);
-                        requireTr.addModule({symbol: moduleName, path: scriptPath});
+                        
+                        if(requireTr.hasModule(moduleName) === false) {
+                            requireTr.addModule({symbol: moduleName, path: scriptPath});
+                        }
 
                         module.getchildren().forEach(function(child) {
                             if (child.tag.toLowerCase() == 'clobbers') {
