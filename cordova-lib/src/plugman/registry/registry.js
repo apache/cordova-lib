@@ -33,7 +33,8 @@ var npm = require('npm'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('../../events'),
     unpack = require('../../util/unpack'),
-    plugmanConfigDir = path.resolve(home, '.plugman'),
+    // if PLUGMAN_HOME env var is specified use it as config directory (see CB-8190)
+    plugmanConfigDir = process.env.PLUGMAN_HOME || path.resolve(home, '.plugman'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache');
 
 
