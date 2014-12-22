@@ -48,7 +48,7 @@ xdescribe('serve command', function() {
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
     })
-    it('should not run outside of a Cordova-based project', function() {
+    iit('should not run outside of a Cordova-based project', function() {
         process.chdir(tempDir);
 
         expect(function() {
@@ -72,9 +72,9 @@ xdescribe('serve command', function() {
 
         function cit(cond) {
             if (cond) {
-                return it;
+                return iit;
             }
-            return xit;
+            return it;
         }
         function itifapps(apps) {
             return cit(apps.every(function (bin) {return shell.which(bin);}));
@@ -164,7 +164,7 @@ xdescribe('serve command', function() {
             };
         };
 
-        it('should serve from top-level www if the file exists there', function() {
+        iit('should serve from top-level www if the file exists there', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -174,7 +174,7 @@ xdescribe('serve command', function() {
             })();
         });
 
-        it('should honour a custom port setting', function() {
+        iit('should honour a custom port setting', function() {
             var payload = 'This is test file.';
             payloads.firefoxos = 'This is the firefoxos test file.'
             test_serve('firefoxos', '/basictest.html', payload, {
@@ -210,7 +210,7 @@ xdescribe('serve command', function() {
             test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
         });
 
-        it('should fall back to www on firefoxos', function() {
+        iit('should fall back to www on firefoxos', function() {
             payloads.firefoxos = 'This is the firefoxos test file.';
             test_serve('firefoxos', '/test.html', payloads.firefoxos)();
         });
