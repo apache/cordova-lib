@@ -70,7 +70,7 @@ describe('start', function() {
         ).then(
             function(){ done = true; }
         );
-        waitsFor(function() { return done; }, 'promise never resolved', 1000);
+        waitsFor(function() { return done; }, 'promise never resolved', 10000);
     });
 });
 
@@ -242,7 +242,7 @@ describe('uninstall', function() {
             runs(function() {
                 uninstallPromise( uninstall('android', project, plugins['DummyPlugin'], plugins_install_dir, { browserify: true }) );
             });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
+            waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
                 expect(add_to_queue).toHaveBeenCalledWith(plugins_install_dir, dummy_id, 'android', true);
             });
@@ -254,7 +254,7 @@ describe('uninstall', function() {
             runs(function() {
                 uninstallPromise(uninstall('atari', project, 'SomePlugin', plugins_install_dir, { browserify: true }));
             });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
+            waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
                 expect(''+done).toContain('atari not supported.');
             });
@@ -263,7 +263,7 @@ describe('uninstall', function() {
             runs(function() {
                 uninstallPromise(uninstall('android', project, 'SomePluginThatDoesntExist', plugins_install_dir, { browserify: true }));
             });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
+            waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
                 expect(''+done).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
             });
@@ -303,7 +303,7 @@ describe('end', function() {
             done = true;
         });
 
-        waitsFor(function() { return done; }, 'promise never resolved', 500);
+        waitsFor(function() { return done; }, 'promise never resolved', 1500);
     });
 });
 
