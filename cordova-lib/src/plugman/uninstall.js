@@ -357,9 +357,9 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         config_changes.add_uninstalled_plugin_to_prepare_queue(plugins_dir, plugin_id, platform, is_top_level);
         // call prepare after a successful uninstall
         if (options.browserify) {
-            plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
         } else {
-            plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
         }
     });
 }
