@@ -14,7 +14,7 @@
         "hostos": ["linux"],
         "parser": "./metadata/ubuntu_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "3.6.3"
+        "version": "4.0.0"
     },
     "amazon-fireos": {
         "parser": "./metadata/amazon_fireos_parser",
@@ -25,7 +25,7 @@
         "hostos": ["win32"],
         "parser": "./metadata/wp8_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git",
-        "version": "3.7.0",
+        "version": "3.7.1",
         "altplatform": "wp"
     },
     "blackberry10": {

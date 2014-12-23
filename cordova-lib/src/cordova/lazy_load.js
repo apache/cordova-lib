@@ -39,6 +39,7 @@ var path          = require('path'),
     URL           = require('url'),
     Q             = require('q'),
     npm           = require('npm'),
+    unpack        = require('../util/unpack'),
     util          = require('./util'),
     stubplatform  = {
         url    : undefined,
@@ -160,7 +161,9 @@ function npm_cache_add(pkg) {
         return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
     }).then(function(info) {
         var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
-        return pkgDir;
+        // Unpack the package that was added to the cache (CB-8154)
+        var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+        return unpack.unpackTgz(package_tgz, pkgDir);
     });
 }
 
