@@ -73,7 +73,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     }
 
     // If it looks like a network URL, git clone it.
-    if ( uri.protocol && uri.protocol != 'file:' && uri.protocol != 'c:' && !plugin_src.match(/^\w+:\\/)) {
+    if ( uri.protocol && uri.protocol != 'file:' && !uri.protocol.match(/^[a-z]:/) && !plugin_src.match(/^\w+:\\/)) {
         events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
         if (options.link) {
             return Q.reject(new CordovaError('--link is not supported for git URLs'));
