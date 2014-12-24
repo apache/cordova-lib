@@ -34,6 +34,7 @@ var shell   = require('shelljs'),
     path    = require('path'),
     Q       = require('q'),
     registry = require('./registry/registry');
+var cordovaUtil = require('../cordova/util');
 
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
@@ -102,7 +103,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
        
         var p,  // The Q promise to be returned.
             linkable = true,
-            plugin_dir = path.join(plugin_src, options.subdir);
+            plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
 
         if (fs.existsSync(plugin_dir)) {
             p = Q(plugin_dir);
