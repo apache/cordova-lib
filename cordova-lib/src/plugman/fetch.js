@@ -251,8 +251,10 @@ function copyPlugin(plugin_dir, plugins_dir, link) {
     var dest = path.join(plugins_dir, pinfo.id);
     shell.rm('-rf', dest);
     if (link) {
-        events.emit('verbose', 'Linking plugin "' + plugin_dir + '" => "' + dest + '"');
-        fs.symlinkSync(plugin_dir, dest, 'dir');
+        var isRelativePath = plugin_dir[1] != ':' && plugin_dir[0] != path.sep;
+        var fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;
+        events.emit('verbose', 'Linking "' + dest + '" => "' + fixedPath + '"');
+        fs.symlinkSync(fixedPath, dest, 'dir');
     } else {
         shell.mkdir('-p', dest);
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
