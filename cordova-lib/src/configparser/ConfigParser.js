@@ -417,7 +417,11 @@ ConfigParser.prototype = {
     getEngines: function(){
         var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine');
         return engines.map(function(engine){
-            return {'id':engine.attrib.id};
+	    var version = engine.attrib.version;
+            return {
+		'id': engine.attrib.id,
+		'version': version ? version : null
+	    };
         });
     },
     write:function() {
