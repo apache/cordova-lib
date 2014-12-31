@@ -126,17 +126,16 @@ function AndroidProject() {
 
 AndroidProject.prototype = {
     addSubProject: function(parentDir, subDir) {
-        var subProjectFile = path.resolve(subDir, 'project.properties');
-        if (!fs.existsSync(subProjectFile)) throw new Error('cannot find "' + subProjectFile + '" referenced in <framework>');
-
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
+        var subProjectFile = path.resolve(subDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
+        if (fs.existsSync(subProjectFile)) {
+            var subProperties = this._getPropertiesFile(subProjectFile);
+            subProperties.set('target', parentProperties.get('target'));
+            this._subProjectDirs[subDir] = true;
+        }
         addLibraryReference(parentProperties, module.exports.getRelativeLibraryPath(parentDir, subDir));
 
-        var subProperties = this._getPropertiesFile(subProjectFile);
-        subProperties.set('target', parentProperties.get('target'));
-
-        this._subProjectDirs[subDir] = true;
         this._dirty = true;
     },
     removeSubProject: function(parentDir, subDir) {
