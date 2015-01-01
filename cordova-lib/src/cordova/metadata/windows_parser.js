@@ -27,12 +27,17 @@ var fs            = require('fs'),
     events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
     HooksRunner        = require('../../hooks/HooksRunner');
 
 function windows_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     try {
         this.isOldProjectTemplate = false;
         // Check that it's a universal windows store project
@@ -55,6 +60,8 @@ function windows_parser(project) {
         throw new CordovaError('The provided path "' + project + '" is not a Windows project. ' + e);
     }
 }
+
+require('util').inherits(windows_parser, Parser);
 
 module.exports = windows_parser;
 

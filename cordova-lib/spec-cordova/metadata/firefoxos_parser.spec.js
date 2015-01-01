@@ -22,6 +22,7 @@ var platforms = require('../../src/cordova/platforms'),
     shell = require('shelljs'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
@@ -43,6 +44,9 @@ describe('firefoxos project parser', function() {
                 var p = new platforms.android.parser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.firefoxos.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

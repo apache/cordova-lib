@@ -26,6 +26,7 @@ var fs            = require('fs'),
     shell         = require('shelljs'),
     util          = require('../util'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     events        = require('../../events');
@@ -34,10 +35,16 @@ function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {
         throw new CordovaError('The provided path "' + project + '" is not a Cordova BlackBerry10 project.');
     }
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     this.path = project;
     this.config_path = path.join(this.path, 'www', 'config.xml');
     this.xml = new ConfigParser(this.config_path);
 }
+
+require('util').inherits(blackberry_parser, Parser);
 
 module.exports = blackberry_parser;
 

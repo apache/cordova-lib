@@ -26,6 +26,7 @@ var platforms = require('../../src/cordova/platforms'),
     xmlHelpers = require('../../src/util/xml-helpers'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
@@ -86,6 +87,9 @@ describe('blackberry10 project parser', function() {
                 project = new platforms.blackberry10.parser(proj);
             }).not.toThrow();
             expect(project).toBeDefined();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.blackberry10.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

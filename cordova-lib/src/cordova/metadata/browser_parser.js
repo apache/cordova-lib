@@ -26,11 +26,18 @@ var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
     util = require('../util'),
-    Q = require('q');
+    Q = require('q'),
+    Parser = require('./parser');
 
 function browser_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     this.path = project;
 }
+
+require('util').inherits(browser_parser, Parser);
 
 module.exports = browser_parser;
 

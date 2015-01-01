@@ -26,6 +26,7 @@ var platforms = require('../../src/cordova/platforms'),
     fs = require('fs'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
@@ -66,6 +67,9 @@ describe('ios project parser', function () {
                 expect(p.pbxproj).toEqual(path.join(proj, 'test.xcodeproj', 'project.pbxproj'));
                 expect(p.xcodeproj).toEqual(path.join(proj, 'test.xcodeproj'));
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.ios.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

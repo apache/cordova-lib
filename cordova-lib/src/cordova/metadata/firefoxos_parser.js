@@ -28,11 +28,18 @@ var fs = require('fs'),
     events = require('../../events'),
     util = require('../util'),
     Q = require('q'),
+    Parser = require('./parser'),
     ConfigParser = require('../../configparser/ConfigParser');
 
 function firefoxos_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     this.path = project;
 }
+
+require('util').inherits(firefoxos_parser, Parser);
 
 module.exports = firefoxos_parser;
 

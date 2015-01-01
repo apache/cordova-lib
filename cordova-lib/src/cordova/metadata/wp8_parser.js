@@ -27,12 +27,17 @@ var fs            = require('fs'),
     events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError'),
     xml           = require('../../util/xml-helpers'),
     HooksRunner        = require('../../hooks/HooksRunner');
 
 function wp8_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     try {
         // TODO : Check that it's not a wp8 project?
         var csproj_file   = fs.readdirSync(project).filter(function(e) { return e.match(/\.csproj$/i); })[0];
@@ -45,6 +50,8 @@ function wp8_parser(project) {
     }
     this.manifest_path  = path.join(this.wp8_proj_dir, 'Properties', 'WMAppManifest.xml');
 }
+
+require('util').inherits(wp8_parser, Parser);
 
 module.exports = wp8_parser;
 

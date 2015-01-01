@@ -21,7 +21,8 @@ var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
-    fs = require('fs');
+    fs = require('fs'),
+    Parser = require('../../src/cordova/metadata/parser');
 
 describe('browser project parser', function() {
     var proj = path.join('some', 'path');
@@ -37,6 +38,9 @@ describe('browser project parser', function() {
                 var p = new platforms.browser.parser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.browser.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

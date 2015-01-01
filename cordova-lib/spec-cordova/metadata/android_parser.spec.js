@@ -25,6 +25,7 @@ var platforms = require('../../src/cordova/platforms'),
     xmlHelpers = require('../../src/util/xml-helpers'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova');
 
@@ -78,6 +79,9 @@ describe('android project parser', function() {
                 expect(p.manifest).toEqual(path.join(proj, 'AndroidManifest.xml'));
                 expect(p.android_config).toEqual(path.join(proj, 'res', 'xml', 'config.xml'));
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.android.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

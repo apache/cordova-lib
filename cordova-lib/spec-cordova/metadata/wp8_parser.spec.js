@@ -27,6 +27,7 @@ var platforms = require('../../src/cordova/platforms'),
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     CordovaError = require('../../src/CordovaError'),
     cordova = require('../../src/cordova/cordova'),
@@ -95,6 +96,9 @@ describe('wp8 project parser', function() {
                 expect(p.wp8_proj_dir).toEqual(proj);
                 expect(p.manifest_path).toEqual(path.join(proj, 'Properties', 'WMAppManifest.xml'));
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.wp8.parser(proj) instanceof Parser).toBeTruthy();
         });
     });
 

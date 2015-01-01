@@ -31,10 +31,15 @@ var fs            = require('fs'),
     shell         = require('shelljs'),
     plist         = require('plist'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     ConfigParser  = require('../../configparser/ConfigParser'),
     CordovaError  = require('../../CordovaError');
 
 function ios_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     try {
         var xcodeproj_dir = fs.readdirSync(project).filter(function(e) { return e.match(/\.xcodeproj$/i); })[0];
         if (!xcodeproj_dir) throw new CordovaError('The provided path "' + project + '" is not a Cordova iOS project.');
@@ -48,6 +53,8 @@ function ios_parser(project) {
     this.pbxproj = path.join(this.xcodeproj, 'project.pbxproj');
     this.config_path = path.join(this.cordovaproj, 'config.xml');
 }
+
+require('util').inherits(ios_parser, Parser);
 
 module.exports = ios_parser;
 

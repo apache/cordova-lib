@@ -27,10 +27,15 @@ var fs            = require('fs'),
     util          = require('../util'),
     shell         = require('shelljs'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     os            = require('os'),
     ConfigParser  = require('../../configparser/ConfigParser');
 
 function ubuntu_parser(project) {
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     this.path = project;
     this.config = new ConfigParser(this.config_xml());
     this.update_manifest();
@@ -39,6 +44,8 @@ function ubuntu_parser(project) {
 function sanitize(str) {
     return str.replace(/\n/g, ' ').replace(/^\s+|\s+$/g, '');
 }
+
+require('util').inherits(ubuntu_parser, Parser);
 
 module.exports = ubuntu_parser;
 

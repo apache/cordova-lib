@@ -29,6 +29,7 @@ var fs            = require('fs'),
     events        = require('../../events'),
     shell         = require('shelljs'),
     Q             = require('q'),
+    Parser        = require('./parser'),
     ConfigParser = require('../../configparser/ConfigParser'),
     CordovaError = require('../../CordovaError');
 
@@ -37,11 +38,17 @@ function amazon_fireos_parser(project) {
     if (!fs.existsSync(path.join(project, 'AndroidManifest.xml'))) {
         throw new CordovaError('The provided path "' + project + '" is not an Android project.');
     }
+
+    // Call the base class constructor
+    Parser.apply(this, arguments);
+
     this.path = project;
     this.strings = path.join(this.path, 'res', 'values', 'strings.xml');
     this.manifest = path.join(this.path, 'AndroidManifest.xml');
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
 }
+
+require('util').inherits(amazon_fireos_parser, Parser);
 
 module.exports = amazon_fireos_parser;
 
