@@ -73,7 +73,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
     var addSymbolList = through.obj(function(row, enc, next) {
         if(symbolList === null) {
             symbolList = requireTr.getModules();
-            this.push(util.format("var symbolList = %s;\n%s\n", JSON.stringify(symbolList), row));
+            this.push(util.format('var symbolList = %s;\n%s\n', JSON.stringify(symbolList), row));
         } else {
             this.push(row);
         }
