@@ -24,6 +24,7 @@
 
 var platform_modules   = require('./platforms'),
     path               = require('path'),
+    through            = require('through2'),
     config_changes     = require('./util/config-changes'),
     xml_helpers        = require('../util/xml-helpers'),
     wp8                = require('./platforms/wp8'),
@@ -62,13 +63,26 @@ function uninstallQueuedPlugins(platform_json, wwwDir) {
     }
 }
 
-function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, symbolList) {
+function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
 
     var deferred = Q.defer();
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
+    var symbolList = null;
 
-    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion, symbolList);
+    var addSymbolList = through.obj(function(row, enc, next) {
+        if(symbolList === null) {
+            symbolList = requireTr.getModules();
+            this.push(util.format("var symbolList = %s;\n%s\n", JSON.stringify(symbolList), row));
+        } else {
+            this.push(row);
+        }
+        next();
+    });
+
+    libraryRelease.pipeline.get('wrap').push(addSymbolList);
+
+    writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
     var releaseBundle = libraryRelease.bundle();
 
@@ -138,7 +152,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     if(!is_top_level) {
         return Q();
     }
-    requireTr.platform = platform;
+    requireTr.init(platform);
 
     var commitId;
     return computeCommitIdSync()
