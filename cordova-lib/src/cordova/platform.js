@@ -21,8 +21,6 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-
-
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -40,7 +38,8 @@ var config            = require('./config'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
     unorm             = require('unorm'),
-    shell             = require('shelljs');
+    shell             = require('shelljs'),
+    _                 = require('underscore');
 
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
@@ -51,11 +50,11 @@ function add(hooksRunner, projectRoot, targets, opts) {
     var msg;
     if ( !targets || !targets.length ) {
         msg = 'No platform specified. Please specify a platform to add. ' +
-              'See `' + cordova_util.binname + ' platform list`.';
+            'See `' + cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
 
-    for(var i= 0 ; i< targets.length; i++){
+    for (var i= 0 ; i < targets.length; i++) {
         if ( !hostSupports(targets[i]) ) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
@@ -70,7 +69,6 @@ function add(hooksRunner, projectRoot, targets, opts) {
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
-
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
     if ( !fs.existsSync(platformsDir)) {
@@ -78,60 +76,128 @@ function add(hooksRunner, projectRoot, targets, opts) {
     }
 
     return hooksRunner.fire('before_platform_add', opts)
-    .then(function() {
-        return promiseutil.Q_chainmap(targets, function(t) {
-            // For each platform, download it and call its "create" script.
+	.then(function() {
+            return promiseutil.Q_chainmap(targets, function (target) {
 
-            var p;  // The promise to be returned by this function.
-            var platform = t.split('@')[0];
-            // If t is not a platform or platform@version, it must be a dir.
-            // In this case get platform name from package.json in that dir and
-            // skip lazy-load.
-            if( !(platform in platforms) ) {
-                var pPath = path.resolve(t);
-                var pkg;
-                // Prep the message in advance, we might need it in several places.
-                msg = 'The provided path does not seem to contain a ' +
-                      'Cordova platform: ' + t;
-                try {
-                    pkg = require(path.join(pPath, 'package'));
-                } catch(e) {
-                    throw new CordovaError(msg + '\n' + e.message);
-                }
-                if ( !pkg || !pkg.name ) {
-                    throw new CordovaError(msg);
-                }
-                // Package names for Cordova platforms look like "cordova-ios".
-                var nameParts = pkg.name.split('-');
-                var name = nameParts[1];
-                if (name == 'amazon') {
-                    name = 'amazon-fireos';
-                }
-                if( !platforms[name] ) {
-                    throw new CordovaError(msg);
-                }
-                platform = name;
+		// For each platform, download it and call its "create" script.
+		var p;  // The promise to be returned by this function.
+		var parts = target.split('@');
+		var platform = parts[0];
+		var version = parts[1];
 
-                // Use a fulfilled promise with the path as value to skip dloading.
-                p = Q(pPath);
-            } else {
-                // Using lazy_load for a platform specified by name
-                p = lazy_load.based_on_config(projectRoot, t, opts)
-                .fail(function(err) {
-                    throw new CordovaError('Unable to fetch platform ' + t + ': ' + err);
-                });
-            }
+		// Promise: It is resolved with an object with the following properties: 
+		//           platform(name) and libDir(contains create script)
+		var pPlatformDetails; 
+		
+		// If target is not a platform or platform@version, it must be a dir.
+		// In this case get platform name from package.json in that dir and
+		// skip lazy-load.
+		if( !(platform in platforms) ){
+		    pPlatformDetails = getPlatformDetailsFromDir(target);
+		}
+		else {
+		    if(!version){
+			events.emit('log', 'No version supplied. Retrieving version from config.xml...');
+		    }
+		    version = version || getVersionFromConfigFile(platform, cfg);
+		    if (version) {
+		        version = version.replace(/^file:\/\//, ''); // If version is a folder, remove the 'file://' prefix from it.
+		    }
+		    var tgt = version ? (platform + '@' + version) : platform;
+		    pPlatformDetails = isDirectory(version) ? getPlatformDetailsFromDir(version) : downloadPlatform(projectRoot, tgt, opts);
+		}
 
-            return p
-            .then(function(libDir) {
-                var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
-                return call_into_create(platform, projectRoot, cfg, libDir, template, opts);
-            });
-        });
-    })
-    .then(function() {
-        return hooksRunner.fire('after_platform_add', opts);
+		return pPlatformDetails.then(function(platDetails) {
+                    var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;		    
+                    return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
+		});            
+
+	    }).then(function() {
+		return hooksRunner.fire('after_platform_add', opts);
+	    });
+	});
+}
+
+function isDirectory(dir){
+    try{
+	return fs.lstatSync(dir).isDirectory();
+    }
+    catch(e){
+	return false;
+    }   
+}
+
+// Returns a Promise
+function downloadPlatform(projectRoot, target, opts){
+
+    // Using lazy_load for a platform specified by name
+    var p = lazy_load.based_on_config(projectRoot, target, opts)
+	.then(function(libDir){ 
+	    return {
+		platform: target.split('@')[0],
+		libDir: libDir
+	    };
+	}).fail(function(err){
+	    throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
+	});
+    
+    return p;
+}
+
+function resolvePath(pPath){
+    return path.resolve(pPath);
+}
+
+function getPackageJsonContent(pPath) {
+    return require(path.join(pPath, 'package'));
+}
+
+// Returns a Promise
+// Gets platform details from a directory
+function getPlatformDetailsFromDir(dir){
+
+    var pkg;
+    var pPath = path.resolve(dir);
+
+    // Prep the message in advance, we might need it in several places.
+    var msg = 'The provided path does not seem to contain a ' +
+        'Cordova platform: ' + dir;
+    try {
+        pkg = getPackageJsonContent(pPath);
+    } catch(e) {
+	return Q.reject(new CordovaError(msg + '\n' + e.message));
+    }
+    if ( !pkg || !pkg.name ) {
+	return Q.reject(new CordovaError(msg));
+    }
+    // Package names for Cordova platforms look like "cordova-ios".
+    var nameParts = pkg.name.split('-');
+    var name = nameParts[1];
+    if (name == 'amazon') {
+        name = 'amazon-fireos';
+    }
+    if( !platforms[name] ) {
+	return Q.reject(new CordovaError(msg));
+    }
+
+    // Use a fulfilled promise with the platform name and path as value to skip downloading.
+    return Q({
+	platform: name,
+	libDir: pPath
     });
+}
+
+function getVersionFromConfigFile(platform, cfg) {
+    if(!platform || ( !(platform in platforms) )){
+	throw new CordovaError('Invalid platform: ' + platform);
+    }
+
+    // Get appropriate version from config.xml
+    var engine = _.find(cfg.getEngines(), function(eng){
+	return eng.id.toLowerCase() === platform.toLowerCase();
+    });
+
+    return engine ? engine.version : null;		
 }
 
 function remove(hooksRunner, projectRoot, targets, opts) {
@@ -400,7 +466,7 @@ function platform(command, targets, opts) {
             if (idxWindows8 >=0) {
                 targets[idxWindows8] = 'windows';
             }
-            return add(hooksRunner, projectRoot, targets, opts);
+	    return add(hooksRunner, projectRoot, targets, opts);
         case 'rm':
         case 'remove':
             return remove(hooksRunner, projectRoot, targets, opts);
