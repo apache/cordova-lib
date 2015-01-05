@@ -50,7 +50,7 @@ function add(hooksRunner, projectRoot, targets, opts) {
     var msg;
     if ( !targets || !targets.length ) {
         msg = 'No platform specified. Please specify a platform to add. ' +
-            'See `' + cordova_util.binname + ' platform list`.';
+              'See `' + cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
 
@@ -76,44 +76,35 @@ function add(hooksRunner, projectRoot, targets, opts) {
     }
 
     return hooksRunner.fire('before_platform_add', opts)
-	.then(function() {
-            return promiseutil.Q_chainmap(targets, function (target) {
+	.then(function () {
+	    return promiseutil.Q_chainmap(targets, function (target) {
 
-		// For each platform, download it and call its "create" script.
-		var p;  // The promise to be returned by this function.
-		var parts = target.split('@');
-		var platform = parts[0];
-		var version = parts[1];
+	        // For each platform, download it and call its "create" script.
+	        var parts = target.split('@');
+	        var platform = parts[0];
+	        var version = parts[1];
 
-		// Promise: It is resolved with an object with the following properties: 
-		//           platform(name) and libDir(contains create script)
-		var pPlatformDetails; 
-		
-		// If target is not a platform or platform@version, it must be a dir.
-		// In this case get platform name from package.json in that dir and
-		// skip lazy-load.
-		if( !(platform in platforms) ){
-		    pPlatformDetails = getPlatformDetailsFromDir(target);
-		}
-		else {
-		    if(!version){
-			events.emit('log', 'No version supplied. Retrieving version from config.xml...');
-		    }
-		    version = version || getVersionFromConfigFile(platform, cfg);
-		    if (version) {
-		        version = version.replace(/^file:\/\//, ''); // If version is a folder, remove the 'file://' prefix from it.
-		    }
-		    var tgt = version ? (platform + '@' + version) : platform;
-		    pPlatformDetails = isDirectory(version) ? getPlatformDetailsFromDir(version) : downloadPlatform(projectRoot, tgt, opts);
-		}
-
-		return pPlatformDetails.then(function(platDetails) {
-                    var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;		    
-                    return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
-		});            
-
-	    }).then(function() {
-		return hooksRunner.fire('after_platform_add', opts);
+	        return Q.when().then(function () {
+	            if (!(platform in platforms)) {
+	                return getPlatformDetailsFromDir(target);
+	            }
+	            else {
+	                if (!version) {
+	                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+	                }
+	                version = version || getVersionFromConfigFile(platform, cfg);
+	                if (version) {
+	                    version = version.replace(/^file:\/\//, ''); // If version is a folder, remove the 'file://' prefix from it.
+	                }
+	                var tgt = version ? (platform + '@' + version) : platform;
+	                return isDirectory(version) ? getPlatformDetailsFromDir(version) : downloadPlatform(projectRoot, tgt, opts);
+	            }
+	        }).then(function (platDetails) {
+	            var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
+	            return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
+	        });
+	    }).then(function () {
+	        return hooksRunner.fire('after_platform_add', opts);
 	    });
 	});
 }
@@ -128,20 +119,18 @@ function isDirectory(dir){
 }
 
 // Returns a Promise
-function downloadPlatform(projectRoot, target, opts){
+function downloadPlatform(projectRoot, target, opts) {
 
     // Using lazy_load for a platform specified by name
-    var p = lazy_load.based_on_config(projectRoot, target, opts)
-	.then(function(libDir){ 
+    return lazy_load.based_on_config(projectRoot, target, opts)
+	.then(function (libDir) {
 	    return {
-		platform: target.split('@')[0],
-		libDir: libDir
+	        platform: target.split('@')[0],
+	        libDir: libDir
 	    };
-	}).fail(function(err){
+	}).fail(function (err) {
 	    throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
 	});
-    
-    return p;
 }
 
 function resolvePath(pPath){
@@ -197,7 +186,7 @@ function getVersionFromConfigFile(platform, cfg) {
 	return eng.id.toLowerCase() === platform.toLowerCase();
     });
 
-    return engine ? engine.version : null;		
+    return engine && engine.version;		
 }
 
 function remove(hooksRunner, projectRoot, targets, opts) {
@@ -430,11 +419,11 @@ function platform(command, targets, opts) {
     // - ../path/to/dir/with/platform/files
     if (targets) {
         if (!(targets instanceof Array)) targets = [targets];
-        targets.forEach(function(t) {
+        targets.forEach(function (t) {
             // Trim the @version part if it's there.
             var p = t.split('@')[0];
             // OK if it's one of known platform names.
-            if ( p in platforms ) return;
+            if (p in platforms) return;
             // Not a known platform name, check if its a real path.
             var pPath = path.resolve(t);
             if (fs.existsSync(pPath)) return;
@@ -459,14 +448,14 @@ function platform(command, targets, opts) {
     opts = opts || {};
     opts.platforms = targets;
 
-    switch(command) {
+    switch (command) {
         case 'add':
             // CB-6976 Windows Universal Apps. windows8 is now alias for windows
             var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >=0) {
+            if (idxWindows8 >= 0) {
                 targets[idxWindows8] = 'windows';
             }
-	    return add(hooksRunner, projectRoot, targets, opts);
+            return add(hooksRunner, projectRoot, targets, opts);
         case 'rm':
         case 'remove':
             return remove(hooksRunner, projectRoot, targets, opts);
