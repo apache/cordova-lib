@@ -24,7 +24,9 @@
 var fs            = require('fs'),
     path          = require('path'),
     CordovaError  = require('../CordovaError'),
-    shell         = require('shelljs');
+    shell         = require('shelljs'),
+    Q             = require('q'),
+    platforms     = require('./platformsConfig.json');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -55,6 +57,7 @@ exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports.fixRelativePath = fixRelativePath;
+exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -262,3 +265,45 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
         });
     }
 }
+
+function resolvePath(pPath) {
+    return path.resolve(pPath);
+}
+
+function getPackageJsonContent(pPath) {
+    return require(path.join(pPath, 'package'));
+}
+
+// Returns a Promise
+// Gets platform details from a directory
+function getPlatformDetailsFromDir(dir) {
+    var pkg;
+    var pPath = resolvePath(dir);
+
+    // Prep the message in advance, we might need it in several places.
+    var msg = 'The provided path does not seem to contain a ' +
+        'Cordova platform: ' + dir;
+    try {
+        pkg = getPackageJsonContent(pPath);
+    } catch(e) {
+	return Q.reject(new CordovaError(msg + '\n' + e.message));
+    }
+    if ( !pkg || !pkg.name ) {
+	return Q.reject(new CordovaError(msg));
+    }
+    // Package names for Cordova platforms look like "cordova-ios".
+    var nameParts = pkg.name.split('-');
+    var name = nameParts[1];
+    if (name == 'amazon') {
+        name = 'amazon-fireos';
+    }
+    if( !platforms[name] ) {
+	return Q.reject(new CordovaError(msg));
+    }
+
+    // Use a fulfilled promise with the platform name and path as value to skip downloading.
+    return Q({
+	platform: name,
+	libDir: pPath
+    });
+} 

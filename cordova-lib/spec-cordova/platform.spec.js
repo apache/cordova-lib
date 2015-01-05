@@ -28,7 +28,9 @@ var helpers = require('./helpers'),
     events = require('../src/events'),
     cordova = require('../src/cordova/cordova'),
     rewire = require('rewire'),
-    platform = rewire('../src/cordova/platform.js');
+    util = rewire('../src/cordova/util.js'),
+    platform = rewire('../src/cordova/platform.js'),
+    CordovaError = require('../src/CordovaError');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
 
@@ -338,8 +340,11 @@ describe('add function', function () {
             platform: 'android',
             libDir: targets[0]
         }));
-        platform.__set__('getPlatformDetailsFromDir', getPlatformDetailsFromDirMock);
-
+	
+	platform.__set__('util', {
+	    getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
+	});
+	
         var downloadPlatformMock = jasmine.createSpy();
         platform.__set__('downloadPlatform', downloadPlatformMock);
 
@@ -354,22 +359,94 @@ describe('add function', function () {
         });
     });
 
-    it('fails if there is an error while getting the platform details', function (done) {
+    it('tries to git-clone if there is an error while getting the platform details as specified from the command line', function (done) {
 
-        var targets = ['C:\\Projects\\cordova-projects\\cordova-android'];
+        var targets = ['https://github.com/apache/cordova-android'],
+	    targetPlatform = 'android',
+	    libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory';
+
+	var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
+	    platform: targetPlatform,
+	    libDir: libDir
+	}));
+	platform.__set__('cloneGitRepo', cloneGitRepoMock);
 
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
-        platform.__set__('getPlatformDetailsFromDir', function(){ // put this in globals section ? and reset
-            var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
-            return Q.reject(new Error(msg));
+	platform.__set__('util', {
+	    'getPlatformDetailsFromDir': function(){ 
+		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+		return Q.reject(new Error(msg));
+            }
+	});
+
+        platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
+            expect(cloneGitRepoMock).toHaveBeenCalledWith(targets[0]);
+            expect(call_into_create_mock).toHaveBeenCalledWith(targetPlatform, projectRoot, cfg, libDir, null, opts);
+            done();
         });
+    });
+
+    it('tries to git-clone if there is an error while downloading the platform specified by config.xml', function (done) {
+
+	var targetPlatform = 'android',
+            targets = [targetPlatform],
+	    libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
+            gitUrl = 'https://github.com/apache/cordova-android';
+
+	platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
+	platform.__set__('downloadPlatform', jasmine.createSpy().andReturn(Q.reject('error')));
+
+	var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
+	    platform: targetPlatform,
+	    libDir: libDir
+	}));
+	platform.__set__('cloneGitRepo', cloneGitRepoMock);
+
+        var call_into_create_mock = jasmine.createSpy();
+        platform.__set__('call_into_create', call_into_create_mock);
+
+	platform.__set__('util', {
+	    'getPlatformDetailsFromDir': function(){ 
+		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+		return Q.reject(new Error(msg));
+            }
+	});
+
+        platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
+            expect(cloneGitRepoMock).toHaveBeenCalledWith(gitUrl);
+            expect(call_into_create_mock).toHaveBeenCalledWith(targetPlatform, projectRoot, cfg, libDir, null, opts);
+            done();
+        });
+    });
+
+    it('fails if both platform downloading and git cloning actions are unsuccessful', function (done) {
+	
+	var targetPlatform = 'android',
+            targets = [targetPlatform],
+	    libDir  = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
+            gitUrl  = 'https://github.com/apache/cordova-android',
+            error   = new Error('Error while downloading: cannot use git repo url to download.');
+
+	platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
+	platform.__set__('downloadPlatform', jasmine.createSpy().andThrow(error)); 
+
+	var cloneGitRepoMock = jasmine.createSpy().andThrow(new Error('Error while cloning. Git repo non existent.'));
+	platform.__set__('cloneGitRepo', cloneGitRepoMock);
+
+	platform.__set__('util', {
+	    'getPlatformDetailsFromDir': function(){ 
+		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+		return Q.reject(new Error(msg));
+            }
+	});
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            var packagePath = path.join(targets[0], 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + targets[0]);
-            expect(call_into_create_mock).not.toHaveBeenCalled();
+	    var expectedErrorMessage = 'Unable to add platform ' + targetPlatform + 
+		                       '. Make sure to provide a valid version, an existing folder or an accessible git repository: ';
+            expect(cloneGitRepoMock).toHaveBeenCalledWith(gitUrl);
+	    expect((error.message.indexOf(expectedErrorMessage) > -1)).toBeTruthy();
             done();
         });
     });
@@ -395,20 +472,6 @@ describe('add function', function () {
             expect(getVersionFromConfigFileMock).toHaveBeenCalledWith('android', cfg);
             expect(downloadPlatformMock).toHaveBeenCalledWith(projectRoot, 'android@' + versionInConfigXML, opts);
             expect(call_into_create_mock).toHaveBeenCalledWith('android', projectRoot, cfg, libDir, null, opts);
-            done();
-        });
-    });
-    
-    it('fails if there is an error while downloading the platform', function(done) {
-
-        var targets = ['android'];
-        var errorMessage = 'Unable to fetch platform andythoroid : Cordova library \'andythoroid\' not recognized.';
-        platform.__set__('downloadPlatform', function(){
-            throw new Error(errorMessage);
-        });
-
-        platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function(error){
-            expect(error.message).toBe(errorMessage);
             done();
         });
     });
@@ -476,7 +539,9 @@ describe('add function', function () {
             platform: 'android',
             libDir: 'C:/path/to/android/platform'
         }));
-        platform.__set__('getPlatformDetailsFromDir', getPlatformDetailsFromDirMock);
+	platform.__set__('util', {
+	    getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
+	});
 
         var isDirectoryMock = jasmine.createSpy().andReturn(true);
         platform.__set__('isDirectory', isDirectoryMock);
@@ -489,7 +554,7 @@ describe('add function', function () {
             expect(getPlatformDetailsFromDirMock).toHaveBeenCalledWith('C:/path/to/android/platform');
             expect(call_into_create_mock).toHaveBeenCalledWith('android', projectRoot, cfg, 'C:/path/to/android/platform', null, opts);
             done();
-        });
+        }).fail(function(err){ console.log(err); done(); });
 	
     });
 
@@ -605,141 +670,6 @@ describe('downloadPlatform function', function(){
             expect(based_on_config_called).toBeTruthy();
             expect(platformDetails.platform).toBe('wp8');
 	    expect(platformDetails.libDir).toBe(libDir);
-            done();
-        });
-    });
-});
-
-describe('getPlatformDetailsFromDir function', function(){
-
-    var dir = 'C:\\Projects\\cordova-projects\\cordova-android';
-    var getPackageJsonContentOriginal = platform.__get__('getPackageJsonContent');
-    var resolvePathOriginal = platform.__get__('resolvePath');
-    var getPlatformDetailsFromDir = platform.__get__('getPlatformDetailsFromDir'); // function under test
-
-    beforeEach(function() {
-	platform.__set__('getPackageJsonContent', function (p) {
-            return p + '\\package';
-        });
-	platform.__set__('resolvePath', function(p){
-	    return p;
-	});
-    });
-
-    afterEach(function() {
-	platform.__set__('getPackageJsonContent', getPackageJsonContentOriginal);
-	platform.__set__('resolvePath', resolvePathOriginal);
-    });
-    
-    it('returns the appropriate platform details', function(done){
-
-        // Mock out package.json content
-        platform.__set__('getPackageJsonContent', function (p) {
-            return {
-                'name': 'cordova-android',
-                'version': '3.7.0-dev',
-                'description': 'cordova-android release',
-                'main': 'bin/create'
-            };
-        });
-
-        getPlatformDetailsFromDir(dir).then(function (platformDetails) {
-	    expect(platformDetails.platform).toBe('android');
-	    expect(platformDetails.libDir).toBe(dir);
-            done();
-        });
-    });
-
-    it('throws if the directory supplied does not contain a package.json file', function (done) {
-
-        platform.__set__('getPackageJsonContent', function (p) {
-            var pPath = path.join(p, 'package');
-            var msg = "Cannot find module '" + pPath + "'";
-            var err = new Error(msg);
-            err.code = 'MODULE_NOT_FOUND';
-            throw err;
-        });
-
-        getPlatformDetailsFromDir(dir).fail(function (error) {
-            var packagePath = path.join(dir, 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a Cordova platform: ' + dir +
-				       '\n' + 'Cannot find module ' + "'" + packagePath + "'");
-            done();
-        });
-    });
-
-    it('replaces "amazon" by "amazon-fireos" if package.json returns "amazon"', function (done) {
-
-        var dir = 'C:\\Projects\\cordova-projects\\cordova-amazon-fireos';
-
-        platform.__set__('getPackageJsonContent', function (p) {
-            return {
-                'name': 'cordova-amazon', // use 'cordova-amazon' instead of 'cordova-amazon-fireos'
-                'version': '3.7.0-dev',
-                'description': 'cordova-amazon-fireos release',
-                'main': 'bin/create'
-            };
-        });
-
-        getPlatformDetailsFromDir(dir).then(function (platformDetails) {
-	    expect(platformDetails.libDir).toBe(dir);
-	    expect(platformDetails.platform).toBe('amazon-fireos');
-            done();
-        });
-    });
-
-    it('throws if package.json file has no name property', function (done) {
-	
-        platform.__set__('getPackageJsonContent', function (p) {
-            return {
-		//name: 'cordova-android' --> No name
-	    };
-        });
-
-        getPlatformDetailsFromDir(dir).fail(function (error) {
-            var packagePath = path.join(dir, 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + dir);
-            done();
-        });
-    });
-
-    it('throws if package.json file returns null', function (done) {
-	
-        platform.__set__('getPackageJsonContent', function (p) {
-            return null;
-        });
-
-        getPlatformDetailsFromDir(dir).fail(function (error) {
-            var packagePath = path.join(dir, 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + dir);
-            done();
-        });
-    });
-
-    it('throws if the name in package.json file is not a recognized platform', function (done) {
-
-        // These are the only 'recognized' platforms
-        platform.__set__('platforms', {
-            "ios": {
-                "hostos": ["darwin"],
-                "parser": "./metadata/ios_parser",
-                "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-                "version": "3.7.0"
-            }
-        });
-
-        platform.__set__('getPackageJsonContent', function () {
-            return {
-                'name': 'cordova-android',
-                'version': '3.7.0-dev',
-                'description': 'cordova-android release',
-                'main': 'bin/create'
-            };
-        });
-
-        getPlatformDetailsFromDir(dir).fail(function (error) {
-            var packagePath = path.join(dir, 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + dir);
             done();
         });
     });

@@ -26,7 +26,8 @@ var lazy_load = require('../src/cordova/lazy_load'),
     request = require('request'),
     fs = require('fs'),
     Q = require('q'),
-    platforms = require('../src/cordova/platforms');
+    platforms = require('../src/cordova/platforms'),
+    child_process = require('child_process');
 
 describe('lazy_load module', function() {
     var custom_path;
@@ -91,7 +92,7 @@ describe('lazy_load module', function() {
                 }
             };
             lazy_load.custom(mock_platforms, 'platform X').then(function() {
-                expect(fire).not.toHaveBeenCalled()
+                expect(fire).not.toHaveBeenCalled();
             }, function(err) {
                 expect(err).not.toBeDefined();
             }).fin(done);
@@ -106,7 +107,7 @@ describe('lazy_load module', function() {
                 }
             };
             lazy_load.custom(mock_platforms, 'platform X').then(function() {
-                expect(fire).not.toHaveBeenCalled()
+                expect(fire).not.toHaveBeenCalled();
             }, function(err) {
                 expect(err).not.toBeDefined();
             }).fin(done);
@@ -136,7 +137,7 @@ describe('lazy_load module', function() {
                     }, 10);
                     return fakeRequest;
                 });
-                load_spy = spyOn(npmconf, 'load').andCallFake(function(cb) { cb(null, { get: function() { return npmConfProxy }}); });
+                load_spy = spyOn(npmconf, 'load').andCallFake(function(cb) { cb(null, { get: function() { return npmConfProxy; }}); });
             });
 
             it('should call request with appropriate url params', function(done) {
@@ -268,5 +269,60 @@ describe('lazy_load module', function() {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
+    });
+});
+
+describe('git_clone method', function() {
+    var cordova, custom, tmp_dir, fire;
+    beforeEach(function() {
+        cordova = spyOn(lazy_load, 'cordova').andReturn(Q());
+        custom = spyOn(lazy_load, 'custom').andReturn(Q());
+        fire = spyOn(HooksRunner, 'fire').andCallFake(function(method,args){
+            tmp_dir = args.location;
+            fs.writeFileSync(args.location + '/package.json', '{"name":"cordova-ios"}');
+            return Q();
+        });
+        spyOn(child_process, 'exec').andCallFake(function(cmd, config, callback){
+            callback();
+        });
+    });
+    afterEach(function() {
+        shell.rm('-rf', tmp_dir);
+    });
+    it('should call before_library_clone hook', function(done){
+        lazy_load.git_clone('some repo').then(function() {
+            expect(fire).toHaveBeenCalledWith('before_library_clone', {repository:'some repo',location:tmp_dir});
+        }, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    });
+    it('should clone git repo', function(done){
+        lazy_load.git_clone('some repo').then(function() {
+            expect(child_process.exec).toHaveBeenCalledWith('git clone "some repo" "' + tmp_dir + '"', {}, jasmine.any(Function));
+        }, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    });
+    it('should checkout ref', function(done){
+        lazy_load.git_clone('some repo').then(function() {
+            expect(child_process.exec).toHaveBeenCalledWith('git checkout "master"', {cwd:tmp_dir}, jasmine.any(Function));
+        }, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    });
+    it('should call after_library_clone hook', function(done){
+        lazy_load.git_clone('some repo').then(function() {
+            expect(fire).toHaveBeenCalledWith('after_library_clone', {repository:'some repo',location:tmp_dir,platform:'ios'});
+        }, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    });
+    it('should return clone with platform and libDir', function(done){
+        lazy_load.git_clone('some repo').then(function(clone) {
+            expect(clone.platform).toBe('ios');
+            expect(clone.libDir).toBe(tmp_dir);
+        }, function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
     });
 });
