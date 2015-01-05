@@ -29,6 +29,7 @@ var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
     platforms     = require('./platforms'),
+    child_process = require('child_process'),
     npmconf       = require('npmconf'),
     events        = require('../events'),
     request       = require('request'),
@@ -41,6 +42,7 @@ var path          = require('path'),
     npm           = require('npm'),
     unpack        = require('../util/unpack'),
     util          = require('./util'),
+    platforms     = require('./platforms'),
     stubplatform  = {
         url    : undefined,
         version: undefined,
@@ -50,6 +52,7 @@ var path          = require('path'),
 
 exports.cordova = cordova;
 exports.cordova_git = cordova_git;
+exports.cordova_custom_git = cordova_custom_git;
 exports.cordova_npm = cordova_npm;
 exports.npm_cache_add = npm_cache_add;
 exports.custom = custom;
@@ -114,6 +117,78 @@ function cordova_git(platform) {
     plat.id = 'cordova';
     plat.version = platform.version;
     return module.exports.custom(mixed_platforms, platform.name);
+}
+
+function cordova_custom_git(repository) {
+  var platform;
+  // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
+  // fails in this case with "EXDEV, cross-device link not permitted".
+  var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
+  var tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
+  shell.rm('-rf', tmp_dir);
+  shell.mkdir('-p', tmp_dir);
+  var git_ref = 'master';
+  if(!shell.which('git')) {
+      shell.rm('-rf', tmp_dir);
+      return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
+  }
+  return HooksRunner.fire('before_library_clone', {
+      repository:repository,
+      location:tmp_dir
+  }).then(function() {
+      var globalUtil = require('util');
+      var d = Q.defer();
+      var cmd = globalUtil.format('git clone "%s" "%s"', repository, tmp_dir);
+      events.emit('verbose', 'Cloning platform via git-clone command: ' + cmd);
+      child_process.exec(cmd, {}, function(err, stdout, stderr) {
+          if (err) {
+              shell.rm('-rf', tmp_dir);
+              d.reject(err);
+          } else {
+            events.emit('verbose', 'Platform "' + repository + '" cloned.');
+            // Check out the specified revision
+            var checkoutCmd = globalUtil.format('git checkout "%s"', git_ref);
+            events.emit('verbose', 'Checking out git ref via command: ' + checkoutCmd);
+            child_process.exec(checkoutCmd, { cwd: tmp_dir }, function(err, stdout, stderr) {
+                if (err) {
+                    shell.rm('-rf', tmp_dir);
+                    d.reject(err);
+                } else {
+                    events.emit('verbose', 'Git ref "' + git_ref + '" checked out.');
+                    var pPath = path.resolve(tmp_dir);
+                    var pkg;
+                    // Prep the message in advance, we might need it in several places.
+                    var msg = 'The provided repository does not seem to contain a ' +
+                              'Cordova platform: ' + repository;
+                    try {
+                        pkg = require(path.join(pPath, 'package'));
+                    } catch(e) {
+                        d.reject(msg + '\n' + e.message);
+                    }
+                    if ( !pkg || !pkg.name ) {
+                        d.reject(new Error(msg));
+                    }
+                    // Package names for Cordova platforms look like "cordova-ios".
+                    var nameParts = pkg.name.split('-');
+                    var name = nameParts[1];
+                    if (name == 'amazon') {
+                        name = 'amazon-fireos';
+                    }
+                    if( !platforms[name] ) {
+                        d.reject(new Error(msg));
+                    }
+                    platform = name;
+                    d.resolve(HooksRunner.fire('after_library_clone', {
+                        repository:repository,
+                        location:tmp_dir,
+                        platform:platform
+                    }));
+                }
+            });
+          }
+      });
+      return d.promise.then(function () { return {libDir:tmp_dir, platform:platform}; });
+  });
 }
 
 function cordova_npm(platform) {
