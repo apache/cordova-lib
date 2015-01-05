@@ -17,6 +17,7 @@
     under the License.
 */
 
+var url = require('url');
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -58,8 +59,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         return Q.reject(new CordovaError(msg));
     }
 
-    for (var i= 0 ; i < targets.length; i++) {
-        if ( !hostSupports(targets[i]) ) {
+    for (var i = 0 ; i < targets.length; i++) {
+        if (!hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
             events.emit('log', msg);
@@ -86,14 +87,19 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
             return Q.when().then(function() {
                 if (!(platform in platforms)) {
-                    return getPlatformDetailsFromDir(target);
-                } else {
+                    version = platform;
+                    platform = null;
+                }
+                if (platform) {
                     if (!version) {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     }
                     version = version || getVersionFromConfigFile(platform, cfg);
-                    return isDirectory(version) ? getPlatformDetailsFromDir(version, platform) : downloadPlatform(projectRoot, platform, version, opts);
                 }
+                if (isDirectory(version)) {
+                    return getPlatformDetailsFromDir(version, platform);
+                }
+                return downloadPlatform(projectRoot, platform, version, opts);
             }).then(function(platDetails) {
                 platform = platDetails.platform;
                 version = platDetails.version;
@@ -143,13 +149,13 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
-                }).then(function() {
-                    return hooksRunner.fire('after_platform_' + cmd, opts);
-                }).then(function() {
-                    return require('./cordova').raw.prepare(platform);
                 });
             });
         });
+    }).then(function() {
+        return hooksRunner.fire('after_platform_' + cmd, opts);
+    }).then(function() {
+        return require('./cordova').raw.prepare(platform);
     });
 }
 
@@ -161,24 +167,26 @@ function isDirectory(dir) {
     }
 }
 
+function isUrl(value) {
+    var u = value && url.parse(value);
+    return !!(u && u.protocol && u.protocol.length > 1); // Account for windows c:/ paths
+}
+
+// Downloads via npm or via git clone (tries both)
 // Returns a Promise
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
-    // Using lazy_load for a platform specified by name
-    return lazy_load.based_on_config(projectRoot, target, opts)
-    .then(function (libDir) {
+    return Q().then(function() {
+        if (isUrl(version)) {
+            events.emit('log', 'git cloning: ' + version);
+            return lazy_load.git_clone(version);
+        }
+        return lazy_load.based_on_config(projectRoot, target, opts);
+    }).then(function(libDir) {
         return getPlatformDetailsFromDir(libDir, platform);
-    }).fail(function (err) {
+    }, function(err) {
         throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
     });
-}
-
-function getPackageJsonContent(pPath) {
-    return require(path.join(pPath, 'package'));
-}
-
-function resolvePath(pPath){
-    return path.resolve(pPath);
 }
 
 function platformFromName(name) {
@@ -193,12 +201,12 @@ function platformFromName(name) {
 // Returns a Promise
 // Gets platform details from a directory
 function getPlatformDetailsFromDir(dir, platformIfKnown){
-    var libDir = resolvePath(dir);
+    var libDir = path.resolve(dir);
     var platform;
     var version;
 
     try {
-        var pkg = getPackageJsonContent(libDir);
+        var pkg = require(path.join(libDir, 'package'));
         platform = platformFromName(pkg.name);
         version = pkg.version;
     } catch(e) {
@@ -420,6 +428,7 @@ function platform(command, targets, opts) {
     // - android
     // - android@3.5.0
     // - ../path/to/dir/with/platform/files
+    // - https://github.com/apache/cordova-android.git
     if (targets) {
         if (!(targets instanceof Array)) targets = [targets];
         targets.forEach(function (t) {
@@ -430,11 +439,13 @@ function platform(command, targets, opts) {
             // Not a known platform name, check if its a real path.
             var pPath = path.resolve(t);
             if (fs.existsSync(pPath)) return;
-            // Neither path, nor platform name - throw.
+
             var msg;
+	    // If target looks like a url, we will try cloning it with git
             if (/[~:/\\.]/.test(t)) {
-                msg = 'Platform path "' + t + '" not found.';
+                return;
             } else {
+		// Neither path, git-url nor platform name - throw.
                 msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'
