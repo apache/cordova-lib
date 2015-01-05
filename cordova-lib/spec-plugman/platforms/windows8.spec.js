@@ -107,13 +107,13 @@ describe('windows8 project handler', function() {
             it('should copy stuff from one location to another by calling common.copyFile', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
-                windows8['source-file'].install(source[0], dummyplugin, temp, dummy_id, proj_files);
+                windows8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
                 expect(s).toHaveBeenCalledWith(dummyplugin, 'src/windows8/dummer.js', temp, path.join('plugins', 'com.phonegap.plugins.dummyplugin', 'dummer.js'));
             });
             it('should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
                 expect(function() {
-                    windows8['source-file'].install(source[1], faultyplugin, temp, faulty_id, proj_files);
+                    windows8['source-file'].install(source[1], faultyplugin, temp, faulty_id, null, proj_files);
                 }).toThrow('"' + path.resolve(faultyplugin, 'src/windows8/NotHere.js') + '" not found!');
             });
             it('should throw if source-file target already exists', function() {
@@ -122,7 +122,7 @@ describe('windows8 project handler', function() {
                 shell.mkdir('-p', path.dirname(target));
                 fs.writeFileSync(target, 'some bs', 'utf-8');
                 expect(function() {
-                    windows8['source-file'].install(source[0], dummyplugin, temp, dummy_id, proj_files);
+                    windows8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
                 }).toThrow('"' + target + '" already exists!');
             });
         });
@@ -143,7 +143,7 @@ describe('windows8 project handler', function() {
                 install('windows8', temp, dummyplugin, plugins_dir, {})
                 .then(function() {
                     var source = copyArray(valid_source);
-                    windows8['source-file'].uninstall(source[0], temp, dummy_id, proj_files);
+                    windows8['source-file'].uninstall(source[0], temp, dummy_id, null, proj_files);
                     expect(s).toHaveBeenCalledWith(temp, path.join('plugins',  'com.phonegap.plugins.dummyplugin', 'dummer.js'));
                     done();
                 });

@@ -59,7 +59,7 @@ module.exports = {
         return new jsproj(path.join(project_dir, project_files[0]));
     },
     'source-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project_file) {
             var targetDir = source_el.attrib['target-dir'] || '';
             var dest = path.join('plugins', plugin_id, targetDir, path.basename(source_el.attrib['src']));
 
@@ -67,7 +67,7 @@ module.exports = {
             // add reference to this file to jsproj.
             project_file.addSourceFile(dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id, project_file) {
+        uninstall:function(source_el, project_dir, plugin_id, options, project_file) {
             var dest = path.join('plugins', plugin_id,
                                  source_el.attrib['target-dir'] || '',
                                  path.basename(source_el.attrib['src']));
@@ -77,33 +77,33 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-fileinstall is not supported for Windows 8');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for Windows 8');
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'resource-file is not supported for Windows 8');
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
         }
     },
     'lib-file': {
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             var inc  = el.attrib['Include'];
             project_file.addSDKRef(inc);
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'windows8 lib-file uninstall :: ' + plugin_id);
             var inc = el.attrib['Include'];
             project_file.removeSDKRef(inc);
         }
     },
     'framework': {
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'windows8 framework install :: ' + plugin_id);
 
             var src = el.attrib['src'];
@@ -123,7 +123,7 @@ module.exports = {
             }
 
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'windows8 framework uninstall :: ' + plugin_id  );
 
             var src = el.attrib['src'];

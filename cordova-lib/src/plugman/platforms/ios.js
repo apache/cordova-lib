@@ -41,7 +41,7 @@ module.exports = {
         return plist.parse(fs.readFileSync(plist_file, 'utf8')).CFBundleIdentifier;
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, project) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project) {
             var src = source_el.attrib['src'];
             var srcFile = path.resolve(plugin_dir, src);
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(source_el));
@@ -66,7 +66,7 @@ module.exports = {
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
         },
-        uninstall:function(source_el, project_dir, plugin_id, project) {
+        uninstall:function(source_el, project_dir, plugin_id, options, project) {
             var src = source_el.attrib['src'];
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(source_el));
             var destFile = path.resolve(targetDir, path.basename(src));
@@ -89,7 +89,7 @@ module.exports = {
         }
     },
     'header-file':{
-        install:function(header_el, plugin_dir, project_dir, plugin_id, project) {
+        install:function(header_el, plugin_dir, project_dir, plugin_id, options, project) {
             var src = header_el.attrib['src'];
             var srcFile = path.resolve(plugin_dir, src);
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
@@ -104,7 +104,7 @@ module.exports = {
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
         },
-        uninstall:function(header_el, project_dir, plugin_id, project) {
+        uninstall:function(header_el, project_dir, plugin_id, options, project) {
             var src = header_el.attrib['src'];
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
             var destFile = path.resolve(targetDir, path.basename(src));
@@ -120,7 +120,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(resource_el, plugin_dir, project_dir, plugin_id, project) {
+        install:function(resource_el, plugin_dir, project_dir, plugin_id, options, project) {
             var src = resource_el.attrib['src'],
                 srcFile = path.resolve(plugin_dir, src),
                 destFile = path.resolve(project.resources_dir, path.basename(src));
@@ -129,7 +129,7 @@ module.exports = {
             project.xcode.addResourceFile(path.join('Resources', path.basename(src)));
             shell.cp('-R', srcFile, project.resources_dir);
         },
-        uninstall:function(resource_el, project_dir, plugin_id, project) {
+        uninstall:function(resource_el, project_dir, plugin_id, options, project) {
             var src = resource_el.attrib['src'],
                 destFile = path.resolve(project.resources_dir, path.basename(src));
             project.xcode.removeResourceFile(path.join('Resources', path.basename(src)));
@@ -137,7 +137,7 @@ module.exports = {
         }
     },
     'framework':{ // CB-5238 custom frameworks only
-        install:function(framework_el, plugin_dir, project_dir, plugin_id, project) {
+        install:function(framework_el, plugin_dir, project_dir, plugin_id, options, project) {
             var src = framework_el.attrib['src'],
                 custom = framework_el.attrib['custom'],
                 srcFile = path.resolve(plugin_dir, src),
@@ -150,7 +150,7 @@ module.exports = {
             var project_relative = path.relative(project_dir, targetDir);
             project.xcode.addFramework(project_relative, {customFramework: true});
         },
-        uninstall:function(framework_el, project_dir, plugin_id, project) {
+        uninstall:function(framework_el, project_dir, plugin_id, options, project) {
             var src = framework_el.attrib['src'],
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
             project.xcode.removeFramework(targetDir, {customFramework: true});
@@ -158,10 +158,10 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.install is not supported for ios');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.uninstall is not supported for ios');
         }
     },

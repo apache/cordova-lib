@@ -52,23 +52,23 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
-        uninstall: function(source_el, project_dir, plugin_id) {}
+        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(source_el, project_dir, plugin_id, options) {}
     },
     'header-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
-        uninstall: function(source_el, project_dir, plugin_id) {}
+        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(source_el, project_dir, plugin_id, options) {}
     },
     'resource-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
-        uninstall: function(source_el, project_dir, plugin_id) {}
+        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(source_el, project_dir, plugin_id, options) {}
     },
     'framework': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
-        uninstall: function(source_el, project_dir, plugin_id) {}
+        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(source_el, project_dir, plugin_id, options) {}
     },
     'lib-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
-        uninstall: function(source_el, project_dir, plugin_id) {}
+        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(source_el, project_dir, plugin_id, options) {}
     }
 };
