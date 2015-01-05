@@ -40,7 +40,7 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var src = source_el.attrib['src'];
             var target = source_el.attrib['target-dir'] || plugin_id;
             TARGETS.forEach(function(arch) {
@@ -59,7 +59,7 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.install is not supported for blackberry');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -67,7 +67,7 @@ module.exports = {
         }
     },
     'lib-file':{
-        install:function(lib_el, plugin_dir, project_dir, plugin_id) {
+        install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var arch = lib_el.attrib.arch;
             var dest = path.join('native', arch, 'plugins', 'jnext', path.basename(src));
@@ -81,7 +81,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'resource-file.install is not supported for blackberry');
         },
         uninstall:function(el, project_dir, plugin_id) {
@@ -89,7 +89,7 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.install is not supported for blackberry');
         },
         uninstall:function(source_el, project_dir, plugin_id) {

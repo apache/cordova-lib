@@ -50,7 +50,7 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('build', 'src', 'plugins', plugin_id, path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
 
@@ -66,7 +66,7 @@ module.exports = {
         }
     },
     'header-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('build', 'src', 'plugins', plugin_id, path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
 
@@ -96,7 +96,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('qml', path.basename(source_el.attrib.src));
             if (source_el.attrib['target-dir'])
                 dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib.src));
@@ -110,7 +110,7 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.install is not supported for ubuntu');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -118,7 +118,7 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.install is not supported for ubuntu');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
