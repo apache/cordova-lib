@@ -141,6 +141,7 @@ module.exports = function plugin(command, targets, opts) {
                                         browserify: opts.browserify || false,
                                         searchpath: searchPath,
                                         noregistry: opts.noregistry,
+                                        link: opts.link
                                     },
                                     tokens,
                                     key,

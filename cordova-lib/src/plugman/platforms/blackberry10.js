@@ -71,7 +71,7 @@ module.exports = {
             var src = lib_el.attrib.src;
             var arch = lib_el.attrib.arch;
             var dest = path.join('native', arch, 'plugins', 'jnext', path.basename(src));
-            common.copyFile(plugin_dir, src, project_dir, dest);
+            common.copyFile(plugin_dir, src, project_dir, dest, false);
         },
         uninstall:function(lib_el, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
