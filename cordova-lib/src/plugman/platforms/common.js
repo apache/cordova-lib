@@ -37,7 +37,8 @@ module.exports = common = {
         var full_path = path.resolve(project_dir, relative_path);
         return full_path;
     },
-    copyFile:function(plugin_dir, src, project_dir, dest, /* optional */ link) {
+    // Many times we simply need to copy shit over, knowing if a source path doesnt exist or if a target path already exists
+    copyFile:function(plugin_dir, src, project_dir, dest) {
         src = module.exports.resolveSrcPath(plugin_dir, src);
         if (!fs.existsSync(src)) throw new Error('"' + src + '" not found!');
 
@@ -55,22 +56,20 @@ module.exports = common = {
 
         shell.mkdir('-p', path.dirname(dest));
 
-        if (link) {
-            fs.symlinkSync(path.relative(path.dirname(dest), src), dest);
-        } else if (fs.statSync(src).isDirectory()) {
-            // XXX shelljs decides to create a directory when -R|-r is used which sucks. http://goo.gl/nbsjq
+        // XXX shelljs decides to create a directory when -R|-r is used which sucks. http://goo.gl/nbsjq
+        if(fs.statSync(src).isDirectory()) {
             shell.cp('-Rf', src+'/*', dest);
         } else {
             shell.cp('-f', src, dest);
         }
     },
     // Same as copy file but throws error if target exists
-    copyNewFile:function(plugin_dir, src, project_dir, dest, /* optional */ link) {
+    copyNewFile:function(plugin_dir, src, project_dir, dest) {
         var target_path = common.resolveTargetPath(project_dir, dest);
         if (fs.existsSync(target_path))
             throw new Error('"' + target_path + '" already exists!');
 
-        common.copyFile(plugin_dir, src, project_dir, dest, link);
+        common.copyFile(plugin_dir, src, project_dir, dest);
     },
     // checks if file exists and then deletes. Error if doesn't exist
     removeFile:function(project_dir, src) {

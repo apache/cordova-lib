@@ -62,7 +62,7 @@ module.exports = {
             }
             var dest = path.join(targetDir, path.basename(src));
 
-            common.copyNewFile(plugin_dir, src, project_dir, dest, options.link);
+            common.copyNewFile(plugin_dir, src, project_dir, dest);
         },
         uninstall:function(source_el, project_dir, plugin_id) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
@@ -81,7 +81,7 @@ module.exports = {
         install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
-            common.copyFile(plugin_dir, src, project_dir, dest, options.link);
+            common.copyFile(plugin_dir, src, project_dir, dest);
         },
         uninstall:function(lib_el, project_dir, plugin_id) {
             var src = lib_el.attrib.src;
@@ -94,7 +94,7 @@ module.exports = {
             var src = el.attrib.src;
             var target = el.attrib.target;
             events.emit('verbose', 'Copying resource file ' + src + ' to ' + target);
-            common.copyFile(plugin_dir, src, project_dir, path.normalize(target), options.link);
+            common.copyFile(plugin_dir, src, project_dir, path.normalize(target));
         },
         uninstall:function(el, project_dir, plugin_id) {
             var target = el.attrib.target;
@@ -114,7 +114,7 @@ module.exports = {
 
             if (custom) {
                 var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
-                common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir, options.link);
+                common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir);
                 subDir = path.resolve(project_dir, subRelativeDir);
             } else {
                 var sdk_dir = module.exports.getProjectSdkDir(project_dir);
