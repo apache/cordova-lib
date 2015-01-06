@@ -93,9 +93,6 @@ function add(hooksRunner, projectRoot, targets, opts) {
 	                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
 	                }
 	                version = version || getVersionFromConfigFile(platform, cfg);
-	                if (version) {
-	                    version = version.replace(/^file:\/\//, ''); // If version is a folder, remove the 'file://' prefix from it.
-	                }
 	                var tgt = version ? (platform + '@' + version) : platform;
 	                return isDirectory(version) ? getPlatformDetailsFromDir(version) : downloadPlatform(projectRoot, tgt, opts);
 	            }
