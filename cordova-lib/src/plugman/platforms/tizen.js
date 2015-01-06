@@ -52,23 +52,23 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
         uninstall: function(source_el, project_dir, plugin_id) {}
     },
     'header-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
         uninstall: function(source_el, project_dir, plugin_id) {}
     },
     'resource-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
         uninstall: function(source_el, project_dir, plugin_id) {}
     },
     'framework': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
         uninstall: function(source_el, project_dir, plugin_id) {}
     },
     'lib-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
+        install: function(source_el, plugin_dir, project_dir, plugin_id) {},
         uninstall: function(source_el, project_dir, plugin_id) {}
     }
 };

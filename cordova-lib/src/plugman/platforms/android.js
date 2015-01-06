@@ -51,7 +51,7 @@ module.exports = {
         return packageName.substring(lastDotIndex + 1);
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var src = source_el.attrib['src'];
             if (!src) {
                 throw new CordovaError('<source-file> element is missing "src" attribute: ' + source_el);
@@ -70,7 +70,7 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'header-file.install is not supported for android');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -78,7 +78,7 @@ module.exports = {
         }
     },
     'lib-file':{
-        install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(lib_el, plugin_dir, project_dir, plugin_id) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
             common.copyFile(plugin_dir, src, project_dir, dest);
@@ -90,7 +90,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(el, plugin_dir, project_dir, plugin_id) {
             var src = el.attrib.src;
             var target = el.attrib.target;
             events.emit('verbose', 'Copying resource file ' + src + ' to ' + target);
@@ -102,7 +102,7 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
             if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);

@@ -55,7 +55,7 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.copyFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
         },
@@ -65,7 +65,7 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'header-fileinstall is not supported for browser');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -73,7 +73,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'resource-file.install is not supported for browser');
         },
         uninstall:function(el, project_dir, plugin_id) {
@@ -81,7 +81,7 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'framework.install is not supported for browser');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -89,7 +89,7 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'lib-file.install is not supported for browser');
         },
         uninstall:function(source_el, project_dir, plugin_id) {

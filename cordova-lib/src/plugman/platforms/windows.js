@@ -59,7 +59,7 @@ module.exports = {
         return new jsproj(path.join(project_dir, project_files[0]));
     },
     'source-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, project_file, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, project_file) {
             var targetDir = source_el.attrib['target-dir'] || '';
             var dest = path.join('plugins', plugin_id, targetDir, path.basename(source_el.attrib['src']));
 
@@ -77,7 +77,7 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'header-fileinstall is not supported for Windows 8');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
@@ -85,14 +85,14 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file, options) {
+        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
             events.emit('verbose', 'resource-file is not supported for Windows 8');
         },
         uninstall:function(el, project_dir, plugin_id, project_file) {
         }
     },
     'lib-file': {
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file, options) {
+        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
             var inc  = el.attrib['Include'];
             project_file.addSDKRef(inc);
         },
@@ -103,7 +103,7 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file, options) {
+        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
             events.emit('verbose', 'windows8 framework install :: ' + plugin_id);
 
             var src = el.attrib['src'];

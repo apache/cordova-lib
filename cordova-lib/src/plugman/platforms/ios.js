@@ -41,7 +41,7 @@ module.exports = {
         return plist.parse(fs.readFileSync(plist_file, 'utf8')).CFBundleIdentifier;
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, project) {
             var src = source_el.attrib['src'];
             var srcFile = path.resolve(plugin_dir, src);
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(source_el));
@@ -89,7 +89,7 @@ module.exports = {
         }
     },
     'header-file':{
-        install:function(header_el, plugin_dir, project_dir, plugin_id, options, project) {
+        install:function(header_el, plugin_dir, project_dir, plugin_id, project) {
             var src = header_el.attrib['src'];
             var srcFile = path.resolve(plugin_dir, src);
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
@@ -120,7 +120,7 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(resource_el, plugin_dir, project_dir, plugin_id, options, project) {
+        install:function(resource_el, plugin_dir, project_dir, plugin_id, project) {
             var src = resource_el.attrib['src'],
                 srcFile = path.resolve(plugin_dir, src),
                 destFile = path.resolve(project.resources_dir, path.basename(src));
@@ -137,7 +137,7 @@ module.exports = {
         }
     },
     'framework':{ // CB-5238 custom frameworks only
-        install:function(framework_el, plugin_dir, project_dir, plugin_id, options, project) {
+        install:function(framework_el, plugin_dir, project_dir, plugin_id, project) {
             var src = framework_el.attrib['src'],
                 custom = framework_el.attrib['custom'],
                 srcFile = path.resolve(plugin_dir, src),
@@ -158,7 +158,7 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'lib-file.install is not supported for ios');
         },
         uninstall:function(source_el, project_dir, plugin_id) {
