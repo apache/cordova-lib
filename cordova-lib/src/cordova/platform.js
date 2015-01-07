@@ -91,25 +91,38 @@ function add(hooksRunner, projectRoot, targets, opts) {
                       'Cordova platform: ' + t;
                 try {
                     pkg = getPackageJsonContent(pPath);
+                    if ( !pkg || !pkg.name ) {
+                        throw new CordovaError(msg);
+                    }
+                    // Package names for Cordova platforms look like "cordova-ios".
+                    var nameParts = pkg.name.split('-');
+                    var name = nameParts[1];
+                    if (name == 'amazon') {
+                        name = 'amazon-fireos';
+                    }
+                    if( !platforms[name] ) {
+                        throw new CordovaError(msg);
+                    }
+                    platform = name;
+                    // Use a fulfilled promise with the path as value to skip dloading.
+                    p = Q(pPath);
                 } catch(e) {
-                    throw new CordovaError(msg + '\n' + e.message);
+                    // Maybe it's a git repository
+                    events.emit('verbose', 'Could not find local folder ' + t + '. Try to handle it as git repository.');
+                    p = lazy_load.cordova_custom_git(t)
+                    .then(function(clone) {
+                        try {
+                            pkg = require(path.join(clone.libDir, 'package'));
+                            platform = clone.platform;
+                        } catch(e) {
+                            throw new CordovaError(msg + '\n' + e.message);
+                        }
+                        return clone.libDir;
+                    })
+                    .fail(function(err) {
+                        throw new CordovaError('Unable to add platform ' + t + '. Ensure it\'s an existing folder or an accessible git repository.');
+                    });
                 }
-                if ( !pkg || !pkg.name ) {
-                    throw new CordovaError(msg);
-                }
-                // Package names for Cordova platforms look like "cordova-ios".
-                var nameParts = pkg.name.split('-');
-                var name = nameParts[1];
-                if (name == 'amazon') {
-                    name = 'amazon-fireos';
-                }
-                if( !platforms[name] ) {
-                    throw new CordovaError(msg);
-                }
-                platform = name;
-
-                // Use a fulfilled promise with the path as value to skip dloading.
-                p = Q(pPath);
             } else {
                 // Using lazy_load for a platform specified by name
                 p = lazy_load.based_on_config(projectRoot, t, opts)
@@ -379,7 +392,8 @@ function platform(command, targets, opts) {
             // Neither path, nor platform name - throw.
             var msg;
             if (/[~:/\\.]/.test(t)) {
-                msg = 'Platform path "' + t + '" not found.';
+                // handle it as git repository
+                return;
             } else {
                 msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +

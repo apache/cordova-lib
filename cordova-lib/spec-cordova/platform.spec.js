@@ -28,7 +28,8 @@ var helpers = require('./helpers'),
     events = require('../src/events'),
     cordova = require('../src/cordova/cordova'),
     rewire = require('rewire'),
-    platform = rewire('../src/cordova/platform.js');
+    platform = rewire('../src/cordova/platform.js'),
+    lazy_load = require('../src/cordova/lazy_load');
 
 describe('platform end-to-end', function () {
 
@@ -144,6 +145,7 @@ describe('add function', function () {
     var getPackageJsonContentOriginal = platform.__get__('getPackageJsonContent');
 
     beforeEach(function () {
+        spyOn(lazy_load, 'cordova_custom_git').andReturn(Q());
 
         opts = {};
 
@@ -349,6 +351,27 @@ describe('add function', function () {
         });
     });
 
+    it('tries to clone repository if directory does not exist', function (done) {
+
+        var targets = ['C:\\Projects\\cordova-projects\\cordova-android'];
+
+        var call_into_create_mock = jasmine.createSpy();
+        platform.__set__('call_into_create', call_into_create_mock);
+
+        platform.__set__('getPackageJsonContent', function (p) {
+            var pPath = path.join(p, 'package');
+            var msg = "Cannot find module '" + pPath + "'";
+            var err = new Error(msg);
+            err.code = 'MODULE_NOT_FOUND';
+            throw err;
+        });
+
+        platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
+            expect(lazy_load.cordova_custom_git).toHaveBeenCalled();
+            done();
+        });
+    });
+
     it('throws if target directory supplied does not contain package.json file', function (done) {
 
         var targets = ['C:\\Projects\\cordova-projects\\cordova-android'];
@@ -366,8 +389,8 @@ describe('add function', function () {
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
             var packagePath = path.join(targets[0], 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + targets[0] +
-                '\n' + 'Cannot find module ' + "'" + packagePath + "'");
+            expect(error.message).toBe('Unable to add platform ' + targets[0] +
+                '. Ensure it\'s an existing folder or an accessible git repository.');
             done();
         });
     });
@@ -390,7 +413,7 @@ describe('add function', function () {
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
             var packagePath = path.join(targets[0], 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + targets[0]);
+            expect(error.message).toBe('Unable to add platform ' + targets[0] + '. Ensure it\'s an existing folder or an accessible git repository.');
             done();
         });
     });
@@ -430,7 +453,7 @@ describe('add function', function () {
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
             var packagePath = path.join(targets[0], 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + targets[0]);
+            expect(error.message).toBe('Unable to add platform ' + targets[0] + '. Ensure it\'s an existing folder or an accessible git repository.');
             done();
         });
     });
@@ -463,7 +486,7 @@ describe('add function', function () {
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
             var packagePath = path.join(targets[0], 'package');
-            expect(error.message).toBe('The provided path does not seem to contain a ' + 'Cordova platform: ' + targets[0]);
+            expect(error.message).toBe('Unable to add platform ' + targets[0] + '. Ensure it\'s an existing folder or an accessible git repository.');
             done();
         });
     });
