@@ -466,7 +466,7 @@ describe('add function', function () {
         var targets = ['android'];
 
         platform.__set__('getVersionFromConfigFile', function(){
-            return "file://C:/path/to/android/platform";
+            return "C:/path/to/android/platform";
         });
 
         var downloadPlatformMock = jasmine.createSpy();
