@@ -2,7 +2,7 @@
   "author": "Apache Software Foundation",
   "name": "cordova-lib",
   "description": "Apache Cordova tools core lib and API",
-  "version": "4.1.3-dev",
+  "version": "4.2.0",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
@@ -35,7 +35,7 @@
     "tar": "1.0.2",
     "underscore": "1.7.0",
     "xcode": "0.6.7",
-    "cordova-js": "3.7.2",
+    "cordova-js": "3.7.3",
     "d8": "0.4.4",
     "unorm": "1.3.3",
     "valid-identifier": "0.0.1",

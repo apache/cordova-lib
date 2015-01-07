@@ -20,6 +20,44 @@
 -->
 # Cordova-lib Release Notes
 
+### 4.2.0 (Jan 06, 2015)
+* `ConfigParser`: refactor `getPreference()`
+* Parsers: add base parser (parser.js) and make platform parsers inherit from it
+* Parsers: assign methods without overriding the prototype
+* CB-8225 Add Unit Tests for `platform.js/add` function (closes #138)
+* CB-8230 Make `project.properties` optional for Android sub-libraries
+* CB-8215 Improve error message when `<source-file>` is missing `target-dir` on android
+* CB-8217 Fix plugin add --link when plugin given as relative path
+* CB-8216 Resolve plugin paths relative to original CWD
+* CB-7311 Fix tests on windows for iOS parser
+* CB-7803 Allow adding any platform on any host OS (close #126)
+* CB-8155 Do not fail plugin installation from git url with --link (close #129)
+* Updates README with description of npm commands for this package
+* CB-8129 Adds 'npm run cover' command to generate tests coverage report (close #131)
+* CB-8114 Specify a cache-min-time for plugins (closes #133)
+* CB-8190 Make plugman config/cache directory to be customizable via PLUGMAN_HOME (close #134)
+* CB-7863 Fixed broken test run on Windows 8.1 caused by incorrect use of promises (close #132, close #112)
+* CB-7610 Fix `cordova plugin add d:\path` (or any other non-c: path) (close #135)
+* CB-8179 Corrected latest wp8 version
+* CB-8158 added hasModule check to browserify code
+* CB-8173 Point to the latest ubuntu version
+* CB-8179 Point to the latest wp8 version
+* CB-8158 adding symbolList to cordova.js
+* CB-8154 Fix errors adding platforms or plugins
+* browserify: updated require to use symbollist
+* Amazon related changes. Added a type named "gradleReference" in framework according to https://git-wip-us.apache.org/repos/asf?p=cordova-lib.git;a=commit;h=02a96d757acc604610eb403cf11f79513ead4ac5
+* CB-7736 Update npm dep to promote qs module to 1.0
+* Added a missing "else" keyword.
+* CB-8086 Fixed framework tests.
+* CB-8086 Added an explanatory comment.
+* CB-8086 Prefixed subprojects with package name.
+* CB-8067 externalized valid-identifier it is it's own module
+* Added identifier checking for app id, searches for java+C# reserved words
+* [CB-6472] Adding content to -Info.plist - Unexpected behaviour
+* CB-8053: Including a project reference in a plugin fails on Windows platform.
+* Pass the searchpath when installing plugins
+* Add a type named "gradleReference" in framework
+
 ### 4.1.2 (Nov 13, 2014)
 * CB-7079 Allow special characters and digits in id when publishing to plugins registry
 * CB-7988: Update platform versions for iOS, wp8 & Windows to 3.7.0
@@ -278,3 +316,5 @@
 
 ### 0.21.1
 Initial release v0.21.1 (picks up from the same version number as plugman was).
+
+
