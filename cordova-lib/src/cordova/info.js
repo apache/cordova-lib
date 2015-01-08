@@ -42,12 +42,43 @@ function execSpawn(command, args, resultMsg, errorMsg) {
     });
 }
 
+//Collects data from promise, and it returns a promise
+function preparePromise(promise, headline) {
+    var output = "";
+    resultList = promise.state === 'fullfilled' ? promise.value : promise.reason;
+    if (resultList.length > 0) {
+        resultList.map(function (result) {
+            output += result.name + ' ip: ' + result.ip + '\n';
+        });
+        return Q(headline + ':\n' + output);
+    }
+    return Q(headline + ':\n' + 'Not found');
+}
+
 function getPlatformInfo(platform, projectRoot) {
     switch (platform) {
     case 'ios':
         return execSpawn('xcodebuild', ['-version'], 'iOS platform:\n\n', 'Error retrieving iOS platform information: ');
     case 'android':
         return execSpawn('android', ['list', 'target'], 'Android platform:\n\n', 'Error retrieving Android platform information: ');
+    case 'blackberry10':
+        var bbUtilsPath = path.join(projectRoot, 'platforms', platform, 'cordova'),
+            targetUtils = require(path.join(bbUtilsPath, 'lib', 'target-utils'));
+        return Q.allSettled([
+                // Using target-utils.getTargetList to get the list of emulators or devices registered on development environment.
+                // Using Q.nfcall to interface with callbacks.
+                Q.nfcall(targetUtils.getTargetList, 'emulator', false),
+                Q.nfcall(targetUtils.getTargetList, 'device', false)
+            ]).spread(function (emu, dev) {
+            return Q.all([
+                    execSpawn(path.join(bbUtilsPath,'bb10-ndk-version'), '', 'BlackBerry 10 Native SDK version: ', 'Error retrieving BlackBerry 10 Native SDK version'),
+                    preparePromise(emu, 'BlackBerry 10 deployed emulators:'),
+                    preparePromise(dev, 'BlackBerry 10 deployed devices:')
+                ]).then(function (outs) {
+                return 'BlackBerry 10 Platform: \n\n' + outs.join('\n\n');
+            });
+        });
+
     }
 }
 
