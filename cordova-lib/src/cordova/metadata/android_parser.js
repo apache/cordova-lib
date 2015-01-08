@@ -40,7 +40,7 @@ function android_parser(project) {
     }
 
     // Call the base class constructor
-    Parser.apply(this, arguments);
+    Parser.call(this, 'android', project);
 
     this.path = project;
     this.strings = path.join(this.path, 'res', 'values', 'strings.xml');
@@ -51,16 +51,6 @@ function android_parser(project) {
 require('util').inherits(android_parser, Parser);
 
 module.exports = android_parser;
-
-android_parser.prototype.findOrientationPreference = function(config) {
-    var ret = config.getPreference('orientation');
-    if (ret && ret != 'default' && ret != 'portrait' && ret != 'landscape') {
-        events.emit('warn', 'Unknown value for orientation preference: ' + ret);
-        ret = null;
-    }
-
-    return ret;
-};
 
 android_parser.prototype.findAndroidLaunchModePreference = function(config) {
     var launchMode = config.getPreference('AndroidLaunchMode');
@@ -241,19 +231,13 @@ android_parser.prototype.update_from_config = function(config) {
 
     var act = manifest.getroot().find('./application/activity');
 
-    // Set the orientation in the AndroidManifest
-    var orientationPref = this.findOrientationPreference(config);
-    if (orientationPref) {
-        switch (orientationPref) {
-            case 'default':
-                delete act.attrib["android:screenOrientation"];
-                break;
-            case 'portrait':
-                act.attrib["android:screenOrientation"] = 'portrait';
-                break;
-            case 'landscape':
-                act.attrib["android:screenOrientation"] = 'landscape';
-        }
+    // Set the android:screenOrientation in the AndroidManifest
+    var orientation = this.helper.getOrientation(config);
+
+    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
+        act.attrib['android:screenOrientation'] = orientation;
+    } else {
+        delete act.attrib['android:screenOrientation'];
     }
 
     // Set android:launchMode in AndroidManifest

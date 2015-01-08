@@ -24,7 +24,8 @@ var platforms = require('../../src/cordova/platforms'),
     _ = require('underscore'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('../../src/configparser/ConfigParser'),
+    CordovaError = require('../../src/CordovaError');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 
@@ -56,13 +57,19 @@ describe('firefoxos project parser', function() {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.firefoxos.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.firefoxos.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.firefoxos.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'firefoxos', proj);
         });
     });
 
     describe('instance', function() {
-        var p, cp, rm, is_cordova, write, read;
+        var p, cp, rm, is_cordova, write, read, getOrientation;
         var ff_proj = path.join(proj, 'platforms', 'firefoxos');
+        var manifestJson = null;
         beforeEach(function() {
             p = new platforms.firefoxos.parser(ff_proj);
             cp = spyOn(shell, 'cp');
@@ -73,11 +80,12 @@ describe('firefoxos project parser', function() {
 
             spyOn(JSON, 'parse').andCallFake(function (path) {
                 if (/manifest.webapp$/.exec(path)) {
-                    return _.extend({}, MANIFEST_JSON);
+                    return manifestJson = _.extend({}, MANIFEST_JSON);
                 } else {
                     throw new CordovaError('Unexpected JSON.parse(): ' + path);
                 }
             });
+            getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
         describe('update_from_config method', function() {
@@ -87,11 +95,41 @@ describe('firefoxos project parser', function() {
                 cfg.version = function() { return '1.0'; };
                 read.andReturn(p.manifest_path);
             });
-
             it('should write manifest.webapp', function() {
                 p.update_from_config(cfg);
                 expect(write.mostRecentCall.args[0]).toEqual(p.manifest_path);
             });
+            it('should write out the orientation preference value', function() {
+                getOrientation.andCallThrough();
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toEqual([ 'portrait' ]);
+            });
+            it('should handle no orientation', function () {
+                getOrientation.andReturn('');
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toBeUndefined();
+            });
+            it('should handle default orientation', function () {
+                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toBeUndefined();
+            });
+            it('should handle portrait orientation', function () {
+                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toEqual([ 'portrait' ]);
+            });
+            it('should handle landscape orientation', function () {
+                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toEqual([ 'landscape' ]);
+            });
+            it('should handle custom orientation', function () {
+                getOrientation.andReturn('some-custom-orientation');
+                p.update_from_config(cfg);
+                expect(manifestJson.orientation).toEqual([ 'some-custom-orientation' ]);
+            });
+
         });
 
         describe('www_dir method', function() {

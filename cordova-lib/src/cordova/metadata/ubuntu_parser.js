@@ -34,7 +34,7 @@ var fs            = require('fs'),
 function ubuntu_parser(project) {
 
     // Call the base class constructor
-    Parser.apply(this, arguments);
+    Parser.call(this, 'ubuntu', project);
 
     this.path = project;
     this.config = new ConfigParser(this.config_xml());

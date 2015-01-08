@@ -32,7 +32,7 @@ var fs = require('fs'),
 function browser_parser(project) {
 
     // Call the base class constructor
-    Parser.apply(this, arguments);
+    Parser.call(this, 'browser', project);
 
     this.path = project;
 }

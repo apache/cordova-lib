@@ -27,6 +27,7 @@ var platforms = require('../../src/cordova/platforms'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
+    CordovaError = require('../../src/CordovaError'),
     cordova = require('../../src/cordova/cordova');
 
 // Create a real config object before mocking out everything.
@@ -46,6 +47,7 @@ var MANIFEST_XML = '<manifest android:versionCode="1" android:versionName="0.0.1
 
 describe('android project parser', function() {
     var proj = path.join('some', 'path');
+    var android_proj = path.join(proj, 'platforms', 'android');
     var exists;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
@@ -68,26 +70,30 @@ describe('android project parser', function() {
         it('should throw if provided directory does not contain an AndroidManifest.xml', function() {
             exists.andReturn(false);
             expect(function() {
-                new platforms.android.parser(proj);
+                new platforms.android.parser(android_proj);
             }).toThrow();
         });
         it('should create an instance with path, strings, manifest and android_config properties', function() {
             expect(function() {
-                var p = new platforms.android.parser(proj);
-                expect(p.path).toEqual(proj);
-                expect(p.strings).toEqual(path.join(proj, 'res', 'values', 'strings.xml'));
-                expect(p.manifest).toEqual(path.join(proj, 'AndroidManifest.xml'));
-                expect(p.android_config).toEqual(path.join(proj, 'res', 'xml', 'config.xml'));
+                var p = new platforms.android.parser(android_proj);
+                expect(p.path).toEqual(android_proj);
+                expect(p.strings).toEqual(path.join(android_proj, 'res', 'values', 'strings.xml'));
+                expect(p.manifest).toEqual(path.join(android_proj, 'AndroidManifest.xml'));
+                expect(p.android_config).toEqual(path.join(android_proj, 'res', 'xml', 'config.xml'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.android.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.android.parser(android_proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.android.parser(android_proj);
+            expect(call).toHaveBeenCalledWith(p, 'android', android_proj);
         });
     });
 
     describe('instance', function() {
-        var p, cp, rm, mkdir, is_cordova, write, read;
-        var android_proj = path.join(proj, 'platforms', 'android');
+        var p, cp, rm, mkdir, is_cordova, write, read, getOrientation;
         var stringsRoot;
         var manifestRoot;
         beforeEach(function() {
@@ -96,7 +102,7 @@ describe('android project parser', function() {
             p = new platforms.android.parser(android_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').andReturn(android_proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync');
             mkdir = spyOn(shell, 'mkdir');
@@ -105,38 +111,51 @@ describe('android project parser', function() {
                     return stringsRoot = new et.ElementTree(et.XML(STRINGS_XML));
                 } else if (/AndroidManifest/.exec(path)) {
                     return manifestRoot = new et.ElementTree(et.XML(MANIFEST_XML));
+                } else {
+                    throw new CordovaError('Unexpected parseElementtreeSync: ' + path);
                 }
             });
+            getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
         describe('update_from_config method', function() {
             beforeEach(function() {
-                spyOn(fs, 'readdirSync').andReturn([path.join(proj, 'src', 'android_pkg', 'MyApp.java')]);
+                spyOn(fs, 'readdirSync').andReturn([ path.join(android_proj, 'src', 'android_pkg', 'MyApp.java') ]);
                 cfg.name = function() { return 'testname' };
                 cfg.packageName = function() { return 'testpkg' };
                 cfg.version = function() { return 'one point oh' };
                 read.andReturn('package org.cordova.somepackage; public class MyApp extends CordovaActivity { }');
             });
 
-            it('should handle no orientation', function() {
-                cfg.getPreference = function() { return null; };
+            it('should write out the orientation preference value', function() {
+                getOrientation.andCallThrough();
                 p.update_from_config(cfg);
-                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('VAL');
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
+            });
+            it('should handle no orientation', function() {
+                getOrientation.andReturn('');
+                p.update_from_config(cfg);
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toBeUndefined();
             });
             it('should handle default orientation', function() {
-                cfg.getPreference = function() { return 'default'; };
+                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toBeUndefined();
             });
             it('should handle portrait orientation', function() {
-                cfg.getPreference = function() { return 'portrait'; };
+                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('portrait');
             });
-            it('should handle invalid orientation', function() {
-                cfg.getPreference = function() { return 'prtrait'; };
+            it('should handle landscape orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
-                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('VAL');
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
+            });
+            it('should handle custom orientation', function() {
+                getOrientation.andReturn('some-custom-orientation');
+                p.update_from_config(cfg);
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('some-custom-orientation');
             });
             it('should write out the app name to strings.xml', function() {
                 p.update_from_config(cfg);

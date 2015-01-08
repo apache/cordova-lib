@@ -89,7 +89,12 @@ describe('blackberry10 project parser', function() {
             expect(project).toBeDefined();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.blackberry10.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.blackberry10.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.blackberry10.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'blackberry10', proj);
         });
     });
 

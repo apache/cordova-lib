@@ -35,13 +35,14 @@ var fs            = require('fs'),
 
 function wp8_parser(project) {
 
-    // Call the base class constructor
-    Parser.apply(this, arguments);
-
     try {
         // TODO : Check that it's not a wp8 project?
         var csproj_file   = fs.readdirSync(project).filter(function(e) { return e.match(/\.csproj$/i); })[0];
         if (!csproj_file) throw new CordovaError('No .csproj file in "'+project+'"');
+
+        // Call the base class constructor
+        Parser.call(this, 'wp8', project);
+
         this.wp8_proj_dir = project;
         this.csproj_path  = path.join(this.wp8_proj_dir, csproj_file);
         this.sln_path     = path.join(this.wp8_proj_dir, csproj_file.replace(/\.csproj/, '.sln'));
@@ -62,6 +63,23 @@ wp8_parser.prototype.update_from_config = function(config) {
 
     //Get manifest file
     var manifest = xml.parseElementtreeSync(this.manifest_path);
+
+    var mainPageXAML = xml.parseElementtreeSync(path.join(this.wp8_proj_dir, 'MainPage.xaml'));
+
+    var orientation = this.helper.getOrientation(config);
+    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
+
+        mainPageXAML.getroot().attrib['Orientation'] = orientation;
+        mainPageXAML.getroot().attrib['SupportedOrientations'] = orientation;
+
+        if (!this.helper.isGlobalOrientation(orientation)) {
+            delete mainPageXAML.getroot().attrib['SupportedOrientations'];
+        }
+
+    } else {
+        delete mainPageXAML.getroot().attrib['SupportedOrientations'];
+        delete mainPageXAML.getroot().attrib['Orientation'];
+    }
 
     //Update app version
     var version = config.version();
@@ -110,9 +128,7 @@ wp8_parser.prototype.update_from_config = function(config) {
         csproj.find('.//SilverlightAppEntry').text = pkg + '.App';
         fs.writeFileSync(this.csproj_path, csproj.write({indent: 4}), 'utf-8');
         //MainPage.xaml
-        var mainPageXAML = xml.parseElementtreeSync(path.join(this.wp8_proj_dir, 'MainPage.xaml'));
         mainPageXAML.getroot().attrib['x:Class'] = pkg + '.MainPage';
-        fs.writeFileSync(path.join(this.wp8_proj_dir, 'MainPage.xaml'), mainPageXAML.write({indent: 4}), 'utf-8');
         //MainPage.xaml.cs
         var mainPageCS = fs.readFileSync(path.join(this.wp8_proj_dir, 'MainPage.xaml.cs'), 'utf-8');
         var namespaceRegEx = new RegExp('namespace ' + prev_name);
@@ -125,6 +141,9 @@ wp8_parser.prototype.update_from_config = function(config) {
         var appCS = fs.readFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), 'utf-8');
         fs.writeFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), appCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
     }
+
+    // Write out MainPage.xaml
+    fs.writeFileSync(path.join(this.wp8_proj_dir, 'MainPage.xaml'), mainPageXAML.write({indent: 4}), 'utf-8');
 
     //Write out manifest
     fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');

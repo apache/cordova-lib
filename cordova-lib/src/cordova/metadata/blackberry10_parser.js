@@ -37,7 +37,7 @@ function blackberry_parser(project) {
     }
 
     // Call the base class constructor
-    Parser.apply(this, arguments);
+    Parser.call(this, 'blackberry10', project);
 
     this.path = project;
     this.config_path = path.join(this.path, 'www', 'config.xml');

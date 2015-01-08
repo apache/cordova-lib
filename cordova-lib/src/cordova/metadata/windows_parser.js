@@ -35,9 +35,6 @@ var fs            = require('fs'),
 
 function windows_parser(project) {
 
-    // Call the base class constructor
-    Parser.apply(this, arguments);
-
     try {
         this.isOldProjectTemplate = false;
         // Check that it's a universal windows store project
@@ -49,6 +46,10 @@ function windows_parser(project) {
         if (!projFile) {
             throw new CordovaError('No project file in "'+project+'"');
         }
+
+        // Call the base class constructor
+        Parser.call(this, 'windows8', project);
+
         this.projDir = project;
         this.projFilePath = path.join(this.projDir, projFile);
 
