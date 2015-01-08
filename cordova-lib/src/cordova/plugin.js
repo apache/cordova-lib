@@ -160,7 +160,7 @@ module.exports = function plugin(command, targets, opts) {
                                 }
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options).then(savePluginsToConfig());
+                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options).then(savePluginsToConfig);
                             });
                         }, Q());
                     });
@@ -207,7 +207,7 @@ module.exports = function plugin(command, targets, opts) {
                         });
                     }, Q())
                     .then(function() {
-                        return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins')).then(savePluginsToConfig());
+                        return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins')).then(savePluginsToConfig);
                     });
                 }, Q());
             }).then(function() {
