@@ -34,7 +34,7 @@ var fs = require('fs'),
 function firefoxos_parser(project) {
 
     // Call the base class constructor
-    Parser.apply(this, arguments);
+    Parser.call(this, 'firefoxos', project);
 
     this.path = project;
     this.config_path = path.join(project, 'config.xml');
@@ -85,16 +85,13 @@ firefoxos_parser.prototype.update_from_config = function(config) {
         manifest.fullscreen = fullScreen;
     }
 
-    var orientations = [];
-    var preferenceNodes = config.doc.findall('preference');
-    preferenceNodes.forEach(function (preference) {
-        if (preference.attrib.name.toLowerCase() === 'orientation') {
-            orientations.push(preference.attrib.value);
-        }
-    });
+    // Set orientation preference
+    var orientation = this.helper.getOrientation(config);
 
-    if (orientations && orientations.length) {
-        manifest.orientation = orientations;
+    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
+        manifest.orientation = [ orientation ];
+    } else {
+        delete manifest.orientation;
     }
 
     var permissionNodes = config.doc.findall('permission');

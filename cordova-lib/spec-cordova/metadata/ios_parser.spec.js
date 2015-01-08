@@ -69,12 +69,17 @@ describe('ios project parser', function () {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.ios.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.ios.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.ios.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'ios', proj);
         });
     });
 
     describe('instance', function() {
-        var p, cp, rm, mkdir, is_cordova, write, read;
+        var p, cp, rm, mkdir, is_cordova, write, read, getOrientation;
         var ios_proj = path.join(proj, 'platforms', 'ios');
         beforeEach(function() {
             p = new platforms.ios.parser(ios_proj);
@@ -84,6 +89,7 @@ describe('ios project parser', function () {
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
+            getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
         describe('update_from_config method', function() {
@@ -106,7 +112,6 @@ describe('ios project parser', function () {
                 cfg.name = function() { return 'testname' };
                 cfg.packageName = function() { return 'testpkg' };
                 cfg.version = function() { return 'one point oh' };
-                p = new platforms.ios.parser(ios_proj);
             });
 
             it('should update the app name in pbxproj by calling xcode.updateProductName, and move the ios native files to match the new name', function(done) {
@@ -135,6 +140,48 @@ describe('ios project parser', function () {
             it('should write out the app version to info plist as CFBundleVersion', function(done) {
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleShortVersionString).toEqual('one point oh');
+                });
+            });
+            it('should write out the orientation preference value', function(done) {
+                getOrientation.andCallThrough();
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
+                });
+            });
+            it('should handle no orientation', function(done) {
+                getOrientation.andReturn('');
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toBeUndefined();
+                });
+            });
+            it('should handle default orientation', function(done) {
+                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toBeUndefined();
+                });
+            });
+            it('should handle portrait orientation', function(done) {
+                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
+                });
+            });
+            it('should handle landscape orientation', function(done) {
+                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationLandscapeLeft' ]);
+                });
+            });
+            it('should handle custom orientation', function(done) {
+                getOrientation.andReturn('some-custom-orientation');
+                wrapper(p.update_from_config(cfg), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'some-custom-orientation' ]);
                 });
             });
         });

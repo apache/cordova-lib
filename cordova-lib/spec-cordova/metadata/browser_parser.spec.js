@@ -40,7 +40,12 @@ describe('browser project parser', function() {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.browser.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.browser.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.browser.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'browser', proj);
         });
     });
 

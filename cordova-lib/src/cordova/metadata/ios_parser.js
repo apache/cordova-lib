@@ -37,12 +37,13 @@ var fs            = require('fs'),
 
 function ios_parser(project) {
 
-    // Call the base class constructor
-    Parser.apply(this, arguments);
-
     try {
         var xcodeproj_dir = fs.readdirSync(project).filter(function(e) { return e.match(/\.xcodeproj$/i); })[0];
         if (!xcodeproj_dir) throw new CordovaError('The provided path "' + project + '" is not a Cordova iOS project.');
+
+        // Call the base class constructor
+        Parser.call(this, 'ios', project);
+
         this.xcodeproj = path.join(project, xcodeproj_dir);
         this.originalName = this.xcodeproj.substring(this.xcodeproj.lastIndexOf(path.sep)+1, this.xcodeproj.indexOf('.xcodeproj'));
         this.cordovaproj = path.join(project, this.originalName);
@@ -80,6 +81,27 @@ ios_parser.prototype.update_from_config = function(config) {
     infoPlist['CFBundleShortVersionString'] = version;
     var CFBundleVersion = config.ios_CFBundleVersion() || default_CFBundleVersion(version);
     infoPlist['CFBundleVersion'] = CFBundleVersion;
+
+    var orientation = this.helper.getOrientation(config);
+
+    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
+        switch (orientation.toLowerCase()) {
+            case 'portrait':
+                infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationPortrait' ];
+                infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ];
+                break;
+            case 'landscape':
+                infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationLandscapeLeft' ];
+                infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ];
+                break;
+            default:
+                infoPlist['UIInterfaceOrientation'] = [ orientation ];
+                delete infoPlist['UISupportedInterfaceOrientations'];
+        }
+    } else {
+        delete infoPlist['UISupportedInterfaceOrientations'];
+        delete infoPlist['UIInterfaceOrientation'];
+    }
 
     var info_contents = plist.build(infoPlist);
     info_contents = info_contents.replace(/<string>[\s\r\n]*<\/string>/g,'<string></string>');

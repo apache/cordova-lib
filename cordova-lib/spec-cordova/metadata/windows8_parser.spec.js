@@ -91,7 +91,12 @@ describe('windows8 project parser', function() {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.windows8.parser(proj) instanceof Parser).toBeTruthy();
+            expect(new platforms.windows8.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.windows8.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'windows8', proj);
         });
     });
 
