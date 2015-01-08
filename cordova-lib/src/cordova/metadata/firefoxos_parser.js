@@ -37,6 +37,8 @@ function firefoxos_parser(project) {
     Parser.apply(this, arguments);
 
     this.path = project;
+    this.config_path = path.join(project, 'config.xml');
+    this.manifest_path = path.join(this.www_dir(), 'manifest.webapp');
 }
 
 require('util').inherits(firefoxos_parser, Parser);
@@ -44,14 +46,17 @@ require('util').inherits(firefoxos_parser, Parser);
 module.exports = firefoxos_parser;
 
 // Returns a promise.
-firefoxos_parser.prototype.update_from_config = function() {
-    var config = new ConfigParser(this.config_xml());
-    var manifestPath = path.join(this.www_dir(), 'manifest.webapp');
+firefoxos_parser.prototype.update_from_config = function(config) {
+
+    if (!(config instanceof ConfigParser)) {
+        return Q.reject(new Error('update_from_config requires a ConfigParser object'));
+    }
+
     var manifest = {};
 
     // Load existing manifest
-    if (fs.existsSync(manifestPath)) {
-        manifest = JSON.parse(fs.readFileSync(manifestPath));
+    if (fs.existsSync(this.manifest_path)) {
+        manifest = JSON.parse(fs.readFileSync(this.manifest_path));
     }
 
     // overwrite properties existing in config.xml
@@ -151,7 +156,7 @@ firefoxos_parser.prototype.update_from_config = function() {
         }
     }
 
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
+    fs.writeFileSync(this.manifest_path, JSON.stringify(manifest, null, 4));
 
     return Q();
 };
@@ -191,12 +196,12 @@ firefoxos_parser.prototype.update_overrides = function() {
 };
 
 firefoxos_parser.prototype.config_xml = function(){
-    return path.join(this.path, 'config.xml');
+    return this.config_path;
 };
 
 // Returns a promise.
 firefoxos_parser.prototype.update_project = function(cfg) {
-    return this.update_from_config()
+    return this.update_from_config(cfg)
         .then(function(){
             this.update_overrides();
             util.deleteSvnFolders(this.www_dir());
