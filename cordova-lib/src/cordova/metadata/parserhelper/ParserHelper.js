@@ -23,27 +23,24 @@
 
 'use strict';
 
-var ParserHelper = require('./parserhelper/ParserHelper');
+var extend = require('underscore').extend;
+var preferences = require('./preferences');
 
 /**
- * Base module for platform parsers
+ * Helper module for platform parsers
  *
- * @param {String} [platform]    Platform name (e.g. android)
- * @param {String} [projectPath] path/to/platform/project
+ * @param {String} [platform] Platform name (e.g. android)
  */
-function Parser (platform, projectPath) {
-
+function ParserHelper(platform) {
     this.platform = platform || '';
-    this.path = projectPath || '';
-
-    // Extend with a ParserHelper instance
-    Object.defineProperty(this, 'helper', {
-        value: new ParserHelper(this.platform),
-        enumerable: true,
-        configurable: false,
-        writable: false
-    });
-
 }
 
-module.exports = Parser;
+// Extend with helpers
+extend(ParserHelper.prototype, preferences);
+
+// Override getOrientation()
+ParserHelper.prototype.getOrientation = function (config) {
+    return preferences.getOrientation(config, this.platform);
+};
+
+module.exports = ParserHelper;

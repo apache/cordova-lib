@@ -17,16 +17,37 @@
     under the License.
 */
 
-var Parser = require('../../src/cordova/metadata/parser');
+var fs = require('fs'),
+    platforms = require('../../src/cordova/platforms.js'),
+    Parser = require('../../src/cordova/metadata/parser'),
+    ParserHelper = require('../../src/cordova/metadata/parserhelper/ParserHelper');
 
 describe('base parser', function() {
 
-    describe('instance', function() {
+    var exists, parser;
 
-        var parser;
+    beforeEach(function() {
+        exists = spyOn(fs, 'existsSync');
+        parser = new Parser();
+    });
 
-        beforeEach(function() {
-            parser = new Parser();
+    describe('properties', function() {
+
+        it('should have properties named path and platform', function() {
+            expect(parser.path).not.toBeUndefined();
+            expect(parser.platform).not.toBeUndefined();
+        });
+
+        it('should have a property named helper that is an instace of ParserHelper', function() {
+            var descriptor = Object.getOwnPropertyDescriptor(parser, 'helper');
+            expect(descriptor).not.toBeUndefined();
+            expect(descriptor.value instanceof ParserHelper).toBe(true);
+        });
+
+        it('should have an immutable helper property', function() {
+            var value = 'foo';
+            parser.helpers = value;
+            expect(parser.helper instanceof ParserHelper).toBe(true);
         });
 
     });
