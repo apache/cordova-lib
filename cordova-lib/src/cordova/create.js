@@ -92,34 +92,43 @@ function create(dir, id, name, cfg) {
         return Q.reject(new CordovaError('Path already exists and is not empty: ' + dir));
     }
 
-    // Read / Write .cordova/config.json file if necessary.
+    var symlink = false; // Whether to symlink the www dir instead of copying.
+    var diskConfig = config.read(dir);
+    var wwwLib = cfg.lib && cfg.lib.www || diskConfig.lib && diskConfig.lib.www;
+    if (wwwLib) {
+        // This was changed from "uri" to "url", but checking uri for backwards compatibility.
+        wwwLib.url = wwwLib.url || wwwLib.uri;
+        // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
+        wwwLib.version = wwwLib.version || 'not_versioned';
+        wwwLib.id = wwwLib.id || 'dummy_id';
+        symlink  = !!wwwLib.link;
+        // Strip link and url from cfg to avoid them being persisted to disk via .cordova/config.json.
+        cfg = JSON.parse(JSON.stringify(cfg));
+        cfg.lib.www = 0;
+        cfg = JSON.parse(JSON.stringify(cfg).replace(',"www":0', '').replace(/"www":0,?/, '').replace(',"lib":{}', '').replace(/"lib":{},?/, ''));
+    }
+
+    // Update cached version of config.json
     var origAutoPersist = config.getAutoPersist();
     config.setAutoPersist(false);
-    var config_json = config(dir, cfg);
+    config(dir, cfg);
     config.setAutoPersist(origAutoPersist);
 
     var p;
-    var symlink = false; // Whether to symlink the www dir instead of copying.
     var www_parent_dir;
     var custom_config_xml;
     var custom_merges;
     var custom_hooks;
 
-    if (config_json.lib && config_json.lib.www) {
-        // This was changed from "uri" to "url", but checking uri for backwards compatibility.
-        config_json.lib.www.url = config_json.lib.www.url || config_json.lib.www.uri;
-        events.emit('log', 'Using custom www assets from '+config_json.lib.www.url);
-        // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
-        config_json.lib.www.version = config_json.lib.www.version || 'not_versioned';
-        config_json.lib.www.id = config_json.lib.www.id || 'dummy_id';
-        symlink  = !!config_json.lib.www.link;
+    if (wwwLib && wwwLib.url) {
+        events.emit('log', 'Using custom www assets from ' + wwwLib.url);
 
         // Make sure that the source www/ is not a direct ancestor of the
         // target www/, or else we will recursively copy forever. To do this,
         // we make sure that the shortest relative path from source-to-target
         // must start by going up at least one directory or with a drive
         // letter for Windows.
-        var rel_path = path.relative(config_json.lib.www.url, www_dir);
+        var rel_path = path.relative(wwwLib.url, www_dir);
         var goes_up = rel_path.split(path.sep)[0] == '..';
 
         if (!(goes_up || rel_path[1] == ':')) {
@@ -127,14 +136,14 @@ function create(dir, id, name, cfg) {
                 'Project dir "' +
                 dir +
                 '" must not be created at/inside the template used to create the project "' +
-                config_json.lib.www.url + '".'
+                wwwLib.url + '".'
             );
         }
-        if(symlink) {
-            p = Q(config_json.lib.www.url);
+        if (symlink) {
+            p = Q(wwwLib.url);
             events.emit('verbose', 'Symlinking custom www assets into "' + www_dir + '"');
         } else {
-            p = lazy_load.custom(config_json.lib, 'www')
+            p = lazy_load.custom({'www': wwwLib}, 'www')
             .then(function(d) {
                 events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
                 return d;
@@ -151,7 +160,6 @@ function create(dir, id, name, cfg) {
     }
 
     return p.then(function(www_lib) {
-        var cfg, config_json;
         if (!fs.existsSync(www_lib)) {
             throw new CordovaError('Could not find directory: '+www_lib);
         }
@@ -161,12 +169,8 @@ function create(dir, id, name, cfg) {
             www_lib = path.join(www_lib, 'www');
         }
 
-        cfg = config.read(dir);
-        config.setAutoPersist(true);
-        config_json = config(dir, cfg);
-
         // Find if we also have custom merges and config.xml as siblings of custom www.
-        if (www_parent_dir && config_json.lib && config_json.lib.www) {
+        if (www_parent_dir && wwwLib) {
             custom_config_xml = path.join(www_parent_dir, 'config.xml');
             if ( !fs.existsSync(custom_config_xml) ) {
                 custom_config_xml = null;
@@ -183,7 +187,7 @@ function create(dir, id, name, cfg) {
 
         var dirAlreadyExisted = fs.existsSync(dir);
         if (!dirAlreadyExisted) {
-            shell.mkdir(dir);
+            fs.mkdirSync(dir);
         }
         if (symlink) {
             try {
