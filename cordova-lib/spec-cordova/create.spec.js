@@ -89,6 +89,7 @@ describe('create end-to-end', function() {
 
     beforeEach(function() {
         shell.rm('-rf', project);
+        shell.mkdir('-p', tmpDir);
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
@@ -127,7 +128,7 @@ describe('create end-to-end', function() {
         })
         .then(checkProject)
         .fail(function(err) {
-            console.log(err);
+            console.log(err && err.stack);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -146,6 +147,9 @@ describe('create end-to-end', function() {
                 // Allow symlink error if not in admin mode
                 expect(err.message).toBe("Symlinks on Windows require Administrator privileges");
             } else {
+                if (err) {
+                    console.log(err.stack);
+                }
                 expect(err).toBeUndefined();
             }
         })
