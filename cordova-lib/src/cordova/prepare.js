@@ -28,10 +28,12 @@ var cordova_util      = require('./util'),
     fs                = require('fs'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
-    HooksRunner            = require('../hooks/HooksRunner'),
+    HooksRunner       = require('../hooks/HooksRunner'),
     events            = require('../events'),
     Q                 = require('q'),
-    plugman           = require('../plugman/plugman');
+    plugman           = require('../plugman/plugman'),
+    config            = require('./config'),
+    restore           = require('./restore');
 
 // Returns a promise.
 exports = module.exports = prepare;
@@ -58,6 +60,14 @@ function prepare(options) {
 
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
+    .then(function(){
+      var config_json = config(projectRoot, {});
+      var autoenabled = config_json.auto_restore_plugins || false;
+      if(autoenabled){
+        return restore('plugins', options);
+      }
+      return Q();
+    })
     .then(function() {
 
 

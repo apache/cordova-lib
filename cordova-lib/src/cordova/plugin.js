@@ -32,12 +32,13 @@ var cordova_util  = require('./util'),
     shell         = require('shelljs'),
     PluginInfo    = require('../PluginInfo'),
     plugman       = require('../plugman/plugman'),
-    events        = require('../events');
+    events        = require('../events'),
+    save          = require('./save');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
     var projectRoot = cordova_util.cdProjectRoot();
-
+    var config_json = config(projectRoot, {});
     // Dance with all the possible call signatures we've come up over the time. They can be:
     // 1. plugin() -> list the plugins
     // 2. plugin(command, Array of targets, maybe opts object)
@@ -95,7 +96,6 @@ module.exports = function plugin(command, targets, opts) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
             }
 
-            var config_json = config(projectRoot, {});
             var searchPath = config_json.plugin_search_path || [];
             if (typeof opts.searchpath == 'string') {
                 searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
@@ -111,7 +111,7 @@ module.exports = function plugin(command, targets, opts) {
             return hooksRunner.fire('before_plugin_add', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
-                    var pluginsDir = path.join(projectRoot, 'plugins');
+                  var pluginsDir = path.join(projectRoot, 'plugins');
                     return soFar.then(function() {
                         if (target[target.length - 1] == path.sep) {
                             target = target.substring(0, target.length - 1);
@@ -134,7 +134,7 @@ module.exports = function plugin(command, targets, opts) {
                         }
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
-                            return soFar.then(function() {
+                          return soFar.then(function() {
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
                                     options = {
                                         cli_variables: opts.cli_variables || {},
@@ -161,7 +161,7 @@ module.exports = function plugin(command, targets, opts) {
                                 }
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options);
+                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options).then(savePluginsToConfig);
                             });
                         }, Q());
                     });
@@ -195,7 +195,8 @@ module.exports = function plugin(command, targets, opts) {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
                             //check if plugin is restorable and warn
                             var configPath = cordova_util.projectConfig(projectRoot);
-                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                            var autosave =  config_json.auto_save_restore_plugins || false;
+                            if(!autosave && fs.existsSync(configPath)){//should not happen with real life but needed for tests
                                 var configXml = new ConfigParser(configPath);
                                 var features = configXml.doc.findall('./feature/param[@name="id"][@value="'+target+'"]/..');
                                 if(features && features.length){
@@ -207,7 +208,7 @@ module.exports = function plugin(command, targets, opts) {
                         });
                     }, Q())
                     .then(function() {
-                        return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
+                        return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins')).then(savePluginsToConfig);
                     });
                 }, Q());
             }).then(function() {
@@ -229,6 +230,20 @@ module.exports = function plugin(command, targets, opts) {
         default:
             return list(projectRoot, hooksRunner);
     }
+    
+    //utility to save plugin changes to config.xml
+    function savePluginsToConfig(){
+      var autoenabled = config_json.auto_save_plugins || false;
+      var wrapped = config_json.auto_save_shrinkwrap_plugins || false;
+      if(autoenabled){
+        var options = {
+          shrinkwrap : wrapped
+        };
+        return save('plugins',options);
+      }
+      return Q();
+    }
+
 };
 
 function list(projectRoot, hooksRunner) {
@@ -282,3 +297,4 @@ function list(projectRoot, hooksRunner) {
         return pluginsList;
     });
 }
+
