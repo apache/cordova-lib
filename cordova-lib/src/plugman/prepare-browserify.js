@@ -182,14 +182,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             // pluginMetadata is a mapping from plugin IDs to versions.
             pluginMetadata[plugin_id] = xml.getroot().attrib.version;
 
-            var cordova_plugins = "module.exports.metadata = \n";
-            cordova_plugins += JSON.stringify(pluginMetadata, null, '     ') + "\n";
-            cordova_plugins += "modules.exports = modules.exports.metadata;";
-            
-            events.emit('verbose', 'Writing out cordova_plugins.js...');
-            fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
-            var plugin_id = xml.getroot().attrib.id;
-
             // add the plugins dir to the platform's www.
             var platformPluginsDir = path.join(wwwDir, 'plugins');
             // XXX this should not be here if there are no js-module. It leaves an empty plugins/ directory
@@ -248,6 +240,13 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 scripts.push(scriptPath);
             });
         });
+
+        var cordova_plugins = 'module.exports.metadata = \n';
+        cordova_plugins += JSON.stringify(pluginMetadata, null, '     ') + '\n';
+        cordova_plugins += 'modules.exports = modules.exports.metadata;';
+            
+        events.emit('verbose', 'Writing out cordova_plugins.js...');
+        fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
 
         libraryRelease.transform(requireTr.transform);
 
