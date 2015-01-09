@@ -93,8 +93,10 @@ function create(dir, id, name, cfg) {
     }
 
     // Read / Write .cordova/config.json file if necessary.
+    var origAutoPersist = config.getAutoPersist();
     config.setAutoPersist(false);
     var config_json = config(dir, cfg);
+    config.setAutoPersist(origAutoPersist);
 
     var p;
     var symlink = false; // Whether to symlink the www dir instead of copying.
