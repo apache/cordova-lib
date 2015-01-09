@@ -139,6 +139,8 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // - Skip those without support for this platform. (No <platform> tags means JS-only!)
     // - Build a list of all their js-modules, including platform-specific js-modules.
     // - For each js-module (general first, then platform) build up an object storing the path and any clobbers, merges and runs for it.
+    // Write this object into www/cordova_plugins.json.
+    // This file is not really used. Maybe cordova app harness
     events.emit('verbose', 'Preparing ' + platform + ' browserify project');
     var platform_json = config_changes.get_platform_json(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
@@ -164,6 +166,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
         platform_json = config_changes.get_platform_json(plugins_dir, platform);
         var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
+        var pluginMetadata = {};
         events.emit('verbose', 'Iterating over installed plugins:', plugins);
 
         plugins && plugins.forEach(function(plugin) {
@@ -174,7 +177,17 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 return Q();
             }
             var xml = xml_helpers.parseElementtreeSync(pluginXML);
+           
+            var plugin_id = xml.getroot().attrib.id;
+            // pluginMetadata is a mapping from plugin IDs to versions.
+            pluginMetadata[plugin_id] = xml.getroot().attrib.version;
 
+            var cordova_plugins = "module.exports.metadata = \n";
+            cordova_plugins += JSON.stringify(pluginMetadata, null, '     ') + "\n";
+            cordova_plugins += "modules.exports = modules.exports.metadata;";
+            
+            events.emit('verbose', 'Writing out cordova_plugins.js...');
+            fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
             var plugin_id = xml.getroot().attrib.id;
 
             // add the plugins dir to the platform's www.
