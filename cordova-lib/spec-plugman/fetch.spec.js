@@ -128,7 +128,7 @@ describe('fetch', function() {
             runs(function() {
                 expect(done).toBe(true);
                 expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir if applicable', function() {
@@ -140,7 +140,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
@@ -153,7 +153,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, ref);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref from the URL hash, if provided', function() {
@@ -165,7 +165,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef');
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the subdir from the URL hash, if provided', function() {
@@ -177,7 +177,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref and subdir from the URL hash, if provided', function() {
@@ -189,7 +189,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef');
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should fail when the expected ID doesn\'t match', function(done) {

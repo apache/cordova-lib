@@ -43,7 +43,6 @@ var localPlugins = null;
 // Returns a promise.
 module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
-     var data = {};//data to be saved to .fetch.json
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 
@@ -73,97 +72,89 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         }
     }
 
-    // If it looks like a network URL, git clone it.
-    if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/)) {
-        events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
-        if (options.link) {
-            events.emit('log', '--link is not supported for git URLs and will be ignored');
-        }
-
-            data = {
-                source: {
-                    type: 'git',
-                    url:  plugin_src,
-                    subdir: options.subdir,
-                    ref: options.git_ref
-                }
-            };
+    return Q.when().then(function() {
+        // If it looks like a network URL, git clone it.
+        if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/)) {
+            events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
+            if (options.link) {
+                events.emit('log', '--link is not supported for git URLs and will be ignored');
+            }
 
             return plugins.clonePluginGit(plugin_src, plugins_dir, options)
             .then(function(dir) {
-                checkID(options.expected_id, dir);
-                return dir;
-            })
-            .then(function(dir) {
-                metadata.save_fetch_metadata(dir, data);
-                return dir;
-            });
-    } else {
-        // If it's not a network URL, it's either a local path or a plugin ID.
-       
-        var p,  // The Q promise to be returned.
-            linkable = true,
-            plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
-
-        if (fs.existsSync(plugin_dir)) {
-            p = Q(plugin_dir);
-            data = {
-                  source: {
-                    type: 'local',
-                    path: plugin_dir
+                return {
+                    pinfo: new PluginInfo.PluginInfo(dir),
+                    fetchJsonSource: {
+                        type: 'git',
+                        url:  plugin_src,
+                        subdir: options.subdir,
+                        ref: options.git_ref
                     }
                 };
-        } else {
+            });
+        }
+        // If it's not a network URL, it's either a local path or a plugin ID.
+        var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
+
+        return Q.when().then(function() {
+            if (fs.existsSync(plugin_dir)) {
+                return {
+                    pinfo: new PluginInfo.PluginInfo(plugin_dir),
+                    fetchJsonSource: {
+                        type: 'local',
+                        path: plugin_dir
+                    }
+                };
+            }
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath);
             if (pinfo) {
-                p = Q(pinfo.dir);
-                data = {
-                  source: {
-                    type: 'local',
-                    path: pinfo.dir
-                    }
-                };
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
-            } else if ( options.noregistry ) {
-                p = Q.reject(new CordovaError(
-                        'Plugin ' + plugin_src + ' not found locally. ' +
-                        'Note, plugin registry was disabled by --noregistry flag.'
-                    ));
-            } else {
-                // If not found in local search path, fetch from the registry.
-                linkable = false;
-                events.emit('log', 'Fetching plugin "' + plugin_src + '" via plugin registry');
-                p = registry.fetch([plugin_src], options.client);
-                data = {
-                  source: {
-                    type: 'registry',
-                    id: plugin_src
+                return {
+                    pinfo: pinfo,
+                    fetchJsonSource: {
+                        type: 'local',
+                        path: pinfo.dir
                     }
                 };
+            } else if ( options.noregistry ) {
+                return Q.reject(new CordovaError(
+                    'Plugin ' + plugin_src + ' not found locally. ' +
+                    'Note, plugin registry was disabled by --noregistry flag.'
+                ));
             }
-        }
-
-        return p
-        .then(function(dir) {
-            options.plugin_src_dir = dir;
-            return copyPlugin(dir, plugins_dir, options.link && linkable);
-        }).then(function(dest){
-             metadata.save_fetch_metadata(dest, data);
-             return dest;
-        })
-        .then(function(dir) {
-            checkID(options.expected_id, dir);
-            return dir;
+            // If not found in local search path, fetch from the registry.
+            events.emit('log', 'Fetching plugin "' + plugin_src + '" via plugin registry');
+            return registry.fetch([plugin_src], options.client)
+            .then(function(dir) {
+                return {
+                    pinfo: new PluginInfo.PluginInfo(dir),
+                    fetchJsonSource: {
+                        type: 'registry',
+                        id: plugin_src
+                    }
+                };
+            });
+        }).then(function(result) {
+            options.plugin_src_dir = result.pinfo.dir;
+            return Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'))
+            .then(function(dir) {
+                result.pinfo.dir = dir;
+                return result;
+            });
         });
-    }
+    }).then(function(result){
+        checkID(options.expected_id, result.pinfo);
+        metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, { source: result.fetchJsonSource });
+        return result.pinfo.dir;
+    });
 }
 
+
 // Helper function for checking expected plugin IDs against reality.
-function checkID(expected_id, dir) {
+function checkID(expected_id, pinfo) {
     if (!expected_id) return;
-    var pinfo = new PluginInfo.PluginInfo(dir);
     var id = pinfo.id;
     // if id with specific version provided, append version to id
     if (expected_id.split('@').length > 1) {
@@ -246,8 +237,8 @@ function findLocalPlugin(plugin_src, searchpath) {
 
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
-function copyPlugin(plugin_dir, plugins_dir, link) {
-    var pinfo = new PluginInfo.PluginInfo(plugin_dir);
+function copyPlugin(pinfo, plugins_dir, link) {
+    var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
     shell.rm('-rf', dest);
     if (link) {
