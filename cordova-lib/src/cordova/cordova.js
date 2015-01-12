@@ -73,5 +73,6 @@ addModuleProperty(module, 'run', './run', true);
 addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'save', './save', true);
 addModuleProperty(module, 'restore', './restore', true);
+addModuleProperty(module, 'targets', './targets', true);
 
 
