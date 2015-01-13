@@ -16,6 +16,7 @@
  * under the License.
  *
 */
+/* jshint node:true, sub:true, indent:4  */
 
 /*
  * This module deals with shared configuration / dependency "stuff". That is:
@@ -39,13 +40,13 @@ var fs   = require('fs'),
     path = require('path'),
     et   = require('elementtree'),
     semver = require('semver'),
-    _ = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
     platforms = require('./../platforms'),
     events = require('../../events'),
     ConfigKeeper = require('./ConfigKeeper');
 
-var shelljs = require('shelljs');
+var PlatformJson = require('./PlatformJson');
+var mungeutil = require('./munge-util');
 
 
 // These frameworks are required by cordova-ios by default. We should never add/remove them.
@@ -78,10 +79,6 @@ exports.process = function(plugins_dir, project_dir, platform) {
     var munger = new PlatformMunger(platform, project_dir, plugins_dir);
     munger.process();
     munger.save_all();
-};
-
-exports.get_munge_change = function(munge, keys) {
-    return deep_find.apply(null, arguments);
 };
 
 /******************************************************************************/
@@ -184,7 +181,7 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
     var config_munge = self.generate_plugin_config_munge(plugin_dir, plugin_vars);
     // global munge looks at all plugins' changes to config files
     var global_munge = platform_config.config_munge;
-    var munge = decrement_munge(global_munge, config_munge);
+    var munge = mungeutil.decrement_munge(global_munge, config_munge);
 
     for (var file in munge.files) {
         if (file == 'plugins-plist' && self.platform == 'ios') {
@@ -240,9 +237,9 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
     var munge, global_munge;
     if (should_increment) {
         global_munge = platform_config.config_munge;
-        munge = increment_munge(global_munge, config_munge);
+        munge = mungeutil.increment_munge(global_munge, config_munge);
     } else {
-        global_munge = clone_munge(platform_config.config_munge);
+        global_munge = mungeutil.clone_munge(platform_config.config_munge);
         munge = config_munge;
     }
 
@@ -345,7 +342,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
                     var file = f.attrib['src'];
                     var weak = ('true' == f.attrib['weak']).toString();
 
-                    deep_add(munge, 'framework', file, { xml: weak, count: 1 });
+                    mungeutil.deep_add(munge, 'framework', file, { xml: weak, count: 1 });
                 }
             });
         }
@@ -367,7 +364,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
                 });
             }
             // 2. add into munge
-            deep_add(munge, target, parent, { xml: stringified, count: 1, after: after });
+            mungeutil.deep_add(munge, target, parent, { xml: stringified, count: 1, after: after });
         });
     });
     return munge;
@@ -408,51 +405,17 @@ exports.get_platform_json = get_platform_json;
 function get_platform_json(plugins_dir, platform) {
     checkPlatform(platform);
 
-    var filepath = path.join(plugins_dir, platform + '.json');
-    if (fs.existsSync(filepath)) {
-        return fix_munge(JSON.parse(fs.readFileSync(filepath, 'utf-8')));
-    } else {
-        var config = {
-            prepare_queue:{installed:[], uninstalled:[]},
-            config_munge:{},
-            installed_plugins:{},
-            dependent_plugins:{}
-        };
-        return config;
-    }
+    var projectJson = PlatformJson.load(plugins_dir, platform);
+    return projectJson.configJson;
 }
 
 exports.save_platform_json = save_platform_json;
 function save_platform_json(config, plugins_dir, platform) {
     checkPlatform(platform);
-    var filepath = path.join(plugins_dir, platform + '.json');
-    shelljs.mkdir('-p', plugins_dir);
-    fs.writeFileSync(filepath, JSON.stringify(config, null, 4), 'utf-8');
+    var filePath = path.join(plugins_dir, platform + '.json');
+    var projectJson = new PlatformJson(filePath, platform, config);
+    projectJson.save();
 }
-
-
-// convert a munge from the old format ([file][parent][xml] = count) to the current one
-function fix_munge(platform_config) {
-    var munge = platform_config.config_munge;
-    if (!munge.files) {
-        var new_munge = { files: {} };
-        for (var file in munge) {
-            for (var selector in munge[file]) {
-                for (var xml_child in munge[file][selector]) {
-                    var val = parseInt(munge[file][selector][xml_child]);
-                    for (var i = 0; i < val; i++) {
-                        deep_add(new_munge, [file, selector, { xml: xml_child, count: val }]);
-                    }
-                }
-            }
-        }
-        platform_config.config_munge = new_munge;
-    }
-
-    return platform_config;
-}
-
-
 
 /******************************************************************************
 * Utility functions
@@ -463,148 +426,3 @@ function checkPlatform(platform) {
     if (!(platform in platforms)) throw new Error('platform "' + platform + '" not recognized.');
 }
 
-/******************************************************************************
-* Munge object manipulations functions
-******************************************************************************/
-
-// add the count of [key1][key2]...[keyN] to obj
-// return true if it didn't exist before
-function deep_add(obj, keys /* or key1, key2 .... */ ) {
-    if ( !Array.isArray(keys) ) {
-        keys = Array.prototype.slice.call(arguments, 1);
-    }
-
-    return process_munge(obj, true/*createParents*/, function (parentArray, k) {
-        var found = _.find(parentArray, function(element) {
-            return element.xml == k.xml;
-        });
-        if (found) {
-            found.after = found.after || k.after;
-            found.count += k.count;
-        } else {
-            parentArray.push(k);
-        }
-        return !found;
-    }, keys);
-}
-
-// decrement the count of [key1][key2]...[keyN] from obj and remove if it reaches 0
-// return true if it was removed or not found
-function deep_remove(obj, keys /* or key1, key2 .... */ ) {
-    if ( !Array.isArray(keys) ) {
-        keys = Array.prototype.slice.call(arguments, 1);
-    }
-
-    var result = process_munge(obj, false/*createParents*/, function (parentArray, k) {
-        var index = -1;
-        var found = _.find(parentArray, function (element) {
-            index++;
-            return element.xml == k.xml;
-        });
-        if (found) {
-            found.count -= k.count;
-            if (found.count > 0) {
-                return false;
-            }
-            else {
-                parentArray.splice(index, 1);
-            }
-        }
-        return undefined;
-    }, keys);
-
-    return typeof result === 'undefined' ? true : result;
-}
-
-// search for [key1][key2]...[keyN]
-// return the object or undefined if not found
-function deep_find(obj, keys /* or key1, key2 .... */ ) {
-    if ( !Array.isArray(keys) ) {
-        keys = Array.prototype.slice.call(arguments, 1);
-    }
-
-    return process_munge(obj, false/*createParents?*/, function (parentArray, k) {
-        return _.find(parentArray, function (element) {
-            return element.xml == (k.xml || k);
-        });
-    }, keys);
-}
-
-// Execute func passing it the parent array and the xmlChild key.
-// When createParents is true, add the file and parent items  they are missing
-// When createParents is false, stop and return undefined if the file and/or parent items are missing
-
-function process_munge(obj, createParents, func, keys /* or key1, key2 .... */ ) {
-    if ( !Array.isArray(keys) ) {
-        keys = Array.prototype.slice.call(arguments, 1);
-    }
-    var k = keys[0];
-    if (keys.length == 1) {
-        return func(obj, k);
-    } else if (keys.length == 2) {
-        if (!obj.parents[k] && !createParents) {
-            return undefined;
-        }
-        obj.parents[k] = obj.parents[k] || [];
-        return process_munge(obj.parents[k], createParents, func, keys.slice(1));
-    } else if (keys.length == 3){
-        if (!obj.files[k] && !createParents) {
-            return undefined;
-        }
-        obj.files[k] = obj.files[k] || { parents: {} };
-        return process_munge(obj.files[k], createParents, func, keys.slice(1));
-    } else {
-        throw new Error('Invalid key format. Must contain at most 3 elements (file, parent, xmlChild).');
-    }
-}
-
-// All values from munge are added to base as
-// base[file][selector][child] += munge[file][selector][child]
-// Returns a munge object containing values that exist in munge
-// but not in base.
-function increment_munge(base, munge) {
-    var diff = { files: {} };
-
-    for (var file in munge.files) {
-        for (var selector in munge.files[file].parents) {
-            for (var xml_child in munge.files[file].parents[selector]) {
-                var val = munge.files[file].parents[selector][xml_child];
-                // if node not in base, add it to diff and base
-                // else increment it's value in base without adding to diff
-                var newlyAdded = deep_add(base, [file, selector, val]);
-                if (newlyAdded) {
-                    deep_add(diff, file, selector, val);
-                }
-            }
-        }
-    }
-    return diff;
-}
-
-// Update the base munge object as
-// base[file][selector][child] -= munge[file][selector][child]
-// nodes that reached zero value are removed from base and added to the returned munge
-// object.
-function decrement_munge(base, munge) {
-    var zeroed = { files: {} };
-
-    for (var file in munge.files) {
-        for (var selector in munge.files[file].parents) {
-            for (var xml_child in munge.files[file].parents[selector]) {
-                var val = munge.files[file].parents[selector][xml_child];
-                // if node not in base, add it to diff and base
-                // else increment it's value in base without adding to diff
-                var removed = deep_remove(base, [file, selector, val]);
-                if (removed) {
-                    deep_add(zeroed, file, selector, val);
-                }
-            }
-        }
-    }
-    return zeroed;
-}
-
-// For better readability where used
-function clone_munge(munge) {
-    return increment_munge({}, munge);
-}

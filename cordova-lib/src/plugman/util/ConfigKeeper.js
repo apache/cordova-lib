@@ -13,6 +13,8 @@
  * under the License.
  *
 */
+/* jshint node:true, sub:true, indent:4  */
+/* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
 
 var path = require('path');
 var ConfigFile = require('./ConfigFile');
@@ -27,8 +29,9 @@ var ConfigFile = require('./ConfigFile');
 * project_dir/platform/file
 * where file is the name used for the file in config munges.
 ******************************************************************************/
-function ConfigKeeper(project_dir) {
+function ConfigKeeper(project_dir, plugins_dir) {
     this.project_dir = project_dir;
+    this.plugins_dir = plugins_dir;
     this._cached = {};
 }
 
