@@ -37,16 +37,14 @@
 
 var fs   = require('fs'),
     path = require('path'),
-    glob = require('glob'),
-    plist = require('plist'),
-    bplist = require('bplist-parser'),
     et   = require('elementtree'),
     semver = require('semver'),
     _ = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
     platforms = require('./../platforms'),
     events = require('../../events'),
-    plist_helpers = require('./../util/plist-helpers');
+    ConfigKeeper = require('./ConfigKeeper');
+
 var shelljs = require('shelljs');
 
 
@@ -120,7 +118,7 @@ function PlatformMunger(platform, project_dir, plugins_dir) {
     this.project_dir = project_dir;
     this.plugins_dir = plugins_dir;
     this.platform_handler = platforms[platform];
-    this.config_keeper = new ConfigKeeper();
+    this.config_keeper = new ConfigKeeper(project_dir);
 }
 
 // Write out all unsaved files.
@@ -403,52 +401,6 @@ function PlatformMunger_process() {
 }
 /**** END of PlatformMunger ****/
 
-
-/******************************************************************************
-* ConfigKeeper class
-*
-* Used to load and store config files to avoid re-parsing and writing them out
-* multiple times.
-*
-* The config files are referred to by a fake path constructed as
-* project_dir/platform/file
-* where file is the name used for the file in config munges.
-******************************************************************************/
-function ConfigKeeper() {
-    this._cached = {};
-}
-
-ConfigKeeper.prototype.get = ConfigKeeper_get;
-function ConfigKeeper_get(project_dir, platform, file) {
-    var self = this;
-
-    // This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
-    // https://issues.apache.org/jira/browse/CB-6414
-    if(file == 'config.xml' && platform == 'android'){
-        file = 'res/xml/config.xml';
-    }
-    var fake_path = path.join(project_dir, platform, file);
-
-    if (self._cached[fake_path]) {
-        return self._cached[fake_path];
-    }
-    // File was not cached, need to load.
-    var config_file = new ConfigFile(project_dir, platform, file);
-    self._cached[fake_path] = config_file;
-    return config_file;
-}
-
-
-ConfigKeeper.prototype.save_all = ConfigKeeper_save_all;
-function ConfigKeeper_save_all() {
-    var self = this;
-    Object.keys(self._cached).forEach(function (fake_path) {
-        var config_file = self._cached[fake_path];
-        if (config_file.is_changed) config_file.save();
-    });
-}
-/**** END of ConfigKeeper ****/
-
 // TODO: move save/get_platform_json to be part of ConfigKeeper or ConfigFile
 // For now they are used in many places in plugman and cordova-cli and can
 // save the file bypassing the ConfigKeeper's cache.
@@ -500,126 +452,6 @@ function fix_munge(platform_config) {
     return platform_config;
 }
 
-/**** END of ConfigKeeper ****/
-
-
-/******************************************************************************
-* ConfigFile class
-*
-* Can load and keep various types of config files. Provides some functionality
-* specific to some file types such as grafting XML children. In most cases it
-* should be instantiated by ConfigKeeper.
-*
-* For plugin.xml files use as:
-* plugin_config = self.config_keeper.get(plugin_dir, '', 'plugin.xml');
-*
-* TODO: Consider moving it out to a separate file and maybe partially with
-* overrides in platform handlers.
-******************************************************************************/
-function ConfigFile(project_dir, platform, file_tag) {
-    this.project_dir = project_dir;
-    this.platform = platform;
-    this.file_tag = file_tag;
-    this.is_changed = false;
-
-    this.load();
-}
-
-// ConfigFile.load()
-ConfigFile.prototype.load = ConfigFile_load;
-function ConfigFile_load() {
-    var self = this;
-
-    // config file may be in a place not exactly specified in the target
-    var filepath = self.filepath = resolveConfigFilePath(self.project_dir, self.platform, self.file_tag);
-
-    if ( !filepath || !fs.existsSync(filepath) ) {
-        self.exists = false;
-        return;
-    }
-    self.exists = true;
-    var ext = path.extname(filepath);
-    // Windows8 uses an appxmanifest, and wp8 will likely use
-    // the same in a future release
-    if (ext == '.xml' || ext == '.appxmanifest') {
-        self.type = 'xml';
-        self.data = xml_helpers.parseElementtreeSync(filepath);
-    } else if (ext == '.pbxproj') {
-        self.type = 'pbxproj';
-        var projectFile = platforms.ios.parseProjectFile(self.project_dir);
-        self.data = projectFile.xcode;
-        self.cordovaVersion = projectFile.cordovaVersion;
-    } else {
-        // plist file
-        self.type = 'plist';
-        // TODO: isBinaryPlist() reads the file and then parse re-reads it again.
-        //       We always write out text plist, not binary.
-        //       Do we still need to support binary plist?
-        //       If yes, use plist.parseStringSync() and read the file once.
-        self.data = isBinaryPlist(filepath) ?
-                bplist.parseBuffer(fs.readFileSync(filepath)) :
-                plist.parse(fs.readFileSync(filepath, 'utf8'));
-    }
-}
-
-// ConfigFile.save()
-ConfigFile.prototype.save = ConfigFile_save;
-function ConfigFile_save() {
-    var self = this;
-    if (self.type === 'xml') {
-        fs.writeFileSync(self.filepath, self.data.write({indent: 4}), 'utf-8');
-    } else if (self.type === 'pbxproj') {
-        fs.writeFileSync(self.filepath, self.data.writeSync());
-    } else {
-        // plist
-        var regExp = new RegExp('<string>[ \t\r\n]+?</string>', 'g');
-        fs.writeFileSync(self.filepath, plist.build(self.data).replace(regExp, '<string></string>'));
-    }
-    self.is_changed = false;
-}
-
-// ConfigFile.graft_child()
-ConfigFile.prototype.graft_child = ConfigFile_graft_child;
-function ConfigFile_graft_child(selector, xml_child) {
-    var self = this;
-    var filepath = self.filepath;
-    var result;
-    if (self.type === 'xml') {
-        var xml_to_graft = [et.XML(xml_child.xml)];
-        result = xml_helpers.graftXML(self.data, xml_to_graft, selector, xml_child.after);
-        if ( !result) {
-            throw new Error('grafting xml at selector "' + selector + '" from "' + filepath + '" during config install went bad :(');
-        }
-    } else {
-        // plist file
-        result = plist_helpers.graftPLIST(self.data, xml_child.xml, selector);
-        if ( !result ) {
-            throw new Error('grafting to plist "' + filepath + '" during config install went bad :(');
-        }
-    }
-    self.is_changed = true;
-}
-
-// ConfigFile.prune_child()
-ConfigFile.prototype.prune_child = ConfigFile_prune_child;
-function ConfigFile_prune_child(selector, xml_child) {
-    var self = this;
-    var filepath = self.filepath;
-    var result;
-    if (self.type === 'xml') {
-        var xml_to_graft = [et.XML(xml_child.xml)];
-        result = xml_helpers.pruneXML(self.data, xml_to_graft, selector);
-    } else {
-        // plist file
-        result = plist_helpers.prunePLIST(self.data, xml_child.xml, selector);
-    }
-    if ( !result) {
-        var err_msg = 'Pruning at selector "' + selector + '" from "' + filepath + '" went bad.';
-        throw new Error(err_msg);
-    }
-    self.is_changed = true;
-}
-/**** END of ConfigFile ****/
 
 
 /******************************************************************************
@@ -630,89 +462,6 @@ function ConfigFile_prune_child(selector, xml_child) {
 function checkPlatform(platform) {
     if (!(platform in platforms)) throw new Error('platform "' + platform + '" not recognized.');
 }
-
-// determine if a plist file is binary
-function isBinaryPlist(filename) {
-    // I wish there was a synchronous way to read only the first 6 bytes of a
-    // file. This is wasteful :/
-    var buf = '' + fs.readFileSync(filename, 'utf8');
-    // binary plists start with a magic header, "bplist"
-    return buf.substring(0, 6) === 'bplist';
-}
-
-// Find out the real name of an iOS project
-// TODO: glob is slow, need a better way or caching, or avoid using more than once.
-function getIOSProjectname(project_dir) {
-    var matches = glob.sync(path.join(project_dir, '*.xcodeproj'));
-    var iospath;
-    if (matches.length === 1) {
-        iospath = path.basename(matches[0],'.xcodeproj');
-    } else {
-        var msg;
-        if (matches.length === 0) {
-            msg = 'Does not appear to be an xcode project, no xcode project file in ' + project_dir;
-        }
-        else {
-            msg = 'There are multiple *.xcodeproj dirs in ' + project_dir;
-        }
-        throw new Error(msg);
-    }
-    return iospath;
-}
-
-// Some config-file target attributes are not qualified with a full leading directory, or contain wildcards.
-// Resolve to a real path in this function.
-// TODO: getIOSProjectname is slow because of glob, try to avoid calling it several times per project.
-function resolveConfigFilePath(project_dir, platform, file) {
-    var filepath = path.join(project_dir, file);
-    var matches;
-
-    // .pbxproj file
-    if (file === 'framework') {
-        var proj_name = getIOSProjectname(project_dir);
-        filepath = path.join(project_dir, proj_name + '.xcodeproj', 'project.pbxproj');
-        return filepath;
-    }
-
-    if (file.indexOf('*') > -1) {
-        // handle wildcards in targets using glob.
-        matches = glob.sync(path.join(project_dir, '**', file));
-        if (matches.length) filepath = matches[0];
-        
-        // [CB-5989] multiple Info.plist files may exist. default to $PROJECT_NAME-Info.plist
-        if(matches.length > 1 && file.indexOf('-Info.plist')>-1){
-            var plistName =  getIOSProjectname(project_dir)+'-Info.plist';
-            for (var i=0; i < matches.length; i++) {
-                if(matches[i].indexOf(plistName) > -1){
-                    filepath = matches[i];
-                    break;
-                }
-            }    
-        }
-        return filepath;
-    }
-
-    // special-case config.xml target that is just "config.xml". This should be resolved to the real location of the file.
-    // TODO: move the logic that contains the locations of config.xml from cordova CLI into plugman.
-    if (file == 'config.xml') {
-        if (platform == 'ubuntu') {
-            filepath = path.join(project_dir, 'config.xml');
-        } else if (platform == 'ios') {
-            var iospath = getIOSProjectname(project_dir);
-            filepath = path.join(project_dir,iospath, 'config.xml');
-        } else if (platform == 'android') {
-            filepath = path.join(project_dir, 'res', 'xml', 'config.xml');
-        } else {
-            matches = glob.sync(path.join(project_dir, '**', 'config.xml'));
-            if (matches.length) filepath = matches[0];
-        }
-        return filepath;
-    }
-
-    // None of the special cases matched, returning project_dir/file.
-    return filepath;
-}
-
 
 /******************************************************************************
 * Munge object manipulations functions
