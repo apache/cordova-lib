@@ -3,4 +3,12 @@ git:
   depth: 10
 node_js:
   - "0.10"
-before_install: cd cordova-lib
+install:
+  - cd ..
+  - git clone https://github.com/apache/cordova-js --depth 10
+  - cd cordova-js
+  - npm install
+  - npm link
+  - cd ../cordova-lib/cordova-lib
+  - npm link cordova-js
+  - npm install
