@@ -84,6 +84,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             .then(function(dir) {
                 return {
                     pinfo: new PluginInfo.PluginInfo(dir),
+                    dest: dir,
                     fetchJsonSource: {
                         type: 'git',
                         url:  plugin_src,
@@ -140,14 +141,14 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             options.plugin_src_dir = result.pinfo.dir;
             return Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'))
             .then(function(dir) {
-                result.pinfo.dir = dir;
+                result.dest = dir;
                 return result;
             });
         });
     }).then(function(result){
         checkID(options.expected_id, result.pinfo);
         metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, { source: result.fetchJsonSource });
-        return result.pinfo.dir;
+        return result.dest;
     });
 }
 
