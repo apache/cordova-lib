@@ -285,11 +285,11 @@ function getPlatformDetailsFromDir(dir) {
         'Cordova platform: ' + dir;
     try {
         pkg = getPackageJsonContent(pPath);
-    } catch(e) {
-	return Q.reject(new CordovaError(msg + '\n' + e.message));
+    } catch (e) {
+        return Q.reject(new CordovaError(msg + '\n' + e.message));
     }
-    if ( !pkg || !pkg.name ) {
-	return Q.reject(new CordovaError(msg));
+    if (!pkg || !pkg.name) {
+        return Q.reject(new CordovaError(msg));
     }
     // Package names for Cordova platforms look like "cordova-ios".
     var nameParts = pkg.name.split('-');
@@ -297,13 +297,13 @@ function getPlatformDetailsFromDir(dir) {
     if (name == 'amazon') {
         name = 'amazon-fireos';
     }
-    if( !platforms[name] ) {
-	return Q.reject(new CordovaError(msg));
+    if (!platforms[name]) {
+        return Q.reject(new CordovaError(msg));
     }
 
     // Use a fulfilled promise with the platform name and path as value to skip downloading.
     return Q({
-	platform: name,
-	libDir: pPath
+        platform: name,
+        libDir: pPath
     });
-} 
+}

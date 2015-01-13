@@ -288,48 +288,45 @@ function custom(platforms, platform) {
 
 // Returns a promise
 function git_clone(repository) {
-  var platform;
-  var globalUtil = require('util');
-  // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
-  // fails in this case with "EXDEV, cross-device link not permitted".
-  var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
-  var tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
-  shell.rm('-rf', tmp_dir);
-  shell.mkdir('-p', tmp_dir);
-  if(!shell.which('git')) {
-      shell.rm('-rf', tmp_dir);
-      return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
-  }
-  return HooksRunner.fire('before_library_clone', {
-      repository:repository,
-      location:tmp_dir
-  }).then(function() {
-      var cmd = globalUtil.format('git clone "%s" "%s"', repository, tmp_dir);
-      events.emit('verbose', 'Cloning platform via git-clone command: ' + cmd);
+    // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
+    // fails in this case with "EXDEV, cross-device link not permitted".
+    var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
+    var tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
+    shell.rm('-rf', tmp_dir);
+    shell.mkdir('-p', tmp_dir);
+    if (!shell.which('git')) {
+        shell.rm('-rf', tmp_dir);
+        return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
+    }
+    return HooksRunner.fire('before_library_clone', {
+        repository: repository,
+        location: tmp_dir
+    }).then(function () {
+        var globalUtil = require('util');
+        var cmd = globalUtil.format('git clone "%s" "%s"', repository, tmp_dir);
+        events.emit('verbose', 'Cloning platform via git-clone command: ' + cmd);
 
-      return Q.ninvoke(child_process, 'exec', cmd, {}).then(function(){
-	  var git_ref = 'master';
-	  var checkoutCmd = globalUtil.format('git checkout "%s"', git_ref);
-	  events.emit('verbose', 'Checking out git ref via command: ' + checkoutCmd);
-	  return Q.ninvoke(child_process, 'exec', checkoutCmd, { cwd: tmp_dir });
-      }).then(function(){ 
-          return util.getPlatformDetailsFromDir(tmp_dir); 
-      }).then(function(platDetails){
-	  platform = platDetails.platform; 
-	  HooksRunner.fire('after_library_clone', {
-	      repository:repository,
-	      location:tmp_dir,
-	      platform:platDetails.platform	      
-	  });
-	  return {
-	      libDir:tmp_dir, 
-	      platform:platform
-	  };
-      }).fail(function(err){
-	  shell.rm('-rf', tmp_dir);
-	  return Q.reject(err);
-      });
-  });
+        return Q.ninvoke(child_process, 'exec', cmd, {}).then(function () {
+            var checkoutCmd = 'git checkout "master"';
+            events.emit('verbose', 'Checking out git ref via command: ' + checkoutCmd);
+            return Q.ninvoke(child_process, 'exec', checkoutCmd, { cwd: tmp_dir });
+        }).then(function () {
+            return util.getPlatformDetailsFromDir(tmp_dir);
+        }).then(function (platDetails) {
+            HooksRunner.fire('after_library_clone', {
+                repository: repository,
+                location: tmp_dir,
+                platform: platDetails.platform
+            });
+            return {
+                libDir: tmp_dir,
+                platform: platDetails.platform
+            };
+        }).fail(function (err) {
+            shell.rm('-rf', tmp_dir);
+            return Q.reject(err);
+        });
+    });
 }
 
 

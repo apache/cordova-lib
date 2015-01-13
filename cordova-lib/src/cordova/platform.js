@@ -49,14 +49,14 @@ for (var p in platforms) {
 
 function add(hooksRunner, projectRoot, targets, opts) {
     var msg;
-    if ( !targets || !targets.length ) {
+    if (!targets || !targets.length) {
         msg = 'No platform specified. Please specify a platform to add. ' +
               'See `' + cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
 
-    for (var i= 0 ; i < targets.length; i++) {
-        if ( !hostSupports(targets[i]) ) {
+    for (var i = 0 ; i < targets.length; i++) {
+        if (!hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
             events.emit('log', msg);
@@ -72,62 +72,61 @@ function add(hooksRunner, projectRoot, targets, opts) {
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
-    if ( !fs.existsSync(platformsDir)) {
+    if (!fs.existsSync(platformsDir)) {
         shell.mkdir('-p', platformsDir);
     }
 
     return hooksRunner.fire('before_platform_add', opts)
-	.then(function () {
-	    return promiseutil.Q_chainmap(targets, function (target) {
+    .then(function () {
+        return promiseutil.Q_chainmap(targets, function (target) {
+            // For each platform, download it and call its "create" script.
+            var parts = target.split('@');
+            var platform = parts[0];
+            var version = parts[1];
 
-	        // For each platform, download it and call its "create" script.
-	        var parts = target.split('@');
-	        var platform = parts[0];
-	        var version = parts[1];
+            return Q.when().then(function () {
+                if (!(platform in platforms)) {
+                    // First, try handling 'platform' as a directory, if it fails, try handling it as a git repository
+                    return Q.fcall(function () {
+                        return util.getPlatformDetailsFromDir(target);
+                    }).fail(function (err) {
+                        // Maybe it's a git repo
+                        events.emit('verbose', err);
+                        events.emit('verbose', 'Could not find local folder ' + target + '. Try to handle it as git repository.');
+                        return cloneGitRepo(target);
+                    });
+                }
+                else {
+                    if (!version) {
+                        events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+                    }
+                    version = version || getVersionFromConfigFile(platform, cfg);
+                    var tgt = version ? (platform + '@' + version) : platform;
 
-	        return Q.when().then(function () {
-	            if (!(platform in platforms)) {
-	                // First, try handling 'platform' as a directory, if it fails, try handling it as a git repository
-		        return Q.fcall(function () {
-	                    return util.getPlatformDetailsFromDir(target);
-	                }).fail(function (err) {
-	                    // Maybe it's a git repo
-	                    events.emit('verbose', err);
-	                    events.emit('verbose', 'Could not find local folder ' + target + '. Try to handle it as git repository.');
-	                    return cloneGitRepo(target);
-	                });
-	            }
-	            else {
-	                if (!version) {
-	                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
-	                }
-	                version = version || getVersionFromConfigFile(platform, cfg);
-	                var tgt = version ? (platform + '@' + version) : platform;
+                    if (isDirectory(version)) {
+                        return util.getPlatformDetailsFromDir(version);
+                    }
 
-	                if (isDirectory(version)) {
-	                    return util.getPlatformDetailsFromDir(version);
-	                }
-
-	                return Q.fcall(function () {
-	                    return downloadPlatform(projectRoot, tgt, opts);
-	                }).fail(function (err) {
-	                    // Maybe it's a git repo
-	                    events.emit('verbose', err);
-	                    events.emit('verbose', 'Could not download platform ' + tgt + '. Try to handle ' + version + ' as git repository.');
-	                    return cloneGitRepo(version);
-	                });
-	            }
-	        }).then(function (platDetails) {
-	            var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
-	            return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
-	        }).fail(function (error) {
-	            throw new CordovaError('Unable to add platform ' + target + '. Make sure to provide a valid version, an existing folder or an accessible git repository: ' +
+                    return Q.fcall(function () {
+                        return downloadPlatform(projectRoot, tgt, opts);
+                    }).fail(function (err) {
+                        // Maybe it's a git repo
+                        events.emit('verbose', err);
+                        events.emit('verbose', 'Could not download platform ' + tgt + '. Try to handle ' + version + ' as git repository.');
+                        return cloneGitRepo(version);
+                    });
+                }
+            }).then(function (platDetails) {
+                var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
+                return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
+            }).fail(function (error) {
+                throw new CordovaError('Unable to add platform ' + target + '. Make sure to provide a valid version, an existing folder or an accessible git repository: ' +
                            error);
-	        });
-	    }).then(function () {
-	        return hooksRunner.fire('after_platform_add', opts);
-	    });
-	});
+            });
+        }).then(function () {
+            return hooksRunner.fire('after_platform_add', opts);
+        });
+    });
 }
 
 function isDirectory(dir){

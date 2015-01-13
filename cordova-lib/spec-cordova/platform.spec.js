@@ -56,24 +56,24 @@ describe('platform end-to-end', function () {
 
     var results;
 
-    beforeEach(function() {
+    beforeEach(function () {
         shell.rm('-rf', tmpDir);
     });
-    afterEach(function() {
+    afterEach(function () {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.raw.platform('list').then(function () {
             var installed = results.match(/Installed platforms: (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
     function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.raw.platform('list').then(function () {
             var installed = results.match(/Installed platforms: (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -84,7 +84,7 @@ describe('platform end-to-end', function () {
     // They should run the appropriate hooks.
     // They should fail when not inside a Cordova project.
     // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('should successfully run', function(done) {
+    it('should successfully run', function (done) {
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
         shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
@@ -99,55 +99,55 @@ describe('platform end-to-end', function () {
 
         // The config.json in the fixture project points at fake "local" paths.
         // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
+        spyOn(superspawn, 'spawn').andCallFake(function (cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
-            } else if(cmd.match(/version\b/)) {
+            } else if (cmd.match(/version\b/)) {
                 return Q('3.3.0');
-            } else if(cmd.match(/update\b/)) {
+            } else if (cmd.match(/update\b/)) {
                 fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
             }
             return Q();
         });
 
-        events.on('results', function(res) { results = res; });
+        events.on('results', function (res) { results = res; });
 
         // Check there are no platforms yet.
-        emptyPlatformList().then(function() {
+        emptyPlatformList().then(function () {
             // Add the testing platform.
             return cordova.raw.platform('add', [helpers.testPlatform]);
-        }).then(function() {
+        }).then(function () {
             // Check the platform add was successful.
             expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
             expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
         }).then(fullPlatformList) // Check for it in platform ls.
-        .then(function() {
+        .then(function () {
             // Try to update the platform.
             return cordova.raw.platform('update', [helpers.testPlatform]);
-        }).then(function() {
+        }).then(function () {
             // Our fake update script in the exec mock above creates this dummy file.
             expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toExist();
         }).then(fullPlatformList) // Platform should still be in platform ls.
-        .then(function() {
+        .then(function () {
             // And now remove it.
             return cordova.raw.platform('rm', [helpers.testPlatform]);
-        }).then(function() {
+        }).then(function () {
             // It should be gone.
             expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
         }).then(emptyPlatformList) // platform ls should be empty too.
-        .fail(function(err) {
+        .fail(function (err) {
             expect(err).toBeUndefined();
         }).fin(done);
     });
 });
 
 describe('add function', function () {
-    
-    beforeEach(function(){
-	
+
+    beforeEach(function () {
+
         opts = {};
-	
+
         hooksRunnerMock = {
             fire: function () {
                 return Q();
@@ -159,9 +159,9 @@ describe('add function', function () {
         });
 
         platform.__set__('ConfigParser', function (xml) {
-            cfg = 
+            cfg =
 		{
-		    getEngines: function() {
+		    getEngines: function () {
 		        return [
                     {
                         name: 'cordova-android',
@@ -172,11 +172,11 @@ describe('add function', function () {
                         value: '2.1.0'
                     }
 		        ];
-		    }		
+		    }
 		};
             return cfg;
         });
-	
+
         platform.__set__('config', {
             read: function (projectRoot) {
                 return {};
@@ -219,8 +219,8 @@ describe('add function', function () {
 
     });
 
-    afterEach(function(){
-	
+    afterEach(function () {
+
         platform.__set__('hostSupports', hostSupportsOriginal);
         platform.__set__('ConfigParser', ConfigParserOriginal);
         platform.__set__('config', configOriginal);
@@ -340,11 +340,11 @@ describe('add function', function () {
             platform: 'android',
             libDir: targets[0]
         }));
-	
-	platform.__set__('util', {
-	    getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
-	});
-	
+
+        platform.__set__('util', {
+            getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
+        });
+
         var downloadPlatformMock = jasmine.createSpy();
         platform.__set__('downloadPlatform', downloadPlatformMock);
 
@@ -365,21 +365,21 @@ describe('add function', function () {
 	    targetPlatform = 'android',
 	    libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory';
 
-	var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
-	    platform: targetPlatform,
-	    libDir: libDir
-	}));
-	platform.__set__('cloneGitRepo', cloneGitRepoMock);
+        var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
+            platform: targetPlatform,
+            libDir: libDir
+        }));
+        platform.__set__('cloneGitRepo', cloneGitRepoMock);
 
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
-	platform.__set__('util', {
-	    'getPlatformDetailsFromDir': function(){ 
-		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
-		return Q.reject(new Error(msg));
+        platform.__set__('util', {
+            'getPlatformDetailsFromDir': function () {
+                var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+                return Q.reject(new Error(msg));
             }
-	});
+        });
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
             expect(cloneGitRepoMock).toHaveBeenCalledWith(targets[0]);
@@ -390,29 +390,29 @@ describe('add function', function () {
 
     it('tries to git-clone if there is an error while downloading the platform specified by config.xml', function (done) {
 
-	var targetPlatform = 'android',
-            targets = [targetPlatform],
-	    libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
-            gitUrl = 'https://github.com/apache/cordova-android';
+        var targetPlatform = 'android',
+                targets = [targetPlatform],
+            libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
+                gitUrl = 'https://github.com/apache/cordova-android';
 
-	platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
-	platform.__set__('downloadPlatform', jasmine.createSpy().andReturn(Q.reject('error')));
+        platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
+        platform.__set__('downloadPlatform', jasmine.createSpy().andReturn(Q.reject('error')));
 
-	var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
-	    platform: targetPlatform,
-	    libDir: libDir
-	}));
-	platform.__set__('cloneGitRepo', cloneGitRepoMock);
+        var cloneGitRepoMock = jasmine.createSpy().andReturn(Q({
+            platform: targetPlatform,
+            libDir: libDir
+        }));
+        platform.__set__('cloneGitRepo', cloneGitRepoMock);
 
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
-	platform.__set__('util', {
-	    'getPlatformDetailsFromDir': function(){ 
-		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
-		return Q.reject(new Error(msg));
+        platform.__set__('util', {
+            'getPlatformDetailsFromDir': function () {
+                var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+                return Q.reject(new Error(msg));
             }
-	});
+        });
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
             expect(cloneGitRepoMock).toHaveBeenCalledWith(gitUrl);
@@ -422,31 +422,31 @@ describe('add function', function () {
     });
 
     it('fails if both platform downloading and git cloning actions are unsuccessful', function (done) {
-	
-	var targetPlatform = 'android',
-            targets = [targetPlatform],
-	    libDir  = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
-            gitUrl  = 'https://github.com/apache/cordova-android',
-            error   = new Error('Error while downloading: cannot use git repo url to download.');
 
-	platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
-	platform.__set__('downloadPlatform', jasmine.createSpy().andThrow(error)); 
+        var targetPlatform = 'android',
+                targets = [targetPlatform],
+            libDir = 'C:\\Projects\\cordova-projects\\cordova-android-clone-directory',
+                gitUrl = 'https://github.com/apache/cordova-android',
+                error = new Error('Error while downloading: cannot use git repo url to download.');
 
-	var cloneGitRepoMock = jasmine.createSpy().andThrow(new Error('Error while cloning. Git repo non existent.'));
-	platform.__set__('cloneGitRepo', cloneGitRepoMock);
+        platform.__set__('getVersionFromConfigFile', jasmine.createSpy().andReturn(gitUrl));
+        platform.__set__('downloadPlatform', jasmine.createSpy().andThrow(error));
 
-	platform.__set__('util', {
-	    'getPlatformDetailsFromDir': function(){ 
-		var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
-		return Q.reject(new Error(msg));
+        var cloneGitRepoMock = jasmine.createSpy().andThrow(new Error('Error while cloning. Git repo non existent.'));
+        platform.__set__('cloneGitRepo', cloneGitRepoMock);
+
+        platform.__set__('util', {
+            'getPlatformDetailsFromDir': function () {
+                var msg = 'The provided path does not seem to contain a Cordova platform: ' + targets[0];
+                return Q.reject(new Error(msg));
             }
-	});
+        });
 
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-	    var expectedErrorMessage = 'Unable to add platform ' + targetPlatform + 
-		                       '. Make sure to provide a valid version, an existing folder or an accessible git repository: ';
+            var expectedErrorMessage = 'Unable to add platform ' + targetPlatform +
+                                   '. Make sure to provide a valid version, an existing folder or an accessible git repository: ';
             expect(cloneGitRepoMock).toHaveBeenCalledWith(gitUrl);
-	    expect((error.message.indexOf(expectedErrorMessage) > -1)).toBeTruthy();
+            expect((error.message.indexOf(expectedErrorMessage) > -1)).toBeTruthy();
             done();
         });
     });
@@ -459,7 +459,7 @@ describe('add function', function () {
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
-        var getVersionFromConfigFileMock = jasmine.createSpy().andReturn(versionInConfigXML); 
+        var getVersionFromConfigFileMock = jasmine.createSpy().andReturn(versionInConfigXML);
         platform.__set__('getVersionFromConfigFile', getVersionFromConfigFileMock);
 
         var downloadPlatformMock = jasmine.createSpy().andReturn(Q({
@@ -480,18 +480,18 @@ describe('add function', function () {
 
         var targets = ['wp8@https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git;a=snapshot;h=3.7.0;sf=tgz'];
 
-        var call_into_create_mock = jasmine.createSpy(); 
+        var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
         var wasDownloadPlatformCalled = false;
-        platform.__set__('downloadPlatform', function(){
+        platform.__set__('downloadPlatform', function () {
             wasDownloadPlatformCalled = true;
             return Q({
                 platform: 'wp8',
                 libDir: libDir
             });
         });
-	
+
         platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
             expect(wasDownloadPlatformCalled).toBeTruthy();
             expect(call_into_create_mock).toHaveBeenCalledWith('wp8', projectRoot, cfg, libDir, null, opts);
@@ -499,14 +499,14 @@ describe('add function', function () {
         });
     });
 
-    it('downloads and uses the pinned CLI version if platform has no version and config.xml has no corresponding engine', function(done) {
-	
+    it('downloads and uses the pinned CLI version if platform has no version and config.xml has no corresponding engine', function (done) {
+
         var targets = ['android'];
-	
+
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
 
-        platform.__set__('getVersionFromConfigFile', function(){
+        platform.__set__('getVersionFromConfigFile', function () {
             return null;
         });
 
@@ -523,12 +523,12 @@ describe('add function', function () {
         });
     });
 
-    it('uses the directory in config.xml when the target has no version', function(done) {
+    it('uses the directory in config.xml when the target has no version', function (done) {
 
         // uses the directory. make changes to other tests
         var targets = ['android'];
 
-        platform.__set__('getVersionFromConfigFile', function(){
+        platform.__set__('getVersionFromConfigFile', function () {
             return "C:/path/to/android/platform";
         });
 
@@ -539,37 +539,37 @@ describe('add function', function () {
             platform: 'android',
             libDir: 'C:/path/to/android/platform'
         }));
-	platform.__set__('util', {
-	    getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
-	});
+        platform.__set__('util', {
+            getPlatformDetailsFromDir: getPlatformDetailsFromDirMock
+        });
 
         var isDirectoryMock = jasmine.createSpy().andReturn(true);
         platform.__set__('isDirectory', isDirectoryMock);
 
         var call_into_create_mock = jasmine.createSpy();
         platform.__set__('call_into_create', call_into_create_mock);
-	
-        platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function(){
+
+        platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
             expect(downloadPlatformMock).not.toHaveBeenCalled();
             expect(getPlatformDetailsFromDirMock).toHaveBeenCalledWith('C:/path/to/android/platform');
             expect(call_into_create_mock).toHaveBeenCalledWith('android', projectRoot, cfg, 'C:/path/to/android/platform', null, opts);
             done();
-        }).fail(function(err){ console.log(err); done(); });
-	
+        });
+
     });
 
-    it('uses the version from config.xml when no version is specified', function(done) {
-		
+    it('uses the version from config.xml when no version is specified', function (done) {
+
         var targets = ['ios']; // no version part, as opposed to 'android@1.4.0'
         var version = '3.6.2';
-	
+
         var call_into_create_mock = jasmine.createSpy();
-        platform.__set__('call_into_create', call_into_create_mock); 
-	
+        platform.__set__('call_into_create', call_into_create_mock);
+
         platform.__set__('getVersionFromConfigFile', function () {
             return version;
         });
-		
+
         var downloadPlatformMock = jasmine.createSpy().andReturn(Q({
             platform: 'ios',
             libDir: libDir
@@ -586,18 +586,18 @@ describe('add function', function () {
         });
     });
 
-    it('uses the version of platform pinned in the CLI when the target is specified by name with no version and config.xml contains no corresponding engine', function(done) {
-		
+    it('uses the version of platform pinned in the CLI when the target is specified by name with no version and config.xml contains no corresponding engine', function (done) {
+
         var targets = ['ios']; // no version part, as opposed to 'android@1.4.0'
         var version = null;
-	
+
         var call_into_create_mock = jasmine.createSpy();
-        platform.__set__('call_into_create', call_into_create_mock); 
-	
+        platform.__set__('call_into_create', call_into_create_mock);
+
         platform.__set__('getVersionFromConfigFile', function () {
             return version; // null
         });
-		
+
         var downloadPlatformMock = jasmine.createSpy().andReturn(Q({
             platform: 'ios',
             libDir: libDir
@@ -612,10 +612,10 @@ describe('add function', function () {
     });
 });
 
-describe('downloadPlatform function', function(){
-    
+describe('downloadPlatform function', function () {
+
     var downloadPlatform = platform.__get__('downloadPlatform'); // function under test
- 
+
     it('throws if lazy_loading fails', function (done) {
 
         var target = 'android';
@@ -633,7 +633,7 @@ describe('downloadPlatform function', function(){
             done();
         });
     });
-    
+
     it('allows targets of the form "platform@version" where "version" is a url', function (done) {
 
         var target = 'wp8@https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git;a=snapshot;h=3.7.0;sf=tgz';
@@ -649,15 +649,13 @@ describe('downloadPlatform function', function(){
         downloadPlatform(projectRoot, target, opts).then(function (platformDetails) {
             expect(based_on_config_called).toBeTruthy();
             expect(platformDetails.platform).toBe('wp8');
-	    expect(platformDetails.libDir).toBe(libDir);
+            expect(platformDetails.libDir).toBe(libDir);
             done();
         });
     });
 
     it('returns name and libDir of downloaded platform', function (done) {
-	
         var target = 'wp8@3.1.0';
-
         var based_on_config_called = false;
         platform.__set__('lazy_load', {
             based_on_config: function (projectRoot, t, opts) {
@@ -669,7 +667,7 @@ describe('downloadPlatform function', function(){
         downloadPlatform(projectRoot, target, opts).then(function (platformDetails) {
             expect(based_on_config_called).toBeTruthy();
             expect(platformDetails.platform).toBe('wp8');
-	    expect(platformDetails.libDir).toBe(libDir);
+            expect(platformDetails.libDir).toBe(libDir);
             done();
         });
     });
