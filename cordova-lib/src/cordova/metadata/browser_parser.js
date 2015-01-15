@@ -90,5 +90,8 @@ browser_parser.prototype.update_project = function(cfg) {
         .then(function(){
             this.update_overrides();
             util.deleteSvnFolders(this.www_dir());
+
+            // Copy munged config.xml to platform www dir
+            shell.cp('-rf', path.join(this.www_dir(), '..', 'config.xml'), this.www_dir());
         }.bind(this));
 };
