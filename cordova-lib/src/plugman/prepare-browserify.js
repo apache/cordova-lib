@@ -44,10 +44,12 @@ var platform_modules   = require('./platforms'),
     Q                  = require('q'),
     computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id');
 
-function uninstallQueuedPlugins(platform_json, wwwDir) {
+var PlatformJson = require('./util/PlatformJson');
+
+function uninstallQueuedPlugins(platformJson, wwwDir) {
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
     // via <js-module> elements
-    var plugins_to_uninstall = platform_json.prepare_queue.uninstalled;
+    var plugins_to_uninstall = platformJson.root.prepare_queue.uninstalled;
     if (plugins_to_uninstall && plugins_to_uninstall.length) {
         var plugins_www = path.join(wwwDir, 'plugins');
         if (fs.existsSync(plugins_www)) {
@@ -142,14 +144,14 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // Write this object into www/cordova_plugins.json.
     // This file is not really used. Maybe cordova app harness
     events.emit('verbose', 'Preparing ' + platform + ' browserify project');
-    var platform_json = config_changes.get_platform_json(plugins_dir, platform);
+    var platformJson = PlatformJson.load(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
     var scripts = [];
 
-    uninstallQueuedPlugins(platform_json, www_dir);
+    uninstallQueuedPlugins(platformJson, www_dir);
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
-    config_changes.process(plugins_dir, project_dir, platform);
+    config_changes.process(plugins_dir, project_dir, platform, platformJson);
 
     if(!is_top_level) {
         return Q();
@@ -164,8 +166,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     }).then(function(platformVersion){
         var libraryRelease = bundle(platform, false, commitId, platformVersion);
 
-        platform_json = config_changes.get_platform_json(plugins_dir, platform);
-        var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
+        var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
         var pluginMetadata = {};
         events.emit('verbose', 'Iterating over installed plugins:', plugins);
 

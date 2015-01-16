@@ -31,7 +31,7 @@ var path             = require('path'),
     superspawn       = require('./superspawn'),
     CordovaError     = require('../CordovaError'),
     plugman_metadata = require('../plugman/util/metadata'),
-    config_changes   = require('../plugman/util/config-changes');
+    PlatformJson     = require('../plugman/util/PlatformJson');
 
 module.exports = save;
 function save(target, opts){
@@ -156,8 +156,8 @@ function isDependencyPlugin(pluginId){
         return false;
     }
     for(var i= 0; i< platforms.length; i++){
-        var platform_config = config_changes.get_platform_json(pluginsPath, platforms[i]);
-        if(platform_config.dependent_plugins[pluginId])
+        var platformJson = PlatformJson.load(pluginsPath, platforms[i]);
+        if (platformJson.root.dependent_plugins[pluginId])
         {
             return true;
         }

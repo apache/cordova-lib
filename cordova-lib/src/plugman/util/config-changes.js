@@ -40,12 +40,10 @@ var fs   = require('fs'),
     path = require('path'),
     et   = require('elementtree'),
     semver = require('semver'),
-    xml_helpers = require('../../util/xml-helpers'),
     platforms = require('./../platforms'),
     events = require('../../events'),
     ConfigKeeper = require('./ConfigKeeper');
 
-var PlatformJson = require('./PlatformJson');
 var mungeutil = require('./munge-util');
 
 
@@ -62,46 +60,11 @@ exports.PlatformMunger = PlatformMunger;
 /******************************************************************************
 Adapters to keep the current refactoring effort to within this file
 ******************************************************************************/
-exports.add_plugin_changes = function(platform, project_dir, plugins_dir, plugin_id, plugin_vars, is_top_level, should_increment, cache) {
-    var munger = new PlatformMunger(platform, project_dir, plugins_dir);
-    munger.add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increment, cache);
-    munger.save_all();
-};
-
-exports.remove_plugin_changes = function(platform, project_dir, plugins_dir, plugin_name, plugin_id, is_top_level, should_decrement) {
-    // TODO: should_decrement parameter is never used, remove it here and wherever called
-    var munger = new PlatformMunger(platform, project_dir, plugins_dir);
-    munger.remove_plugin_changes(plugin_name, plugin_id, is_top_level);
-    munger.save_all();
-};
-
-exports.process = function(plugins_dir, project_dir, platform) {
-    var munger = new PlatformMunger(platform, project_dir, plugins_dir);
+exports.process = function(plugins_dir, project_dir, platform, platformJson) {
+    var munger = new PlatformMunger(platform, project_dir, plugins_dir, platformJson);
     munger.process();
     munger.save_all();
 };
-
-/******************************************************************************/
-
-
-exports.add_installed_plugin_to_prepare_queue = add_installed_plugin_to_prepare_queue;
-function add_installed_plugin_to_prepare_queue(plugins_dir, plugin, platform, vars, is_top_level) {
-    checkPlatform(platform);
-    var config = exports.get_platform_json(plugins_dir, platform);
-    config.prepare_queue.installed.push({'plugin':plugin, 'vars':vars, 'topLevel':is_top_level});
-    exports.save_platform_json(config, plugins_dir, platform);
-}
-
-exports.add_uninstalled_plugin_to_prepare_queue = add_uninstalled_plugin_to_prepare_queue;
-function add_uninstalled_plugin_to_prepare_queue(plugins_dir, plugin, platform, is_top_level) {
-    checkPlatform(platform);
-
-    var plugin_xml = xml_helpers.parseElementtreeSync(path.join(plugins_dir, plugin, 'plugin.xml'));
-    var config = exports.get_platform_json(plugins_dir, platform);
-    config.prepare_queue.uninstalled.push({'plugin':plugin, 'id':plugin_xml.getroot().attrib['id'], 'topLevel':is_top_level});
-    exports.save_platform_json(config, plugins_dir, platform);
-}
-
 
 /******************************************************************************
 * PlatformMunger class
@@ -109,19 +72,21 @@ function add_uninstalled_plugin_to_prepare_queue(plugins_dir, plugin, platform, 
 * Can deal with config file of a single project.
 * Parsed config files are cached in a ConfigKeeper object.
 ******************************************************************************/
-function PlatformMunger(platform, project_dir, plugins_dir) {
+function PlatformMunger(platform, project_dir, plugins_dir, platformJson) {
     checkPlatform(platform);
     this.platform = platform;
     this.project_dir = project_dir;
     this.plugins_dir = plugins_dir;
     this.platform_handler = platforms[platform];
     this.config_keeper = new ConfigKeeper(project_dir);
+    this.platformJson = platformJson;
 }
 
 // Write out all unsaved files.
 PlatformMunger.prototype.save_all = PlatformMunger_save_all;
 function PlatformMunger_save_all() {
     this.config_keeper.save_all();
+    this.platformJson.save();
 }
 
 // Apply a munge object to a single config file.
@@ -173,7 +138,7 @@ function PlatformMunger_apply_file_munge(file, munge, remove) {
 PlatformMunger.prototype.remove_plugin_changes = remove_plugin_changes;
 function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
     var self = this;
-    var platform_config = exports.get_platform_json(self.plugins_dir, self.platform);
+    var platform_config = self.platformJson.root;
     var plugin_dir = path.join(self.plugins_dir, plugin_name);
     var plugin_vars = (is_top_level ? platform_config.installed_plugins[plugin_id] : platform_config.dependent_plugins[plugin_id]);
 
@@ -212,16 +177,13 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
     } else {
         delete platform_config.dependent_plugins[plugin_id];
     }
-
-    // save
-    exports.save_platform_json(platform_config, self.plugins_dir, self.platform);
 }
 
 
 PlatformMunger.prototype.add_plugin_changes = add_plugin_changes;
 function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increment) {
     var self = this;
-    var platform_config = exports.get_platform_json(self.plugins_dir, self.platform);
+    var platform_config = self.platformJson.root;
     var plugin_dir = path.join(self.plugins_dir, plugin_id);
 
     var plugin_config = self.config_keeper.get(plugin_dir, '', 'plugin.xml');
@@ -271,9 +233,6 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
     } else {
         platform_config.dependent_plugins[plugin_id] = plugin_vars || {};
     }
-
-    // save
-    exports.save_platform_json(platform_config, self.plugins_dir, self.platform);
 }
 
 
@@ -284,7 +243,7 @@ PlatformMunger.prototype.reapply_global_munge = reapply_global_munge ;
 function reapply_global_munge () {
     var self = this;
 
-    var platform_config = exports.get_platform_json(self.plugins_dir, self.platform);
+    var platform_config = self.platformJson.root;
     var global_munge = platform_config.config_munge;
     for (var file in global_munge.files) {
         // TODO: remove this warning some time after 3.4 is out.
@@ -375,8 +334,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
 PlatformMunger.prototype.process = PlatformMunger_process;
 function PlatformMunger_process() {
     var self = this;
-
-    var platform_config = exports.get_platform_json(self.plugins_dir, self.platform);
+    var platform_config = self.platformJson.root;
 
     // Uninstallation first
     platform_config.prepare_queue.uninstalled.forEach(function(u) {
@@ -388,34 +346,11 @@ function PlatformMunger_process() {
         self.add_plugin_changes(u.plugin, u.vars, u.topLevel, true);
     });
 
-    platform_config = exports.get_platform_json(self.plugins_dir, self.platform);
-
     // Empty out installed/ uninstalled queues.
     platform_config.prepare_queue.uninstalled = [];
     platform_config.prepare_queue.installed = [];
-    // save platform json
-    exports.save_platform_json(platform_config, self.plugins_dir, self.platform);
 }
 /**** END of PlatformMunger ****/
-
-// TODO: move save/get_platform_json to be part of ConfigKeeper or ConfigFile
-// For now they are used in many places in plugman and cordova-cli and can
-// save the file bypassing the ConfigKeeper's cache.
-exports.get_platform_json = get_platform_json;
-function get_platform_json(plugins_dir, platform) {
-    checkPlatform(platform);
-
-    var projectJson = PlatformJson.load(plugins_dir, platform);
-    return projectJson.configJson;
-}
-
-exports.save_platform_json = save_platform_json;
-function save_platform_json(config, plugins_dir, platform) {
-    checkPlatform(platform);
-    var filePath = path.join(plugins_dir, platform + '.json');
-    var projectJson = new PlatformJson(filePath, platform, config);
-    projectJson.save();
-}
 
 /******************************************************************************
 * Utility functions

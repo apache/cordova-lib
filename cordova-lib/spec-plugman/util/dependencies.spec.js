@@ -20,6 +20,7 @@ var dependencies = require('../../src/plugman/util/dependencies'),
     xml_helpers = require('../../src/util/xml-helpers'),
     path = require('path'),
     config = require('../../src/plugman/util/config-changes');
+var PlatformJson = require('../../src/plugman/util/PlatformJson');
 
 describe('dependency module', function() {
     describe('generateDependencyInfo method', function() {
@@ -29,12 +30,12 @@ describe('dependency module', function() {
                 "isitme":"",
                 "yourelookingfor":""
             };
-            spyOn(xml_helpers, 'parseElementtreeSync').andReturn({findall:function(){}});
-            var spy = spyOn(config, 'get_platform_json').andReturn({
+            var platformJson = new PlatformJson('filePath', 'platform', {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generateDependencyInfo('some dir');
+            spyOn(xml_helpers, 'parseElementtreeSync').andReturn({findall:function(){}});
+            var obj = dependencies.generateDependencyInfo(platformJson, 'plugins_dir');
             expect(obj.top_level_plugins).toEqual(Object.keys(tlps));
         });
         it('should return a dependency graph for the plugins', function() {
@@ -47,11 +48,12 @@ describe('dependency module', function() {
                 "D":"",
                 "E":""
             };
-            var spy = spyOn(config, 'get_platform_json').andReturn({
+            var plugins_dir = path.join(__dirname, '..', 'plugins', 'dependencies');
+            var platformJson = new PlatformJson(plugins_dir, 'android', {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generateDependencyInfo(path.join(__dirname, '..', 'plugins', 'dependencies'), 'android');
+            var obj = dependencies.generateDependencyInfo(platformJson, plugins_dir);
             expect(obj.graph.getChain('A')).toEqual(['C','D']);
             expect(obj.graph.getChain('B')).toEqual(['D', 'E']);
         });

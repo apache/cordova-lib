@@ -19,7 +19,7 @@
 var uninstall = require('../src/plugman/uninstall'),
     install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
-    config_changes = require('../src/plugman/util/config-changes'),
+    PlatformJson = require('../src/plugman/util/PlatformJson'),
     events  = require('../src/events'),
     plugman = require('../src/plugman/plugman'),
     common  = require('./common'),
@@ -89,7 +89,7 @@ describe('uninstallPlatform', function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
         spyOn(shell, 'cp').andReturn(true);
-        add_to_queue = spyOn(config_changes, 'add_uninstalled_plugin_to_prepare_queue');
+        add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
         done = false;
     });
     describe('success', function() {
@@ -108,7 +108,7 @@ describe('uninstallPlatform', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(add_to_queue).toHaveBeenCalledWith(plugins_install_dir, dummy_id, 'android', true);
+                expect(add_to_queue).toHaveBeenCalledWith(dummy_id, true);
             });
         });
         it('should queue up actions as appropriate for that plugin and call process on the action stack', function() {
@@ -234,7 +234,7 @@ describe('uninstall', function() {
     beforeEach(function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
-        add_to_queue = spyOn(config_changes, 'add_uninstalled_plugin_to_prepare_queue');
+        add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
         done = false;
     });
     describe('success', function() {
@@ -244,7 +244,7 @@ describe('uninstall', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
-                expect(add_to_queue).toHaveBeenCalledWith(plugins_install_dir, dummy_id, 'android', true);
+                expect(add_to_queue).toHaveBeenCalledWith(dummy_id, true);
             });
         });
     });

@@ -19,6 +19,7 @@
 var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     plugman = require('../src/plugman/plugman'),
+    PlatformJson = require('../src/plugman/util/PlatformJson'),
     path = require('path'),
     fs = require('fs'),
     util = require('../src/cordova/util'),
@@ -63,7 +64,6 @@ describe('prepare command', function() {
         parsers = {},
         plugman_prepare,
         find_plugins,
-        plugman_get_json,
         cp,
         mkdir,
         load;
@@ -84,12 +84,8 @@ describe('prepare command', function() {
         });
         plugman_prepare = spyOn(plugman, 'prepare').andReturn(Q());
         find_plugins = spyOn(util, 'findPlugins').andReturn([]);
-        plugman_get_json = spyOn(plugman.config_changes, 'get_platform_json').andReturn({
-            prepare_queue:{installed:[], uninstalled:[]},
-            config_munge:{},
-            installed_plugins:{},
-            dependent_plugins:{}
-        });
+        spyOn(PlatformJson, 'load').andReturn(new PlatformJson(null, null, {}));
+        spyOn(PlatformJson.prototype, 'save');
         load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
         cp = spyOn(shell, 'cp').andReturn(true);
         mkdir = spyOn(shell, 'mkdir');
@@ -164,7 +160,7 @@ describe('prepare command', function() {
                 prepare('android').then(function() {
                     expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
                 }, function(err) {
-                    expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err);
+                    expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err.stack);
                 }).fin(done);
             });
         });

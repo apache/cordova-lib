@@ -18,7 +18,7 @@
 */
 var install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
-    config_changes = require('../src/plugman/util/config-changes'),
+    PlatformJson = require('../src/plugman/util/PlatformJson'),
     xml_helpers = require('../src/util/xml-helpers'),
     events  = require('../src/events'),
     plugman = require('../src/plugman/plugman'),
@@ -92,7 +92,7 @@ describe('start', function() {
 
     beforeEach(function() {
         prepare = spyOn(plugman, 'prepare');
-        config_queue_add = spyOn(config_changes, 'add_installed_plugin_to_prepare_queue');
+        config_queue_add = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
         proc = spyOn(actions.prototype, 'process').andReturn( Q(true) );
         actions_push = spyOn(actions.prototype, 'push');
         ca = spyOn(actions.prototype, 'createAction');
@@ -166,7 +166,7 @@ describe('install', function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         cp = spyOn(shell, 'cp').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
-        add_to_queue = spyOn(config_changes, 'add_installed_plugin_to_prepare_queue');
+        add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
         done = false;
     });
 
@@ -203,7 +203,7 @@ describe('install', function() {
         });
 
         it('should call the config-changes module\'s add_installed_plugin_to_prepare_queue method after processing an install', function() {
-           expect(results['config_add']).toEqual([plugins_install_dir, dummy_id, 'android', {}, true]);
+           expect(results['config_add']).toEqual([dummy_id, {}, true]);
         });
         it('should queue up actions as appropriate for that plugin and call process on the action stack',
            function() {

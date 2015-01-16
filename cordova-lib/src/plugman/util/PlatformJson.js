@@ -21,38 +21,63 @@ var fs = require('fs');
 var path = require('path');
 var shelljs = require('shelljs');
 var mungeutil = require('./munge-util');
+var PluginInfo = require('../../PluginInfo');
 
-function PlatformJson(filePath, platform, configJson) {
+function PlatformJson(filePath, platform, root) {
     this.filePath = filePath;
     this.platform = platform;
-    this.configJson = configJson;
+    this.root = fix_munge(root || {});
 }
 
 PlatformJson.load = function(plugins_dir, platform) {
     var filePath = path.join(plugins_dir, platform + '.json');
-    var configJson;
+    var root = null;
     if (fs.existsSync(filePath)) {
-        configJson = fix_munge(JSON.parse(fs.readFileSync(filePath, 'utf-8')));
-    } else {
-        configJson = {
-            prepare_queue:{installed:[], uninstalled:[]},
-            config_munge:{},
-            installed_plugins:{},
-            dependent_plugins:{}
-        };
+        root = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-    return new PlatformJson(filePath, platform, configJson);
+    return new PlatformJson(filePath, platform, root);
 };
 
 PlatformJson.prototype.save = function() {
     shelljs.mkdir('-p', path.dirname(this.filePath));
-    fs.writeFileSync(this.filePath, JSON.stringify(this.configJson, null, 4), 'utf-8');
+    fs.writeFileSync(this.filePath, JSON.stringify(this.root, null, 4), 'utf-8');
+};
+
+PlatformJson.prototype.isPluginInstalled = function(pluginId) {
+    var installed_plugin_id;
+    var json = this.root;
+    for (installed_plugin_id in json.installed_plugins) {
+        if (installed_plugin_id == pluginId) {
+            return true;
+        }
+    }
+    for (installed_plugin_id in json.dependent_plugins) {
+        if (installed_plugin_id == pluginId) {
+            return true;
+        }
+    }
+    return false;
+};
+
+PlatformJson.prototype.addInstalledPluginToPrepareQueue = function(pluginDirName, vars, is_top_level) {
+    this.root.prepare_queue.installed.push({'plugin':pluginDirName, 'vars':vars, 'topLevel':is_top_level});
+};
+
+// TODO: Enforce pluginDirName == pluginId so that we don't need to read the file.
+PlatformJson.prototype.addUninstalledPluginToPrepareQueue = function(pluginDirName, is_top_level) {
+    var pinfo = new PluginInfo.PluginInfo(path.join(path.dirname(this.filePath), pluginDirName));
+    this.root.prepare_queue.uninstalled.push({'plugin':pluginDirName, 'id':pinfo.id, 'topLevel':is_top_level});
 };
 
 
 // convert a munge from the old format ([file][parent][xml] = count) to the current one
-function fix_munge(platform_config) {
-    var munge = platform_config.config_munge;
+function fix_munge(root) {
+    root.prepare_queue = root.prepare_queue || {installed:[], uninstalled:[]};
+    root.config_munge = root.config_munge || {files: {}};
+    root.installed_plugins = root.installed_plugins || {};
+    root.dependent_plugins = root.dependent_plugins || {};
+
+    var munge = root.config_munge;
     if (!munge.files) {
         var new_munge = { files: {} };
         for (var file in munge) {
@@ -65,10 +90,10 @@ function fix_munge(platform_config) {
                 }
             }
         }
-        platform_config.config_munge = new_munge;
+        root.config_munge = new_munge;
     }
 
-    return platform_config;
+    return root;
 }
 
 module.exports = PlatformJson;
