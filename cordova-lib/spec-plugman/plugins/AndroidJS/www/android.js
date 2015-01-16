@@ -1,1 +1,1 @@
-{};
+./AndroidJS/www/android.js
