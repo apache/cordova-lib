@@ -17,8 +17,7 @@
 -->
 
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    id="com.cordova.engine"
+    id="com.cordova.engine-ios"
     version="1.0.0">
 
     <name>Engine Choo Choo</name>
@@ -30,5 +29,4 @@
         <engine name="apple-osx" version=">10.0"/>
         <engine name="apple-xcode" version=">=4.6.3"/>
     </engines>
-    
 </plugin>

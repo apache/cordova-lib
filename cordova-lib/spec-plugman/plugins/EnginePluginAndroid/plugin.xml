@@ -17,8 +17,7 @@
 -->
 
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    id="com.cordova.engine"
+    id="com.cordova.engine-android"
     version="1.0.0">
 
     <name>Engine Choo Choo</name>
@@ -28,5 +27,4 @@
         <engine name="cordova-android" version=">=3.1.0"/>
         <engine name="android-sdk" version=">=18"/>
     </engines>
-    
 </plugin>
