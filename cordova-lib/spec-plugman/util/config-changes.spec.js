@@ -85,11 +85,10 @@ describe('config-changes module', function() {
 
         describe('addUninstalledPluginToPrepareQueue', function() {
             it('should append specified plugin to platform.json', function() {
-              /* TODO: re-enable once it doens't require reading from filesystem
                 var platformJson = new PlatformJson(null, 'android', null);
                 platformJson.addUninstalledPluginToPrepareQueue('org.test.plugins.dummyplugin');
                 var json = platformJson.root;
-                expect(json.prepare_queue.uninstalled[0].plugin).toEqual('org.test.plugins.dummyplugin');*/
+                expect(json.prepare_queue.uninstalled[0].plugin).toEqual('org.test.plugins.dummyplugin');
             });
         });
     });

@@ -21,7 +21,6 @@ var fs = require('fs');
 var path = require('path');
 var shelljs = require('shelljs');
 var mungeutil = require('./munge-util');
-var PluginInfo = require('../../PluginInfo');
 
 function PlatformJson(filePath, platform, root) {
     this.filePath = filePath;
@@ -63,10 +62,8 @@ PlatformJson.prototype.addInstalledPluginToPrepareQueue = function(pluginDirName
     this.root.prepare_queue.installed.push({'plugin':pluginDirName, 'vars':vars, 'topLevel':is_top_level});
 };
 
-// TODO: Enforce pluginDirName == pluginId so that we don't need to read the file.
-PlatformJson.prototype.addUninstalledPluginToPrepareQueue = function(pluginDirName, is_top_level) {
-    var pinfo = new PluginInfo.PluginInfo(path.join(path.dirname(this.filePath), pluginDirName));
-    this.root.prepare_queue.uninstalled.push({'plugin':pluginDirName, 'id':pinfo.id, 'topLevel':is_top_level});
+PlatformJson.prototype.addUninstalledPluginToPrepareQueue = function(pluginId, is_top_level) {
+    this.root.prepare_queue.uninstalled.push({'plugin':pluginId, 'id':pluginId, 'topLevel':is_top_level});
 };
 
 
