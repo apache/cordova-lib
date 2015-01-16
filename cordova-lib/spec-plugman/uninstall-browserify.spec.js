@@ -43,7 +43,7 @@ var uninstall = require('../src/plugman/uninstall'),
         'C' : path.join(plugins_dir, 'dependencies', 'C')
     },
     promise,
-    dummy_id = 'com.phonegap.plugins.dummyplugin';
+    dummy_id = 'org.test.plugins.dummyplugin';
 
 function uninstallPromise(f) {
     return f.then(function() { done = true; }, function(err) { done = err; });

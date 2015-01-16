@@ -265,7 +265,7 @@ describe('ios project handler', function() {
             });
             it('should throw if framework target already exists', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
-                var target = path.join(temp, 'SampleApp/Plugins/com.phonegap.plugins.dummyplugin/Custom.framework');
+                var target = path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework');
                 shell.mkdir('-p', target);
                 expect(function() {
                     ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
@@ -275,14 +275,14 @@ describe('ios project handler', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'addFramework');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/com.phonegap.plugins.dummyplugin/Custom.framework'), {customFramework:true});
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
             });
             it('should cp the file to the right target location', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(shell, 'cp');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
                 expect(spy).toHaveBeenCalledWith('-R', path.join(dummyplugin, 'src', 'ios', 'Custom.framework'),
-                                                 path.join(temp, 'SampleApp/Plugins/com.phonegap.plugins.dummyplugin'));
+                                                 path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin'));
             });
         });
         it('of two plugins should apply xcode file changes from both', function(){
@@ -297,16 +297,16 @@ describe('ios project handler', function() {
                 var xcode = ios.parseProjectFile(temp).xcode;
                 // from DummyPlugin
                 expect(xcode.hasFile(path.join('Resources', 'DummyPlugin.bundle'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
                 expect(xcode.hasFile('usr/lib/src/ios/libsqlite3.dylib')).toBe(true);
-                expect(xcode.hasFile(path.join('SampleApp','Plugins','com.phonegap.plugins.dummyplugin','Custom.framework'))).toBe(true);
+                expect(xcode.hasFile(path.join('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBe(true);
                 // from WeblessPlugin
                 expect(xcode.hasFile(path.join('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','com.phonegap.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);
                 expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBe(true);
             });
         });
@@ -410,14 +410,14 @@ describe('ios project handler', function() {
                 var spy = spyOn(proj_files.xcode, 'removeFramework');
 
                 ios['framework'].uninstall(frameworks[0], temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.join(temp, 'SampleApp/Plugins/com.phonegap.plugins.dummyplugin/Custom.framework'), {customFramework:true});
+                expect(spy).toHaveBeenCalledWith(path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
             });
             it('should rm the file from the right target location', function(){
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(shell, 'rm');
 
                 ios['framework'].uninstall(frameworks[0], temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith('-rf', path.join(temp, 'SampleApp/Plugins/com.phonegap.plugins.dummyplugin/Custom.framework'));
+                expect(spy).toHaveBeenCalledWith('-rf', path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'));
             });
         });
     });

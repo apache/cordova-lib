@@ -20,7 +20,7 @@
 
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="com.phonegap.plugins.faultyplugin"
+    id="org.test.plugins.faultyplugin"
     version="0.6.0">
 
     <name>Faulty Plugin</name>
@@ -37,7 +37,7 @@
     <!-- android -->
     <platform name="android">
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="com.phonegap.plugins.faultyplugin.FaultyPlugin"
+            <activity android:name="org.test.plugins.faultyplugin.FaultyPlugin"
                       android:label="@string/app_name">
                 <intent-filter>
                 </intent-filter>
@@ -47,13 +47,13 @@
         <!-- CDV < 2.0 -->
         <config-file target="res/xml/plugins.xml" parent="/plugins">
             <plugin name="FaultyPlugin"
-                value="com.phonegap.plugins.faultyplugin.FaultyPlugin"/>
+                value="org.test.plugins.faultyplugin.FaultyPlugin"/>
         </config-file>
 
         <!-- CDV 2.0+ (for now) -->
         <config-file target="res/xml/config.xml" parent="/cordova/plugins">
             <plugin name="FaultyPlugin"
-                value="com.phonegap.plugins.faultyplugin.FaultyPlugin"/>
+                value="org.test.plugins.faultyplugin.FaultyPlugin"/>
         </config-file>
 
         <!-- this file doesn't exist -->
@@ -64,7 +64,7 @@
     <!-- android -->
     <platform name="amazon-fireos">
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="com.phonegap.plugins.faultyplugin.FaultyPlugin"
+            <activity android:name="org.test.plugins.faultyplugin.FaultyPlugin"
                       android:label="@string/app_name">
                 <intent-filter>
                 </intent-filter>
@@ -74,13 +74,13 @@
         <!-- CDV < 2.0 -->
         <config-file target="res/xml/plugins.xml" parent="/plugins">
             <plugin name="FaultyPlugin"
-                value="com.phonegap.plugins.faultyplugin.FaultyPlugin"/>
+                value="org.test.plugins.faultyplugin.FaultyPlugin"/>
         </config-file>
 
         <!-- CDV 2.0+ (for now) -->
         <config-file target="res/xml/config.xml" parent="/cordova/plugins">
             <plugin name="FaultyPlugin"
-                value="com.phonegap.plugins.faultyplugin.FaultyPlugin"/>
+                value="org.test.plugins.faultyplugin.FaultyPlugin"/>
         </config-file>
 
         <!-- this file doesn't exist -->

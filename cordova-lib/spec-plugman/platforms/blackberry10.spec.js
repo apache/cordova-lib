@@ -111,7 +111,7 @@ describe('blackberry10 project handler', function() {
             });
             it('should throw if target file already exists', function() {
                 // write out a file
-                var target = path.resolve(temp, 'native/device/chrome/plugin/com.phonegap.plugins.dummyplugin');
+                var target = path.resolve(temp, 'native/device/chrome/plugin/org.test.plugins.dummyplugin');
                 shell.mkdir('-p', target);
                 target = path.join(target, 'index.js');
                 fs.writeFileSync(target, 'some bs', 'utf-8');

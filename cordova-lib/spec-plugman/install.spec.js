@@ -52,7 +52,7 @@ var install = require('../src/plugman/install'),
     },
     promise,
     results = {},
-    dummy_id = 'com.phonegap.plugins.dummyplugin',
+    dummy_id = 'org.test.plugins.dummyplugin',
     superspawn = require('../src/cordova/superspawn');
 
 

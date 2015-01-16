@@ -38,7 +38,7 @@
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="plugins">
             <plugin name="F"
-                value="com.phonegap.F.F"/>
+                value="org.test.F.F"/>
         </config-file>
 
         <source-file src="src/android/F.java"

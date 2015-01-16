@@ -89,7 +89,7 @@ describe('config-changes module', function() {
                 var platformJson = new PlatformJson(null, 'android', null);
                 platformJson.addUninstalledPluginToPrepareQueue('DummyPlugin');
                 var json = platformJson.root;
-                expect(json.prepare_queue.uninstalled[0].plugin).toEqual('com.phonegap.plugins.dummyplugin');*/
+                expect(json.prepare_queue.uninstalled[0].plugin).toEqual('org.test.plugins.dummyplugin');*/
             });
         });
     });

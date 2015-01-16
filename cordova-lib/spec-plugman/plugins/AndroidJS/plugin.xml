@@ -20,7 +20,7 @@
 
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="com.phonegap.androidonly"
+    id="org.test.androidonly"
     version="3.0.0">
 
     <name>JavaScript in yo droidz</name>

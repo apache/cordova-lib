@@ -107,7 +107,7 @@ describe('wp8 project handler', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
                 wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/wp8/DummyPlugin.cs', temp, path.join('Plugins', 'com.phonegap.plugins.dummyplugin', 'DummyPlugin.cs'), false);
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/wp8/DummyPlugin.cs', temp, path.join('Plugins', 'org.test.plugins.dummyplugin', 'DummyPlugin.cs'), false);
             });
             it('should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
@@ -159,7 +159,7 @@ describe('wp8 project handler', function() {
                 .then(function() {
                     var source = copyArray(valid_source);
                     wp8['source-file'].uninstall(source[0], temp, dummy_id, null, proj_files);
-                    expect(s).toHaveBeenCalledWith(temp, path.join('Plugins', 'com.phonegap.plugins.dummyplugin', 'DummyPlugin.cs'));
+                    expect(s).toHaveBeenCalledWith(temp, path.join('Plugins', 'org.test.plugins.dummyplugin', 'DummyPlugin.cs'));
                     done();
                 });
             });
