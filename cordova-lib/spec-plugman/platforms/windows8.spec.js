@@ -28,8 +28,8 @@ var windows8 = require('../../src/plugman/platforms/windows'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
+    faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     windows8_project = path.join(__dirname, '..', 'projects', 'windows8');
 
 var xml_path     = path.join(dummyplugin, 'plugin.xml')

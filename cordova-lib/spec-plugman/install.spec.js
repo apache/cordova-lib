@@ -39,11 +39,11 @@ var install = require('../src/plugman/install'),
     plugins_dir = path.join(spec, 'plugins'),
     plugins_install_dir = path.join(project, 'cordova', 'plugins'),
     plugins = {
-        'DummyPlugin' : path.join(plugins_dir, 'DummyPlugin'),
-        'EnginePlugin' : path.join(plugins_dir, 'EnginePlugin'),
-        'EnginePluginAndroid' : path.join(plugins_dir, 'EnginePluginAndroid'),
-        'ChildBrowser' : path.join(plugins_dir, 'ChildBrowser'),
-        'VariablePlugin' : path.join(plugins_dir, 'VariablePlugin'),
+        'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
+        'com.cordova.engine' : path.join(plugins_dir, 'com.cordova.engine'),
+        'com.cordova.engine-android' : path.join(plugins_dir, 'com.cordova.engine-android'),
+        'org.test.plugins.childbrowser' : path.join(plugins_dir, 'org.test.plugins.childbrowser'),
+        'com.adobe.vars' : path.join(plugins_dir, 'com.adobe.vars'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
@@ -104,7 +104,7 @@ describe('start', function() {
         done = false;
         promise = Q()
          .then(
-            function(){ return install('android', project, plugins['DummyPlugin']) }
+            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin']) }
         ).then(
             function(){
                 results['actions_callCount'] = actions_push.callCount;
@@ -114,15 +114,15 @@ describe('start', function() {
                 return Q();
             }
         ).then(
-            function(){ return install('android', project, plugins['EnginePlugin']) }
+            function(){ return install('android', project, plugins['com.cordova.engine']) }
         ).then(
             function(){
                 emit = spyOn(events, 'emit');
-                return install('android', project, plugins['ChildBrowser'])
+                return install('android', project, plugins['org.test.plugins.childbrowser'])
             }
         ).then(
             function(){
-                return install('android', project, plugins['VariablePlugin'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} })
+                return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} })
             }
         ).then(
             function(){
@@ -161,7 +161,7 @@ describe('install', function() {
         spyOn(shell, 'mkdir').andReturn(true);
         spyOn(platforms, 'copyFile').andReturn(true);
 
-        fetchSpy = spyOn(plugman.raw, 'fetch').andReturn( Q( plugins['EnginePlugin'] ) );
+        fetchSpy = spyOn(plugman.raw, 'fetch').andReturn( Q( plugins['com.cordova.engine'] ) );
         chmod = spyOn(fs, 'chmodSync').andReturn(true);
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         cp = spyOn(shell, 'cp').andReturn(true);
@@ -176,11 +176,11 @@ describe('install', function() {
         });
 
         it('should emit a results event with platform-agnostic <info>', function() {
-            // ChildBrowser
+            // org.test.plugins.childbrowser
             expect(results['emit_results'][0]).toBe('No matter what platform you are installing to, this notice is very important.');
         });
         it('should emit a results event with platform-specific <info>', function() {
-            // ChildBrowser
+            // org.test.plugins.childbrowser
             expect(results['emit_results'][1]).toBe('Please make sure you read this because it is very important to complete the installation of your plugin.');
         });
         it('should interpolate variables into <info> tags', function() {
@@ -189,7 +189,7 @@ describe('install', function() {
         });
 
         it('should call fetch if provided plugin cannot be resolved locally', function() {
-            fetchSpy.andReturn( Q( plugins['DummyPlugin'] ) );
+            fetchSpy.andReturn( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
 
             runs(function() {
@@ -218,7 +218,7 @@ describe('install', function() {
             });
 
             runs(function() {
-                installPromise( install('android', project, plugins['EnginePlugin']) );
+                installPromise( install('android', project, plugins['com.cordova.engine']) );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -232,7 +232,7 @@ describe('install', function() {
             });
 
             runs(function() {
-                installPromise( install('android', project, plugins['EnginePlugin']) );
+                installPromise( install('android', project, plugins['com.cordova.engine']) );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -244,10 +244,10 @@ describe('install', function() {
             exec.andCallFake(function(cmd, cb) {
                 cb(null, '3.1.0\n');
             });
-            fetchSpy.andReturn( Q( plugins['EnginePluginAndroid'] ) );
+            fetchSpy.andReturn( Q( plugins['com.cordova.engine-android'] ) );
 
             runs(function() {
-                installPromise( install('android', project, plugins['EnginePluginAndroid']) );
+                installPromise( install('android', project, plugins['com.cordova.engine-android']) );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -256,13 +256,13 @@ describe('install', function() {
         });
         it('should check platform sdk version if specified', function() {
             var spy = spyOn(semver, 'satisfies').andReturn(true);
-            fetchSpy.andReturn( Q( plugins['EnginePluginAndroid'] ) );
+            fetchSpy.andReturn( Q( plugins['com.cordova.engine-android'] ) );
             exec.andCallFake(function(cmd, cb) {
                 cb(null, '18\n');
             });
 
             runs(function() {
-                installPromise( install('android', project, 'EnginePluginAndroid') );
+                installPromise( install('android', project, 'com.cordova.engine-android') );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -278,10 +278,10 @@ describe('install', function() {
         });
         it('should check engine versions', function() {
             var spy = spyOn(semver, 'satisfies').andReturn(true);
-            fetchSpy.andReturn( Q( plugins['EnginePlugin'] ) );
+            fetchSpy.andReturn( Q( plugins['com.cordova.engine'] ) );
 
             runs(function() {
-                installPromise( install('android', project, plugins['EnginePlugin']) );
+                installPromise( install('android', project, plugins['com.cordova.engine']) );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -302,7 +302,7 @@ describe('install', function() {
         it('should not check custom engine version that is not supported for platform', function() {
             var spy = spyOn(semver, 'satisfies').andReturn(true);
             runs(function() {
-                installPromise( install('blackberry10', project, plugins['EnginePlugin']) );
+                installPromise( install('blackberry10', project, plugins['com.cordova.engine']) );
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -447,7 +447,7 @@ describe('install', function() {
         });
         it('should throw if variables are missing', function() {
             runs(function() {
-                installPromise( install('android', project, plugins['VariablePlugin']) );
+                installPromise( install('android', project, plugins['com.adobe.vars']) );
             });
             waitsFor(function(){ return done; }, 'install promise never resolved', 200);
             runs(function() {
@@ -472,7 +472,7 @@ describe('install', function() {
                 cb(null, '0.0.1\n');
             });
             runs(function() {
-                installPromise( install('android', project, plugins['EnginePlugin']) );
+                installPromise( install('android', project, plugins['com.cordova.engine']) );
             });
             waitsFor(function(){ return done; }, 'install promise never resolved', 200);
             runs(function() {

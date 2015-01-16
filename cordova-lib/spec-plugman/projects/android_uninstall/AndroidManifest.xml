@@ -12,7 +12,7 @@
             <intent-filter>
             </intent-filter>
         </activity>
-        <activity android:label="@string/app_name" android:name="org.test.plugins.dummyplugin.DummyPlugin">
+        <activity android:label="@string/app_name" android:name="DummyPlugin.org.test.plugins.dummyplugin">
             <intent-filter />
         </activity>
     </application>

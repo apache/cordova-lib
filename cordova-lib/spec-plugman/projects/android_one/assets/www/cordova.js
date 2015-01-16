@@ -1542,7 +1542,7 @@ Contact.prototype.remove = function(successCB, errorCB) {
         fail(ContactError.UNKNOWN_ERROR);
     }
     else {
-        exec(successCB, fail, "Contacts", "remove", [this.id]);
+        exec(successCB, fail, "org.apache.cordova.core.contacts", "remove", [this.id]);
     }
 };
 
@@ -1599,7 +1599,7 @@ Contact.prototype.save = function(successCB, errorCB) {
         }
     };
     var dupContact = convertOut(utils.clone(this));
-    exec(success, fail, "Contacts", "save", [dupContact]);
+    exec(success, fail, "org.apache.cordova.core.contacts", "save", [dupContact]);
 };
 
 
@@ -4973,17 +4973,17 @@ var argscheck = require('cordova/argscheck'),
     Contact = require('cordova/plugin/Contact');
 
 /**
-* Represents a group of Contacts.
+* Represents a group of org.apache.cordova.core.contacts.
 * @constructor
 */
 var contacts = {
     /**
-     * Returns an array of Contacts matching the search criteria.
+     * Returns an array of org.apache.cordova.core.contacts matching the search criteria.
      * @param fields that should be searched
      * @param successCB success callback
      * @param errorCB error callback
      * @param {ContactFindOptions} options that can be applied to contact searching
-     * @return array of Contacts matching search criteria
+     * @return array of org.apache.cordova.core.contacts matching search criteria
      */
     find:function(fields, successCB, errorCB, options) {
         argscheck.checkArgs('afFO', 'contacts.find', arguments);
@@ -4997,7 +4997,7 @@ var contacts = {
                 }
                 successCB(cs);
             };
-            exec(win, errorCB, "Contacts", "search", [fields, options]);
+            exec(win, errorCB, "org.apache.cordova.core.contacts", "search", [fields, options]);
         }
     },
 

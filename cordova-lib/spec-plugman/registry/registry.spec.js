@@ -44,7 +44,7 @@ describe('registry', function() {
     describe('manifest', function() {
         var pluginDir, packageJson, tmp_plugin, tmp_plugin_xml, tmp_package_json;
         beforeEach(function() {
-            pluginDir = __dirname + '/../plugins/EnginePlugin';
+            pluginDir = __dirname + '/../plugins/com.cordova.engine';
             tmp_plugin = path.join(os.tmpdir(), 'plugin');
             tmp_plugin_xml = path.join(tmp_plugin, 'plugin.xml');
             tmp_package_json = path.join(tmp_plugin, 'package.json');
@@ -124,7 +124,7 @@ describe('registry', function() {
             }));
         });
         it('should run publish', function() {
-            var params = [__dirname + '/../plugins/DummyPlugin'];
+            var params = [__dirname + '/../plugins/org.test.plugins.dummyplugin'];
             var spyGenerate = spyOn(manifest, 'generatePackageJsonFromPluginXml').andReturn(Q());
             var spyUnlink = spyOn(fs, 'unlink');
             registryPromise(true, registry.publish(params).then(function() {

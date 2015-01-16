@@ -1,1 +1,0 @@
-./DummyPlugin/www/dummyplugin.js

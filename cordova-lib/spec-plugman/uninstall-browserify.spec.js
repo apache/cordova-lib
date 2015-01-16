@@ -38,7 +38,7 @@ var uninstall = require('../src/plugman/uninstall'),
     plugins_install_dir2 = path.join(project2, 'cordova', 'plugins'),
 
     plugins = {
-        'DummyPlugin' : path.join(plugins_dir, 'DummyPlugin'),
+        'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'C' : path.join(plugins_dir, 'dependencies', 'C')
     },
@@ -60,7 +60,7 @@ describe('start', function() {
         done = false;
         promise = Q()
         .then(
-            function(){ return install('android', project, plugins['DummyPlugin'], plugins_install_dir, { browserify: true }) }
+            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin'], plugins_install_dir, { browserify: true }) }
         ).then(
             function(){ return install('android', project, plugins['A'], plugins_install_dir, { browserify: true }) }
         ).then(
@@ -240,7 +240,7 @@ describe('uninstall', function() {
     describe('success', function() {
         it('should call the config-changes module\'s add_uninstalled_plugin_to_prepare_queue method after processing an install', function() {
             runs(function() {
-                uninstallPromise( uninstall('android', project, plugins['DummyPlugin'], plugins_install_dir, { browserify: true }) );
+                uninstallPromise( uninstall('android', project, plugins['org.test.plugins.dummyplugin'], plugins_install_dir, { browserify: true }) );
             });
             waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
@@ -278,7 +278,7 @@ describe('end', function() {
 
         promise.then(
             function(){
-                return uninstall('android', project, plugins['DummyPlugin'], plugins_install_dir, { browserify: true })
+                return uninstall('android', project, plugins['org.test.plugins.dummyplugin'], plugins_install_dir, { browserify: true })
             }
         ).then(
             function(){

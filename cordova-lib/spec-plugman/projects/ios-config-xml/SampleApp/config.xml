@@ -40,7 +40,7 @@
         <plugin name="Accelerometer" value="CDVAccelerometer" />
         <plugin name="Camera" value="CDVCamera" />
         <plugin name="NetworkStatus" value="CDVConnection" />
-        <plugin name="Contacts" value="CDVContacts" />
+        <plugin name="org.apache.cordova.core.contacts" value="CDVContacts" />
         <plugin name="Debug Console" value="CDVDebugConsole" />
         <plugin name="Echo" value="CDVEcho" />
         <plugin name="File" value="CDVFile" />

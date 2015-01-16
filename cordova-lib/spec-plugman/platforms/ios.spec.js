@@ -31,10 +31,10 @@ var ios = require('../../src/plugman/platforms/ios'),
     ios_plist_project = path.join(__dirname, '..', 'projects', 'ios-plist', '*'),
     ios_project = path.join(ios_config_xml_project, '..'),
     xml_helpers = require('../../src/util/xml-helpers'),
-    variableplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    weblessplugin = path.join(__dirname, '..', 'plugins', 'WeblessPlugin'),
+    variableplugin = path.join(__dirname, '..', 'plugins', 'com.adobe.vars'),
+    faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
+    weblessplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.weblessplugin'),
     done = false;
 
 var xml_path = path.join(dummyplugin, 'plugin.xml'),
@@ -295,7 +295,7 @@ describe('ios project handler', function() {
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
                 var xcode = ios.parseProjectFile(temp).xcode;
-                // from DummyPlugin
+                // from org.test.plugins.dummyplugin
                 expect(xcode.hasFile(path.join('Resources', 'DummyPlugin.bundle'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
@@ -303,7 +303,7 @@ describe('ios project handler', function() {
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
                 expect(xcode.hasFile('usr/lib/src/ios/libsqlite3.dylib')).toBe(true);
                 expect(xcode.hasFile(path.join('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBe(true);
-                // from WeblessPlugin
+                // from org.test.plugins.weblessplugin
                 expect(xcode.hasFile(path.join('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);

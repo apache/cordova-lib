@@ -1,1 +1,0 @@
-./WebNotifications/www/webnotifications.js

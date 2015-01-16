@@ -29,13 +29,13 @@ var configChanges = require('../../src/plugman/util/config-changes'),
     shell   = require('shelljs'),
     xcode = require('xcode'),
     temp    = path.join(os.tmpdir(), 'plugman'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    cbplugin = path.join(__dirname, '..', 'plugins', 'ChildBrowser'),
-    childrenplugin = path.join(__dirname, '..', 'plugins', 'multiple-children'),
-    shareddepsplugin = path.join(__dirname, '..', 'plugins', 'shared-deps-multi-child'),
-    configplugin = path.join(__dirname, '..', 'plugins', 'ConfigTestPlugin'),
-    varplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
-    plistplugin = path.join(__dirname, '..', 'plugins', 'PlistPlugin'),
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
+    cbplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.childbrowser'),
+    childrenplugin = path.join(__dirname, '..', 'plugins', 'org.test.multiple-children'),
+    shareddepsplugin = path.join(__dirname, '..', 'plugins', 'org.test.shareddeps'),
+    configplugin = path.join(__dirname, '..', 'plugins', 'org.test.configtest'),
+    varplugin = path.join(__dirname, '..', 'plugins', 'com.adobe.vars'),
+    plistplugin = path.join(__dirname, '..', 'plugins', 'org.apache.plist'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*'),
     android_two_no_perms_project = path.join(__dirname, '..', 'projects', 'android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '..', 'projects', 'ios-config-xml', '*'),
@@ -69,16 +69,16 @@ describe('config-changes module', function() {
         describe('addInstalledPluginToPrepareQueue', function() {
             it('should append specified plugin to platform.json', function() {
                 var platformJson = new PlatformJson(null, 'android', null);
-                platformJson.addInstalledPluginToPrepareQueue('DummyPlugin', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.dummyplugin', {});
                 var json = platformJson.root;
-                expect(json.prepare_queue.installed[0].plugin).toEqual('DummyPlugin');
+                expect(json.prepare_queue.installed[0].plugin).toEqual('org.test.plugins.dummyplugin');
                 expect(json.prepare_queue.installed[0].vars).toEqual({});
             });
             it('should append specified plugin with any variables to platform.json', function() {
                 var platformJson = new PlatformJson(null, 'android', null);
-                platformJson.addInstalledPluginToPrepareQueue('DummyPlugin', {'dude':'man'});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.dummyplugin', {'dude':'man'});
                 var json = platformJson.root;
-                expect(json.prepare_queue.installed[0].plugin).toEqual('DummyPlugin');
+                expect(json.prepare_queue.installed[0].plugin).toEqual('org.test.plugins.dummyplugin');
                 expect(json.prepare_queue.installed[0].vars).toEqual({'dude':'man'});
             });
         });
@@ -87,7 +87,7 @@ describe('config-changes module', function() {
             it('should append specified plugin to platform.json', function() {
               /* TODO: re-enable once it doens't require reading from filesystem
                 var platformJson = new PlatformJson(null, 'android', null);
-                platformJson.addUninstalledPluginToPrepareQueue('DummyPlugin');
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.plugins.dummyplugin');
                 var json = platformJson.root;
                 expect(json.prepare_queue.uninstalled[0].plugin).toEqual('org.test.plugins.dummyplugin');*/
             });
@@ -225,11 +225,11 @@ describe('config-changes module', function() {
         it('should generate config munges for queued plugins', function() {
             shell.cp('-rf', android_two_project, temp);
             var platformJson = PlatformJson.load(plugins_dir, 'android');
-            platformJson.root.prepare_queue.installed = [{'plugin':'DummyPlugin', 'vars':{}}];
+            platformJson.root.prepare_queue.installed = [{'plugin':'org.test.plugins.dummyplugin', 'vars':{}}];
             var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
             var spy = spyOn(munger, 'generate_plugin_config_munge').andReturn({});
             munger.process();
-            expect(spy).toHaveBeenCalledWith(path.join(plugins_dir, 'DummyPlugin'), {});
+            expect(spy).toHaveBeenCalledWith(path.join(plugins_dir, 'org.test.plugins.dummyplugin'), {});
         });
         describe(': installation', function() {
             describe('of xml config files', function() {
@@ -238,7 +238,7 @@ describe('config-changes module', function() {
                 });
                 it('should call graftXML for every new config munge it introduces (every leaf in config munge that does not exist)', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
-                    platformJson.root.prepare_queue.installed = [{'plugin':'DummyPlugin', 'vars':{}}];
+                    platformJson.root.prepare_queue.installed = [{'plugin':'org.test.plugins.dummyplugin', 'vars':{}}];
 
                     var spy = spyOn(xml_helpers, 'graftXML').andReturn(true);
 
@@ -253,7 +253,7 @@ describe('config-changes module', function() {
                 it('should not call graftXML for a config munge that already exists from another plugin', function() {
                     shell.cp('-rf', configplugin, plugins_dir);
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
-                    platformJson.addInstalledPluginToPrepareQueue('ConfigTestPlugin', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.configtest', {});
 
                     var spy = spyOn(xml_helpers, 'graftXML').andReturn(true);
                     var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
@@ -262,7 +262,7 @@ describe('config-changes module', function() {
                 });
                 it('should not call graftXML for a config munge targeting a config file that does not exist', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
-                    platformJson.addInstalledPluginToPrepareQueue('DummyPlugin', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.dummyplugin', {});
 
                     var spy = spyOn(fs, 'readFileSync').andCallThrough();
 
@@ -277,7 +277,7 @@ describe('config-changes module', function() {
                     shell.cp('-rf', ios_config_xml, temp);
                     shell.cp('-rf', varplugin, plugins_dir);
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
-                    platformJson.addInstalledPluginToPrepareQueue('VariablePlugin', {});
+                    platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {});
                     configChanges.process(plugins_dir, temp, 'ios', platformJson);
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
                 });
@@ -287,7 +287,7 @@ describe('config-changes module', function() {
                     shell.cp('-rf', ios_config_xml, temp);
                     shell.cp('-rf', plistplugin, plugins_dir);
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
-                    platformJson.addInstalledPluginToPrepareQueue('PlistPlugin', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.apache.plist', {});
                     configChanges.process(plugins_dir, temp, 'ios', platformJson);
 
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>UINewsstandIcon<\/key>[\s\S]*<key>CFBundlePrimaryIcon<\/key>/);
@@ -302,7 +302,7 @@ describe('config-changes module', function() {
                 });
                 it('should call into xcode.addFramework if plugin has <framework> file defined and is ios',function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
-                    platformJson.addInstalledPluginToPrepareQueue('ChildBrowser', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.childbrowser', {});
                     var munger = new configChanges.PlatformMunger('ios', temp, plugins_dir, platformJson);
                     munger.process();
                     expect(xcode_add).toHaveBeenCalledWith('libsqlite3.dylib', {weak:false});
@@ -315,7 +315,7 @@ describe('config-changes module', function() {
                 shell.cp('-rf', ios_config_xml, temp);
                 shell.cp('-rf', cbplugin, plugins_dir);
                 var platformJson = PlatformJson.load(plugins_dir, 'ios');
-                platformJson.addInstalledPluginToPrepareQueue('ChildBrowser', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.childbrowser', {});
                 var spy = spyOn(fs, 'readFileSync').andCallThrough();
 
                 var munger = new configChanges.PlatformMunger('ios', temp, plugins_dir, platformJson);
@@ -326,7 +326,7 @@ describe('config-changes module', function() {
                 shell.cp('-rf', android_two_project, temp);
                 shell.cp('-rf', varplugin, plugins_dir);
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('VariablePlugin', {'API_KEY':'hi'}, true);
+                platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {'API_KEY':'hi'}, true);
 
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
@@ -343,12 +343,12 @@ describe('config-changes module', function() {
 
                 // Run through an "install"
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('DummyPlugin', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.dummyplugin', {});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
 
                 // Now set up an uninstall and make sure prunexml is called properly
-                platformJson.addUninstalledPluginToPrepareQueue('DummyPlugin');
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.plugins.dummyplugin');
                 var spy = spyOn(xml_helpers, 'pruneXML').andReturn(true);
                 munger.process();
                 expect(spy.calls.length).toEqual(4);
@@ -362,16 +362,16 @@ describe('config-changes module', function() {
                 shell.cp('-rf', varplugin, plugins_dir);
                 // Run through an "install"
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('VariablePlugin', {"API_KEY":"canucks"});
+                platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {"API_KEY":"canucks"});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
 
                 // Now set up an uninstall and make sure prunexml is called properly
-                platformJson.addUninstalledPluginToPrepareQueue('VariablePlugin');
+                platformJson.addUninstalledPluginToPrepareQueue('com.adobe.vars');
                 var spy = spyOn(munger, 'generate_plugin_config_munge').andReturn({});
                 munger.process();
                 var munge_params = spy.mostRecentCall.args;
-                expect(munge_params[0]).toEqual(path.join(plugins_dir, 'VariablePlugin'));
+                expect(munge_params[0]).toEqual(path.join(plugins_dir, 'com.adobe.vars'));
                 expect(munge_params[1]['API_KEY']).toEqual('canucks');
             });
             it('should not call pruneXML for a config munge that another plugin depends on', function() {
@@ -381,13 +381,13 @@ describe('config-changes module', function() {
 
                 // Run through and "install" two plugins (they share a permission for INTERNET)
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('multiple-children', {});
-                platformJson.addInstalledPluginToPrepareQueue('shared-deps-multi-child', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.multiple-children', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.shareddeps', {});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
 
                 // Now set up an uninstall for multi-child plugin
-                platformJson.addUninstalledPluginToPrepareQueue('multiple-children');
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.multiple-children');
                 munger.process();
                 munger.save_all();
                 var am_xml = new et.ElementTree(et.XML(fs.readFileSync(path.join(temp, 'AndroidManifest.xml'), 'utf-8')));
@@ -399,12 +399,12 @@ describe('config-changes module', function() {
                 shell.cp('-rf', android_two_project, temp);
                 // install a plugin
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('DummyPlugin', {});
+                platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.dummyplugin', {});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
 
                 // set up an uninstall for the same plugin
-                platformJson.addUninstalledPluginToPrepareQueue('DummyPlugin');
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.plugins.dummyplugin');
 
                 var spy = spyOn(fs, 'readFileSync').andCallThrough();
                 munger.process();
@@ -416,12 +416,12 @@ describe('config-changes module', function() {
                 shell.cp('-rf', varplugin, plugins_dir);
                 // install the var plugin
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('VariablePlugin', {'API_KEY':'eat my shorts'});
+                platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {'API_KEY':'eat my shorts'});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson);
                 munger.process();
 
                 // queue up an uninstall for the same plugin
-                platformJson.addUninstalledPluginToPrepareQueue('VariablePlugin');
+                platformJson.addUninstalledPluginToPrepareQueue('com.adobe.vars');
                 munger.process();
 
                 expect(platformJson.root.prepare_queue.uninstalled.length).toEqual(0);
