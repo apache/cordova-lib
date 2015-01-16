@@ -28,6 +28,7 @@ var path = require('path')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
    , properties_parser = require('properties-parser')
    , android_project = require('../util/android-project')
+   , CordovaError = require('../../CordovaError')
    ;
 
 var projectFileCache = {};
@@ -45,9 +46,18 @@ module.exports = {
         return mDoc._root.attrib['package'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
-            common.copyFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
+        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+            var src = source_el.attrib['src'];
+            if (!src) {
+                throw new CordovaError('<source-file> element is missing "src" attribute: ' + source_el);
+            }
+            var targetDir = source_el.attrib['target-dir'];
+            if (!targetDir) {
+                throw new CordovaError('<source-file> element is missing "target-dir" attribute: ' + source_el);
+            }
+            var dest = path.join(targetDir, path.basename(src));
+
+            common.copyNewFile(plugin_dir, src, project_dir, dest);
         },
         uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
@@ -90,7 +100,7 @@ module.exports = {
         install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Installing Android library: ' + src);
             var parent = source_el.attrib.parent;
@@ -118,7 +128,7 @@ module.exports = {
         uninstall:function(source_el, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Uninstalling Android library: ' + src);
             var parent = source_el.attrib.parent;
