@@ -80,7 +80,6 @@ addProperty(plugman, 'search', './search', true);
 addProperty(plugman, 'info', './info', true);
 addProperty(plugman, 'create', './create', true);
 addProperty(plugman, 'platform', './platform_operation', true);
-addProperty(plugman, 'config_changes', './util/config-changes');
 
 plugman.commands =  {
     'config'   : function(cli_opts) {
