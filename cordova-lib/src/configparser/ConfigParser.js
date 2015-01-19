@@ -82,6 +82,25 @@ function getCordovaNamespacePrefix(doc){
     return prefix;
 }
 
+/**
+ * Finds the value of an element's attribute
+ * @param  {String} attributeName Name of the attribute to search for
+ * @param  {Array}  elems         An array of ElementTree nodes
+ * @return {String}
+ */
+function findElementAttributeValue(attributeName, elems) {
+
+    elems = Array.isArray(elems) ? elems : [ elems ];
+
+    var value = elems.filter(function (elem) {
+        return elem.attrib.name.toLowerCase() === attributeName.toLowerCase();
+    }).map(function (filteredElems) {
+        return filteredElems.attrib.value;
+    }).pop();
+
+    return value ? value : '';
+}
+
 ConfigParser.prototype = {
     packageName: function(id) {
         return this.doc.getroot().attrib['id'];
@@ -124,20 +143,22 @@ ConfigParser.prototype = {
     author: function() {
         return getNodeTextSafe(this.doc.find('author'));
     },
+    getGlobalPreference: function (name) {
+        return findElementAttributeValue(name, this.doc.findall('preference'));
+    },
+    getPlatformPreference: function (name, platform) {
+        return findElementAttributeValue(name, this.doc.findall('platform[@name=\'' + platform + '\']/preference'));
+    },
     getPreference: function(name, platform) {
-        var preferences = this.doc.findall('preference');
-        if (platform) { // include platform specific preferences
-            preferences = preferences.concat(
-                this.doc.findall('platform[@name=\'' + platform + '\']/preference'));
+
+        var platformPreference = '';
+
+        if (platform) {
+            platformPreference = this.getPlatformPreference(name, platform);
         }
-        var ret = null;
-        preferences.forEach(function (preference) {
-            // Take the last one that matches.
-            if (preference.attrib.name.toLowerCase() === name.toLowerCase()) {
-                ret = preference.attrib.value;
-            }
-        });
-        return ret;
+
+        return platformPreference ? platformPreference : this.getGlobalPreference(name);
+
     },
     /**
      * Returns all resources for the platform specified.
@@ -396,7 +417,11 @@ ConfigParser.prototype = {
     getEngines: function(){
         var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine');
         return engines.map(function(engine){
-            return {'id':engine.attrib.id};
+	    var version = engine.attrib.version;
+            return {
+		'id': engine.attrib.id,
+		'version': version ? version : null
+	    };
         });
     },
     write:function() {

@@ -25,10 +25,10 @@ var fetch   = require('../src/plugman/fetch'),
     xml_helpers = require('../src/util/xml-helpers'),
     metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
-    test_plugin = path.join(__dirname, 'plugins', 'ChildBrowser'),
-    test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'ChildBrowser'),
+    test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
+    test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
     test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
-    test_plugin_id = 'com.phonegap.plugins.childbrowser',
+    test_plugin_id = 'org.test.plugins.childbrowser',
     test_plugin_version ='0.6.0',
     somedir = test_plugin,
     somedir = path.join(temp, test_plugin_id),
@@ -128,7 +128,7 @@ describe('fetch', function() {
             runs(function() {
                 expect(done).toBe(true);
                 expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir if applicable', function() {
@@ -140,7 +140,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
@@ -153,7 +153,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, ref);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref from the URL hash, if provided', function() {
@@ -165,7 +165,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef');
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the subdir from the URL hash, if provided', function() {
@@ -177,7 +177,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined);
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref and subdir from the URL hash, if provided', function() {
@@ -189,16 +189,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef');
-                expect(save_metadata).toHaveBeenCalledWith(test_plugin, jasmine.any(Object));
-            });
-        });
-        it('should throw if used with url and `link` param', function() {
-            runs(function() {
-                fetch("https://github.com/bobeast/GAPlugin.git", temp, {link:true}).then(null, function(err) { done = err; });
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
-                expect(''+done).toContain('--link is not supported for git URLs');
+                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should fail when the expected ID doesn\'t match', function(done) {

@@ -85,16 +85,33 @@ describe('config.xml parser', function () {
             });
         });
         describe('preference', function() {
-            it('should get value of existing preference', function() {
+            it('should return the value of a global preference', function() {
                 expect(cfg.getPreference('fullscreen')).toEqual('true');
             });
-            it('should get undefined as non existing preference', function() {
-                expect(cfg.getPreference('zimzooo!')).toEqual(undefined);
+            it('should return the value of a platform-specific preference', function() {
+                expect(cfg.getPreference('android-minSdkVersion', 'android')).toEqual('10');
+            });
+            it('should return an empty string for a non-existing preference', function() {
+                expect(cfg.getPreference('zimzooo!')).toEqual('');
             });
         });
-        describe('platform specific preference', function() {
-            it('should get value of existing platform specific preference', function() {
-                expect(cfg.getPreference('android-minSdkVersion', 'android')).toEqual('10');
+        describe('global preference', function() {
+            it('should return the value of a global preference', function() {
+                expect(cfg.getGlobalPreference('orientation')).toEqual('portrait');
+            });
+            it('should return an empty string for a non-existing preference', function() {
+                expect(cfg.getGlobalPreference('foobar')).toEqual('');
+            });
+        });
+        describe('platform-specific preference', function() {
+            it('should return the value of a platform specific preference', function() {
+                expect(cfg.getPlatformPreference('orientation', 'android')).toEqual('landscape');
+            });
+            it('should return an empty string when querying for a non-existing preference', function() {
+                expect(cfg.getPlatformPreference('foobar', 'android')).toEqual('');
+            });
+            it('should return an empty string when querying with unsupported platform', function() {
+                expect(cfg.getPlatformPreference('orientation', 'foobar')).toEqual('');
             });
         });
         describe('feature',function(){

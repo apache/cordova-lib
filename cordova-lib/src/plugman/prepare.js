@@ -32,6 +32,7 @@ var platform_modules = require('./platforms'),
     util            = require('util'),
     events          = require('../events'),
     plugman         = require('./plugman');
+var PlatformJson = require('./util/PlatformJson');
 
 // Called on --prepare.
 // Sets up each plugin's Javascript code to be loaded properly.
@@ -48,12 +49,12 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // - Write this object into www/cordova_plugins.json.
     // - Cordova.js contains code to load them at runtime from that file.
     events.emit('verbose', 'Preparing ' + platform + ' project');
-    var platform_json = config_changes.get_platform_json(plugins_dir, platform);
+    var platformJson = PlatformJson.load(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
 
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
     // via <js-module> elements
-    var plugins_to_uninstall = platform_json.prepare_queue.uninstalled;
+    var plugins_to_uninstall = platformJson.root.prepare_queue.uninstalled;
     if (plugins_to_uninstall && plugins_to_uninstall.length) {
         var plugins_www = path.join(wwwDir, 'plugins');
         if (fs.existsSync(plugins_www)) {
@@ -69,11 +70,10 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     }
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
-    config_changes.process(plugins_dir, project_dir, platform);
+    config_changes.process(plugins_dir, project_dir, platform, platformJson);
 
-    platform_json = config_changes.get_platform_json(plugins_dir, platform);
     // This array holds all the metadata for each module and ends up in cordova_plugins.json
-    var plugins = Object.keys(platform_json.installed_plugins).concat(Object.keys(platform_json.dependent_plugins));
+    var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
     var moduleObjects = [];
     var pluginMetadata = {};
     events.emit('verbose', 'Iterating over installed plugins:', plugins);

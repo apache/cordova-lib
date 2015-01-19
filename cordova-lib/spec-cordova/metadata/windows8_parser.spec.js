@@ -27,6 +27,7 @@ var platforms = require('../../src/cordova/platforms'),
     Q = require('q'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     cordova = require('../../src/cordova/cordova'),
     HooksRunner = require('../../src/hooks/HooksRunner');
@@ -88,6 +89,14 @@ describe('windows8 project parser', function() {
                 expect(parser.projDir).toEqual(proj);
                 expect(parser.manifestPath).toEqual(path.join(proj, 'package.appxmanifest'));
             }).not.toThrow();
+        });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.windows8.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.windows8.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'windows8', proj);
         });
     });
 

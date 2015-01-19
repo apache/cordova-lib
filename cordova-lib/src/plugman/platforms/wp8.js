@@ -46,14 +46,14 @@ module.exports = {
         return new csproj(path.join(project_dir, project_files[0]));
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project_file) {
             var dest = path.join('Plugins', plugin_id, source_el.attrib['target-dir'] ? source_el.attrib['target-dir'] : '', path.basename(source_el.attrib['src']));
 
             common.copyNewFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
             // add reference to this file to csproj.
             project_file.addSourceFile(dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id, project_file) {
+        uninstall:function(source_el, project_dir, plugin_id, options, project_file) {
             var dest = path.join('Plugins', plugin_id, source_el.attrib['target-dir'] ? source_el.attrib['target-dir'] : '', path.basename(source_el.attrib['src']));
             common.removeFile(project_dir, dest);
             // remove reference to this file from csproj.
@@ -61,23 +61,23 @@ module.exports = {
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.install is not supported for wp8');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for wp8');
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'resource-file.install is not supported for wp8');
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'resource-file.uninstall is not supported for wp8');
         }
     },
     'framework':{
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 framework install :: ' + plugin_id  );
 
             var src = el.attrib['src'];
@@ -92,7 +92,7 @@ module.exports = {
             project_file.addReference(dest);
 
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 framework uninstall :: ' + plugin_id  );
 
             var src = el.attrib['src'];
@@ -107,12 +107,12 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(el, plugin_dir, project_dir, plugin_id, project_file) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 lib-file install :: ' + plugin_id);
             var inc  = el.attrib['Include'];
             project_file.addSDKRef(inc);
         },
-        uninstall:function(el, project_dir, plugin_id, project_file) {
+        uninstall:function(el, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 lib-file uninstall :: ' + plugin_id);
             var inc = el.attrib['Include'];
             project_file.removeSDKRef(inc);

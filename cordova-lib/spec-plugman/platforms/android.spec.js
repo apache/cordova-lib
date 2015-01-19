@@ -30,9 +30,9 @@ var android = require('../../src/plugman/platforms/android'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
-    variableplugin = path.join(__dirname, '..', 'plugins', 'VariablePlugin'),
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
+    faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
+    variableplugin = path.join(__dirname, '..', 'plugins', 'com.adobe.vars'),
     android_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*');
 
@@ -92,7 +92,7 @@ describe('android project handler', function() {
                 var s = spyOn(common, 'copyFile');
 
                 android['lib-file'].install(valid_libs[0], dummyplugin, temp);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/TestLib.jar', temp, path.join('libs', 'TestLib.jar'));
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/TestLib.jar', temp, path.join('libs', 'TestLib.jar'), false);
             });
         });
         describe('of <resource-file> elements', function() {
@@ -100,7 +100,7 @@ describe('android project handler', function() {
                 var s = spyOn(common, 'copyFile');
 
                 android['resource-file'].install(valid_resources[0], dummyplugin, temp);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'android-resource.xml', temp, path.join('res', 'xml', 'dummy.xml'));
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'android-resource.xml', temp, path.join('res', 'xml', 'dummy.xml'), false);
             });
         });
         describe('of <source-file> elements', function() {
@@ -112,7 +112,7 @@ describe('android project handler', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
                 android['source-file'].install(source[0], dummyplugin, temp);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/DummyPlugin.java', temp, path.join('src', 'com', 'phonegap', 'plugins', 'dummyplugin', 'DummyPlugin.java'));
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/DummyPlugin.java', temp, path.join('src', 'com', 'phonegap', 'plugins', 'dummyplugin', 'DummyPlugin.java'), false);
             });
             it('should throw if source file cannot be found', function() {
                 var source = copyArray(invalid_source);

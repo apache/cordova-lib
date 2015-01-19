@@ -25,7 +25,6 @@
 var path = require('path'),
     fs   = require('fs'),
     shell= require('shelljs'),
-    config_changes = require('./util/config-changes'),
     xml_helpers = require('../util/xml-helpers'),
     action_stack = require('./util/action-stack'),
     dependencies = require('./util/dependencies'),
@@ -39,6 +38,8 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     PluginInfo = require('../PluginInfo'),
     cordovaUtil      = require('../cordova/util');
+
+var PlatformJson = require('./util/PlatformJson');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -145,7 +146,8 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     // Can have missing plugins on some platforms when not supported..
     var dependList = {};
     platforms.forEach(function(platform) {
-        var depsInfo = dependencies.generateDependencyInfo(plugins_dir, platform);
+        var platformJson = PlatformJson.load(plugins_dir, platform);
+        var depsInfo = dependencies.generateDependencyInfo(platformJson, plugins_dir);
         var tlps = depsInfo.top_level_plugins;
         var deps;
 
@@ -160,7 +162,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         });
 
         toDelete.forEach(function(plugin) {
-            deps = dependencies.dependents(plugin, depsInfo);
+            deps = dependencies.dependents(plugin, depsInfo, platformJson);
 
             var i = deps.indexOf(top_plugin_id);
             if(i >= 0)
@@ -215,10 +217,11 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     var plugin_id    = plugin_et._root.attrib['id'];
 
     // Deps info can be passed recusively
-    var depsInfo = options.depsInfo || dependencies.generateDependencyInfo(plugins_dir, platform, 'remove');
+    var platformJson = PlatformJson.load(plugins_dir, platform);
+    var depsInfo = options.depsInfo || dependencies.generateDependencyInfo(platformJson, plugins_dir);
 
     // Check that this plugin has no dependents.
-    var dependents = dependencies.dependents(plugin_id, depsInfo, platform);
+    var dependents = dependencies.dependents(plugin_id, depsInfo, platformJson);
 
     if(options.is_top_level && dependents && dependents.length > 0) {
         var msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
@@ -231,7 +234,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
     // Check how many dangling dependencies this plugin has.
     var deps = depsInfo.graph.getChain(plugin_id);
-    var danglers = dependencies.danglers(plugin_id, depsInfo, platform);
+    var danglers = dependencies.danglers(plugin_id, depsInfo, platformJson);
 
     var promise;
     if (deps && deps.length && danglers && danglers.length) {
@@ -307,38 +310,38 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(source) {
             actions.push(actions.createAction(handler['source-file'].uninstall,
-                                             [source, project_dir, plugin_id],
+                                             [source, project_dir, plugin_id, options],
                                              handler['source-file'].install,
-                                             [source, plugin_dir, project_dir, plugin_id]));
+                                             [source, plugin_dir, project_dir, plugin_id, options]));
         });
 
         headerFiles && headerFiles.forEach(function(header) {
             actions.push(actions.createAction(handler['header-file'].uninstall,
-                                             [header, project_dir, plugin_id],
+                                             [header, project_dir, plugin_id, options],
                                              handler['header-file'].install,
-                                             [header, plugin_dir, project_dir, plugin_id]));
+                                             [header, plugin_dir, project_dir, plugin_id, options]));
         });
 
         resourceFiles && resourceFiles.forEach(function(resource) {
             actions.push(actions.createAction(handler['resource-file'].uninstall,
-                                              [resource, project_dir, plugin_id],
+                                              [resource, project_dir, plugin_id, options],
                                               handler['resource-file'].install,
-                                              [resource, plugin_dir, project_dir]));
+                                              [resource, plugin_dir, project_dir, options]));
         });
 
         // CB-5238 custom frameworks only
         frameworkFiles && frameworkFiles.forEach(function(framework) {
             actions.push(actions.createAction(handler['framework'].uninstall,
-                                              [framework, project_dir, plugin_id],
+                                              [framework, project_dir, plugin_id, options],
                                               handler['framework'].install,
-                                              [framework, plugin_dir, project_dir]));
+                                              [framework, plugin_dir, project_dir, options]));
         });
 
         libFiles && libFiles.forEach(function(source) {
             actions.push(actions.createAction(handler['lib-file'].uninstall,
-                                              [source, project_dir, plugin_id],
+                                              [source, project_dir, plugin_id, options],
                                               handler['lib-file'].install,
-                                              [source, plugin_dir, project_dir, plugin_id]));
+                                              [source, plugin_dir, project_dir, plugin_id, options]));
         });
     }
 
@@ -354,12 +357,14 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         // WIN!
         events.emit('verbose', plugin_id + ' uninstalled from ' + platform + '.');
         // queue up the plugin so prepare can remove the config changes
-        config_changes.add_uninstalled_plugin_to_prepare_queue(plugins_dir, plugin_id, platform, is_top_level);
+        var platformJson = PlatformJson.load(plugins_dir, platform);
+        platformJson.addUninstalledPluginToPrepareQueue(plugin_id, is_top_level);
+        platformJson.save();
         // call prepare after a successful uninstall
         if (options.browserify) {
-            plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
         } else {
-            plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
         }
     });
 }

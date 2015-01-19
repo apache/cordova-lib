@@ -28,6 +28,7 @@ var path = require('path')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
    , properties_parser = require('properties-parser')
    , android_project = require('../util/android-project')
+   , CordovaError = require('../../CordovaError')
    ;
 
 var projectFileCache = {};
@@ -46,51 +47,60 @@ module.exports = {
     },
     'source-file':{
         install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
-            common.copyFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
+            var src = source_el.attrib['src'];
+            if (!src) {
+                throw new CordovaError('<source-file> element is missing "src" attribute: ' + source_el);
+            }
+            var targetDir = source_el.attrib['target-dir'];
+            if (!targetDir) {
+                throw new CordovaError('<source-file> element is missing "target-dir" attribute: ' + source_el);
+            }
+            var dest = path.join(targetDir, path.basename(src));
+
+            common.copyNewFile(plugin_dir, src, project_dir, dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.deleteJava(project_dir, dest);
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-fileinstall is not supported for amazon-fireos');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for amazon-fireos');
         }
     },
     'lib-file':{
-        install:function(lib_el, plugin_dir, project_dir, plugin_id) {
+        install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
             common.copyFile(plugin_dir, src, project_dir, dest);
         },
-        uninstall:function(lib_el, project_dir, plugin_id) {
+        uninstall:function(lib_el, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
             common.removeFile(project_dir, dest);
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options) {
             var src = el.attrib.src;
             var target = el.attrib.target;
             events.emit('verbose', 'Copying resource file ' + src + ' to ' + target);
             common.copyFile(plugin_dir, src, project_dir, target);
         },
-        uninstall:function(el, project_dir, plugin_id) {
+        uninstall:function(el, project_dir, plugin_id, options) {
             var target = el.attrib.target;
             common.removeFile(project_dir, target);
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Installing Android library: ' + src);
             var parent = source_el.attrib.parent;
@@ -115,10 +125,10 @@ module.exports = {
                 projectConfig.addSubProject(parentDir, subDir);
             }
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Uninstalling Android library: ' + src);
             var parent = source_el.attrib.parent;

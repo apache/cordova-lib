@@ -21,22 +21,45 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var fs = require('fs'),
-    path = require('path');
+var fs = require('fs');
+var path = require('path');
 
-var filename = '.fetch.json';
+var cachedJson = null;
+
+function getJson(pluginsDir) {
+    if (!cachedJson) {
+        var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
+        if (fs.existsSync(fetchJsonPath)) {
+            cachedJson = JSON.parse(fs.readFileSync(fetchJsonPath, 'utf-8'));
+        } else {
+            cachedJson = {};
+        }
+    }
+    return cachedJson;
+}
 
 exports.get_fetch_metadata = function(plugin_dir) {
-    var filepath = path.join(plugin_dir, filename);
-    if (fs.existsSync(filepath)) {
-        return JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-    } else {
-        return {};
+    var pluginsDir = path.dirname(plugin_dir);
+    var pluginId = path.basename(plugin_dir);
+
+    var metadataJson = getJson(pluginsDir);
+    if (metadataJson[pluginId]) {
+        return metadataJson[pluginId];
     }
+    var legacyPath = path.join(plugin_dir, '.fetch.json');
+    if (fs.existsSync(legacyPath)) {
+        var ret = JSON.parse(fs.readFileSync(legacyPath, 'utf-8'));
+        exports.save_fetch_metadata(pluginsDir, pluginId, ret);
+        fs.unlinkSync(legacyPath);
+        return ret;
+    }
+    return {};
 };
 
-exports.save_fetch_metadata = function(plugin_dir, data) {
-    var filepath = path.join(plugin_dir, '.fetch.json');
-    fs.writeFileSync(filepath, JSON.stringify(data), 'utf-8');
+exports.save_fetch_metadata = function(pluginsDir, pluginId, data) {
+    var metadataJson = getJson(pluginsDir);
+    metadataJson[pluginId] = data;
+    var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
+    fs.writeFileSync(fetchJsonPath, JSON.stringify(metadataJson, null, 4), 'utf-8');
 };
 

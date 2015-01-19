@@ -30,9 +30,9 @@ var blackberry10 = require('../../src/plugman/platforms/blackberry10'),
     plugins_module = require('../../src/plugman/util/plugins'),
     blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*'),
     plugins = {
-        dummy: parsePlugin(path.join(__dirname, '..', 'plugins', 'DummyPlugin')),
-        faulty: parsePlugin(path.join(__dirname, '..', 'plugins', 'FaultyPlugin')),
-        echo: parsePlugin(path.join(__dirname, '..', 'plugins', 'cordova.echo'))
+        dummy: parsePlugin(path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin')),
+        faulty: parsePlugin(path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin')),
+        echo: parsePlugin(path.join(__dirname, '..', 'plugins', 'com.cordova.echo'))
     };
 
 function copyArray(arr) {
@@ -83,7 +83,7 @@ describe('blackberry10 project handler', function() {
                     s = spyOn(common, 'copyFile');
 
                 blackberry10['lib-file'].install(libs[0], plugin.path, temp);
-                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/native/device/echoJnext.so', temp, path.join('native', 'device', 'plugins', 'jnext', 'echoJnext.so'));
+                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/native/device/echoJnext.so', temp, path.join('native', 'device', 'plugins', 'jnext', 'echoJnext.so'), false);
             });
         });
         describe('of <source-file> elements', function() {
@@ -93,15 +93,15 @@ describe('blackberry10 project handler', function() {
                     s = spyOn(common, 'copyFile');
 
                 blackberry10['source-file'].install(source[0], plugin.path, temp, plugin.id);
-                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', 'cordova.echo', 'index.js'));
-                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', 'cordova.echo', 'index.js'));
+                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'), false);
+                expect(s).toHaveBeenCalledWith(plugin.path, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'), false);
             });
             it('defaults to plugin id when dest is not present', function() {
                 var source = copyArray(plugins.dummy.srcFiles);
                 var s = spyOn(common, 'copyFile');
                 blackberry10['source-file'].install(source[0], plugins.dummy.path, temp, plugins.dummy.id);
-                expect(s).toHaveBeenCalledWith(plugins.dummy.path, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', plugins.dummy.id, 'index.js'));
-                expect(s).toHaveBeenCalledWith(plugins.dummy.path, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', plugins.dummy.id, 'index.js'));
+                expect(s).toHaveBeenCalledWith(plugins.dummy.path, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', plugins.dummy.id, 'index.js'), false);
+                expect(s).toHaveBeenCalledWith(plugins.dummy.path, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', plugins.dummy.id, 'index.js'), false);
             });
             it('should throw if source file cannot be found', function() {
                 var source = copyArray(plugins.faulty.srcFiles);
@@ -111,7 +111,7 @@ describe('blackberry10 project handler', function() {
             });
             it('should throw if target file already exists', function() {
                 // write out a file
-                var target = path.resolve(temp, 'native/device/chrome/plugin/com.phonegap.plugins.dummyplugin');
+                var target = path.resolve(temp, 'native/device/chrome/plugin/org.test.plugins.dummyplugin');
                 shell.mkdir('-p', target);
                 target = path.join(target, 'index.js');
                 fs.writeFileSync(target, 'some bs', 'utf-8');
@@ -139,8 +139,8 @@ describe('blackberry10 project handler', function() {
                 var source = copyArray(plugin.srcFiles);
                 blackberry10['source-file'].install(source[0], plugin.path, temp, plugin.id);
                 blackberry10['source-file'].uninstall(source[0], temp, plugin.id);
-                expect(s).toHaveBeenCalledWith(temp, path.join('native', 'device', 'chrome', 'plugin', 'cordova.echo', 'index.js'));
-                expect(s).toHaveBeenCalledWith(temp, path.join('native', 'simulator', 'chrome', 'plugin', 'cordova.echo', 'index.js'));
+                expect(s).toHaveBeenCalledWith(temp, path.join('native', 'device', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'));
+                expect(s).toHaveBeenCalledWith(temp, path.join('native', 'simulator', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'));
             });
             it('should remove stuff by calling common.removeFile', function() {
                 var s = spyOn(common, 'removeFile'),

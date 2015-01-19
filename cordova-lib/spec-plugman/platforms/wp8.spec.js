@@ -28,8 +28,8 @@ var wp8 = require('../../src/plugman/platforms/wp8'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
     plugins_module = require('../../src/plugman/util/plugins'),
-    dummyplugin = path.join(__dirname, '..', 'plugins', 'DummyPlugin'),
-    faultyplugin = path.join(__dirname, '..', 'plugins', 'FaultyPlugin'),
+    dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
+    faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     wp8_project = path.join(__dirname, '..', 'projects', 'wp8');
 
 var xml_path     = path.join(dummyplugin, 'plugin.xml')
@@ -106,13 +106,13 @@ describe('wp8 project handler', function() {
             it('should copy stuff from one location to another by calling common.copyFile', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
-                wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, proj_files);
-                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/wp8/DummyPlugin.cs', temp, path.join('Plugins', 'com.phonegap.plugins.dummyplugin', 'DummyPlugin.cs'));
+                wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(s).toHaveBeenCalledWith(dummyplugin, 'src/wp8/DummyPlugin.cs', temp, path.join('Plugins', 'org.test.plugins.dummyplugin', 'DummyPlugin.cs'), false);
             });
             it('should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
                 expect(function() {
-                    wp8['source-file'].install(source[1], faultyplugin, temp, faulty_id, proj_files);
+                    wp8['source-file'].install(source[1], faultyplugin, temp, faulty_id, null, proj_files);
                 }).toThrow('"' + path.resolve(faultyplugin, 'src/wp8/NotHere.cs') + '" not found!');
             });
             it('should throw if source-file target already exists', function() {
@@ -121,7 +121,7 @@ describe('wp8 project handler', function() {
                 shell.mkdir('-p', path.dirname(target));
                 fs.writeFileSync(target, 'some bs', 'utf-8');
                 expect(function() {
-                    wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, proj_files);
+                    wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
                 }).toThrow('"' + target + '" already exists!');
             });
         });
@@ -158,8 +158,8 @@ describe('wp8 project handler', function() {
                 install('wp8', temp, dummyplugin, plugins_dir, {})
                 .then(function() {
                     var source = copyArray(valid_source);
-                    wp8['source-file'].uninstall(source[0], temp, dummy_id, proj_files);
-                    expect(s).toHaveBeenCalledWith(temp, path.join('Plugins', 'com.phonegap.plugins.dummyplugin', 'DummyPlugin.cs'));
+                    wp8['source-file'].uninstall(source[0], temp, dummy_id, null, proj_files);
+                    expect(s).toHaveBeenCalledWith(temp, path.join('Plugins', 'org.test.plugins.dummyplugin', 'DummyPlugin.cs'));
                     done();
                 });
             });

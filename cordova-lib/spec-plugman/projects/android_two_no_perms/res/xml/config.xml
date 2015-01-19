@@ -39,7 +39,7 @@
     <plugin name="Compass" value="org.apache.cordova.CompassListener"/>
     <plugin name="Media" value="org.apache.cordova.AudioHandler"/>
     <plugin name="Camera" value="org.apache.cordova.CameraLauncher"/>
-    <plugin name="Contacts" value="org.apache.cordova.ContactManager"/>
+    <plugin name="org.apache.cordova.core.contacts" value="org.apache.cordova.ContactManager"/>
     <plugin name="File" value="org.apache.cordova.FileUtils"/>
     <plugin name="NetworkStatus" value="org.apache.cordova.NetworkManager"/>
     <plugin name="Notification" value="org.apache.cordova.Notification"/>

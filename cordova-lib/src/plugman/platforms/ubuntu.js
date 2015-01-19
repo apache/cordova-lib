@@ -50,14 +50,14 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('build', 'src', 'plugins', plugin_id, path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
 
             var cmake = path.join(project_dir, 'build', 'CMakeLists.txt');
             shell.exec('touch ' + cmake);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(project_dir, 'build', 'src', 'plugins', plugin_id);
             shell.rm(path.join(dest, path.basename(source_el.attrib.src)));
 
@@ -66,7 +66,7 @@ module.exports = {
         }
     },
     'header-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('build', 'src', 'plugins', plugin_id, path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
 
@@ -80,7 +80,7 @@ module.exports = {
 
             fs.writeFileSync(plugins, src);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(project_dir, 'build', 'src', 'plugins', plugin_id);
             shell.rm(path.join(dest, path.basename(source_el.attrib.src)));
 
@@ -96,13 +96,13 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join('qml', path.basename(source_el.attrib.src));
             if (source_el.attrib['target-dir'])
                 dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib.src));
             common.copyFile(plugin_dir, source_el.attrib.src, project_dir, dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(project_dir, 'qml');
             if (source_el.attrib['target-dir'])
                 dest = path.join(project_dir, source_el.attrib['target-dir']);
@@ -110,18 +110,18 @@ module.exports = {
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.install is not supported for ubuntu');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.uninstall is not supported for ubuntu');
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.install is not supported for ubuntu');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.uninstall is not supported for ubuntu');
         }
     }

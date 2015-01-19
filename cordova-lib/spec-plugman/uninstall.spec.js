@@ -19,7 +19,7 @@
 var uninstall = require('../src/plugman/uninstall'),
     install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
-    config_changes = require('../src/plugman/util/config-changes'),
+    PlatformJson = require('../src/plugman/util/PlatformJson'),
     events  = require('../src/events'),
     plugman = require('../src/plugman/plugman'),
     common  = require('./common'),
@@ -38,12 +38,12 @@ var uninstall = require('../src/plugman/uninstall'),
     plugins_install_dir2 = path.join(project2, 'cordova', 'plugins'),
 
     plugins = {
-        'DummyPlugin' : path.join(plugins_dir, 'DummyPlugin'),
+        'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'C' : path.join(plugins_dir, 'dependencies', 'C')
     },
     promise,
-    dummy_id = 'com.phonegap.plugins.dummyplugin';
+    dummy_id = 'org.test.plugins.dummyplugin';
 
 function uninstallPromise(f) {
     return f.then(function() { done = true; }, function(err) { done = err; });
@@ -60,7 +60,7 @@ describe('start', function() {
         done = false;
         promise = Q()
         .then(
-            function(){ return install('android', project, plugins['DummyPlugin']) }
+            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin']) }
         ).then(
             function(){ return install('android', project, plugins['A']) }
         ).then(
@@ -88,7 +88,7 @@ describe('uninstallPlatform', function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
         spyOn(shell, 'cp').andReturn(true);
-        add_to_queue = spyOn(config_changes, 'add_uninstalled_plugin_to_prepare_queue');
+        add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
         done = false;
     });
     describe('success', function() {
@@ -107,7 +107,7 @@ describe('uninstallPlatform', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(add_to_queue).toHaveBeenCalledWith(plugins_install_dir, dummy_id, 'android', true);
+                expect(add_to_queue).toHaveBeenCalledWith(dummy_id, true);
             });
         });
         it('should queue up actions as appropriate for that plugin and call process on the action stack', function() {
@@ -233,17 +233,17 @@ describe('uninstall', function() {
     beforeEach(function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
-        add_to_queue = spyOn(config_changes, 'add_uninstalled_plugin_to_prepare_queue');
+        add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
         done = false;
     });
     describe('success', function() {
         it('should call the config-changes module\'s add_uninstalled_plugin_to_prepare_queue method after processing an install', function() {
             runs(function() {
-                uninstallPromise( uninstall('android', project, plugins['DummyPlugin']) );
+                uninstallPromise( uninstall('android', project, plugins['org.test.plugins.dummyplugin']) );
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(add_to_queue).toHaveBeenCalledWith(plugins_install_dir, dummy_id, 'android', true);
+                expect(add_to_queue).toHaveBeenCalledWith(dummy_id, true);
             });
         });
     });
@@ -277,7 +277,7 @@ describe('end', function() {
 
         promise.then(
             function(){
-                return uninstall('android', project, plugins['DummyPlugin'])
+                return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
             }
         ).then(
             function(){

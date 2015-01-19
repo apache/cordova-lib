@@ -25,7 +25,6 @@
 var dep_graph = require('dep-graph'),
     path = require('path'),
     fs = require('fs'),
-    config_changes = require('./config-changes'),
     underscore = require('underscore'),
     xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
@@ -43,8 +42,8 @@ module.exports = package = {
         return path.join(plugins_dir, plugin_id, 'plugin.xml');
     },
 
-    generateDependencyInfo:function(plugins_dir, platform) {
-        var json = config_changes.get_platform_json(plugins_dir, platform);
+    generateDependencyInfo:function(platformJson, plugins_dir) {
+        var json = platformJson.root;
 
         // TODO: store whole dependency tree in plugins/[platform].json
         // in case plugins are forcefully removed...
@@ -82,12 +81,12 @@ module.exports = package = {
     },
 
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
-    dependents: function(plugin_id, plugins_dir, platform) {
+    dependents: function(plugin_id, plugins_dir, platformJson) {
         var depsInfo;
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generateDependencyInfo(plugins_dir, platform);
+            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir);
 
         var graph = depsInfo.graph;
         var tlps = depsInfo.top_level_plugins;
@@ -100,12 +99,12 @@ module.exports = package = {
 
     // Returns a list of plugins which the given plugin depends on, for which it is the only dependent.
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
-    danglers: function(plugin_id, plugins_dir, platform) {
+    danglers: function(plugin_id, plugins_dir, platformJson) {
         var depsInfo;
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generateDependencyInfo(plugins_dir, platform);
+            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir);
 
         var graph = depsInfo.graph;
         var dependencies = graph.getChain(plugin_id);

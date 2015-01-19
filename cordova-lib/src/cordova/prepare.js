@@ -31,7 +31,9 @@ var cordova_util      = require('./util'),
     HooksRunner            = require('../hooks/HooksRunner'),
     events            = require('../events'),
     Q                 = require('q'),
-    plugman           = require('../plugman/plugman');
+    plugman           = require('../plugman/plugman'),
+    PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
+    PlatformJson      = require('../plugman/util/PlatformJson');
 
 // Returns a promise.
 exports = module.exports = prepare;
@@ -102,7 +104,8 @@ function prepare(options) {
             }
 
             // Make sure that config changes for each existing plugin is in place
-            var munger = new plugman.config_changes.PlatformMunger(platform, platformPath, plugins_dir);
+            var platformJson = PlatformJson.load(plugins_dir, platform);
+            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson);
             munger.reapply_global_munge();
             munger.save_all();
 

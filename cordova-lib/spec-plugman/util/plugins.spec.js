@@ -48,7 +48,7 @@ describe('plugins utility module', function(){
             done = false;
         });
         it('should shell out to git clone with correct arguments', function(){
-            var plugin_git_url = 'https://github.com/imhotep/ChildBrowser';
+            var plugin_git_url = 'https://github.com/imhotep/org.test.plugins.childbrowser';
             var callback = jasmine.createSpy();
 
             runs(function() {
@@ -65,7 +65,7 @@ describe('plugins utility module', function(){
             });
         });
         it('should take into account subdirectory argument when copying over final repository into plugins+plugin_id directory', function() {
-            var plugin_git_url = 'https://github.com/imhotep/ChildBrowser';
+            var plugin_git_url = 'https://github.com/imhotep/org.test.plugins.childbrowser';
             var fake_subdir = 'TheBrainRecoilsInHorror';
             runs(function() {
                 plugins.clonePluginGitRepo(plugin_git_url, temp, fake_subdir)

@@ -106,7 +106,7 @@ describe('xml-helpers', function(){
 
         beforeEach(function() {
             config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'projects', 'android_two', 'res', 'xml', 'config.xml'));
-            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'plugins', 'ChildBrowser', 'plugin.xml'));
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '..', 'plugins', 'org.test.plugins.childbrowser', 'plugin.xml'));
         });
 
         it('should add children to the specified selector', function() {

@@ -43,6 +43,10 @@ function config(project_root, opts) {
     return json;
 }
 
+config.getAutoPersist = function() {
+    return autoPersist;
+};
+
 config.setAutoPersist = function(value) {
     autoPersist = value;
 };

@@ -23,7 +23,7 @@ var owner = require('../src/plugman/owner'),
 describe('owner', function() {
     it('should run owner', function() {
         var sOwner = spyOn(registry, 'owner').andReturn(Q());
-        var params = ['add', 'anis', 'com.phonegap.plugins.dummyplugin'];
+        var params = ['add', 'anis', 'org.test.plugins.dummyplugin'];
         owner(params);
         expect(sOwner).toHaveBeenCalledWith(params);
     });

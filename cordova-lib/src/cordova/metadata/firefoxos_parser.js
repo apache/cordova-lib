@@ -28,171 +28,179 @@ var fs = require('fs'),
     events = require('../../events'),
     util = require('../util'),
     Q = require('q'),
+    Parser = require('./parser'),
     ConfigParser = require('../../configparser/ConfigParser');
 
-module.exports = function firefoxos_parser(project) {
+function firefoxos_parser(project) {
+
+    // Call the base class constructor
+    Parser.call(this, 'firefoxos', project);
+
     this.path = project;
-};
+    this.config_path = path.join(project, 'config.xml');
+    this.manifest_path = path.join(this.www_dir(), 'manifest.webapp');
+}
 
+require('util').inherits(firefoxos_parser, Parser);
 
-module.exports.prototype = {
-    // Returns a promise.
-    update_from_config: function() {
-        var config = new ConfigParser(this.config_xml());
-        var manifestPath = path.join(this.www_dir(), 'manifest.webapp');
-        var manifest = {};
+module.exports = firefoxos_parser;
 
-        // Load existing manifest
-        if (fs.existsSync(manifestPath)) {
-            manifest = JSON.parse(fs.readFileSync(manifestPath));
-        }
+// Returns a promise.
+firefoxos_parser.prototype.update_from_config = function(config) {
 
-        // overwrite properties existing in config.xml
-        var contentNode = config.doc.find('content');
-        var contentSrc = contentNode && contentNode.attrib['src'] || 'index.html';
-        manifest.launch_path = '/' + contentSrc;
+    if (!(config instanceof ConfigParser)) {
+        return Q.reject(new Error('update_from_config requires a ConfigParser object'));
+    }
 
-        manifest.installs_allowed_from = manifest.installs_allowed_from || ['*'];
-        manifest.version = config.version();
-        manifest.name = config.name();
-        manifest.description = config.description();
-        manifest.developer = {
-            name: config.author()
-        };
+    var manifest = {};
 
-        var authorNode = config.doc.find('author');
-        var authorUrl = authorNode && authorNode.attrib['href'];
+    // Load existing manifest
+    if (fs.existsSync(this.manifest_path)) {
+        manifest = JSON.parse(fs.readFileSync(this.manifest_path));
+    }
 
-        if (authorUrl) {
-            manifest.developer.url = authorUrl;
-        }
+    // overwrite properties existing in config.xml
+    var contentNode = config.doc.find('content');
+    var contentSrc = contentNode && contentNode.attrib['src'] || 'index.html';
+    manifest.launch_path = '/' + contentSrc;
 
-        var fullScreen = config.getPreference('fullscreen');
+    manifest.installs_allowed_from = manifest.installs_allowed_from || ['*'];
+    manifest.version = config.version();
+    manifest.name = config.name();
+    manifest.description = config.description();
+    manifest.developer = {
+        name: config.author()
+    };
 
-        if (fullScreen) {
-            manifest.fullscreen = fullScreen;
-        }
+    var authorNode = config.doc.find('author');
+    var authorUrl = authorNode && authorNode.attrib['href'];
 
-        var orientations = [];
-        var preferenceNodes = config.doc.findall('preference');
-        preferenceNodes.forEach(function (preference) {
-            if (preference.attrib.name.toLowerCase() === 'orientation') {
-                orientations.push(preference.attrib.value);
+    if (authorUrl) {
+        manifest.developer.url = authorUrl;
+    }
+
+    var fullScreen = config.getPreference('fullscreen');
+
+    if (fullScreen) {
+        manifest.fullscreen = fullScreen;
+    }
+
+    // Set orientation preference
+    var orientation = this.helper.getOrientation(config);
+
+    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
+        manifest.orientation = [ orientation ];
+    } else {
+        delete manifest.orientation;
+    }
+
+    var permissionNodes = config.doc.findall('permission');
+    var privileged = false;
+
+    if (permissionNodes.length) {
+        manifest.permissions = {};
+
+        permissionNodes.forEach(function(node) {
+            var permissionName = node.attrib['name'];
+
+            manifest.permissions[permissionName] = {
+                description: node.attrib['description']
+            };
+
+            if (node.attrib['access']) {
+                manifest.permissions[permissionName].access = node.attrib['access'];
+            }
+
+            if (node.attrib['privileged'] === 'true') {
+                privileged = true;
             }
         });
+    }
 
-        if (orientations && orientations.length) {
-            manifest.orientation = orientations;
-        }
+    if (privileged) {
+        manifest.type = 'privileged';
+    } else {
+        delete manifest.type;
+    }
 
-        var permissionNodes = config.doc.findall('permission');
-        var privileged = false;
+    var icons = config.getIcons('firefoxos');
+    // if there are icon elements in config.xml
+    if (icons) {
+        manifest.icons = {};
+        for (var i = 0; i < icons.length; i++) {
+            var icon = icons[i];
+            var size = icon.width;
+            var sizeInt = parseInt(size);
 
-        if (permissionNodes.length) {
-            manifest.permissions = {};
+            events.emit('verbose', 'icon[' + i + ']:' + JSON.stringify(icon));
 
-            permissionNodes.forEach(function(node) {
-                var permissionName = node.attrib['name'];
+            if (size && !isNaN(sizeInt)) {
+                if (icon.src) {
+                    var destfilepath = path.join(this.www_dir(), 'icon', 'icon-' + size + '.png');
 
-                manifest.permissions[permissionName] = {
-                    description: node.attrib['description']
-                };
+                    manifest.icons[sizeInt] = '/icon/icon-' + size + '.png';
 
-                if (node.attrib['access']) {
-                    manifest.permissions[permissionName].access = node.attrib['access'];
-                }
-
-                if (node.attrib['privileged'] === 'true') {
-                    privileged = true;
-                }
-            });
-        }
-
-        if (privileged) {
-            manifest.type = 'privileged';
-        } else {
-            delete manifest.type;
-        }
-
-        var icons = config.getIcons('firefoxos');
-        // if there are icon elements in config.xml
-        if (icons) {
-            manifest.icons = {};
-            for (var i = 0; i < icons.length; i++) {
-                var icon = icons[i];
-                var size = icon.width;
-                var sizeInt = parseInt(size);
-
-                events.emit('verbose', 'icon[' + i + ']:' + JSON.stringify(icon));
-
-                if (size && !isNaN(sizeInt)) {
-                    if (icon.src) {
-                        var destfilepath = path.join(this.www_dir(), 'icon', 'icon-' + size + '.png');
-
-                        manifest.icons[sizeInt] = '/icon/icon-' + size + '.png';
-
-                        if (!fs.existsSync(icon.src)) {
-                            events.emit('verbose', 'ignoring icon[' + i + '] icon. File ' + icon.src + ' not found.');
-                        } else {
-                            events.emit('verbose', 'Copying icon from ' + icon.src + ' to ' + destfilepath);
-                            shell.cp('-f', icon.src, destfilepath);
-                        }
+                    if (!fs.existsSync(icon.src)) {
+                        events.emit('verbose', 'ignoring icon[' + i + '] icon. File ' + icon.src + ' not found.');
                     } else {
-                        events.emit('warn', 'ignoring icon[' + i + '] no src attribute:' + JSON.stringify(icon));
+                        events.emit('verbose', 'Copying icon from ' + icon.src + ' to ' + destfilepath);
+                        shell.cp('-f', icon.src, destfilepath);
                     }
+                } else {
+                    events.emit('warn', 'ignoring icon[' + i + '] no src attribute:' + JSON.stringify(icon));
                 }
             }
         }
-
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
-
-        return Q();
-    },
-
-    www_dir: function() {
-        return path.join(this.path, 'www');
-    },
-
-    // Used for creating platform_www in projects created by older versions.
-    cordovajs_path:function(libDir) {
-        var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
-        return path.resolve(jsPath);
-    },
-
-    // Replace the www dir with contents of platform_www and app www.
-    update_www:function() {
-        var projectRoot = util.isCordova(this.path);
-        var app_www = util.projectWww(projectRoot);
-        var platform_www = path.join(this.path, 'platform_www');
-
-        // Clear the www dir
-        shell.rm('-rf', this.www_dir());
-        shell.mkdir(this.www_dir());
-        // Copy over all app www assets
-        shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
-        // Copy over stock platform www assets (cordova.js)
-        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
-    },
-
-    update_overrides: function() {
-        var projectRoot = util.isCordova(this.path);
-        var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'firefoxos');
-        if(fs.existsSync(mergesPath)) {
-            var overrides = path.join(mergesPath, '*');
-            shell.cp('-rf', overrides, this.www_dir());
-        }
-    },
-
-    config_xml:function(){
-        return path.join(this.path, 'config.xml');
-    },
-
-    // Returns a promise.
-    update_project: function(cfg) {
-        return this.update_from_config()
-            .then(function(){
-                this.update_overrides();
-                util.deleteSvnFolders(this.www_dir());
-            }.bind(this));
     }
+
+    fs.writeFileSync(this.manifest_path, JSON.stringify(manifest, null, 4));
+
+    return Q();
+};
+
+firefoxos_parser.prototype.www_dir = function() {
+    return path.join(this.path, 'www');
+};
+
+// Used for creating platform_www in projects created by older versions.
+firefoxos_parser.prototype.cordovajs_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
+    return path.resolve(jsPath);
+};
+
+// Replace the www dir with contents of platform_www and app www.
+firefoxos_parser.prototype.update_www = function() {
+    var projectRoot = util.isCordova(this.path);
+    var app_www = util.projectWww(projectRoot);
+    var platform_www = path.join(this.path, 'platform_www');
+
+    // Clear the www dir
+    shell.rm('-rf', this.www_dir());
+    shell.mkdir(this.www_dir());
+    // Copy over all app www assets
+    shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
+    // Copy over stock platform www assets (cordova.js)
+    shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
+};
+
+firefoxos_parser.prototype.update_overrides = function() {
+    var projectRoot = util.isCordova(this.path);
+    var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'firefoxos');
+    if(fs.existsSync(mergesPath)) {
+        var overrides = path.join(mergesPath, '*');
+        shell.cp('-rf', overrides, this.www_dir());
+    }
+};
+
+firefoxos_parser.prototype.config_xml = function(){
+    return this.config_path;
+};
+
+// Returns a promise.
+firefoxos_parser.prototype.update_project = function(cfg) {
+    return this.update_from_config(cfg)
+        .then(function(){
+            this.update_overrides();
+            util.deleteSvnFolders(this.www_dir());
+        }.bind(this));
 };

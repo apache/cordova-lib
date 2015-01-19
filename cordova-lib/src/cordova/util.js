@@ -33,6 +33,8 @@ if (!global_config_path) {
     global_config_path = path.join(HOME, '.cordova');
 }
 
+var origCwd = null;
+
 var lib_path = path.join(global_config_path, 'lib');
 shell.mkdir('-p', lib_path);
 
@@ -51,6 +53,8 @@ exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
+exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
+exports.fixRelativePath = fixRelativePath;
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -109,8 +113,29 @@ function cdProjectRoot() {
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
     }
+    if (!origCwd) {
+        origCwd = process.env.PWD || process.cwd();
+    }
+    process.env.PWD = projectRoot;
     process.chdir(projectRoot);
     return projectRoot;
+}
+
+function getOrigWorkingDirectory() {
+    return origCwd || process.env.PWD || process.cwd();
+}
+
+// Fixes up relative paths that are no longer valid due to chdir() within cdProjectRoot().
+function fixRelativePath(value, /* optional */ cwd) {
+    // Don't touch absolute paths.
+    if (value[1] == ':' || value[0] == path.sep) {
+        return value;
+    }
+    var newDir = cwd || process.env.PWD || process.cwd();
+    var origDir = getOrigWorkingDirectory();
+    var pathDiff = path.relative(newDir, origDir);
+    var ret = path.normalize(path.join(pathDiff, value));
+    return ret;
 }
 
 // Recursively deletes .svn folders from a target path

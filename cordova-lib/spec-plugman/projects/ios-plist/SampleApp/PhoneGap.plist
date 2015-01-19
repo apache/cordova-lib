@@ -22,31 +22,31 @@
 	<array/>
 	<key>Plugins</key>
 	<dict>
-		<key>com.phonegap.accelerometer</key>
+		<key>org.test.accelerometer</key>
 		<string>PGAccelerometer</string>
-		<key>com.phonegap.camera</key>
+		<key>org.test.camera</key>
 		<string>PGCamera</string>
-		<key>com.phonegap.connection</key>
+		<key>org.test.connection</key>
 		<string>PGConnection</string>
-		<key>com.phonegap.contacts</key>
+		<key>org.test.contacts</key>
 		<string>PGContacts</string>
-		<key>com.phonegap.debugconsole</key>
+		<key>org.test.debugconsole</key>
 		<string>PGDebugConsole</string>
-		<key>com.phonegap.file</key>
+		<key>org.test.file</key>
 		<string>PGFile</string>
-		<key>com.phonegap.filetransfer</key>
+		<key>org.test.filetransfer</key>
 		<string>PGFileTransfer</string>
-		<key>com.phonegap.geolocation</key>
+		<key>org.test.geolocation</key>
 		<string>PGLocation</string>
-		<key>com.phonegap.notification</key>
+		<key>org.test.notification</key>
 		<string>PGNotification</string>
-		<key>com.phonegap.media</key>
+		<key>org.test.media</key>
 		<string>PGSound</string>
-		<key>com.phonegap.mediacapture</key>
+		<key>org.test.mediacapture</key>
 		<string>PGCapture</string>
-		<key>com.phonegap.splashscreen</key>
+		<key>org.test.splashscreen</key>
 		<string>PGSplashScreen</string>
-		<key>com.phonegap.battery</key>
+		<key>org.test.battery</key>
 		<string>PGBattery</string>
 	</dict>
 </dict>

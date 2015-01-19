@@ -95,7 +95,7 @@ module.exports = function plugin(command, targets, opts) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
             }
 
-            var config_json = config(projectRoot, {});
+            var config_json = config.read(projectRoot);
             var searchPath = config_json.plugin_search_path || [];
             if (typeof opts.searchpath == 'string') {
                 searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
@@ -141,6 +141,7 @@ module.exports = function plugin(command, targets, opts) {
                                         browserify: opts.browserify || false,
                                         searchpath: searchPath,
                                         noregistry: opts.noregistry,
+                                        link: opts.link
                                     },
                                     tokens,
                                     key,

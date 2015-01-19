@@ -28,7 +28,7 @@ var path = require('path'),
     dep_graph = require('dep-graph'),
     child_process = require('child_process'),
     semver = require('semver'),
-    config_changes = require('./util/config-changes'),
+    PlatformJson = require('./util/PlatformJson'),
     PluginInfo    = require('../PluginInfo'),
     CordovaError  = require('../CordovaError'),
     Q = require('q'),
@@ -242,22 +242,6 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
 }
 
 
-function isPluginInstalled(plugins_dir, platform, plugin_id) {
-    var installed_plugin_id;
-    var platform_config = config_changes.get_platform_json(plugins_dir, platform);
-    for (installed_plugin_id in platform_config.installed_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    for (installed_plugin_id in platform_config.dependent_plugins) {
-        if (installed_plugin_id == plugin_id) {
-            return true;
-        }
-    }
-    return false;
-}
-
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise.
 module.exports.runInstall = runInstall;
@@ -267,8 +251,9 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
     options = options || {};
     options.graph = options.graph || new dep_graph();
+    var platformJson = PlatformJson.load(plugins_dir, platform);
 
-    if (isPluginInstalled(plugins_dir, platform, pluginInfo.id)) {
+    if (platformJson.isPluginInstalled(pluginInfo.id)) {
         if (options.is_top_level) {
             events.emit('results', 'Plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         } else {
@@ -552,37 +537,37 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         // queue up native stuff
         sourceFiles && sourceFiles.forEach(function(item) {
             actions.push(actions.createAction(handler['source-file'].install,
-                                              [item, plugin_dir, project_dir, pluginInfo.id],
+                                              [item, plugin_dir, project_dir, pluginInfo.id, options],
                                               handler['source-file'].uninstall,
-                                              [item, project_dir, pluginInfo.id]));
+                                              [item, project_dir, pluginInfo.id, options]));
         });
 
         headerFiles && headerFiles.forEach(function(item) {
             actions.push(actions.createAction(handler['header-file'].install,
-                                             [item, plugin_dir, project_dir, pluginInfo.id],
+                                             [item, plugin_dir, project_dir, pluginInfo.id, options],
                                              handler['header-file'].uninstall,
-                                             [item, project_dir, pluginInfo.id]));
+                                             [item, project_dir, pluginInfo.id, options]));
         });
 
         resourceFiles && resourceFiles.forEach(function(item) {
             actions.push(actions.createAction(handler['resource-file'].install,
-                                              [item, plugin_dir, project_dir, pluginInfo.id],
+                                              [item, plugin_dir, project_dir, pluginInfo.id, options],
                                               handler['resource-file'].uninstall,
-                                              [item, project_dir, pluginInfo.id]));
+                                              [item, project_dir, pluginInfo.id, options]));
         });
         // CB-5238 custom frameworks only
         frameworkFiles && frameworkFiles.forEach(function(item) {
             actions.push(actions.createAction(handler['framework'].install,
-                                             [item, plugin_dir, project_dir, pluginInfo.id],
+                                             [item, plugin_dir, project_dir, pluginInfo.id, options],
                                              handler['framework'].uninstall,
-                                             [item, project_dir, pluginInfo.id]));
+                                             [item, project_dir, pluginInfo.id, options]));
         });
 
         libFiles && libFiles.forEach(function(item) {
             actions.push(actions.createAction(handler['lib-file'].install,
-                                                [item, plugin_dir, project_dir, pluginInfo.id],
+                                                [item, plugin_dir, project_dir, pluginInfo.id, options],
                                                 handler['lib-file'].uninstall,
-                                                [item, project_dir, pluginInfo.id]));
+                                                [item, project_dir, pluginInfo.id, options]));
 
         });
     }
@@ -591,14 +576,16 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     return actions.process(platform, project_dir)
     .then(function(err) {
         // queue up the plugin so prepare knows what to do.
-        config_changes.add_installed_plugin_to_prepare_queue(plugins_dir, pluginInfo.id, platform, filtered_variables, options.is_top_level);
+        var platformJson = PlatformJson.load(plugins_dir, platform);
+        platformJson.addInstalledPluginToPrepareQueue(pluginInfo.id, filtered_variables, options.is_top_level);
+        platformJson.save();
         // call prepare after a successful install
         if (options.browserify) {
-            plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
         } else {
-            plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
         }
-
+	}).then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // WIN!
         // Log out plugin INFO element contents in case additional install steps are necessary

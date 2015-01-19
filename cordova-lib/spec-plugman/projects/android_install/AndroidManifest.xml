@@ -8,11 +8,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:configChanges="orientation|keyboardHidden" android:label="@string/app_name" android:name="com.phonegap.DroidGap">
+        <activity android:configChanges="orientation|keyboardHidden" android:label="@string/app_name" android:name="org.test.DroidGap">
             <intent-filter>
             </intent-filter>
         </activity>
-        <activity android:label="@string/app_name" android:name="com.phonegap.plugins.dummyplugin.DummyPlugin">
+        <activity android:label="@string/app_name" android:name="DummyPlugin.org.test.plugins.dummyplugin">
             <intent-filter />
         </activity>
     </application>

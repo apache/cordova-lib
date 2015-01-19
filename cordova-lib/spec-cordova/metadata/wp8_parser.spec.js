@@ -27,6 +27,7 @@ var platforms = require('../../src/cordova/platforms'),
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/cordova/config'),
+    Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     CordovaError = require('../../src/CordovaError'),
     cordova = require('../../src/cordova/cordova'),
@@ -35,10 +36,25 @@ var platforms = require('../../src/cordova/platforms'),
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 
+var MANIFEST_XML, PROJ_XML, MAINPAGEXAML_XML, XAML_XML;
+MANIFEST_XML = PROJ_XML = XAML_XML = '<foo><App Title="s"><PrimaryToken /><RootNamespace/><SilverlightAppEntry/><XapFilename/><AssemblyName/></App></foo>';
+MAINPAGEXAML_XML = '<phone:PhoneApplicationPage x:Class="io.cordova.hellocordova.MainPage"' +
+    'FontFamily="{StaticResource PhoneFontFamilyNormal}" FontSize="{StaticResource PhoneFontSizeNormal}"' +
+    'Foreground="{StaticResource PhoneForegroundBrush}" Background="Black"' +
+    'SupportedOrientations="PortraitOrLandscape" Orientation="VAL"' +
+    'shell:SystemTray.IsVisible="True" d:DesignHeight="768" d:DesignWidth="480" xmlns:my="clr-namespace:WPCordovaClassLib">' +
+    '<Grid x:Name="LayoutRoot" Background="Transparent" HorizontalAlignment="Stretch">' +
+        '<Grid.RowDefinitions>' +
+            '<RowDefinition Height="*"/>' +
+        '</Grid.RowDefinitions>' +
+        '<my:CordovaView HorizontalAlignment="Stretch" Margin="0,0,0,0"  x:Name="CordovaView" VerticalAlignment="Stretch" />' +
+    '</Grid>' +
+    '</phone:PhoneApplicationPage>';
+
 describe('wp8 project parser', function() {
     var proj = '/some/path';
     var exists, exec, custom, readdir, cfg_parser, config_read;
-    var manifestXml, projXml;
+    var manifestXml, projXml, mainPageXamlXml;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
@@ -56,14 +72,16 @@ describe('wp8 project parser', function() {
             : ({})
         });
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.csproj']);
-        projXml = manifestXml = null;
+        projXml = manifestXml = mainPageXamlXml = null;
         spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
             if (/WMAppManifest.xml$/.exec(path)) {
-                return manifestXml = new et.ElementTree(et.XML('<foo><App Title="s"><PrimaryToken /><RootNamespace/><SilverlightAppEntry/><XapFilename/><AssemblyName/></App></foo>'));
+                return manifestXml = new et.ElementTree(et.XML(MANIFEST_XML));
             } else if (/csproj$/.exec(path)) {
-                return projXml = new et.ElementTree(et.XML('<foo><App Title="s"><PrimaryToken /><RootNamespace/><SilverlightAppEntry/><XapFilename/><AssemblyName/></App></foo>'));
+                return projXml = new et.ElementTree(et.XML(PROJ_XML));
+            } else if (/MainPage.xaml$/.exec(path)) {
+                return mainPageXamlXml = new et.ElementTree(et.XML(MAINPAGEXAML_XML));
             } else if (/xaml$/.exec(path)) {
-                return new et.ElementTree(et.XML('<foo><App Title="s"><PrimaryToken /><RootNamespace/><SilverlightAppEntry/><XapFilename/><AssemblyName/></App></foo>'));
+                return new et.ElementTree(et.XML(XAML_XML));
             } else {
                 throw new CordovaError('Unexpected parseElementtreeSync: ' + path);
             }
@@ -96,10 +114,18 @@ describe('wp8 project parser', function() {
                 expect(p.manifest_path).toEqual(path.join(proj, 'Properties', 'WMAppManifest.xml'));
             }).not.toThrow();
         });
+        it('should be an instance of Parser', function() {
+            expect(new platforms.wp8.parser(proj) instanceof Parser).toBe(true);
+        });
+        it('should call super with the correct arguments', function() {
+            var call = spyOn(Parser, 'call');
+            var p = new platforms.wp8.parser(proj);
+            expect(call).toHaveBeenCalledWith(p, 'wp8', proj);
+        });
     });
 
     describe('instance', function() {
-        var p, cp, rm, is_cordova, write, read, mv, mkdir;
+        var p, cp, rm, is_cordova, write, read, mv, mkdir, getOrientation;
         var wp8_proj = path.join(proj, 'platforms', 'wp8');
         beforeEach(function() {
             p = new platforms.wp8.parser(wp8_proj);
@@ -110,6 +136,7 @@ describe('wp8 project parser', function() {
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
+            getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
         describe('update_from_config method', function() {
@@ -135,6 +162,42 @@ describe('wp8 project parser', function() {
                 p.update_from_config(cfg);
                 var appEl = manifestXml.getroot().find('.//App');
                 expect(appEl.attrib.Version).toEqual('one point oh');
+            });
+            it('should write out the orientation preference value', function() {
+                getOrientation.andCallThrough();
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait')
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
+            });
+            it('should handle no orientation', function() {
+                getOrientation.andReturn('');
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toBeUndefined();
+            });
+            it('should handle default orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toBeUndefined();
+            });
+            it('should handle portrait orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait')
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
+            });
+            it('should handle landscape orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('landscape')
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('landscape');
+            });
+            it('should handle custom orientation', function() {
+                getOrientation.andReturn('some-custom-orientation');
+                p.update_from_config(cfg);
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('some-custom-orientation');
             });
         });
         describe('www_dir method', function() {

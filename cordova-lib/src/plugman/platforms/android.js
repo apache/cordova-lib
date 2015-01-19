@@ -28,6 +28,7 @@ var path = require('path')
    , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
    , properties_parser = require('properties-parser')
    , android_project = require('../util/android-project')
+   , CordovaError = require('../../CordovaError')
    ;
 
 var projectFileCache = {};
@@ -50,53 +51,61 @@ module.exports = {
         return packageName.substring(lastDotIndex + 1);
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+            var src = source_el.attrib['src'];
+            if (!src) {
+                throw new CordovaError('<source-file> element is missing "src" attribute: ' + source_el);
+            }
+            var targetDir = source_el.attrib['target-dir'];
+            if (!targetDir) {
+                throw new CordovaError('<source-file> element is missing "target-dir" attribute: ' + source_el);
+            }
+            var dest = path.join(targetDir, path.basename(src));
 
-            common.copyNewFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
+            common.copyNewFile(plugin_dir, src, project_dir, dest, options && options.link);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
             common.deleteJava(project_dir, dest);
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.install is not supported for android');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for android');
         }
     },
     'lib-file':{
-        install:function(lib_el, plugin_dir, project_dir, plugin_id) {
+        install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
-            common.copyFile(plugin_dir, src, project_dir, dest);
+            common.copyFile(plugin_dir, src, project_dir, dest, !!(options && options.link));
         },
-        uninstall:function(lib_el, project_dir, plugin_id) {
+        uninstall:function(lib_el, project_dir, plugin_id, options) {
             var src = lib_el.attrib.src;
             var dest = path.join('libs', path.basename(src));
             common.removeFile(project_dir, dest);
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id) {
+        install:function(el, plugin_dir, project_dir, plugin_id, options) {
             var src = el.attrib.src;
             var target = el.attrib.target;
             events.emit('verbose', 'Copying resource file ' + src + ' to ' + target);
-            common.copyFile(plugin_dir, src, project_dir, path.normalize(target));
+            common.copyFile(plugin_dir, src, project_dir, path.normalize(target), !!(options && options.link));
         },
-        uninstall:function(el, project_dir, plugin_id) {
+        uninstall:function(el, project_dir, plugin_id, options) {
             var target = el.attrib.target;
             common.removeFile(project_dir, path.normalize(target));
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Installing Android library: ' + src);
             var parent = source_el.attrib.parent;
@@ -105,7 +114,7 @@ module.exports = {
 
             if (custom) {
                 var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
-                common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir);
+                common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir, options && options.link);
                 subDir = path.resolve(project_dir, subRelativeDir);
             } else {
                 var sdk_dir = module.exports.getProjectSdkDir(project_dir);
@@ -121,10 +130,10 @@ module.exports = {
                 projectConfig.addSubProject(parentDir, subDir);
             }
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall:function(source_el, project_dir, plugin_id, options) {
             var src = source_el.attrib.src;
             var custom = source_el.attrib.custom;
-            if (!src) throw new Error('src not specified in framework element');
+            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
 
             events.emit('verbose', 'Uninstalling Android library: ' + src);
             var parent = source_el.attrib.parent;
