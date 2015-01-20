@@ -99,13 +99,41 @@ describe('ios project handler', function() {
                 ios.parseProjectFile(temp);
             }).toThrow('does not appear to be an xcode project (no xcode project file)');
         });
-        it('should throw if project does not contain an appropriate PhoneGap/Cordova.plist file or config.xml file', function() {
+        it('should throw if project does not contain an appropriate config.xml file', function() {
             shell.cp('-rf', ios_config_xml_project, temp);
             shell.rm(path.join(temp, 'SampleApp', 'config.xml'));
 
             expect(function() {
                 ios.parseProjectFile(temp);
-            }).toThrow('could not find PhoneGap/Cordova plist file, or config.xml file.');
+            }).toThrow('could not find -Info.plist file, or config.xml file.');
+        });
+        it('should throw if project does not contain an appropriate -Info.plist file', function() {
+            shell.cp('-rf', ios_config_xml_project, temp);
+            shell.rm(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'));
+
+            expect(function () {
+                ios.parseProjectFile(temp);
+            }).toThrow('could not find -Info.plist file, or config.xml file.');
+        });
+        it('should return right directory when multiple .plist files are present', function() {
+            shell.cp('-rf', ios_config_xml_project, temp);
+            //Create a folder named A with config.xml and .plist files in it
+            var pathToFolderA = path.join(temp, 'A');
+            shell.mkdir(pathToFolderA);
+            shell.cp('-rf', path.join(temp, 'SampleApp/*'), pathToFolderA);
+
+            var parsedProjectFile = ios.parseProjectFile(temp);
+            var pluginsDir = parsedProjectFile.plugins_dir,
+                resourcesDir = parsedProjectFile.resources_dir,
+                xcodePath = parsedProjectFile.xcode_path;
+
+            var pluginsDirParent = path.dirname(pluginsDir),
+                resourcesDirParent = path.dirname(resourcesDir),
+                sampleAppDir = path.join(temp, 'SampleApp');
+
+            expect(pluginsDirParent).toEqual(sampleAppDir);
+            expect(resourcesDirParent).toEqual(sampleAppDir);
+            expect(xcodePath).toEqual(sampleAppDir);
         });
     });
 
