@@ -29,6 +29,8 @@ var path = require('path')
   , plist = require('plist')
   , shell = require('shelljs')
   , events = require('../../events')
+  , _ = require('underscore')
+  , CordovaError = require('../../CordovaError')
   , cachedProjectFiles = {}
   ;
 
@@ -74,7 +76,7 @@ module.exports = {
 
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
             project_ref = fixPathSep(project_ref);
-            
+
             project.xcode.removeSourceFile(project_ref);
             if (is_framework) {
                 var project_relative = path.join(path.basename(project.xcode_path), project_ref);
@@ -96,10 +98,10 @@ module.exports = {
             var destFile = path.resolve(targetDir, path.basename(src));
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <header-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
-            
+
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
             project_ref = fixPathSep(project_ref);
-            
+
             project.xcode.addHeaderFile(project_ref);
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
@@ -108,10 +110,10 @@ module.exports = {
             var src = header_el.attrib['src'];
             var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
             var destFile = path.resolve(targetDir, path.basename(src));
-            
+
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
             project_ref = fixPathSep(project_ref);
-            
+
             project.xcode.removeHeaderFile(project_ref);
             shell.rm('-rf', destFile);
             if(fs.existsSync(targetDir) && fs.readdirSync(targetDir).length>0){
@@ -184,22 +186,17 @@ module.exports = {
         var xcodeproj = xcode.project(pbxPath);
         xcodeproj.parseSync();
 
-        // grab and parse plist file or config.xml
-        var config_files = (glob.sync(path.join(project_dir, '**', '{PhoneGap,Cordova}.plist')).length === 0 ?
-                            glob.sync(path.join(project_dir, '**', 'config.xml')) :
-                            glob.sync(path.join(project_dir, '**', '{PhoneGap,Cordova}.plist'))
-                           );
 
-        config_files = config_files.filter(function (val) {
-            return !(/^build\//.test(val)) && !(/\/www\/config.xml$/.test(val));
-        });
+        var xcBuildConfiguration = xcodeproj.pbxXCBuildConfigurationSection();
+        var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { return entry.buildSettings && entry.buildSettings.INFOPLIST_FILE; });
+        var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1'));
+        var config_file = path.join(path.dirname(plist_file), 'config.xml');
 
-        if (config_files.length === 0) {
-            throw new Error('could not find PhoneGap/Cordova plist file, or config.xml file.');
+        if (!fs.existsSync(plist_file) || !fs.existsSync(config_file)) {
+            throw new CordovaError('could not find -Info.plist file, or config.xml file.');
         }
 
-        var config_file = config_files[0];
-        var xcode_dir = path.dirname(config_file);
+        var xcode_dir = path.dirname(plist_file);
         var pluginsDir = path.resolve(xcode_dir, 'Plugins');
         var resourcesDir = path.resolve(xcode_dir, 'Resources');
         var cordovaVersion = fs.readFileSync(path.join(project_dir, 'CordovaLib', 'VERSION'), 'utf8').trim();
