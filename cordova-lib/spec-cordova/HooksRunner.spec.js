@@ -412,7 +412,7 @@ describe('HooksRunner', function() {
 
                 // remove plugin
                 cordova.raw.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
-                    expect(err).toBeUndefined();
+                    expect(err.stack).toBeUndefined();
                 }).then(function () {
                     cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
                         expect(err).toBeUndefined();
@@ -420,7 +420,7 @@ describe('HooksRunner', function() {
                         testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
                         shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
 
-                        var pluginInfo = new PluginInfo.PluginInfo(testPluginInstalledPath);
+                        var pluginInfo = new PluginInfo(testPluginInstalledPath);
 
                         var cordovaVersion = require('../package').version;
 

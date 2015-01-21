@@ -38,11 +38,6 @@ var path = require('path')
   , CordovaError = require('./CordovaError')
   ;
 
-// Exports
-exports.PluginInfo = PluginInfo;
-exports.loadPluginsDir = loadPluginsDir;
-
-
 function PluginInfo(dirname) {
     var self = this;
 
@@ -220,6 +215,24 @@ function PluginInfo(dirname) {
 
         return scriptElements.filter(filterScriptByHookType);
     }
+
+    self.getJsModules = getJsModules;
+    function getJsModules(platform) {
+        var modules = _getTags(self._et, 'js-module', platform, _parseJsModule);
+        return modules;
+    }
+
+    function _parseJsModule(tag) {
+        var ret = {
+            name: tag.attrib.name,
+            src: tag.attrib.src,
+            clobbers: tag.findall('clobbers').map(function(tag) { return { target: tag.attrib.target }; }),
+            merges: tag.findall('merges').map(function(tag) { return { target: tag.attrib.target }; }),
+            runs: tag.findall('merges').map(function(tag) { return {}; })
+        };
+
+        return ret;
+    }
     ///// End of PluginInfo methods /////
 
 
@@ -255,6 +268,9 @@ function PluginInfo(dirname) {
 // applied to each element.
 function _getTags(pelem, tag, platform, transform) {
     var platformTag = pelem.find('./platform[@name="' + platform + '"]');
+    if (platform == 'windows' && !platformTag) {
+        platformTag = pelem.find('platform[@name="' + 'windows8' + '"]');
+    }
     var tagsInRoot = pelem.findall(tag);
     tagsInRoot = tagsInRoot || [];
     var tagsInPlatform = platformTag ? platformTag.findall(tag) : [];
@@ -268,39 +284,14 @@ function _getTags(pelem, tag, platform, transform) {
 // Same as _getTags() but only looks inside a platfrom section.
 function _getTagsInPlatform(pelem, tag, platform, transform) {
     var platformTag = pelem.find('./platform[@name="' + platform + '"]');
+    if (platform == 'windows' && !platformTag) {
+        platformTag = pelem.find('platform[@name="' + 'windows8' + '"]');
+    }
     var tags = platformTag ? platformTag.findall(tag) : [];
     if ( typeof transform === 'function' ) {
         tags = tags.map(transform);
     }
     return tags;
-}
-
-// Given a dir containing multiple plugins, create a PluginInfo object for
-// each of them and return as array.
-// Should load them all in parallel and return a promise, but not yet.
-function loadPluginsDir(dirname) {
-    if ( !fs.existsSync(dirname) ){
-        return [];
-    }
-    // If dir itself is a plugin, return it in an array with one element.
-    if (fs.existsSync(path.join(dirname, 'plugin.xml'))) {
-        return [new PluginInfo(dirname)];
-    }
-    var subdirs = fs.readdirSync(dirname);
-    var plugins = [];
-    subdirs.forEach(function (subdir) {
-        var d = path.join(dirname, subdir);
-        if (!fs.existsSync(path.join(d, 'plugin.xml'))) {
-            return; // continue
-        }
-        try {
-        	var p = new PluginInfo(d);
-        	plugins.push(p);
-        } catch (e) {
-        	// ignore errors while parsing so we can continue with searching
-        }
-    });
-    return plugins;
 }
 
 // Used as the default parser for some elements in plugin.xml
@@ -313,3 +304,5 @@ function cloneAttribs(tag) {
 function isStrTrue(x) {
     return (typeof x === 'string') && (x.trim().toLowerCase() == 'true');
 }
+
+module.exports = PluginInfo;

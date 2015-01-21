@@ -26,34 +26,35 @@ var path             = require('path'),
     Q                = require('q'),
     cordova_util     = require('./util'),
     ConfigParser     = require('../configparser/ConfigParser'),
-    xml              = require('../util/xml-helpers'),
     events           = require('../events'),
     superspawn       = require('./superspawn'),
+    PluginInfoProvider = require('../PluginInfoProvider'),
     CordovaError     = require('../CordovaError'),
     plugman_metadata = require('../plugman/util/metadata'),
     PlatformJson     = require('../plugman/util/PlatformJson');
 
 module.exports = save;
 function save(target, opts){
+    opts = opts || {};
     cordova_util.cdProjectRoot();//checks if this is a cordova project
+    var pluginInfoProvider = opts.pluginInfoProvider || new PluginInfoProvider();
     if( 'plugins' === target ){
-        return savePlugins(opts);
+        return savePlugins(opts.shrinkwrap, pluginInfoProvider);
     }
     if( 'platforms' === target ){
-        return savePlatforms(opts);
+        return savePlatforms(opts.shrinkwrap);
     }
     throw new CordovaError('Unknown target only "plugins" and "platforms" are supported');
 }
 
-function savePlatforms(opts){
-    opts = opts || {};
+function savePlatforms(shrinkwrap){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var configXml = new ConfigParser(configPath);
     var platforms_on_fs = cordova_util.listPlatforms(projectHome);
     return Q.all( platforms_on_fs.map(function(p){
         var promise = new Q({'id':p});
-        if(opts.shrinkwrap){//retrieve and save platform version
+        if(shrinkwrap){//retrieve and save platform version
             var script = path.join(projectHome, 'platforms', p, 'cordova', 'version');
             promise= superspawn.spawn(script).then(function(v){
                 return {'id':p ,'version':v};
@@ -75,8 +76,7 @@ function savePlatforms(opts){
     }));
 }
 
-function savePlugins(opts){
-    opts = opts || {};
+function savePlugins(shrinkwrap, pluginInfoProvider){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var configXml = new ConfigParser(configPath);
@@ -102,7 +102,7 @@ function savePlugins(opts){
 
     return Q.all(plugins.map(function(plugin){
         var currentPluginPath = path.join(pluginsPath,plugin);
-        var name = readPluginName(currentPluginPath);
+        var pluginInfo = pluginInfoProvider.get(currentPluginPath);
         var id = plugin;
         // filter out the dependency plugins. Top-level plugins list is not always accurate. 
         if(isDependencyPlugin(id)){
@@ -133,11 +133,10 @@ function savePlugins(opts){
             }
         }
         //save version if shrinkwrapped
-        if(opts.shrinkwrap){
-            var version = readPluginVersion(currentPluginPath);
-            params.push({ name: 'version', value: version });
+        if(shrinkwrap){
+            params.push({ name: 'version', value: pluginInfo.version});
         }
-        configXml.addFeature(name,params);
+        configXml.addFeature(pluginInfo.name, params);
         configXml.write();
         events.emit('results', 'Saved plugin info for "'+plugin+'" to config.xml');
         return Q();
@@ -165,19 +164,3 @@ function isDependencyPlugin(pluginId){
     return false;
 }
 
-function readPluginName(pluginPath){
-    var xml_path = path.join(pluginPath, 'plugin.xml');
-    var et = xml.parseElementtreeSync(xml_path);
-    var el = et.getroot().find('name');
-    if(el && el.text){
-        return el.text.trim();
-    }
-    return '';
-}
-
-function readPluginVersion(pluginPath){
-    var xml_path = path.join(pluginPath, 'plugin.xml');
-    var et = xml.parseElementtreeSync(xml_path);
-    var version = et.getroot().attrib.version;
-    return version;
-}
