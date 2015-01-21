@@ -26,7 +26,11 @@ var fs            = require('fs'),
     CordovaError  = require('../CordovaError'),
     shell         = require('shelljs'),
     Q             = require('q'),
-    platforms     = require('./platformsConfig.json');
+    platforms     = require('./platformsConfig.json'),
+    globalUtil    = require('util'),
+    child_process = require('child_process'),
+    events        = require('../events'),
+    os            = require('os');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -58,6 +62,7 @@ exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports.fixRelativePath = fixRelativePath;
 exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
+exports.cloneGitRepo = cloneGitRepo;
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -305,5 +310,41 @@ function getPlatformDetailsFromDir(dir) {
     return Q({
         platform: name,
         libDir: pPath
+    });
+}
+
+
+//  clone_dir, if provided is the directory that git will clone into.
+//  if no clone_dir is supplied, a temp directory will be created and used by git.
+function cloneGitRepo(git_url, git_ref, clone_dir){ 
+    if (!shell.which('git')) {
+        return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
+    }
+
+    // If no clone_dir is specified, create a tmp dir which git will clone into.
+    var tmp_dir = clone_dir;
+    if(!tmp_dir){
+	tmp_dir = path.join(os.tmpdir(), 'git', String((new Date()).valueOf()));
+    }
+    shell.rm('-rf', tmp_dir);
+    shell.mkdir('-p', tmp_dir);
+        
+    var cmd = globalUtil.format('git clone "%s" "%s"', git_url, tmp_dir);
+    events.emit('verbose', 'Cloning repository via git-clone command: ' + cmd);
+
+    return Q.ninvoke(child_process, 'exec', cmd, {}).then(function () {
+	if(git_ref){
+	    var checkoutCmd = globalUtil.format('git checkout "%s"', git_ref);
+            events.emit('verbose', 'Checking out git ref via command: ' + checkoutCmd);
+            return Q.ninvoke(child_process, 'exec', checkoutCmd, { cwd: tmp_dir }).then(function(){
+		events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + git_ref + '".');
+	    });
+	}
+	return Q();
+    }).then(function(){
+	return tmp_dir;
+    }).fail(function (err) {
+        shell.rm('-rf', tmp_dir);
+        return Q.reject(err);
     });
 }

@@ -23,12 +23,13 @@
 
 var os = require('os'),
     path = require('path'),
-    util = require('util'),
+    globalUtil = require('util'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     Q = require('q'),
     xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
+    util   = require('../../cordova/util'),
     tmp_dir;
 
 module.exports = {
@@ -47,42 +48,9 @@ module.exports = {
     // Fetches plugin information from remote server.
     // Returns a promise.
     clonePluginGitRepo:function(plugin_git_url, plugins_dir, subdir, git_ref) {
-
-        if(!shell.which('git')) {
-            return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
-        }
-        tmp_dir = path.join(os.tmpdir(), 'plugman', 'git', String((new Date()).valueOf()));
-
-        shell.rm('-rf', tmp_dir);
-
-        var cmd = util.format('git clone "%s" "%s"', plugin_git_url, tmp_dir);
-        events.emit('verbose', 'Fetching plugin via git-clone command: ' + cmd);
-        var d = Q.defer();
-
-        child_process.exec(cmd, function(err, stdout, stderr) {
-            if (err) {
-                d.reject(err);
-            } else {
-                d.resolve();
-            }
-        });
-        return d.promise.then(function() {
-            events.emit('verbose', 'Plugin "' + plugin_git_url + '" fetched.');
-            // Check out the specified revision, if provided.
-            if (git_ref) {
-                var cmd = util.format('git checkout "%s"', git_ref);
-                var d2 = Q.defer();
-                child_process.exec(cmd, { cwd: tmp_dir }, function(err, stdout, stderr) {
-                    if (err) d2.reject(err);
-                    else d2.resolve();
-                });
-                return d2.promise.then(function() {
-                    events.emit('log', 'Plugin "' + plugin_git_url + '" checked out to git ref "' + git_ref + '".');
-                });
-            }
-        }).then(function() {
+	return util.cloneGitRepo(plugin_git_url, git_ref).then(function(tmp_dir) {
             // Read the plugin.xml file and extract the plugin's ID.
-            tmp_dir = path.join(tmp_dir, subdir);
+	    tmp_dir = path.join(tmp_dir, subdir);
             // TODO: what if plugin.xml does not exist?
             var xml_file = path.join(tmp_dir, 'plugin.xml');
             var xml = xml_helpers.parseElementtreeSync(xml_file);
