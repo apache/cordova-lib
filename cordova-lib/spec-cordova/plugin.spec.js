@@ -78,7 +78,7 @@ describe('plugin end-to-end', function() {
         }).then(function() {
             expect(results).toMatch(/No plugins added/gi);
         }).fail(function(err) {
-            console.log(err);
+            console.log(err.stack);
             expect(err).toBeUndefined();
         }).fin(done);
     });

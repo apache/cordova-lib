@@ -36,10 +36,10 @@ var path = require('path'),
     plugman = require('./plugman'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
-    PluginInfo = require('../PluginInfo'),
     cordovaUtil      = require('../cordova/util');
 
 var PlatformJson = require('./util/PlatformJson');
+var PluginInfoProvider = require('../PluginInfoProvider');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -47,6 +47,7 @@ module.exports = uninstall;
 function uninstall(platform, project_dir, id, plugins_dir, options) {
     options = options || {};
     options.is_top_level = true;
+    options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     // Allow path to file to grab an ID
@@ -66,6 +67,7 @@ function uninstall(platform, project_dir, id, plugins_dir, options) {
 module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_dir, options) {
     options = options || {};
     options.is_top_level = true;
+    options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
@@ -204,13 +206,10 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise
 function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-
     // If this plugin is not really installed, return (CB-7004).
     if (!fs.existsSync(plugin_dir)) {
         return Q();
     }
-
-    options = options || {};
 
     var xml_path     = path.join(plugin_dir, 'plugin.xml');
     var plugin_et    = xml_helpers.parseElementtreeSync(xml_path);
@@ -258,7 +257,8 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     var projectRoot = cordovaUtil.isCordova();
 
     if(projectRoot) {
-        var pluginInfo = new PluginInfo.PluginInfo(plugin_dir);
+        // TODO: May want to use pluginInfoProvider, but there's not much caching value.
+        var pluginInfo = options.pluginInfoProvider.get(plugin_dir);
 
         // using unified hooksRunner
         var hooksRunnerOptions = {
@@ -348,7 +348,7 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
     // queue up asset installation
     var common = require('./platforms/common');
     assets && assets.forEach(function(asset) {
-        actions.push(actions.createAction(common.asset.uninstall, [asset, www_dir, plugin_id], common.asset.install, [asset, plugin_dir, www_dir]));
+        actions.push(actions.createAction(common.asset.uninstall, [asset.attrib.src, asset.attrib.target, www_dir, plugin_id], common.asset.install, [asset, plugin_dir, www_dir]));
     });
 
     // run through the action stack
@@ -362,9 +362,9 @@ function handleUninstall(actions, platform, plugin_id, plugin_et, project_dir, w
         platformJson.save();
         // call prepare after a successful uninstall
         if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
         } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
         }
     });
 }

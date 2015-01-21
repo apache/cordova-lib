@@ -28,6 +28,9 @@ var Q = require('q'),
     shell = require('shelljs'),
     path = require('path');
 
+/**
+ * Used for adding templates for plugin platforms to plugin.xml
+ */
 module.exports = {
     add: function( platformName ) {
         var pluginxml,

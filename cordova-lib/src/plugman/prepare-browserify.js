@@ -26,7 +26,6 @@ var platform_modules   = require('./platforms'),
     path               = require('path'),
     through            = require('through2'),
     config_changes     = require('./util/config-changes'),
-    xml_helpers        = require('../util/xml-helpers'),
     wp8                = require('./platforms/wp8'),
     windows            = require('./platforms/windows'),
     common             = require('./platforms/common'),
@@ -45,6 +44,7 @@ var platform_modules   = require('./platforms'),
     computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id');
 
 var PlatformJson = require('./util/PlatformJson');
+var PluginInfoProvider = require('../PluginInfoProvider');
 
 function uninstallQueuedPlugins(platformJson, wwwDir) {
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
@@ -133,7 +133,7 @@ function getPlatformVersion(cId, project_dir) {
 // Sets up each plugin's Javascript code to be loaded properly.
 // Expects a path to the project (platforms/android in CLI, . in plugman-only),
 // a path to where the plugins are downloaded, the www dir, and the platform ('android', 'ios', etc.).
-module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_dir, is_top_level) {
+module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_dir, is_top_level, pluginInfoProvider) {
     // Process:
     // - Do config munging by calling into config-changes module
     // - List all plugins in plugins_dir
@@ -144,6 +144,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // Write this object into www/cordova_plugins.json.
     // This file is not really used. Maybe cordova app harness
     events.emit('verbose', 'Preparing ' + platform + ' browserify project');
+    pluginInfoProvider = pluginInfoProvider || new PluginInfoProvider(); // Allow null for backwards-compat.
     var platformJson = PlatformJson.load(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
     var scripts = [];
@@ -171,42 +172,29 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         events.emit('verbose', 'Iterating over installed plugins:', plugins);
 
         plugins && plugins.forEach(function(plugin) {
-            var pluginDir = path.join(plugins_dir, plugin),
-                pluginXML = path.join(pluginDir, 'plugin.xml');
-            if (!fs.existsSync(pluginXML)) {
-                plugman.emit('warn', 'Missing file: ' + pluginXML);
-                return Q();
-            }
-            var xml = xml_helpers.parseElementtreeSync(pluginXML);
-           
-            var plugin_id = xml.getroot().attrib.id;
+            var pluginDir = path.join(plugins_dir, plugin);
+            var pluginInfo = pluginInfoProvider.get(pluginDir);
+            var plugin_id = pluginInfo.id;
             // pluginMetadata is a mapping from plugin IDs to versions.
-            pluginMetadata[plugin_id] = xml.getroot().attrib.version;
+            pluginMetadata[plugin_id] = pluginInfo.version;
 
             // add the plugins dir to the platform's www.
             var platformPluginsDir = path.join(wwwDir, 'plugins');
             // XXX this should not be here if there are no js-module. It leaves an empty plugins/ directory
             shell.mkdir('-p', platformPluginsDir);
 
-            var jsModules = xml.findall('./js-module');
-            var assets = xml.findall('asset');
-            var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
-
-            if (platformTag) {
-                assets = assets.concat(platformTag.findall('./asset'));
-                jsModules = jsModules.concat(platformTag.findall('./js-module'));
-            }
+            var jsModules = pluginInfo.getJsModules(platform);
+            var assets = pluginInfo.getAssets(platform);
 
             // Copy www assets described in <asset> tags.
-            assets = assets || [];
             assets.forEach(function(asset) {
-                common.asset.install(asset, pluginDir, wwwDir);
+                common.asset.install(asset.src, asset.target, pluginDir, wwwDir);
             });
             jsModules.forEach(function(module) {
                 // Copy the plugin's files into the www directory.
                 // NB: We can't always use path.* functions here, because they will use platform slashes.
                 // But the path in the plugin.xml and in the cordova_plugins.js should be always forward slashes.
-                var pathParts = module.attrib.src.split('/');
+                var pathParts = module.src.split('/');
 
                 var fsDirname = path.join.apply(path, pathParts.slice(0, -1));
                 var fsDir = path.join(platformPluginsDir, plugin_id, fsDirname);
@@ -214,10 +202,10 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
                 // Read in the file, prepend the cordova.define, and write it back out.
                 var moduleName = plugin_id + '.';
-                if (module.attrib.name) {
-                    moduleName += module.attrib.name;
+                if (module.name) {
+                    moduleName += module.name;
                 } else {
-                    moduleName += path.basename(module.attrib.src, '.js');
+                    moduleName += path.basename(module.src, '.js');
                 }
 
                 var fsPath = path.join.apply(path, pathParts);
@@ -227,16 +215,15 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                     requireTr.addModule({symbol: moduleName, path: scriptPath});
                 }
 
-                module.getchildren().forEach(function(child) {
-                    if (child.tag.toLowerCase() == 'clobbers') {
-                        fs.appendFileSync(scriptPath,
-                          prepareNamespace(child.attrib.target, 'c'),
-                          'utf-8');
-                    } else if (child.tag.toLowerCase() == 'merges') {
-                        fs.appendFileSync(scriptPath,
-                          prepareNamespace(child.attrib.target, 'm'),
-                          'utf-8');
-                    }
+                module.clobbers.forEach(function(child) {
+                    fs.appendFileSync(scriptPath,
+                        prepareNamespace(child.target, 'c'),
+                        'utf-8');
+                });
+                module.merges.forEach(function(child) {
+                    fs.appendFileSync(scriptPath,
+                        prepareNamespace(child.target, 'm'),
+                        'utf-8');
                 });
                 scripts.push(scriptPath);
             });

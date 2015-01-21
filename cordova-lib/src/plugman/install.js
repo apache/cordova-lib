@@ -29,7 +29,7 @@ var path = require('path'),
     child_process = require('child_process'),
     semver = require('semver'),
     PlatformJson = require('./util/PlatformJson'),
-    PluginInfo    = require('../PluginInfo'),
+    PluginInfoProvider = require('../PluginInfoProvider'),
     CordovaError  = require('../CordovaError'),
     Q = require('q'),
     platform_modules = require('./platforms'),
@@ -246,11 +246,14 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
 // Returns a promise.
 module.exports.runInstall = runInstall;
 function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-    var pluginInfo   = new PluginInfo.PluginInfo(plugin_dir)
-      , filtered_variables = {};
-
     options = options || {};
     options.graph = options.graph || new dep_graph();
+    options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
+
+    var pluginInfoProvider = options.pluginInfoProvider;
+    var pluginInfo   = pluginInfoProvider.get(plugin_dir);
+    var filtered_variables = {};
+
     var platformJson = PlatformJson.load(plugins_dir, platform);
 
     if (platformJson.isPluginInstalled(pluginInfo.id)) {
@@ -302,7 +305,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
             // may need to copy to destination...
             if ( !fs.existsSync(install_plugin_dir) ) {
-                copyPlugin(plugin_dir, plugins_dir, options.link);
+                copyPlugin(plugin_dir, plugins_dir, options.link, pluginInfoProvider);
             }
 
             var projectRoot = cordovaUtil.isCordova();
@@ -581,9 +584,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         platformJson.save();
         // call prepare after a successful install
         if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
         } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
         }
 	}).then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
@@ -613,8 +616,8 @@ function isRelativePath(path) {
 }
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
-function copyPlugin(plugin_src_dir, plugins_dir, link) {
-    var pluginInfo = new PluginInfo.PluginInfo(plugin_src_dir);
+function copyPlugin(plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
+    var pluginInfo = pluginInfoProvider.get(plugin_src_dir);
     var dest = path.join(plugins_dir, pluginInfo.id);
     shell.rm('-rf', dest);
 
@@ -627,6 +630,7 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');
         shell.cp('-R', path.join(plugin_src_dir, '*') , dest);
     }
+    pluginInfoProvider.put(dest, pluginInfo);
 
     return dest;
 }
