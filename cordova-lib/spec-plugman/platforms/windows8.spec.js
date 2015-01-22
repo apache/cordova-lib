@@ -32,28 +32,15 @@ var windows8 = require('../../src/plugman/platforms/windows'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     windows8_project = path.join(__dirname, '..', 'projects', 'windows8');
 
-var xml_path     = path.join(dummyplugin, 'plugin.xml')
-  , xml_text     = fs.readFileSync(xml_path, 'utf-8')
-  , plugin_et    = new et.ElementTree(et.XML(xml_text));
+var PluginInfo = require('../../src/PluginInfo');
 
-var platformTag = plugin_et.find('./platform[@name="windows8"]');
-var dummy_id = plugin_et._root.attrib['id'];
+var dummyPluginInfo = new PluginInfo(dummyplugin);
+var dummy_id = dummyPluginInfo.id;
+var valid_source = dummyPluginInfo.getSourceFiles('windows8');
 
-var valid_source = platformTag.findall('./source-file');
-var assets = plugin_et.findall('./asset');
-
-var configChanges = platformTag.findall('./config-file');
-
-xml_path  = path.join(faultyplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8');
-
-plugin_et = new et.ElementTree(et.XML(xml_text));
-
-platformTag = plugin_et.find('./platform[@name="windows8"]');
-
-var invalid_source = platformTag.findall('./source-file');
-
-var faulty_id = plugin_et._root.attrib['id'];
+var faultyPluginInfo = new PluginInfo(faultyplugin);
+var faulty_id = faultyPluginInfo.id;
+var invalid_source = faultyPluginInfo.getSourceFiles('windows8');
 
 shell.mkdir('-p', temp);
 shell.cp('-rf', path.join(windows8_project, '*'), temp);

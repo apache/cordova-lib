@@ -25,20 +25,18 @@
 var platform_modules = require('./platforms'),
     path            = require('path'),
     config_changes  = require('./util/config-changes'),
-    xml_helpers     = require('../util/xml-helpers'),
     common          = require('./platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
-    util            = require('util'),
-    events          = require('../events'),
-    plugman         = require('./plugman');
+    events          = require('../events');
 var PlatformJson = require('./util/PlatformJson');
+var PluginInfoProvider = require('../PluginInfoProvider');
 
 // Called on --prepare.
 // Sets up each plugin's Javascript code to be loaded properly.
 // Expects a path to the project (platforms/android in CLI, . in plugman-only),
 // a path to where the plugins are downloaded, the www dir, and the platform ('android', 'ios', etc.).
-module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_dir) {
+module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_dir, is_top_level, pluginInfoProvider) {
     // Process:
     // - Do config munging by calling into config-changes module
     // - List all plugins in plugins_dir
@@ -49,6 +47,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     // - Write this object into www/cordova_plugins.json.
     // - Cordova.js contains code to load them at runtime from that file.
     events.emit('verbose', 'Preparing ' + platform + ' project');
+    pluginInfoProvider = pluginInfoProvider || new PluginInfoProvider(); // Allow null for backwards-compat.
     var platformJson = PlatformJson.load(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
 
@@ -70,7 +69,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     }
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
-    config_changes.process(plugins_dir, project_dir, platform, platformJson);
+    config_changes.process(plugins_dir, project_dir, platform, platformJson, pluginInfoProvider);
 
     // This array holds all the metadata for each module and ends up in cordova_plugins.json
     var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
@@ -79,40 +78,22 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Iterating over installed plugins:', plugins);
 
     plugins && plugins.forEach(function(plugin) {
-        var pluginDir = path.join(plugins_dir, plugin),
-            pluginXML = path.join(pluginDir, 'plugin.xml');
-        if (!fs.existsSync(pluginXML)) {
-            plugman.emit('warn', 'Missing file: ' + pluginXML);
-            return;
-        }
-        var xml = xml_helpers.parseElementtreeSync(pluginXML);
+        var pluginDir = path.join(plugins_dir, plugin);
+        var pluginInfo = pluginInfoProvider.get(pluginDir);
 
-        var plugin_id = xml.getroot().attrib.id;
-
+        var plugin_id = pluginInfo.id;
         // pluginMetadata is a mapping from plugin IDs to versions.
-        pluginMetadata[plugin_id] = xml.getroot().attrib.version;
+        pluginMetadata[plugin_id] = pluginInfo.version;
 
         // add the plugins dir to the platform's www.
         var platformPluginsDir = path.join(wwwDir, 'plugins');
         // XXX this should not be here if there are no js-module. It leaves an empty plugins/ directory
         shell.mkdir('-p', platformPluginsDir);
 
-        var jsModules = xml.findall('./js-module');
-        var assets = xml.findall('asset');
-        var platformTag = xml.find(util.format('./platform[@name="%s"]', platform));
-        // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-        // we allow using windows8 tag for new windows platform
-        if (platform == 'windows' && !platformTag) {
-            platformTag = xml.find('platform[@name="' + 'windows8' + '"]');
-        }
-
-        if (platformTag) {
-            assets = assets.concat(platformTag.findall('./asset'));
-            jsModules = jsModules.concat(platformTag.findall('./js-module'));
-        }
+        var jsModules = pluginInfo.getJsModules(platform);
+        var assets = pluginInfo.getAssets(platform);
 
         // Copy www assets described in <asset> tags.
-        assets = assets || [];
         assets.forEach(function(asset) {
             common.asset.install(asset, pluginDir, wwwDir);
         });
@@ -121,7 +102,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             // Copy the plugin's files into the www directory.
             // NB: We can't always use path.* functions here, because they will use platform slashes.
             // But the path in the plugin.xml and in the cordova_plugins.js should be always forward slashes.
-            var pathParts = module.attrib.src.split('/');
+            var pathParts = module.src.split('/');
 
             var fsDirname = path.join.apply(path, pathParts.slice(0, -1));
             var fsDir = path.join(platformPluginsDir, plugin_id, fsDirname);
@@ -129,10 +110,10 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
             // Read in the file, prepend the cordova.define, and write it back out.
             var moduleName = plugin_id + '.';
-            if (module.attrib.name) {
-                moduleName += module.attrib.name;
+            if (module.name) {
+                moduleName += module.name;
             } else {
-                var result = module.attrib.src.match(/([^\/]+)\.js/);
+                var result = module.src.match(/([^\/]+)\.js/);
                 moduleName += result[1];
             }
 
@@ -146,26 +127,18 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
             // Prepare the object for cordova_plugins.json.
             var obj = {
-                file: ['plugins', plugin_id, module.attrib.src].join('/'),
+                file: ['plugins', plugin_id, module.src].join('/'),
                 id: moduleName
             };
-
-            // Loop over the children of the js-module tag, collecting clobbers, merges and runs.
-            module.getchildren().forEach(function(child) {
-                if (child.tag.toLowerCase() == 'clobbers') {
-                    if (!obj.clobbers) {
-                        obj.clobbers = [];
-                    }
-                    obj.clobbers.push(child.attrib.target);
-                } else if (child.tag.toLowerCase() == 'merges') {
-                    if (!obj.merges) {
-                        obj.merges = [];
-                    }
-                    obj.merges.push(child.attrib.target);
-                } else if (child.tag.toLowerCase() == 'runs') {
-                    obj.runs = true;
-                }
-            });
+            if (module.clobbers.length > 0) {
+                obj.clobbers = module.clobbers.map(function(o) { return o.target; });
+            }
+            if (module.merges.length > 0) {
+                obj.merges = module.merges.map(function(o) { return o.target; });
+            }
+            if (module.runs.length > 0) {
+                obj.runs = true;
+            }
 
             // Add it to the list of module objects bound for cordova_plugins.json
             moduleObjects.push(obj);

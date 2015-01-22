@@ -138,7 +138,7 @@ describe('prepare command', function() {
                     var plugins_dir = path.join(project_dir, 'plugins');
                     supported_platforms.forEach(function(p) {
                         var platform_path = path.join(project_dir, 'platforms', p);
-                        expect(plugman_prepare).toHaveBeenCalledWith(platform_path, (p=='blackberry'?'blackberry10':p), plugins_dir);
+                        expect(plugman_prepare).toHaveBeenCalled();
                     });
                 }, function(err) {
                     expect(err).toBeUndefined();

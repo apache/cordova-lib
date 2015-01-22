@@ -30,7 +30,7 @@ var cordova_util  = require('./util'),
     ConfigParser  = require('../configparser/ConfigParser'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    PluginInfo    = require('../PluginInfo'),
+    PluginInfoProvider = require('../PluginInfoProvider'),
     plugman       = require('../plugman/plugman'),
     events        = require('../events');
 
@@ -110,6 +110,7 @@ module.exports = function plugin(command, targets, opts) {
             opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
             return hooksRunner.fire('before_plugin_add', opts)
             .then(function() {
+                var pluginInfoProvider = new PluginInfoProvider();
                 return opts.plugins.reduce(function(soFar, target) {
                     var pluginsDir = path.join(projectRoot, 'plugins');
                     return soFar.then(function() {
@@ -119,11 +120,11 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link});
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider});
                     })
                     .then(function(dir) {
                         // Validate top-level required variables
-                        var pluginVariables = new PluginInfo.PluginInfo(dir).getPreferences(),
+                        var pluginVariables = pluginInfoProvider.get(dir).getPreferences(),
                             missingVariables = pluginVariables.filter(function (v) {
                                 return !(v in opts.cli_variables);
                             });
@@ -141,7 +142,8 @@ module.exports = function plugin(command, targets, opts) {
                                         browserify: opts.browserify || false,
                                         searchpath: searchPath,
                                         noregistry: opts.noregistry,
-                                        link: opts.link
+                                        link: opts.link,
+                                        pluginInfoProvider: pluginInfoProvider
                                     },
                                     tokens,
                                     key,
@@ -207,6 +209,7 @@ module.exports = function plugin(command, targets, opts) {
                         });
                     }, Q())
                     .then(function() {
+                        // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
                     });
                 }, Q());
@@ -236,7 +239,9 @@ function list(projectRoot, hooksRunner) {
     return hooksRunner.fire('before_plugin_ls')
     .then(function() {
         var pluginsDir = path.join(projectRoot, 'plugins');
-        return PluginInfo.loadPluginsDir(pluginsDir);
+        // TODO: This should list based off of platform.json, not directories within plugins/
+        var pluginInfoProvider = new PluginInfoProvider();
+        return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
     })
     .then(function(plugins) {
         if (plugins.length === 0) {

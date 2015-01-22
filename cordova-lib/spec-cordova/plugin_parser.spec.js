@@ -20,7 +20,6 @@ var cordova = require('../src/cordova/cordova'),
     path = require('path'),
     fs = require('fs'),
     plugin_parser = require('../src/cordova/plugin_parser'),
-    et = require('elementtree'),
     xml = path.join(__dirname, 'fixtures', 'plugins', 'test', 'plugin.xml');
 
 var xml_contents = fs.readFileSync(xml, 'utf-8');

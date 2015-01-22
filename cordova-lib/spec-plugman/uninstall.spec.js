@@ -71,6 +71,9 @@ describe('start', function() {
             function(){ done = true; }
         );
         waitsFor(function() { return done; }, 'promise never resolved', 500);
+        runs(function() {
+            expect(done).toBe(true);
+        });
     });
 });
 

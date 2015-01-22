@@ -21,6 +21,7 @@ var dependencies = require('../../src/plugman/util/dependencies'),
     path = require('path'),
     config = require('../../src/plugman/util/config-changes');
 var PlatformJson = require('../../src/plugman/util/PlatformJson');
+var PluginInfoProvider = require('../../src/PluginInfoProvider');
 
 describe('dependency module', function() {
     describe('generateDependencyInfo method', function() {
@@ -34,8 +35,12 @@ describe('dependency module', function() {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
+            var pluginInfoProvider = new PluginInfoProvider();
+            Object.keys(tlps).forEach(function(k) {
+                pluginInfoProvider.put({id:k, dir: path.join('plugins_dir', k), getDependencies: function() {return[]}});
+            });
             spyOn(xml_helpers, 'parseElementtreeSync').andReturn({findall:function(){}});
-            var obj = dependencies.generateDependencyInfo(platformJson, 'plugins_dir');
+            var obj = dependencies.generateDependencyInfo(platformJson, 'plugins_dir', pluginInfoProvider);
             expect(obj.top_level_plugins).toEqual(Object.keys(tlps));
         });
         it('should return a dependency graph for the plugins', function() {
@@ -53,7 +58,7 @@ describe('dependency module', function() {
                 installed_plugins:tlps,
                 dependent_plugins:[]
             });
-            var obj = dependencies.generateDependencyInfo(platformJson, plugins_dir);
+            var obj = dependencies.generateDependencyInfo(platformJson, plugins_dir, new PluginInfoProvider());
             expect(obj.graph.getChain('A')).toEqual(['C','D']);
             expect(obj.graph.getChain('B')).toEqual(['D', 'E']);
         });

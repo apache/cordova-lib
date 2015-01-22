@@ -17,19 +17,20 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
+/* jshint node:true, laxcomma:true */
+/* globals describe, it, expect */
 
-var xml = require('../util/xml-helpers');
+var PluginInfoProvider = require('../src/PluginInfoProvider'),
+    path = require('path');
 
-/** Deprecated. Use PluginInfo instead. */
-function plugin_parser(xmlPath) {
-    this.path = xmlPath;
-    this.doc = xml.parseElementtreeSync(xmlPath);
-    this.platforms = this.doc.findall('platform').map(function(p) {
-        return p.attrib.name;
+var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+
+describe('PluginInfoProvider', function () {
+    describe('getAllWithinSearchPath', function () {
+        it('should load all plugins in a dir', function () {
+            var pluginInfoProvider = new PluginInfoProvider();
+            var plugins = pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
+            expect(plugins.length).not.toBe(0);
+        });
     });
-}
-
-module.exports = plugin_parser;
+});

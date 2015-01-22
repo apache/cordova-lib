@@ -23,7 +23,7 @@ var path = require('path'),
     events = require('../events'),
     Q = require('q'),
     plugin  = require('../cordova/plugin'),
-    PluginInfo = require('../PluginInfo'),
+    PluginInfoProvider = require('../PluginInfoProvider'),
     ConfigParser = require('../configparser/ConfigParser');
 
 /**
@@ -141,7 +141,7 @@ function getAllPluginsHookScriptFiles(hook, opts) {
     var pluginInfo;
     var currentPluginOptions;
 
-    var plugins = PluginInfo.loadPluginsDir(path.join(opts.projectRoot, 'plugins'));
+    var plugins = (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins'));
 
     plugins.forEach(function(pluginInfo) {
         currentPluginOptions = {

@@ -69,8 +69,13 @@ describe('start', function() {
             function(){ return install('android', project2, plugins['A'], plugins_install_dir2, { browserify: true }) }
         ).then(
             function(){ done = true; }
-        );
-        waitsFor(function() { return done; }, 'promise never resolved', 10000);
+        ).fail(function(err) {
+            done = err.stack;
+        });
+        waitsFor(function() { return done; }, 'promise never resolved', 5000);
+        runs(function() {
+            expect(done).toBe(true);
+        });
     });
 });
 

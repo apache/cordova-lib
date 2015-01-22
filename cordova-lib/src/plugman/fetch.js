@@ -26,7 +26,7 @@ var shell   = require('shelljs'),
     url     = require('url'),
     underscore = require('underscore'),
     semver = require('semver'),
-    PluginInfo    = require('../PluginInfo'),
+    PluginInfoProvider = require('../PluginInfoProvider'),
     plugins = require('./util/plugins'),
     CordovaError  = require('../CordovaError'),
     events = require('../events'),
@@ -52,6 +52,8 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     if ( typeof options.searchpath === 'string' ) {
         options.searchpath = options.searchpath.split(path.delimiter);
     }
+
+    var pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
 
     // clone from git repository
     var uri = url.parse(plugin_src);
@@ -83,7 +85,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             return plugins.clonePluginGit(plugin_src, plugins_dir, options)
             .then(function(dir) {
                 return {
-                    pinfo: new PluginInfo.PluginInfo(dir),
+                    pinfo: pluginInfoProvider.get(dir),
                     dest: dir,
                     fetchJsonSource: {
                         type: 'git',
@@ -100,7 +102,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         return Q.when().then(function() {
             if (fs.existsSync(plugin_dir)) {
                 return {
-                    pinfo: new PluginInfo.PluginInfo(plugin_dir),
+                    pinfo: pluginInfoProvider.get(plugin_dir),
                     fetchJsonSource: {
                         type: 'local',
                         path: plugin_dir
@@ -109,7 +111,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             }
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
-            var pinfo = findLocalPlugin(plugin_src, options.searchpath);
+            var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
             if (pinfo) {
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
                 return {
@@ -130,7 +132,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             return registry.fetch([plugin_src], options.client)
             .then(function(dir) {
                 return {
-                    pinfo: new PluginInfo.PluginInfo(dir),
+                    pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
                         id: plugin_src
@@ -169,7 +171,7 @@ function checkID(expected_id, pinfo) {
 // Note, there is no cache invalidation logic for local plugins.
 // As of this writing loadLocalPlugins() is never called with different
 // search paths and such case would not be handled properly.
-function loadLocalPlugins(searchpath) {
+function loadLocalPlugins(searchpath, pluginInfoProvider) {
     if (localPlugins) {
         // localPlugins already populated, nothing to do.
         // just in case, make sure it was loaded with the same search path
@@ -188,7 +190,7 @@ function loadLocalPlugins(searchpath) {
     localPlugins.plugins = {};
 
     searchpath.forEach(function(dir) {
-        var ps = PluginInfo.loadPluginsDir(dir);
+        var ps = pluginInfoProvider.getAllWithinSearchPath(dir);
         ps.forEach(function(p) {
             var versions = localPlugins.plugins[p.id] || [];
             versions.push(p);
@@ -204,8 +206,8 @@ function loadLocalPlugins(searchpath) {
 // Examples of accepted plugin_src strings:
 //      org.apache.cordova.file
 //      org.apache.cordova.file@>=1.2.0
-function findLocalPlugin(plugin_src, searchpath) {
-    loadLocalPlugins(searchpath);
+function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
+    loadLocalPlugins(searchpath, pluginInfoProvider);
     var id = plugin_src;
     var versionspec = '*';
     if (plugin_src.indexOf('@') != -1) {
