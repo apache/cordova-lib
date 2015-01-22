@@ -21,12 +21,8 @@
           indent:4, unused:vars, latedef:nofunc
 */
 
-var os = require('os'),
-    path = require('path'),
-    globalUtil = require('util'),
+var path = require('path'),
     shell = require('shelljs'),
-    child_process = require('child_process'),
-    Q = require('q'),
     xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     util   = require('../../cordova/util'),
