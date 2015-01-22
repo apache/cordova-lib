@@ -24,7 +24,13 @@
 var fs            = require('fs'),
     path          = require('path'),
     CordovaError  = require('../CordovaError'),
-    shell         = require('shelljs');
+    shell         = require('shelljs'),
+    Q             = require('q'),
+    platforms     = require('./platformsConfig.json'),
+    globalUtil    = require('util'),
+    child_process = require('child_process'),
+    events        = require('../events'),
+    os            = require('os');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -55,6 +61,8 @@ exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports.fixRelativePath = fixRelativePath;
+exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
+exports.cloneGitRepo = cloneGitRepo;
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -261,4 +269,82 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
             set : function(v) { val = v; }
         });
     }
+}
+
+function resolvePath(pPath) {
+    return path.resolve(pPath);
+}
+
+function getPackageJsonContent(pPath) {
+    return require(path.join(pPath, 'package'));
+}
+
+// Returns a Promise
+// Gets platform details from a directory
+function getPlatformDetailsFromDir(dir) {
+    var pkg;
+    var pPath = resolvePath(dir);
+
+    // Prep the message in advance, we might need it in several places.
+    var msg = 'The provided path does not seem to contain a ' +
+        'Cordova platform: ' + dir;
+    try {
+        pkg = getPackageJsonContent(pPath);
+    } catch (e) {
+        return Q.reject(new CordovaError(msg + '\n' + e.message));
+    }
+    if (!pkg || !pkg.name) {
+        return Q.reject(new CordovaError(msg));
+    }
+    // Package names for Cordova platforms look like "cordova-ios".
+    var nameParts = pkg.name.split('-');
+    var name = nameParts[1];
+    if (name == 'amazon') {
+        name = 'amazon-fireos';
+    }
+    if (!platforms[name]) {
+        return Q.reject(new CordovaError(msg));
+    }
+
+    // Use a fulfilled promise with the platform name and path as value to skip downloading.
+    return Q({
+        platform: name,
+        libDir: pPath
+    });
+}
+
+
+//  clone_dir, if provided is the directory that git will clone into.
+//  if no clone_dir is supplied, a temp directory will be created and used by git.
+function cloneGitRepo(git_url, git_ref, clone_dir){ 
+    if (!shell.which('git')) {
+        return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
+    }
+
+    // If no clone_dir is specified, create a tmp dir which git will clone into.
+    var tmp_dir = clone_dir;
+    if(!tmp_dir){
+	tmp_dir = path.join(os.tmpdir(), 'git', String((new Date()).valueOf()));
+    }
+    shell.rm('-rf', tmp_dir);
+    shell.mkdir('-p', tmp_dir);
+        
+    var cmd = globalUtil.format('git clone "%s" "%s"', git_url, tmp_dir);
+    events.emit('verbose', 'Cloning repository via git-clone command: ' + cmd);
+
+    return Q.ninvoke(child_process, 'exec', cmd, {}).then(function () {
+	if(git_ref){
+	    var checkoutCmd = globalUtil.format('git checkout "%s"', git_ref);
+            events.emit('verbose', 'Checking out git ref via command: ' + checkoutCmd);
+            return Q.ninvoke(child_process, 'exec', checkoutCmd, { cwd: tmp_dir }).then(function(){
+		events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + git_ref + '".');
+	    });
+	}
+	return Q();
+    }).then(function(){
+	return tmp_dir;
+    }).fail(function (err) {
+        shell.rm('-rf', tmp_dir);
+        return Q.reject(err);
+    });
 }

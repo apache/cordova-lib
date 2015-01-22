@@ -50,6 +50,7 @@ var path          = require('path'),
 
 exports.cordova = cordova;
 exports.cordova_git = cordova_git;
+exports.git_clone = git_clone_platform;
 exports.cordova_npm = cordova_npm;
 exports.npm_cache_add = npm_cache_add;
 exports.custom = custom;
@@ -281,6 +282,38 @@ function custom(platforms, platform) {
             });
         });
         return d.promise.then(function () { return lib_dir; });
+    });
+}
+
+// Returns a promise
+function git_clone_platform(git_url) {
+    // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
+    // fails in this case with "EXDEV, cross-device link not permitted".
+    var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
+    var tmp_dir = path.join(util.libDirectory, 'tmp', tmp_subidr);
+    shell.rm('-rf', tmp_dir);
+    shell.mkdir('-p', tmp_dir);
+
+    return HooksRunner.fire('before_platform_clone', {
+        repository: git_url,
+        location: tmp_dir
+    }).then(function () {
+        return util.cloneGitRepo(git_url, 'master', tmp_dir);
+    }).then(function () {
+        return util.getPlatformDetailsFromDir(tmp_dir);
+    }).then(function (platDetails) {
+        HooksRunner.fire('after_platform_clone', {
+            repository: git_url,
+            location: tmp_dir,
+            platform: platDetails.platform
+        });
+        return {
+            libDir: tmp_dir,
+            platform: platDetails.platform
+        };
+    }).fail(function (err) {
+        shell.rm('-rf', tmp_dir);
+        return Q.reject(err);
     });
 }
 

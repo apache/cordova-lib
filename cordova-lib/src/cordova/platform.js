@@ -39,6 +39,7 @@ var config            = require('./config'),
     semver            = require('semver'),
     unorm             = require('unorm'),
     shell             = require('shelljs'),
+    util              = require('./util'),
     _                 = require('underscore');
 
 // Expose the platform parsers on top of this command
@@ -48,14 +49,14 @@ for (var p in platforms) {
 
 function add(hooksRunner, projectRoot, targets, opts) {
     var msg;
-    if ( !targets || !targets.length ) {
+    if (!targets || !targets.length) {
         msg = 'No platform specified. Please specify a platform to add. ' +
               'See `' + cordova_util.binname + ' platform list`.';
         return Q.reject(new CordovaError(msg));
     }
 
-    for (var i= 0 ; i < targets.length; i++) {
-        if ( !hostSupports(targets[i]) ) {
+    for (var i = 0 ; i < targets.length; i++) {
+        if (!hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
             events.emit('log', msg);
@@ -71,102 +72,98 @@ function add(hooksRunner, projectRoot, targets, opts) {
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
-    if ( !fs.existsSync(platformsDir)) {
+    if (!fs.existsSync(platformsDir)) {
         shell.mkdir('-p', platformsDir);
     }
 
     return hooksRunner.fire('before_platform_add', opts)
-    .then(function() {
-        return promiseutil.Q_chainmap(targets, function(target) {
+    .then(function () {
+        return promiseutil.Q_chainmap(targets, function (target) {
             // For each platform, download it and call its "create" script.
             var parts = target.split('@');
             var platform = parts[0];
             var version = parts[1];
 
-            return Q.when().then(function() {
+            return Q.when().then(function () {
                 if (!(platform in platforms)) {
-                    return getPlatformDetailsFromDir(target);
-                } else {
+                    // First, try handling 'platform' as a directory, if it fails, try handling it as a git repository
+                    return Q.fcall(function () {
+                        return util.getPlatformDetailsFromDir(target);
+                    }).fail(function (err) {
+                        // Maybe it's a git repo
+                        events.emit('verbose', err);
+                        events.emit('verbose', 'Could not find local folder ' + target + '. Try to handle it as git repository.');
+                        return cloneGitRepo(target);
+                    });
+                }
+                else {
                     if (!version) {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     }
                     version = version || getVersionFromConfigFile(platform, cfg);
                     var tgt = version ? (platform + '@' + version) : platform;
-                    return isDirectory(version) ? getPlatformDetailsFromDir(version) : downloadPlatform(projectRoot, tgt, opts);
+
+                    if (isDirectory(version)) {
+                        return util.getPlatformDetailsFromDir(version);
+                    }
+
+                    return Q.fcall(function () {
+                        return downloadPlatform(projectRoot, tgt, opts);
+                    }).fail(function (err) {
+                        // Maybe it's a git repo
+                        events.emit('verbose', err);
+                        events.emit('verbose', 'Could not download platform ' + tgt + '. Try to handle ' + version + ' as git repository.');
+                        return cloneGitRepo(version);
+                    });
                 }
-            }).then(function(platDetails) {
+            }).then(function (platDetails) {
                 var template = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
                 return call_into_create(platDetails.platform, projectRoot, cfg, platDetails.libDir, template, opts);
+            }).fail(function (error) {
+                throw new CordovaError('Unable to add platform ' + target + '. Make sure to provide a valid version, an existing folder or an accessible git repository: ' +
+                           error);
             });
+        }).then(function () {
+            return hooksRunner.fire('after_platform_add', opts);
         });
-    })
-    .then(function() {
-        return hooksRunner.fire('after_platform_add', opts);
     });
 }
 
-function isDirectory(dir) {
-    try {
+function isDirectory(dir){
+    try{
 	return fs.lstatSync(dir).isDirectory();
-    } catch(e) {
-	return false;
     }
+    catch(e){
+	return false;
+    }   
+}
+
+function cloneGitRepo(gitRepo)
+{
+    // Check all exit points and make sure their return types match to expected one.
+    return lazy_load.git_clone(gitRepo)
+        .then(function(clone) {
+	    // After cloning, retrieve the platform details from dir
+	    return util.getPlatformDetailsFromDir(clone.libDir);
+        })
+        .then(function(platDetails){
+	    return platDetails;
+	});
 }
 
 // Returns a Promise
 function downloadPlatform(projectRoot, target, opts) {
+
     // Using lazy_load for a platform specified by name
     return lazy_load.based_on_config(projectRoot, target, opts)
-    .then(function (libDir) {
-        return {
-            platform: target.split('@')[0],
-            libDir: libDir
-        };
-    }).fail(function (err) {
-        throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
-    });
-}
-
-function getPackageJsonContent(pPath) {
-    return require(path.join(pPath, 'package'));
-}
-
-function resolvePath(pPath){
-    return path.resolve(pPath);
-}
-
-// Returns a Promise
-// Gets platform details from a directory
-function getPlatformDetailsFromDir(dir){
-    var pkg;
-    var pPath = resolvePath(dir);
-
-    // Prep the message in advance, we might need it in several places.
-    var msg = 'The provided path does not seem to contain a ' +
-        'Cordova platform: ' + dir;
-    try {
-        pkg = getPackageJsonContent(pPath);
-    } catch(e) {
-	return Q.reject(new CordovaError(msg + '\n' + e.message));
-    }
-    if ( !pkg || !pkg.name ) {
-	return Q.reject(new CordovaError(msg));
-    }
-    // Package names for Cordova platforms look like "cordova-ios".
-    var nameParts = pkg.name.split('-');
-    var name = nameParts[1];
-    if (name == 'amazon') {
-        name = 'amazon-fireos';
-    }
-    if (!platforms[name]) {
-	return Q.reject(new CordovaError(msg));
-    }
-
-    // Use a fulfilled promise with the platform name and path as value to skip downloading.
-    return Q({
-	platform: name,
-	libDir: pPath
-    });
+	.then(function (libDir) {
+	    return {
+	        platform: target.split('@')[0],
+	        libDir: libDir
+	    };
+	}).fail(function (err) {
+	    throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
+	});
 }
 
 function getVersionFromConfigFile(platform, cfg) {
@@ -423,7 +420,7 @@ function platform(command, targets, opts) {
             // Neither path, nor platform name - throw.
             var msg;
             if (/[~:/\\.]/.test(t)) {
-                msg = 'Platform path "' + t + '" not found.';
+                return;
             } else {
                 msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +

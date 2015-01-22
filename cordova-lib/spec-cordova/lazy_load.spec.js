@@ -26,7 +26,8 @@ var lazy_load = require('../src/cordova/lazy_load'),
     request = require('request'),
     fs = require('fs'),
     Q = require('q'),
-    platforms = require('../src/cordova/platforms');
+    platforms = require('../src/cordova/platforms'),
+    child_process = require('child_process');
 
 describe('lazy_load module', function() {
     var custom_path;
@@ -91,7 +92,7 @@ describe('lazy_load module', function() {
                 }
             };
             lazy_load.custom(mock_platforms, 'platform X').then(function() {
-                expect(fire).not.toHaveBeenCalled()
+                expect(fire).not.toHaveBeenCalled();
             }, function(err) {
                 expect(err).not.toBeDefined();
             }).fin(done);
@@ -106,7 +107,7 @@ describe('lazy_load module', function() {
                 }
             };
             lazy_load.custom(mock_platforms, 'platform X').then(function() {
-                expect(fire).not.toHaveBeenCalled()
+                expect(fire).not.toHaveBeenCalled();
             }, function(err) {
                 expect(err).not.toBeDefined();
             }).fin(done);
@@ -136,7 +137,7 @@ describe('lazy_load module', function() {
                     }, 10);
                     return fakeRequest;
                 });
-                load_spy = spyOn(npmconf, 'load').andCallFake(function(cb) { cb(null, { get: function() { return npmConfProxy }}); });
+                load_spy = spyOn(npmconf, 'load').andCallFake(function(cb) { cb(null, { get: function() { return npmConfProxy; }}); });
             });
 
             it('should call request with appropriate url params', function(done) {
@@ -270,3 +271,4 @@ describe('lazy_load module', function() {
         });
     });
 });
+
