@@ -32,22 +32,15 @@ var wp8 = require('../../src/plugman/platforms/wp8'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     wp8_project = path.join(__dirname, '..', 'projects', 'wp8');
 
-var xml_path     = path.join(dummyplugin, 'plugin.xml')
-  , xml_text     = fs.readFileSync(xml_path, 'utf-8')
-  , plugin_et    = new et.ElementTree(et.XML(xml_text));
+var PluginInfo = require('../../src/PluginInfo');
 
-var platformTag = plugin_et.find('./platform[@name="wp8"]');
-var dummy_id = plugin_et._root.attrib['id'];
-var valid_source = platformTag.findall('./source-file'),
-    assets = plugin_et.findall('./asset'),
-    configChanges = platformTag.findall('./config-file');
-xml_path  = path.join(faultyplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
+var dummyPluginInfo = new PluginInfo(dummyplugin);
+var dummy_id = dummyPluginInfo.id;
+var valid_source = dummyPluginInfo.getSourceFiles('wp8');
 
-platformTag = plugin_et.find('./platform[@name="wp8"]');
-var invalid_source = platformTag.findall('./source-file');
-var faulty_id = plugin_et._root.attrib['id'];
+var faultyPluginInfo = new PluginInfo(faultyplugin);
+var faulty_id = faultyPluginInfo.id;
+var invalid_source = faultyPluginInfo.getSourceFiles('wp8');
 
 shell.mkdir('-p', temp);
 shell.cp('-rf', path.join(wp8_project, '*'), temp);

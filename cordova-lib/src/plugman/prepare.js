@@ -69,7 +69,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     }
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
-    config_changes.process(plugins_dir, project_dir, platform, platformJson);
+    config_changes.process(plugins_dir, project_dir, platform, platformJson, pluginInfoProvider);
 
     // This array holds all the metadata for each module and ends up in cordova_plugins.json
     var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
@@ -95,7 +95,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
         // Copy www assets described in <asset> tags.
         assets.forEach(function(asset) {
-            common.asset.install(asset.src, asset.target, pluginDir, wwwDir);
+            common.asset.install(asset, pluginDir, wwwDir);
         });
 
         jsModules.forEach(function(module) {
@@ -134,7 +134,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 obj.clobbers = module.clobbers.map(function(o) { return o.target; });
             }
             if (module.merges.length > 0) {
-                obj.clobbers = module.merges.map(function(o) { return o.target; });
+                obj.merges = module.merges.map(function(o) { return o.target; });
             }
             if (module.runs.length > 0) {
                 obj.runs = true;

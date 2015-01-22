@@ -27,13 +27,11 @@ A class for holidng the information currently stored in plugin.xml
 It should also be able to answer questions like whether the plugin
 is compatible with a given engine version.
 
-TODO (kamrik): refactor this to use no fs sync fnctions and return promises.
+TODO (kamrik): refactor this to not use sync functions and return promises.
 */
 
 
 var path = require('path')
-  , fs = require('fs')
-  , _ = require('underscore')
   , xml_helpers = require('./util/xml-helpers')
   , CordovaError = require('./CordovaError')
   ;
@@ -164,9 +162,13 @@ function PluginInfo(dirname) {
     }
 
     function _parseSourceFile(tag) {
-        var srcFile = _.clone(tag.attrib);
-        srcFile.framework = isStrTrue(srcFile.framework);
-        return srcFile;
+        return {
+            src: tag.attrib.src,
+            framework: isStrTrue(tag.attrib.framework),
+            weak: isStrTrue(tag.attrib.weak),
+            compilerFlags: tag.attrib['compiler-flags'],
+            targetDir: tag.attrib['target-dir']
+        };
     }
 
     // <header-file>
@@ -174,7 +176,12 @@ function PluginInfo(dirname) {
     // <header-file src="CDVFoo.h" />
     self.getHeaderFiles = getHeaderFiles;
     function getHeaderFiles(platform) {
-        var headerFiles = _getTagsInPlatform(self._et, 'header-file', platform, cloneAttribs);
+        var headerFiles = _getTagsInPlatform(self._et, 'header-file', platform, function(tag) {
+            return {
+                src: tag.attrib.src,
+                targetDir: tag.attrib['target-dir']
+            };
+        });
         return headerFiles;
     }
 
@@ -183,7 +190,12 @@ function PluginInfo(dirname) {
     // <resource-file src="FooPluginStrings.xml" target="res/values/FooPluginStrings.xml" />
     self.getResourceFiles = getResourceFiles;
     function getResourceFiles(platform) {
-        var resourceFiles = _getTagsInPlatform(self._et, 'resource-file', platform, cloneAttribs);
+        var resourceFiles = _getTagsInPlatform(self._et, 'resource-file', platform, function(tag) {
+            return {
+                src: tag.attrib.src,
+                target: tag.attrib.target
+            };
+        });
         return resourceFiles;
     }
 
@@ -192,7 +204,13 @@ function PluginInfo(dirname) {
     // <lib-file src="src/BlackBerry10/native/device/libfoo.so" arch="device" />
     self.getLibFiles = getLibFiles;
     function getLibFiles(platform) {
-        var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, cloneAttribs);
+        var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, function(tag) {
+            return {
+                src: tag.attrib.src,
+                arch: tag.attrib.arch,
+                Include: tag.attrib.Include
+            };
+        });
         return libFiles;
     }
     
@@ -228,19 +246,46 @@ function PluginInfo(dirname) {
             src: tag.attrib.src,
             clobbers: tag.findall('clobbers').map(function(tag) { return { target: tag.attrib.target }; }),
             merges: tag.findall('merges').map(function(tag) { return { target: tag.attrib.target }; }),
-            runs: tag.findall('merges').map(function(tag) { return {}; })
+            runs: tag.findall('runs').length > 0
         };
 
         return ret;
     }
+
+    self.getEngines = function() {
+        return self._et.findall('engines/engine').map(function(n) {
+            return {
+                name: n.attrib.name,
+                version: n.attrib.version,
+                platform: n.attrib.platform,
+                scriptSrc: n.attrib.scriptSrc
+            };
+        });
+    };
+
+    self.getPlatforms = function() {
+        return self._et.findall('platform').map(function(n) {
+            return { name: n.attrib.name };
+        });
+    };
+
+    self.getFrameworks = function(platform) {
+        return _getTags(self._et, 'framework', platform, function(el) {
+            var ret = {
+                type: el.attrib.type,
+                parent: el.attrib.parent,
+                custom: isStrTrue(el.attrib.custom),
+                src: el.attrib.src,
+                weak: isStrTrue(el.attrib.weak)
+            };
+            return ret;
+        });
+    };
     ///// End of PluginInfo methods /////
 
 
     ///// PluginInfo Constructor logic  /////
     self.filepath = path.join(dirname, 'plugin.xml');
-    if (!fs.existsSync(self.filepath)) {
-        throw new Error('Could not find plugin info in ' + dirname);
-    }
 
     self.dir = dirname;
     var et = self._et = xml_helpers.parseElementtreeSync(self.filepath);
@@ -294,15 +339,9 @@ function _getTagsInPlatform(pelem, tag, platform, transform) {
     return tags;
 }
 
-// Used as the default parser for some elements in plugin.xml
-function cloneAttribs(tag) {
-    return _.clone(tag.attrib);
-}
-
-// Check if x is a string 'true'. Allows for variations in case and
-// leading/trailing white space.
+// Check if x is a string 'true'.
 function isStrTrue(x) {
-    return (typeof x === 'string') && (x.trim().toLowerCase() == 'true');
+    return String(x).toLowerCase() == 'true';
 }
 
 module.exports = PluginInfo;

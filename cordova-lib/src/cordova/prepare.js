@@ -105,7 +105,7 @@ function prepare(options) {
 
             // Make sure that config changes for each existing plugin is in place
             var platformJson = PlatformJson.load(plugins_dir, platform);
-            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson);
+            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson, pluginInfoProvider);
             munger.reapply_global_munge();
             munger.save_all();
 

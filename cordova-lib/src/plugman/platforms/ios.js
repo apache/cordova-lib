@@ -41,13 +41,12 @@ module.exports = {
         return plist.parse(fs.readFileSync(plist_file, 'utf8')).CFBundleIdentifier;
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = source_el.attrib['src'];
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
+            var src = obj.src;
             var srcFile = path.resolve(plugin_dir, src);
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(source_el));
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
             var destFile = path.resolve(targetDir, path.basename(src));
-            var is_framework = source_el.attrib['framework'] && (source_el.attrib['framework'] == 'true' || source_el.attrib['framework'] === true);
-            var has_flags = source_el.attrib['compiler-flags'] && source_el.attrib['compiler-flags'].length ? true : false ;
+            var is_framework = obj.framework;
 
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <source-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
@@ -55,22 +54,21 @@ module.exports = {
             project_ref = fixPathSep(project_ref);
 
             if (is_framework) {
-                var weak = source_el.attrib['weak'];
-                var opt = { weak: (weak === weak == 'true') };
+                var opt = { weak: obj.weak };
                 var project_relative = path.join(path.basename(project.xcode_path), project_ref);
                 project.xcode.addFramework(project_relative, opt);
                 project.xcode.addToLibrarySearchPaths({path:project_ref});
             } else {
-                project.xcode.addSourceFile(project_ref, has_flags ? {compilerFlags:source_el.attrib['compiler-flags']} : {});
+                project.xcode.addSourceFile(project_ref, obj.compilerFlags ? {compilerFlags:obj.compilerFlags} : {});
             }
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
         },
-        uninstall:function(source_el, project_dir, plugin_id, options, project) {
-            var src = source_el.attrib['src'];
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(source_el));
+        uninstall:function(obj, project_dir, plugin_id, options, project) {
+            var src = obj.src;
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
             var destFile = path.resolve(targetDir, path.basename(src));
-            var is_framework = source_el.attrib['framework'] && (source_el.attrib['framework'] == 'true' || source_el.attrib['framework'] === true);
+            var is_framework = obj.framework;
 
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
             project_ref = fixPathSep(project_ref);
@@ -89,10 +87,10 @@ module.exports = {
         }
     },
     'header-file':{
-        install:function(header_el, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = header_el.attrib['src'];
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
+            var src = obj.src;
             var srcFile = path.resolve(plugin_dir, src);
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
             var destFile = path.resolve(targetDir, path.basename(src));
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <header-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
@@ -104,9 +102,9 @@ module.exports = {
             shell.mkdir('-p', targetDir);
             shell.cp(srcFile, destFile);
         },
-        uninstall:function(header_el, project_dir, plugin_id, options, project) {
-            var src = header_el.attrib['src'];
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, getRelativeDir(header_el));
+        uninstall:function(obj, project_dir, plugin_id, options, project) {
+            var src = obj.src;
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
             var destFile = path.resolve(targetDir, path.basename(src));
             
             var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
@@ -120,8 +118,8 @@ module.exports = {
         }
     },
     'resource-file':{
-        install:function(resource_el, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = resource_el.attrib['src'],
+        install:function(reobj, plugin_dir, project_dir, plugin_id, options, project) {
+            var src = reobj.src,
                 srcFile = path.resolve(plugin_dir, src),
                 destFile = path.resolve(project.resources_dir, path.basename(src));
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <resource-file>');
@@ -129,17 +127,17 @@ module.exports = {
             project.xcode.addResourceFile(path.join('Resources', path.basename(src)));
             shell.cp('-R', srcFile, project.resources_dir);
         },
-        uninstall:function(resource_el, project_dir, plugin_id, options, project) {
-            var src = resource_el.attrib['src'],
+        uninstall:function(reobj, project_dir, plugin_id, options, project) {
+            var src = reobj.src,
                 destFile = path.resolve(project.resources_dir, path.basename(src));
             project.xcode.removeResourceFile(path.join('Resources', path.basename(src)));
             shell.rm('-rf', destFile);
         }
     },
     'framework':{ // CB-5238 custom frameworks only
-        install:function(framework_el, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = framework_el.attrib['src'],
-                custom = framework_el.attrib['custom'],
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
+            var src = obj.src,
+                custom = obj.custom,
                 srcFile = path.resolve(plugin_dir, src),
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
             if (!custom) return; //non-custom frameworks are processed in config-changes.js
@@ -150,18 +148,18 @@ module.exports = {
             var project_relative = path.relative(project_dir, targetDir);
             project.xcode.addFramework(project_relative, {customFramework: true});
         },
-        uninstall:function(framework_el, project_dir, plugin_id, options, project) {
-            var src = framework_el.attrib['src'],
+        uninstall:function(obj, project_dir, plugin_id, options, project) {
+            var src = obj.src,
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
             project.xcode.removeFramework(targetDir, {customFramework: true});
             shell.rm('-rf', targetDir);
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.install is not supported for ios');
         },
-        uninstall:function(source_el, project_dir, plugin_id, options) {
+        uninstall:function(obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.uninstall is not supported for ios');
         }
     },
@@ -222,15 +220,6 @@ module.exports = {
         delete cachedProjectFiles[project_dir];
     }
 };
-
-function getRelativeDir(file) {
-    var targetDir = file.attrib['target-dir'];
-    if (targetDir) {
-        return targetDir;
-    } else {
-        return '';
-    }
-}
 
 var pathSepFix = new RegExp(path.sep.replace(/\\/,'\\\\'),'g');
 function fixPathSep(file) {

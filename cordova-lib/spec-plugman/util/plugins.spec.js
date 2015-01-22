@@ -24,8 +24,11 @@ var http   = require('http'),
     temp   = path.join(osenv.tmpdir(), 'plugman'),
     shell  = require('shelljs'),
     child_process = require('child_process'),
-    plugins = require('../../src/plugman/util/plugins'),
-    xml_helpers = require('../../src/util/xml-helpers');
+    xml_helpers = require('../../src/util/xml-helpers'),
+    plugins = require('../../src/plugman/util/plugins');
+
+var et = require('elementtree');
+var PluginInfoProvider = require('../../src/PluginInfoProvider');
 
 describe('plugins utility module', function(){
     describe('clonePluginGitRepo', function(){
@@ -38,13 +41,7 @@ describe('plugins utility module', function(){
             });
             spyOn(shell, 'which').andReturn(true);
             cp_spy = spyOn(shell, 'cp');
-            xml_spy = spyOn(xml_helpers, 'parseElementtreeSync').andReturn({
-                getroot:function() {
-                    return {
-                        attrib:{id:fake_id}
-                    };
-                }
-            });
+            xml_spy = spyOn(xml_helpers, 'parseElementtreeSync').andReturn(new et.ElementTree(et.XML('<plugin id="' + fake_id + '"/>')));
             done = false;
         });
         it('should shell out to git clone with correct arguments', function(){
@@ -52,8 +49,8 @@ describe('plugins utility module', function(){
             var callback = jasmine.createSpy();
 
             runs(function() {
-                plugins.clonePluginGitRepo(plugin_git_url, temp, '.', undefined)
-                .then(function(val) { done = val; }, function(err) { done = err; });
+                plugins.clonePluginGitRepo(plugin_git_url, temp, '.', undefined, null)
+                .then(function(val) { done = val; }, function(err) { done = err.stack; });
             });
             waitsFor(function() { return done; }, 'promise never resolved', 500);
             runs(function() {
@@ -68,7 +65,7 @@ describe('plugins utility module', function(){
             var plugin_git_url = 'https://github.com/imhotep/org.test.plugins.childbrowser';
             var fake_subdir = 'TheBrainRecoilsInHorror';
             runs(function() {
-                plugins.clonePluginGitRepo(plugin_git_url, temp, fake_subdir)
+                plugins.clonePluginGitRepo(plugin_git_url, temp, fake_subdir, null)
                 .then(function(val) { done = val || true; }, function(err) { done = err; });
             });
             waitsFor(function() { return done; }, 'promise never resolved', 500);

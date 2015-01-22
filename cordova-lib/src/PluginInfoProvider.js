@@ -42,8 +42,8 @@ PluginInfoProvider.prototype.get = function(dirName) {
 
 // Normally you don't need to put() entries, but it's used
 // when copying plugins, and in unit tests.
-PluginInfoProvider.prototype.put = function(dirName, pluginInfo) {
-    var absPath = path.resolve(dirName);
+PluginInfoProvider.prototype.put = function(pluginInfo) {
+    var absPath = path.resolve(pluginInfo.dir);
     this._cache[absPath] = pluginInfo;
 };
 

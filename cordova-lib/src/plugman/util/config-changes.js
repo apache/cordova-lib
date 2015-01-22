@@ -57,11 +57,8 @@ var keep_these_frameworks = [
 
 exports.PlatformMunger = PlatformMunger;
 
-/******************************************************************************
-Adapters to keep the current refactoring effort to within this file
-******************************************************************************/
-exports.process = function(plugins_dir, project_dir, platform, platformJson) {
-    var munger = new PlatformMunger(platform, project_dir, plugins_dir, platformJson);
+exports.process = function(plugins_dir, project_dir, platform, platformJson, pluginInfoProvider) {
+    var munger = new PlatformMunger(platform, project_dir, plugins_dir, platformJson, pluginInfoProvider);
     munger.process();
     munger.save_all();
 };
@@ -72,7 +69,7 @@ exports.process = function(plugins_dir, project_dir, platform, platformJson) {
 * Can deal with config file of a single project.
 * Parsed config files are cached in a ConfigKeeper object.
 ******************************************************************************/
-function PlatformMunger(platform, project_dir, plugins_dir, platformJson) {
+function PlatformMunger(platform, project_dir, plugins_dir, platformJson, pluginInfoProvider) {
     checkPlatform(platform);
     this.platform = platform;
     this.project_dir = project_dir;
@@ -80,6 +77,7 @@ function PlatformMunger(platform, project_dir, plugins_dir, platformJson) {
     this.platform_handler = platforms[platform];
     this.config_keeper = new ConfigKeeper(project_dir);
     this.platformJson = platformJson;
+    this.pluginInfoProvider = pluginInfoProvider;
 }
 
 // Write out all unsaved files.
@@ -106,14 +104,14 @@ function PlatformMunger_apply_file_munge(file, munge, remove) {
         }
         for (var src in munge.parents) {
             for (xml_child in munge.parents[src]) {
-                var xml = munge.parents[src][xml_child].xml;
+                var weak = munge.parents[src][xml_child].xml;
                 // Only add the framework if it's not a cordova-ios core framework
                 if (keep_these_frameworks.indexOf(src) == -1) {
                     // xml_child in this case is whether the framework should use weak or not
                     if (remove) {
                         pbxproj.data.removeFramework(src);
                     } else {
-                        pbxproj.data.addFramework(src, {weak: (xml === 'true')});
+                        pbxproj.data.addFramework(src, {weak: weak});
                     }
                     pbxproj.is_changed = true;
                 }
@@ -185,9 +183,6 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
     var self = this;
     var platform_config = self.platformJson.root;
     var plugin_dir = path.join(self.plugins_dir, plugin_id);
-
-    var plugin_config = self.config_keeper.get(plugin_dir, '', 'plugin.xml');
-    plugin_id = plugin_config.data.getroot().attrib.id;
 
     // get config munge, aka how should this plugin change various config files
     var config_munge = self.generate_plugin_config_munge(plugin_dir, plugin_vars);
@@ -274,45 +269,23 @@ function generate_plugin_config_munge(plugin_dir, vars) {
     }
 
     var munge = { files: {} };
-    var plugin_config = self.config_keeper.get(plugin_dir, '', 'plugin.xml');
-    var plugin_xml = plugin_config.data;
+    var pluginInfo = self.pluginInfoProvider.get(plugin_dir);
 
-    var platformTag = plugin_xml.find('platform[@name="' + self.platform + '"]');
-    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-    // we allow using windows8 tag for new windows platform
-    if (self.platform == 'windows' && !platformTag) {
-        platformTag = plugin_xml.find('platform[@name="' + 'windows8' + '"]');
-    }
+    var changes = pluginInfo.getConfigFiles(self.platform);
 
-    var changes = [];
-    // add platform-agnostic config changes
-    changes = changes.concat(plugin_xml.findall('config-file'));
-    if (platformTag) {
-        // add platform-specific config changes if they exist
-        changes = changes.concat(platformTag.findall('config-file'));
-
-        // note down pbxproj framework munges in special section of munge obj
-        // CB-5238 this is only for systems frameworks
-        if (self.platform === 'ios') {
-            var frameworks = platformTag.findall('framework');
-            frameworks.forEach(function (f) {
-                var custom = f.attrib['custom'];
-                if (!custom) {
-                    var file = f.attrib['src'];
-                    var weak = ('true' == f.attrib['weak']).toString();
-
-                    mungeutil.deep_add(munge, 'framework', file, { xml: weak, count: 1 });
-                }
-            });
-        }
+    // note down pbxproj framework munges in special section of munge obj
+    // CB-5238 this is only for systems frameworks
+    if (self.platform === 'ios') {
+        var frameworks = pluginInfo.getFrameworks(self.platform);
+        frameworks.forEach(function (f) {
+            if (!f.custom) {
+                mungeutil.deep_add(munge, 'framework', f.src, { xml: f.weak, count: 1 });
+            }
+        });
     }
 
     changes.forEach(function(change) {
-        var target = change.attrib['target'];
-        var parent = change.attrib['parent'];
-        var after = change.attrib['after'];
-        var xmls = change.getchildren();
-        xmls.forEach(function(xml) {
+        change.xmls.forEach(function(xml) {
             // 1. stringify each xml
             var stringified = (new et.ElementTree(xml)).write({xml_declaration:false});
             // interp vars
@@ -323,13 +296,13 @@ function generate_plugin_config_munge(plugin_dir, vars) {
                 });
             }
             // 2. add into munge
-            mungeutil.deep_add(munge, target, parent, { xml: stringified, count: 1, after: after });
+            mungeutil.deep_add(munge, change.target, change.parent, { xml: stringified, count: 1, after: change.after });
         });
     });
     return munge;
 }
 
-// Go over the prepare queue an apply the config munges for each plugin
+// Go over the prepare queue and apply the config munges for each plugin
 // that has been (un)installed.
 PlatformMunger.prototype.process = PlatformMunger_process;
 function PlatformMunger_process() {

@@ -152,7 +152,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     uninstallQueuedPlugins(platformJson, www_dir);
 
     events.emit('verbose', 'Processing configuration changes for plugins.');
-    config_changes.process(plugins_dir, project_dir, platform, platformJson);
+    config_changes.process(plugins_dir, project_dir, platform, platformJson, pluginInfoProvider);
 
     if(!is_top_level) {
         return Q();
@@ -188,7 +188,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
             // Copy www assets described in <asset> tags.
             assets.forEach(function(asset) {
-                common.asset.install(asset.src, asset.target, pluginDir, wwwDir);
+                common.asset.install(asset, pluginDir, wwwDir);
             });
             jsModules.forEach(function(module) {
                 // Copy the plugin's files into the www directory.
