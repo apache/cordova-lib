@@ -209,6 +209,7 @@ module.exports = function plugin(command, targets, opts) {
                         });
                     }, Q())
                     .then(function() {
+                        // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
                     });
                 }, Q());

@@ -32,37 +32,20 @@ var android = require('../../src/plugman/platforms/android'),
     plugins_module = require('../../src/plugman/util/plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
-    variableplugin = path.join(__dirname, '..', 'plugins', 'com.adobe.vars'),
     android_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*');
 
-var xml_path     = path.join(dummyplugin, 'plugin.xml')
-  , xml_text     = fs.readFileSync(xml_path, 'utf-8')
-  , plugin_et    = new et.ElementTree(et.XML(xml_text));
+var PluginInfo = require('../../src/PluginInfo');
 
-var platformTag = plugin_et.find('./platform[@name="android"]');
-var dummy_id = plugin_et._root.attrib['id'];
-var valid_source = platformTag.findall('./source-file'),
-    valid_libs = platformTag.findall('./lib-file'),
-    valid_resources = platformTag.findall('./resource-file'),
-    assets = plugin_et.findall('./asset'),
-    configChanges = platformTag.findall('./config-file');
+var dummyPluginInfo = new PluginInfo(dummyplugin);
+var dummy_id = dummyPluginInfo.id;
+var valid_source = dummyPluginInfo.getSourceFiles('android'),
+    valid_resources = dummyPluginInfo.getResourceFiles('android'),
+    valid_libs = dummyPluginInfo.getLibFiles('android'),
+    dummy_configs = dummyPluginInfo.getConfigFiles('android');
 
-xml_path  = path.join(faultyplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
-
-platformTag = plugin_et.find('./platform[@name="android"]');
-var invalid_source = platformTag.findall('./source-file');
-var faulty_id = plugin_et._root.attrib['id'];
-
-xml_path  = path.join(variableplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
-platformTag = plugin_et.find('./platform[@name="android"]');
-
-var variable_id = plugin_et._root.attrib['id'];
-var variable_configs = platformTag.findall('./config-file');
+var faultyPluginInfo = new PluginInfo(faultyplugin);
+var invalid_source = faultyPluginInfo.getSourceFiles('android');
 
 function copyArray(arr) {
     return Array.prototype.slice.call(arr, 0);
@@ -140,8 +123,8 @@ describe('android project handler', function() {
             it('with custom=true should update the main and library projects', function() {
                 var packageIdSuffix = "PlugmanTest";
                 var packageId = "io.cordova." + packageIdSuffix;
-                var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var subDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.attrib.src);
+                var frameworkElement = { src: "LibraryPath", custom: true };
+                var subDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.src);
                 var mainProjectPropsFile = path.resolve(temp, "project.properties");
                 var mainProjectManifestFile = path.resolve(temp, "AndroidManifest.xml");
                 var subProjectPropsFile = path.resolve(subDir, "project.properties");
@@ -175,8 +158,8 @@ describe('android project handler', function() {
                 expect(exec).toHaveBeenCalledWith('android update lib-project --path "' + subDir + '"');
             });
             it('with custom=false should update the main and library projects', function() {
-                var frameworkElement = { attrib: { src: "extras/android/support/v7/appcompat" } };
-                var subDir = path.resolve("~/android-sdk", frameworkElement.attrib.src);
+                var frameworkElement = { src: "extras/android/support/v7/appcompat" };
+                var subDir = path.resolve("~/android-sdk", frameworkElement.src);
                 var localPropsFile = path.resolve(temp, "local.properties");
                 var mainProjectPropsFile = path.resolve(temp, "project.properties");
                 var subProjectPropsFile = path.resolve(subDir, "project.properties");
@@ -256,8 +239,8 @@ describe('android project handler', function() {
             it('should remove library reference from the main project', function () {
                 var packageIdSuffix = "PlugmanTest";
                 var packageId = "io.cordova." + packageIdSuffix;
-                var frameworkElement = { attrib: { src: "LibraryPath", custom: true } };
-                var sub_dir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.attrib.src);
+                var frameworkElement = { src: "LibraryPath", custom: true };
+                var sub_dir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.src);
                 var mainProjectProps = path.resolve(temp, "project.properties");
                 var mainProjectManifest = path.resolve(temp, "AndroidManifest.xml");
                 var existsSync = spyOn(fs, 'existsSync').andReturn(true);

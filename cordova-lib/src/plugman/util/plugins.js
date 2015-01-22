@@ -27,15 +27,16 @@ var os = require('os'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     Q = require('q'),
-    xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     tmp_dir;
+
+var PluginInfo = require('../../PluginInfo');
 
 module.exports = {
     searchAndReplace:require('./search-and-replace'),
 
     clonePluginGit:function(plugin_git_url, plugins_dir, options) {
-        return module.exports.clonePluginGitRepo(plugin_git_url, plugins_dir, options.subdir, options.git_ref).then(
+        return module.exports.clonePluginGitRepo(plugin_git_url, plugins_dir, options.subdir, options.git_ref, options.pluginInfoProvider).then(
             function(dst){
                 // Keep location where we checked out git repo
                 options.plugin_src_dir = tmp_dir;
@@ -46,7 +47,7 @@ module.exports = {
 
     // Fetches plugin information from remote server.
     // Returns a promise.
-    clonePluginGitRepo:function(plugin_git_url, plugins_dir, subdir, git_ref) {
+    clonePluginGitRepo:function(plugin_git_url, plugins_dir, subdir, git_ref, pluginInfoProvider) {
 
         if(!shell.which('git')) {
             return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
@@ -83,16 +84,18 @@ module.exports = {
         }).then(function() {
             // Read the plugin.xml file and extract the plugin's ID.
             tmp_dir = path.join(tmp_dir, subdir);
-            // TODO: what if plugin.xml does not exist?
-            var xml_file = path.join(tmp_dir, 'plugin.xml');
-            var xml = xml_helpers.parseElementtreeSync(xml_file);
-            var plugin_id = xml.getroot().attrib.id;
+            var pluginInfo = new PluginInfo(tmp_dir);
+            var plugin_id = pluginInfo.id;
 
             // TODO: what if a plugin depended on different subdirectories of the same plugin? this would fail.
             // should probably copy over entire plugin git repo contents into plugins_dir and handle subdir separately during install.
             var plugin_dir = path.join(plugins_dir, plugin_id);
             events.emit('verbose', 'Copying fetched plugin over "' + plugin_dir + '"...');
             shell.cp('-R', path.join(tmp_dir, '*'), plugin_dir);
+            pluginInfo.dir = plugin_dir;
+            if (pluginInfoProvider) {
+                pluginInfoProvider.put(pluginInfo);
+            }
 
             events.emit('verbose', 'Plugin "' + plugin_id + '" fetched.');
             process.env.CORDOVA_PLUGIN_ID = plugin_id;

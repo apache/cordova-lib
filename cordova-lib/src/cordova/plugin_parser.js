@@ -23,6 +23,7 @@
 
 var xml = require('../util/xml-helpers');
 
+/** Deprecated. Use PluginInfo instead. */
 function plugin_parser(xmlPath) {
     this.path = xmlPath;
     this.doc = xml.parseElementtreeSync(xmlPath);

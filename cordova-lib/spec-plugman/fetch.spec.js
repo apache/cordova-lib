@@ -36,7 +36,6 @@ var fetch   = require('../src/plugman/fetch'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
 
-
 describe('fetch', function() {
 
     function wrapper(p, done, post) {
@@ -127,7 +126,7 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(done).toBe(true);
-                expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined);
+                expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -139,7 +138,7 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined);
+                expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -152,7 +151,7 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(url, temp, dir, ref);
+                expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -164,7 +163,7 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef');
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -176,7 +175,7 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined);
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -188,7 +187,7 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef');
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });

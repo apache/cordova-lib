@@ -73,6 +73,6 @@ describe('prepare', function() {
     });
     it('should call into config-changes\' process method to do config processing', function() {
         prepare(temp, 'android', plugins_dir);
-        expect(proc).toHaveBeenCalledWith(plugins_dir, temp, 'android', jasmine.any(Object));
+        expect(proc).toHaveBeenCalledWith(plugins_dir, temp, 'android', jasmine.any(Object), jasmine.any(Object));
     });
 });

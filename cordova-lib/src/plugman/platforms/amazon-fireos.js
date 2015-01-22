@@ -46,64 +46,64 @@ module.exports = {
         return mDoc._root.attrib['package'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            var src = source_el.attrib['src'];
+        install:function(obj, plugin_dir, project_dir, plugin_id) {
+            var src = obj.src;
             if (!src) {
-                throw new CordovaError('<source-file> element is missing "src" attribute: ' + source_el);
+                throw new CordovaError('<source-file> element is missing "src" attribute for plugin: ' + plugin_id);
             }
-            var targetDir = source_el.attrib['target-dir'];
+            var targetDir = obj.targetDir;
             if (!targetDir) {
-                throw new CordovaError('<source-file> element is missing "target-dir" attribute: ' + source_el);
+                throw new CordovaError('<source-file> element is missing "target-dir" attribute for plugin: ' + plugin_id);
             }
             var dest = path.join(targetDir, path.basename(src));
 
             common.copyNewFile(plugin_dir, src, project_dir, dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id, options) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
+        uninstall:function(obj, project_dir, plugin_id, options) {
+            var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.deleteJava(project_dir, dest);
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-fileinstall is not supported for amazon-fireos');
         },
-        uninstall:function(source_el, project_dir, plugin_id, options) {
+        uninstall:function(obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for amazon-fireos');
         }
     },
     'lib-file':{
-        install:function(lib_el, plugin_dir, project_dir, plugin_id, options) {
-            var src = lib_el.attrib.src;
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+            var src = obj.src;
             var dest = path.join('libs', path.basename(src));
             common.copyFile(plugin_dir, src, project_dir, dest);
         },
-        uninstall:function(lib_el, project_dir, plugin_id, options) {
-            var src = lib_el.attrib.src;
+        uninstall:function(obj, project_dir, plugin_id, options) {
+            var src = obj.src;
             var dest = path.join('libs', path.basename(src));
             common.removeFile(project_dir, dest);
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, options) {
-            var src = el.attrib.src;
-            var target = el.attrib.target;
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+            var src = obj.src;
+            var target = obj.target;
             events.emit('verbose', 'Copying resource file ' + src + ' to ' + target);
             common.copyFile(plugin_dir, src, project_dir, target);
         },
-        uninstall:function(el, project_dir, plugin_id, options) {
-            var target = el.attrib.target;
+        uninstall:function(obj, project_dir, plugin_id, options) {
+            var target = obj.target;
             common.removeFile(project_dir, target);
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
-            var src = source_el.attrib.src;
-            var custom = source_el.attrib.custom;
-            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+            var src = obj.src;
+            var custom = obj.custom;
+            if (!src) throw new CordovaError('src not specified in <framework> for plugin ' + plugin_id);
 
             events.emit('verbose', 'Installing Android library: ' + src);
-            var parent = source_el.attrib.parent;
+            var parent = obj.parent;
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
 
@@ -117,7 +117,7 @@ module.exports = {
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            var type = source_el.attrib.type;
+            var type = obj.type;
             if (type == 'gradleReference') {
                 //add reference to build.gradle
                 projectConfig.addGradleReference(parentDir, subDir);
@@ -125,13 +125,13 @@ module.exports = {
                 projectConfig.addSubProject(parentDir, subDir);
             }
         },
-        uninstall:function(source_el, project_dir, plugin_id, options) {
-            var src = source_el.attrib.src;
-            var custom = source_el.attrib.custom;
-            if (!src) throw new CordovaError('src not specified in <framework>: ' + source_el);
+        uninstall:function(obj, project_dir, plugin_id, options) {
+            var src = obj.src;
+            var custom = obj.custom;
+            if (!src) throw new CordovaError('src not specified in <framework> for plugin: ' + plugin_id);
 
             events.emit('verbose', 'Uninstalling Android library: ' + src);
-            var parent = source_el.attrib.parent;
+            var parent = obj.parent;
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
 
@@ -145,7 +145,7 @@ module.exports = {
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            var type = source_el.attrib.type;
+            var type = obj.type;
             if (type == 'gradleReference') {
                 projectConfig.removeGradleReference(parentDir, subDir);
             } else {

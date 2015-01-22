@@ -103,18 +103,18 @@ module.exports = common = {
     },
     // handle <asset> elements
     asset:{
-        install:function(src, target, plugin_dir, www_dir) {
-            if (!src) {
-                throw new Error('<asset> tag without required "src" attribute');
+        install:function(asset, plugin_dir, www_dir) {
+            if (!asset.src) {
+                throw new Error('<asset> tag without required "src" attribute. plugin=' + plugin_dir);
             }
-            if (!target) {
+            if (!asset.target) {
                 throw new Error('<asset> tag without required "target" attribute');
             }
 
-            common.copyFile(plugin_dir, src, www_dir, target);
+            common.copyFile(plugin_dir, asset.src, www_dir, asset.target);
         },
-        uninstall:function(src, target, www_dir, plugin_id) {
-            target = target || src;
+        uninstall:function(asset, www_dir, plugin_id) {
+            var target = asset.target || asset.src;
 
             if (!target) {
                 throw new Error('<asset> tag without required "target" attribute');
