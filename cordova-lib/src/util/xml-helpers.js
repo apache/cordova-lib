@@ -17,10 +17,7 @@
  *
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true, laxcomma:true
-*/
+/* jshint sub:true, laxcomma:true */
 
 /**
  * contains XML utility functions, some of which are specific to elementtree

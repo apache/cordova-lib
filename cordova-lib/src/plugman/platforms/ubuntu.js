@@ -17,10 +17,7 @@
  *
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true
-*/
+/* jshint laxcomma:true, sub:true */
 
 function replaceAt(str, index, char) {
     return str.substr(0, index) + char + str.substr(index + char.length);

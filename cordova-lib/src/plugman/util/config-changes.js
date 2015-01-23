@@ -16,7 +16,6 @@
  * under the License.
  *
 */
-/* jshint node:true, sub:true, indent:4  */
 
 /*
  * This module deals with shared configuration / dependency "stuff". That is:
@@ -31,10 +30,7 @@
  * reference counts.
  */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true
-*/
+/* jshint sub:true */
 
 var fs   = require('fs'),
     path = require('path'),

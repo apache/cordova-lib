@@ -17,10 +17,6 @@
  *
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 // contains PLIST utility functions
 var __     = require('underscore');
 var plist = require('plist');

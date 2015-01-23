@@ -20,10 +20,7 @@
     Helper for Android projects configuration
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          boss:true
-*/
+/* jshint boss:true */
 
 var fs = require('fs'),
     path = require('path'),

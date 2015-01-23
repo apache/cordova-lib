@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true, laxcomma:true, laxbreak:true
-*/
+/* jshint sub:true, laxcomma:true, laxbreak:true */
 
 /*
 A class for holidng the information currently stored in plugin.xml

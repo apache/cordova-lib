@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          expr:true
-*/
+/* jshint expr:true */
 
 var dep_graph = require('dep-graph'),
     path = require('path'),

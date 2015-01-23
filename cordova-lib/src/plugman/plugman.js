@@ -19,10 +19,6 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var events = require('../events');
 var Q = require('q');
 

@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          expr:true, quotmark:false
-*/
+/* jshint expr:true, quotmark:false */
 
 var platform_modules = require('./platforms'),
     path            = require('path'),
