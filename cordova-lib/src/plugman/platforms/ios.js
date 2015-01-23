@@ -23,6 +23,7 @@
 */
 
 var path = require('path')
+  , common = require('./common')
   , fs   = require('fs')
   , glob = require('glob')
   , xcode = require('xcode')
@@ -31,6 +32,67 @@ var path = require('path')
   , events = require('../../events')
   , cachedProjectFiles = {}
   ;
+
+
+function installHelper(type, obj, plugin_dir, project_dir, plugin_id, options, project) {
+    var srcFile = path.resolve(plugin_dir, obj.src);
+    var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
+    var destFile = path.join(targetDir, path.basename(obj.src));
+
+    var project_ref;
+    var link = !!(options && options.link);
+    if (link) {
+        var trueSrc = fs.realpathSync(srcFile);
+        // Create a symlink in the expected place, so that uninstall can use it.
+        common.copyNewFile(plugin_dir, trueSrc, project_dir, destFile, link);
+
+        // Xcode won't save changes to a file if there is a symlink involved.
+        // Make the Xcode reference the file directly.
+        // Note: Can't use path.join() here since it collapses 'Plugins/..', and xcode
+        // library special-cases Plugins/ prefix.
+        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, trueSrc));
+    } else {
+        common.copyNewFile(plugin_dir, srcFile, project_dir, destFile, link);
+        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, destFile));
+    }
+
+    if (type == 'header-file') {
+        project.xcode.addHeaderFile(project_ref);
+    } else if (obj.framework) {
+        var opt = { weak: obj.weak };
+        var project_relative = path.join(path.basename(project.xcode_path), project_ref);
+        project.xcode.addFramework(project_relative, opt);
+        project.xcode.addToLibrarySearchPaths({path:project_ref});
+    } else {
+        project.xcode.addSourceFile(project_ref, obj.compilerFlags ? {compilerFlags:obj.compilerFlags} : {});
+    }
+}
+
+function uninstallHelper(type, obj, project_dir, plugin_id, options, project) {
+    var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
+    var destFile = path.join(targetDir, path.basename(obj.src));
+
+    var project_ref;
+    var link = !!(options && options.link);
+    if (link) {
+        var trueSrc = fs.readlinkSync(destFile);
+        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, trueSrc));
+    } else {
+        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, destFile));
+    }
+
+    shell.rm('-rf', targetDir);
+
+    if (type == 'header-file') {
+        project.xcode.removeHeaderFile(project_ref);
+    } else if (obj.framework) {
+        var project_relative = path.join(path.basename(project.xcode_path), project_ref);
+        project.xcode.removeFramework(project_relative);
+        project.xcode.removeFromLibrarySearchPaths({path:project_ref});
+    } else {
+        project.xcode.removeSourceFile(project_ref);
+    }
+}
 
 module.exports = {
     www_dir:function(project_dir) {
@@ -42,79 +104,18 @@ module.exports = {
     },
     'source-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = obj.src;
-            var srcFile = path.resolve(plugin_dir, src);
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
-            var destFile = path.resolve(targetDir, path.basename(src));
-            var is_framework = obj.framework;
-
-            if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <source-file>');
-            if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
-            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
-            project_ref = fixPathSep(project_ref);
-
-            if (is_framework) {
-                var opt = { weak: obj.weak };
-                var project_relative = path.join(path.basename(project.xcode_path), project_ref);
-                project.xcode.addFramework(project_relative, opt);
-                project.xcode.addToLibrarySearchPaths({path:project_ref});
-            } else {
-                project.xcode.addSourceFile(project_ref, obj.compilerFlags ? {compilerFlags:obj.compilerFlags} : {});
-            }
-            shell.mkdir('-p', targetDir);
-            shell.cp(srcFile, destFile);
+            installHelper('source-file', obj, plugin_dir, project_dir, plugin_id, options, project);
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
-            var src = obj.src;
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
-            var destFile = path.resolve(targetDir, path.basename(src));
-            var is_framework = obj.framework;
-
-            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
-            project_ref = fixPathSep(project_ref);
-            
-            project.xcode.removeSourceFile(project_ref);
-            if (is_framework) {
-                var project_relative = path.join(path.basename(project.xcode_path), project_ref);
-                project.xcode.removeFramework(project_relative);
-                project.xcode.removeFromLibrarySearchPaths({path:project_ref});
-            }
-            shell.rm('-rf', destFile);
-
-            if(fs.existsSync(targetDir) && fs.readdirSync(targetDir).length>0){
-                shell.rm('-rf', targetDir);
-            }
+            uninstallHelper('source-file', obj, project_dir, plugin_id, options, project);
         }
     },
     'header-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
-            var src = obj.src;
-            var srcFile = path.resolve(plugin_dir, src);
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
-            var destFile = path.resolve(targetDir, path.basename(src));
-            if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <header-file>');
-            if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
-            
-            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
-            project_ref = fixPathSep(project_ref);
-            
-            project.xcode.addHeaderFile(project_ref);
-            shell.mkdir('-p', targetDir);
-            shell.cp(srcFile, destFile);
+            installHelper('header-file', obj, plugin_dir, project_dir, plugin_id, options, project);
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
-            var src = obj.src;
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, obj.targetDir || '');
-            var destFile = path.resolve(targetDir, path.basename(src));
-            
-            var project_ref = path.join('Plugins', path.relative(project.plugins_dir, destFile));
-            project_ref = fixPathSep(project_ref);
-            
-            project.xcode.removeHeaderFile(project_ref);
-            shell.rm('-rf', destFile);
-            if(fs.existsSync(targetDir) && fs.readdirSync(targetDir).length>0){
-                shell.rm('-rf', targetDir);
-            }
+            uninstallHelper('header-file', obj, project_dir, plugin_id, options, project);
         }
     },
     'resource-file':{
