@@ -345,3 +345,9 @@ function isStrTrue(x) {
 }
 
 module.exports = PluginInfo;
+// Backwards compat:
+PluginInfo.PluginInfo = PluginInfo;
+PluginInfo.loadPluginsDir = function(dir) {
+    var PluginInfoProvider = require('./PluginInfoProvider');
+    return new PluginInfoProvider().getAllWithinSearchPath(dir);
+};
