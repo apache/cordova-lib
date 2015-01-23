@@ -128,7 +128,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            events.emit('log', 'Fetching plugin "' + plugin_src + '" via plugin registry');
             return registry.fetch([plugin_src], options.client)
             .then(function(dir) {
                 return {
