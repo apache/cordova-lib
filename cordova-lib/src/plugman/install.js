@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true, expr:true
-*/
+/* jshint laxcomma:true, sub:true, expr:true */
 
 var path = require('path'),
     fs   = require('fs'),

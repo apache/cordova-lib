@@ -13,7 +13,7 @@
  * under the License.
  *
 */
-/* jshint node:true, sub:true, indent:4  */
+/* jshint sub:true */
 
 var fs = require('fs');
 var path = require('path');

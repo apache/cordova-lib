@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          quotmark:false, unused:false
-*/
+/* jshint quotmark:false, unused:false */
 
 /*
   Helper for dealing with Windows Store JS app .jsproj files

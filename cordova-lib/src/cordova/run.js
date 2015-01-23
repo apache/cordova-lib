@@ -17,10 +17,6 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var cordova_util      = require('./util'),
     path              = require('path'),
     HooksRunner            = require('../hooks/HooksRunner'),

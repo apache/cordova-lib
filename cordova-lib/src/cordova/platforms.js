@@ -17,10 +17,6 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var platforms = require('./platformsConfig.json');
 
 var addModuleProperty = require('./util').addModuleProperty;
