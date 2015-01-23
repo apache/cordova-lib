@@ -41,6 +41,7 @@ var path          = require('path'),
     npm           = require('npm'),
     unpack        = require('../util/unpack'),
     util          = require('./util'),
+    gitclone      = require('../gitclone'),
     stubplatform  = {
         url    : undefined,
         version: undefined,
@@ -298,7 +299,7 @@ function git_clone_platform(git_url) {
         repository: git_url,
         location: tmp_dir
     }).then(function () {
-        return util.cloneGitRepo(git_url, 'master', tmp_dir);
+        return gitclone.clone(git_url, 'master', tmp_dir);
     }).then(function () {
         return util.getPlatformDetailsFromDir(tmp_dir);
     }).then(function (platDetails) {

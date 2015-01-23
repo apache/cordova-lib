@@ -407,6 +407,7 @@ function platform(command, targets, opts) {
     // - android
     // - android@3.5.0
     // - ../path/to/dir/with/platform/files
+    // - https://github.com/apache/cordova-android.git
     if (targets) {
         if (!(targets instanceof Array)) targets = [targets];
         targets.forEach(function (t) {
@@ -417,11 +418,13 @@ function platform(command, targets, opts) {
             // Not a known platform name, check if its a real path.
             var pPath = path.resolve(t);
             if (fs.existsSync(pPath)) return;
-            // Neither path, nor platform name - throw.
+
             var msg;
+	    // If target looks like a url, we will try cloning it with git
             if (/[~:/\\.]/.test(t)) {
                 return;
             } else {
+		// Neither path, git-url nor platform name - throw.
                 msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'

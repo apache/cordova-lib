@@ -26,6 +26,7 @@ var path = require('path'),
     xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     util   = require('../../cordova/util'),
+    gitclone = require('../../gitclone'),
     tmp_dir;
 
 module.exports = {
@@ -44,7 +45,7 @@ module.exports = {
     // Fetches plugin information from remote server.
     // Returns a promise.
     clonePluginGitRepo:function(plugin_git_url, plugins_dir, subdir, git_ref) {
-	return util.cloneGitRepo(plugin_git_url, git_ref).then(function(tmp_dir) {
+	return gitclone.clone(plugin_git_url, git_ref).then(function(tmp_dir) {
             // Read the plugin.xml file and extract the plugin's ID.
 	    tmp_dir = path.join(tmp_dir, subdir);
             // TODO: what if plugin.xml does not exist?
