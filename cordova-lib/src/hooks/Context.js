@@ -17,12 +17,6 @@
  under the License.
  */
 
-var Q = require('q'),
-    fs = require('fs'),
-    path = require('path'),
-    os = require('os'),
-    events = require('../events');
-
 /**
  * Creates hook script context
  * @constructor

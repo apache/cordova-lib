@@ -137,7 +137,7 @@ function runScript(script, context) {
  * Returns a promise. */
 function runScriptViaModuleLoader(script, context) {
     if(!fs.existsSync(script.fullPath)) {
-        events.emit('warn', "Script file does't exist and will be skipped: " + script.fullPath);
+        events.emit('warn', 'Script file does\'t exist and will be skipped: ' + script.fullPath);
         return Q();
     }
     var scriptFn = require(script.fullPath);
@@ -202,7 +202,7 @@ function extractSheBangInterpreter(fullpath) {
     var fileChunk;
     var octetsRead;
     var fileData;
-    var hookFd = fs.openSync(fullpath, "r");
+    var hookFd = fs.openSync(fullpath, 'r');
     try {
         // this is a modern cluster size. no need to read less
         fileData = new Buffer(4096);
