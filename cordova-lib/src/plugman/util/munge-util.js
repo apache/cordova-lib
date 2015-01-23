@@ -14,7 +14,6 @@
  *
 */
 /* jshint node:true, sub:true, indent:4  */
-/* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
 
 var _ = require('underscore');
 

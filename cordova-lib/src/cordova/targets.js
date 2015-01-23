@@ -54,9 +54,9 @@ module.exports = function targets(options) {
 
     var result = Q();
     options.platforms.forEach(function(platform) {
-        if (~options.options.indexOf('--device')) {
+        if (options.options.indexOf('--device') >= 0) {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options));
-        } else if(~options.options.indexOf('--emulator')) {
+        } else if(options.options.indexOf('--emulator') >= 0) {
             result = result.then(displayVirtualDevices.bind(null, projectRoot, platform, options.options));
         } else {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options))

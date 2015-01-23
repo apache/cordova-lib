@@ -14,8 +14,6 @@
  *
 */
 /* jshint node:true, sub:true, indent:4  */
-/* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
-
 
 var fs = require('fs');
 var path = require('path');
