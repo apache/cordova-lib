@@ -30,7 +30,7 @@ var npm = require('npm'),
     rc = require('rc'),
     Q = require('q'),
     request = require('request'),
-    pluginMapper = require('cordova-registry-mapper');
+    pluginMapper = require('cordova-registry-mapper'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('../../events'),
     unpack = require('../../util/unpack'),
@@ -345,7 +345,7 @@ function fetchNPM(plugin, client) {
         var re = /([\w-]*\.[\w-]*\.[\w-]*\.[\w-]*[^@])/;
         var pluginID = plugin.match(re);
         //If true, pluginID is reverse domain style
-        if(pluginID != null) { 
+        if(pluginID !== null) { 
             //grab the @VERSION from the end of the plugin string if it exists
             re = /(@.*)/;
             var versionStr = plugin.match(re);
@@ -356,7 +356,7 @@ function fetchNPM(plugin, client) {
             var packageName = pluginMapper[pluginID[0]];
             if(packageName) {
                 //if @VERSION exists, concat it to packageName
-                if(versionStr != null) {
+                if(versionStr !== null) {
                     packageName += versionStr[0];
                 }
                 events.emit('verbose', 'Converted ' + plugin + ' to ' + packageName + ' for npm fetch');
