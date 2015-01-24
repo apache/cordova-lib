@@ -30,6 +30,7 @@ var npm = require('npm'),
     rc = require('rc'),
     Q = require('q'),
     request = require('request'),
+    pluginMapper = require('cordova-registry-mapper');
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('../../events'),
     unpack = require('../../util/unpack'),
@@ -327,7 +328,6 @@ function makeRequest (method, where, what, cb_) {
      * @return {Promise.<string>} Promised path to fetched package.
      */
 function fetchNPM(plugin, client) {
-    events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
     return initSettingsNPM()
     .then(function (settings) {
         return Q.nfcall(npm.load)
@@ -338,7 +338,35 @@ function fetchNPM(plugin, client) {
             }
         });
     })
+    .then(function(){
+        //if plugin variable is in reverse domain name style, look up the package-name in cordova-registry-mapper module
+
+        //Create regex to for digits, words and dashes and three dots in plugin ids which excludes @VERSION.
+        var re = /([\w-]*\.[\w-]*\.[\w-]*\.[\w-]*[^@])/;
+        var pluginID = plugin.match(re);
+        //If true, pluginID is reverse domain style
+        if(pluginID != null) { 
+            //grab the @VERSION from the end of the plugin string if it exists
+            re = /(@.*)/;
+            var versionStr = plugin.match(re);
+
+            //Check if a mapping exists for the pluginID
+            //if it does, set the plugin variable to your packageName
+            //if it doesn't, don't change the plugin variable
+            var packageName = pluginMapper[pluginID[0]];
+            if(packageName) {
+                //if @VERSION exists, concat it to packageName
+                if(versionStr != null) {
+                    packageName += versionStr[0];
+                }
+                events.emit('verbose', 'Converted ' + plugin + ' to ' + packageName + ' for npm fetch');
+                plugin = packageName;
+            }
+        }
+        return true;
+    })
     .then(function() {
+        events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
         return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
     })
     .then(function(info) {
@@ -358,30 +386,30 @@ function fetchNPM(plugin, client) {
  * @return {Promise.<string>} Promised path to fetched package.
  */
 function fetchPlugReg(plugin, client) {
-    events.emit('log', 'Fetching plugin "' + plugin + '" via plugin registry');
-        return initSettings()
-        .then(function (settings) {
-            return Q.nfcall(npm.load)
-            // configure npm here instead of passing parameters to npm.load due to CB-7670
-            .then(function () {
-                for (var prop in settings){
-                    npm.config.set(prop, settings[prop]);
-                }
-            });
-        })
-        .then(function() {
-            return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
-        })
-        .then(function(info) {
-            var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
-            bumpCounter(info, cl);
-            var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
-            // Unpack the plugin that was added to the cache (CB-8154)
-            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-            return unpack.unpackTgz(package_tgz, pluginDir);
-        })
-        .fail(function() {
-            events.emit('log', 'Fetching from plugin registry failed');
+    return initSettings()
+    .then(function (settings) {
+        return Q.nfcall(npm.load)
+        // configure npm here instead of passing parameters to npm.load due to CB-7670
+        .then(function () {
+            for (var prop in settings){
+                npm.config.set(prop, settings[prop]);
+            }
         });
+    })
+    .then(function() {
+        events.emit('log', 'Fetching plugin "' + plugin + '" via plugin registry');
+        return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
+    })
+    .then(function(info) {
+        var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+        bumpCounter(info, cl);
+        var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
+        // Unpack the plugin that was added to the cache (CB-8154)
+        var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+        return unpack.unpackTgz(package_tgz, pluginDir);
+    })
+    .fail(function() {
+        events.emit('log', 'Fetching from plugin registry failed');
+    });
 }
 
