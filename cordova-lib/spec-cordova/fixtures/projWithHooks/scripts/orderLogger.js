@@ -9,4 +9,4 @@ module.exports.logOrder = function logOrder(index, context) {
 
         fs.appendFileSync('hooks_order.txt', indexWithEOL);
     }
-}
+};

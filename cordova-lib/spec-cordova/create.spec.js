@@ -22,36 +22,19 @@ var helpers = require('./helpers'),
     fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
-    config = require('../src/cordova/config'),
     events = require('../src/events'),
-    util = require('../src/cordova/util'),
     ConfigParser = require('../src/configparser/ConfigParser'),
     cordova = require('../src/cordova/cordova');
-
-// A utility function to generate all combinations of elements from 2 arrays.
-// crossConcat(['x', 'y'], ['1', '2', '3'])
-// -> [ 'x1', 'x2', 'x3', 'y1', 'y2', 'y3']
-var crossConcat = function(a, b, delimiter){
-    var result = [];
-    delimiter = delimiter || '';
-    for (var i = 0; i < a.length; i++) {
-        for (var j = 0; j < b.length; j++) {
-            result.push(a[i] + delimiter + b[j]);
-        }
-    }
-    return result;
-};
 
 var tmpDir = helpers.tmpDir('create_test');
 var appName = 'TestBase';
 var appId = 'org.testing';
 var project = path.join(tmpDir, appName);
-var cordovaDir = path.join(project, '.cordova');
 var configNormal = {
       lib: {
         www: {
           url: path.join(__dirname, 'fixtures', 'base', 'www'),
-          version: "testCordovaCreate",
+          version: 'testCordovaCreate',
           id: appName
         }
       }
@@ -68,17 +51,17 @@ var configSymlink = {
 describe('cordova create checks for valid-identifier', function(done) {    
 
     it('should reject reserved words from start of id', function(done) {
-        cordova.raw.create("projectPath", "int.bob", "appName")
+        cordova.raw.create('projectPath', 'int.bob', 'appName')
         .fail(function(err) {
-            expect(err.message).toBe("App id contains a reserved word, or is not a valid identifier.");
+            expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
         })
         .fin(done);
     });
 
     it('should reject reserved words from end of id', function(done) {
-        cordova.raw.create("projectPath", "bob.class", "appName")
+        cordova.raw.create('projectPath', 'bob.class', 'appName')
         .fail(function(err) {
-            expect(err.message).toBe("App id contains a reserved word, or is not a valid identifier.");
+            expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
         })
         .fin(done);
     });
@@ -145,7 +128,7 @@ describe('create end-to-end', function() {
         .fail(function(err) {
             if(process.platform.slice(0, 3) == 'win') {
                 // Allow symlink error if not in admin mode
-                expect(err.message).toBe("Symlinks on Windows require Administrator privileges");
+                expect(err.message).toBe('Symlinks on Windows require Administrator privileges');
             } else {
                 if (err) {
                     console.log(err.stack);

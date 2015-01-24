@@ -16,6 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint expr: true */
+/* global xdescribe */
+
 var cordova = require('../src/cordova/cordova'),
     console = require('console'),
     path = require('path'),
@@ -24,12 +28,7 @@ var cordova = require('../src/cordova/cordova'),
     Q = require('q'),
     util = require('../src/cordova/util'),
     tempDir,
-    http = require('http'),
-    firefoxos_parser = require('../src/cordova/metadata/firefoxos_parser'),
-    android_parser = require('../src/cordova/metadata/android_parser'),
-    ios_parser = require('../src/cordova/metadata/ios_parser'),
-    blackberry_parser = require('../src/cordova/metadata/blackberry10_parser'),
-    wp8_parser        = require('../src/cordova/metadata/wp8_parser');
+    http = require('http');
 
 var cwd = process.cwd();
 
@@ -47,7 +46,7 @@ xdescribe('serve command', function() {
         process.chdir(cwd);
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
-    })
+    });
     it('should not run outside of a Cordova-based project', function() {
         process.chdir(tempDir);
 
@@ -56,7 +55,7 @@ xdescribe('serve command', function() {
                 expect(server).toBe(null);
                 server.close();
             });
-        }).toThrow("Current working directory is not a Cordova-based project.");
+        }).toThrow('Current working directory is not a Cordova-based project.');
     });
 
     describe('`serve`', function() {
@@ -140,7 +139,7 @@ xdescribe('serve command', function() {
                             response += data;
                         });
                         res.on('end', function() {
-                            expect(response).toEqual(expectedContents)
+                            expect(response).toEqual(expectedContents);
                             if (response === expectedContents) {
                                 expect(res.statusCode).toEqual(200);
                             }
@@ -162,11 +161,11 @@ xdescribe('serve command', function() {
                     server && server.close();
                 });
             };
-        };
+        }
 
         it('should serve from top-level www if the file exists there', function() {
             var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.'
+            payloads.firefoxos = 'This is the firefoxos test file.';
             test_serve('firefoxos', '/basictest.html', payload, {
                 setup: function (){
                     fs.writeFileSync(path.join(util.projectWww(tempDir), 'basictest.html'), payload);
@@ -176,7 +175,7 @@ xdescribe('serve command', function() {
 
         it('should honour a custom port setting', function() {
             var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.'
+            payloads.firefoxos = 'This is the firefoxos test file.';
             test_serve('firefoxos', '/basictest.html', payload, {
                 port: 9001,
                 setup: function (){

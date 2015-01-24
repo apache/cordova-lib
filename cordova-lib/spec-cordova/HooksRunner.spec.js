@@ -17,6 +17,8 @@
  under the License.
  **/
 
+/* jshint boss:true */
+
 var cordova = require('../src/cordova/cordova'),
     HooksRunner = require('../src/hooks/HooksRunner'),
     shell  = require('shelljs'),
@@ -407,7 +409,6 @@ describe('HooksRunner', function() {
             });
 
             it('should run before_plugin_uninstall, before_plugin_install, after_plugin_install hooks for a plugin being installed with correct opts.plugin context', function (done) {
-                var test_event = 'before_plugin_install';
                 var projectRoot = cordovaUtil.isCordova();
 
                 // remove plugin
@@ -447,12 +448,13 @@ describe('HooksRunner', function() {
                                 delete call.args[1].plugin.pluginInfo._et;
                             }
 
-                            if(call.args[0] == 'before_plugin_uninstall' || call.args[0] == 'before_plugin_install'
-                                || call.args[0] == 'after_plugin_install') {
+                            if(call.args[0] == 'before_plugin_uninstall' ||
+                                call.args[0] == 'before_plugin_install' ||
+                                call.args[0] == 'after_plugin_install') {
                                 if(call.args[1] && call.args[1].plugin) {
                                     if(call.args[1].plugin.platform == 'android') {
-                                        expect(JSON.stringify(androidPluginOpts)
-                                            === JSON.stringify(call.args[1])).toBe(true);
+                                        expect(JSON.stringify(androidPluginOpts) ===
+                                            JSON.stringify(call.args[1])).toBe(true);
                                     }
                                 }
                             }

@@ -21,11 +21,10 @@ var path = require('path'),
     Q = require('q'),
     cordova = require('../src/cordova/cordova'),
     cordova_util = require('../src/cordova/util'),
-    ConfigParser = require('../src/configparser/ConfigParser'),
     project_dir = path.join(__dirname, 'fixtures', 'base');
 
 describe('restore command', function(){
-  var is_cordova, result, config_add_feature, cd_project;
+  var is_cordova, result;
 
    function wrapper(f, post) {
         runs(function() {
@@ -48,7 +47,6 @@ describe('restore command', function(){
   });
 
   it('should not try to restore features from config.xml', function(){
-      cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
       var call_count =0;
       expect(installPluginsFromConfigXML).toBeDefined();
       function installPluginsFromConfigXML(cfg){
@@ -60,7 +58,6 @@ describe('restore command', function(){
   });
 
   it('should not try to restore platforms from config.xml', function(){
-      cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
       var call_count =0;
       expect(installPlatformsFromConfigXML).toBeDefined();
       function installPlatformsFromConfigXML(cfg){
