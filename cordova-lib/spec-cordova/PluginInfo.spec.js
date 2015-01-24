@@ -47,7 +47,7 @@ describe('PluginInfo', function () {
     });
     it('should throw when there is no plugin.xml file', function () {
         expect(function () {
-            var p = new PluginInfo('/non/existent/dir');
+            new PluginInfo('/non/existent/dir');
         }).toThrow();
     });
 });

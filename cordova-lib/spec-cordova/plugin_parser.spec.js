@@ -16,8 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../src/cordova/cordova'),
-    path = require('path'),
+var path = require('path'),
     fs = require('fs'),
     plugin_parser = require('../src/cordova/plugin_parser'),
     xml = path.join(__dirname, 'fixtures', 'plugins', 'test', 'plugin.xml');

@@ -24,11 +24,9 @@ var platforms = require('../../src/cordova/platforms'),
     fs = require('fs'),
     et = require('elementtree'),
     xmlHelpers = require('../../src/util/xml-helpers'),
-    Q = require('q'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    cordova = require('../../src/cordova/cordova');
+    ConfigParser = require('../../src/configparser/ConfigParser');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 
@@ -112,7 +110,9 @@ describe('blackberry10 project parser', function() {
         });
 
         describe('update_from_config method', function() {
-            var xml_name, xml_pkg, xml_version, xml_access_rm, xml_update, xml_append, xml_content;
+            var xml_name, xml_pkg, xml_version, xml_access_rm, xml_update,
+                xml_append, xml_content, xml_access_add, xml_preference_remove,
+                xml_preference_add;
             beforeEach(function() {
                 xml_content = jasmine.createSpy('xml content');
                 xml_name = jasmine.createSpy('xml name');
@@ -175,7 +175,7 @@ describe('blackberry10 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, svn, parse, get_env, write_env;
+            var config, www, overrides, svn, parse;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');

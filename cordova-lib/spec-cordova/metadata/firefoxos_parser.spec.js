@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint boss:true */
+
 var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -30,10 +33,10 @@ var platforms = require('../../src/cordova/platforms'),
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 
 var MANIFEST_JSON = {
-    "launch_path": "/index.html", "installs_allowed_from": [ "*" ], "version": "0.0.1", "name": "HelloCordova",
-    "description": "A sample Apache Cordova application that responds to the deviceready event.",
-    "developer": { "name": "Apache Cordova Team", "url": "http://cordova.io" },
-    "orientation": [ "portrait" ], "icons": { "60": "/icon/icon-60.png", "128": "/icon/icon-128.png" }
+    'launch_path': '/index.html', 'installs_allowed_from': [ '*' ], 'version': '0.0.1', 'name': 'HelloCordova',
+    'description': 'A sample Apache Cordova application that responds to the deviceready event.',
+    'developer': { 'name': 'Apache Cordova Team', 'url': 'http://cordova.io' },
+    'orientation': [ 'portrait' ], 'icons': { '60': '/icon/icon-60.png', '128': '/icon/icon-128.png' }
 };
 
 describe('firefoxos project parser', function() {

@@ -19,13 +19,10 @@
 var cordova = require('../src/cordova/cordova'),
     platforms = require('../src/cordova/platforms'),
     path = require('path'),
-    fs = require('fs'),
     HooksRunner = require('../src/hooks/HooksRunner'),
     superspawn = require('../src/cordova/superspawn'),
     util = require('../src/cordova/util'),
-    Q = require('q'),
-    os = require('os');
-
+    Q = require('q');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
@@ -46,7 +43,7 @@ describe('compile command', function() {
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        spyOn(superspawn, 'spawn').andCallFake(function() { return Q() });
+        spyOn(superspawn, 'spawn').andCallFake(function() { return Q(); });
     });
     describe('failure', function() {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
@@ -73,7 +70,7 @@ describe('compile command', function() {
         });
 
         it('should pass down optional parameters', function (done) {
-            cordova.raw.compile({platforms:["blackberry10"], options:["--release"]}).then(function () {
+            cordova.raw.compile({platforms:['blackberry10'], options:['--release']}).then(function () {
                 expect(superspawn.spawn).toHaveBeenCalledWith(path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'build'), ['--release'], jasmine.any(Object));
                 done();
             });
@@ -105,7 +102,7 @@ describe('compile command', function() {
                     expect(fire).not.toHaveBeenCalled();
                     expect(err.message).toContain(
                         'No platforms added to this project. Please use `cordova platform add <platform>`.'
-                    )
+                    );
                 }).fin(done);
             });
         });

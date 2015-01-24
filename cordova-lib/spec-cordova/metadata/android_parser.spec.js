@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint boss:true */
+
 var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -23,12 +26,10 @@ var platforms = require('../../src/cordova/platforms'),
     fs = require('fs'),
     et = require('elementtree'),
     xmlHelpers = require('../../src/util/xml-helpers'),
-    Q = require('q'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
-    CordovaError = require('../../src/CordovaError'),
-    cordova = require('../../src/cordova/cordova');
+    CordovaError = require('../../src/CordovaError');
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
@@ -53,12 +54,6 @@ describe('android project parser', function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
         spyOn(config, 'has_custom_path').andReturn(false);
     });
-
-    function wrapper(p, done, post) {
-        p.then(post, function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    }
 
     function errorWrapper(p, done, post) {
         p.then(function() {
@@ -121,9 +116,9 @@ describe('android project parser', function() {
         describe('update_from_config method', function() {
             beforeEach(function() {
                 spyOn(fs, 'readdirSync').andReturn([ path.join(android_proj, 'src', 'android_pkg', 'MyApp.java') ]);
-                cfg.name = function() { return 'testname' };
-                cfg.packageName = function() { return 'testpkg' };
-                cfg.version = function() { return 'one point oh' };
+                cfg.name = function() { return 'testname'; };
+                cfg.packageName = function() { return 'testpkg'; };
+                cfg.version = function() { return 'one point oh'; };
                 read.andReturn('package org.cordova.somepackage; public class MyApp extends CordovaActivity { }');
             });
 
@@ -162,12 +157,12 @@ describe('android project parser', function() {
                 expect(stringsRoot.getroot().find('string').text).toEqual('testname');
             });
             it('should write out the app id to androidmanifest.xml and update the cordova-android entry Java class', function() {
-                cfg.android_packageName = function () { return null };
+                cfg.android_packageName = function () { return null; };
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().attrib.package).toEqual('testpkg');
             });
             it('should write out the app id to androidmanifest.xml and update the cordova-android entry Java class with android_packageName', function() {
-                cfg.android_packageName = function () { return 'testpkg_android' };
+                cfg.android_packageName = function () { return 'testpkg_android'; };
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().attrib.package).toEqual('testpkg_android');
             });

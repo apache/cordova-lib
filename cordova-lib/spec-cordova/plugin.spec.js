@@ -19,9 +19,7 @@
 
 var helpers = require('./helpers'),
     path = require('path'),
-    fs = require('fs'),
     shell = require('shelljs'),
-    Q = require('q'),
     events = require('../src/events'),
     cordova = require('../src/cordova/cordova');
 

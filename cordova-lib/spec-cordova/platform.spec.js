@@ -21,7 +21,6 @@ var helpers = require('./helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    platforms = require('../src/cordova/platforms'),
     superspawn = require('../src/cordova/superspawn'),
     config = require('../src/cordova/config'),
     Q = require('q'),
@@ -32,23 +31,10 @@ var helpers = require('./helpers'),
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
 
-// Directory containing the 'bin/create' script. 
-var libDir = "C:\\Projects\\cordova-projects\\cordova-android\\";
-
-var cfg;
-var hostSupportsOriginal = platform.__get__('hostSupports');
-var ConfigParserOriginal = platform.__get__('ConfigParser');
-var configOriginal = platform.__get__('config');
-var fsOriginal = platform.__get__('fs');
-var platformsOriginal = platform.__get__('platforms');
-var promiseUtilOriginal = platform.__get__('promiseutil');
-
 describe('platform end-to-end', function () {
 
-    var supported_platforms = Object.keys(platforms).filter(function (p) { return p != 'www'; });
     var tmpDir = helpers.tmpDir('platform_test');
     var project = path.join(tmpDir, 'project');
-    var platformParser = platforms[helpers.testPlatform].parser;
 
     var results;
 
@@ -154,7 +140,7 @@ describe('add function', function () {
     it('throws if the target list is empty', function (done) {
         var targets = [];
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe("No platform specified. Please specify a platform to add. See `cordova platform list`.");
+            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
             done();
         });
     });
@@ -164,15 +150,14 @@ describe('add function', function () {
         // case 1 : target list undefined
         var targets; // = undefined;
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe("No platform specified. Please specify a platform to add. See `cordova platform list`.");
+            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
         });
 
         // case 2 : target list null
         targets = null;
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe("No platform specified. Please specify a platform to add. See `cordova platform list`.");
+            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
             done();
         });
     });
 });
-
