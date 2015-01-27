@@ -71,7 +71,7 @@ function generatePackageJsonFromPluginXml(plugin_path) {
         if(license)      package_json.license      = license;
         if(repo)         package_json.repo         = repo;
         if(issue)        package_json.issue        = issue;
-        if(keywords)     package_json.keywords     = keywords.split(',');
+        if(keywords)     package_json.keywords     = keywords;
         if(platforms) {
             package_json.platforms = platforms.map(function(p) {
                 return p.name;
