@@ -245,6 +245,8 @@ describe('android project handler', function() {
                 var mainProjectManifest = path.resolve(temp, "AndroidManifest.xml");
                 var existsSync = spyOn(fs, 'existsSync').andReturn(true);
                 var writeFileSync = spyOn(fs, 'writeFileSync');
+                spyOn(fs, 'readdirSync').andReturn([]);
+                var rmdirSync = spyOn(fs, 'rmdirSync');
                 var removeFile = spyOn(common, 'removeFile');
                 var readFileSync = spyOn(fs, 'readFileSync').andCallFake(function (file) {
                     if (path.normalize(file) === mainProjectProps) {
@@ -261,6 +263,7 @@ describe('android project handler', function() {
                 expect(_.any(writeFileSync.argsForCall, function (callArgs) {
                     return callArgs[0] === mainProjectProps && callArgs[1].indexOf('\nandroid.library.reference.2=ExistingLibRef2') > -1;
                 })).toBe(true, 'Reference to library not removed');
+                expect(rmdirSync).toHaveBeenCalledWith(path.join(temp, dummy_id));
             });
         });
     });

@@ -19,6 +19,7 @@
 
 /* jshint laxcomma:true, sub:true */
 
+var fs = require('fs');
 var path = require('path')
    , common = require('./common')
    , events = require('../../events')
@@ -141,6 +142,11 @@ module.exports = {
                 var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
                 common.removeFile(project_dir, subRelativeDir);
                 subDir = path.resolve(project_dir, subRelativeDir);
+                // If it's the last framework in the plugin, remove the parent directory.
+                var parDir = path.dirname(subDir);
+                if (fs.readdirSync(parDir).length === 0) {
+                    fs.rmdirSync(parDir);
+                }
             } else {
                 var sdk_dir = module.exports.getProjectSdkDir(project_dir);
                 subDir = path.resolve(sdk_dir, src);
