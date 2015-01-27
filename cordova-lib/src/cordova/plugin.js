@@ -28,6 +28,7 @@ var cordova_util  = require('./util'),
     shell         = require('shelljs'),
     PluginInfoProvider = require('../PluginInfoProvider'),
     plugman       = require('../plugman/plugman'),
+    pluginMapper  = require('cordova-registry-mapper'),
     events        = require('../events');
 
 // Returns a promise.
@@ -178,6 +179,17 @@ module.exports = function plugin(command, targets, opts) {
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
+                    // Convert target from package-name to package-id if necessary
+                    var keys = Object.keys(pluginMapper);
+                    //Traverse through pluginMapper values to see if it equals our target.
+                    //Cordova-plugin-device would get changes to org.apache.cordova.device
+                    for (var i = 0; i < keys.length; i++) {
+                        var val = pluginMapper[keys[i]]; 
+                        if(val === target) {
+                            target = keys[i];
+                        }
+                    }
+
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
                         return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
