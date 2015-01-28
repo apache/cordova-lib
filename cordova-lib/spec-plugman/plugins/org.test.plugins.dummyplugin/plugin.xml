@@ -172,13 +172,29 @@
         <source-file src="src/tizen/dummer.js"/>
     </platform>
 
-    <!-- windows8 -->
-    <platform name="windows8">
+    <!-- windows -->
+    <platform name="windows">
         <config-file target="config.xml" parent="/*">
             <feature id="dummyPlugin" required="true" version="1.0.0.0"/>
         </config-file>
 
         <source-file src="src/windows8/dummer.js"/>
+
+        <lib-file src="TestSDK1, Version=1.0" arch="x86"/>
+        <lib-file src="TestSDK2, Version=1.0" versions=">=8.1"/>
+        <lib-file src="TestSDK3, Version=1.0" target="phone"/>
+        <lib-file src="TestSDK4, Version=1.0" target="windows" versions="8.0" arch="x86"/>
+
+        <framework src="src/windows8/dummy1.dll" arch="x64"/>
+        <framework src="src/windows8/dummy2.dll" versions=">=8.0"/>
+        <framework src="src/windows8/dummy3.dll" target="windows"/>
+        <framework src="src/windows8/dummy4.dll" target="phone" versions="8.1" arch="ARM"/>
+
+        <framework src="src/windows8/dummy1.vcxproj" type="projectReference" arch="x64"/>
+        <framework src="src/windows8/dummy2.vcxproj" type="projectReference" versions="<8.1"/>
+        <framework src="src/windows8/dummy3.vcxproj" type="projectReference" target="win"/>
+        <framework src="src/windows8/dummy4.vcxproj" type="projectReference" target="all" versions="8.1" arch="x86"/>
+
         <js-module src="www/dummyplugin.js" name="Dummy">
             <clobbers target="dummy" />
         </js-module>
