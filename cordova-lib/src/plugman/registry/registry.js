@@ -84,9 +84,10 @@ module.exports = {
      * @return {Promise.<Object>} Promised published data.
      */
     publish: function(args) {
+        var dir = args[0] || '.';
         return initSettings()
         .then(function(settings) {
-            return manifest.generatePackageJsonFromPluginXml(args[0])
+            return manifest.generatePackageJsonFromPluginXml(dir)
             .then(function() {
                 return Q.ninvoke(npm, 'load', settings);
             }).then(function() {
@@ -96,7 +97,7 @@ module.exports = {
                 events.emit('log', 'attempting to publish plugin to registry');
                 return Q.ninvoke(npm.commands, 'publish', args);
             }).then(function() {
-                fs.unlink(path.resolve(args[0], 'package.json'));
+                fs.unlink(path.resolve(dir, 'package.json'));
             }).catch(function(err){
                 return err;
             });
