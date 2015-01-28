@@ -165,13 +165,13 @@ beforeEach(function () {
                     var source = copyArray(valid_source);
                     var s = spyOn(common, 'copyFile');
                     windows['source-file'].install(source[0], dummyplugin, cordovaProjectWindowsPlatformDir, dummy_id, null, proj_files);
-                    expect(s).toHaveBeenCalledWith(dummyplugin, 'src/windows8/dummer.js', cordovaProjectWindowsPlatformDir, path.join('plugins', 'org.test.plugins.dummyplugin', 'dummer.js'), false);
+                    expect(s).toHaveBeenCalledWith(dummyplugin, 'src/windows/dummer.js', cordovaProjectWindowsPlatformDir, path.join('plugins', 'org.test.plugins.dummyplugin', 'dummer.js'), false);
                 });
                 it('should throw if source-file src cannot be found', function () {
                     var source = copyArray(invalid_source);
                     expect(function () {
                         windows['source-file'].install(source[1], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('"' + path.resolve(faultyplugin, 'src/windows8/NotHere.js') + '" not found!');
+                    }).toThrow('"' + path.resolve(faultyplugin, 'src/windows/NotHere.js') + '" not found!');
                 });
                 it('should throw if source-file target already exists', function () {
                     var source = copyArray(valid_source);
@@ -243,16 +243,16 @@ beforeEach(function () {
                 var frameworks = copyArray(valid_frameworks);
 
                 it('should write to correct project files when conditions are specified', function () {
-                    var xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows8\\dummy1.vcxproj"][@Condition="\'$(Platform)\'==\'x64\'"]';
+                    var xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy1.vcxproj"][@Condition="\'$(Platform)\'==\'x64\'"]';
                     validateInstalledProjects('framework', frameworks[4], xpath, ['all']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows8\\dummy2.vcxproj"]';
+                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy2.vcxproj"]';
                     validateInstalledProjects('framework', frameworks[5], xpath, ['windows8']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows8\\dummy3.vcxproj"]';
+                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy3.vcxproj"]';
                     validateInstalledProjects('framework', frameworks[6], xpath, ['windows', 'windows8']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows8\\dummy4.vcxproj"][@Condition="\'$(Platform)\'==\'x86\'"]';
+                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy4.vcxproj"][@Condition="\'$(Platform)\'==\'x86\'"]';
                     validateInstalledProjects('framework', frameworks[7], xpath, ['windows', 'phone']);
                 });
             });
@@ -390,19 +390,19 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/ProjectReference';
-                            var incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows8\\dummy1.vcxproj';
+                            var incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy1.vcxproj';
                             var targetConditions = {versions: undefined, target: undefined, arch: 'x64'};
                             validateUninstalledProjects('framework', frameworks[4], path, incText, targetConditions, ['all']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows8\\dummy2.vcxproj';
+                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy2.vcxproj';
                             targetConditions = {versions: '<8.1', target: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[5], path, incText, targetConditions, ['windows8']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows8\\dummy3.vcxproj';
+                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy3.vcxproj';
                             targetConditions = {versions: undefined, target: 'win', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[6], path, incText, targetConditions, ['windows', 'windows8']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows8\\dummy4.vcxproj';
+                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy4.vcxproj';
                             targetConditions = {versions: '8.1', target: 'all', arch: 'x86'};
                             validateUninstalledProjects('framework', frameworks[7], path, incText, targetConditions, ['windows', 'phone']);
 
