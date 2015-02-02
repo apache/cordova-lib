@@ -16,8 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platforms = require('../src/plugman/platforms')
-var pluginTags = ["source-file", "header-file", "lib-file", "resource-file", "framework"];
+var platforms = require('../src/plugman/platforms');
+var pluginTags = ['source-file', 'header-file', 'lib-file', 'resource-file', 'framework'];
 
 function getTest(platformId, pluginTag) {
     return function() {
@@ -30,13 +30,13 @@ function getTest(platformId, pluginTag) {
         it('with an uninstall method', function() {
             expect(platforms[platformId][pluginTag].uninstall ).toBeDefined();
         });
-    }
+    };
 }
 
 for(var platformId in platforms) {
     for(var index = 0, len = pluginTags.length; index < len; index++) {
         var funk = getTest(platformId,pluginTags[index]);
-        describe(platformId + " should have a " + pluginTags[index] + " object", funk);
+        describe(platformId + ' should have a ' + pluginTags[index] + ' object', funk);
     }
 
 }

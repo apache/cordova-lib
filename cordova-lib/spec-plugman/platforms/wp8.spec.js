@@ -22,12 +22,10 @@ var wp8 = require('../../src/plugman/platforms/wp8'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
-    et      = require('elementtree'),
     os      = require('osenv'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
-    plugins_module = require('../../src/plugman/util/plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     wp8_project = path.join(__dirname, '..', 'projects', 'wp8');
@@ -68,7 +66,7 @@ describe('wp8 project handler', function() {
     });
     describe('package_name method', function() {
         it('should return a wp8 project\'s proper package name', function() {
-            expect(wp8.package_name(wp8_project)).toEqual("{F3A8197B-6B16-456D-B5F4-DD4F04AC0BEC}");
+            expect(wp8.package_name(wp8_project)).toEqual('{F3A8197B-6B16-456D-B5F4-DD4F04AC0BEC}');
         });
     });
 
@@ -128,9 +126,9 @@ describe('wp8 project handler', function() {
                 runs(function () { installPromise(install('wp8', temp, dummyplugin, plugins_dir, {})); });
                 waitsFor(function () { return done; }, 'install promise never resolved', 500);
                 runs(function () {
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App", "Tokens");
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App/Extensions", "Extension");
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App/Extensions", "FileTypeAssociation;Extension");
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App', 'Tokens');
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'Extension');
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'FileTypeAssociation;Extension');
                 });
             });
         });

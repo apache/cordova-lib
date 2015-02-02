@@ -17,16 +17,10 @@
     under the License.
 */
 var csproj  = require('../../src/util/windows/csproj'),
-    path    = require('path'),
-    os      = require('osenv'),
-    et      = require('elementtree'),
-    fs      = require('fs'),
-    xml_helpers = require('../../src/util/xml-helpers');
+    path    = require('path');
 
 var wp8_project     = path.join(__dirname, '..', 'projects', 'wp8'),
-    temp            = path.join(os.tmpdir(), 'plugman'),
-    example_csproj  = path.join(wp8_project, 'CordovaAppProj.csproj'),
-    wpcsproj        = path.join(__dirname, '..', 'plugins', 'WPcsproj');
+    example_csproj  = path.join(wp8_project, 'CordovaAppProj.csproj');
 
 describe('csproj', function() {
     it('should throw if passed in an invalid xml file path ref', function() {
@@ -48,7 +42,6 @@ describe('csproj', function() {
 
     describe('source file', function() {
 
-        var test_csproj;
         var page_test   = path.join('src', 'UI', 'PageTest.xaml');
         var page_test_cs = path.join('src', 'UI', 'PageTest.xaml.cs');
         var lib_test    = path.join('lib', 'LibraryTest.dll');
@@ -106,7 +99,7 @@ describe('csproj', function() {
                     var group = item_groups[i];
                     expect(group._children.length).toBeGreaterThan(0);
                 }
-            })
+            });
 
         });
     });

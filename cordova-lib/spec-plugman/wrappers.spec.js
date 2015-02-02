@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint loopfunc:true */
+
 var Q = require('q'),
     plugman = require('../src/plugman/plugman');
 
@@ -46,7 +49,7 @@ describe('callback wrapper', function() {
 
             it('should call the callback with the error on failure', function(done) {
                 var err = new Error('junk');
-                raw.andCallFake(function() { return Q.reject(err)});
+                raw.andCallFake(function() { return Q.reject(err); });
                 plugman[call](function(err) {
                     expect(err).toEqual(err);
                     done();
