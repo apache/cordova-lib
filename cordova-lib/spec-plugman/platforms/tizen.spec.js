@@ -15,14 +15,14 @@
  * under the License.
  *
 */
+
+
 var tizen = require('../../src/plugman/platforms/tizen'),
-    common = require('../../src/plugman/platforms/common'),
     os = require('osenv'),
-    fs = require('fs'),
-    et = require('elementtree'),
     path = require('path'),
-    shell = require('shelljs'),
-    temp = path.join( os.tmpdir(), 'plugman-' + ((function() {
+    tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
+    
+    path.join( os.tmpdir(), 'plugman-' + ((function() {
         var index, subIndex,
            set = 'abcdefghijklmnopqrstuvwxyz0123456789',
            str = '';
@@ -33,8 +33,7 @@ var tizen = require('../../src/plugman/platforms/tizen'),
         }
 
         return str;
-    })() )),
-   tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
+    })() ));
 
 describe('Tizen project handler', function() {
 	describe('www_dir method', function() {
@@ -45,7 +44,7 @@ describe('Tizen project handler', function() {
 	describe('Manipulating project files', function() {
 		describe('package_name method', function() {
 			it('should return the id of the config.xml root element', function() {
-				expect(tizen.package_name(tizen_project)).toEqual("TizenTestPackage");
+				expect(tizen.package_name(tizen_project)).toEqual('TizenTestPackage');
 			});
 		});
 	});

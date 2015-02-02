@@ -22,12 +22,9 @@ var windows8 = require('../../src/plugman/platforms/windows'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
-    et      = require('elementtree'),
     os      = require('osenv'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
-    xml_helpers = require('../../src/util/xml-helpers'),
-    plugins_module = require('../../src/plugman/util/plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     windows8_project = path.join(__dirname, '..', 'projects', 'windows8');
@@ -68,7 +65,7 @@ describe('windows8 project handler', function() {
     });
     describe('package_name method', function() {
         it('should return a windows8 project\'s proper package name', function() {
-            expect(windows8.package_name(windows8_project)).toEqual("CordovaApp");
+            expect(windows8.package_name(windows8_project)).toEqual('CordovaApp');
         });
     });
 
