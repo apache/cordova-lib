@@ -91,6 +91,13 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
                 if (platform) {
+
+                    // CB-8406 : Prevent 'cordova platform update' from updating to the version used in config.xml
+                    // instead, use the pinned version
+                    if(cmd == 'update'){
+                        version = platforms[platform].version;
+                    }
+
                     if (!version) {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     }
