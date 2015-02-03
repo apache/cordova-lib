@@ -209,7 +209,7 @@ describe('install', function() {
         });
         it('should queue up actions as appropriate for that plugin and call process on the action stack',
            function() {
-                expect(results['actions_callCount']).toEqual(3);
+                expect(results['actions_callCount']).toEqual(6);
                 expect(results['actions_create']).toEqual([jasmine.any(Function), [jasmine.any(Object), path.join(plugins_install_dir, dummy_id), project, dummy_id, jasmine.any(Object)], jasmine.any(Function), [jasmine.any(Object), project, dummy_id, jasmine.any(Object)]]);
         });
 

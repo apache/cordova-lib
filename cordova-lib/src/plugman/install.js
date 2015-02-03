@@ -38,6 +38,7 @@ var path = require('path'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     cordovaUtil = require('../cordova/util');
 
+var superspawn = require('../cordova/superspawn');
 var PluginInfo = require('../PluginInfo');
 var PluginInfoProvider = require('../PluginInfoProvider');
 
@@ -276,10 +277,17 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         top_plugin_dir: plugin_dir
     };
 
-    return callEngineScripts(theEngines)
-    .then(checkEngines)
-    .then(
-        function() {
+    return Q().then(function() {
+        if (options.platformVersion) {
+            return Q(options.platformVersion);
+        }
+        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version')));
+    }).then(function(platformVersion) {
+        options.platformVersion = platformVersion;
+        return callEngineScripts(theEngines);
+    }).then(function(engines) {
+        return checkEngines(engines);
+    }).then(function() {
             // checking preferences, if certain variables are not provided, we should throw.
             var prefs = pluginInfo.getPreferences(platform);
             options.cli_variables = options.cli_variables || {};

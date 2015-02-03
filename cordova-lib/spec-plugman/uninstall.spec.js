@@ -62,18 +62,20 @@ describe('start', function() {
 
         done = false;
         promise = Q()
-        .then(
-            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin']); }
-        ).then(
-            function(){ return install('android', project, plugins['A']); }
-        ).then(
-            function(){ return install('android', project2, plugins['C']); }
-        ).then(
-            function(){ return install('android', project2, plugins['A']); }
-        ).then(
-            function(){ done = true; }
-        );
-        waitsFor(function() { return done; }, 'promise never resolved', 1000);
+        .then(function(){
+            return install('android', project, plugins['org.test.plugins.dummyplugin']);
+        }).then(function(){
+            return install('android', project, plugins['A']);
+        }).then( function(){
+            return install('android', project2, plugins['C']);
+        }).then(function(){
+            return install('android', project2, plugins['A']);
+        }).then(function(){
+            done = true;
+        }, function(err) {
+            done = err.stack;
+        });
+        waitsFor(function() { return done; }, 'promise never resolved', 500);
         runs(function() {
             expect(done).toBe(true);
         });
@@ -120,7 +122,7 @@ describe('uninstallPlatform', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(actions_push.calls.length).toEqual(5);
+                expect(actions_push.calls.length).toEqual(6);
                 expect(proc).toHaveBeenCalled();
             });
         });
@@ -290,7 +292,7 @@ describe('end', function() {
             }
         ).fail(
             function(err) {
-                expect(err.message).toBe('The plugin \'C\' is required by (A), skipping uninstallation.');
+                expect(err.stack).toMatch(/The plugin 'C' is required by \(A\), skipping uninstallation./);
             }
         ).then(
             function(){
