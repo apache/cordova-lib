@@ -26,7 +26,6 @@ var fs = require('fs'),
     path = require('path'),
     properties_parser = require('properties-parser'),
     shell = require('shelljs');
-var semver = require('semver');
 
 
 function addToPropertyList(projectProperties, key, value) {
@@ -35,6 +34,7 @@ function addToPropertyList(projectProperties, key, value) {
         i++;
 
     projectProperties.set(key + '.' + i, value);
+    projectProperties.dirty = true;
 }
 
 function removeFromPropertyList(projectProperties, key, value) {
@@ -51,14 +51,15 @@ function removeFromPropertyList(projectProperties, key, value) {
         }
         i++;
     }
+    projectProperties.dirty = true;
 }
 
-function AndroidProject() {
+function AndroidProject(projectDir) {
     this._propertiesEditors = {};
     this._subProjectDirs = {};
     this._dirty = false;
-
-    return this;
+    this.projectDir = projectDir;
+    this.needsSubLibraryUpdate = false;
 }
 
 AndroidProject.prototype = {
@@ -70,6 +71,7 @@ AndroidProject.prototype = {
         if (fs.existsSync(subProjectFile)) {
             var subProperties = this._getPropertiesFile(subProjectFile);
             subProperties.set('target', parentProperties.get('target'));
+            subProperties.dirty = true;
             this._subProjectDirs[subDir] = true;
         }
         addToPropertyList(parentProperties, 'android.library.reference', module.exports.getRelativeLibraryPath(parentDir, subDir));
@@ -95,18 +97,36 @@ AndroidProject.prototype = {
         removeFromPropertyList(parentProperties, 'cordova.gradle.include', module.exports.getRelativeLibraryPath(parentDir, subDir));
         this._dirty = true;
     },
-    write: function(platformVersion) {
-        if (!this._dirty) return;
+    addSystemLibrary: function(parentDir, value) {
+        var parentProjectFile = path.resolve(parentDir, 'project.properties');
+        var parentProperties = this._getPropertiesFile(parentProjectFile);
+        addToPropertyList(parentProperties, 'cordova.system.library', value);
+        this._dirty = true;
+    },
+    removeSystemLibrary: function(parentDir, value) {
+        var parentProjectFile = path.resolve(parentDir, 'project.properties');
+        var parentProperties = this._getPropertiesFile(parentProjectFile);
+        removeFromPropertyList(parentProperties, 'cordova.system.library', value);
+        this._dirty = true;
+    },
+    write: function() {
+        if (!this._dirty) {
+            return;
+        }
+        this._dirty = false;
 
         for (var filename in this._propertiesEditors) {
-            fs.writeFileSync(filename, this._propertiesEditors[filename].toString());
+            var editor = this._propertiesEditors[filename];
+            if (editor.dirty) {
+                fs.writeFileSync(filename, editor.toString());
+                editor.dirty = false;
+            }
         }
 
         // Starting with 3.6.0, the build scripts set ANDROID_HOME, so there is
         // no reason to keep run this command. Plus - we really want to avoid
         // relying on the presense of native SDKs within plugman.
-        var needsUpdateProject = !platformVersion || semver.lt(platformVersion, '3.6.0');
-        if (needsUpdateProject) {
+        if (this.needsSubLibraryUpdate) {
             for (var sub_dir in this._subProjectDirs)
             {
                 shell.exec('android update lib-project --path "' + sub_dir + '"');
@@ -115,8 +135,13 @@ AndroidProject.prototype = {
         this._dirty = false;
     },
     _getPropertiesFile: function (filename) {
-        if (!this._propertiesEditors[filename])
-            this._propertiesEditors[filename] = properties_parser.createEditor(filename);
+        if (!this._propertiesEditors[filename]) {
+            if (fs.existsSync(filename)) {
+                this._propertiesEditors[filename] = properties_parser.createEditor(filename);
+            } else {
+                this._propertiesEditors[filename] = properties_parser.createEditor();
+            }
+        }
 
         return this._propertiesEditors[filename];
     }

@@ -123,7 +123,7 @@ describe('uninstallPlatform', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(actions_push.calls.length).toEqual(5);
+                expect(actions_push.calls.length).toEqual(6);
                 expect(proc).toHaveBeenCalled();
             });
         });
