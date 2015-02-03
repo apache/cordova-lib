@@ -19,8 +19,8 @@
 
 var path              = require('path'),
     cordova_util      = require('./util'),
-    HooksRunner            = require('../hooks/HooksRunner'),
-    events        = require('../events'),
+    HooksRunner       = require('../hooks/HooksRunner'),
+    events            = require('../events'),
     superspawn        = require('./superspawn');
 
 // Returns a promise.
