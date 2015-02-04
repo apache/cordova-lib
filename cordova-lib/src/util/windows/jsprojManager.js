@@ -129,7 +129,10 @@ jsprojManager.prototype = {
     addProjectReference: function (relative_path, targetConditions) {
         events.emit('verbose', 'jsprojManager.addProjectReference(incText: ' + relative_path + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
-        relative_path = relative_path.split('/').join('\\');
+        // relative_path is the actual path to the file in the current OS, where-as inserted_path is what we write in
+        // the project file, and is always in Windows format.
+        relative_path = path.normalize(relative_path);
+        var inserted_path = relative_path.split('/').join('\\');
 
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
 
@@ -147,7 +150,7 @@ jsprojManager.prototype = {
             "\t\t" + projectGuid + "=" + projectGuid + "\r\n" +
             "\tEndProjectSection\r\n";
         var postInsertText = '\r\nProject("' + projectTypeGuid + '") = "' +
-            projName + '", "' + relative_path + '", ' +
+            projName + '", "' + inserted_path + '", ' +
             '"' + projectGuid + '"\r\nEndProject';
 
         var matchingProjects = this._getMatchingProjects(targetConditions);
@@ -197,7 +200,7 @@ jsprojManager.prototype = {
 
         // Add the ItemGroup/ProjectReference to each matching cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
-        var item = createReferenceElement('ItemGroup/ProjectReference', relative_path, targetConditions);
+        var item = createReferenceElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
         matchingProjects.forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -205,6 +208,11 @@ jsprojManager.prototype = {
 
     removeProjectReference: function (relative_path, targetConditions) {
         events.emit('verbose', 'jsprojManager.removeProjectReference(incText: ' + relative_path + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        // relative_path is the actual path to the file in the current OS, where-as inserted_path is what we write in
+        // the project file, and is always in Windows format.
+        relative_path = path.normalize(relative_path);
+        var inserted_path = relative_path.split('/').join('\\');
 
         // find the guid + name of the referenced project
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
@@ -218,7 +226,7 @@ jsprojManager.prototype = {
         }
 
         var preInsertTextRegExp = getProjectReferencePreInsertRegExp(projectGuid);
-        var postInsertTextRegExp = getProjectReferencePostInsertRegExp(projName, projectGuid, relative_path, projectTypeGuid);
+        var postInsertTextRegExp = getProjectReferencePostInsertRegExp(projName, projectGuid, inserted_path, projectTypeGuid);
 
         // There may be multiple solutions (for different VS versions) - process them all
         getSolutionPaths(this.projectFolder).forEach(function (solutionPath) {
@@ -239,7 +247,7 @@ jsprojManager.prototype = {
         });
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/ProjectReference', relative_path, targetConditions);
+            project.removeReferenceElementItemGroup('ItemGroup/ProjectReference', inserted_path, targetConditions);
         });
     },
 
@@ -423,6 +431,8 @@ proj.prototype = {
         var item = new et.Element('ItemGroup');
 
         relative_path.forEach(function (filePath) {
+            // filePath is never used to find the actual file - it determines what we write to the project file, and so
+            // should always be in Windows format.
             filePath = filePath.split('/').join('\\');
 
             var content = new et.Element('Content');
@@ -436,7 +446,8 @@ proj.prototype = {
     removeSourceFile: function (relative_path) {
         var isRegexp = relative_path instanceof RegExp;
         if (!isRegexp) {
-            // path.normalize(relative_path);// ??
+            // relative_path is never used to find the actual file - it determines what we write to the project file,
+            // and so should always be in Windows format.
             relative_path = relative_path.split('/').join('\\');
         }
 

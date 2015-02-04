@@ -243,16 +243,16 @@ beforeEach(function () {
                 var frameworks = copyArray(valid_frameworks);
 
                 it('should write to correct project files when conditions are specified', function () {
-                    var xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy1.vcxproj"][@Condition="\'$(Platform)\'==\'x64\'"]';
+                    var xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy1.vcxproj') + '"][@Condition="\'$(Platform)\'==\'x64\'"]';
                     validateInstalledProjects('framework', frameworks[4], xpath, ['all']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy2.vcxproj"]';
+                    xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy2.vcxproj') + '"]';
                     validateInstalledProjects('framework', frameworks[5], xpath, ['windows8']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy3.vcxproj"]';
+                    xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy3.vcxproj') + '"]';
                     validateInstalledProjects('framework', frameworks[6], xpath, ['windows', 'windows8']);
 
-                    xpath = 'ProjectReference[@Include="' + dummyplugin + '\\src\\windows\\dummy4.vcxproj"][@Condition="\'$(Platform)\'==\'x86\'"]';
+                    xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy4.vcxproj') + '"][@Condition="\'$(Platform)\'==\'x86\'"]';
                     validateInstalledProjects('framework', frameworks[7], xpath, ['windows', 'phone']);
                 });
             });
@@ -389,22 +389,22 @@ beforeEach(function () {
 
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
-                            var path = 'ItemGroup/ProjectReference';
-                            var incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy1.vcxproj';
+                            var xmlPath = 'ItemGroup/ProjectReference';
+                            var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy1.vcxproj');
                             var targetConditions = {versions: undefined, target: undefined, arch: 'x64'};
-                            validateUninstalledProjects('framework', frameworks[4], path, incText, targetConditions, ['all']);
+                            validateUninstalledProjects('framework', frameworks[4], xmlPath, incText, targetConditions, ['all']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy2.vcxproj';
+                            incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy2.vcxproj');
                             targetConditions = {versions: '<8.1', target: undefined, arch: undefined};
-                            validateUninstalledProjects('framework', frameworks[5], path, incText, targetConditions, ['windows8']);
+                            validateUninstalledProjects('framework', frameworks[5], xmlPath, incText, targetConditions, ['windows8']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy3.vcxproj';
+                            incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy3.vcxproj');
                             targetConditions = {versions: undefined, target: 'win', arch: undefined};
-                            validateUninstalledProjects('framework', frameworks[6], path, incText, targetConditions, ['windows', 'windows8']);
+                            validateUninstalledProjects('framework', frameworks[6], xmlPath, incText, targetConditions, ['windows', 'windows8']);
 
-                            incText = cordovaProjectPluginsDir + "\\" + dummy_id + '\\src\\windows\\dummy4.vcxproj';
+                            incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy4.vcxproj');
                             targetConditions = {versions: '8.1', target: 'all', arch: 'x86'};
-                            validateUninstalledProjects('framework', frameworks[7], path, incText, targetConditions, ['windows', 'phone']);
+                            validateUninstalledProjects('framework', frameworks[7], xmlPath, incText, targetConditions, ['windows', 'phone']);
 
                             done();
                         });
@@ -413,3 +413,8 @@ beforeEach(function () {
         });
     });
 });
+
+function windowsJoin() {
+    // Paths that are written to project files will be in Windows format, regardless of the current OS.
+    return path.join.apply(path, arguments).split('/').join('\\');
+}
