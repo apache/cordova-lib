@@ -87,6 +87,11 @@ module.exports = {
         var dir = args[0] || '.';
         return initSettings()
         .then(function(settings) {
+            if(fs.existsSync(path.join(dir,'package.json'))) {
+                events.emit('verbose', 'temporarily moving existing package.json so we can create one to publish to the cordova plugins registry');
+                //rename package.json to pacakge.json1 temporarily 
+                fs.renameSync(path.join(dir,'package.json'),path.join(dir,'package.json1')); 
+            }
             return manifest.generatePackageJsonFromPluginXml(dir)
             .then(function() {
                 return Q.ninvoke(npm, 'load', settings);
@@ -98,6 +103,11 @@ module.exports = {
                 return Q.ninvoke(npm.commands, 'publish', args);
             }).then(function() {
                 fs.unlink(path.resolve(dir, 'package.json'));
+                //rename package.json1 to package.json if it exists
+                if(fs.existsSync(path.join(dir,'package.json1'))) {
+                    events.emit('verbose', 'restoring original package.json');
+                    fs.renameSync(path.join(dir,'package.json1'),path.join(dir,'package.json')); 
+                }
             }).catch(function(err){
                 return err;
             });
