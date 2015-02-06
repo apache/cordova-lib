@@ -265,7 +265,12 @@ function PluginInfo(dirname) {
             return { name: n.attrib.name };
         });
     };
-
+    
+    self.getPlatformsArray = function() {
+        return self._et.findall('platform').map(function(n) {
+            return n.attrib.name;
+        });
+    };
     self.getFrameworks = function(platform) {
         return _getTags(self._et, 'framework', platform, function(el) {
             var ret = {
@@ -301,8 +306,19 @@ function PluginInfo(dirname) {
     if (self.keywords) {
         self.keywords = self.keywords.split(',').map( function(s) { return s.trim(); } );
     }
+    self.getKeywordsAndPlatforms = function () {
+        return self.keywords.concat('cordovaplugin').concat(addCordova(self.getPlatformsArray()));
+    };
 }  // End of PluginInfo constructor.
 
+// Helper function used to prefix every element of an array with cordova-
+// Useful when we want to modify platforms to be cordova-platform
+function addCordova(someArray) {
+    someArray.forEach(function(element, index, array) {
+        array[index] = 'cordova-' + element;
+    });
+    return someArray;
+}
 
 // Helper function used by most of the getSomething methods of PluginInfo.
 // Get all elements of a given name. Both in root and in platform sections

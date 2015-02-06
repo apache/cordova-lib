@@ -76,6 +76,7 @@ addProperty(plugman, 'search', './search', true);
 addProperty(plugman, 'info', './info', true);
 addProperty(plugman, 'create', './create', true);
 addProperty(plugman, 'platform', './platform_operation', true);
+addProperty(plugman, 'createpackagejson', './createpackagejson', true);
 
 plugman.commands =  {
     'config'   : function(cli_opts) {
@@ -143,7 +144,6 @@ plugman.commands =  {
             else console.log('user added');
         });
     },
-
     'search'   : function(cli_opts) {
         plugman.search(cli_opts.argv.remain, function(err, plugins) {
             if (err) throw err;
@@ -217,7 +217,14 @@ plugman.commands =  {
             return console.log( plugman.help() );
         }
         plugman.platform( { operation: operation, platform_name: cli_opts.platform_name } );
-    }
+    },
+    'createpackagejson'  : function(cli_opts) {
+        var plugin_path = cli_opts.argv.remain;
+        if(!plugin_path) {
+            return console.log(plugman.help());
+        }
+        plugman.createpackagejson(plugin_path);
+    },
 };
 
 module.exports = plugman;
