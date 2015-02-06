@@ -90,13 +90,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     version = platform;
                     platform = null;
                 }
-                if (platform) {
-                    if (!version) {
-                        events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
-                    }
-                    version = version || getVersionFromConfigFile(platform, cfg);
+                if (platform && !version && cmd == 'add') {
+                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+                    version = getVersionFromConfigFile(platform, cfg);
                 }
-                if (isDirectory(version)) {
+                if (version && isDirectory(version)) {
                     return getPlatformDetailsFromDir(version, platform);
                 }
                 return downloadPlatform(projectRoot, platform, version, opts);

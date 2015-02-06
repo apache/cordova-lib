@@ -28,8 +28,28 @@ var path = require('path')
    , android_project = require('../util/android-project')
    , CordovaError = require('../../CordovaError')
    ;
+var semver = require('semver');
 
 var projectFileCache = {};
+
+function getProjectSdkDir(project_dir) {
+    var localProperties = properties_parser.createEditor(path.resolve(project_dir, 'local.properties'));
+    return localProperties.get('sdk.dir');
+}
+
+function getCustomSubprojectRelativeDir(plugin_id, project_dir, src) {
+    // All custom subprojects are prefixed with the last portion of the package id.
+    // This is to avoid collisions when opening multiple projects in Eclipse that have subprojects with the same name.
+    var prefix = package_suffix(project_dir);
+    var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
+    return subRelativeDir;
+}
+
+function package_suffix(project_dir) {
+    var packageName = module.exports.package_name(project_dir);
+    var lastDotIndex = packageName.lastIndexOf('.');
+    return packageName.substring(lastDotIndex + 1);
+}
 
 module.exports = {
     www_dir:function(project_dir) {
@@ -42,11 +62,6 @@ module.exports = {
         var mDoc = xml_helpers.parseElementtreeSync(path.join(project_dir, 'AndroidManifest.xml'));
 
         return mDoc._root.attrib['package'];
-    },
-    package_suffix:function(project_dir) {
-        var packageName = module.exports.package_name(project_dir);
-        var lastDotIndex = packageName.lastIndexOf('.');
-        return packageName.substring(lastDotIndex + 1);
     },
     'source-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options) {
@@ -109,23 +124,30 @@ module.exports = {
             var parent = obj.parent;
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
+            var type = obj.type;
 
             if (custom) {
-                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
+                var subRelativeDir = getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
                 common.copyNewFile(plugin_dir, src, project_dir, subRelativeDir, options && options.link);
                 subDir = path.resolve(project_dir, subRelativeDir);
             } else {
-                var sdk_dir = module.exports.getProjectSdkDir(project_dir);
-                subDir = path.resolve(sdk_dir, src);
+                if (semver.gte(options.platformVersion, '4.0.0-dev')) {
+                    type = 'sys';
+                    subDir = src;
+                } else {
+                    var sdk_dir = getProjectSdkDir(project_dir);
+                    subDir = path.resolve(sdk_dir, src);
+                }
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            var type = obj.type;
             if (type == 'gradleReference') {
-                //add reference to build.gradle
                 projectConfig.addGradleReference(parentDir, subDir);
+            } else if (type == 'sys') {
+                projectConfig.addSystemLibrary(parentDir, subDir);
             } else {
                 projectConfig.addSubProject(parentDir, subDir);
+                projectConfig.needsSubLibraryUpdate = semver.lt(options.platformVersion, '3.6.0');
             }
         },
         uninstall:function(obj, project_dir, plugin_id, options) {
@@ -137,9 +159,10 @@ module.exports = {
             var parent = obj.parent;
             var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
             var subDir;
+            var type = obj.type;
 
             if (custom) {
-                var subRelativeDir = module.exports.getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
+                var subRelativeDir = getCustomSubprojectRelativeDir(plugin_id, project_dir, src);
                 common.removeFile(project_dir, subRelativeDir);
                 subDir = path.resolve(project_dir, subRelativeDir);
                 // If it's the last framework in the plugin, remove the parent directory.
@@ -148,14 +171,20 @@ module.exports = {
                     fs.rmdirSync(parDir);
                 }
             } else {
-                var sdk_dir = module.exports.getProjectSdkDir(project_dir);
-                subDir = path.resolve(sdk_dir, src);
+                if (semver.gte(options.platformVersion, '4.0.0-dev')) {
+                    type = 'sys';
+                    subDir = src;
+                } else {
+                    var sdk_dir = getProjectSdkDir(project_dir);
+                    subDir = path.resolve(sdk_dir, src);
+                }
             }
 
             var projectConfig = module.exports.parseProjectFile(project_dir);
-            var type = obj.type;
             if (type == 'gradleReference') {
                 projectConfig.removeGradleReference(parentDir, subDir);
+            } else if (type == 'sys') {
+                projectConfig.removeSystemLibrary(parentDir, subDir);
             } else {
                 projectConfig.removeSubProject(parentDir, subDir);
             }
@@ -163,24 +192,13 @@ module.exports = {
     },
     parseProjectFile: function(project_dir){
         if (!projectFileCache[project_dir]) {
-            projectFileCache[project_dir] = new android_project.AndroidProject();
+            projectFileCache[project_dir] = new android_project.AndroidProject(project_dir);
         }
 
         return projectFileCache[project_dir];
     },
     purgeProjectFileCache:function(project_dir) {
         delete projectFileCache[project_dir];
-    },
-    getProjectSdkDir: function (project_dir) {
-        var localProperties = properties_parser.createEditor(path.resolve(project_dir, 'local.properties'));
-        return localProperties.get('sdk.dir');
-    },
-    getCustomSubprojectRelativeDir: function (plugin_id, project_dir, src) {
-        // All custom subprojects are prefixed with the last portion of the package id.
-        // This is to avoid collisions when opening multiple projects in Eclipse that have subprojects with the same name.
-        var prefix = module.exports.package_suffix(project_dir);
-        var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
-        return subRelativeDir;
     }
 };
 
