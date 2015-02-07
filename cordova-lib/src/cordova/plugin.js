@@ -91,6 +91,8 @@ module.exports = function plugin(command, targets, opts) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
             }
 
+            var xml = cordova_util.projectConfig(projectRoot);
+            var cfg = new ConfigParser(xml);
             var config_json = config.read(projectRoot);
             var searchPath = config_json.plugin_search_path || [];
             if (typeof opts.searchpath == 'string') {
@@ -112,6 +114,22 @@ module.exports = function plugin(command, targets, opts) {
                     return soFar.then(function() {
                         if (target[target.length - 1] == path.sep) {
                             target = target.substring(0, target.length - 1);
+                        }
+
+                        var parts = target.split('@');
+                        var id = parts[0];
+                        var version = parts[1];
+
+                        // If no version is specified, retrieve the version from config.xml
+                        if(!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)){
+                            events.emit('verbose', 'no version specified, retrieving version from config.xml');
+                            var ver = getVersionFromConfigFile(id, cfg);
+
+                            if( cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) ){
+                                target = ver;
+                            } else {
+                                target = ver ? (id + '@' + ver) : target;
+                            }
                         }
 
                         // Fetch the plugin first.
@@ -229,6 +247,11 @@ module.exports = function plugin(command, targets, opts) {
             return list(projectRoot, hooksRunner);
     }
 };
+
+function getVersionFromConfigFile(plugin, cfg){
+    var feature = cfg.getFeature(plugin);
+    return feature && feature.params.version; 
+}
 
 function list(projectRoot, hooksRunner) {
     var pluginsList = [];

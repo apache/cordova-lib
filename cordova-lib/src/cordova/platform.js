@@ -17,7 +17,6 @@
     under the License.
 */
 
-var url = require('url');
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -103,7 +102,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 if (version) {
                     var maybeDir = cordova_util.fixRelativePath(version);
-                    if (isDirectory(maybeDir)) {
+                    if (cordova_util.isDirectory(maybeDir)) {
                         return getPlatformDetailsFromDir(maybeDir, platform);
                     }
                 }
@@ -175,25 +174,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     });
 }
 
-function isDirectory(dir) {
-    try {
-	return fs.lstatSync(dir).isDirectory();
-    } catch(e) {
-	return false;
-    }
-}
-
-function isUrl(value) {
-    var u = value && url.parse(value);
-    return !!(u && u.protocol && u.protocol.length > 1); // Account for windows c:/ paths
-}
-
 // Downloads via npm or via git clone (tries both)
 // Returns a Promise
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
-        if (isUrl(version)) {
+        if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             return lazy_load.git_clone(version);
         }
