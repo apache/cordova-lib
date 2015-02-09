@@ -73,7 +73,6 @@ module.exports.prototype = {
             manifest.fullscreen = fullScreen;
         }
 
-        events.emit('verbose', 'boink activity');
         var activitiesNodes = config.doc.findall('activities');
         activitiesNodes.forEach(function(activitiesNode) {
             var activityNodes = activitiesNode.findall('activity');
