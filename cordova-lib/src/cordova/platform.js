@@ -101,8 +101,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     version = getVersionFromConfigFile(platform, cfg);
                 }
-                if (version && isDirectory(version)) {
-                    return getPlatformDetailsFromDir(version, platform);
+                if (version) {
+                    var maybeDir = cordova_util.fixRelativePath(version);
+                    if (isDirectory(maybeDir)) {
+                        return getPlatformDetailsFromDir(maybeDir, platform);
+                    }
                 }
                 return downloadPlatform(projectRoot, platform, version, opts);
             }).then(function(platDetails) {
