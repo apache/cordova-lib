@@ -27,7 +27,6 @@ var windows = require('../../src/plugman/platforms/windows'),
     cordovaProjectDir = path.join(os.tmpdir(), 'plugman'),
     cordovaProjectWindowsPlatformDir = path.join(cordovaProjectDir, 'platforms', 'windows'),
     cordovaProjectPluginsDir = path.join(cordovaProjectDir, 'plugins'),
-    xml_helpers = require('../../src/util/xml-helpers'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin');
 
@@ -97,7 +96,7 @@ beforeEach(function () {
         });
         describe('package_name method', function () {
             it('should return a windows project\'s proper package name', function () {
-                expect(windows.package_name(windows_project)).toEqual("CordovaApp");
+                expect(windows.package_name(windows_project)).toEqual('CordovaApp');
             });
         });
 

@@ -70,6 +70,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
+    var autosave =  config_json.auto_save_platforms || false;
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
@@ -90,19 +91,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     version = platform;
                     platform = null;
                 }
-                if (platform) {
-                    if (!version) {
-                        events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
-                    }
-                    version = version || getVersionFromConfigFile(platform, cfg);
+
+                // If --save/autosave on && no version specified, use the pinned version
+                // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
+                if( (opts.save || autosave) && !version ){
+                    version = platforms[platform].version;
                 }
-                if (isDirectory(version)) {
-                    return getPlatformDetailsFromDir(version, platform);
+                if (platform && !version && cmd == 'add') {
+                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+                    version = getVersionFromConfigFile(platform, cfg);
+                }
+                if (version) {
+                    var maybeDir = cordova_util.fixRelativePath(version);
+                    if (isDirectory(maybeDir)) {
+                        return getPlatformDetailsFromDir(maybeDir, platform);
+                    }
                 }
                 return downloadPlatform(projectRoot, platform, version, opts);
             }).then(function(platDetails) {
                 platform = platDetails.platform;
-                version = platDetails.version;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
 
@@ -149,6 +156,15 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
+                }).then(function() {
+                    if(opts.save || autosave){
+                        // Save target into config.xml, overriding already existing settings
+                        events.emit('log', '--save flag or autosave detected');
+                        events.emit('log', 'Saving ' + platform + '@' + version + ' into config.xml file ...');
+                        cfg.removeEngine(platform);
+                        cfg.addEngine(platform, version);
+                        cfg.write();
+                    }                    
                 });
             });
         });
@@ -256,6 +272,20 @@ function remove(hooksRunner, projectRoot, targets, opts) {
             if (fs.existsSync(plugins_json)) shell.rm(plugins_json);
         });
     }).then(function() {
+        var config_json = config.read(projectRoot);
+        var autosave =  config_json.auto_save_platforms || false;
+	if(opts.save || autosave){
+	    targets.forEach(function(target) {
+		var platformId = target.split('@')[0];
+		var xml = cordova_util.projectConfig(projectRoot);
+		var cfg = new ConfigParser(xml);
+		events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+		cfg.removeEngine(platformId);
+		cfg.write();
+	    });
+	}
+    })
+    .then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
 }
@@ -466,7 +496,7 @@ function platform(command, targets, opts) {
         case 'add':
             // CB-6976 Windows Universal Apps. windows8 is now alias for windows
             var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >= 0) {
+            if (idxWindows8 >=0) {
                 targets[idxWindows8] = 'windows';
             }
             return add(hooksRunner, projectRoot, targets, opts);

@@ -16,20 +16,15 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platforms = require('../src/plugman/platforms'),
-    prepare = require('../src/plugman/prepare'),
-    common  = require('../src/plugman/platforms/common');
+var prepare = require('../src/plugman/prepare'),
+    common  = require('../src/plugman/platforms/common'),
     fs      = require('fs'),
-    os      = require('osenv'),
     path    = require('path'),
     shell   = require('shelljs'),
     config_changes = require('../src/plugman/util/config-changes'),
     PlatformJson = require('../src/plugman/util/PlatformJson'),
     temp    = __dirname,
     plugins_dir = path.join(temp, 'plugins');
-
-var json = path.join(temp, 'assets', 'www', 'cordova_plugins.json');
-var js = path.join(temp, 'assets', 'www', 'cordova_plugins.js');
 
 describe('prepare', function() {
     var proc, platform_json, write, mkdir, rm;

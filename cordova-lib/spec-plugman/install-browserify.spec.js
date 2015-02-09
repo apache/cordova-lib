@@ -16,13 +16,14 @@
 //     specific language governing permissions and limitations
 //     under the License.
 // */
+
+/* jshint sub:true */
+
 var install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
     PlatformJson = require('../src/plugman/util/PlatformJson'),
-    xml_helpers = require('../src/util/xml-helpers'),
     events  = require('../src/events'),
     plugman = require('../src/plugman/plugman'),
-    browserify = require('../src/plugman/prepare-browserify'),
     platforms = require('../src/plugman/platforms/common'),
     common  = require('./common'),
     fs      = require('fs'),
@@ -86,10 +87,10 @@ var fake = {
             return Q( path.join(plugins_dir, 'dependencies', id) );
         }
     }
-}
+};
 
 describe('start', function() {
-    var prepare, prepareBrowserify, config_queue_add, proc, actions_push, ca, emit, write;
+    var prepare, prepareBrowserify, config_queue_add, proc, actions_push, ca, emit;
 
     beforeEach(function() {
         prepare = spyOn(plugman, 'prepare');
@@ -106,7 +107,7 @@ describe('start', function() {
         done = false;
         promise = Q()
          .then(
-            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin'], plugins_install_dir, { browserify: true }) }
+            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin'], plugins_install_dir, { browserify: true }); }
         ).then(
             function(){
                 results['actions_callCount'] = actions_push.callCount;
@@ -117,15 +118,15 @@ describe('start', function() {
             }
         ).then(
             function(){ 
-                return install('android', project, plugins['com.cordova.engine'], plugins_install_dir, { browserify: true }) }
+                return install('android', project, plugins['com.cordova.engine'], plugins_install_dir, { browserify: true }); }
         ).then(
             function(){
                 emit = spyOn(events, 'emit');
-                return install('android', project, plugins['org.test.plugins.childbrowser'], plugins_install_dir, { browserify: true })
+                return install('android', project, plugins['org.test.plugins.childbrowser'], plugins_install_dir, { browserify: true });
             }
         ).then(
             function(){
-                return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { browserify: true, cli_variables:{API_KEY:'batman'} })
+                return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { browserify: true, cli_variables:{API_KEY:'batman'} });
             }
         ).then(
             function(){
@@ -138,7 +139,7 @@ describe('start', function() {
                         results['emit_results'].push(emit.calls[i].args[1]);
                 }
 
-                events.emit("verbose", "***** DONE START *****");
+                events.emit('verbose', '***** DONE START *****');
             }
         ).fail(
             function(error) {
@@ -150,12 +151,12 @@ describe('start', function() {
 });
 
 describe('install', function() {
-    var chmod, exec, proc, add_to_queue, prepare, actions_push, c_a, mkdir, cp, rm, fetchSpy, emit;
+    var chmod, exec, add_to_queue, prepare, cp, rm, fetchSpy;
     var spawnSpy;
 
     beforeEach(function() {
         prepare = spyOn(plugman, 'prepare').andReturn( Q(true) );
-        prepareBrowserify = spyOn(plugman, 'prepareBrowserify');
+        spyOn(plugman, 'prepareBrowserify');
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, cb) {
             cb(false, '', '');
         });
@@ -166,7 +167,7 @@ describe('install', function() {
 
         fetchSpy = spyOn(plugman.raw, 'fetch').andReturn( Q( plugins['com.cordova.engine'] ) );
         chmod = spyOn(fs, 'chmodSync').andReturn(true);
-        fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
+        spyOn(fs, 'writeFileSync').andReturn(true);
         cp = spyOn(shell, 'cp').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
         add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
@@ -210,7 +211,7 @@ describe('install', function() {
         });
         it('should queue up actions as appropriate for that plugin and call process on the action stack',
            function() {
-                expect(results['actions_callCount']).toEqual(3);
+                expect(results['actions_callCount']).toEqual(6);
                 expect(results['actions_create']).toEqual([jasmine.any(Function), [jasmine.any(Object), path.join(plugins_install_dir, dummy_id), project, dummy_id, jasmine.any(Object)], jasmine.any(Function), [jasmine.any(Object), project, dummy_id, jasmine.any(Object)]]);
         });
 
@@ -355,7 +356,7 @@ describe('install', function() {
                         'Install start for "C" on android.',
                         'Install start for "D" on android.',
                         'Install start for "A" on android.'
-                    ]);;
+                    ]);
                 });
             });
 
@@ -384,7 +385,7 @@ describe('install', function() {
                 });
                 waitsFor(function () { return done; }, 'install promise never resolved', 200);
                 runs(function () {
-                    var install = common.spy.getInstall(emit);
+                    common.spy.getInstall(emit);
 
                     expect(done.message).toEqual('Cyclic dependency from G to H');
                 });
@@ -428,7 +429,7 @@ describe('install', function() {
                         'Install start for "B" on android.'
                     ]);
 
-                    var copy = common.spy.startsWith(emit, "Copying from");
+                    var copy = common.spy.startsWith(emit, 'Copying from');
                     expect(copy.length).toBe(3);
                     expect(copy[0].indexOf(path.normalize('meta/D')) > 0).toBe(true);
                     expect(copy[1].indexOf(path.normalize('meta/subdir/E')) > 0).toBe(true);
@@ -460,7 +461,7 @@ describe('install', function() {
         it('should throw if git is not found on the path and a remote url is requested', function() {
             spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
             fetchSpy.andCallThrough();
-            var which_spy = spyOn(shell, 'which').andReturn(null);
+            spyOn(shell, 'which').andReturn(null);
             runs(function() {
                 installPromise( install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git', plugins_install_dir, { browserify: true }) );
             });
@@ -470,7 +471,7 @@ describe('install', function() {
             });
         });
         it('should throw if plugin version is less than the minimum requirement', function(){
-            var spy = spyOn(semver, 'satisfies').andReturn(false);
+            spyOn(semver, 'satisfies').andReturn(false);
             exec.andCallFake(function(cmd, cb) {
                 cb(null, '0.0.1\n');
             });
