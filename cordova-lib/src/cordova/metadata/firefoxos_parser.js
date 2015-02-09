@@ -73,6 +73,39 @@ module.exports.prototype = {
             manifest.fullscreen = fullScreen;
         }
 
+        events.emit('verbose', 'boink activity');
+        var activitiesNodes = config.doc.findall('activities');
+        activitiesNodes.forEach(function(activitiesNode) {
+            var activityNodes = activitiesNode.findall('activity');
+            if (activityNodes.length) {
+                var activities = {};
+                activityNodes.forEach(function (node) {
+                    var name = node.attrib.name;
+                    var href = node.attrib.href;
+                    if (name && href) {
+                        events.emit('verbose', 'activity name='+name+' href='+href);
+                        activities[name] = {};
+                        activities[name].href = href;
+                        var disposition = node.attrib.disposition;
+                        if (disposition) {
+                            activities[name].disposition = disposition;
+                        }
+                        activities[name].filters = {};
+                        var filterNodes = node.findall('filter');
+                        filterNodes.forEach(function(filter) {
+                            var type = filter.attrib.type;
+                            if (type) {
+                                activities[name].filters.type = type;
+                            }
+                        });
+                    } else {
+                        events.emit('warn', 'activity without name='+name+'or href='+href);
+                    }
+                });
+                manifest.activities = activities;
+            }
+        });
+
         var orientations = [];
         var preferenceNodes = config.doc.findall('preference');
         preferenceNodes.forEach(function (preference) {
