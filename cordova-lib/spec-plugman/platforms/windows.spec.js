@@ -56,7 +56,7 @@ beforeEach(function () {
                 return 'Expected xml \'' + et.tostring(xml) + '\' ' + notText + 'to contain elements matching \'' + xpath + '\'.';
             };
 
-            return xml.find(xpath) != null;
+            return xml.find(xpath) !== null;
         }    });
 });
 
