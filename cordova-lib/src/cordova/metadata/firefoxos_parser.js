@@ -85,6 +85,10 @@ module.exports.prototype = {
                         events.emit('verbose', 'activity name='+name+' href='+href);
                         activities[name] = {};
                         activities[name].href = href;
+                        var returnValue = node.attrib.returnValue;
+                        if (returnValue) {
+                            activities[name].returnValue = returnValue;
+                        }
                         var disposition = node.attrib.disposition;
                         if (disposition) {
                             activities[name].disposition = disposition;
