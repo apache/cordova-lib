@@ -26,7 +26,7 @@ var common = require('./common'),
     path = require('path'),
     fs   = require('fs'),
     glob = require('glob'),
-    jsprojManager = require('../../util/windows/jsproj'),
+    jsprojManager = require('../../util/windows/jsprojManager'),
     events = require('../../events'),
     xml_helpers = require('../../util/xml-helpers');
 
