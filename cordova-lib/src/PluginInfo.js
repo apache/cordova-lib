@@ -205,7 +205,9 @@ function PluginInfo(dirname) {
             return {
                 src: tag.attrib.src,
                 arch: tag.attrib.arch,
-                Include: tag.attrib.Include
+                Include: tag.attrib.Include,
+                versions: tag.attrib.versions,
+                target: tag.attrib.target
             };
         });
         return libFiles;
@@ -273,7 +275,10 @@ function PluginInfo(dirname) {
                 parent: el.attrib.parent,
                 custom: isStrTrue(el.attrib.custom),
                 src: el.attrib.src,
-                weak: isStrTrue(el.attrib.weak)
+                weak: isStrTrue(el.attrib.weak),
+                versions: el.attrib.versions,
+                target: el.attrib.target,
+                arch: el.attrib.arch
             };
             return ret;
         });

@@ -1,35 +1,38 @@
 /**
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
-*/
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
 
 /* jshint quotmark:false, unused:false */
 
 /*
-  Helper for dealing with Windows Store JS app .jsproj files
-*/
+ Helper for dealing with Windows Store JS app .jsproj files
+ */
 
 
-var xml_helpers = require('../../util/xml-helpers'),
+var util = require('util'),
+    xml_helpers = require('../../util/xml-helpers'),
     et = require('elementtree'),
     fs = require('fs'),
+    glob = require('glob'),
     shell = require('shelljs'),
     events = require('../../events'),
-    path = require('path');
+    path = require('path'),
+    semver = require('semver');
 
 var WinCSharpProjectTypeGUID = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";  // .csproj
 var WinCplusplusProjectTypeGUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";  // .vcxproj
@@ -40,140 +43,96 @@ var JsProjectRegEx = /(Project\("\{262852C6-CD72-467D-83FE-5EEB1973A190}"\)\s*=\
 // Chars in a string that need to be escaped when used in a RegExp
 var RegExpEscRegExp = /([.?*+\^$\[\]\\(){}|\-])/g;
 
-function jsproj(location) {
-    if (!location) {
-        throw new Error('Project file location can\'t be null or empty' );
-    }
-    events.emit('verbose','creating jsproj from project at : ' + location);
-    this.location = location;
-    this.xml = xml_helpers.parseElementtreeSync(location);
-    // Detect universal Windows app project template
-    this.isUniversalWindowsApp = location.match(/\.(projitems|shproj)$/i);
-    return this;
+function jsprojManager(location) {
+    this.isUniversalWindowsApp = path.extname(location).toLowerCase() === ".projitems";
+    this.projects = [];
+    this.master = this.isUniversalWindowsApp ? new proj(location) : new jsproj(location);
+    this.projectFolder = path.dirname(location);
+
 }
 
-jsproj.prototype = {
-    location:null,
-    xml:null,
-    plugins_dir:"Plugins",
-    write:function() {
-        fs.writeFileSync(this.location, this.xml.write({indent:4}), 'utf-8');
-    },
+jsprojManager.prototype = {
+    _projects: null,
 
-    // add/remove the item group for SDKReference
-    // example :
-    // <ItemGroup><SDKReference Include="Microsoft.VCLibs, version=12.0" /></ItemGroup>
-    addSDKRef:function(incText) {
-        var item_group = new et.Element('ItemGroup');
-        var elem = new et.Element('SDKReference');
-        elem.attrib.Include = incText;
-
-        item_group.append(elem);
-        this.xml.getroot().append(item_group);
-    },
-
-    removeSDKRef:function(incText) {
-        var item_group = this.xml.find('ItemGroup/SDKReference[@Include="' + incText + '"]/..');
-        if(item_group) { // TODO: error handling
-            this.xml.getroot().remove(0, item_group);
+    write: function () {
+        this.master.write();
+        if (this._projects) {
+            var that = this;
+            this._projects.forEach(function (project) {
+                if (project !== that.master && project.touched) {
+                    project.write();
+                }
+            });
         }
     },
 
-    addReference:function(relPath) {
-        events.emit('verbose','addReference::' + relPath);
+    addSDKRef: function (incText, targetConditions) {
+        events.emit('verbose', 'jsprojManager.addSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
-        var item = new et.Element('ItemGroup');
-        var extName = path.extname(relPath);
+        var item = createReferenceElement('ItemGroup/SDKReference', incText, targetConditions);
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.appendToRoot(item);
+        });
+    },
 
-        var elem = new et.Element('Reference');
-        // add file name
-        elem.attrib.Include = path.basename(relPath, extName);
+    removeSDKRef: function (incText, targetConditions) {
+        events.emit('verbose', 'jsprojManager.removeSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.removeReferenceElementItemGroup('ItemGroup/SDKReference', incText, targetConditions);
+        });
+    },
+
+    addReference: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.addReference(incText: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
         // add hint path with full path
         var hint_path = new et.Element('HintPath');
         hint_path.text = relPath;
-
-        elem.append(hint_path);
-
-        if(extName == ".winmd") {
-            var mdFileTag = new et.Element("IsWinMDFile");
-            mdFileTag.text = "true";
-            elem.append(mdFileTag);
-        }
-
-        item.append(elem);
-        this.xml.getroot().append(item);
-    },
-
-    removeReference:function(relPath) {
-        events.emit('verbose','removeReference::' + relPath);
+        var children = [hint_path];
 
         var extName = path.extname(relPath);
-        var includeText = path.basename(relPath,extName);
-        // <ItemGroup>
-        //   <Reference Include="WindowsRuntimeComponent1">
-        var item_group = this.xml.find('ItemGroup/Reference[@Include="' + includeText + '"]/..');
-
-        if(item_group) { // TODO: erro handling
-            this.xml.getroot().remove(0, item_group);
+        if (extName === ".winmd") {
+            var mdFileTag = new et.Element("IsWinMDFile");
+            mdFileTag.text = "true";
+            children.push(mdFileTag);
         }
-    },
 
-    addSourceFile:function(relative_path) {
-        // we allow multiple paths to be passed at once as array so that
-        // we don't create separate ItemGroup for each source file, CB-6874
-        if (!(relative_path instanceof Array)) {
-            relative_path = [relative_path];
-        }
-        // make ItemGroup to hold file.
-        var item = new et.Element('ItemGroup');
-
-        relative_path.forEach(function(filePath) {
-            filePath = filePath.split('/').join('\\');
-
-            var content = new et.Element('Content');
-            content.attrib.Include = filePath;
-            item.append(content);
+        var item = createReferenceElement('ItemGroup/Reference', path.basename(relPath, extName), targetConditions, children);
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.appendToRoot(item);
         });
-        this.xml.getroot().append(item);
+
     },
 
-    removeSourceFile: function(relative_path) {
-        var isRegexp = relative_path instanceof RegExp;
-        if (!isRegexp) {
-            // path.normalize(relative_path);// ??
-            relative_path = relative_path.split('/').join('\\');
-        }
+    removeReference: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.removeReference(incText: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
-        var root = this.xml.getroot();
-        // iterate through all ItemGroup/Content elements and remove all items matched
-        this.xml.findall('ItemGroup').forEach(function(group){
-            // matched files in current ItemGroup
-            var filesToRemove = group.findall('Content').filter(function(item) {
-                if (!item.attrib.Include) return false;
-                return isRegexp ? item.attrib.Include.match(relative_path) :
-                    item.attrib.Include == relative_path;
-            });
+        var extName = path.extname(relPath);
+        var includeText = path.basename(relPath, extName);
 
-            // nothing to remove, skip..
-            if (filesToRemove.length < 1) return;
-
-            filesToRemove.forEach(function(file) {
-                // remove file reference
-                group.remove(0, file);
-            });
-            // remove ItemGroup if empty
-            if(group.findall('*').length < 1) {
-                root.remove(0, group);
-            }
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.removeReferenceElementItemGroup('ItemGroup/Reference', includeText, targetConditions);
         });
     },
 
-    // relative path must include the project file, so we can determine .csproj, .jsproj, .vcxproj...
-    addProjectReference: function (relative_path) {
-        events.emit('verbose', 'adding project reference to ' + relative_path);
+    addSourceFile: function (relative_path) {
+        events.emit('verbose', 'jsprojManager.addSourceFile(relative_path: ' + relative_path + ')');
+        this.master.addSourceFile(relative_path);
+    },
 
-        relative_path = relative_path.split('/').join('\\');
+    removeSourceFile: function (relative_path) {
+        events.emit('verbose', 'jsprojManager.removeSourceFile(incText: ' + relative_path + ')');
+        this.master.removeSourceFile(relative_path);
+    },
+
+    addProjectReference: function (relative_path, targetConditions) {
+        events.emit('verbose', 'jsprojManager.addProjectReference(incText: ' + relative_path + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        // relative_path is the actual path to the file in the current OS, where-as inserted_path is what we write in
+        // the project file, and is always in Windows format.
+        relative_path = path.normalize(relative_path);
+        var inserted_path = relative_path.split('/').join('\\');
 
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
 
@@ -191,22 +150,40 @@ jsproj.prototype = {
             "\t\t" + projectGuid + "=" + projectGuid + "\r\n" +
             "\tEndProjectSection\r\n";
         var postInsertText = '\r\nProject("' + projectTypeGuid + '") = "' +
-            projName + '", "' + relative_path + '", ' +
+            projName + '", "' + inserted_path + '", ' +
             '"' + projectGuid + '"\r\nEndProject';
 
-        // There may be multiple solutions (for different VS versions) - process them all
-        getSolutionPaths(this.location).forEach(function (solutionPath) {
+        var matchingProjects = this._getMatchingProjects(targetConditions);
+        if (matchingProjects.length === 0) {
+            // No projects meet the specified target and version criteria, so nothing to do.
+            return;
+        }
+
+        // Will we be writing into the .projitems file rather than individual .jsproj files?
+        var useProjItems = this.isUniversalWindowsApp && matchingProjects.length === 1 && matchingProjects[0] === this.master;
+
+        // There may be multiple solution files (for different VS versions) - process them all
+        getSolutionPaths(this.projectFolder).forEach(function (solutionPath) {
             var solText = fs.readFileSync(solutionPath, {encoding: "utf8"});
 
-            // Insert a project dependency into each jsproj in the solution.
-            var jsProjectFound = false;
-            solText = solText.replace(JsProjectRegEx, function (match) {
-                jsProjectFound = true;
-                return match + preInsertText;
-            });
+            if (useProjItems) {
+                // Insert a project dependency into every jsproj in the solution.
+                var jsProjectFound = false;
+                solText = solText.replace(JsProjectRegEx, function (match) {
+                    jsProjectFound = true;
+                    return match + preInsertText;
+                });
 
-            if (!jsProjectFound) {
-                throw new Error("no jsproj found in solution");
+                if (!jsProjectFound) {
+                    throw new Error("no jsproj found in solution");
+                }
+            } else {
+                // Insert a project dependency only for projects that match specified target and version
+                matchingProjects.forEach(function (project) {
+                    solText = solText.replace(getJsProjRegExForProject(path.basename(project.location)), function (match) {
+                        return match + preInsertText;
+                    });
+                });
             }
 
             // Add the project after existing projects. Note that this fairly simplistic check should be fine, since the last
@@ -221,17 +198,21 @@ jsproj.prototype = {
             fs.writeFileSync(solutionPath, solText, {encoding: "utf8"});
         });
 
-        // Add the ItemGroup/ProjectReference to the cordova project :
+        // Add the ItemGroup/ProjectReference to each matching cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
-        var item = new et.Element('ItemGroup');
-        var projRef = new et.Element('ProjectReference');
-        projRef.attrib.Include = relative_path;
-        item.append(projRef);
-        this.xml.getroot().append(item);
+        var item = createReferenceElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
+        matchingProjects.forEach(function (project) {
+            project.appendToRoot(item);
+        });
     },
 
-    removeProjectReference: function (relative_path) {
-        events.emit('verbose', 'removing project reference to ' + relative_path);
+    removeProjectReference: function (relative_path, targetConditions) {
+        events.emit('verbose', 'jsprojManager.removeProjectReference(incText: ' + relative_path + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        // relative_path is the actual path to the file in the current OS, where-as inserted_path is what we write in
+        // the project file, and is always in Windows format.
+        relative_path = path.normalize(relative_path);
+        var inserted_path = relative_path.split('/').join('\\');
 
         // find the guid + name of the referenced project
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
@@ -245,10 +226,10 @@ jsproj.prototype = {
         }
 
         var preInsertTextRegExp = getProjectReferencePreInsertRegExp(projectGuid);
-        var postInsertTextRegExp = getProjectReferencePostInsertRegExp(projName, projectGuid, relative_path, projectTypeGuid);
+        var postInsertTextRegExp = getProjectReferencePostInsertRegExp(projName, projectGuid, inserted_path, projectTypeGuid);
 
         // There may be multiple solutions (for different VS versions) - process them all
-        getSolutionPaths(this.location).forEach(function (solutionPath) {
+        getSolutionPaths(this.projectFolder).forEach(function (solutionPath) {
             var solText = fs.readFileSync(solutionPath, {encoding: "utf8"});
 
             // To be safe (to handle subtle changes in formatting, for example), use a RegExp to find and remove
@@ -265,12 +246,50 @@ jsproj.prototype = {
             fs.writeFileSync(solutionPath, solText, {encoding: "utf8"});
         });
 
-        // select first ItemsGroups with a ChildNode ProjectReference
-        // ideally select all, and look for @attrib 'Include'= projectFullPath
-        var projectRefNodesPar = this.xml.find("ItemGroup/ProjectReference[@Include='" + relative_path + "']/..");
-        if (projectRefNodesPar) {
-            this.xml.getroot().remove(0, projectRefNodesPar);
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.removeReferenceElementItemGroup('ItemGroup/ProjectReference', inserted_path, targetConditions);
+        });
+    },
+
+    _getMatchingProjects: function (targetConditions) {
+        // If specified, target can be 'all' (default), 'phone' or 'windows'. Ultimately should probably allow a comma
+        // separated list, but not needed now.
+        var target = getTarget(targetConditions);
+        var versions = getVersions(targetConditions);
+
+        if (target || versions) {
+            var matchingProjects = this.projects.filter(function (project) {
+                return (!target || target === project.target) && (!versions || semver.satisfies(project.version, versions, /* loose */ true));
+            });
+
+            if (matchingProjects.length < this.projects.length) {
+                return matchingProjects;
+            }
         }
+
+        // All projects match. If this is a universal project, return the projitems file. Otherwise return our single
+        // project.
+        return [this.master];
+    },
+
+    get projects() {
+        var projects = this._projects;
+        if (!projects) {
+            projects = [];
+            this._projects = projects;
+
+            if (this.isUniversalWindowsApp) {
+                var projectPath = this.projectFolder;
+                var projectFiles = glob.sync('*.jsproj', {cwd: projectPath});
+                projectFiles.forEach(function (projectFile) {
+                    projects.push(new jsproj(path.join(projectPath, projectFile)));
+                });
+            } else {
+                this.projects.push(this.master);
+            }
+        }
+
+        return projects;
     }
 };
 
@@ -287,12 +306,17 @@ function getProjectReferencePostInsertRegExp(projName, projectGuid, relative_pat
     return new RegExp('\\s*Project\\("' + projectTypeGuid + '"\\)\\s*=\\s*"' + projName + '"\\s*,\\s*"' + relative_path + '"\\s*,\\s*"' + projectGuid + '"\\s*EndProject', 'gi');
 }
 
-function getSolutionPaths(jsprojLocation) {
-    return shell.ls(path.join(path.dirname(jsprojLocation), "*.sln")); // TODO:error handling
+function getSolutionPaths(projectFolder) {
+    return shell.ls(path.join(projectFolder, "*.sln")); // TODO:error handling
 }
 
 function escapeRegExpString(regExpString) {
     return regExpString.replace(RegExpEscRegExp, "\\$1");
+}
+
+function getJsProjRegExForProject(projectFile) {
+    projectFile = escapeRegExpString(projectFile);
+    return new RegExp('(Project\\("\\{262852C6-CD72-467D-83FE-5EEB1973A190}"\\)\\s*=\\s*"[^"]+",\\s*"' + projectFile + '",\\s*"\\{[0-9a-f\\-]+}"[^\\r\\n]*[\\r\\n]*)', 'gi');
 }
 
 function getProjectTypeGuid(projectPath) {
@@ -306,4 +330,215 @@ function getProjectTypeGuid(projectPath) {
     return null;
 }
 
-module.exports = jsproj;
+function createReferenceElement(path, incText, targetConditions, children) {
+    path = path.split('/');
+    path.reverse();
+
+    var lastElement = null;
+    path.forEach(function (elementName) {
+        var element = new et.Element(elementName);
+        if (lastElement) {
+            element.append(lastElement);
+        } else {
+            element.attrib.Include = incText;
+
+            var condition = createConditionAttrib(targetConditions);
+            if (condition) {
+                element.attrib.Condition = condition;
+            }
+
+            if (children) {
+                children.forEach(function (child) {
+                    element.append(child);
+                });
+            }
+        }
+        lastElement = element;
+    });
+
+    return lastElement;
+}
+
+function getTarget(targetConditions) {
+    var target = targetConditions.target;
+    if (target) {
+        target = target.toLowerCase().trim();
+        if (target === "all") {
+            target = null;
+        } else if (target === "win") {
+            // Allow "win" as alternative to "windows"
+            target = "windows";
+        } else if (target !== 'phone' && target !== 'windows') {
+            throw new Error('Invalid lib-file target attribute (must be "all", "phone", "windows" or "win"): ' + target);
+        }
+    }
+    return target;
+}
+
+function getVersions(targetConditions) {
+    var versions = targetConditions.versions;
+    if (versions && !semver.validRange(versions, /* loose */ true)) {
+        throw new Error('Invalid lib-file versions attribute (must be a valid a valid node semantic version range): ' + versions);
+    }
+    return versions;
+}
+
+
+/* proj */
+
+function proj(location) {
+    // Class to handle simple project xml operations
+    if (!location) {
+        throw new Error('Project file location can\'t be null or empty');
+    }
+    this.location = location;
+    this.xml = xml_helpers.parseElementtreeSync(location);
+}
+
+proj.prototype = {
+    write: function () {
+        fs.writeFileSync(this.location, this.xml.write({indent: 4}), 'utf-8');
+    },
+
+    appendToRoot: function (element) {
+        this.touched = true;
+        this.xml.getroot().append(element);
+    },
+
+    removeReferenceElementItemGroup: function (path, incText, targetConditions) {
+        var xpath = path + '[@Include="' + incText + '"]';
+        var condition = createConditionAttrib(targetConditions);
+        if (condition) {
+            xpath += '[@Condition="' + condition + '"]';
+        }
+        xpath += '/..';
+
+        var itemGroup = this.xml.find(xpath);
+        if (itemGroup) {
+            this.touched = true;
+            this.xml.getroot().remove(0, itemGroup);
+        }
+    },
+
+    addSourceFile: function (relative_path) {
+        // we allow multiple paths to be passed at once as array so that
+        // we don't create separate ItemGroup for each source file, CB-6874
+        if (!(relative_path instanceof Array)) {
+            relative_path = [relative_path];
+        }
+
+        // make ItemGroup to hold file.
+        var item = new et.Element('ItemGroup');
+
+        relative_path.forEach(function (filePath) {
+            // filePath is never used to find the actual file - it determines what we write to the project file, and so
+            // should always be in Windows format.
+            filePath = filePath.split('/').join('\\');
+
+            var content = new et.Element('Content');
+            content.attrib.Include = filePath;
+            item.append(content);
+        });
+
+        this.appendToRoot(item);
+    },
+
+    removeSourceFile: function (relative_path) {
+        var isRegexp = relative_path instanceof RegExp;
+        if (!isRegexp) {
+            // relative_path is never used to find the actual file - it determines what we write to the project file,
+            // and so should always be in Windows format.
+            relative_path = relative_path.split('/').join('\\');
+        }
+
+        var root = this.xml.getroot();
+        var that = this;
+        // iterate through all ItemGroup/Content elements and remove all items matched
+        this.xml.findall('ItemGroup').forEach(function (group) {
+            // matched files in current ItemGroup
+            var filesToRemove = group.findall('Content').filter(function (item) {
+                if (!item.attrib.Include) {
+                    return false;
+                }
+                return isRegexp ? item.attrib.Include.match(relative_path) : item.attrib.Include === relative_path;
+            });
+
+            // nothing to remove, skip..
+            if (filesToRemove.length < 1) {
+                return;
+            }
+
+            filesToRemove.forEach(function (file) {
+                // remove file reference
+                group.remove(0, file);
+            });
+            // remove ItemGroup if empty
+            if (group.findall('*').length < 1) {
+                that.touched = true;
+                root.remove(0, group);
+            }
+        });
+    }
+};
+
+
+/* jsproj */
+
+function jsproj(location) {
+    function targetPlatformIdentifierToDevice(jsprojPlatform) {
+        var index = ["Windows", "WindowsPhoneApp"].indexOf(jsprojPlatform);
+        if (index < 0) {
+            throw new Error("Unknown TargetPlatformIdentifier '" + jsprojPlatform + "' in project file '" + location + "'");
+        }
+        return ["windows", "phone"][index];
+    }
+
+    function validateVersion(version) {
+        version = version.split('.');
+        while (version.length < 3) {
+            version.push("0");
+        }
+        return version.join(".");
+    }
+
+    // Class to handle a jsproj file
+    proj.call(this, location);
+
+    var propertyGroup = this.xml.find('PropertyGroup[TargetPlatformIdentifier]');
+    if (!propertyGroup) {
+        throw new Error("Unable to find PropertyGroup/TargetPlatformIdentifier in project file '" + this.location + "'");
+    }
+
+    var jsprojPlatform = propertyGroup.find('TargetPlatformIdentifier').text;
+    this.target = targetPlatformIdentifierToDevice(jsprojPlatform);
+
+    var version = propertyGroup.find('TargetPlatformVersion');
+    if (!version) {
+        throw new Error("Unable to find PropertyGroup/TargetPlatformVersion in project file '" + this.location + "'");
+    }
+    this.version = validateVersion(version.text);
+}
+
+util.inherits(jsproj, proj);
+
+jsproj.prototype.target = null;
+jsproj.prototype.version = null;
+
+/* Common support functions */
+
+function createConditionAttrib(targetConditions) {
+    var arch = targetConditions.arch;
+    if (arch) {
+        if (arch === "arm") {
+            // Specifcally allow "arm" as alternative to "ARM"
+            arch = "ARM";
+        } else if (arch !== "x86" && arch !== "x64" && arch !== "ARM") {
+            throw new Error('Invalid lib-file arch attribute (must be "x86", "x64" or "ARM"): ' + arch);
+        }
+        return "'$(Platform)'=='" + arch + "'";
+    }
+    return null;
+}
+
+
+module.exports = jsprojManager;
