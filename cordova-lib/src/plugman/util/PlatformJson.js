@@ -13,9 +13,7 @@
  * under the License.
  *
 */
-/* jshint node:true, sub:true, indent:4  */
-/* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
-
+/* jshint sub:true */
 
 var fs = require('fs');
 var path = require('path');

@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint sub:true */
+
 var uninstall = require('../src/plugman/uninstall'),
     install = require('../src/plugman/install'),
     actions = require('../src/plugman/util/action-stack'),
@@ -59,26 +62,29 @@ describe('start', function() {
 
         done = false;
         promise = Q()
-        .then(
-            function(){ return install('android', project, plugins['org.test.plugins.dummyplugin']) }
-        ).then(
-            function(){ return install('android', project, plugins['A']) }
-        ).then(
-            function(){ return install('android', project2, plugins['C']) }
-        ).then(
-            function(){ return install('android', project2, plugins['A']) }
-        ).then(
-            function(){ done = true; }
-        );
+        .then(function(){
+            return install('android', project, plugins['org.test.plugins.dummyplugin']);
+        }).then(function(){
+            return install('android', project, plugins['A']);
+        }).then( function(){
+            return install('android', project2, plugins['C']);
+        }).then(function(){
+            return install('android', project2, plugins['A']);
+        }).then(function(){
+            done = true;
+        }, function(err) {
+            done = err.stack;
+        });
         waitsFor(function() { return done; }, 'promise never resolved', 500);
+        runs(function() {
+            expect(done).toBe(true);
+        });
     });
 });
 
 describe('uninstallPlatform', function() {
     var proc, prepare, actions_push, add_to_queue, c_a, rm;
     var fsWrite;
-
-    var plat_common = require('../src/plugman/platforms/common');
 
     beforeEach(function() {
         proc = spyOn(actions.prototype, 'process').andReturn(Q());
@@ -116,7 +122,7 @@ describe('uninstallPlatform', function() {
             });
             waitsFor(function() { return done; }, 'promise never resolved', 200);
             runs(function() {
-                expect(actions_push.calls.length).toEqual(5);
+                expect(actions_push.calls.length).toEqual(6);
                 expect(proc).toHaveBeenCalled();
             });
         });
@@ -165,7 +171,7 @@ describe('uninstallPlugin', function() {
 
     beforeEach(function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
-        rm = spyOn(shell, 'rm').andCallFake(function(f,p) { rmstack.push(p); return true});
+        rm = spyOn(shell, 'rm').andCallFake(function(f,p) { rmstack.push(p); return true; });
         rmstack = [];
         emit = spyOn(events, 'emit');
         done = false;
@@ -188,7 +194,7 @@ describe('uninstallPlugin', function() {
             });
         });
 
-        it("should fail if plugin is a required dependency", function() {
+        it('should fail if plugin is a required dependency', function() {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('C', plugins_install_dir) );
             });
@@ -198,7 +204,7 @@ describe('uninstallPlugin', function() {
             });
         });
 
-        it("allow forcefully removing a plugin", function() {
+        it('allow forcefully removing a plugin', function() {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('C', plugins_install_dir, {force: true}) );
             });
@@ -210,7 +216,7 @@ describe('uninstallPlugin', function() {
             });
         });
 
-        it("never remove top level plugins if they are a dependency", function() {
+        it('never remove top level plugins if they are a dependency', function() {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('A', plugins_install_dir2) );
             });
@@ -277,21 +283,21 @@ describe('end', function() {
 
         promise.then(
             function(){
-                return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
+                return uninstall('android', project, plugins['org.test.plugins.dummyplugin']);
             }
         ).then(
             function(){
                 // Fails... A depends on
-                return uninstall('android', project, plugins['C'])
+                return uninstall('android', project, plugins['C']);
             }
         ).fail(
             function(err) {
-                expect(err.message).toBe("The plugin 'C' is required by (A), skipping uninstallation.");
+                expect(err.stack).toMatch(/The plugin 'C' is required by \(A\), skipping uninstallation./);
             }
         ).then(
             function(){
                 // dependencies on C,D ... should this only work with --recursive? prompt user..?
-                return uninstall('android', project, plugins['A'])
+                return uninstall('android', project, plugins['A']);
             }
         ).fin(function(err){
             if(err)

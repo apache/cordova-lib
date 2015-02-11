@@ -17,12 +17,9 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var xml = require('../util/xml-helpers');
 
+/** Deprecated. Use PluginInfo instead. */
 function plugin_parser(xmlPath) {
     this.path = xmlPath;
     this.doc = xml.parseElementtreeSync(xmlPath);

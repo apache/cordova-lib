@@ -17,10 +17,6 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var cordova_events = require('../events');
 var cordova_util = require('./util');
 
@@ -73,5 +69,6 @@ addModuleProperty(module, 'run', './run', true);
 addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'save', './save', true);
 addModuleProperty(module, 'restore', './restore', true);
+addModuleProperty(module, 'targets', './targets', true);
 
 

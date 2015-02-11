@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true
-*/
+/* jshint laxcomma:true, sub:true */
 
 var path = require('path')
     , fs = require('fs')
@@ -52,23 +49,23 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(source_el, project_dir, plugin_id, options) {}
+        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(obj, project_dir, plugin_id, options) {}
     },
     'header-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(source_el, project_dir, plugin_id, options) {}
+        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(obj, project_dir, plugin_id, options) {}
     },
     'resource-file':{
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(source_el, project_dir, plugin_id, options) {}
+        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(obj, project_dir, plugin_id, options) {}
     },
     'framework': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(source_el, project_dir, plugin_id, options) {}
+        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(obj, project_dir, plugin_id, options) {}
     },
     'lib-file': {
-        install: function(source_el, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(source_el, project_dir, plugin_id, options) {}
+        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function(obj, project_dir, plugin_id, options) {}
     }
 };

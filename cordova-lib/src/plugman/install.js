@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true, expr:true
-*/
+/* jshint laxcomma:true, sub:true, expr:true */
 
 var path = require('path'),
     fs   = require('fs'),
@@ -29,7 +26,6 @@ var path = require('path'),
     child_process = require('child_process'),
     semver = require('semver'),
     PlatformJson = require('./util/PlatformJson'),
-    PluginInfo    = require('../PluginInfo'),
     CordovaError  = require('../CordovaError'),
     Q = require('q'),
     platform_modules = require('./platforms'),
@@ -41,6 +37,10 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     cordovaUtil = require('../cordova/util');
+
+var superspawn = require('../cordova/superspawn');
+var PluginInfo = require('../PluginInfo');
+var PluginInfoProvider = require('../PluginInfoProvider');
 
 /* INSTALL FLOW
    ------------
@@ -201,22 +201,22 @@ function callEngineScripts(engines) {
 }
 
 // return only the engines we care about/need
-function getEngines(pluginElement, platform, project_dir, plugin_dir){
-    var engines = pluginElement.findall('engines/engine');
+function getEngines(pluginInfo, platform, project_dir, plugin_dir){
+    var engines = pluginInfo.getEngines();
     var defaultEngines = require('./util/default-engines')(project_dir);
     var uncheckedEngines = [];
     var cordovaEngineIndex, cordovaPlatformEngineIndex, theName, platformIndex, defaultPlatformIndex;
     // load in known defaults and update when necessary
 
     engines.forEach(function(engine){
-        theName = engine.attrib['name'];
+        theName = engine.name;
 
         // check to see if the engine is listed as a default engine
         if(defaultEngines[theName]){
             // make sure engine is for platform we are installing on
             defaultPlatformIndex = defaultEngines[theName].platform.indexOf(platform);
             if(defaultPlatformIndex > -1 || defaultEngines[theName].platform === '*'){
-                defaultEngines[theName].minVersion = defaultEngines[theName].minVersion ? defaultEngines[theName].minVersion : engine.attrib['version'];
+                defaultEngines[theName].minVersion = defaultEngines[theName].minVersion ? defaultEngines[theName].minVersion : engine.version;
                 defaultEngines[theName].currentVersion = defaultEngines[theName].currentVersion ? defaultEngines[theName].currentVersion : null;
                 defaultEngines[theName].scriptSrc = defaultEngines[theName].scriptSrc ? defaultEngines[theName].scriptSrc : null;
                 defaultEngines[theName].name = theName;
@@ -229,9 +229,9 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
             }
         // check for other engines
         }else{
-            platformIndex = engine.attrib['platform'].indexOf(platform);
-            if(platformIndex > -1 || engine.attrib['platform'] === '*'){
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.attrib['platform'], 'scriptSrc':path.resolve(plugin_dir, engine.attrib['scriptSrc']), 'minVersion' :  engine.attrib['version']});
+            platformIndex = engine.platform.indexOf(platform);
+            if(platformIndex > -1 || engine.platform === '*'){
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':path.resolve(plugin_dir, engine.scriptSrc), 'minVersion' :  engine.version});
             }
         }
     });
@@ -246,11 +246,14 @@ function getEngines(pluginElement, platform, project_dir, plugin_dir){
 // Returns a promise.
 module.exports.runInstall = runInstall;
 function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-    var pluginInfo   = new PluginInfo.PluginInfo(plugin_dir)
-      , filtered_variables = {};
-
     options = options || {};
     options.graph = options.graph || new dep_graph();
+    options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
+
+    var pluginInfoProvider = options.pluginInfoProvider;
+    var pluginInfo   = pluginInfoProvider.get(plugin_dir);
+    var filtered_variables = {};
+
     var platformJson = PlatformJson.load(plugins_dir, platform);
 
     if (platformJson.isPluginInstalled(pluginInfo.id)) {
@@ -263,7 +266,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     }
     events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
-    var theEngines = getEngines(pluginInfo._et, platform, project_dir, plugin_dir);
+    var theEngines = getEngines(pluginInfo, platform, project_dir, plugin_dir);
 
     var install = {
         actions: actions,
@@ -274,10 +277,17 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         top_plugin_dir: plugin_dir
     };
 
-    return callEngineScripts(theEngines)
-    .then(checkEngines)
-    .then(
-        function() {
+    return Q().then(function() {
+        if (options.platformVersion) {
+            return Q(options.platformVersion);
+        }
+        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version')));
+    }).then(function(platformVersion) {
+        options.platformVersion = platformVersion;
+        return callEngineScripts(theEngines);
+    }).then(function(engines) {
+        return checkEngines(engines);
+    }).then(function() {
             // checking preferences, if certain variables are not provided, we should throw.
             var prefs = pluginInfo.getPreferences(platform);
             options.cli_variables = options.cli_variables || {};
@@ -302,7 +312,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
             // may need to copy to destination...
             if ( !fs.existsSync(install_plugin_dir) ) {
-                copyPlugin(plugin_dir, plugins_dir, options.link);
+                copyPlugin(plugin_dir, plugins_dir, options.link, pluginInfoProvider);
             }
 
             var projectRoot = cordovaUtil.isCordova();
@@ -520,57 +530,46 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     var handler = platform_modules[platform];
 
-    var platformTag = pluginInfo._et.find('./platform[@name="'+platform+'"]');
+    var sourceFiles = pluginInfo.getSourceFiles(platform);
+    var headerFiles = pluginInfo.getHeaderFiles(platform);
+    var libFiles = pluginInfo.getLibFiles(platform);
+    var resourceFiles = pluginInfo.getResourceFiles(platform);
+    var frameworkFiles = pluginInfo.getFrameworks(platform);
 
-    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-    // we allow using windows8 tag for new windows platform
-    if (platform == 'windows' && !platformTag) {
-        platformTag = pluginInfo._et.find('platform[@name="' + 'windows8' + '"]');
-    }
-    if (platformTag) {
-        var sourceFiles = platformTag.findall('./source-file'),
-            headerFiles = platformTag.findall('./header-file'),
-            resourceFiles = platformTag.findall('./resource-file'),
-            frameworkFiles = platformTag.findall('./framework'),
-            libFiles = platformTag.findall('./lib-file');
+    // queue up native stuff
+    sourceFiles.forEach(function(item) {
+        actions.push(actions.createAction(handler['source-file'].install,
+                                          [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                          handler['source-file'].uninstall,
+                                          [item, project_dir, pluginInfo.id, options]));
+    });
 
-        // queue up native stuff
-        sourceFiles && sourceFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler['source-file'].install,
-                                              [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                              handler['source-file'].uninstall,
-                                              [item, project_dir, pluginInfo.id, options]));
-        });
+    headerFiles.forEach(function(item) {
+        actions.push(actions.createAction(handler['header-file'].install,
+                                         [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                         handler['header-file'].uninstall,
+                                         [item, project_dir, pluginInfo.id, options]));
+    });
 
-        headerFiles && headerFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler['header-file'].install,
-                                             [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                             handler['header-file'].uninstall,
-                                             [item, project_dir, pluginInfo.id, options]));
-        });
+    resourceFiles.forEach(function(item) {
+        actions.push(actions.createAction(handler['resource-file'].install,
+                                          [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                          handler['resource-file'].uninstall,
+                                          [item, project_dir, pluginInfo.id, options]));
+    });
+    frameworkFiles.forEach(function(item) {
+        actions.push(actions.createAction(handler['framework'].install,
+                                         [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                         handler['framework'].uninstall,
+                                         [item, project_dir, pluginInfo.id, options]));
+    });
+    libFiles.forEach(function(item) {
+        actions.push(actions.createAction(handler['lib-file'].install,
+                                            [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                            handler['lib-file'].uninstall,
+                                            [item, project_dir, pluginInfo.id, options]));
 
-        resourceFiles && resourceFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler['resource-file'].install,
-                                              [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                              handler['resource-file'].uninstall,
-                                              [item, project_dir, pluginInfo.id, options]));
-        });
-        // CB-5238 custom frameworks only
-        frameworkFiles && frameworkFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler['framework'].install,
-                                             [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                             handler['framework'].uninstall,
-                                             [item, project_dir, pluginInfo.id, options]));
-        });
-
-        libFiles && libFiles.forEach(function(item) {
-            actions.push(actions.createAction(handler['lib-file'].install,
-                                                [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                                handler['lib-file'].uninstall,
-                                                [item, project_dir, pluginInfo.id, options]));
-
-        });
-    }
+    });
 
     // run through the action stack
     return actions.process(platform, project_dir)
@@ -581,9 +580,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         platformJson.save();
         // call prepare after a successful install
         if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
         } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level);
+            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
         }
 	}).then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
@@ -613,8 +612,8 @@ function isRelativePath(path) {
 }
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
-function copyPlugin(plugin_src_dir, plugins_dir, link) {
-    var pluginInfo = new PluginInfo.PluginInfo(plugin_src_dir);
+function copyPlugin(plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
+    var pluginInfo = new PluginInfo(plugin_src_dir);
     var dest = path.join(plugins_dir, pluginInfo.id);
     shell.rm('-rf', dest);
 
@@ -627,6 +626,8 @@ function copyPlugin(plugin_src_dir, plugins_dir, link) {
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');
         shell.cp('-R', path.join(plugin_src_dir, '*') , dest);
     }
+    pluginInfo.dir = dest;
+    pluginInfoProvider.put(pluginInfo);
 
     return dest;
 }

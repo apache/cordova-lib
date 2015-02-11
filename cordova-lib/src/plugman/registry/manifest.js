@@ -17,15 +17,12 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
-var xml_helpers = require('../../util/xml-helpers'),
-    path = require('path'),
+var path = require('path'),
     Q = require('q'),
     fs = require('fs'),
     whitelist = require('./whitelist');
+
+var PluginInfo = require('../../PluginInfo');
 
 function validateName(name) {
     if (!name.match(/^(\S+\.){2,}.*$/)) {
@@ -39,37 +36,26 @@ function validateName(name) {
     return true;
 }
 
-// Java world big-up!
 // Returns a promise.
 function generatePackageJsonFromPluginXml(plugin_path) {
     return Q().then(function() {
         var package_json = {};
-        var pluginXml = xml_helpers.parseElementtreeSync(path.join(plugin_path, 'plugin.xml'));
-
-        if(!pluginXml) throw new Error('invalid plugin.xml document');
-
-        var pluginElm = pluginXml.getroot();
-
-        if(!pluginElm) throw new Error('invalid plugin.xml document');
+        var pluginInfo = new PluginInfo(plugin_path);
 
         // REQUIRED: name, version
         // OPTIONAL: description, license, keywords, engine
-        var name = pluginElm.attrib.id,
-            version = pluginElm.attrib.version,
-            cordova_name = pluginElm.findtext('name'),
-            description = pluginElm.findtext('description'),
-            license = pluginElm.findtext('license'),
-            keywords = pluginElm.findtext('keywords'),
-            repo = pluginElm.findtext('repo'),
-            issue = pluginElm.findtext('issue'),
-            engines = pluginElm.findall('engines/engine'),
-            platformsElm = pluginElm.findall('platform'),
-            englishdoc = '',
-            platforms = [];
+        var name = pluginInfo.id,
+            version = pluginInfo.version,
+            cordova_name = pluginInfo.name,
+            description = pluginInfo.description,
+            license = pluginInfo.license,
+            keywords = pluginInfo.keywords,
+            repo = pluginInfo.repo,
+            issue = pluginInfo.issue,
+            engines = pluginInfo.getEngines(),
+            platforms = pluginInfo.getPlatforms(),
+            englishdoc = '';
 
-        platformsElm.forEach(function(plat){
-            platforms.push(plat.attrib.name);
-        });
         if(!version) throw new Error('`version` required');
 
         package_json.version = version;
@@ -85,15 +71,18 @@ function generatePackageJsonFromPluginXml(plugin_path) {
         if(license)      package_json.license      = license;
         if(repo)         package_json.repo         = repo;
         if(issue)        package_json.issue        = issue;
-        if(keywords)     package_json.keywords     = keywords.split(',');
-        if(platforms)    package_json.platforms    = platforms;
+        if(keywords)     package_json.keywords     = keywords;
+        if(platforms) {
+            package_json.platforms = platforms.map(function(p) {
+                return p.name;
+            });
+        }
 
         // Adding engines
         if(engines) {
-            package_json.engines = [];
-            for(var i = 0, j = engines.length ; i < j ; i++) {
-                package_json.engines.push({name: engines[i].attrib.name, version: engines[i].attrib.version});
-            }
+            package_json.engines = engines.map(function(e) {
+                return {name: e.name, version: e.version};
+            });
         }
 
         // Set docs_path to doc/index.md exists

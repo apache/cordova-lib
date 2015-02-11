@@ -17,14 +17,11 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var path              = require('path'),
     cordova_util      = require('./util'),
-    HooksRunner            = require('../hooks/HooksRunner'),
-    events        = require('../events'),
+    HooksRunner       = require('../hooks/HooksRunner'),
+    events            = require('../events'),
+    Q                 = require('q'),
     superspawn        = require('./superspawn');
 
 // Returns a promise.
@@ -44,6 +41,7 @@ module.exports = function compile(options) {
         return hooksRunner.fire('after_compile', options);
     }, function(error) {
         events.emit('log', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
+        return Q.reject(error);
     });
     return ret;
 };

@@ -17,6 +17,8 @@
     under the License.
 */
 
+/* jshint boss:true, sub:true */
+
 var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -30,7 +32,6 @@ var platforms = require('../../src/cordova/platforms'),
     Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
     CordovaError = require('../../src/CordovaError'),
-    cordova = require('../../src/cordova/cordova'),
     HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.
@@ -53,7 +54,7 @@ MAINPAGEXAML_XML = '<phone:PhoneApplicationPage x:Class="io.cordova.hellocordova
 
 describe('wp8 project parser', function() {
     var proj = '/some/path';
-    var exists, exec, custom, readdir, cfg_parser, config_read;
+    var exists, exec, custom, readdir, config_read;
     var manifestXml, projXml, mainPageXamlXml;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
@@ -69,7 +70,7 @@ describe('wp8 project parser', function() {
                     }
                 }
             }
-            : ({})
+            : ({});
         });
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.csproj']);
         projXml = manifestXml = mainPageXamlXml = null;
@@ -141,10 +142,10 @@ describe('wp8 project parser', function() {
 
         describe('update_from_config method', function() {
             beforeEach(function() {
-                cfg.name = function() { return 'testname' };
-                cfg.content = function() { return 'index.html' };
-                cfg.packageName = function() { return 'testpkg' };
-                cfg.version = function() { return 'one point oh' };
+                cfg.name = function() { return 'testname'; };
+                cfg.content = function() { return 'index.html'; };
+                cfg.packageName = function() { return 'testpkg'; };
+                cfg.version = function() { return 'one point oh'; };
                 readdir.andReturn(['test.sln']);
             });
 
@@ -166,7 +167,7 @@ describe('wp8 project parser', function() {
             it('should write out the orientation preference value', function() {
                 getOrientation.andCallThrough();
                 p.update_from_config(cfg);
-                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait')
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
             });
             it('should handle no orientation', function() {
@@ -184,13 +185,13 @@ describe('wp8 project parser', function() {
             it('should handle portrait orientation', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
                 p.update_from_config(cfg);
-                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait')
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
             });
             it('should handle landscape orientation', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
-                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('landscape')
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('landscape');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('landscape');
             });
             it('should handle custom orientation', function() {
@@ -222,7 +223,7 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, svn, fire;
+            var config, www, svn, fire;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');

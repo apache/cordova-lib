@@ -17,32 +17,18 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          expr:true
-*/
+/* jshint expr:true */
 
 var dep_graph = require('dep-graph'),
     path = require('path'),
     fs = require('fs'),
     underscore = require('underscore'),
-    xml_helpers = require('../../util/xml-helpers'),
     events = require('../../events'),
     package;
 
 module.exports = package = {
 
-    resolvePath: function(plugin_id, plugins_dir)
-    {
-        return path.join(plugins_dir, plugin_id);
-    },
-
-    resolveConfig: function(plugin_id, plugins_dir)
-    {
-        return path.join(plugins_dir, plugin_id, 'plugin.xml');
-    },
-
-    generateDependencyInfo:function(platformJson, plugins_dir) {
+    generateDependencyInfo:function(platformJson, plugins_dir, pluginInfoProvider) {
         var json = platformJson.root;
 
         // TODO: store whole dependency tree in plugins/[platform].json
@@ -52,25 +38,25 @@ module.exports = package = {
         Object.keys(json.installed_plugins).forEach(function(plugin_id) {
             tlps.push(plugin_id);
 
-            var xml = xml_helpers.parseElementtreeSync( package.resolveConfig(plugin_id, plugins_dir) );
-            var deps = xml.findall('.//dependency');
-
-            deps && deps.forEach(function(dep) {
-                graph.add(plugin_id, dep.attrib.id);
+            var plugin_dir = path.join(plugins_dir, plugin_id);
+            var pluginInfo = pluginInfoProvider.get(plugin_dir);
+            var deps = pluginInfo.getDependencies(platformJson.platform);
+            deps.forEach(function(dep) {
+                graph.add(plugin_id, dep.id);
             });
         });
         Object.keys(json.dependent_plugins).forEach(function(plugin_id) {
-            var configPath = package.resolveConfig(plugin_id, plugins_dir);
+            var plugin_dir = path.join(plugins_dir, plugin_id);
             // dependency plugin does not exist (CB-7846)
-            if (!fs.existsSync(configPath)) {
-                events.emit('verbose', 'Plugin "'+ plugin_id +'" does not exist ('+ configPath +')');
+            if (!fs.existsSync(plugin_dir)) {
+                events.emit('verbose', 'Plugin "'+ plugin_id +'" does not exist ('+ plugin_dir+')');
                 return;
             }
 
-            var xml = xml_helpers.parseElementtreeSync(configPath);
-            var deps = xml.findall('.//dependency');
-            deps && deps.forEach(function(dep) {
-                graph.add(plugin_id, dep.attrib.id);
+            var pluginInfo = pluginInfoProvider.get(plugin_dir);
+            var deps = pluginInfo.getDependencies(platformJson.platform);
+            deps.forEach(function(dep) {
+                graph.add(plugin_id, dep.id);
             });
         });
 
@@ -81,12 +67,12 @@ module.exports = package = {
     },
 
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
-    dependents: function(plugin_id, plugins_dir, platformJson) {
+    dependents: function(plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         var depsInfo;
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir);
+            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
 
         var graph = depsInfo.graph;
         var tlps = depsInfo.top_level_plugins;
@@ -99,12 +85,12 @@ module.exports = package = {
 
     // Returns a list of plugins which the given plugin depends on, for which it is the only dependent.
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
-    danglers: function(plugin_id, plugins_dir, platformJson) {
+    danglers: function(plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         var depsInfo;
         if(typeof plugins_dir == 'object')
             depsInfo = plugins_dir;
         else
-            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir);
+            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
 
         var graph = depsInfo.graph;
         var dependencies = graph.getChain(plugin_id);

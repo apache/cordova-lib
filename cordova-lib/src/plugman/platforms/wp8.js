@@ -17,10 +17,7 @@
  *
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true
-*/
+/* jshint laxcomma:true, sub:true */
 
 var common = require('./common'),
     path = require('path'),
@@ -46,43 +43,43 @@ module.exports = {
         return new csproj(path.join(project_dir, project_files[0]));
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options, project_file) {
-            var dest = path.join('Plugins', plugin_id, source_el.attrib['target-dir'] ? source_el.attrib['target-dir'] : '', path.basename(source_el.attrib['src']));
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
+            var dest = path.join('Plugins', plugin_id, obj.targetDir ? obj.targetDir : '', path.basename(obj.src));
 
-            common.copyNewFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
+            common.copyNewFile(plugin_dir, obj.src, project_dir, dest);
             // add reference to this file to csproj.
             project_file.addSourceFile(dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id, options, project_file) {
-            var dest = path.join('Plugins', plugin_id, source_el.attrib['target-dir'] ? source_el.attrib['target-dir'] : '', path.basename(source_el.attrib['src']));
+        uninstall:function(obj, project_dir, plugin_id, options, project_file) {
+            var dest = path.join('Plugins', plugin_id, obj.targetDir ? obj.targetDir : '', path.basename(obj.src));
             common.removeFile(project_dir, dest);
             // remove reference to this file from csproj.
             project_file.removeSourceFile(dest);
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id, options) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.install is not supported for wp8');
         },
-        uninstall:function(source_el, project_dir, plugin_id, options) {
+        uninstall:function(obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for wp8');
         }
     },
     'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'resource-file.install is not supported for wp8');
         },
-        uninstall:function(el, project_dir, plugin_id, options, project_file) {
+        uninstall:function(obj, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'resource-file.uninstall is not supported for wp8');
         }
     },
     'framework':{
-        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 framework install :: ' + plugin_id  );
 
-            var src = el.attrib['src'];
+            var src = obj.src;
             var dest = src; // if !isCustom, we will just add a reference to the file in place
-            var isCustom = el.attrib.custom == 'true';
+            var isCustom = obj.custom;
 
             if(isCustom) {
                 dest = path.join('plugins', plugin_id, path.basename(src));
@@ -92,11 +89,11 @@ module.exports = {
             project_file.addReference(dest);
 
         },
-        uninstall:function(el, project_dir, plugin_id, options, project_file) {
+        uninstall:function(obj, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 framework uninstall :: ' + plugin_id  );
 
-            var src = el.attrib['src'];
-            var isCustom = el.attrib.custom == 'true';
+            var src = obj.src;
+            var isCustom = obj.custom;
 
             if(isCustom) {
                 var dest = path.join('plugins', plugin_id);
@@ -107,14 +104,14 @@ module.exports = {
         }
     },
     'lib-file': {
-        install:function(el, plugin_dir, project_dir, plugin_id, options, project_file) {
+        install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 lib-file install :: ' + plugin_id);
-            var inc  = el.attrib['Include'];
+            var inc  = obj.Include;
             project_file.addSDKRef(inc);
         },
-        uninstall:function(el, project_dir, plugin_id, options, project_file) {
+        uninstall:function(obj, project_dir, plugin_id, options, project_file) {
             events.emit('verbose', 'wp8 lib-file uninstall :: ' + plugin_id);
-            var inc = el.attrib['Include'];
+            var inc = obj.Include;
             project_file.removeSDKRef(inc);
         }
     }

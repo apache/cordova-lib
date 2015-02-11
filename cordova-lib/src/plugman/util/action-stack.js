@@ -17,16 +17,11 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          quotmark:false
-*/
+/* jshint quotmark:false */
 
 var platforms = require("../platforms"),
     events = require('../../events'),
     Q = require('q');
-var superspawn = require('../../cordova/superspawn');
-var path = require('path');
 
 function ActionStack() {
     this.stack = [];
@@ -98,13 +93,11 @@ ActionStack.prototype = {
         }
         events.emit('verbose', 'Action stack processing complete.');
 
-        return superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'))
-        .then(function(platformVersion) {
-            if (project_files) {
-                events.emit('verbose', 'Writing out ' + platform + ' project files...');
-                project_files.write(platformVersion);
-            }
-        });
+        if (project_files) {
+            events.emit('verbose', 'Writing out ' + platform + ' project files...');
+            project_files.write();
+        }
+        return Q();
     }
 };
 

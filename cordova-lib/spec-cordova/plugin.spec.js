@@ -19,9 +19,7 @@
 
 var helpers = require('./helpers'),
     path = require('path'),
-    fs = require('fs'),
     shell = require('shelljs'),
-    Q = require('q'),
     events = require('../src/events'),
     cordova = require('../src/cordova/cordova');
 
@@ -78,7 +76,7 @@ describe('plugin end-to-end', function() {
         }).then(function() {
             expect(results).toMatch(/No plugins added/gi);
         }).fail(function(err) {
-            console.log(err);
+            console.log(err.stack);
             expect(err).toBeUndefined();
         }).fin(done);
     });

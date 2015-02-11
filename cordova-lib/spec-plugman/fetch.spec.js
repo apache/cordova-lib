@@ -30,12 +30,9 @@ var fetch   = require('../src/plugman/fetch'),
     test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
     test_plugin_id = 'org.test.plugins.childbrowser',
     test_plugin_version ='0.6.0',
-    somedir = test_plugin,
-    somedir = path.join(temp, test_plugin_id),
     plugins = require('../src/plugman/util/plugins'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
-
 
 describe('fetch', function() {
 
@@ -60,7 +57,7 @@ describe('fetch', function() {
     });
 
     describe('local plugins', function() {
-        var xml, rm, sym, mkdir, cp, save_metadata;
+        var rm, sym, cp, save_metadata;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
@@ -108,7 +105,7 @@ describe('fetch', function() {
         });
     });
     describe('git plugins', function() {
-        var clone, save_metadata, done, xml;
+        var clone, save_metadata, done;
 
         function fetchPromise(f) {
             f.then(function() { done = true; }, function(err) { done = err; });
@@ -120,31 +117,31 @@ describe('fetch', function() {
             done = false;
         });
         it('should call clonePluginGitRepo for https:// and git:// based urls', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp));
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(done).toBe(true);
-                expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined);
+                expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir if applicable', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
             runs(function() {
                 fetchPromise(fetch(url, temp, { subdir: dir }));
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined);
+                expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
             var ref = 'fakeGitRef';
             runs(function() {
@@ -152,43 +149,43 @@ describe('fetch', function() {
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(url, temp, dir, ref);
+                expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef');
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the subdir from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#:fakeSubDir";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#:fakeSubDir';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined);
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref and subdir from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
-                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef');
+                expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
@@ -216,7 +213,7 @@ describe('fetch', function() {
     });
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
-        var xml, rm, sym, mkdir, cp, save_metadata;
+        var rm, sym, save_metadata;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');

@@ -39,7 +39,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		571A463B14DB0A1B007FEAC7 /* ChildApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChildApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		571A463B14DB0A1B007FEAC7 /* SampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		571A463F14DB0A1B007FEAC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		571A464114DB0A1B007FEAC7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		571A464314DB0A1B007FEAC7 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -53,10 +53,10 @@
 		571A465314DB0A1B007FEAC7 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		571A465514DB0A1B007FEAC7 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		571A465714DB0A1B007FEAC7 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		571A465B14DB0A1B007FEAC7 /* ChildApp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ChildApp-Info.plist"; sourceTree = "<group>"; };
+		571A465B14DB0A1B007FEAC7 /* SampleApp-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SampleApp-Info.plist"; sourceTree = "<group>"; };
 		571A465D14DB0A1B007FEAC7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		571A465F14DB0A1B007FEAC7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		571A466114DB0A1B007FEAC7 /* ChildApp-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ChildApp-Prefix.pch"; sourceTree = "<group>"; };
+		571A466114DB0A1B007FEAC7 /* SampleApp-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SampleApp-Prefix.pch"; sourceTree = "<group>"; };
 		571A466214DB0A1B007FEAC7 /* PhoneGap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhoneGap.framework; path = /Users/Shared/PhoneGap/Frameworks/PhoneGap.framework; sourceTree = "<absolute>"; };
 		571A466714DB0A1B007FEAC7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		571A466B14DB0A1B007FEAC7 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -112,7 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				577FC36514DB0B620082BA7B /* www */,
-				571A465914DB0A1B007FEAC7 /* ChildApp */,
+				571A465914DB0A1B007FEAC7 /* SampleApp */,
 				571A463E14DB0A1B007FEAC7 /* Frameworks */,
 				571A463C14DB0A1B007FEAC7 /* Products */,
 			);
@@ -121,7 +121,7 @@
 		571A463C14DB0A1B007FEAC7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				571A463B14DB0A1B007FEAC7 /* ChildApp.app */,
+				571A463B14DB0A1B007FEAC7 /* SampleApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,7 +146,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		571A465914DB0A1B007FEAC7 /* ChildApp */ = {
+		571A465914DB0A1B007FEAC7 /* SampleApp */ = {
 			isa = PBXGroup;
 			children = (
 				571A466214DB0A1B007FEAC7 /* PhoneGap.framework */,
@@ -155,16 +155,16 @@
 				571A468614DB0A1B007FEAC7 /* Plugins */,
 				571A465A14DB0A1B007FEAC7 /* Supporting Files */,
 			);
-			path = ChildApp;
+			path = SampleApp;
 			sourceTree = "<group>";
 		};
 		571A465A14DB0A1B007FEAC7 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				571A465B14DB0A1B007FEAC7 /* ChildApp-Info.plist */,
+				571A465B14DB0A1B007FEAC7 /* SampleApp-Info.plist */,
 				571A465C14DB0A1B007FEAC7 /* InfoPlist.strings */,
 				571A465F14DB0A1B007FEAC7 /* main.m */,
-				571A466114DB0A1B007FEAC7 /* ChildApp-Prefix.pch */,
+				571A466114DB0A1B007FEAC7 /* SampleApp-Prefix.pch */,
 				571A467B14DB0A1B007FEAC7 /* PhoneGap.plist */,
 				571A468414DB0A1B007FEAC7 /* MainViewController.xib */,
 			);
@@ -240,9 +240,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		571A463A14DB0A1B007FEAC7 /* ChildApp */ = {
+		571A463A14DB0A1B007FEAC7 /* SampleApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 571A468A14DB0A1B007FEAC7 /* Build configuration list for PBXNativeTarget "ChildApp" */;
+			buildConfigurationList = 571A468A14DB0A1B007FEAC7 /* Build configuration list for PBXNativeTarget "SampleApp" */;
 			buildPhases = (
 				571A463414DB0A1B007FEAC7 /* Sources */,
 				571A463514DB0A1B007FEAC7 /* Frameworks */,
@@ -255,9 +255,9 @@
 			);
 			dependencies = (
 			);
-			name = ChildApp;
-			productName = ChildApp;
-			productReference = 571A463B14DB0A1B007FEAC7 /* ChildApp.app */;
+			name = SampleApp;
+			productName = SampleApp;
+			productReference = 571A463B14DB0A1B007FEAC7 /* SampleApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -268,7 +268,7 @@
 			attributes = {
 				LastUpgradeCheck = 0420;
 			};
-			buildConfigurationList = 571A463214DB0A1A007FEAC7 /* Build configuration list for PBXProject "ChildApp" */;
+			buildConfigurationList = 571A463214DB0A1A007FEAC7 /* Build configuration list for PBXProject "SampleApp" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -281,7 +281,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				571A463A14DB0A1B007FEAC7 /* ChildApp */,
+				571A463A14DB0A1B007FEAC7 /* SampleApp */,
 			);
 		};
 /* End PBXProject section */
@@ -424,9 +424,9 @@
 				FRAMEWORK_SEARCH_PATHS = /Users/Shared/PhoneGap/Frameworks;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "ChildApp/ChildApp-Prefix.pch";
+				GCC_PREFIX_HEADER = "SampleApp/SampleApp-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "PHONEGAP_FRAMEWORK=YES";
-				INFOPLIST_FILE = "ChildApp/ChildApp-Info.plist";
+				INFOPLIST_FILE = "SampleApp/SampleApp-Info.plist";
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					UIKit,
@@ -451,9 +451,9 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = /Users/Shared/PhoneGap/Frameworks;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "ChildApp/ChildApp-Prefix.pch";
+				GCC_PREFIX_HEADER = "SampleApp/SampleApp-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "PHONEGAP_FRAMEWORK=YES";
-				INFOPLIST_FILE = "ChildApp/ChildApp-Info.plist";
+				INFOPLIST_FILE = "SampleApp/SampleApp-Info.plist";
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					UIKit,
@@ -474,7 +474,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		571A463214DB0A1A007FEAC7 /* Build configuration list for PBXProject "ChildApp" */ = {
+		571A463214DB0A1A007FEAC7 /* Build configuration list for PBXProject "SampleApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				571A468814DB0A1B007FEAC7 /* Debug */,
@@ -483,7 +483,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		571A468A14DB0A1B007FEAC7 /* Build configuration list for PBXNativeTarget "ChildApp" */ = {
+		571A468A14DB0A1B007FEAC7 /* Build configuration list for PBXNativeTarget "SampleApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				571A468B14DB0A1B007FEAC7 /* Debug */,

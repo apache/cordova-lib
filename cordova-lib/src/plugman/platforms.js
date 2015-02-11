@@ -17,10 +17,6 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 module.exports = {
     'android': require('./platforms/android'),
     'amazon-fireos': require('./platforms/amazon-fireos'),

@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          quotmark:false
-*/
+/* jshint quotmark:false */
 
 var Q = require('q'),
     et = require('elementtree'),
@@ -28,6 +25,9 @@ var Q = require('q'),
     shell = require('shelljs'),
     path = require('path');
 
+/**
+ * Used for adding templates for plugin platforms to plugin.xml
+ */
 module.exports = {
     add: function( platformName ) {
         var pluginxml,

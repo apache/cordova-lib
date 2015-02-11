@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true
-*/
+/* jshint sub:true */
 
 var fs            = require('fs'),
     unorm         = require('unorm'),

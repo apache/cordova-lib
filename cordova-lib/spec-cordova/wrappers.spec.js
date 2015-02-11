@@ -16,6 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/* jshint loopfunc: true */
+
 var Q = require('q'),
     cordova = require('../src/cordova/cordova');
 

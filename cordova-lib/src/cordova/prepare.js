@@ -17,10 +17,6 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 var cordova_util      = require('./util'),
     ConfigParser      = require('../configparser/ConfigParser'),
     path              = require('path'),
@@ -34,6 +30,8 @@ var cordova_util      = require('./util'),
     plugman           = require('../plugman/plugman'),
     PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
     PlatformJson      = require('../plugman/util/PlatformJson');
+
+var PluginInfoProvider = require('../PluginInfoProvider');
 
 // Returns a promise.
 exports = module.exports = prepare;
@@ -61,7 +59,7 @@ function prepare(options) {
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
     .then(function() {
-
+        var pluginInfoProvider = new PluginInfoProvider();
 
         // Iterate over each added platform
         return Q.all(options.platforms.map(function(platform) {
@@ -98,14 +96,12 @@ function prepare(options) {
 
             if (options.browserify) {
                 plugman.prepare = require('../plugman/prepare-browserify');
-                plugman.prepare(platformPath, platform, plugins_dir, false, true);
-            } else {
-                plugman.prepare(platformPath, platform, plugins_dir);
             }
+            plugman.prepare(platformPath, platform, plugins_dir, null, true, pluginInfoProvider);
 
             // Make sure that config changes for each existing plugin is in place
             var platformJson = PlatformJson.load(plugins_dir, platform);
-            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson);
+            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson, pluginInfoProvider);
             munger.reapply_global_munge();
             munger.save_all();
 

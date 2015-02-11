@@ -16,6 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
+/*
 var amazon_fireos = require('../../src/plugman/platforms/amazon-fireos'),
     common  = require('../../src/plugman/platforms/common'),
     install = require('../../src/plugman/install'),
@@ -30,40 +31,22 @@ var amazon_fireos = require('../../src/plugman/platforms/amazon-fireos'),
     plugins_module = require('../../src/plugman/util/plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
-    variableplugin = path.join(__dirname, '..', 'plugins', 'com.adobe.vars'),
     amazon_fireos_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
     amazon_fireos_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*');
 
-var xml_path     = path.join(dummyplugin, 'plugin.xml')
-  , xml_text     = fs.readFileSync(xml_path, 'utf-8')
-  , plugin_et    = new et.ElementTree(et.XML(xml_text));
+var PluginInfo = require('../../src/PluginInfo');
 
-var platformTag = plugin_et.find('./platform[@name="amazon-fireos"]');
-var dummy_id = plugin_et._root.attrib['id'];
+var dummyPluginInfo = new PluginInfo(dummyplugin);
+var dummy_id = dummyPluginInfo.id;
+var valid_source = dummyPluginInfo.getSourceFiles('amazon-fireos');
 
-var valid_source = platformTag.findall('./source-file'),
-    valid_libs = platformTag.findall('./lib-file'),
-    assets = plugin_et.findall('./asset'),
-    configChanges = platformTag.findall('./config-file');
-
-xml_path  = path.join(faultyplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
-
-platformTag = plugin_et.find('./platform[@name="amazon-fireos"]');
-var invalid_source = platformTag.findall('./source-file');
-var faulty_id = plugin_et._root.attrib['id'];
-xml_path  = path.join(variableplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
-platformTag = plugin_et.find('./platform[@name="amazon-fireos"]');
-
-var variable_id = plugin_et._root.attrib['id'];
-var variable_configs = platformTag.findall('./config-file');
+var faultyPluginInfo = new PluginInfo(faultyplugin);
+var invalid_source = faultyPluginInfo.getSourceFiles('amazon-fireos');
 
 function copyArray(arr) {
     return Array.prototype.slice.call(arr, 0);
 }
+*/
 /*
 describe('amazon-fireos project handler', function() {
     describe('www_dir method', function() {

@@ -20,11 +20,9 @@ var cordova = require('../src/cordova/cordova'),
     platforms = require('../src/cordova/platforms'),
     superspawn = require('../src/cordova/superspawn'),
     path = require('path'),
-    fs = require('fs'),
     HooksRunner = require('../src/hooks/HooksRunner'),
     Q = require('q'),
-    util = require('../src/cordova/util'),
-    os = require('os');
+    util = require('../src/cordova/util');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
@@ -75,7 +73,7 @@ describe('emulate command', function() {
             });
         });
         it('should pass down options', function(done) {
-            cordova.raw.emulate({platforms: ['ios'], options:["--optionTastic"]}).then(function(err) {
+            cordova.raw.emulate({platforms: ['ios'], options:['--optionTastic']}).then(function(err) {
                 expect(prepare_spy).toHaveBeenCalledWith(['ios']);
                 expect(superspawn.spawn).toHaveBeenCalledWith(path.join(project_dir, 'platforms', 'ios', 'cordova', 'run'), ['--emulator', '--optionTastic'], jasmine.any(Object));
 
@@ -107,7 +105,7 @@ describe('emulate command', function() {
                     expect('this call').toBe('fail');
                 }, function(err) {
                     expect(fire).not.toHaveBeenCalled();
-                    expect(''+err).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.')
+                    expect(''+err).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
                 }).fin(done);
             });
         });

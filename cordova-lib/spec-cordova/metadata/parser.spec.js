@@ -18,7 +18,6 @@
 */
 
 var fs = require('fs'),
-    platforms = require('../../src/cordova/platforms.js'),
     Parser = require('../../src/cordova/metadata/parser'),
     ParserHelper = require('../../src/cordova/metadata/parserhelper/ParserHelper');
 

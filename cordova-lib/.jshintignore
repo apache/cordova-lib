@@ -1,0 +1,6 @@
+spec-cordova/fixtures/platforms/android/*
+spec-cordova/fixtures/base/www/index.html
+spec-cordova/fixtures/base/www/js/index.js
+spec-cordova/fixtures/projWithHooks/www/js/index.js
+spec-plugman/projects/*
+spec-plugman/plugins/*

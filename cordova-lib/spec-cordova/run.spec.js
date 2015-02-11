@@ -20,7 +20,6 @@ var cordova = require('../src/cordova/cordova'),
     platforms = require('../src/cordova/platforms'),
     superspawn = require('../src/cordova/superspawn'),
     path = require('path'),
-    fs = require('fs'),
     HooksRunner = require('../src/hooks/HooksRunner'),
     Q = require('q'),
     util = require('../src/cordova/util');

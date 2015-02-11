@@ -30,7 +30,7 @@ describe('PluginInfo', function () {
         var p, prefs, assets, deps, configFiles, infos, srcFiles;
         var headerFiles, libFiles, resourceFiles;
         expect(function () {
-            p = new PluginInfo.PluginInfo(path.join(pluginsDir, 'ChildBrowser'));
+            p = new PluginInfo(path.join(pluginsDir, 'ChildBrowser'));
             prefs = p.getPreferences('android');
             assets = p.getAssets('android');
             deps = p.getDependencies('android');
@@ -47,13 +47,7 @@ describe('PluginInfo', function () {
     });
     it('should throw when there is no plugin.xml file', function () {
         expect(function () {
-            var p = new PluginInfo.PluginInfo('/non/existent/dir');
+            new PluginInfo('/non/existent/dir');
         }).toThrow();
-    });
-    describe('loadPluginsDir', function () {
-        it('should load all plugins in a dir', function () {
-            var plugins = PluginInfo.loadPluginsDir(pluginsDir);
-            expect(plugins.length).not.toBe(0);
-        });
     });
 });

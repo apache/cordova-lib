@@ -22,32 +22,23 @@ var wp8 = require('../../src/plugman/platforms/wp8'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
-    et      = require('elementtree'),
     os      = require('osenv'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     xml_helpers = require('../../src/util/xml-helpers'),
-    plugins_module = require('../../src/plugman/util/plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     wp8_project = path.join(__dirname, '..', 'projects', 'wp8');
 
-var xml_path     = path.join(dummyplugin, 'plugin.xml')
-  , xml_text     = fs.readFileSync(xml_path, 'utf-8')
-  , plugin_et    = new et.ElementTree(et.XML(xml_text));
+var PluginInfo = require('../../src/PluginInfo');
 
-var platformTag = plugin_et.find('./platform[@name="wp8"]');
-var dummy_id = plugin_et._root.attrib['id'];
-var valid_source = platformTag.findall('./source-file'),
-    assets = plugin_et.findall('./asset'),
-    configChanges = platformTag.findall('./config-file');
-xml_path  = path.join(faultyplugin, 'plugin.xml')
-xml_text  = fs.readFileSync(xml_path, 'utf-8')
-plugin_et = new et.ElementTree(et.XML(xml_text));
+var dummyPluginInfo = new PluginInfo(dummyplugin);
+var dummy_id = dummyPluginInfo.id;
+var valid_source = dummyPluginInfo.getSourceFiles('wp8');
 
-platformTag = plugin_et.find('./platform[@name="wp8"]');
-var invalid_source = platformTag.findall('./source-file');
-var faulty_id = plugin_et._root.attrib['id'];
+var faultyPluginInfo = new PluginInfo(faultyplugin);
+var faulty_id = faultyPluginInfo.id;
+var invalid_source = faultyPluginInfo.getSourceFiles('wp8');
 
 shell.mkdir('-p', temp);
 shell.cp('-rf', path.join(wp8_project, '*'), temp);
@@ -75,7 +66,7 @@ describe('wp8 project handler', function() {
     });
     describe('package_name method', function() {
         it('should return a wp8 project\'s proper package name', function() {
-            expect(wp8.package_name(wp8_project)).toEqual("{F3A8197B-6B16-456D-B5F4-DD4F04AC0BEC}");
+            expect(wp8.package_name(wp8_project)).toEqual('{F3A8197B-6B16-456D-B5F4-DD4F04AC0BEC}');
         });
     });
 
@@ -135,9 +126,9 @@ describe('wp8 project handler', function() {
                 runs(function () { installPromise(install('wp8', temp, dummyplugin, plugins_dir, {})); });
                 waitsFor(function () { return done; }, 'install promise never resolved', 500);
                 runs(function () {
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App", "Tokens");
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App/Extensions", "Extension");
-                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), "/Deployment/App/Extensions", "FileTypeAssociation;Extension");
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App', 'Tokens');
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'Extension');
+                    expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'FileTypeAssociation;Extension');
                 });
             });
         });

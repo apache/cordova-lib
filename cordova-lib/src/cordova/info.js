@@ -17,10 +17,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc
-*/
-
 /*
 A utility funciton to help output the information needed
 when submitting a help request.

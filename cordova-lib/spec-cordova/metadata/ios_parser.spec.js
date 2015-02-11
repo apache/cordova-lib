@@ -22,13 +22,11 @@ var platforms = require('../../src/cordova/platforms'),
     shell = require('shelljs'),
     plist = require('plist'),
     xcode = require('xcode'),
-    et = require('elementtree'),
     fs = require('fs'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    cordova = require('../../src/cordova/cordova');
+    ConfigParser = require('../../src/configparser/ConfigParser');
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
@@ -94,7 +92,6 @@ describe('ios project parser', function () {
 
         describe('update_from_config method', function() {
             var mv;
-            var cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             var plist_parse, plist_build, xc;
             var update_name, xc_write;
             beforeEach(function() {
@@ -109,9 +106,9 @@ describe('ios project parser', function () {
                     updateProductName:update_name,
                     writeSync:xc_write
                 });
-                cfg.name = function() { return 'testname' };
-                cfg.packageName = function() { return 'testpkg' };
-                cfg.version = function() { return 'one point oh' };
+                cfg.name = function() { return 'testname'; };
+                cfg.packageName = function() { return 'testpkg'; };
+                cfg.version = function() { return 'one point oh'; };
             });
 
             it('should update the app name in pbxproj by calling xcode.updateProductName, and move the ios native files to match the new name', function(done) {
@@ -126,13 +123,13 @@ describe('ios project parser', function () {
                 });
             });
             it('should write out the app id to info plist as CFBundleIdentifier', function(done) {
-                cfg.ios_CFBundleIdentifier = function() { return null };
+                cfg.ios_CFBundleIdentifier = function() { return null; };
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleIdentifier).toEqual('testpkg');
                 });
             });
             it('should write out the app id to info plist as CFBundleIdentifier with ios-CFBundleIdentifier', function(done) {
-                cfg.ios_CFBundleIdentifier = function() { return 'testpkg_ios' };
+                cfg.ios_CFBundleIdentifier = function() { return 'testpkg_ios'; };
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].CFBundleIdentifier).toEqual('testpkg_ios');
                 });

@@ -17,6 +17,8 @@
     under the License.
 */
 
+/* jshint laxcomma: true, multistr: true */
+
 var path = require('path')
   , xml_helpers = require('../src/util/xml-helpers')
   , et = require('elementtree')
@@ -24,13 +26,13 @@ var path = require('path')
   , title = et.XML('<title>HELLO</title>')
   , usesNetworkOne = et.XML('<uses-permission ' +
             'android:name="PACKAGE_NAME.permission.C2D_MESSAGE"/>')
-  , usesNetworkTwo = et.XML("<uses-permission android:name=\
-            \"PACKAGE_NAME.permission.C2D_MESSAGE\" />")
-  , usesReceive = et.XML("<uses-permission android:name=\
-            \"com.google.android.c2dm.permission.RECEIVE\"/>")
-  , helloTagOne = et.XML("<h1>HELLO</h1>")
-  , goodbyeTag = et.XML("<h1>GOODBYE</h1>")
-  , helloTagTwo = et.XML("<h1>  HELLO  </h1>");
+  , usesNetworkTwo = et.XML('<uses-permission android:name=\
+            "PACKAGE_NAME.permission.C2D_MESSAGE" />')
+  , usesReceive = et.XML('<uses-permission android:name=\
+            "com.google.android.c2dm.permission.RECEIVE"/>')
+  , helloTagOne = et.XML('<h1>HELLO</h1>')
+  , goodbyeTag = et.XML('<h1>GOODBYE</h1>')
+  , helloTagTwo = et.XML('<h1>  HELLO  </h1>');
 
 
 describe('xml-helpers', function(){
@@ -40,7 +42,7 @@ describe('xml-helpers', function(){
             expect(function() {
                 xml_helpers.parseElementtreeSync(xml_path);
             }).not.toThrow();
-        })
+        });
     });
     describe('equalNodes', function() {
         it('should return false for different tags', function(){

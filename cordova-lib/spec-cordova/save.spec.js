@@ -25,7 +25,7 @@ var path = require('path'),
     project_dir = path.join(__dirname, 'fixtures', 'base');
 
 describe('save command', function(){
-  var is_cordova, result, config_add_feature, cd_project;
+  var is_cordova, result;
 
    function wrapper(f, post) {
         runs(function() {
@@ -48,7 +48,6 @@ describe('save command', function(){
   });
 
   it('should not try to add features to config.xml', function(){
-    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
     var parserWriter = spyOn(ConfigParser.prototype, 'write');
     expect(ConfigParser.prototype.write).not.toHaveBeenCalled();
     cordova.save('plugins');
@@ -57,11 +56,10 @@ describe('save command', function(){
   });
 
   it('should not try to add platforms to config.xml', function(){
-    cd_project_root = spyOn(cordova_util, 'cdProjectRoot').andReturn(project_dir);
     var call_count =0;
     ConfigParser.prototype.write = function(){
       call_count++;
-    }
+    };
     expect(call_count).toEqual(0);
     cordova.save('platforms');
     expect(call_count).toEqual(0);

@@ -17,10 +17,7 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          sub:true
-*/
+/* jshint sub:true */
 
 var fs = require('fs'),
     path = require('path'),
@@ -90,5 +87,8 @@ browser_parser.prototype.update_project = function(cfg) {
         .then(function(){
             this.update_overrides();
             util.deleteSvnFolders(this.www_dir());
+
+            // Copy munged config.xml to platform www dir
+            shell.cp('-rf', path.join(this.www_dir(), '..', 'config.xml'), this.www_dir());
         }.bind(this));
 };

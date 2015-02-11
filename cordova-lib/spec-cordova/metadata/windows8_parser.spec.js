@@ -17,6 +17,8 @@
     under the License.
 */
 
+/* jshint boss:true */
+
 var platforms = require('../../src/cordova/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -29,7 +31,6 @@ var platforms = require('../../src/cordova/platforms'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
     ConfigParser = require('../../src/configparser/ConfigParser'),
-    cordova = require('../../src/cordova/cordova'),
     HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.
@@ -38,7 +39,7 @@ var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 describe('windows8 project parser', function() {
 
     var proj = '/some/path';
-    var exists, exec, custom, readdir, cfg_parser, config_read;
+    var exists, exec, custom, readdir, config_read;
     var winXml;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
@@ -55,7 +56,7 @@ describe('windows8 project parser', function() {
                     }
                 }
             }
-            : ({})
+            : ({});
         });
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.jsproj']);
         winXml = null;
@@ -116,10 +117,10 @@ describe('windows8 project parser', function() {
 
         describe('update_from_config method', function() {
             beforeEach(function() {
-                cfg.name = function() { return 'testname' };
-                cfg.content = function() { return 'index.html' };
-                cfg.packageName = function() { return 'testpkg' };
-                cfg.version = function() { return 'one point oh' };
+                cfg.name = function() { return 'testname'; };
+                cfg.content = function() { return 'index.html'; };
+                cfg.packageName = function() { return 'testpkg'; };
+                cfg.version = function() { return 'one point oh'; };
                 readdir.andReturn(['test.sln']);
             });
 
@@ -153,7 +154,7 @@ describe('windows8 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, svn, fire;
+            var config, www, svn, fire, shellls;
             beforeEach(function() {
                 config = spyOn(parser, 'update_from_config');
                 www = spyOn(parser, 'update_www');
