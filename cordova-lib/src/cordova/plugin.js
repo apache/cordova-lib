@@ -58,7 +58,7 @@ module.exports = function plugin(command, targets, opts) {
     // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
     var HooksRunner = require('../hooks/HooksRunner');
     var hooksRunner = new HooksRunner(projectRoot);
-
+    var config_json = config.read(projectRoot);
     var platformList = cordova_util.listPlatforms(projectRoot);
 
     // Massage plugin name(s) / path(s)
@@ -93,7 +93,6 @@ module.exports = function plugin(command, targets, opts) {
 
             var xml = cordova_util.projectConfig(projectRoot);
             var cfg = new ConfigParser(xml);
-            var config_json = config.read(projectRoot);
             var searchPath = config_json.plugin_search_path || [];
             if (typeof opts.searchpath == 'string') {
                 searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
@@ -147,6 +146,32 @@ module.exports = function plugin(command, targets, opts) {
                             events.emit('results', 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).');
                             return;
                         }
+                        // save to config.xml 
+                       var autosave =  config_json.auto_save_plugins || false;
+                       if(autosave || opts.save){
+                         var pluginInfo =  pluginInfoProvider.get(dir);
+                         var existingFeature = cfg.getFeature(pluginInfo.id);
+                         if(!existingFeature){
+                           var params = [{name:'id', value:pluginInfo.id}];
+                           params.push({ name: 'version', value: pluginInfo.version});
+                           var url     = require('url');
+
+                           var uri = url.parse(target);
+                           if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
+                             params.push({name:'url', value:target});
+                           }else{
+                             var plugin_dir = cordova_util.fixRelativePath(path.join(target,  (opts.subdir || '.') ));
+                             if (fs.existsSync(plugin_dir)) {
+                               params.push({name:'installPath', value:target});
+                             }
+                           }
+                           cfg.addFeature(pluginInfo.name, params);
+                           cfg.write();
+                           events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
+                         }else{
+                           events.emit('results', 'Plugin info for "'+pluginInfo.id+'" already exists in config.xml');
+                         }
+                       }
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
                             return soFar.then(function() {
@@ -209,22 +234,32 @@ module.exports = function plugin(command, targets, opts) {
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
-                            //check if plugin is restorable and warn
-                            var configPath = cordova_util.projectConfig(projectRoot);
-                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
-                                var configXml = new ConfigParser(configPath);
-                                var features = configXml.doc.findall('./feature/param[@name="id"][@value="'+target+'"]/..');
-                                if(features && features.length){
-                                    events.emit('results','"'+target + '" plugin is restorable, call "cordova save plugins" to remove it from restorable plugins list');
-                                }
-                            }
-                            events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
+                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
                         });
                     }, Q())
                     .then(function() {
                         // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
+                    }).then(function(){
+                      //remove plugin from config.xml
+                      var autosave =  config_json.auto_save_plugins || false;
+                      if(autosave || opts.save){
+                        var configPath = cordova_util.projectConfig(projectRoot);
+                        if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                          var configXml = new ConfigParser(configPath);
+                          var feature = configXml.doc.find('./feature/param[@name="id"][@value="' + target + '"]/..');
+                          if(feature){
+                            var childs = configXml.doc.getroot().getchildren();
+                            var idx = childs.indexOf(feature);
+                            if(idx > -1){
+                              childs.splice(idx,1);
+                            }
+                            configXml.write();
+                            events.emit('results', 'config.xml entry for ' +target+ ' is removed');
+                          }
+                        }
+                      }
                     });
                 }, Q());
             }).then(function() {
