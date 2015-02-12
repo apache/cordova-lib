@@ -67,6 +67,7 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     opts.projectRoot = this.projectRoot;
     opts.cordova = opts.cordova || {};
     opts.cordova.platforms = opts.cordova.platforms || opts.platforms || cordovaUtil.listPlatforms(opts.projectRoot);
+    opts.cordova.platforms = opts.cordova.platforms.map(function(platform) { return platform.split('@')[0]; } );
     opts.cordova.plugins = opts.cordova.plugins || opts.plugins || cordovaUtil.findPlugins(path.join(opts.projectRoot, 'plugins'));
 
     try {
