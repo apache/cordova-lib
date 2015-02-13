@@ -17,7 +17,6 @@
     under the License.
 */
 
-var url = require('url');
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
@@ -70,6 +69,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
+    var autosave =  config_json.auto_save_platforms || false;
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
@@ -90,17 +90,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     version = platform;
                     platform = null;
                 }
+
+                // If --save/autosave on && no version specified, use the pinned version
+                // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
+                if( (opts.save || autosave) && !version ){
+                    version = platforms[platform].version;
+                }
                 if (platform && !version && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     version = getVersionFromConfigFile(platform, cfg);
                 }
-                if (version && isDirectory(version)) {
-                    return getPlatformDetailsFromDir(version, platform);
+                if (version) {
+                    var maybeDir = cordova_util.fixRelativePath(version);
+                    if (cordova_util.isDirectory(maybeDir)) {
+                        return getPlatformDetailsFromDir(maybeDir, platform);
+                    }
                 }
                 return downloadPlatform(projectRoot, platform, version, opts);
             }).then(function(platDetails) {
                 platform = platDetails.platform;
-                version = platDetails.version;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
 
@@ -147,6 +155,15 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
+                }).then(function() {
+                    if(opts.save || autosave){
+                        // Save target into config.xml, overriding already existing settings
+                        events.emit('log', '--save flag or autosave detected');
+                        events.emit('log', 'Saving ' + platform + '@' + version + ' into config.xml file ...');
+                        cfg.removeEngine(platform);
+                        cfg.addEngine(platform, version);
+                        cfg.write();
+                    }                    
                 });
             });
         });
@@ -157,25 +174,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     });
 }
 
-function isDirectory(dir) {
-    try {
-	return fs.lstatSync(dir).isDirectory();
-    } catch(e) {
-	return false;
-    }
-}
-
-function isUrl(value) {
-    var u = value && url.parse(value);
-    return !!(u && u.protocol && u.protocol.length > 1); // Account for windows c:/ paths
-}
-
 // Downloads via npm or via git clone (tries both)
 // Returns a Promise
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
-        if (isUrl(version)) {
+        if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             return lazy_load.git_clone(version);
         }
@@ -254,6 +258,20 @@ function remove(hooksRunner, projectRoot, targets, opts) {
             if (fs.existsSync(plugins_json)) shell.rm(plugins_json);
         });
     }).then(function() {
+        var config_json = config.read(projectRoot);
+        var autosave =  config_json.auto_save_platforms || false;
+	if(opts.save || autosave){
+	    targets.forEach(function(target) {
+		var platformId = target.split('@')[0];
+		var xml = cordova_util.projectConfig(projectRoot);
+		var cfg = new ConfigParser(xml);
+		events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+		cfg.removeEngine(platformId);
+		cfg.write();
+	    });
+	}
+    })
+    .then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
 }
@@ -464,7 +482,7 @@ function platform(command, targets, opts) {
         case 'add':
             // CB-6976 Windows Universal Apps. windows8 is now alias for windows
             var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >= 0) {
+            if (idxWindows8 >=0) {
                 targets[idxWindows8] = 'windows';
             }
             return add(hooksRunner, projectRoot, targets, opts);

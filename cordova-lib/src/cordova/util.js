@@ -21,7 +21,8 @@
 var fs            = require('fs'),
     path          = require('path'),
     CordovaError  = require('../CordovaError'),
-    shell         = require('shelljs');
+    shell         = require('shelljs'),
+    url           = require('url');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -52,6 +53,13 @@ exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports.fixRelativePath = fixRelativePath;
+exports.isDirectory = isDirectory;
+exports.isUrl = isUrl;
+
+function isUrl(value) {
+    var u = value && url.parse(value);
+    return !!(u && u.protocol && u.protocol.length > 1); // Account for windows c:/ paths
+}
 
 function isRootDir(dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
@@ -226,6 +234,14 @@ function preProcessOptions (inputOptions) {
     }
 
     return result;
+}
+
+function isDirectory(dir) {
+    try {
+	return fs.lstatSync(dir).isDirectory();
+    } catch(e) {
+	return false;
+    }
 }
 
 // opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
