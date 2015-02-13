@@ -110,6 +110,8 @@ describe('HooksRunner', function() {
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
             } else if(cmd.match(/update\b/)) {
                 fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
+            } else if (cmd.match(/version/)) {
+                return '3.6.0';
             }
             return Q();
         });
@@ -133,7 +135,7 @@ describe('HooksRunner', function() {
             hookOptions = { projectRoot: project, cordova: options };
 
             cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
-                expect(err).toBeUndefined();
+                expect(err && err.stack).toBeUndefined();
             }).then(function () {
                 testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
                 shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
