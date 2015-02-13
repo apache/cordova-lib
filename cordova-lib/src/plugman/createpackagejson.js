@@ -25,9 +25,7 @@ var Q = require('q'),
     init = require('init-package-json');
 
 //returns a promise
-function createPackageJson(args) {
-    var plugin_path = args[0];
-
+function createPackageJson(plugin_path) {
     var pluginInfo = new PluginInfo(plugin_path);
    
     var defaults = {

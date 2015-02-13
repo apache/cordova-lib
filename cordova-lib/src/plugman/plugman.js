@@ -219,7 +219,7 @@ plugman.commands =  {
         plugman.platform( { operation: operation, platform_name: cli_opts.platform_name } );
     },
     'createpackagejson'  : function(cli_opts) {
-        var plugin_path = cli_opts.argv.remain;
+        var plugin_path = cli_opts.argv.remain[0];
         if(!plugin_path) {
             return console.log(plugman.help());
         }

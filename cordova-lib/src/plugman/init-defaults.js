@@ -4,36 +4,39 @@
 /* global basename */
 /* global yes */
 /* global prompt */
+// PromZard file that is used by createpackagejson and init-package-json module
 
 var fs = require('fs'),
     path = require('path'),
     defaults = require('./defaults.json');
 
 
-function readDeps (test) { return function (cb) {
-    fs.readdir('node_modules', function (er, dir) {
-        if (er) return cb();
-        var deps = {};
-        var n = dir.length;
-        if (n === 0) return cb(null, deps);
-        dir.forEach(function (d) {
-            if (d.match(/^\./)) return next();
+function readDeps (test) { 
+    return function (cb) {
+        fs.readdir('node_modules', function (er, dir) {
+            if (er) return cb();
+            var deps = {};
+            var n = dir.length;
+            if (n === 0) return cb(null, deps);
+            dir.forEach(function (d) {
+                if (d.match(/^\./)) return next();
 
-            var dp = path.join(dirname, 'node_modules', d, 'package.json');
-            fs.readFile(dp, 'utf8', function (er, p) {
-                if (er) return next();
-                try { p = JSON.parse(p); }
-                catch (e) { return next(); }
-                if (!p.version) return next();
-                deps[d] = config.get('save-exact') ? p.version : config.get('save-prefix') + p.version;
-                return next();
+                var dp = path.join(dirname, 'node_modules', d, 'package.json');
+                fs.readFile(dp, 'utf8', function (er, p) {
+                    if (er) return next();
+                    try { p = JSON.parse(p); }
+                    catch (e) { return next(); }
+                    if (!p.version) return next();
+                    deps[d] = config.get('save-exact') ? p.version : config.get('save-prefix') + p.version;
+                    return next();
+                });
             });
+            function next () {
+                if (--n === 0) return cb(null, deps);
+            }
         });
-        function next () {
-            if (--n === 0) return cb(null, deps);
-        }
-    });
-};}
+    };
+}
 
 var name = package.name || basename;
 exports.name = yes ? name : prompt('name', name);

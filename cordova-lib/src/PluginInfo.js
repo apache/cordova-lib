@@ -314,10 +314,10 @@ function PluginInfo(dirname) {
 // Helper function used to prefix every element of an array with cordova-
 // Useful when we want to modify platforms to be cordova-platform
 function addCordova(someArray) {
-    someArray.forEach(function(element, index, array) {
-        array[index] = 'cordova-' + element;
+    var newArray = someArray.map(function(element) {
+        return 'cordova-' + element;
     });
-    return someArray;
+    return newArray;
 }
 
 // Helper function used by most of the getSomething methods of PluginInfo.
