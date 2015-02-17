@@ -205,7 +205,9 @@ function PluginInfo(dirname) {
             return {
                 src: tag.attrib.src,
                 arch: tag.attrib.arch,
-                Include: tag.attrib.Include
+                Include: tag.attrib.Include,
+                versions: tag.attrib.versions,
+                target: tag.attrib.target
             };
         });
         return libFiles;
@@ -265,7 +267,12 @@ function PluginInfo(dirname) {
             return { name: n.attrib.name };
         });
     };
-
+    
+    self.getPlatformsArray = function() {
+        return self._et.findall('platform').map(function(n) {
+            return n.attrib.name;
+        });
+    };
     self.getFrameworks = function(platform) {
         return _getTags(self._et, 'framework', platform, function(el) {
             var ret = {
@@ -273,7 +280,10 @@ function PluginInfo(dirname) {
                 parent: el.attrib.parent,
                 custom: isStrTrue(el.attrib.custom),
                 src: el.attrib.src,
-                weak: isStrTrue(el.attrib.weak)
+                weak: isStrTrue(el.attrib.weak),
+                versions: el.attrib.versions,
+                target: el.attrib.target,
+                arch: el.attrib.arch
             };
             return ret;
         });
@@ -301,8 +311,19 @@ function PluginInfo(dirname) {
     if (self.keywords) {
         self.keywords = self.keywords.split(',').map( function(s) { return s.trim(); } );
     }
+    self.getKeywordsAndPlatforms = function () {
+        return self.keywords.concat('cordovaplugin').concat(addCordova(self.getPlatformsArray()));
+    };
 }  // End of PluginInfo constructor.
 
+// Helper function used to prefix every element of an array with cordova-
+// Useful when we want to modify platforms to be cordova-platform
+function addCordova(someArray) {
+    var newArray = someArray.map(function(element) {
+        return 'cordova-' + element;
+    });
+    return newArray;
+}
 
 // Helper function used by most of the getSomething methods of PluginInfo.
 // Get all elements of a given name. Both in root and in platform sections

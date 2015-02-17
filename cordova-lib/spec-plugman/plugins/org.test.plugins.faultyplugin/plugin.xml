@@ -131,17 +131,21 @@
         <source-file src="src/wp8/NotHere.cs" />
     </platform>
 
-    <!-- wp8 -->
-    <platform name="windows8">
+    <!-- windows -->
+    <platform name="windows">
         <config-file target="config.xml" parent="/*">
             <feature name="org.test.plugins.faultyplugin">
-                <param name="windows8-package" value="org.test.plugins.faultyplugin"/>
+                <param name="windows-package" value="org.test.plugins.faultyplugin"/>
             </feature>
         </config-file>
 
-        <source-file src="src/windows8/faultyPlugin.js" />
+        <source-file src="src/windows/faultyPlugin.js" />
+
+        <lib-file src="TestSDK1, Version=1.0" arch="x85"/>
+        <lib-file src="TestSDK2, Version=1.0" versions="8.0a"/>
+        <lib-file src="TestSDK3, Version=1.0" target="daphne"/>
 
         <!-- does not exist -->
-        <source-file src="src/windows8/NotHere.js" />
+        <source-file src="src/windows/NotHere.js" />
     </platform>
 </plugin>

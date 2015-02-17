@@ -586,6 +586,20 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         }
 	}).then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
+
+        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
+            events.emit('verbose', 'Updating build files since android plugin contained <framework>');
+            var buildModule;
+            try {
+                buildModule = require(path.join(project_dir, 'cordova', 'lib', 'build'));
+            } catch (e) {
+                // Should occur only in unit tests.
+            }
+            if (buildModule && buildModule.prepBuildFiles) {
+                buildModule.prepBuildFiles();
+            }
+        }
+
         // WIN!
         // Log out plugin INFO element contents in case additional install steps are necessary
         var info_strings = pluginInfo.getInfo(platform) || [];
