@@ -244,7 +244,7 @@ function getVersionFromConfigFile(platform, cfg) {
 
     // Get appropriate version from config.xml
     var engine = _.find(cfg.getEngines(), function(eng){
-	return eng.id.toLowerCase() === platform.toLowerCase();
+	return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
     return engine && engine.version;

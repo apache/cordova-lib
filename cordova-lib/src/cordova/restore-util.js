@@ -37,12 +37,12 @@ function installPlatformsFromConfigXML(platforms){
 
     var engines = cfg.getEngines(projectHome);
     var targets = engines.map(function(engine){
-        var platformPath = path.join(projectHome, 'platforms', engine.id);
+        var platformPath = path.join(projectHome, 'platforms', engine.name);
         var platformAlreadyAdded = fs.existsSync(platformPath);
 
        //if no platforms are specified we skip.
-       if( (platforms && platforms.indexOf(engine.id)> -1 ) && !platformAlreadyAdded ){
-         var t = engine.id;
+       if( (platforms && platforms.indexOf(engine.name)> -1 ) && !platformAlreadyAdded ){
+         var t = engine.name;
          if(engine.version){
            t += '@'+engine.version;
          }
