@@ -75,7 +75,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
-    shell.mkdir('-p', path.join(projectRoot, 'platforms'));
+    var platformsDir = path.join(projectRoot, 'platforms');
+    shell.mkdir('-p', platformsDir);
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
@@ -162,6 +163,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
                 }).then(function() {
+                    savePlatformVersion(platformsDir, platform, version);
+                }).then(function() {
                     if(opts.save || autosave){
                         // Save target into config.xml, overriding already existing settings
                         events.emit('log', '--save flag or autosave detected');
@@ -176,6 +179,40 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         return hooksRunner.fire('after_platform_' + cmd, opts);
     });
+}
+
+// save the platform's installed or updated version
+// tests: add, update
+// 
+function savePlatformVersion(platformsDir, platform, version) {
+    debugger;
+    // if no version set, save current edge version
+    if(!version){
+        version = platforms[platform].version;
+    }
+
+    events.emit('verbose', 'saving ' + platform + '@' + version + ' into platforms.json');
+    
+    // test: what if platforms.json already contains this platform and version => override it
+    // test: what if platforms.json is empty ?
+    // test: what if platforms.json hasn't been created yet ? => create it and write into it
+    var jsonPath = path.join(platformsDir, 'platforms.json');
+    if(!fs.existsSync(jsonPath)){
+        // ugly. create in a better way
+        var fd = fs.openSync(jsonPath, 'w'); // test: what if there is an error while creating ? 
+        fs.writeFileSync(jsonPath, JSON.stringify({}, null, 4), 'utf-8');
+        fs.closeSync(fd);
+    }
+    var data = getJson(jsonPath);
+
+    // test: what if version is null ? non-null ?
+    data[platform] = version; //test: what if data[platform] is null? non-null?
+    // how does JSON.stringify() work ?
+    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 4), 'utf-8');
+}
+
+function getJson(jsonPath) {  // jsonPath -> jsonFile  
+    return JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 }
 
 // Downloads via npm or via git clone (tries both)
@@ -498,6 +535,8 @@ function platform(command, targets, opts) {
             return update(hooksRunner, projectRoot, targets, opts);
         case 'check':
             return check(hooksRunner, projectRoot);
+        //case 'save':
+            //return save(hooksRunner, projectRoot);
         default:
             return list(hooksRunner, projectRoot);
     }
