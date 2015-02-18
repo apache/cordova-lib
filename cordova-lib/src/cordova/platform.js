@@ -211,6 +211,19 @@ function savePlatformVersion(platformsDir, platform, version) {
     fs.writeFileSync(jsonPath, JSON.stringify(data, null, 4), 'utf-8');
 }
 
+function removePlatformVersion(platformsDir, platform){
+    var jsonPath = path.join(platformsDir, 'platforms.json');
+    if(!fs.existsSync(jsonPath)){
+        return;
+    }
+    var data = getJson(jsonPath);
+
+    // test: what if version is null ? non-null ?
+    delete data[platform]; //test: what if data[platform] is null? non-null?
+    // how does JSON.stringify() work ?
+    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 4), 'utf-8');
+}
+
 function getJson(jsonPath) {  // jsonPath -> jsonFile  
     return JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 }
@@ -311,8 +324,14 @@ function remove(hooksRunner, projectRoot, targets, opts) {
 		cfg.write();
 	    });
 	}
-    })
-    .then(function() {
+    }).then(function() {
+        // Remove targets from platforms.json
+        var platformsDir = path.join(projectRoot, 'platforms');
+        targets.forEach(function(target) {
+            events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
+            removePlatformVersion(platformsDir, target);
+        });
+    }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
 }
