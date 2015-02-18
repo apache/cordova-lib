@@ -35,7 +35,8 @@ var config            = require('./config'),
     semver            = require('semver'),
     unorm             = require('unorm'),
     shell             = require('shelljs'),
-    _                 = require('underscore');
+    _                 = require('underscore'),
+    platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
@@ -163,7 +164,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
                 }).then(function() {
-                    savePlatformVersion(platformsDir, platform, version);
+                    // Save platform@version into platforms.json. i.e: 'android@https://github.com/apache/cordova-android.git'
+                    // If no version was specified, save the edge version                    
+                    var versionToSave = version || platforms[platform].version;
+                    events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
+                    platformMetadata.save(projectRoot, platform, versionToSave);
                 }).then(function() {
                     if(opts.save || autosave){
                         // Save target into config.xml, overriding already existing settings
@@ -181,51 +186,22 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     });
 }
 
-// save the platform's installed or updated version
-// tests: add, update
-// 
-function savePlatformVersion(platformsDir, platform, version) {
-    debugger;
-    // if no version set, save current edge version
-    if(!version){
-        version = platforms[platform].version;
-    }
+function save(hooksRunner, projectRoot, opts) {
+    var xml = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(xml);
 
-    events.emit('verbose', 'saving ' + platform + '@' + version + ' into platforms.json');
-    
-    // test: what if platforms.json already contains this platform and version => override it
-    // test: what if platforms.json is empty ?
-    // test: what if platforms.json hasn't been created yet ? => create it and write into it
-    var jsonPath = path.join(platformsDir, 'platforms.json');
-    if(!fs.existsSync(jsonPath)){
-        // ugly. create in a better way
-        var fd = fs.openSync(jsonPath, 'w'); // test: what if there is an error while creating ? 
-        fs.writeFileSync(jsonPath, JSON.stringify({}, null, 4), 'utf-8');
-        fs.closeSync(fd);
-    }
-    var data = getJson(jsonPath);
+    // First, remove all platforms that are already in config.xml
+    cfg.getEngines().forEach(function(engine){
+        cfg.removeEngine(engine.name);
+    });
 
-    // test: what if version is null ? non-null ?
-    data[platform] = version; //test: what if data[platform] is null? non-null?
-    // how does JSON.stringify() work ?
-    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 4), 'utf-8');
-}
-
-function removePlatformVersion(platformsDir, platform){
-    var jsonPath = path.join(platformsDir, 'platforms.json');
-    if(!fs.existsSync(jsonPath)){
-        return;
-    }
-    var data = getJson(jsonPath);
-
-    // test: what if version is null ? non-null ?
-    delete data[platform]; //test: what if data[platform] is null? non-null?
-    // how does JSON.stringify() work ?
-    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 4), 'utf-8');
-}
-
-function getJson(jsonPath) {  // jsonPath -> jsonFile  
-    return JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+    // Save installed platforms into config.xml
+    return platformMetadata.getPlatformVersions(projectRoot).then(function(platformVersions){
+        platformVersions.forEach(function(platVer){
+            cfg.addEngine(platVer.platform, platVer.version);
+        });
+        cfg.write();
+    });
 }
 
 // Downloads via npm or via git clone (tries both)
@@ -326,10 +302,9 @@ function remove(hooksRunner, projectRoot, targets, opts) {
 	}
     }).then(function() {
         // Remove targets from platforms.json
-        var platformsDir = path.join(projectRoot, 'platforms');
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
-            removePlatformVersion(platformsDir, target);
+            platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
@@ -554,8 +529,8 @@ function platform(command, targets, opts) {
             return update(hooksRunner, projectRoot, targets, opts);
         case 'check':
             return check(hooksRunner, projectRoot);
-        //case 'save':
-            //return save(hooksRunner, projectRoot);
+        case 'save':
+            return save(hooksRunner, projectRoot, opts);
         default:
             return list(hooksRunner, projectRoot);
     }
