@@ -65,7 +65,7 @@ blackberry_parser.prototype.update_from_config = function(config) {
                 destFolder = path.join(dest, '..');
 
             if (!fs.existsSync(destFolder)) {
-                shell.mkdir(destFolder); // make sure target dir exists
+                shell.mkdir('-p', destFolder); // make sure target dir exists
             }
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
