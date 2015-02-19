@@ -53,14 +53,12 @@ function installPlatformsFromConfigXML(platforms){
     if(!targets || !targets.length  ){
         return Q.all('No platforms are listed in config.xml to restore');
     }
-    
     // Run platform add for all the platforms seperately 
     // so that failure on one does not affect the other.
     var promises = targets.map(function(target){
        if(target){
          events.emit('log', 'Restoring platform '+target+ ' referenced on config.xml');
-         var p = cordova.raw.platform('add',target);
-         return p;
+         return cordova.raw.platform('add',target);
        }
        return Q();
     });
@@ -89,26 +87,24 @@ function installPluginsFromConfigXML(args) {
         return Q.all('No config.xml plugins to install');
     }
 
-    return features.reduce(function(soFar, featureId) {
+    var promises = features.map(function(featureId){
         var pluginPath =  path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
-            return soFar;
+            return Q();
         }
-        return soFar.then(function() {
-            events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
-            var feature = cfg.getFeature(featureId);
+        events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
+        var feature = cfg.getFeature(featureId);
 
-            // Install from given URL if defined or using a plugin id
-            var installFrom = feature.url || feature.installPath || feature.id;
-            if( feature.version && !feature.url && !feature.installPath ){
-                installFrom += ('@' + feature.version);
-            }
-            // Add feature preferences as CLI variables if have any
-            var options = {cli_variables: feature.variables, 
-                            searchpath: args.searchpath };
-
+        // Install from given URL if defined or using a plugin id
+        var installFrom = feature.url || feature.installPath || feature.id;
+        if( feature.version && !feature.url && !feature.installPath ){
+            installFrom += ('@' + feature.version);
+        }
+        // Add feature preferences as CLI variables if have any
+        var options = {cli_variables: feature.variables, 
+            searchpath: args.searchpath };
             return plugin('add', installFrom, options);
-        });
-    }, Q());
+    });
+    return Q.allSettled(promises);
 }

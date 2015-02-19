@@ -60,7 +60,7 @@ module.exports = function plugin(command, targets, opts) {
     var hooksRunner = new HooksRunner(projectRoot);
     var config_json = config.read(projectRoot);
     var platformList = cordova_util.listPlatforms(projectRoot);
-    var autosave =  config_json.auto_save_plugins || false;
+    
     // Massage plugin name(s) / path(s)
     var pluginPath, plugins;
     pluginPath = path.join(projectRoot, 'plugins');
@@ -120,7 +120,7 @@ module.exports = function plugin(command, targets, opts) {
                         var version = parts[1];
 
                         // If no version is specified, retrieve the version from config.xml
-                        if(!autosave && opts.save && !version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)){
+                        if(!saveToConfigXmlOn(config_json,opts) && !version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)){
                             events.emit('verbose', 'no version specified, retrieving version from config.xml');
                             var ver = getVersionFromConfigFile(id, cfg);
 
@@ -136,33 +136,45 @@ module.exports = function plugin(command, targets, opts) {
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider});
                     })
                     .then(function(dir){
-                      // save to config.xml 
+                        // save to config.xml 
+                        if(saveToConfigXmlOn(config_json,opts)){
+                            var pluginInfo =  pluginInfoProvider.get(dir);
+                            var existingFeature = cfg.getFeature(pluginInfo.id);
+                            if(!existingFeature){
+                                var params = [{name:'id', value:pluginInfo.id}];
+                                var pluginVersion = versionFromTargetString(target);
+                                if(!pluginVersion && opts.shrinkwrap){
+                                    pluginVersion = pluginInfo.version;
+                                }
+                                if(pluginVersion){
+                                    params.push({ name: 'version', value: pluginVersion});
+                                }
+                                var url = require('url');
 
-                      if(autosave || opts.save){
-                        var pluginInfo =  pluginInfoProvider.get(dir);
-                        var existingFeature = cfg.getFeature(pluginInfo.id);
-                        if(!existingFeature){
-                          var params = [{name:'id', value:pluginInfo.id}];
-                          params.push({ name: 'version', value: pluginInfo.version});
-                          var url = require('url');
-
-                          var uri = url.parse(target);
-                          if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
-                            params.push({name:'url', value:target});
-                          }else{
-                            var plugin_dir = cordova_util.fixRelativePath(path.join(target,  (opts.subdir || '.') ));
-                            if (fs.existsSync(plugin_dir)) {
-                              params.push({name:'installPath', value:target});
+                                var uri = url.parse(target);
+                                if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
+                                    params.push({name:'url', value:target});
+                                }else{
+                                    var plugin_dir = cordova_util.fixRelativePath(path.join(target,  (opts.subdir || '.') ));
+                                    if (fs.existsSync(plugin_dir)) {
+                                        params.push({name:'installPath', value:target});
+                                    }
+                                }
+                                if(opts.cli_variables){
+                                    for(var varname in opts.cli_variables){
+                                        if(opts.cli_variables.hasOwnProperty(varname)){
+                                            params.push({name:varname, value:opts.cli_variables[varname]});
+                                        }
+                                    } 
+                                }
+                                cfg.addFeature(pluginInfo.name, params);
+                                cfg.write();
+                                events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
+                            }else{
+                                events.emit('results', 'Plugin info for "'+pluginInfo.id+'" already exists in config.xml');
                             }
-                          }
-                          cfg.addFeature(pluginInfo.name, params);
-                          cfg.write();
-                          events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
-                        }else{
-                          events.emit('results', 'Plugin info for "'+pluginInfo.id+'" already exists in config.xml');
                         }
-                      }
-                      return dir;
+                        return dir;
                     })
                     .then(function(dir) {
                         // Validate top-level required variables
@@ -245,23 +257,23 @@ module.exports = function plugin(command, targets, opts) {
                         // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
                     }).then(function(){
-                      //remove plugin from config.xml
-                      if(autosave || opts.save){
-                        var configPath = cordova_util.projectConfig(projectRoot);
-                        if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
-                          var configXml = new ConfigParser(configPath);
-                          var feature = configXml.doc.find('./feature/param[@name="id"][@value="' + target + '"]/..');
-                          if(feature){
-                            var childs = configXml.doc.getroot().getchildren();
-                            var idx = childs.indexOf(feature);
-                            if(idx > -1){
-                              childs.splice(idx,1);
+                        //remove plugin from config.xml
+                        if(saveToConfigXmlOn(config_json, opts)){
+                            var configPath = cordova_util.projectConfig(projectRoot);
+                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                                var configXml = new ConfigParser(configPath);
+                                var feature = configXml.doc.find('./feature/param[@name="id"][@value="' + target + '"]/..');
+                                if(feature){
+                                    var childs = configXml.doc.getroot().getchildren();
+                                    var idx = childs.indexOf(feature);
+                                    if(idx > -1){
+                                        childs.splice(idx,1);
+                                    }
+                                    configXml.write();
+                                    events.emit('results', 'config.xml entry for ' +target+ ' is removed');
+                                }
                             }
-                            configXml.write();
-                            events.emit('results', 'config.xml entry for ' +target+ ' is removed');
-                          }
                         }
-                      }
                     });
                 }, Q());
             }).then(function() {
@@ -342,4 +354,20 @@ function list(projectRoot, hooksRunner) {
     .then(function() {
         return pluginsList;
     });
+}
+
+function saveToConfigXmlOn(config_json, options){
+    options = options || {};
+    var autosave =  config_json.auto_save_plugins || false;
+    return autosave || options.save;
+}
+
+function versionFromTargetString(target){
+    if (target[target.length - 1] == path.sep) {
+        target = target.substring(0, target.length - 1);
+    }
+    var parts = target.split('@');
+    if(!cordova_util.isUrl(parts[0]) && !cordova_util.isDirectory(parts[0])){
+        return parts[1];
+    }
 }
