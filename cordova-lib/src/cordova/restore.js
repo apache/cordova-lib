@@ -45,6 +45,9 @@ function installPlatformsFromConfigXML(cfg){
     var projectHome = cordova_util.cdProjectRoot();
     var engines = cfg.getEngines(projectHome);
     var targets = engines.map(function(engine){
+            if (engine.version) {
+                return engine.id + '@' + engine.version;
+            }
             return engine.id;
         });
     if(!targets || !targets.length  ){
