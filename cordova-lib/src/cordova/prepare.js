@@ -52,19 +52,19 @@ function prepare(options) {
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
     .then(function(){
-      return restore.installPlatformsFromConfigXML(options.platforms);
+        return restore.installPlatformsFromConfigXML(options.platforms);
     })
     .then(function(){
-      options = cordova_util.preProcessOptions(options);
-      var paths = options.platforms.map(function(p) {
-        var platform_path = path.join(projectRoot, 'platforms', p);
-        var parser = (new platforms[p].parser(platform_path));
-        return parser.www_dir();
-      });
-      options.paths = paths;
+        options = cordova_util.preProcessOptions(options);
+        var paths = options.platforms.map(function(p) {
+            var platform_path = path.join(projectRoot, 'platforms', p);
+            var parser = (new platforms[p].parser(platform_path));
+            return parser.www_dir();
+        });
+        options.paths = paths;
     })
     .then(function(){
-      return restore.installPluginsFromConfigXML(options);
+        return restore.installPluginsFromConfigXML(options);
     })
     .then(function() {
         var pluginInfoProvider = new PluginInfoProvider();

@@ -152,7 +152,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }).then(function() {
                     copy_cordova_js(projectRoot, platform);
                 }).then(function () {
-                    return require('./cordova').raw.prepare(platform);
+                    // Call prepare for the current platform.
+                    var prepOpts = {
+                        platforms :[platform]
+                    };
+                    return require('./cordova').raw.prepare(prepOpts);
                 }).then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
