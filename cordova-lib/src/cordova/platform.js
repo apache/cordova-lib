@@ -521,19 +521,27 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     if (/android|ios/.exec(platDetails.platform) && semver.gt(platDetails.version, '3.3.0')) {
         args.push('--cli');
     }
-
+    
     var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
     var name = platDetails.platform == 'ios' ? unorm.nfd(cfg.name()) : cfg.name();
     args.push(output, pkg, name);
+
+    var activityName = cfg.android_activityName();
+    if (activityName && platDetails.platform === 'android') {
+        activityName = activityName.replace(/W/g, '');
+	args.push(activityName);
+    }
+
     if (template_dir) {
         args.push(template_dir);
     }
     if (opts.link) {
         args.push('--link');
     }
+
     return args;
 }
 

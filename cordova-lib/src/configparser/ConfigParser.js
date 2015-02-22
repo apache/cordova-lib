@@ -108,6 +108,9 @@ ConfigParser.prototype = {
     android_packageName: function() {
         return this.doc.getroot().attrib['android-packageName'];
     },
+    android_activityName: function() {
+	return this.doc.getroot().attrib['android-activityName'];
+    },
     ios_CFBundleIdentifier: function() {
         return this.doc.getroot().attrib['ios-CFBundleIdentifier'];
     },
