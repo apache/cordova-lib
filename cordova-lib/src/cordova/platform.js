@@ -151,6 +151,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     return superspawn.spawn(bin, args, copts);
                 }).then(function() {
                     copy_cordova_js(projectRoot, platform);
+                }).then(function () {
+                    return require('./cordova').raw.prepare(platform);
                 }).then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
@@ -163,14 +165,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, version);
                         cfg.write();
-                    }                    
+                    }
                 });
             });
         });
     }).then(function() {
         return hooksRunner.fire('after_platform_' + cmd, opts);
-    }).then(function() {
-        return require('./cordova').raw.prepare(platform);
     });
 }
 
