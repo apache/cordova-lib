@@ -521,7 +521,7 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     if (/android|ios/.exec(platDetails.platform) && semver.gt(platDetails.version, '3.3.0')) {
         args.push('--cli');
     }
-    
+
     var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
@@ -530,9 +530,9 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     args.push(output, pkg, name);
 
     var activityName = cfg.android_activityName();
-    if (activityName && platDetails.platform === 'android') {
-        activityName = activityName.replace(/W/g, '');
-	args.push(activityName);
+    if (activityName && platDetails.platform === 'android' && semver.gte(platDetails.version, '4.0.0-dev')) {
+        activityName = activityName.replace(/\W/g, '');
+        args.push('--activity-name', activityName);
     }
 
     if (template_dir) {
