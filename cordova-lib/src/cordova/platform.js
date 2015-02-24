@@ -266,11 +266,11 @@ function remove(hooksRunner, projectRoot, targets, opts) {
         var autosave =  config_json.auto_save_platforms || false;
 	if(opts.save || autosave){
 	    targets.forEach(function(target) {
-		var platformId = target.split('@')[0];
+		var platformName = target.split('@')[0];
 		var xml = cordova_util.projectConfig(projectRoot);
 		var cfg = new ConfigParser(xml);
 		events.emit('log', 'Removing ' + target + ' from config.xml file ...');
-		cfg.removeEngine(platformId);
+		cfg.removeEngine(platformName);
 		cfg.write();
 	    });
 	}
