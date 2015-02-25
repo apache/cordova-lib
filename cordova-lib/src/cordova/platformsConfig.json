@@ -3,12 +3,12 @@
         "hostos": ["darwin"],
         "parser": "./metadata/ios_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "3.7.0"
+        "version": "3.8.0"
     },
     "android": {
         "parser": "./metadata/android_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "3.7.0"
+        "version": "3.7.1"
     },
     "ubuntu": {
         "hostos": ["linux"],
