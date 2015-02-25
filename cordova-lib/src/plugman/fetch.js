@@ -39,6 +39,7 @@ var localPlugins = null;
 // Returns a promise.
 module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
+    debugger;
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 

@@ -380,6 +380,20 @@ ConfigParser.prototype = {
             }
         }
     },
+
+    // test: write doc
+    // test: test this function thoroughly
+    removeFeature: function(name){
+        var features = this.doc.find('./feature/param[@name="id"][@value="' + name + '"]/..');
+        for(var i=0; i < features.length; i++){
+            var childs = this.doc.getroot().getchildren();
+            var idx = childs.indexOf(features[i]);
+            if(idx > -1){
+                childs.splice(idx,1);
+            }
+        }
+    },
+        
     /**
      * Adds an engine. Does not check for duplicates.
      * @param  {String} name the engine name

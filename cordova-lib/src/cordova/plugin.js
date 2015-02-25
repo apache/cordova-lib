@@ -234,7 +234,6 @@ module.exports = function plugin(command, targets, opts) {
             if (!targets || !targets.length) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
-
             opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
@@ -295,10 +294,97 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooksRunner.fire('after_plugin_search');
             });
+        case 'save':
+            // save the versions/folders/git-urls of currently installed plugins into config.xml
+            return save(projectRoot, opts);
         default:
             return list(projectRoot, hooksRunner);
     }
 };
+
+function save(projectRoot, opts){
+    // test: what if there are multiple plugins installed ?
+    // test: what if there are no plugins installed ?
+    // test: test right after creation of a project
+    // test: what if fetch.json is missing => error out ?
+    // test: what if config.xml already contains plugins ? => remove all pre-existin plugins first
+    // test: should we save variables ? => this would mean capturing them when adding/installing a plugin
+    // test: relative paths
+    // Read fetch.json file (done)
+    // test: save variables into fetch.json. this means changing how 'plugin add' works
+    // test: when removing a plugin, remove it from fetch.json as well. what about update ?
+    debugger;
+    var xml = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(xml);
+
+    // First, remove all pre-existing features/plugins from config.xml
+    // test this: seems not to work
+    cfg.getFeatureIdList().forEach(function(feature){
+        cfg.removeFeature(feature);
+    });
+
+    // Then, save plugins and their sources
+    //     1- first, try to retrieve the plugins and their sources from fetch.json
+    // test: does this work after I start saving variables into fetch.json ?
+    return Q().then(function(){
+        var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
+        var plugins = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+        // test: make sure to parse variables too. that means saving them in fetch.json in the first place
+        debugger;
+        Object.keys(plugins).forEach(function(pluginName){
+            var plugin = plugins[pluginName];
+            var pluginSource = plugin['source'];
+            var location = pluginSource['url'] || pluginSource['path'] || pluginSource['id'];
+
+            var idParam = {name: 'id', value: pluginName};
+            var sourceParam = getPluginSource(location, opts);
+
+            var params = [];
+            params.push(idParam);
+            if(sourceParam){
+                params.push(sourceParam);
+            }
+            cfg.addFeature(pluginName, params);
+        });
+    });
+}
+
+// test: test this method thoroughly
+function getPluginSource(location, opts){
+   
+    // is it a url ?
+    var url = require('url');        
+    var uri = url.parse(location); // test: what if location is not a url ?
+    if ( cordova_util.isUrl(location) && (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':') && !location.match(/^\w+:\\/)) {
+        // tests: version, folder, url in fetch.json file
+        // this piece of code should move to a function(createPluginParams) and Gorkem's code + fetch.js + this code refactor to point to the new function
+        return {name: 'url', value: location};
+    }  
+    
+    // is it a directory ?
+    // var plugin_dir = cordova_util.fixRelativePath(path.join(location, (opts.subdir || '.') ));
+    // //test: what if the plugin_dir doesn't exist ? save nothing in that field ? would restoring from config.xml install the pinned version ?
+    // if (fs.existsSync(plugin_dir)) {
+    //     return {name:'installPath', value:location};
+    // }
+    if(cordova_util.isDirectory(location)){ // test: what if location begins with 'file://'
+        return {name: 'installPath', value: location};
+    }
+
+    // hmmm, is it a version then ? is this the correct way to do it ?
+    // if(!cordova_util.isUrl(location) && !cordova_util.isDirectory(location)){
+    //     return {name:'version', value:location};
+    // }
+
+    // test: what if location is 'org.apache.cordova.device', with no version parts ?
+    var parts = location.split('@');
+    var plugin = parts[0];
+    var version = parts[1]; // test: what to do when version is undefined ? (done)
+    if(!version){
+        return null;
+    }
+    return {name: 'version', value: version};
+}
 
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
