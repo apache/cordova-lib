@@ -82,6 +82,46 @@ firefoxos_parser.prototype.update_from_config = function(config) {
         manifest.fullscreen = fullScreen;
     }
 
+    var activitiesNodes = config.doc.findall('activities');
+    activitiesNodes.forEach(function(activitiesNode) {
+        var activityNodes = activitiesNode.findall('activity');
+        if (activityNodes.length) {
+            var activities = {};
+            activityNodes.forEach(function (node) {
+                var name = node.attrib.name;
+                var href = node.attrib.href;
+                if (name && href) {
+                    events.emit('verbose', 'activity name='+name+' href='+href);
+                    activities[name] = {};
+                    activities[name].href = href;
+                    var returnValue = node.attrib.returnValue;
+                    if (returnValue) {
+                        activities[name].returnValue = returnValue;
+                    }
+                    var disposition = node.attrib.disposition;
+                    if (disposition) {
+                        activities[name].disposition = disposition;
+                    }
+                    activities[name].filters = {};
+                    var filterNodes = node.findall('filter');
+                    filterNodes.forEach(function(filter) {
+                        var url = filter.attrib.url;
+                        if (url) {
+                            activities[name].filters.url = url;
+                        }
+                        var type = filter.attrib.type;
+                        if (type) {
+                            activities[name].filters.type = type;
+                        }
+                    });
+                } else {
+                    events.emit('warn', 'activity without name='+name+'or href='+href);
+                }
+            });
+            manifest.activities = activities;
+        }
+    });
+
     // Set orientation preference
     var orientation = this.helper.getOrientation(config);
 

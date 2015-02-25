@@ -18,15 +18,11 @@
 */
 var blackberry10 = require('../../src/plugman/platforms/blackberry10'),
     common = require('../../src/plugman/platforms/common'),
-    install = require('../../src/plugman/install'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    et = require('elementtree'),
     os = require('osenv'),
     temp = path.join(os.tmpdir(), 'plugman'),
-    plugins_dir = path.join(temp, 'cordova', 'plugins'),
-    plugins_module = require('../../src/plugman/util/plugins'),
     blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*');
 var PluginInfo = require('../../src/PluginInfo');
 
@@ -64,7 +60,7 @@ describe('blackberry10 project handler', function() {
             shell.rm('-rf', temp);
         });
         describe('of <lib-file> elements', function() {
-            it("should copy so files to native/target/plugins", function () {
+            it('should copy so files to native/target/plugins', function () {
                 var plugin = plugins.echo,
                     libs = copyArray(plugin.getLibFiles('blackberry10')),
                     s = spyOn(common, 'copyFile');
@@ -76,7 +72,7 @@ describe('blackberry10 project handler', function() {
         describe('of <source-file> elements', function() {
             it('should copy stuff from one location to another by calling common.copyFile', function() {
                 var plugin = plugins.echo,
-                    source = copyArray(plugin.getSourceFiles('blackberry10'));
+                    source = copyArray(plugin.getSourceFiles('blackberry10')),
                     s = spyOn(common, 'copyFile');
 
                 blackberry10['source-file'].install(source[0], plugin.dir, temp, plugin.id);
@@ -140,7 +136,7 @@ describe('blackberry10 project handler', function() {
             });
         });
         describe('of <lib-file> elements', function(done) {
-            it("should remove so files from www/plugins", function () {
+            it('should remove so files from www/plugins', function () {
                 var s = spyOn(common, 'removeFile'),
                     plugin = plugins.echo;
                 var source = copyArray(plugin.getLibFiles('blackberry10'));

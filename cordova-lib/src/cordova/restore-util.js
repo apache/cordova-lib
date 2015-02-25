@@ -24,37 +24,43 @@ var cordova_util    = require('./util'),
     fs               = require('fs'),
     plugin           = require('./plugin'),
     events           = require('../events'),
-    platform         = require('./platform'),
-    CordovaError     = require('../CordovaError');
+    cordova          = require('./cordova');
 
-module.exports = restore;
-function restore(target, args){
+exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
+exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
+
+
+function installPlatformsFromConfigXML(platforms){
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
-    var configXml = new ConfigParser(configPath);
-    if( 'plugins' === target ){
-        return installPluginsFromConfigXML(configXml, args);
-    }
-    if( 'platforms' === target ){
-        return installPlatformsFromConfigXML(configXml);
-    }
-    return Q.reject( new CordovaError('Unknown target only "plugins" and "platforms" are supported'));
-}
+    var cfg = new ConfigParser(configPath);
 
-function installPlatformsFromConfigXML(cfg){
-    var projectHome = cordova_util.cdProjectRoot();
     var engines = cfg.getEngines(projectHome);
     var targets = engines.map(function(engine){
-            return engine.id;
-        });
+        var platformPath = path.join(projectHome, 'platforms', engine.name);
+        var platformAlreadyAdded = fs.existsSync(platformPath);
+
+       //if no platforms are specified we skip.
+       if( (platforms && platforms.indexOf(engine.name)> -1 ) && !platformAlreadyAdded ){
+         var t = engine.name;
+         if(engine.version){
+           t += '@'+engine.version;
+         }
+         return t;
+       }
+    });
+
     if(!targets || !targets.length  ){
         return Q.all('No platforms are listed in config.xml to restore');
     }
-    
     // Run platform add for all the platforms seperately 
     // so that failure on one does not affect the other.
     var promises = targets.map(function(target){
-        return platform('add',target);
+       if(target){
+         events.emit('log', 'Restoring platform '+target+ ' referenced on config.xml');
+         return cordova.raw.platform('add',target);
+       }
+       return Q();
     });
     return Q.allSettled(promises).then(
         function (results) {
@@ -68,9 +74,11 @@ function installPlatformsFromConfigXML(cfg){
 }
 
 //returns a Promise
-function installPluginsFromConfigXML(cfg, args) {
+function installPluginsFromConfigXML(args) {
     //Install plugins that are listed on config.xml
     var projectRoot = cordova_util.cdProjectRoot();
+    var configPath = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(configPath);
     var plugins_dir = path.join(projectRoot, 'plugins');
 
     // Get all configured plugins
@@ -79,26 +87,24 @@ function installPluginsFromConfigXML(cfg, args) {
         return Q.all('No config.xml plugins to install');
     }
 
-    return features.reduce(function(soFar, featureId) {
+    var promises = features.map(function(featureId){
         var pluginPath =  path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
-            return soFar;
+            return Q();
         }
-        return soFar.then(function() {
-            events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
-            var feature = cfg.getFeature(featureId);
+        events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
+        var feature = cfg.getFeature(featureId);
 
-            // Install from given URL if defined or using a plugin id
-            var installFrom = feature.url || feature.installPath || feature.id;
-            if( feature.version && !feature.url && !feature.installPath ){
-                installFrom += ('@' + feature.version);
-            }
-            // Add feature preferences as CLI variables if have any
-            var options = {cli_variables: feature.variables, 
-                            searchpath: args.searchpath };
-
+        // Install from given URL if defined or using a plugin id
+        var installFrom = feature.url || feature.installPath || feature.id;
+        if( feature.version && !feature.url && !feature.installPath ){
+            installFrom += ('@' + feature.version);
+        }
+        // Add feature preferences as CLI variables if have any
+        var options = {cli_variables: feature.variables, 
+            searchpath: args.searchpath };
             return plugin('add', installFrom, options);
-        });
-    }, Q());
+    });
+    return Q.allSettled(promises);
 }

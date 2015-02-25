@@ -385,24 +385,24 @@ ConfigParser.prototype = {
 
     /**
      * Adds an engine. Does not check for duplicates.
-     * @param  {String} id the engine id
+     * @param  {String} name the engine name
      * @param  {String} version engine version (optional)
      */
-    addEngine: function(id, version){
-        if(!id) return;
-        var el = et.Element('{http://cordova.apache.org/ns/1.0}engine');
-        el.attrib.id = id;
+    addEngine: function(name, version){
+        if(!name) return;
+        var el = et.Element('engine');
+        el.attrib.name = name;
         if(version){
             el.attrib.version = version;
         }
         this.doc.getroot().append(el);
     },
     /**
-     * Removes all the engines with given id
-     * @param  {String} id the engine id.
+     * Removes all the engines with given name
+     * @param  {String} name the engine name.
      */
-    removeEngine: function(id){
-        var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine/[@id="' +id+'"]');
+    removeEngine: function(name){
+        var engines = this.doc.findall('./engine/[@name="' +name+'"]');
         for(var i=0; i < engines.length; i++){
             var childs = this.doc.getroot().getchildren();
             var idx = childs.indexOf(engines[i]);
@@ -412,11 +412,11 @@ ConfigParser.prototype = {
         }
     },
     getEngines: function(){
-        var engines = this.doc.findall('./'+this.cdvNamespacePrefix+':engine');
+        var engines = this.doc.findall('./engine');
         return engines.map(function(engine){
 	    var version = engine.attrib.version;
             return {
-		'id': engine.attrib.id,
+		'name': engine.attrib.name,
 		'version': version ? version : null
 	    };
         });

@@ -21,6 +21,7 @@
 
 var path = require('path'),
     fs   = require('fs'),
+    semver = require('semver'),
     shell= require('shelljs'),
     action_stack = require('./util/action-stack'),
     dependencies = require('./util/dependencies'),
@@ -34,6 +35,7 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil      = require('../cordova/util');
 
+var superspawn = require('../cordova/superspawn');
 var PlatformJson = require('./util/PlatformJson');
 var PluginInfoProvider = require('../PluginInfoProvider');
 
@@ -76,7 +78,15 @@ module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_d
 
     var current_stack = new action_stack();
 
-    return runUninstallPlatform(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
+    return Q().then(function() {
+        if (options.platformVersion) {
+            return Q(options.platformVersion);
+        }
+        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version')));
+    }).then(function(platformVersion) {
+        options.platformVersion = platformVersion;
+        return runUninstallPlatform(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
+    });
 };
 
 // Returns a promise.
@@ -354,6 +364,19 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
             return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
         } else {
             return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
+        }
+    }).then(function() {
+        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
+            events.emit('verbose', 'Updating build files since android plugin contained <framework>');
+            var buildModule;
+            try {
+                buildModule = require(path.join(project_dir, 'cordova', 'lib', 'build'));
+            } catch (e) {
+                // Should occur only in unit tests.
+            }
+            if (buildModule && buildModule.prepBuildFiles) {
+                buildModule.prepBuildFiles();
+            }
         }
     });
 }

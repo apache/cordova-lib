@@ -17,7 +17,7 @@
     under the License.
 */
 /* jshint node:true, sub:true, indent:4  */
-/* global jasmine, describe, beforeEach, afterEach, it, spyOn, expect */
+/* global describe, beforeEach, afterEach, it, spyOn, expect */
 
 var configChanges = require('../../src/plugman/util/config-changes'),
     xml_helpers = require('../../src/util/xml-helpers'),
@@ -96,7 +96,6 @@ describe('config-changes module', function() {
 
     describe('load method', function() {
         it('should return an empty config json object if file doesn\'t exist', function() {
-            var filepath = path.join(plugins_dir, 'android.json');
             var platformJson = PlatformJson.load(plugins_dir, 'android');
             expect(platformJson.root).toBeDefined();
             expect(platformJson.root.prepare_queue).toBeDefined();
@@ -107,7 +106,7 @@ describe('config-changes module', function() {
             var filepath = path.join(plugins_dir, 'android.json');
             var json = {
                 prepare_queue: {installed: [], uninstalled: []},
-                config_munge: {files: {"some_file": {parents: {"some_parent": [{"xml": "some_change", "count": 1}]}}}},
+                config_munge: {files: {'some_file': {parents: {'some_parent': [{'xml': 'some_change', 'count': 1}]}}}},
                 installed_plugins: {},
                 dependent_plugins: {}};
             fs.writeFileSync(filepath, JSON.stringify(json), 'utf-8');
@@ -273,7 +272,6 @@ describe('config-changes module', function() {
                 });
             });
             describe('of plist config files', function() {
-                var xcode_add, xcode_rm;
                 it('should write empty string nodes with no whitespace', function() {
                     shell.cp('-rf', ios_config_xml, temp);
                     shell.cp('-rf', varplugin, plugins_dir);
@@ -295,7 +293,7 @@ describe('config-changes module', function() {
                 });
             });
             describe('of pbxproject framework files', function() {
-                var xcode_add, xcode_rm;
+                var xcode_add;
                 beforeEach(function() {
                     shell.cp('-rf', ios_config_xml, temp);
                     shell.cp('-rf', cbplugin, plugins_dir);
@@ -363,7 +361,7 @@ describe('config-changes module', function() {
                 shell.cp('-rf', varplugin, plugins_dir);
                 // Run through an "install"
                 var platformJson = PlatformJson.load(plugins_dir, 'android');
-                platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {"API_KEY":"canucks"});
+                platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {'API_KEY':'canucks'});
                 var munger = new configChanges.PlatformMunger('android', temp, plugins_dir, platformJson, pluginInfoProvider);
                 munger.process();
 

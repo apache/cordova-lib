@@ -24,12 +24,14 @@ var cordova_util      = require('./util'),
     fs                = require('fs'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
-    HooksRunner            = require('../hooks/HooksRunner'),
+    HooksRunner       = require('../hooks/HooksRunner'),
     events            = require('../events'),
     Q                 = require('q'),
     plugman           = require('../plugman/plugman'),
     PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
-    PlatformJson      = require('../plugman/util/PlatformJson');
+    PlatformJson      = require('../plugman/util/PlatformJson'),
+    restore           = require('./restore-util');
+    
 
 var PluginInfoProvider = require('../PluginInfoProvider');
 
@@ -47,17 +49,23 @@ function prepare(options) {
         };
     }
 
-    options = cordova_util.preProcessOptions(options);
-
-    var paths = options.platforms.map(function(p) {
-        var platform_path = path.join(projectRoot, 'platforms', p);
-        var parser = (new platforms[p].parser(platform_path));
-        return parser.www_dir();
-    });
-    options.paths = paths;
-
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
+    .then(function(){
+        return restore.installPlatformsFromConfigXML(options.platforms);
+    })
+    .then(function(){
+        options = cordova_util.preProcessOptions(options);
+        var paths = options.platforms.map(function(p) {
+            var platform_path = path.join(projectRoot, 'platforms', p);
+            var parser = (new platforms[p].parser(platform_path));
+            return parser.www_dir();
+        });
+        options.paths = paths;
+    })
+    .then(function(){
+        return restore.installPluginsFromConfigXML(options);
+    })
     .then(function() {
         var pluginInfoProvider = new PluginInfoProvider();
 

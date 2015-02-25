@@ -16,6 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
+/*
 var amazon_fireos = require('../../src/plugman/platforms/amazon-fireos'),
     common  = require('../../src/plugman/platforms/common'),
     install = require('../../src/plugman/install'),
@@ -45,6 +46,7 @@ var invalid_source = faultyPluginInfo.getSourceFiles('amazon-fireos');
 function copyArray(arr) {
     return Array.prototype.slice.call(arr, 0);
 }
+*/
 /*
 describe('amazon-fireos project handler', function() {
     describe('www_dir method', function() {

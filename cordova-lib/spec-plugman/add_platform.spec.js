@@ -18,9 +18,7 @@
 */
 var platform = require('../src/plugman/platform'),
     Q = require('q'),
-    fs = require('fs'),
-    shell = require('shelljs'),
-    plugman = require('../src/plugman/plugman');
+    fs = require('fs');
 
 describe( 'platform add/remove', function() {
     it( 'should call platform add', function() {
@@ -36,9 +34,7 @@ describe( 'platform add/remove', function() {
 
 describe( 'platform add', function() {
     var done = false,
-        existsSync,
-        mkdir,
-        writeFileSync;
+        existsSync;
     function platformPromise( f ) {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
@@ -52,7 +48,7 @@ describe( 'platform add', function() {
         });
         waitsFor(function() { return done; }, 'platform promise never resolved', 500);
         runs(function() {
-            expect(''+ done ).toContain( "can't find a plugin.xml.  Are you in the plugin?"  );
+            expect(''+ done ).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
         });
     });
 });
@@ -60,9 +56,7 @@ describe( 'platform add', function() {
 
 describe( 'platform remove', function() {
     var done = false,
-        existsSync,
-        mkdir,
-        writeFileSync;
+        existsSync;
     function platformPromise( f ) {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
@@ -76,7 +70,7 @@ describe( 'platform remove', function() {
         });
         waitsFor(function() { return done; }, 'platform promise never resolved', 500);
         runs(function() {
-            expect(''+ done ).toContain( "can't find a plugin.xml.  Are you in the plugin?"  );
+            expect(''+ done ).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
         });
     });
 });

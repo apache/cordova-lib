@@ -3,12 +3,12 @@
         "hostos": ["darwin"],
         "parser": "./metadata/ios_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "3.7.0"
+        "version": "3.8.0"
     },
     "android": {
         "parser": "./metadata/android_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "3.6.4"
+        "version": "3.7.1"
     },
     "ubuntu": {
         "hostos": ["linux"],
@@ -48,13 +48,13 @@
         "hostos": ["win32"],
         "parser": "./metadata/windows_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "3.7.1"
+        "version": "3.8.0"
     },
     "windows": {
         "hostos": ["win32"],
         "parser": "./metadata/windows_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "3.7.1"
+        "version": "3.8.0"
     },
     "browser": {
         "parser": "./metadata/browser_parser",

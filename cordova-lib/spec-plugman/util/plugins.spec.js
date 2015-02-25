@@ -17,10 +17,8 @@
  *
 */
 
-var http   = require('http'),
-    osenv  = require('osenv'),
+var osenv  = require('osenv'),
     path   = require('path'),
-    fs     = require('fs'),
     temp   = path.join(osenv.tmpdir(), 'plugman'),
     shell  = require('shelljs'),
     child_process = require('child_process'),
@@ -28,7 +26,6 @@ var http   = require('http'),
     plugins = require('../../src/plugman/util/plugins');
 
 var et = require('elementtree');
-var PluginInfoProvider = require('../../src/PluginInfoProvider');
 
 describe('plugins utility module', function(){
     describe('clonePluginGitRepo', function(){
@@ -46,7 +43,6 @@ describe('plugins utility module', function(){
         });
         it('should shell out to git clone with correct arguments', function(){
             var plugin_git_url = 'https://github.com/imhotep/org.test.plugins.childbrowser';
-            var callback = jasmine.createSpy();
 
             runs(function() {
                 plugins.clonePluginGitRepo(plugin_git_url, temp, '.', undefined, null)

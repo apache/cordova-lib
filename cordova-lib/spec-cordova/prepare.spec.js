@@ -96,6 +96,7 @@ describe('prepare command', function() {
     describe('failure', function() {
         it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
             is_cordova.andReturn(false);
+            cd_project_root.andCallThrough();//undo spy here because prepare depends on cdprojectRoot for isCordova check
             Q().then(prepare).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {

@@ -16,8 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var action_stack = require('../../src/plugman/util/action-stack'),
-    ios = require('../../src/plugman/platforms/ios');
+var action_stack = require('../../src/plugman/util/action-stack');
 
 describe('action-stack', function() {
     var stack;

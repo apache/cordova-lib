@@ -30,8 +30,6 @@ var fetch   = require('../src/plugman/fetch'),
     test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
     test_plugin_id = 'org.test.plugins.childbrowser',
     test_plugin_version ='0.6.0',
-    somedir = test_plugin,
-    somedir = path.join(temp, test_plugin_id),
     plugins = require('../src/plugman/util/plugins'),
     Q = require('q'),
     registry = require('../src/plugman/registry/registry');
@@ -59,7 +57,7 @@ describe('fetch', function() {
     });
 
     describe('local plugins', function() {
-        var xml, rm, sym, mkdir, cp, save_metadata;
+        var rm, sym, cp, save_metadata;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
@@ -107,7 +105,7 @@ describe('fetch', function() {
         });
     });
     describe('git plugins', function() {
-        var clone, save_metadata, done, xml;
+        var clone, save_metadata, done;
 
         function fetchPromise(f) {
             f.then(function() { done = true; }, function(err) { done = err; });
@@ -119,7 +117,7 @@ describe('fetch', function() {
             done = false;
         });
         it('should call clonePluginGitRepo for https:// and git:// based urls', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp));
             });
@@ -131,7 +129,7 @@ describe('fetch', function() {
             });
         });
         it('should call clonePluginGitRepo with subdir if applicable', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
             runs(function() {
                 fetchPromise(fetch(url, temp, { subdir: dir }));
@@ -143,7 +141,7 @@ describe('fetch', function() {
             });
         });
         it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
             var ref = 'fakeGitRef';
             runs(function() {
@@ -156,8 +154,8 @@ describe('fetch', function() {
             });
         });
         it('should extract the git ref from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
@@ -168,8 +166,8 @@ describe('fetch', function() {
             });
         });
         it('should extract the subdir from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#:fakeSubDir";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#:fakeSubDir';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
@@ -180,8 +178,8 @@ describe('fetch', function() {
             });
         });
         it('should extract the git ref and subdir from the URL hash, if provided', function() {
-            var url = "https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/";
-            var baseURL = "https://github.com/bobeast/GAPlugin.git";
+            var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/';
+            var baseURL = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp, {}));
             });
@@ -215,7 +213,7 @@ describe('fetch', function() {
     });
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
-        var xml, rm, sym, mkdir, cp, save_metadata;
+        var rm, sym, save_metadata;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');

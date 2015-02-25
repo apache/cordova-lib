@@ -133,7 +133,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             if (module.merges.length > 0) {
                 obj.merges = module.merges.map(function(o) { return o.target; });
             }
-            if (module.runs.length > 0) {
+            if (module.runs) {
                 obj.runs = true;
             }
 

@@ -16,6 +16,8 @@
  *
 */
 
+/* jshint laxcomma:true, multistr:true */
+
 var path = require('path')
   , xml_helpers = require('../../src/util/xml-helpers')
   , et = require('elementtree')
@@ -23,13 +25,13 @@ var path = require('path')
   , title = et.XML('<title>HELLO</title>')
   , usesNetworkOne = et.XML('<uses-permission ' +
 			'android:name="PACKAGE_NAME.permission.C2D_MESSAGE"/>')
-  , usesNetworkTwo = et.XML("<uses-permission android:name=\
-            \"PACKAGE_NAME.permission.C2D_MESSAGE\" />")
-  , usesReceive = et.XML("<uses-permission android:name=\
-            \"com.google.android.c2dm.permission.RECEIVE\"/>")
-  , helloTagOne = et.XML("<h1>HELLO</h1>")
-  , goodbyeTag = et.XML("<h1>GOODBYE</h1>")
-  , helloTagTwo = et.XML("<h1>  HELLO  </h1>");
+  , usesNetworkTwo = et.XML('<uses-permission android:name=\
+            \"PACKAGE_NAME.permission.C2D_MESSAGE\" />')
+  , usesReceive = et.XML('<uses-permission android:name=\
+            \"com.google.android.c2dm.permission.RECEIVE\"/>')
+  , helloTagOne = et.XML('<h1>HELLO</h1>')
+  , goodbyeTag = et.XML('<h1>GOODBYE</h1>')
+  , helloTagTwo = et.XML('<h1>  HELLO  </h1>');
 
 
 describe('xml-helpers', function(){
@@ -128,23 +130,23 @@ describe('xml-helpers', function(){
         it('for simple XPath paths, the parent should be created if not present', function () {
             var doc = new et.ElementTree(et.XML('<widget>')),
                 children = [et.XML('<rim:permits> super_awesome_permission </rim:permits>')],
-                selector= "/widget/rim:permissions";
+                selector= '/widget/rim:permissions';
             expect(xml_helpers.graftXML(doc, children, selector)).toBe(true);
-            expect(et.tostring(doc.getroot())).toContain("<rim:permissions><rim:permits> super_awesome_permission </rim:permits></rim:permissions>");
+            expect(et.tostring(doc.getroot())).toContain('<rim:permissions><rim:permits> super_awesome_permission </rim:permits></rim:permissions>');
         });
 
         it('returns false for more complicated selectors', function () {
             var doc = new et.ElementTree(et.XML('<widget>')),
                 children = [et.XML('<rim:permits> super_awesome_permission </rim:permits>')],
-                selector= "/bookstore/book[price>35]/title";
+                selector= '/bookstore/book[price>35]/title';
             expect(xml_helpers.graftXML(doc, children, selector)).toBe(false);
         });
 
         it('appends children after the specified sibling', function () {
             var doc = new et.ElementTree(et.XML('<widget><A/><B/><C/></widget>')),
                 children = [et.XML('<B id="new"/>'), et.XML('<B id="new2"/>')],
-                selector= "/widget",
-                after= "B;A";
+                selector= '/widget',
+                after= 'B;A';
             expect(xml_helpers.graftXML(doc, children, selector, after)).toBe(true);
             expect(et.tostring(doc.getroot())).toContain('<B /><B id="new" /><B id="new2" />');
         });
@@ -152,8 +154,8 @@ describe('xml-helpers', function(){
         it('appends children after the 2nd priority sibling if the 1st one is missing', function () {
             var doc = new et.ElementTree(et.XML('<widget><A/><C/></widget>')),
                 children = [et.XML('<B id="new"/>'), et.XML('<B id="new2"/>')],
-                selector= "/widget",
-                after= "B;A";
+                selector= '/widget',
+                after= 'B;A';
             expect(xml_helpers.graftXML(doc, children, selector, after)).toBe(true);
             expect(et.tostring(doc.getroot())).toContain('<A /><B id="new" /><B id="new2" />');
         });
@@ -161,8 +163,8 @@ describe('xml-helpers', function(){
         it('inserts children at the beginning if specified sibling is missing', function () {
             var doc = new et.ElementTree(et.XML('<widget><B/><C/></widget>')),
                 children = [et.XML('<A id="new"/>'), et.XML('<A id="new2"/>')],
-                selector= "/widget",
-                after= "A";
+                selector= '/widget',
+                after= 'A';
             expect(xml_helpers.graftXML(doc, children, selector, after)).toBe(true);
             expect(et.tostring(doc.getroot())).toContain('<widget><A id="new" /><A id="new2" />');
         });

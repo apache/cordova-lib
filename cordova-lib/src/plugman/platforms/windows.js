@@ -15,21 +15,25 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
+ */
 
-/* jshint laxcomma:true, sub:true */
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+ indent:4, unused:vars, latedef:nofunc,
+ laxcomma:true, sub:true
+ */
 
 var common = require('./common'),
     path = require('path'),
     fs   = require('fs'),
     glob = require('glob'),
-    jsproj = require('../../util/windows/jsproj'),
+    jsprojManager = require('../../util/windows/jsprojManager'),
     events = require('../../events'),
     xml_helpers = require('../../util/xml-helpers');
 
 module.exports = {
     platformName: 'windows',
     InvalidProjectPathError: 'does not appear to be a Windows 8 or Unified Windows Store project (no .projitems|jsproj file)',
+
     www_dir:function(project_dir) {
         return path.join(project_dir, 'www');
     },
@@ -53,7 +57,7 @@ module.exports = {
                 throw new Error(this.InvalidProjectPathError);
             }
         }
-        return new jsproj(path.join(project_dir, project_files[0]));
+        return new jsprojManager(path.join(project_dir, project_files[0]));
     },
     'source-file': {
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
@@ -66,8 +70,8 @@ module.exports = {
         },
         uninstall:function(obj, project_dir, plugin_id, options, project_file) {
             var dest = path.join('plugins', plugin_id,
-                                 obj.targetDir || '',
-                                 path.basename(obj.src));
+                obj.targetDir || '',
+                path.basename(obj.src));
             common.removeFile(project_dir, dest);
             // remove reference to this file from csproj.
             project_file.removeSourceFile(dest);
@@ -75,33 +79,33 @@ module.exports = {
     },
     'header-file': {
         install:function(obj, plugin_dir, project_dir, plugin_id, options) {
-            events.emit('verbose', 'header-fileinstall is not supported for Windows 8');
+            events.emit('verbose', 'header-file.install is not supported for Windows');
         },
         uninstall:function(obj, project_dir, plugin_id, options) {
-            events.emit('verbose', 'header-file.uninstall is not supported for Windows 8');
+            events.emit('verbose', 'header-file.uninstall is not supported for Windows');
         }
     },
     'resource-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
-            events.emit('verbose', 'resource-file is not supported for Windows 8');
+            events.emit('verbose', 'resource-file is not supported for Windows');
         },
         uninstall:function(obj, project_dir, plugin_id, options, project_file) {
         }
     },
     'lib-file': {
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
-            var inc  = obj.Include;
-            project_file.addSDKRef(inc);
+            var inc  = obj.Include || obj.src;
+            project_file.addSDKRef(inc, getTargetConditions(obj));
         },
         uninstall:function(obj, project_dir, plugin_id, options, project_file) {
-            events.emit('verbose', 'windows8 lib-file uninstall :: ' + plugin_id);
-            var inc = obj.Include;
-            project_file.removeSDKRef(inc);
+            events.emit('verbose', 'windows lib-file uninstall :: ' + plugin_id);
+            var inc = obj.Include || obj.src;
+            project_file.removeSDKRef(inc, getTargetConditions(obj));
         }
     },
     'framework': {
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
-            events.emit('verbose', 'windows8 framework install :: ' + plugin_id);
+            events.emit('verbose', 'windows framework install :: ' + plugin_id);
 
             var src = obj.src;
             var dest = src; // if !isCustom, we will just add a reference to the file in place
@@ -109,38 +113,42 @@ module.exports = {
             // var isCustom = obj.custom;
             var type = obj.type;
 
-            if(type == 'projectReference') {
-                project_file.addProjectReference(path.join(plugin_dir,src));
+            if(type === 'projectReference') {
+                project_file.addProjectReference(path.join(plugin_dir,src), getTargetConditions(obj));
             }
             else {
                 // if(isCustom) {}
                 dest = path.join('plugins', plugin_id, path.basename(src));
                 common.copyFile(plugin_dir, src, project_dir, dest);
-                project_file.addReference(dest, src);
+                project_file.addReference(dest, getTargetConditions(obj));
             }
 
         },
         uninstall:function(obj, project_dir, plugin_id, options, project_file) {
-            events.emit('verbose', 'windows8 framework uninstall :: ' + plugin_id  );
+            events.emit('verbose', 'windows framework uninstall :: ' + plugin_id  );
 
             var src = obj.src;
             // technically it is not possible to get here without isCustom == true -jm
             // var isCustom = obj.custom;
             var type = obj.type;
 
-            if(type == 'projectReference') {
+            if(type === 'projectReference') {
                 // unfortunately we have to generate the plugin_dir path because it is not passed to uninstall. Note
                 // that project_dir is the windows project directory ([project]\platforms\windows) - we need to get to
                 // [project]\plugins\[plugin_id]
                 var plugin_dir = path.join(project_dir, '..', '..', 'plugins', plugin_id, src);
-                project_file.removeProjectReference(plugin_dir);
+                project_file.removeProjectReference(plugin_dir, getTargetConditions(obj));
             }
             else {
                 // if(isCustom) {  }
                 var targetPath = path.join('plugins', plugin_id);
                 common.removeFile(project_dir, targetPath);
-                project_file.removeReference(src);
+                project_file.removeReference(src, getTargetConditions(obj));
             }
         }
     }
 };
+
+function getTargetConditions(obj) {
+    return {versions: obj.versions, target: obj.target, arch: obj.arch};
+}

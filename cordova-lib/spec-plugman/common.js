@@ -17,7 +17,6 @@
     under the License.
 */
 
-var plugman = require('../src/plugman/plugman')
 //     nopt = require('nopt');
 
 // var known_opts = {
@@ -46,6 +45,7 @@ var plugman = require('../src/plugman/plugman')
 //     if(opt.debug >= 6)
 //         plugman.on('log', console.log);
 // }
+var common = {};
 
 module.exports = common = {
     spy: {

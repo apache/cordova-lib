@@ -9,3 +9,5 @@ spec-cordova/fixtures/projects/cordova
 .idea/*
 .gitcore
 *.jar
+src/plugman/defaults.json
+cordova-lib/src/plugman/defaults.json
