@@ -48,13 +48,13 @@
         "hostos": ["win32"],
         "parser": "./metadata/windows_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "3.7.1"
+        "version": "3.8.0"
     },
     "windows": {
         "hostos": ["win32"],
         "parser": "./metadata/windows_parser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "3.7.1"
+        "version": "3.8.0"
     },
     "browser": {
         "parser": "./metadata/browser_parser",
