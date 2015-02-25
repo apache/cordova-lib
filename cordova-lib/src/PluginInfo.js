@@ -312,7 +312,7 @@ function PluginInfo(dirname) {
         self.keywords = self.keywords.split(',').map( function(s) { return s.trim(); } );
     }
     self.getKeywordsAndPlatforms = function () {
-        return self.keywords.concat('cordovaplugin').concat(addCordova(self.getPlatformsArray()));
+        return self.keywords.concat('ecosystem:cordova').concat(addCordova(self.getPlatformsArray()));
     };
 }  // End of PluginInfo constructor.
 
