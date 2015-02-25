@@ -29,7 +29,9 @@ var cordova_util  = require('./util'),
     PluginInfoProvider = require('../PluginInfoProvider'),
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
-    events        = require('../events');
+    events        = require('../events'),
+    metadata      = require('../plugman/util/metadata'),
+    _             = require('underscore');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -134,7 +136,10 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider});
+
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, 
+                                                                       pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables,
+                                                                       is_top_level: true });
                     })
                     .then(function(dir){
                         // save to config.xml
@@ -278,6 +283,12 @@ module.exports = function plugin(command, targets, opts) {
                                 events.emit('results', 'config.xml entry for ' +target+ ' is removed');
                             }
                         }
+                    })
+                    .then(function(){
+                        // Remove plugin from fetch.json
+                        events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
+                        var pluginsDir = path.join(projectRoot, 'plugins');
+                        metadata.remove_plugin(pluginsDir, target);
                     });
                 }, Q());
             }).then(function() {
@@ -295,14 +306,87 @@ module.exports = function plugin(command, targets, opts) {
             }).then(function() {
                 return hooksRunner.fire('after_plugin_search');
             });
+        case 'save':
+            // save the versions/folders/git-urls of currently installed plugins into config.xml
+            return save(projectRoot, opts);
         default:
             return list(projectRoot, hooksRunner);
     }
 };
 
+function save(projectRoot, opts){
+    var xml = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(xml);
+
+    // First, remove all pre-existing plugins from config.xml
+    cfg.getPluginIdList().forEach(function(plugin){
+        cfg.removePlugin(plugin);
+    });
+
+    // It might be the case that fetch.json file is not yet existent.
+    // for example: when we have never ran the command 'cordova plugin add foo' on the project
+    // in that case, there's nothing to do except bubble up the error
+    function onFileNotFoundException(err){
+        return Q.reject(err.message);
+    }
+
+    // Then, save top-level plugins and their sources
+    return Q().then(function(){
+        var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
+        return JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+    }).fail(onFileNotFoundException).then(function(plugins){
+        Object.keys(plugins).forEach(function(pluginName){
+            var plugin = plugins[pluginName];
+            var pluginSource = plugin.source;
+            
+            // If not a top-level plugin, skip it, don't save it to config.xml
+            if(!plugin.is_top_level){
+                return;
+            }
+
+            
+            var attribs = {name: pluginName};
+
+            // Retrieve appropriate property: 'src' or 'version'
+            var src = (function(){
+                if(pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')){
+                    return { src: (pluginSource.url || pluginSource.path) };
+                }
+                if(pluginSource.hasOwnProperty('id')){
+                    var parts = pluginSource.id.split('@');
+                    var version = parts[1];
+                    if(version){
+                        return { version: version };
+                    }
+                }                
+                // If there's an id, but no version
+                // If there's no valid property('url', 'path', 'id')
+                return {};
+            }());
+            _.extend(attribs, src);
+            var variables = getPluginVariables(plugin.variables);
+            cfg.addPlugin(attribs, variables);
+        });
+        cfg.write();
+    });
+}
+
+function getPluginVariables(variables){
+    var result = [];
+    if(!variables){
+        return result;
+    }
+    
+    Object.keys(variables).forEach(function(pluginVar){
+        result.push({name: pluginVar, value: variables[pluginVar]});
+    });
+
+    return result;
+}
+
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
-    return pluginEntry && pluginEntry.version;
+    return pluginEntry && (pluginEntry.src || pluginEntry.version); 
 }
 
 function list(projectRoot, hooksRunner) {

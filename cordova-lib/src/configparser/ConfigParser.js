@@ -388,6 +388,7 @@ ConfigParser.prototype = {
             }
         }
     },
+        
     /**
      * Adds an engine. Does not check for duplicates.
      * @param  {String} name the engine name
@@ -409,10 +410,10 @@ ConfigParser.prototype = {
     removeEngine: function(name){
         var engines = this.doc.findall('./engine/[@name="' +name+'"]');
         for(var i=0; i < engines.length; i++){
-            var childs = this.doc.getroot().getchildren();
-            var idx = childs.indexOf(engines[i]);
+            var children = this.doc.getroot().getchildren();
+            var idx = children.indexOf(engines[i]);
             if(idx > -1){
-                childs.splice(idx,1);
+                children.splice(idx,1);
             }
         }
     },
