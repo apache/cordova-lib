@@ -91,7 +91,7 @@ module.exports = {
             if(fs.existsSync(path.join(dir,'package.json'))) {
                 events.emit('verbose', 'temporarily moving existing package.json so we can create one to publish to the cordova plugins registry');
                 if(fs.existsSync(path.join(dir,'package.json1'))) {
-                    //package.json1 already exists, maybe due to an past failed attempt to publish
+                    //package.json1 already exists, maybe due to a failed past attempt to publish
                     //we will assume that the rename has already happened.
                     events.emit('verbose', 'package.json1 already exists. Will use');
                 } else {
@@ -167,12 +167,11 @@ module.exports = {
      */
     fetch: function(plugin, client) {
         plugin = plugin.shift();
-        return fetchNPM(plugin, client)
+        return fetchPlugReg(plugin, client)
         .fail(function() {
-            events.emit('log', 'Fetching from npm failed');
-            //reset settings to fetch from cordova registry
+            events.emit('log', 'Fetching from cordova plugin registry failed');
             module.exports.settings = null;
-            return fetchPlugReg(plugin,client);
+            return fetchNPM(plugin,client);
         });
     },
  
@@ -204,10 +203,18 @@ module.exports = {
 
 /**
  * @method initSettings
+ * @param {Boolean} using npm registry
  * @return {Promise.<Object>} Promised settings.
  */
-function initSettings() {
+function initSettings(npm) {
     var settings = module.exports.settings;
+    var registryURL = 'http://registry.cordova.io';
+
+    //if npm is true, use npm registry
+    if(npm) {
+        registryURL = 'http://registry.npmjs.org';
+    }
+
     // check if settings already set
     if(settings !== null) return Q(settings);
 
@@ -222,41 +229,21 @@ function initSettings() {
     module.exports.settings =
     rc('plugman', {
         cache: plugmanCacheDir,
-        registry: 'http://registry.cordova.io',
+        registry: registryURL,
         logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
         userconfig: path.resolve(plugmanConfigDir, 'config'),
         'cache-min': oneDay
     });
-    return Q(settings);
-}
 
-/**
- * @method initSettingsNPM
- * @return {Promise.<Object>} Promised settings.
- */
-function initSettingsNPM() {
-    var settings = module.exports.settings;
-    // check if settings already set
-    if(settings !== null) return Q(settings);
-
-    // setting up settings
-    // obviously if settings dir does not exist settings is going to be empty
-    if(!fs.existsSync(plugmanConfigDir)) {
-        fs.mkdirSync(plugmanConfigDir);
-        fs.mkdirSync(plugmanCacheDir);
+    // if npm is true, use npm registry. 
+    // ~/.plugman/config overides the above cofig if it exists. 
+    // Need to reset the registry value in settings 
+    if(npm) {
+        settings.registry = 'http://registry.npmjs.org';
     }
 
-    settings =
-    module.exports.settings =
-    rc('plugman', {
-        cache: plugmanCacheDir,
-        registry: 'http://registry.npmjs.org',
-        logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
-        'cache-min': oneDay
-    });
     return Q(settings);
 }
-
 
 // Send a message to the registry to update download counts.
 function bumpCounter(info, client) {
@@ -342,7 +329,7 @@ function makeRequest (method, where, what, cb_) {
      * @return {Promise.<string>} Promised path to fetched package.
      */
 function fetchNPM(plugin, client) {
-    return initSettingsNPM()
+    return initSettings(true)
     .then(function (settings) {
         return Q.nfcall(npm.load)
         // configure npm here instead of passing parameters to npm.load due to CB-7670
@@ -351,33 +338,6 @@ function fetchNPM(plugin, client) {
                 npm.config.set(prop, settings[prop]);
             }
         });
-    })
-    .then(function(){
-        //if plugin variable is in reverse domain name style, look up the package-name in cordova-registry-mapper module
-
-        //Create regex to for digits, words and dashes and three dots in plugin ids which excludes @VERSION.
-        var re = /([\w-]*\.[\w-]*\.[\w-]*\.[\w-]*[^@])/;
-        var pluginID = plugin.match(re);
-        //If true, pluginID is reverse domain style
-        if(pluginID !== null) { 
-            //grab the @VERSION from the end of the plugin string if it exists
-            re = /(@.*)/;
-            var versionStr = plugin.match(re);
-
-            //Check if a mapping exists for the pluginID
-            //if it does, set the plugin variable to your packageName
-            //if it doesn't, don't change the plugin variable
-            var packageName = pluginMapper[pluginID[0]];
-            if(packageName) {
-                //if @VERSION exists, concat it to packageName
-                if(versionStr !== null) {
-                    packageName += versionStr[0];
-                }
-                events.emit('verbose', 'Converted ' + plugin + ' to ' + packageName + ' for npm fetch');
-                plugin = packageName;
-            }
-        }
-        return true;
     })
     .then(function() {
         events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
@@ -390,6 +350,11 @@ function fetchNPM(plugin, client) {
         // Unpack the plugin that was added to the cache (CB-8154)
         var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
         return unpack.unpackTgz(package_tgz, pluginDir);
+    })
+    .fail(function(error) {
+        //console.log(error)
+        events.emit('log', 'Fetching from npm registry failed');
+        return Q.reject(error)
     });
 }
 
@@ -421,9 +386,6 @@ function fetchPlugReg(plugin, client) {
         // Unpack the plugin that was added to the cache (CB-8154)
         var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
         return unpack.unpackTgz(package_tgz, pluginDir);
-    })
-    .fail(function() {
-        events.emit('log', 'Fetching from plugin registry failed');
     });
 }
 
