@@ -167,9 +167,11 @@ module.exports = {
      */
     fetch: function(plugin, client) {
         plugin = plugin.shift();
-        return fetchPlugReg(plugin, client)
+        return checkPluginID(plugin)
+        .then(function() {
+            return fetchPlugReg(plugin, client);
+        })
         .fail(function() {
-            events.emit('log', 'Fetching from cordova plugin registry failed');
             module.exports.settings = null;
             return fetchNPM(plugin,client);
         });
@@ -352,7 +354,6 @@ function fetchNPM(plugin, client) {
         return unpack.unpackTgz(package_tgz, pluginDir);
     })
     .fail(function(error) {
-        //console.log(error)
         events.emit('log', 'Fetching from npm registry failed');
         return Q.reject(error)
     });
@@ -386,6 +387,39 @@ function fetchPlugReg(plugin, client) {
         // Unpack the plugin that was added to the cache (CB-8154)
         var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
         return unpack.unpackTgz(package_tgz, pluginDir);
-    });
+    })
+    .fail(function(error) {
+        events.emit('log', 'Fetching from cordova plugin registry failed');
+        return Q.reject(error)
+    });;
 }
 
+/**
+ * @method checkPluginID
+ * @param {Array} with one element - the plugin id or "id@version"
+ * @return {Promise.<string>} Promised path to fetched package.
+ */
+function checkPluginID(plugin) {
+    //if plugin id is not reverse domain name style, skip CPR and fetch from npm
+
+    //Create regex to for digits, words and dashes and three dots in plugin ids which excludes @VERSION.
+    var re = /([\w-]*\.[\w-]*\.[\w-]*\.[\w-]*[^@])/;
+    var pluginID = plugin.match(re);
+    //If pluginID equals null, plugin is not reverse domain name style
+    if(pluginID === null) { 
+        events.emit('verbose', 'Skipping CPR');
+        //Q.reject will send us straight to the fail method which is where fetchNPM gets called.
+        return Q.reject();
+    } else {
+        //Reverse domain name style plugin ID
+        //Check if a mapping exists for the pluginID
+        //if it does, warn the users to use package-name
+        var packageName = pluginMapper[pluginID[0]];
+        if(packageName) {
+            events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' 
+                    + packageName + ' and moved to npm. Please use `cordova plugin add '
+                    + packageName + '` next time.');
+        }
+    }
+    return Q(); 
+}
