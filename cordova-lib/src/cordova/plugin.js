@@ -298,8 +298,8 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function getVersionFromConfigFile(plugin, cfg){
-    var feature = cfg.getFeature(plugin);
-    return feature && feature.params.version; 
+    var feature = cfg.getFeature(plugin); 
+    return feature && (feature.params.url || feature.params.installPath || feature.params.version);
 }
 
 function list(projectRoot, hooksRunner) {
