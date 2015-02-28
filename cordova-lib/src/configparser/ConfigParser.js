@@ -368,7 +368,7 @@ ConfigParser.prototype = {
     /**
      *This does not check for duplicate feature entries
      */
-    addFeature: function (name, params){
+    addFeature: function (name, params, variables){
         if(!name) return;
         var el = new et.Element('feature');
         el.attrib.name = name;
@@ -378,6 +378,14 @@ ConfigParser.prototype = {
                 p.attrib.name = param.name;
                 p.attrib.value = param.value;
                 el.append(p);
+            });
+        }
+        if (variables) {
+            variables.forEach(function(variable){
+                var v = new et.Element('variable');
+                v.attrib.name = variable.name;
+                v.attrib.value = variable.value;
+                el.append(v);
             });
         }
         this.doc.getroot().append(el);
