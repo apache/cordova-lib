@@ -334,7 +334,7 @@ ConfigParser.prototype = {
         );
 
         // Iterate preferences
-        result.variables = processChildren('variable');
+        result.variables = processChildren('param');
 
         return result;
 
