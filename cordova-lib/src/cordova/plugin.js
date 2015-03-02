@@ -141,6 +141,7 @@ module.exports = function plugin(command, targets, opts) {
                             var pluginInfo =  pluginInfoProvider.get(dir);
                             var existingFeature = cfg.getFeature(pluginInfo.id);
                             if(!existingFeature){
+                                var variables = [];
                                 var params = [{name:'id', value:pluginInfo.id}];
                                 var pluginVersion = versionFromTargetString(target);
                                 if(!pluginVersion && opts.shrinkwrap){
@@ -163,11 +164,11 @@ module.exports = function plugin(command, targets, opts) {
                                 if(opts.cli_variables){
                                     for(var varname in opts.cli_variables){
                                         if(opts.cli_variables.hasOwnProperty(varname)){
-                                            params.push({name:varname, value:opts.cli_variables[varname]});
+                                            variables.push({name:varname, value:opts.cli_variables[varname]});
                                         }
                                     } 
                                 }
-                                cfg.addFeature(pluginInfo.name, params);
+                                cfg.addFeature(pluginInfo.name, params, variables);
                                 cfg.write();
                                 events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
                             }else{
