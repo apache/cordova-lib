@@ -238,7 +238,7 @@ function initSettings(npm) {
     });
 
     // if npm is true, use npm registry. 
-    // ~/.plugman/config overides the above cofig if it exists. 
+    // ~/.plugman/config overides the above config if it exists. 
     // Need to reset the registry value in settings 
     if(npm) {
         settings.registry = 'http://registry.npmjs.org';

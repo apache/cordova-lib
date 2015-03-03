@@ -32,7 +32,7 @@
     <!-- Features -->
     <feature name="A feature with preference">
         <param name="id" value="org.apache.cordova.featurewithvars"/>
-        <variable name="var" value="varvalue"/>
+        <param name="var" value="varvalue"/>
     </feature>
     <feature name="A feature with url">
         <param name="id" value="org.apache.cordova.featurewithurl" />

@@ -2,3 +2,4 @@ spec-cordova
 spec-plugman
 spec
 coverage
+src/plugman/defaults.json
