@@ -237,11 +237,8 @@ module.exports = function plugin(command, targets, opts) {
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
-                   /*
-*/
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                    
                         // Convert target from package-name to package-id if necessary
                         var keys = Object.keys(pluginMapper);
                         //Traverse through pluginMapper values to see if it equals our target.
@@ -255,7 +252,6 @@ module.exports = function plugin(command, targets, opts) {
                         }
                         
                         if (plugins.indexOf(target) < 0) {
-
                             return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
                         }
                     }
@@ -299,7 +295,6 @@ module.exports = function plugin(command, targets, opts) {
                 opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
-
         case 'search':
             return hooksRunner.fire('before_plugin_search')
             .then(function() {

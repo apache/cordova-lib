@@ -47,6 +47,7 @@ function uninstall(platform, project_dir, id, plugins_dir, options) {
     options.is_top_level = true;
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
+    
     // Allow `id` to be a path to a file.
     var xml_path = path.join(id, 'plugin.xml');
     if ( fs.existsSync(xml_path) ) {
