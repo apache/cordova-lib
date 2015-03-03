@@ -237,20 +237,27 @@ module.exports = function plugin(command, targets, opts) {
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
-                    // Convert target from package-name to package-id if necessary
-                    var keys = Object.keys(pluginMapper);
-                    //Traverse through pluginMapper values to see if it equals our target.
-                    //Cordova-plugin-device would get changes to org.apache.cordova.device
-                    for (var i = 0; i < keys.length; i++) {
-                        var val = pluginMapper[keys[i]]; 
-                        if(val === target) {
-                            target = keys[i];
-                        }
-                    }
-
+                   /*
+*/
                     // Check if we have the plugin.
                     if (plugins.indexOf(target) < 0) {
-                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
+                    
+                        // Convert target from package-name to package-id if necessary
+                        var keys = Object.keys(pluginMapper);
+                        //Traverse through pluginMapper values to see if it equals our target.
+                        //Cordova-plugin-device would get changes to org.apache.cordova.device
+                        for (var i = 0; i < keys.length; i++) {
+                            var val = pluginMapper[keys[i]]; 
+                            if(val === target) {
+                                events.emit('log', 'Plugin "' + target + '" is not present in the project. Converting value to "' + keys[i] + '" and trying again.');
+                                target = keys[i]; 
+                            }
+                        }
+                        
+                        if (plugins.indexOf(target) < 0) {
+
+                            return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
+                        }
                     }
 
                     // Iterate over all installed platforms and uninstall.
@@ -292,6 +299,7 @@ module.exports = function plugin(command, targets, opts) {
                 opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
+
         case 'search':
             return hooksRunner.fire('before_plugin_search')
             .then(function() {

@@ -355,7 +355,7 @@ function fetchNPM(plugin, client) {
     })
     .fail(function(error) {
         events.emit('log', 'Fetching from npm registry failed');
-        return Q.reject(error)
+        return Q.reject(error);
     });
 }
 
@@ -390,8 +390,8 @@ function fetchPlugReg(plugin, client) {
     })
     .fail(function(error) {
         events.emit('log', 'Fetching from cordova plugin registry failed');
-        return Q.reject(error)
-    });;
+        return Q.reject(error);
+    });
 }
 
 /**
@@ -416,9 +416,9 @@ function checkPluginID(plugin) {
         //if it does, warn the users to use package-name
         var packageName = pluginMapper[pluginID[0]];
         if(packageName) {
-            events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' 
-                    + packageName + ' and moved to npm. Please use `cordova plugin add '
-                    + packageName + '` next time.');
+            events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + 
+                    packageName + ' and moved to npm. Please use `cordova plugin add ' + 
+                    packageName + '` next time.');
         }
     }
     return Q(); 
