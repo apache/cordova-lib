@@ -20,6 +20,79 @@
 -->
 # Cordova-lib Release Notes
 
+### 4.3.0 (Feb 27, 2015)
+* updated pinned versions of ios to 3.8.0 and android to 3.7.1
+* CB-8524 Switched to the latest Windows release
+* changed createpackage.json keyword to ecosystem:cordova
+* CB-8448 add support for activities
+* CB-8482 rename: platformId -> platformName
+* CB-8482: Update engine syntax within config.xml
+* Organize save logic some more
+* --save flag for plugins
+* fix for test after prepare changes
+* restore plugins and platforms on prepare
+* CB-8472 Can't find config.xml error installing browser platform after plugin.  (close #167)
+* CB-8469 android: Call into platform's build.js after `plugin add` so that Android Studio will work without needing an explicit command-line build first
+* CB-8123 Fix JSHINT issue.
+* CB-8123 Fix path handling so tests work on any platform.
+* CB-8123 Rename further windows platform related files.
+* CB-8123 Rename windows platform related files.
+* CB-8123 Plugin references can target specific windows platforms.
+* CB-8420 Make `cordova plugin add FOO` use version from config.xml (close #162)
+* CB-8239 Fix `cordova platform add PATH` when PATH is relative and CWD != project root
+* CB-8227 CB8237 CB-8238 Add --save flag and autosave to 'cordova platform add', 'cordova platform remove' and 'cordova platform update'
+* CB-8409 compile: bubble failures
+* CB-8239 Fix "platform update" should ignore `<cdv:engine>` (close #159)
+* CB-8390 android: Make `<framework custom=false>` work with Gradle
+* CB-8416 updated plugman publish to temporarily rename existing package.json files
+* CB-8416: added `plugman createpackagejson .` command to create a package.json from plugin.xml
+* CB-6973 add spec-plugman to npm run jshint
+* CB-6973 fix spec-plugman jshint failures
+* CB-6973 have base rules in jshintrc for spec-plugman
+* CB-8377 Fixed <runs> tag parsing (close #156)
+* CB-5696 find ios project directory using the xcode project file (close #151)
+* CB-8373 android: Add gradle references to project.properties rather than build.gradle
+* CB-8370 Make "plugman publish" without args default to CWD
+* Fix publish type-error introduced in recent commit 15adc1b9fcc069438f5
+* CB-8366 android: Remove empty `<framework>` directory upon uninstall
+* CB-6973 Enable JSHint for spec-cordova
+* CB-8239 Add support for git urls to 'cordova platform add' (close #148)
+* CB-8358 Add `--link` for `platform add` and `platform update`
+* CB-6973 remove base rules from individual files in src
+* CB-6973 have base rules in .jshintrc file
+* Add shims to undo breaking change in a20b3ae3 (didn't realize PluginInfo was exported)
+* CB-8354 Add --link support for iOS source and header files
+* Make all ad-hoc plugin.xml parsing use PluginInfo instead
+* Make all usages of PluginInfo use PluginInfoProvider instead
+* Add PluginInfoProvider for better caching of PluginInfo
+* CB-8284 revert npm dependency due to issues with registry
+* CB-8223 Expose config.xml in the Browser platform (close #149)
+* CB-8168 --list support for cordova-lib (close #145)
+* [Amazon] Improve error message when `<source-file>` is missing `target-dir`
+* refactor: Make addUninstalledPluginToPrepareQueue take pluginId rather than dirName
+* Chnage plugman test plugins to have IDs as directory names
+* Make all test plugin IDs unique
+* Empty out contents of plugin test files (and delete some unused ones)
+* CB-4789 refactor: Remove config_changes.get/set_platform_json in favour of PlatformJson
+* CB-8319 Remove config_changes module from plugman's public API
+* CB-8314 Speed up Travis CI (close #150)
+* refactor: Extract PlatformJson and munge-util into separate modules
+* refactor: Move ConfigFile and ConfigKeeper into their own files
+* CB-8285 Fix regression caused by c49eaa86c92b (PluginInfo's are cached, don't change them)
+* CB-8208 Made CI systems to get cordova-js dependency from gihub (close #146)
+* CB-8285 Don't create .fetch.json files within plugin directories
+* CB-8286 Never persist value of create --link-to within .cordova/config.json
+* CB-8288 Don't set config.setAutoPersist() in cordova.create
+* Fix create spec sometimes failing because it's deleted its own tmp directory
+* CB-8153 generate cordova_plugins.json for browserify based projects
+* CB-8043 CB-6462 CB-6105 Refactor orientation preference support (close #128)
+* FirefoxOS parser: allow passing in a ConfigParser object
+* Parsers: extend base parser with helper functions
+* CB-8244 android: Have `plugin add --link` create symlinks for `<source-file>`, `<framework>`, etc 
+* CB-8244 Pass options object to platform handlers in plugman (commit attempt #2)
+* CB-8226 'cordova platform add' : Look up version in config.xml if no version specified
+* Delete root .npmignore, since there's no node module there
+
 ### 4.2.0 (Jan 06, 2015)
 * `ConfigParser`: refactor `getPreference()`
 * Parsers: add base parser (parser.js) and make platform parsers inherit from it
@@ -316,5 +389,3 @@
 
 ### 0.21.1
 Initial release v0.21.1 (picks up from the same version number as plugman was).
-
-

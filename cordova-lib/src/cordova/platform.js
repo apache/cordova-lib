@@ -532,12 +532,20 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
     var name = platDetails.platform == 'ios' ? unorm.nfd(cfg.name()) : cfg.name();
     args.push(output, pkg, name);
+
+    var activityName = cfg.android_activityName();
+    if (activityName && platDetails.platform === 'android' && semver.gte(platDetails.version, '4.0.0-dev')) {
+        activityName = activityName.replace(/\W/g, '');
+        args.push('--activity-name', activityName);
+    }
+
     if (template_dir) {
         args.push(template_dir);
     }
     if (opts.link) {
         args.push('--link');
     }
+
     return args;
 }
 
