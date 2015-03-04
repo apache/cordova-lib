@@ -205,16 +205,20 @@ module.exports = {
 
 /**
  * @method initSettings
- * @param {Boolean} using npm registry
+ * @param {Boolean} determines if we are using the npm registry
  * @return {Promise.<Object>} Promised settings.
  */
-function initSettings(npm) {
+function initSettings(useNpmRegistry) {
     var settings = module.exports.settings;
-    var registryURL = 'http://registry.cordova.io';
+    const NPM_REG_URL = 'http://registry.npmjs.org';
+    const CPR_REG_URL = 'http://registry.cordova.io';
+    var registryURL;
 
-    //if npm is true, use npm registry
-    if(npm) {
-        registryURL = 'http://registry.npmjs.org';
+    //if useNpmRegistry is true, use npm registry
+    if(useNpmRegistry) {
+        registryURL = NPM_REG_URL;
+    } else {
+        registryURL = CPR_REG_URL;
     }
 
     // check if settings already set
@@ -240,8 +244,8 @@ function initSettings(npm) {
     // if npm is true, use npm registry. 
     // ~/.plugman/config overides the above config if it exists. 
     // Need to reset the registry value in settings 
-    if(npm) {
-        settings.registry = 'http://registry.npmjs.org';
+    if(useNpmRegistry) {
+        settings.registry = NPM_REG_URL;
     }
 
     return Q(settings);
