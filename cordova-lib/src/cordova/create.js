@@ -27,8 +27,7 @@ var path          = require('path'),
     CordovaError  = require('../CordovaError'),
     ConfigParser  = require('../configparser/ConfigParser'),
     cordova_util  = require('./util'),
-    validateIdentifier = require('valid-identifier'),
-    _             = require('underscore');
+    validateIdentifier = require('valid-identifier');
 
 /**
  * Usage:
@@ -112,10 +111,13 @@ function create(dir, cfg) {
     })
     .then(function() {
         // Strip link and url from cfg to avoid them being persisted to disk via .cordova/config.json.
-        // TODO: apparently underscore has no deep clone.  Replace with lodash or something.
-        var cfgToPersistToDisk = _.clone(cfg);
-        //delete cfgToPersistToDisk.lib.www;
-        //if (Object.keys(cfgToPersistToDisk.lib).length === 0) delete cfgToPersistToDisk.lib;
+        // TODO: apparently underscore has no deep clone.  Replace with lodash or something. For now, abuse JSON.
+        var cfgToPersistToDisk = JSON.parse(JSON.stringify(cfg));
+
+        delete cfgToPersistToDisk.lib.www;
+        if (Object.keys(cfgToPersistToDisk.lib).length === 0) {
+            delete cfgToPersistToDisk.lib;
+        }
 
         // Update cached version of config.json
         var origAutoPersist = config.getAutoPersist();
