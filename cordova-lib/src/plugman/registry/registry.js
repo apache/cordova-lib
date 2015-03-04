@@ -421,8 +421,8 @@ function checkPluginID(plugin) {
         var packageName = pluginMapper[pluginID[0]];
         if(packageName) {
             events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + 
-                    packageName + ' and moved to npm. Please use `cordova plugin add ' + 
-                    packageName + '` next time.');
+                    packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + 
+                    plugin + '` and `cordova plugin add ' + packageName + '`.');
         }
     }
     return Q(); 
