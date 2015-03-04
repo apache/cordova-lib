@@ -32,13 +32,24 @@ var path          = require('path'),
 /**
  * Usage:
  * @dir - directory where the project will be created. Required.
+ * @optionalId - app id. Optional.
+ * @optionalName - app name. Optional.
  * @cfg - extra config to be saved in .cordova/config.json
  **/
 // Returns a promise.
 module.exports = create;
-function create(dir, cfg) {
+function create(dir, optionalId, optionalName, cfg) {
     return Q.fcall(function() {
         // Lets check prerequisites first
+
+        if (arguments.length == 3) {
+          cfg = optionalName;
+          optionalName = undefined;
+        } else if (arguments.length == 2) {
+          cfg = optionalId;
+          optionalId = undefined;
+          optionalName = undefined;
+        }
 
         if (!dir) {
             throw new CordovaError('At least the dir must be provided to create new project. See `' + cordova_util.binname + ' help`.');
@@ -49,6 +60,9 @@ function create(dir, cfg) {
                 throw new CordovaError('Must provide a project configuration.');
             }
         }
+
+        if (optionalId) cfg.id = optionalId;
+        if (optionalName) cfg.name = optionalName;
 
         // Make absolute.
         dir = path.resolve(dir);
