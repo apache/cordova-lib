@@ -178,11 +178,11 @@ module.exports = {
             }
         })
         .then(function() {
-            return fetchPlugReg(plugin, client);
+            return fetchPlugin(plugin, client, false);
         })
         .fail(function() {
             module.exports.settings = null;
-            return fetchNPM(plugin,client);
+            return fetchPlugin(plugin, client, true);
         });
     },
  
@@ -213,7 +213,6 @@ module.exports = {
 };
 
 /**
- * @method initSettings
  * @param {Boolean} determines if we are using the npm registry
  * @return {Promise.<Object>} Promised settings.
  */
@@ -339,12 +338,19 @@ function makeRequest (method, where, what, cb_) {
 }
 
 /**
-     * @method fetchNPM
-     * @param {Array} with one element - the plugin id or "id@version"
-     * @return {Promise.<string>} Promised path to fetched package.
-     */
-function fetchNPM(plugin, client) {
-    return initSettings(true)
+* @param {Array} with one element - the plugin id or "id@version"
+* @param useNpmRegistry: {Boolean} - to use the npm registry 
+* @return {Promise.<string>} Promised path to fetched package.
+*/
+function fetchPlugin(plugin, client, useNpmRegistry) {
+    //set registry variable to use in log messages below
+    var registryName;
+    if(useNpmRegistry){
+        registryName = 'npm';
+    } else {
+        registryName = 'cordova plugins registry';
+    }
+    return initSettings(useNpmRegistry)
     .then(function (settings) {
         return Q.nfcall(npm.load)
         // configure npm here instead of passing parameters to npm.load due to CB-7670
@@ -355,7 +361,7 @@ function fetchNPM(plugin, client) {
         });
     })
     .then(function() {
-        events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
+        events.emit('log', 'Fetching plugin "' + plugin + '" via ' + registryName);
         return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
     })
     .then(function(info) {
@@ -367,41 +373,7 @@ function fetchNPM(plugin, client) {
         return unpack.unpackTgz(package_tgz, pluginDir);
     })
     .fail(function(error) {
-        events.emit('log', 'Fetching from npm registry failed');
-        return Q.reject(error);
-    });
-}
-
-/**
- * @method fetchPlugReg
- * @param {Array} with one element - the plugin id or "id@version"
- * @return {Promise.<string>} Promised path to fetched package.
- */
-function fetchPlugReg(plugin, client) {
-    return initSettings()
-    .then(function (settings) {
-        return Q.nfcall(npm.load)
-        // configure npm here instead of passing parameters to npm.load due to CB-7670
-        .then(function () {
-            for (var prop in settings){
-                npm.config.set(prop, settings[prop]);
-            }
-        });
-    })
-    .then(function() {
-        events.emit('log', 'Fetching plugin "' + plugin + '" via plugin registry');
-        return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
-    })
-    .then(function(info) {
-        var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
-        bumpCounter(info, cl);
-        var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
-        // Unpack the plugin that was added to the cache (CB-8154)
-        var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-        return unpack.unpackTgz(package_tgz, pluginDir);
-    })
-    .fail(function(error) {
-        events.emit('log', 'Fetching from cordova plugin registry failed');
+        events.emit('log', 'Fetching from ' + registryName + ' failed');
         return Q.reject(error);
     });
 }
