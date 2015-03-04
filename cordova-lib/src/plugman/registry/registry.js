@@ -167,13 +167,12 @@ module.exports = {
      */
     fetch: function(plugin, client) {
         plugin = plugin.shift();
-        return Q()
-        .then(function() {
+        return Q.fcall(function() {
             //check to see if pluginID is reverse domain name style
             if(isValidCprName(plugin)){
                 return Q();
             } else {
-                //fetch from npm
+                //make promise fail so it will fetch from npm
                 events.emit('verbose', 'Skipping CPR');
                 return Q.reject();
             }
@@ -373,7 +372,6 @@ function fetchNPM(plugin, client) {
     });
 }
 
-
 /**
  * @method fetchPlugReg
  * @param {Array} with one element - the plugin id or "id@version"
@@ -410,14 +408,12 @@ function fetchPlugReg(plugin, client) {
 
 /**
  * @param {Array} with one element - the plugin id or "id@version"
- * @return {Boolean} if pluginID is reverse domain name style.
+ * @return {Boolean} if plugin id is reverse domain name style.
  */
 function isValidCprName(plugin) {
-    //if plugin id is not reverse domain name style, skip CPR and fetch from npm
-
-    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style.
-    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(plugin)
-
+    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style. Also makes sure not to match @VERSION.
+    var matches = /([^@]*\.[^@]*\.[^@]*[^@\d])/.exec(plugin)
+    
     //If matches equals null, plugin is not reverse domain name style
     if(matches === null) { 
         return false;
@@ -428,13 +424,14 @@ function isValidCprName(plugin) {
 }
 
 /**
- * @param {Array} - the plugin id or "id@version"
+ * @param plugin:{Array} - the plugin id or "id@version"
+ * @param matches:{Array} - the array containing the RDN style plugin id without @version
  */
-function warnIfIdInMapper(plugin, pluginID) {
+function warnIfIdInMapper(plugin, matches) {
     //Reverse domain name style plugin ID
-    //Check if a mapping exists for the pluginID
+    //Check if a mapping exists for the plugin id
     //if it does, warn the users to use package-name
-    var packageName = pluginMapper[pluginID[0]];
+    var packageName = pluginMapper[matches[0]];
     if(packageName) {
         events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + plugin + '` and `cordova plugin add ' + packageName + '`.');
     }
