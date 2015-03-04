@@ -19,7 +19,8 @@
 
 /* jshint laxcomma:true */
 
-var npm = require('npm'),
+var semver = require('semver'),
+    npm = require('npm'),
     path = require('path'),
     url = require('url'),
     fs = require('fs'),
@@ -36,6 +37,13 @@ var npm = require('npm'),
     plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache'),
     oneDay = 3600*24;
 
+if (semver.compare(npm.version, '1.3.4') > 0) {
+    throw new Error('Unsupported npm version (' + npm.version + '). ' +
+       'Please downgrade to 1.3.4:\n' +
+       '\t(cd ' + path.dirname(path.dirname(path.dirname(__dirname))) +
+       ' && rm -rf ' + path.join('node_modules', 'npm') +
+       ' && npm install npm@1.3.4)');
+}
 
 module.exports = {
     settings: null,
