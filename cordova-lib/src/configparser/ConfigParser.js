@@ -381,10 +381,12 @@ ConfigParser.prototype = {
         }
     },
 
-    // test: write doc
-    // test: test this function thoroughly
-    removeFeature: function(name){
-        var features = this.doc.find('./feature/param[@name="id"][@value="' + name + '"]/..');
+    /**
+     * Removes all the features with given id
+     * @param  {String} id the feature id.
+     */
+    removeFeature: function(id){
+        var features = this.doc.findall('./feature/param[@name="id"][@value="' + id + '"]/..');
         for(var i=0; i < features.length; i++){
             var childs = this.doc.getroot().getchildren();
             var idx = childs.indexOf(features[i]);

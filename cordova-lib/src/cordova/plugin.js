@@ -277,6 +277,11 @@ module.exports = function plugin(command, targets, opts) {
                                 events.emit('results', 'config.xml entry for ' +target+ ' is removed');
                             }
                         }
+                    }).then(function(){
+                        // Remove plugin from fetch.json
+                        events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
+                        var pluginsDir = path.join(projectRoot, 'plugins');
+                        metadata.remove_plugin(pluginsDir, target);
                     });
                 }, Q());
             }).then(function() {
@@ -303,7 +308,7 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function save(projectRoot, opts){
-    // test: what if there are multiple plugins installed ?
+    // test: what if there are multiple plugins installed ? (done)
     // test: what if there are no plugins installed ?
     // test: test right after creation of a project
     // test: what if fetch.json is missing => error out ?
@@ -312,19 +317,17 @@ function save(projectRoot, opts){
     // test: relative paths
     // Read fetch.json file (done)
     // test: save variables into fetch.json. this means changing how 'plugin add' works
-    // test: when removing a plugin, remove it from fetch.json as well. what about update ?
+    // test: when removing a plugin, remove it from fetch.json as well. what about update ? (done)
     debugger;
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 
     // First, remove all pre-existing features/plugins from config.xml
-    // test this: seems not to work
     cfg.getFeatureIdList().forEach(function(feature){
         cfg.removeFeature(feature);
     });
 
     // Then, save plugins and their sources
-    //     1- first, try to retrieve the plugins and their sources from fetch.json
     // test: does this work after I start saving variables into fetch.json ?
     return Q().then(function(){
         var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
@@ -346,6 +349,7 @@ function save(projectRoot, opts){
             }
             cfg.addFeature(pluginName, params);
         });
+        cfg.write();
     });
 }
 
