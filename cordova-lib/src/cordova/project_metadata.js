@@ -31,7 +31,7 @@ function getPlatforms(projectRoot){
 }
 
 // Returns all the plugins that are currently saved into config.xml
-// Return type is a promise that is fulfilled with a list of objects with name and version properties. e.g: [{name: 'android', version: '3.5.0'}, {name: 'wp8', version: 'C:/path/to/platform'}, {name: 'ios', version: 'git://...'}]
+// Return type is a promise that is fulfilled with a list of objects with name and version properties. e.g: [ {id: 'org.apache.cordova.device', name: 'Device', APP_ID: 'my-app-id', APP_NAME: 'my-app-name'} ]
 // ToDO: Once we move to npm, this function should be updated to rely on npm instead
 function getPlugins(projectRoot){
     var xml = cordova_util.projectConfig(projectRoot);
