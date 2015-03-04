@@ -167,7 +167,17 @@ module.exports = {
      */
     fetch: function(plugin, client) {
         plugin = plugin.shift();
-        return checkPluginID(plugin)
+        return Q()
+        .then(function() {
+            //check to see if pluginID is reverse domain name style
+            if(isValidCprName(plugin)){
+                return Q();
+            } else {
+                //fetch from npm
+                events.emit('verbose', 'Skipping CPR');
+                return Q.reject();
+            }
+        })
         .then(function() {
             return fetchPlugReg(plugin, client);
         })
@@ -399,31 +409,33 @@ function fetchPlugReg(plugin, client) {
 }
 
 /**
- * @method checkPluginID
  * @param {Array} with one element - the plugin id or "id@version"
- * @return {Promise.<string>} Promised path to fetched package.
+ * @return {Boolean} if pluginID is reverse domain name style.
  */
-function checkPluginID(plugin) {
+function isValidCprName(plugin) {
     //if plugin id is not reverse domain name style, skip CPR and fetch from npm
 
-    //Create regex to for digits, words and dashes and three dots in plugin ids which excludes @VERSION.
-    var re = /([\w-]*\.[\w-]*\.[\w-]*\.[\w-]*[^@])/;
-    var pluginID = plugin.match(re);
-    //If pluginID equals null, plugin is not reverse domain name style
-    if(pluginID === null) { 
-        events.emit('verbose', 'Skipping CPR');
-        //Q.reject will send us straight to the fail method which is where fetchNPM gets called.
-        return Q.reject();
+    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style.
+    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(plugin)
+
+    //If matches equals null, plugin is not reverse domain name style
+    if(matches === null) { 
+        return false;
     } else {
-        //Reverse domain name style plugin ID
-        //Check if a mapping exists for the pluginID
-        //if it does, warn the users to use package-name
-        var packageName = pluginMapper[pluginID[0]];
-        if(packageName) {
-            events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + 
-                    packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + 
-                    plugin + '` and `cordova plugin add ' + packageName + '`.');
-        }
+        warnIfIdInMapper(plugin, matches);
     }
-    return Q(); 
+    return true 
+}
+
+/**
+ * @param {Array} - the plugin id or "id@version"
+ */
+function warnIfIdInMapper(plugin, pluginID) {
+    //Reverse domain name style plugin ID
+    //Check if a mapping exists for the pluginID
+    //if it does, warn the users to use package-name
+    var packageName = pluginMapper[pluginID[0]];
+    if(packageName) {
+        events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + plugin + '` and `cordova plugin add ' + packageName + '`.');
+    }
 }
