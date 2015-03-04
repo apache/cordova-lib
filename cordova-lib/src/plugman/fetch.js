@@ -146,9 +146,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         checkID(options.expected_id, result.pinfo);
         metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, { source: result.fetchJsonSource });
         return result.dest;
-    })            
-    .fail(function(error) {
-        return Q.reject(error);
     });
 }
 
