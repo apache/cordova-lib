@@ -17,13 +17,10 @@
     under the License.
 */
 
-var cordova = require('../src/cordova/cordova');
-    Q       = require('q'),
+var cordova = require('../src/cordova/cordova'),
     helpers = require('./helpers'),
     shell   = require('shelljs'),
-    path    = require('path'),
-    rewire  = require('rewire'),
-    util    = rewire('../src/cordova/util');
+    path    = require('path');
 
 var appId = 'org.testing';
 var appName = 'ProjectMetadataRetrievalTests';
@@ -39,7 +36,7 @@ var configNormal = {
     }
 };
 
-ddescribe('retrieval of project metadata', function(){
+describe('retrieval of project metadata', function(){
 
     var tmpDir = helpers.tmpDir('project_metadata_test');
     var projectRoot = path.join(tmpDir, appName);
@@ -55,7 +52,7 @@ ddescribe('retrieval of project metadata', function(){
         shell.rm('-rf', tmpDir);
     });
     
-    iit('retrieve platforms and plugins saved in config.xml', function(done){
+    it('retrieve platforms and plugins saved in config.xml', function(done){
         var devicePlugin = 'org.apache.cordova.device@0.2.11';
         var androidPlatform = 'android@3.7.0';
 
