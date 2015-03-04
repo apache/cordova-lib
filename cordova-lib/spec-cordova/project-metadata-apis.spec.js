@@ -22,20 +22,20 @@ var cordova = require('../src/cordova/cordova'),
     shell   = require('shelljs'),
     path    = require('path');
 
-var appId = 'org.testing';
-var appName = 'ProjectMetadataRetrievalTests';
-
-var configNormal = {
-    lib: {
-        www: {
-            url: path.join(__dirname, 'fixtures', 'base', 'www'),
-            version: 'testProjectMetadataRetrieval',
-            id: appName
-        }
-    }
-};
-
 describe('retrieval of project metadata', function(){
+
+    var appId = 'org.testing';
+    var appName = 'ProjectMetadataRetrievalTests';
+
+    var configNormal = {
+        lib: {
+            www: {
+                url: path.join(__dirname, 'fixtures', 'base', 'www'),
+                version: 'testProjectMetadataRetrieval',
+                id: appName
+            }
+        }
+    };
 
     var tmpDir = helpers.tmpDir('project_metadata_test');
     var projectRoot = path.join(tmpDir, appName);
