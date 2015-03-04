@@ -52,7 +52,7 @@ describe('retrieval of project metadata', function(){
     });
     
     it('retrieve platforms and plugins saved in config.xml', function(done){
-        var devicePlugin = 'org.apache.cordova.device@0.2.11';
+        var devicePlugin = 'org.apache.cordova.device@0.2.11'; 
         var androidPlatform = 'android@3.7.0';
 
         process.chdir(tmpDir);
