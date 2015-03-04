@@ -80,8 +80,6 @@ describe('retrieval of project metadata', function(){
             var plugin = plugins[0];
             var retrievedPlugin =  plugin.id + '@' + plugin.version;
             expect(retrievedPlugin).toBe(devicePlugin);
-        }).then(function(){
-            done();
-        });
+        }).fin(done);
     });
 });
