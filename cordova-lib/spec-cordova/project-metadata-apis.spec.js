@@ -24,7 +24,6 @@ var cordova = require('../src/cordova/cordova'),
 
 var appId = 'org.testing';
 var appName = 'ProjectMetadataRetrievalTests';
-var appId = 'org.testing';
 
 var configNormal = {
     lib: {
