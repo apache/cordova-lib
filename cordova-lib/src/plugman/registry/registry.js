@@ -383,14 +383,17 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
  * @return {Boolean} if plugin id is reverse domain name style.
  */
 function isValidCprName(plugin) {
-    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style. Also makes sure not to match @VERSION.
-    var matches = /([^@]*\.[^@]*\.[^@]*[^@\d])/.exec(plugin)
-    
+    // Split @Version from the plugin if it exists.
+    var splitVersion = plugin.split('@');
+
+    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style.
+    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(splitVersion[0])
+
     //If matches equals null, plugin is not reverse domain name style
-    if(matches === null) { 
+    if(matches === null) {
         return false;
     } else {
-        warnIfIdInMapper(plugin, matches);
+        warnIfIdInMapper(splitVersion[0], matches);
     }
     return true 
 }
