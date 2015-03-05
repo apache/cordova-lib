@@ -185,7 +185,7 @@ module.exports = {
             return fetchPlugin(plugin, client, true);
         });
     },
- 
+
     /**
      * @method info
      * @param {String} name Plugin name
@@ -218,8 +218,8 @@ module.exports = {
  */
 function initSettings(useNpmRegistry) {
     var settings = module.exports.settings;
-    const NPM_REG_URL = 'http://registry.npmjs.org';
-    const CPR_REG_URL = 'http://registry.cordova.io';
+    var NPM_REG_URL = 'http://registry.npmjs.org';
+    var CPR_REG_URL = 'http://registry.cordova.io';
     var registryURL;
 
     //if useNpmRegistry is true, use npm registry
@@ -383,30 +383,30 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
  * @return {Boolean} if plugin id is reverse domain name style.
  */
 function isValidCprName(plugin) {
-    // Split @Version from the plugin if it exists.
+    // Split @Version from the plugin id if it exists.
     var splitVersion = plugin.split('@');
 
     //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style.
-    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(splitVersion[0])
+    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(splitVersion[0]);
 
     //If matches equals null, plugin is not reverse domain name style
     if(matches === null) {
         return false;
     } else {
-        warnIfIdInMapper(splitVersion[0], matches);
+        warnIfIdInMapper(splitVersion[0]);
     }
-    return true 
+    return true;
 }
 
 /**
  * @param plugin:{Array} - the plugin id or "id@version"
  * @param matches:{Array} - the array containing the RDN style plugin id without @version
  */
-function warnIfIdInMapper(plugin, matches) {
+function warnIfIdInMapper(plugin) {
     //Reverse domain name style plugin ID
     //Check if a mapping exists for the plugin id
     //if it does, warn the users to use package-name
-    var packageName = pluginMapper[matches[0]];
+    var packageName = pluginMapper[plugin];
     if(packageName) {
         events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + plugin + '` and `cordova plugin add ' + packageName + '`.');
     }
