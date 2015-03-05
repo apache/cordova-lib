@@ -81,5 +81,5 @@ describe('retrieval of project metadata', function(){
             var retrievedPlugin =  plugin.id + '@' + plugin.version;
             expect(retrievedPlugin).toBe(devicePlugin);
         }).fin(done);
-    });
+    }, 5000);
 });
