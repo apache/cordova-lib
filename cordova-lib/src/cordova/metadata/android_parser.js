@@ -69,35 +69,37 @@ android_parser.prototype.findAndroidLaunchModePreference = function(config) {
 // remove the default resource name from all drawable folders
 // return the array of the densities in this project
 android_parser.prototype.deleteDefaultResource = function(name) {
-    var densities = [];
     var res = path.join(this.path, 'res');
     var dirs = fs.readdirSync(res);
 
     for (var i=0; i<dirs.length; i++) {
         var filename = dirs[i];
         if (filename.indexOf('drawable-') === 0) {
-            var density = filename.substr(9);
-            densities.push(density);
-            var template = path.join(res, filename, name);
-            try {
-                fs.unlinkSync(template);
-                events.emit('verbose', 'deleted: ' + template);
-            } catch(e) {
-                // ignored. template screen does probably not exist
+            var imgPath = path.join(res, filename, name);
+            if (fs.existsSync(imgPath)) {
+                fs.unlinkSync(imgPath);
+                events.emit('verbose', 'deleted: ' + imgPath);
+            }
+            imgPath = imgPath.replace(/\.png$/, '.9.png');
+            if (fs.existsSync(imgPath)) {
+                fs.unlinkSync(imgPath);
+                events.emit('verbose', 'deleted: ' + imgPath);
             }
         }
     }
-    return densities;
 };
 
 android_parser.prototype.copyImage = function(src, density, name) {
     var destFolder = path.join(this.path, 'res', (density ? 'drawable-': 'drawable') + density);
-    var destFilePath = path.join(destFolder, name);
+    var isNinePatch = !!/\.9\.png$/.exec(src);
+    var ninePatchName = name.replace(/\.png$/, '.9.png');
 
     // default template does not have default asset for this density
     if (!fs.existsSync(destFolder)) {
         fs.mkdirSync(destFolder);
     }
+
+    var destFilePath = path.join(destFolder, isNinePatch ? ninePatchName : name);
     events.emit('verbose', 'copying image from ' + src + ' to ' + destFilePath);
     shell.cp('-f', src, destFilePath);
 };
@@ -119,12 +121,7 @@ android_parser.prototype.handleSplashes = function(config) {
             if (!resource.density) {
                 return;
             }
-            var screenname = 'screen.png';
-            if (resource.src.match(/\.9\.png$/)) {
-                screenname = 'screen.9.png';
-            }
-
-            me.copyImage(path.join(projectRoot, resource.src), resource.density, screenname);
+            me.copyImage(path.join(projectRoot, resource.src), resource.density, 'screen.png');
         });
     }
 };
