@@ -93,12 +93,16 @@ function create(dir, optionalId, optionalName, cfg) {
             throw new CordovaError('App id contains a reserved word, or is not a valid identifier.');
         }
 
-        if (!cfg.lib || !cfg.lib.www) {
-            throw new CordovaError('Must supply a source www path.');
-        }
 
         // This was changed from "uri" to "url", but checking uri for backwards compatibility.
+        cfg.lib = cfg.lib || {};
+        cfg.lib.www = cfg.lib.www || {};
         cfg.lib.www.url = cfg.lib.www.url || cfg.lib.www.uri;
+
+        if (!cfg.lib.www.url) {
+            cfg.lib.www.url = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world');
+        }
+
         // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
         cfg.lib.www.version = cfg.lib.www.version || 'not_versioned';
         cfg.lib.www.id = cfg.lib.www.id || 'dummy_id';
@@ -227,7 +231,7 @@ function create(dir, optionalId, optionalName, cfg) {
         // Add template config.xml for apps that are missing it
         var configPath = cordova_util.projectConfig(dir);
         if (!fs.existsSync(configPath)) {
-            shell.cp(path.join(__dirname, '..', '..', 'templates', 'config.xml'), configPath);
+            shell.cp(path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml'), configPath);
         }
 
         // Write out id and name to config.xml
