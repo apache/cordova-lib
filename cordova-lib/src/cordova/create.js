@@ -170,12 +170,18 @@ function create(dir, optionalId, optionalName, cfg) {
 
         if (fs.existsSync(path.join(paths.root, 'config.xml'))) {
             paths.configXml = path.join(paths.root, 'config.xml');
+        } else {
+            paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
         }
         if (fs.existsSync(path.join(paths.root, 'merges'))) {
             paths.merges = path.join(paths.root, 'merges');
+        } else {
+            // No merges by default
         }
         if (fs.existsSync(path.join(paths.root, 'hooks'))) {
             paths.hooks = path.join(paths.root, 'hooks');
+        } else {
+            paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
         }
 
         var dirAlreadyExisted = fs.existsSync(dir);
@@ -228,13 +234,8 @@ function create(dir, optionalId, optionalName, cfg) {
         shell.mkdir(path.join(dir, 'platforms'));
         shell.mkdir(path.join(dir, 'plugins'));
 
-        // Add template config.xml for apps that are missing it
-        var configPath = cordova_util.projectConfig(dir);
-        if (!fs.existsSync(configPath)) {
-            shell.cp(path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml'), configPath);
-        }
-
         // Write out id and name to config.xml
+        var configPath = cordova_util.projectConfig(dir);
         var conf = new ConfigParser(configPath);
         if (cfg.id) conf.setPackageName(cfg.id);
         if (cfg.name) conf.setName(cfg.name);
