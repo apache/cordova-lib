@@ -60,10 +60,9 @@ exports.save_fetch_metadata = function(pluginsDir, pluginId, data) {
 };
 
 exports.remove_plugin = function(pluginsDir, pluginId){
-    debugger;
     var metadataJson = getJson(pluginsDir);
     delete metadataJson[pluginId];
     var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
     fs.writeFileSync(fetchJsonPath, JSON.stringify(metadataJson, null, 4), 'utf-8');
-}
+};
 

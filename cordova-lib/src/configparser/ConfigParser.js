@@ -388,10 +388,10 @@ ConfigParser.prototype = {
     removeFeature: function(id){
         var features = this.doc.findall('./feature/param[@name="id"][@value="' + id + '"]/..');
         for(var i=0; i < features.length; i++){
-            var childs = this.doc.getroot().getchildren();
-            var idx = childs.indexOf(features[i]);
+            var children = this.doc.getroot().getchildren();
+            var idx = children.indexOf(features[i]);
             if(idx > -1){
-                childs.splice(idx,1);
+                children.splice(idx,1);
             }
         }
     },
@@ -417,10 +417,10 @@ ConfigParser.prototype = {
     removeEngine: function(name){
         var engines = this.doc.findall('./engine/[@name="' +name+'"]');
         for(var i=0; i < engines.length; i++){
-            var childs = this.doc.getroot().getchildren();
-            var idx = childs.indexOf(engines[i]);
+            var children = this.doc.getroot().getchildren();
+            var idx = children.indexOf(engines[i]);
             if(idx > -1){
-                childs.splice(idx,1);
+                children.splice(idx,1);
             }
         }
     },

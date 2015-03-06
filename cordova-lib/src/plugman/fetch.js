@@ -39,7 +39,6 @@ var localPlugins = null;
 // Returns a promise.
 module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
-    debugger;
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
 
@@ -145,7 +144,12 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         });
     }).then(function(result){
         checkID(options.expected_id, result.pinfo);
-        metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, { source: result.fetchJsonSource });
+        var data = { source: result.fetchJsonSource };
+        if(options.variables) 
+        {
+            data.variables = options.variables; 
+        }
+        metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, data);
         return result.dest;
     });
 }

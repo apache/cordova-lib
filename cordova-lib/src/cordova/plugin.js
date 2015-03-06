@@ -29,7 +29,8 @@ var cordova_util  = require('./util'),
     PluginInfoProvider = require('../PluginInfoProvider'),
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
-    events        = require('../events');
+    events        = require('../events'),
+    metadata      = require('../plugman/util/metadata');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -134,7 +135,7 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider});
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables });
                     })
                     .then(function(dir){
                         // save to config.xml 
@@ -266,7 +267,8 @@ module.exports = function plugin(command, targets, opts) {
                     .then(function() {
                         // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
-                    }).then(function(){
+                    })
+                    .then(function(){
                         //remove plugin from config.xml
                         if(saveToConfigXmlOn(config_json, opts)){
                             var configPath = cordova_util.projectConfig(projectRoot);
@@ -277,14 +279,16 @@ module.exports = function plugin(command, targets, opts) {
                                 events.emit('results', 'config.xml entry for ' +target+ ' is removed');
                             }
                         }
-                    }).then(function(){
+                    })
+                    .then(function(){
                         // Remove plugin from fetch.json
                         events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
                         var pluginsDir = path.join(projectRoot, 'plugins');
                         metadata.remove_plugin(pluginsDir, target);
                     });
                 }, Q());
-            }).then(function() {
+            })
+            .then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
@@ -308,17 +312,7 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function save(projectRoot, opts){
-    // test: what if there are multiple plugins installed ? (done)
-    // test: what if there are no plugins installed ?
-    // test: test right after creation of a project
-    // test: what if fetch.json is missing => error out ?
-    // test: what if config.xml already contains plugins ? => remove all pre-existin plugins first
-    // test: should we save variables ? => this would mean capturing them when adding/installing a plugin
-    // test: relative paths
-    // Read fetch.json file (done)
-    // test: save variables into fetch.json. this means changing how 'plugin add' works
-    // test: when removing a plugin, remove it from fetch.json as well. what about update ? (done)
-    debugger;
+    
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 
@@ -327,17 +321,22 @@ function save(projectRoot, opts){
         cfg.removeFeature(feature);
     });
 
+    // It might be the case that fetch.json file is not yet existent.
+    // for example: when we have never ran the command 'cordova plugin add foo' on the project
+    // in that case, there's nothing to do except bubble up the error
+    function onFileNotFoundException(err){
+        return Q.reject('fetch.json file does not exist: ' + err.message);
+    }
+
     // Then, save plugins and their sources
-    // test: does this work after I start saving variables into fetch.json ?
     return Q().then(function(){
         var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
-        var plugins = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
-        // test: make sure to parse variables too. that means saving them in fetch.json in the first place
-        debugger;
+        return JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+    }).fail(onFileNotFoundException).then(function(plugins){
         Object.keys(plugins).forEach(function(pluginName){
             var plugin = plugins[pluginName];
-            var pluginSource = plugin['source'];
-            var location = pluginSource['url'] || pluginSource['path'] || pluginSource['id'];
+            var pluginSource = plugin.source;
+            var location = pluginSource.url|| pluginSource.path || pluginSource.id;
 
             var idParam = {name: 'id', value: pluginName};
             var sourceParam = getPluginSource(location, opts);
@@ -347,43 +346,46 @@ function save(projectRoot, opts){
             if(sourceParam){
                 params.push(sourceParam);
             }
+
+            var pluginVariables = getPluginVariables(plugin.variables);
+            params = params.concat(pluginVariables);
+            
             cfg.addFeature(pluginName, params);
         });
         cfg.write();
     });
 }
 
-// test: test this method thoroughly
+function getPluginVariables(variables){
+    var result = [];
+    if(!variables){
+        return result;
+    }
+    
+    Object.keys(variables).forEach(function(pluginVar){
+        result.push({name: pluginVar, value: variables[pluginVar]});
+    });
+
+    return result;
+}
+
 function getPluginSource(location, opts){
-   
-    // is it a url ?
+    // Is it a url ?
     var url = require('url');        
-    var uri = url.parse(location); // test: what if location is not a url ?
+    var uri = url.parse(location); 
     if ( cordova_util.isUrl(location) && (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':') && !location.match(/^\w+:\\/)) {
-        // tests: version, folder, url in fetch.json file
-        // this piece of code should move to a function(createPluginParams) and Gorkem's code + fetch.js + this code refactor to point to the new function
         return {name: 'url', value: location};
     }  
     
-    // is it a directory ?
-    // var plugin_dir = cordova_util.fixRelativePath(path.join(location, (opts.subdir || '.') ));
-    // //test: what if the plugin_dir doesn't exist ? save nothing in that field ? would restoring from config.xml install the pinned version ?
-    // if (fs.existsSync(plugin_dir)) {
-    //     return {name:'installPath', value:location};
-    // }
-    if(cordova_util.isDirectory(location)){ // test: what if location begins with 'file://'
+    // Is it a directory ?
+    if(cordova_util.isDirectory(location.replace('file://', ''))){ 
+        location = location.replace('file://', '');
         return {name: 'installPath', value: location};
     }
 
-    // hmmm, is it a version then ? is this the correct way to do it ?
-    // if(!cordova_util.isUrl(location) && !cordova_util.isDirectory(location)){
-    //     return {name:'version', value:location};
-    // }
-
-    // test: what if location is 'org.apache.cordova.device', with no version parts ?
+    // It must be a version
     var parts = location.split('@');
-    var plugin = parts[0];
-    var version = parts[1]; // test: what to do when version is undefined ? (done)
+    var version = parts[1]; 
     if(!version){
         return null;
     }
