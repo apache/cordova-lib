@@ -54,11 +54,12 @@ function create(dir, optionalId, optionalName, cfg) {
         if (!dir) {
             throw new CordovaError('At least the dir must be provided to create new project. See `' + cordova_util.binname + ' help`.');
         }
+
+        cfg = cfg || config.read(dir);
         if (!cfg) {
-            cfg = config.read(dir);
-            if (!cfg) {
-                throw new CordovaError('Must provide a project configuration.');
-            }
+            throw new CordovaError('Must provide a project configuration.');
+        } else if (typeof cfg == 'string') {
+            cfg = JSON.parse(cfg);
         }
 
         if (optionalId) cfg.id = optionalId;
@@ -82,11 +83,6 @@ function create(dir, optionalId, optionalName, cfg) {
 
         if (fs.existsSync(dir) && !sanedircontents(dir)) {
             throw new CordovaError('Path already exists and is not empty: ' + dir);
-        }
-
-        // Massage parameters
-        if (typeof cfg == 'string') {
-            cfg = JSON.parse(cfg);
         }
 
         if (cfg.id && !validateIdentifier(cfg.id)) {
