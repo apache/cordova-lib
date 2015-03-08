@@ -211,7 +211,15 @@ function downloadPlatform(projectRoot, platform, version, opts) {
     return Q().then(function() {
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
-            return lazy_load.git_clone(version);
+            return lazy_load.git_clone(version).fail(function(err){
+                // If it looks like a url, but cannot be cloned, try handling it differently.
+                // it's because it's a tarball of the form: 
+                //     - wp8@https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git;a=snapshot;h=3.7.0;sf=tgz
+                //     - https://api.github.com/repos/msopenTech/cordova-browser/tarball/my-branch
+                events.emit('verbose', err.message);
+                events.emit('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
+                return lazy_load.based_on_config(projectRoot, target, opts);
+            });
         }
         return lazy_load.based_on_config(projectRoot, target, opts);
     }).then(function(libDir) {
