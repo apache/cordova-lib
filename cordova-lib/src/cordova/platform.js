@@ -211,7 +211,10 @@ function downloadPlatform(projectRoot, platform, version, opts) {
     return Q().then(function() {
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
-            return lazy_load.git_clone(version);
+            var parts = version.split('#');
+            var git_url = parts[0];
+            var branchToCheckout = parts[1];
+            return lazy_load.git_clone(git_url, branchToCheckout);
         }
         return lazy_load.based_on_config(projectRoot, target, opts);
     }).then(function(libDir) {
