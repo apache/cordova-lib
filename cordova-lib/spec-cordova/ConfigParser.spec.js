@@ -162,6 +162,15 @@ describe('config.xml parser', function () {
                 expect(feature.variables.var).toBeDefined();
                 expect(feature.variables.var).toEqual('varvalue');
             });
+            it('should filter out special params from feature variables', function () {
+                var feature = cfg.getFeature('org.apache.cordova.featurewithvars');
+                expect(feature.variables).toBeDefined();
+                expect(feature.variables.var).toBeDefined();
+                expect(feature.variables.var).toEqual('varvalue');
+                expect(feature.variables.id).toBeUndefined();
+                expect(feature.variables.version).toBeUndefined();
+                expect(feature.variables.url).toBeUndefined();
+            });
             it('should allow adding a new feature', function(){
                 cfg.addFeature('myfeature');
                 var features = cfg.doc.findall('feature');
