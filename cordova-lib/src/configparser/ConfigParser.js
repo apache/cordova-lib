@@ -338,6 +338,13 @@ ConfigParser.prototype = {
 
         // Iterate preferences
         result.variables = processChildren('param');
+        
+        // Remove any FEATURE_SPECIAL_PARAMS(id, url, installPath, version, etc...) from the variable list
+        Object.keys(result.variables).forEach(function(variable){
+            if(FEATURE_SPECIAL_PARAMS.indexOf(variable) >= 0){
+                delete result.variables[variable];
+            }
+        });
 
         return result;
 
