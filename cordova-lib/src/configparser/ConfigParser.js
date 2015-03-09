@@ -24,16 +24,6 @@ var et = require('elementtree'),
     CordovaError = require('../CordovaError'),
     fs = require('fs');
 
-/**
- * Array of 'feature' params that are set as properties
- * @type {string[]}
- */
-var FEATURE_SPECIAL_PARAMS = [
-    'id',
-    'url',
-    'version',
-    'installPath'
-];
 
 /** Wraps a config.xml file */
 function ConfigParser(path) {
@@ -279,113 +269,108 @@ ConfigParser.prototype = {
 
         return scriptElements.filter(filterScriptByHookType);
     },
-
-    /**
-     * Returns a list of features (IDs)
-     * @return {string[]} Array of feature IDs
-     */
-    getFeatureIdList: function () {
-        var features = this.doc.findall('feature'),
-            feature, idTag, id,
-            result = [];
-
-        // Check for valid features that have IDs set
-        for (var i = 0, l = features.length; i < l; ++i) {
-            feature = features[i];
-            idTag = feature.find('./param[@name="id"]');
-            if (null === idTag) {
-                // Invalid feature
-                continue;
+   /**
+    * Returns a list of plugin (IDs)
+    * @return {string[]} Array of plugin IDs
+    */
+    getPluginIdList: function () {
+        var plugins = this.doc.findall('plugin');
+        var result = plugins.map(function(plugin){
+            return plugin.attrib.name;
+        });
+        var features = this.doc.findall('feature');
+        features.forEach(function(element ){
+            var idTag = element.find('./param[@name="id"]');
+            if(idTag){
+                result.push(idTag.attrib.value);
             }
-            id = idTag.attrib.value;
-            if (!!id) {
-                // Has id and id is non-empty
-                result.push(id);
-            }
-        }
-
+        });
         return result;
     },
-
     /**
-     * Gets feature info
-     * @param {string} id Feature id
-     * @returns {Feature} Feature object
+     * Adds a plugin element. Does not check for duplicates.
+     * @name addPlugin
+     * @function
+     * @param {object} attributes name, version and src are supported
+     * @param {Array} variables name, value
      */
-    getFeature: function(id) {
-        if (!id) {
-            return undefined;
+    addPlugin: function(attributes, variables){
+        if ( !attributes && !attributes.name ) return;
+        var el = new et.Element('plugin');
+        el.attrib.name =attributes.name;
+        if ( attributes.version) {
+            el.attrib.version =attributes.version;
         }
-        var feature = this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
-        if (null === feature) {
-            return undefined;
+        if ( attributes.src){
+            el.attrib.src = attributes.src;
         }
-
-        var result = {};
-        result.id = id;
-        result.name = feature.attrib.name;
-
-        // Iterate params and fill-in 'params' structure
-        // For special cases like 'id', 'url, 'version' - copy to the main space
-        result.params = processChildren (
-            'param',
-            function(name, value) {
-                if (FEATURE_SPECIAL_PARAMS.indexOf(name) >= 0) {
-                    result[name] = value;
-                }
-            }
-        );
-
-        // Iterate preferences
-        result.variables = processChildren('param');
-
-        return result;
-
-        /**
-         * Processes a set of children
-         * having a pair of 'name' and 'value' attributes
-         * filling in 'output' object
-         * @param {string} xPath Search expression
-         * @param {function} [specialProcessing] Performs some additional actions on each valid element
-         * @return {object} A transformed object
-         */
-        function processChildren (xPath, specialProcessing) {
-            var result = {};
-            var needsProcessing = 'function' === typeof specialProcessing;
-            var nodes = feature.findall(xPath);
-            nodes.forEach(function(param){
-                var name = param.attrib.name;
-                var value = param.attrib.value;
-                if (name) {
-                    result[name] = value;
-                    if (needsProcessing) {
-                        specialProcessing(name, value);
-                    }
-                }
-            });
-            return result;
-        }
-    },
-
-
-    /**
-     *This does not check for duplicate feature entries
-     */
-    addFeature: function (name, params){
-        if(!name) return;
-        var el = new et.Element('feature');
-        el.attrib.name = name;
-        if (params) {
-            params.forEach(function(param){
-                var p = new et.Element('param');
-                p.attrib.name = param.name;
-                p.attrib.value = param.value;
-                el.append(p);
+        if(variables){
+            variables.forEach(function(variable){
+                var v = new et.Element('variable');
+                v.attrib.name=variable.name;
+                v.attrib.value=variable.value;
+                el.append(v);
             });
         }
         this.doc.getroot().append(el);
     },
-
+    /**
+     * Retrives the plugin with the given id or null if not found.
+     * @name getPlugin
+     * @function
+     * @param {String} id
+     * @returns {object} plugin including any variables
+     */
+    getPlugin: function(id){
+        if(!id){
+            return undefined;
+        }
+        var pluginElement = this.doc.find('./plugin/[@name="' + id + '"]');
+        if (null === pluginElement) {
+            var legacyFeature =  this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
+            if(legacyFeature){
+                 var events = require('../events');
+                 events.emit('log', 'Found deprecated feature entry for ' + id +' in config.xml.');
+                return featureToPlugin(legacyFeature);
+            }
+            return undefined;
+        }
+        var plugin = {};
+        plugin.name = pluginElement.attrib.name;
+        plugin.version = pluginElement.attrib.version;
+        plugin.src = pluginElement.attrib.src;
+        plugin.variables = {};
+        var variableElements = pluginElement.findall('variable');
+        variableElements.forEach(function(varElement){
+            var name = varElement.attrib.name;
+            var value = varElement.attrib.value;
+            if(name){
+                plugin.variables[name] = value;
+            }
+        });
+        return plugin;
+    },
+    /**
+     * Remove the plugin entry with give name (id)
+     * @name removePlugin
+     * @function
+     * @param id name of the plugin
+     */
+    removePlugin: function(id){
+        if(id){
+            var theElement = this.doc.find('./plugin/[@name="' + id + '"]');
+            if(!theElement){
+                theElement = this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
+            }
+            if(theElement){
+                var childs = this.doc.getroot().getchildren();
+                var idx = childs.indexOf(theElement);
+                if(idx > -1){
+                    childs.splice(idx,1);
+                }
+            }
+        }
+    },
     /**
      * Adds an engine. Does not check for duplicates.
      * @param  {String} name the engine name
@@ -417,11 +402,11 @@ ConfigParser.prototype = {
     getEngines: function(){
         var engines = this.doc.findall('./engine');
         return engines.map(function(engine){
-	    var version = engine.attrib.version;
+        var version = engine.attrib.version;
             return {
-		'name': engine.attrib.name,
-		'version': version ? version : null
-	    };
+        'name': engine.attrib.name,
+        'version': version ? version : null
+        };
         });
     },
     write:function() {
@@ -429,4 +414,25 @@ ConfigParser.prototype = {
     }
 };
 
+function featureToPlugin(featureElement){
+    var plugin = {};
+    plugin.variables=[];
+    var nodes = featureElement.findall('param');
+    nodes.forEach(function(element){
+        var n = element.attrib.name;
+        var v = element.attrib.value;
+        if(n === 'id'){
+            plugin.name = v;
+        }else
+        if(n === 'version'){
+            plugin.version = v;
+        }else
+        if(n === 'url' || n === 'installPath'){
+            plugin.src = v;
+        }else{
+            plugin.variables[n] = v;
+        }
+    });
+    return plugin; 
+}
 module.exports = ConfigParser;

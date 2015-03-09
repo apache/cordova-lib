@@ -82,27 +82,27 @@ function installPluginsFromConfigXML(args) {
     var plugins_dir = path.join(projectRoot, 'plugins');
 
     // Get all configured plugins
-    var features = cfg.getFeatureIdList();
-    if (0 === features.length) {
+    var plugins = cfg.getPluginIdList();
+    if (0 === plugins.length) {
         return Q.all('No config.xml plugins to install');
     }
 
-    var promises = features.map(function(featureId){
+    var promises = plugins.map(function(featureId){
         var pluginPath =  path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
             return Q();
         }
-        events.emit('log', 'Discovered ' + featureId + ' in config.xml. Installing to the project');
-        var feature = cfg.getFeature(featureId);
+        events.emit('log', 'Discovered plugin "' + featureId + '" in config.xml. Installing to the project');
+        var pluginEntry = cfg.getPlugin(featureId);
 
         // Install from given URL if defined or using a plugin id
-        var installFrom = feature.url || feature.installPath || feature.id;
-        if( feature.version && !feature.url && !feature.installPath ){
-            installFrom += ('@' + feature.version);
+        var installFrom = pluginEntry.src || pluginEntry.name;
+        if( pluginEntry.version && !pluginEntry.src ){
+            installFrom += ('@' + pluginEntry.version);
         }
         // Add feature preferences as CLI variables if have any
-        var options = {cli_variables: feature.variables, 
+        var options = {cli_variables: pluginEntry.variables, 
             searchpath: args.searchpath };
             return plugin('add', installFrom, options);
     });
