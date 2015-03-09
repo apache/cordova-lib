@@ -140,35 +140,37 @@ module.exports = function plugin(command, targets, opts) {
                         // save to config.xml 
                         if(saveToConfigXmlOn(config_json,opts)){
                             var pluginInfo =  pluginInfoProvider.get(dir);
-                            var existingFeature = cfg.getFeature(pluginInfo.id);
-                            if(!existingFeature){
-                                var params = [{name:'id', value:pluginInfo.id}];
+                            var existingPluginEntry = cfg.getPlugin(pluginInfo.id);
+                            if(!existingPluginEntry){
+                                var attributes = {};
+                                attributes.name = pluginInfo.id;
                                 var pluginVersion = versionFromTargetString(target);
                                 if(!pluginVersion && opts.shrinkwrap){
                                     pluginVersion = pluginInfo.version;
                                 }
                                 if(pluginVersion){
-                                    params.push({ name: 'version', value: pluginVersion});
+                                    attributes.version = pluginVersion;
                                 }
                                 var url = require('url');
 
                                 var uri = url.parse(target);
                                 if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
-                                    params.push({name:'url', value:target});
+                                    attributes.src = target;
                                 }else{
                                     var plugin_dir = cordova_util.fixRelativePath(path.join(target,  (opts.subdir || '.') ));
                                     if (fs.existsSync(plugin_dir)) {
-                                        params.push({name:'installPath', value:target});
+                                        attributes.src = target;
                                     }
                                 }
+                                var variables = [];
                                 if(opts.cli_variables){
                                     for(var varname in opts.cli_variables){
                                         if(opts.cli_variables.hasOwnProperty(varname)){
-                                            params.push({name:varname, value:opts.cli_variables[varname]});
+                                            variables.push({name:varname, value:opts.cli_variables[varname]});
                                         }
                                     } 
                                 }
-                                cfg.addFeature(pluginInfo.name, params);
+                                cfg.addPlugin(attributes,variables);
                                 cfg.write();
                                 events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
                             }else{
@@ -255,7 +257,6 @@ module.exports = function plugin(command, targets, opts) {
                     // If this is a web-only or dependency-only plugin, then
                     // there may be nothing to do here except remove the
                     // reference from the platform's plugin config JSON.
-                    var plugman = require('../plugman/plugman');
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
@@ -272,16 +273,9 @@ module.exports = function plugin(command, targets, opts) {
                             var configPath = cordova_util.projectConfig(projectRoot);
                             if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
                                 var configXml = new ConfigParser(configPath);
-                                var feature = configXml.doc.find('./feature/param[@name="id"][@value="' + target + '"]/..');
-                                if(feature){
-                                    var childs = configXml.doc.getroot().getchildren();
-                                    var idx = childs.indexOf(feature);
-                                    if(idx > -1){
-                                        childs.splice(idx,1);
-                                    }
-                                    configXml.write();
-                                    events.emit('results', 'config.xml entry for ' +target+ ' is removed');
-                                }
+                                configXml.removePlugin(target);
+                                configXml.write();
+                                events.emit('results', 'config.xml entry for ' +target+ ' is removed');
                             }
                         }
                     });
@@ -293,7 +287,6 @@ module.exports = function plugin(command, targets, opts) {
         case 'search':
             return hooksRunner.fire('before_plugin_search')
             .then(function() {
-                var plugman = require('../plugman/plugman');
                 return plugman.raw.search(opts.plugins);
             }).then(function(plugins) {
                 for(var plugin in plugins) {
@@ -308,8 +301,8 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function getVersionFromConfigFile(plugin, cfg){
-    var feature = cfg.getFeature(plugin); 
-    return feature && (feature.params.url || feature.params.installPath || feature.params.version);
+    var pluginEntry = cfg.getPlugin(plugin);
+    return pluginEntry && pluginEntry.version; 
 }
 
 function list(projectRoot, hooksRunner) {

@@ -268,20 +268,20 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
     }
 
     return Q({
-	libDir: libDir,
-	platform: platform,
+    libDir: libDir,
+    platform: platform,
         version: version
     });
 }
 
 function getVersionFromConfigFile(platform, cfg) {
     if(!platform || ( !(platform in platforms) )){
-	throw new CordovaError('Invalid platform: ' + platform);
+    throw new CordovaError('Invalid platform: ' + platform);
     }
 
     // Get appropriate version from config.xml
     var engine = _.find(cfg.getEngines(), function(eng){
-	return eng.name.toLowerCase() === platform.toLowerCase();
+    return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
     return engine && engine.version;
@@ -301,16 +301,16 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         var config_json = config.read(projectRoot);
         var autosave =  config_json.auto_save_platforms || false;
-	if(opts.save || autosave){
-	    targets.forEach(function(target) {
-		var platformName = target.split('@')[0];
-		var xml = cordova_util.projectConfig(projectRoot);
-		var cfg = new ConfigParser(xml);
-		events.emit('log', 'Removing ' + target + ' from config.xml file ...');
-		cfg.removeEngine(platformName);
-		cfg.write();
-	    });
-	}
+    if(opts.save || autosave){
+        targets.forEach(function(target) {
+        var platformName = target.split('@')[0];
+        var xml = cordova_util.projectConfig(projectRoot);
+        var cfg = new ConfigParser(xml);
+        events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+        cfg.removeEngine(platformName);
+        cfg.write();
+        });
+    }
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
@@ -503,11 +503,11 @@ function platform(command, targets, opts) {
             if (fs.existsSync(pPath)) return;
 
             var msg;
-	    // If target looks like a url, we will try cloning it with git
+        // If target looks like a url, we will try cloning it with git
             if (/[~:/\\.]/.test(t)) {
                 return;
             } else {
-		// Neither path, git-url nor platform name - throw.
+        // Neither path, git-url nor platform name - throw.
                 msg = 'Platform "' + t +
                 '" not recognized as a core cordova platform. See `' +
                 cordova_util.binname + ' platform list`.'
@@ -589,7 +589,6 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     if (opts.link) {
         args.push('--link');
     }
-
     return args;
 }
 
@@ -609,8 +608,8 @@ function installPluginsForNewPlatform(platform, projectRoot, cfg, opts) {
             var options = (function(){
                 // Get plugin preferences from config features if have any
                 // Pass them as cli_variables to plugman
-                var feature = cfg.getFeature(plugin);
-                var variables = feature && feature.variables;
+                var pluginEntry = cfg.getPlugin(plugin);
+                var variables = pluginEntry && pluginEntry.variables;
                 if (!!variables) {
                     events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                     return {
