@@ -16,7 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+var path = require('path');
 var action_stack = require('../../src/plugman/util/action-stack');
+var android_one_project = path.join(__dirname, '..', 'projects', 'android_one');
 
 describe('action-stack', function() {
     var stack;
@@ -34,7 +36,7 @@ describe('action-stack', function() {
             stack.push(stack.createAction(first_spy, first_args, function(){}, []));
             stack.push(stack.createAction(second_spy, second_args, function(){}, []));
             stack.push(stack.createAction(third_spy, third_args, function(){}, []));
-            stack.process('android', 'blah');
+            stack.process('android', android_one_project);
             expect(first_spy).toHaveBeenCalledWith(first_args[0], jasmine.any(Object));
             expect(second_spy).toHaveBeenCalledWith(second_args[0], jasmine.any(Object));
             expect(third_spy).toHaveBeenCalledWith(third_args[0], jasmine.any(Object));
@@ -58,7 +60,7 @@ describe('action-stack', function() {
             // process should throw
             var error;
             runs(function() {
-                stack.process('android', 'blah').fail(function(err) { error = err; });
+                stack.process('android', android_one_project).fail(function(err) { error = err; });
             });
             waitsFor(function(){ return error; }, 'process promise never resolved', 500);
             runs(function() {

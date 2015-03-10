@@ -17,7 +17,7 @@
     under the License.
 */
 var cordova = require('../src/cordova/cordova'),
-    platforms = require('../src/cordova/platforms'),
+    platforms = require('../src/platforms/platforms'),
     superspawn = require('../src/cordova/superspawn'),
     path = require('path'),
     HooksRunner = require('../src/hooks/HooksRunner'),
