@@ -21,18 +21,22 @@ var cordova_util = require('./util'),
     ConfigParser = require('../configparser/ConfigParser'),
     Q            = require('q');
 
-// Returns all the platforms that are currently saved into config.xml
-// Return type is a promise that is fulfilled with a list of objects with name and version properties. e.g: [{name: 'android', version: '3.5.0'}, {name: 'wp8', version: 'C:/path/to/platform'}, {name: 'ios', version: 'git://...'}]
-// ToDo: Once we move to npm, this function should be updated to rely on npm instead
+/** Returns all the platforms that are currently saved into config.xml
+ *  @return Promise<{{name: string, version: string}[]}> A promise to the list of {name: platformName, version: platformVersion} objects
+ *  e.g: [ {name: 'android', version: '3.5.0'}, {name: 'wp8', version: 'C:/path/to/platform'}, {name: 'ios', version: 'git://...'} ]
+ *  ToDo: Once we move to npm, this function should be updated to rely on npm instead
+ */
 function getPlatforms(projectRoot){
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     return Q(cfg.getEngines());
 }
 
-// Returns all the plugins that are currently saved into config.xml
-// Return type is a promise that is fulfilled with a list of objects with name and version properties. e.g: [ {id: 'org.apache.cordova.device', name: 'Device', APP_ID: 'my-app-id', APP_NAME: 'my-app-name'} ]
-// ToDO: Once we move to npm, this function should be updated to rely on npm instead
+/** Returns all the plugins that are currently saved into config.xml
+ *  @return Promise<{{name: string, version: string}[]}> A promise to the list of {name: platformName, version: platformVersion} objects
+ *  e.g: [ {id: 'org.apache.cordova.device', name: 'Device', APP_ID: 'my-app-id', APP_NAME: 'my-app-name'} ]
+ *  ToDo: Once we move to npm, this function should be updated to rely on npm instead
+ */
 function getPlugins(projectRoot){
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
@@ -42,8 +46,8 @@ function getPlugins(projectRoot){
     return Q.all(plugins);
 }
 
-// Returns a promise
-// Returns the specified metadata details
+/** Returns a promise to the specified metadata details
+ */
 function getProjectMetadata(metadata_type, projectRoot){
     switch(metadata_type){
         case 'platforms':
