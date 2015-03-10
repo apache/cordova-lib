@@ -19,12 +19,10 @@
 
 /* jshint unused:false, expr:true */
 
-var platform_modules   = require('./platforms'),
+var platform_modules   = require('../platforms/platforms'),
     path               = require('path'),
     through            = require('through2'),
     config_changes     = require('./util/config-changes'),
-    wp8                = require('./platforms/wp8'),
-    windows            = require('./platforms/windows'),
     common             = require('./platforms/common'),
     fs                 = require('fs'),
     childProcess       = require('child_process'),
@@ -143,7 +141,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Preparing ' + platform + ' browserify project');
     pluginInfoProvider = pluginInfoProvider || new PluginInfoProvider(); // Allow null for backwards-compat.
     var platformJson = PlatformJson.load(plugins_dir, platform);
-    var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
+    var wwwDir = www_dir || platform_modules.getPlatformProject(platform, project_dir).www_dir();
     var scripts = [];
 
     uninstallQueuedPlugins(platformJson, www_dir);
@@ -229,7 +227,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         var cordova_plugins = 'module.exports.metadata = \n';
         cordova_plugins += JSON.stringify(pluginMetadata, null, '     ') + '\n';
         cordova_plugins += 'modules.exports = modules.exports.metadata;';
-            
+
         events.emit('verbose', 'Writing out cordova_plugins.js...');
         fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
 

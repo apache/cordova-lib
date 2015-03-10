@@ -36,7 +36,7 @@ var fs   = require('fs'),
     path = require('path'),
     et   = require('elementtree'),
     semver = require('semver'),
-    platforms = require('./../platforms'),
+    platforms = require('../../platforms/platforms'),
     events = require('../../events'),
     ConfigKeeper = require('./ConfigKeeper');
 
@@ -70,7 +70,7 @@ function PlatformMunger(platform, project_dir, plugins_dir, platformJson, plugin
     this.platform = platform;
     this.project_dir = project_dir;
     this.plugins_dir = plugins_dir;
-    this.platform_handler = platforms[platform];
+    this.platform_handler = platforms.getPlatformProject(platform, project_dir);
     this.config_keeper = new ConfigKeeper(project_dir);
     this.platformJson = platformJson;
     this.pluginInfoProvider = pluginInfoProvider;

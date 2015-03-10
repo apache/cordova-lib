@@ -29,7 +29,7 @@ var path = require('path'),
     underscore = require('underscore'),
     Q = require('q'),
     events = require('../events'),
-    platform_modules = require('./platforms'),
+    platform_modules = require('../platforms/platforms'),
     plugman = require('./plugman'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
@@ -293,58 +293,25 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, plugins_dir, is_top_level, options) {
     var plugin_id = pluginInfo.id;
     var plugin_dir = pluginInfo.dir;
-    var platform_modules = require('./platforms');
-    var handler = platform_modules[platform];
-    www_dir = www_dir || handler.www_dir(project_dir);
+    var handler = platform_modules.getPlatformProject(platform, project_dir);
+    www_dir = www_dir || handler.www_dir();
     events.emit('log', 'Uninstalling ' + plugin_id + ' from ' + platform);
 
+    var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
     var assets = pluginInfo.getAssets(platform);
-    var sourceFiles = pluginInfo.getSourceFiles(platform);
-    var headerFiles = pluginInfo.getHeaderFiles(platform);
-    var libFiles = pluginInfo.getLibFiles(platform);
-    var resourceFiles = pluginInfo.getResourceFiles(platform);
     var frameworkFiles = pluginInfo.getFrameworks(platform);
 
     // queue up native stuff
-    sourceFiles.forEach(function(source) {
-        actions.push(actions.createAction(handler['source-file'].uninstall,
-                                         [source, project_dir, plugin_id, options],
-                                         handler['source-file'].install,
-                                         [source, plugin_dir, project_dir, plugin_id, options]));
+    pluginItems.forEach(function(item) {
+        // CB-5238 Don't uninstall non custom frameworks.
+        if (item.itemType == 'framework' && !item.custom) return;
+        actions.push(actions.createAction(handler.getUninstaller(item.itemType),
+                                          [item, project_dir, plugin_id, options],
+                                          handler.getInstaller(item.itemType),
+                                          [item, plugin_dir, project_dir, plugin_id, options]));
     });
 
-    headerFiles.forEach(function(header) {
-        actions.push(actions.createAction(handler['header-file'].uninstall,
-                                         [header, project_dir, plugin_id, options],
-                                         handler['header-file'].install,
-                                         [header, plugin_dir, project_dir, plugin_id, options]));
-    });
-
-    resourceFiles.forEach(function(resource) {
-        actions.push(actions.createAction(handler['resource-file'].uninstall,
-                                          [resource, project_dir, plugin_id, options],
-                                          handler['resource-file'].install,
-                                          [resource, plugin_dir, project_dir, options]));
-    });
-
-    // CB-5238 custom frameworks only
-    frameworkFiles.forEach(function(framework) {
-        if (framework.custom) {
-            actions.push(actions.createAction(handler['framework'].uninstall,
-                                              [framework, project_dir, plugin_id, options],
-                                              handler['framework'].install,
-                                              [framework, plugin_dir, project_dir, options]));
-        }
-    });
-
-    libFiles.forEach(function(libFile) {
-        actions.push(actions.createAction(handler['lib-file'].uninstall,
-                                          [libFile, project_dir, plugin_id, options],
-                                          handler['lib-file'].install,
-                                          [libFile, plugin_dir, project_dir, plugin_id, options]));
-    });
-
-    // queue up asset installation
+    // queue up asset uninstallation
     var common = require('./platforms/common');
     assets.forEach(function(asset) {
         actions.push(actions.createAction(common.asset.uninstall, [asset, www_dir, plugin_id], common.asset.install, [asset, plugin_dir, www_dir]));

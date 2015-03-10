@@ -28,7 +28,7 @@ var path = require('path'),
     PlatformJson = require('./util/PlatformJson'),
     CordovaError  = require('../CordovaError'),
     Q = require('q'),
-    platform_modules = require('./platforms'),
+    platform_modules = require('../platforms/platforms'),
     os = require('os'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
@@ -527,48 +527,16 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
-
-    var handler = platform_modules[platform];
-
-    var sourceFiles = pluginInfo.getSourceFiles(platform);
-    var headerFiles = pluginInfo.getHeaderFiles(platform);
-    var libFiles = pluginInfo.getLibFiles(platform);
-    var resourceFiles = pluginInfo.getResourceFiles(platform);
-    var frameworkFiles = pluginInfo.getFrameworks(platform);
+    var handler = platform_modules.getPlatformProject(platform, project_dir);
+    var frameworkFiles = pluginInfo.getFrameworks(platform); // Frameworks are needed later
+    var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
 
     // queue up native stuff
-    sourceFiles.forEach(function(item) {
-        actions.push(actions.createAction(handler['source-file'].install,
+    pluginItems.forEach(function(item) {
+        actions.push(actions.createAction(handler.getInstaller(item.itemType),
                                           [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                          handler['source-file'].uninstall,
+                                          handler.getUninstaller(item.itemType),
                                           [item, project_dir, pluginInfo.id, options]));
-    });
-
-    headerFiles.forEach(function(item) {
-        actions.push(actions.createAction(handler['header-file'].install,
-                                         [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                         handler['header-file'].uninstall,
-                                         [item, project_dir, pluginInfo.id, options]));
-    });
-
-    resourceFiles.forEach(function(item) {
-        actions.push(actions.createAction(handler['resource-file'].install,
-                                          [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                          handler['resource-file'].uninstall,
-                                          [item, project_dir, pluginInfo.id, options]));
-    });
-    frameworkFiles.forEach(function(item) {
-        actions.push(actions.createAction(handler['framework'].install,
-                                         [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                         handler['framework'].uninstall,
-                                         [item, project_dir, pluginInfo.id, options]));
-    });
-    libFiles.forEach(function(item) {
-        actions.push(actions.createAction(handler['lib-file'].install,
-                                            [item, plugin_dir, project_dir, pluginInfo.id, options],
-                                            handler['lib-file'].uninstall,
-                                            [item, project_dir, pluginInfo.id, options]));
-
     });
 
     // run through the action stack

@@ -160,6 +160,7 @@ function PluginInfo(dirname) {
 
     function _parseSourceFile(tag) {
         return {
+            itemType: 'source-file',
             src: tag.attrib.src,
             framework: isStrTrue(tag.attrib.framework),
             weak: isStrTrue(tag.attrib.weak),
@@ -175,6 +176,7 @@ function PluginInfo(dirname) {
     function getHeaderFiles(platform) {
         var headerFiles = _getTagsInPlatform(self._et, 'header-file', platform, function(tag) {
             return {
+                itemType: 'header-file',
                 src: tag.attrib.src,
                 targetDir: tag.attrib['target-dir']
             };
@@ -189,6 +191,7 @@ function PluginInfo(dirname) {
     function getResourceFiles(platform) {
         var resourceFiles = _getTagsInPlatform(self._et, 'resource-file', platform, function(tag) {
             return {
+                itemType: 'resource-file',
                 src: tag.attrib.src,
                 target: tag.attrib.target
             };
@@ -203,6 +206,7 @@ function PluginInfo(dirname) {
     function getLibFiles(platform) {
         var libFiles = _getTagsInPlatform(self._et, 'lib-file', platform, function(tag) {
             return {
+                itemType: 'lib-file',
                 src: tag.attrib.src,
                 arch: tag.attrib.arch,
                 Include: tag.attrib.Include,
@@ -212,7 +216,7 @@ function PluginInfo(dirname) {
         });
         return libFiles;
     }
-    
+
     // <hook>
     // Example:
     // <hook type="before_build" src="scripts/beforeBuild.js" />
@@ -267,7 +271,7 @@ function PluginInfo(dirname) {
             return { name: n.attrib.name };
         });
     };
-    
+
     self.getPlatformsArray = function() {
         return self._et.findall('platform').map(function(n) {
             return n.attrib.name;
@@ -276,6 +280,7 @@ function PluginInfo(dirname) {
     self.getFrameworks = function(platform) {
         return _getTags(self._et, 'framework', platform, function(el) {
             var ret = {
+                itemType: 'framework',
                 type: el.attrib.type,
                 parent: el.attrib.parent,
                 custom: isStrTrue(el.attrib.custom),
@@ -288,6 +293,19 @@ function PluginInfo(dirname) {
             return ret;
         });
     };
+
+    self.getFilesAndFrameworks = getFilesAndFrameworks;
+    function getFilesAndFrameworks(platform) {
+        var items = [];
+        // Please avoid changing the order of the calls below, files will be
+        // installed in this order.
+        items = items.concat(self.getSourceFiles(platform));
+        items = items.concat(self.getHeaderFiles(platform));
+        items = items.concat(self.getResourceFiles(platform));
+        items = items.concat(self.getFrameworks(platform));
+        items = items.concat(self.getLibFiles(platform));
+        return items;
+    }
     ///// End of PluginInfo methods /////
 
 
