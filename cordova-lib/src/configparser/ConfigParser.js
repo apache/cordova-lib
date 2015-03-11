@@ -270,7 +270,10 @@ ConfigParser.prototype = {
         return scriptElements.filter(filterScriptByHookType);
     },
    /**
-    * Returns a list of plugin (IDs)
+    * Returns a list of plugin (IDs). 
+    *
+    * This function also returns any plugin's that 
+    * were defined using the legacy <feature> tags.
     * @return {string[]} Array of plugin IDs
     */
     getPluginIdList: function () {
@@ -316,6 +319,9 @@ ConfigParser.prototype = {
     },
     /**
      * Retrives the plugin with the given id or null if not found.
+     *
+     * This function also returns any plugin's that 
+     * were defined using the legacy <feature> tags.
      * @name getPlugin
      * @function
      * @param {String} id
@@ -351,7 +357,10 @@ ConfigParser.prototype = {
         return plugin;
     },
     /**
-     * Remove the plugin entry with give name (id)
+     * Remove the plugin entry with give name (id).
+     *
+     * This function also operates on any plugin's that 
+     * were defined using the legacy <feature> tags.
      * @name removePlugin
      * @function
      * @param id name of the plugin
@@ -402,11 +411,11 @@ ConfigParser.prototype = {
     getEngines: function(){
         var engines = this.doc.findall('./engine');
         return engines.map(function(engine){
-        var version = engine.attrib.version;
+            var version = engine.attrib.version;
             return {
-        'name': engine.attrib.name,
-        'version': version ? version : null
-        };
+                'name': engine.attrib.name,
+                'version': version ? version : null
+            };
         });
     },
     write:function() {

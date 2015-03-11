@@ -19,13 +19,13 @@
         <preference name="android-minSdkVersion" value="10" />
         <preference name="orientation" value="landscape" />
     </platform>
-    <plugin name="org.apache.cordova.featurewithvars">
+    <plugin name="org.apache.cordova.pluginwithvars">
         <variable name="var" value="varvalue" />
     </plugin>
-    <plugin name="org.apache.cordova.featurewithurl" src="http://cordova.apache.org/featurewithurl" />
-    <plugin name="org.apache.cordova.featurewithversion" version="1.1.1" />
-    <plugin name="org.apache.cordova.featurewithurlandversion" src="http://cordova.apache.org/featurewithurlandversion" version="1.1.1" />
-    <plugin name="org.apache.cordova.justafeature" />
+    <plugin name="org.apache.cordova.pluginwithurl" src="http://cordova.apache.org/pluginwithurl" />
+    <plugin name="org.apache.cordova.pluginwithversion" version="1.1.1" />
+    <plugin name="org.apache.cordova.pluginwithurlandversion" src="http://cordova.apache.org/pluginwithurlandversion" version="1.1.1" />
+    <plugin name="org.apache.cordova.justaplugin" />
     <feature name="Legacy plugin entry">
         <param name="id" value="org.apache.cordova.legacyfeature" />
         <param name="version" value="1.2.3" />

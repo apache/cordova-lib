@@ -268,20 +268,20 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
     }
 
     return Q({
-    libDir: libDir,
-    platform: platform,
+        libDir: libDir,
+        platform: platform,
         version: version
     });
 }
 
 function getVersionFromConfigFile(platform, cfg) {
     if(!platform || ( !(platform in platforms) )){
-    throw new CordovaError('Invalid platform: ' + platform);
+        throw new CordovaError('Invalid platform: ' + platform);
     }
 
     // Get appropriate version from config.xml
     var engine = _.find(cfg.getEngines(), function(eng){
-    return eng.name.toLowerCase() === platform.toLowerCase();
+        return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
     return engine && engine.version;
@@ -301,14 +301,14 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         var config_json = config.read(projectRoot);
         var autosave =  config_json.auto_save_platforms || false;
-    if(opts.save || autosave){
-        targets.forEach(function(target) {
-        var platformName = target.split('@')[0];
-        var xml = cordova_util.projectConfig(projectRoot);
-        var cfg = new ConfigParser(xml);
-        events.emit('log', 'Removing ' + target + ' from config.xml file ...');
-        cfg.removeEngine(platformName);
-        cfg.write();
+        if(opts.save || autosave){
+            targets.forEach(function(target) {
+                var platformName = target.split('@')[0];
+                var xml = cordova_util.projectConfig(projectRoot);
+                var cfg = new ConfigParser(xml);
+                events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+                cfg.removeEngine(platformName);
+                cfg.write();
         });
     }
     }).then(function() {
