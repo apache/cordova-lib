@@ -214,7 +214,7 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             var parts = version.split('#');
             var git_url = parts[0];
             var branchToCheckout = parts[1];
-            return lazy_load.git_clone(git_url, branchToCheckout){
+            return lazy_load.git_clone(git_url, branchToCheckout).fail(function(err) {
                 // If it looks like a url, but cannot be cloned, try handling it differently.
                 // it's because it's a tarball of the form: 
                 //     - wp8@https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git;a=snapshot;h=3.7.0;sf=tgz
