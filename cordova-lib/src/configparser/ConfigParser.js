@@ -380,21 +380,6 @@ ConfigParser.prototype = {
             }
         }
     },
-
-    /**
-     * Removes all the features with given id
-     * @param  {String} id the feature id.
-     */
-    removeFeature: function(id){
-        var features = this.doc.findall('./feature/param[@name="id"][@value="' + id + '"]/..');
-        for(var i=0; i < features.length; i++){
-            var children = this.doc.getroot().getchildren();
-            var idx = children.indexOf(features[i]);
-            if(idx > -1){
-                children.splice(idx,1);
-            }
-        }
-    },
         
     /**
      * Adds an engine. Does not check for duplicates.

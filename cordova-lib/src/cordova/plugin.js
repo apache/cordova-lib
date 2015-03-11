@@ -30,7 +30,8 @@ var cordova_util  = require('./util'),
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('../events'),
-    metadata      = require('../plugman/util/metadata');
+    metadata      = require('../plugman/util/metadata'),
+    _             = require('underscore');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -315,20 +316,19 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function save(projectRoot, opts){
-     
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 
-    // First, remove all pre-existing features/plugins from config.xml
-    cfg.getFeatureIdList().forEach(function(feature){
-        cfg.removeFeature(feature);
+    // First, remove all pre-existing plugins from config.xml
+    cfg.getPluginIdList().forEach(function(plugin){
+        cfg.removePlugin(plugin);
     });
 
     // It might be the case that fetch.json file is not yet existent.
     // for example: when we have never ran the command 'cordova plugin add foo' on the project
     // in that case, there's nothing to do except bubble up the error
     function onFileNotFoundException(err){
-        return Q.reject('fetch.json file does not exist: ' + err.message);
+        return Q.reject(err.message);
     }
 
     // Then, save top-level plugins and their sources
@@ -345,21 +345,28 @@ function save(projectRoot, opts){
                 return;
             }
 
-            var location = pluginSource.url|| pluginSource.path || pluginSource.id;
-
-            var idParam = {name: 'id', value: pluginName};
-            var sourceParam = getPluginSource(location, opts);
-
-            var params = [];
-            params.push(idParam);
-            if(sourceParam){
-                params.push(sourceParam);
-            }
-
-            var pluginVariables = getPluginVariables(plugin.variables);
-            params = params.concat(pluginVariables);
             
-            cfg.addFeature(pluginName, params);
+            var attribs = {name: pluginName};
+
+            // Retrieve appropriate property: 'src' or 'version'
+            var src = (function(){
+                if(pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')){
+                    return { src: (pluginSource.url || pluginSource.path) };
+                }
+                if(pluginSource.hasOwnProperty('id')){
+                    var parts = pluginSource.id.split('@');
+                    var version = parts[1];
+                    if(version){
+                        return { version: version };
+                    }
+                }                
+                // If there's an id, but no version
+                // If there's no valid property('url', 'path', 'id')
+                return {};
+            }());
+            _.extend(attribs, src);
+            var variables = getPluginVariables(plugin.variables);
+            cfg.addPlugin(attribs, variables);
         });
         cfg.write();
     });
@@ -378,32 +385,9 @@ function getPluginVariables(variables){
     return result;
 }
 
-function getPluginSource(location, opts){
-    // Is it a url ?
-    var url = require('url');        
-    var uri = url.parse(location); 
-    if ( cordova_util.isUrl(location) && (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':') && !location.match(/^\w+:\\/)) {
-        return {name: 'url', value: location};
-    }  
-    
-    // Is it a directory ?
-    if(cordova_util.isDirectory(location.replace('file://', ''))){ 
-        location = location.replace('file://', '');
-        return {name: 'installPath', value: location};
-    }
-
-    // It must be a version
-    var parts = location.split('@');
-    var version = parts[1]; 
-    if(!version){
-        return null;
-    }
-    return {name: 'version', value: version};
-}
-
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
-    return pluginEntry && pluginEntry.version; 
+    return pluginEntry && (pluginEntry.src || pluginEntry.version); 
 }
 
 function list(projectRoot, hooksRunner) {
