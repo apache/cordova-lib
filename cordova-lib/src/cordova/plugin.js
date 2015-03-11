@@ -135,7 +135,10 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables });
+
+                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, 
+                                                                       pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables,
+                                                                       is_top_level: true });
                     })
                     .then(function(dir){
                         // save to config.xml 
@@ -312,7 +315,7 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function save(projectRoot, opts){
-    
+     
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 
@@ -328,7 +331,7 @@ function save(projectRoot, opts){
         return Q.reject('fetch.json file does not exist: ' + err.message);
     }
 
-    // Then, save plugins and their sources
+    // Then, save top-level plugins and their sources
     return Q().then(function(){
         var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
         return JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
@@ -336,6 +339,12 @@ function save(projectRoot, opts){
         Object.keys(plugins).forEach(function(pluginName){
             var plugin = plugins[pluginName];
             var pluginSource = plugin.source;
+            
+            // If not a top-level plugin, skip it, don't save it to config.xml
+            if(!plugin.is_top_level){
+                return;
+            }
+
             var location = pluginSource.url|| pluginSource.path || pluginSource.id;
 
             var idParam = {name: 'id', value: pluginName};
