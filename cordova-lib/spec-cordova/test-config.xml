@@ -1,53 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns     = "http://www.w3.org/ns/widgets"
-        xmlns:cdv = "http://cordova.apache.org/ns/1.0"
-        id        = "io.cordova.hellocordova"
-        version   = "0.0.1"
-        android-packageName="io.cordova.hellocordova.android"
-        ios-CFBundleIdentifier="io.cordova.hellocordova.ios">
+<?xml version='1.0' encoding='utf-8'?>
+<widget android-packageName="io.cordova.hellocordova.android" id="io.cordova.hellocordova" ios-CFBundleIdentifier="io.cordova.hellocordova.ios" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Hello Cordova</name>
-
     <description>
         A sample Apache Cordova application that responds to the deviceready event.
     </description>
-
-    <author href="http://cordova.io" email="dev@cordova.apache.org">
+    <author email="dev@cordova.apache.org" href="http://cordova.io">
         Apache Cordova Team
     </author>
-
     <content src="index.html" />
-
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <preference name="orientation" value="portrait" />
     <icon id="icon" src="icon.png" />
-    <icon id="logo" src="logo.png" width="255" height="255" />
+    <icon height="255" id="logo" src="logo.png" width="255" />
     <platform name="android">
-        <icon src="logo-android.png" width="255" height="255" density="mdpi" />
+        <icon density="mdpi" height="255" src="logo-android.png" width="255" />
         <preference name="android-minSdkVersion" value="10" />
         <preference name="orientation" value="landscape" />
     </platform>
-
-    <!-- Features -->
-    <feature name="A feature with preference">
-        <param name="id" value="org.apache.cordova.featurewithvars"/>
-        <param name="var" value="varvalue"/>
-    </feature>
-    <feature name="A feature with url">
-        <param name="id" value="org.apache.cordova.featurewithurl" />
-        <param name="url" value="http://cordova.apache.org/featurewithurl" />
-    </feature>
-    <feature name="A feature with version">
-        <param name="id" value="org.apache.cordova.featurewithversion" />
-        <param name="version" value="1.1.1" />
-    </feature>
-    <feature name="A feature with url and version">
-        <param name="id" value="org.apache.cordova.featurewithurlandversion" />
-        <param name="version" value="1.1.1" />
-        <param name="url" value="http://cordova.apache.org/featurewithurlandversion" />
-    </feature>
-    <feature name="A simple feature">
-        <param name="id" value="org.apache.cordova.justafeature" />
+    <plugin name="org.apache.cordova.pluginwithvars">
+        <variable name="var" value="varvalue" />
+    </plugin>
+    <plugin name="org.apache.cordova.pluginwithurl" src="http://cordova.apache.org/pluginwithurl" />
+    <plugin name="org.apache.cordova.pluginwithversion" version="1.1.1" />
+    <plugin name="org.apache.cordova.pluginwithurlandversion" src="http://cordova.apache.org/pluginwithurlandversion" version="1.1.1" />
+    <plugin name="org.apache.cordova.justaplugin" />
+    <feature name="Legacy plugin entry">
+        <param name="id" value="org.apache.cordova.legacyfeature" />
+        <param name="version" value="1.2.3" />
+        <param name="aVar" value="aValue" />
     </feature>
 </widget>

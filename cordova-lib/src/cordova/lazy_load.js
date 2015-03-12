@@ -283,7 +283,7 @@ function custom(platforms, platform) {
 }
 
 // Returns a promise
-function git_clone_platform(git_url) {
+function git_clone_platform(git_url, branch) {
     // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
     // fails in this case with "EXDEV, cross-device link not permitted".
     var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
@@ -295,7 +295,8 @@ function git_clone_platform(git_url) {
         repository: git_url,
         location: tmp_dir
     }).then(function () {
-        return gitclone.clone(git_url, 'master', tmp_dir);
+        var branchToCheckout = branch || 'master';
+        return gitclone.clone(git_url, branchToCheckout, tmp_dir);
     }).then(function () {
         HooksRunner.fire('after_platform_clone', {
             repository: git_url,
