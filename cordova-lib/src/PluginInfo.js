@@ -296,14 +296,15 @@ function PluginInfo(dirname) {
 
     self.getFilesAndFrameworks = getFilesAndFrameworks;
     function getFilesAndFrameworks(platform) {
-        var items = [];
         // Please avoid changing the order of the calls below, files will be
         // installed in this order.
-        items = items.concat(self.getSourceFiles(platform));
-        items = items.concat(self.getHeaderFiles(platform));
-        items = items.concat(self.getResourceFiles(platform));
-        items = items.concat(self.getFrameworks(platform));
-        items = items.concat(self.getLibFiles(platform));
+        var items = [].concat(
+            self.getSourceFiles(platform),
+            self.getHeaderFiles(platform),
+            self.getResourceFiles(platform),
+            self.getFrameworks(platform),
+            self.getLibFiles(platform)
+        );
         return items;
     }
     ///// End of PluginInfo methods /////

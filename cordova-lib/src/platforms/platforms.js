@@ -37,7 +37,6 @@ var PARSER_PUBLIC_METHODS = [
     'config_xml',
     'cordovajs_path',
     'update_from_config',
-    'update_overrides',
     'update_project',
     'update_www',
     'www_dir',
@@ -61,11 +60,9 @@ function PlatformProjectAdapter(platform, platformRootDir) {
     self.parser = new ParserConstructor(platformRootDir);
     self.handler = require(platforms[platform].handler_file);
 
-    // Expos all public methods from the parser and handler, properly bound.
+    // Expose all public methods from the parser and handler, properly bound.
     PARSER_PUBLIC_METHODS.forEach(function(method) {
-        if (self.parser[method]) {
-            self[method] = self.parser[method].bind(self.parser);
-        }
+        self[method] = self.parser[method].bind(self.parser);
     });
 
     HANDLER_PUBLIC_METHODS.forEach(function(method) {
