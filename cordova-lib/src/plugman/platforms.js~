@@ -17,6 +17,10 @@
     under the License.
 */
 
+/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
+          indent:4, unused:vars, latedef:nofunc
+*/
+
 module.exports = {
     'android': require('./platforms/android'),
     'amazon-fireos': require('./platforms/amazon-fireos'),
@@ -28,6 +32,5 @@ module.exports = {
     'firefoxos': require('./platforms/firefoxos'),
     'ubuntu': require('./platforms/ubuntu'),
     'tizen': require('./platforms/tizen'),
-    'browser': require('./platforms/browser'),
-    'sugar': require('./platforms/sugar')
+    'browser': require('./platforms/browser')
 };
