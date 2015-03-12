@@ -17,14 +17,7 @@
     under the License.
 */
 
-var platforms = require('./platformsConfig.json');
+/* jshint unused:false */
 
-var addModuleProperty = require('./util').addModuleProperty;
-Object.keys(platforms).forEach(function(key) {
-    var obj = platforms[key];
-    if (obj.parser) {
-        addModuleProperty(module, 'parser', obj.parser, false, obj);
-    }
-});
-
-module.exports = platforms;
+// Verify that cordova-lib.js can be loaded
+var cordovaLib = require('../cordova-lib');

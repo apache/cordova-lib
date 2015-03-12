@@ -21,7 +21,7 @@ var cordova_util = require('./util'),
     crypto = require('crypto'),
     path = require('path'),
     shell = require('shelljs'),
-    platforms     = require('./platforms'),
+    platforms     = require('../platforms/platforms'),
     ConfigParser = require('../configparser/ConfigParser'),
     HooksRunner        = require('../hooks/HooksRunner'),
     Q = require('q'),
@@ -111,7 +111,7 @@ function launchServer(projectRoot, port) {
         urlPath = urlPath.slice(platformId.length + 1);
 
         try {
-            parser = new platforms[platformId].parser(path.join(projectRoot, 'platforms', platformId));
+            parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
         } catch (e) {
             return do404();
         }
@@ -220,7 +220,7 @@ function calculateMd5(fileName) {
 }
 
 function processAddRequest(request, response, platformId, projectRoot) {
-    var parser = new platforms[platformId].parser(path.join(projectRoot, 'platforms', platformId));
+    var parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
     var wwwDir = parser.www_dir();
     var payload = {
         'configPath': '/' + platformId + '/config.xml',

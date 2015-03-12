@@ -20,7 +20,7 @@
 var cordova_util      = require('./util'),
     ConfigParser      = require('../configparser/ConfigParser'),
     path              = require('path'),
-    platforms         = require('./platforms'),
+    platforms         = require('../platforms/platforms'),
     fs                = require('fs'),
     shell             = require('shelljs'),
     et                = require('elementtree'),
@@ -31,7 +31,7 @@ var cordova_util      = require('./util'),
     PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
     PlatformJson      = require('../plugman/util/PlatformJson'),
     restore           = require('./restore-util');
-    
+
 
 var PluginInfoProvider = require('../PluginInfoProvider');
 
@@ -58,7 +58,7 @@ function prepare(options) {
         options = cordova_util.preProcessOptions(options);
         var paths = options.platforms.map(function(p) {
             var platform_path = path.join(projectRoot, 'platforms', p);
-            var parser = (new platforms[p].parser(platform_path));
+            var parser = platforms.getPlatformProject(p, platform_path);
             return parser.www_dir();
         });
         options.paths = paths;
@@ -73,8 +73,8 @@ function prepare(options) {
         return Q.all(options.platforms.map(function(platform) {
             var platformPath = path.join(projectRoot, 'platforms', platform);
 
-            var parser = new platforms[platform].parser(platformPath),
-                defaults_xml_path = path.join(platformPath, 'cordova', 'defaults.xml');
+            var parser = platforms.getPlatformProject(platform, platformPath);
+            var defaults_xml_path = path.join(platformPath, 'cordova', 'defaults.xml');
             // If defaults.xml is present, overwrite platform config.xml with
             // it Otherwise save whatever is there as defaults so it can be
             // restored or copy project config into platform if none exists.

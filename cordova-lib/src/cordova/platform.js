@@ -29,7 +29,7 @@ var config            = require('./config'),
     lazy_load         = require('./lazy_load'),
     CordovaError      = require('../CordovaError'),
     Q                 = require('q'),
-    platforms         = require('./platforms'),
+    platforms         = require('../platforms/platforms'),
     promiseutil       = require('../util/promise-util'),
     superspawn        = require('./superspawn'),
     semver            = require('semver'),
@@ -165,7 +165,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }).then(function() {
                     // Save platform@version into platforms.json. i.e: 'android@https://github.com/apache/cordova-android.git'
-                    // If no version was specified, save the edge version                    
+                    // If no version was specified, save the edge version
                     var versionToSave = version || platforms[platform].version;
                     events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
@@ -630,7 +630,7 @@ function installPluginsForNewPlatform(platform, projectRoot, cfg, opts) {
 // The www dir is nuked on each prepare so we keep cordova.js in platform_www
 function copy_cordova_js(projectRoot, platform) {
     var platformPath = path.join(projectRoot, 'platforms', platform);
-    var parser = new platforms[platform].parser(platformPath);
+    var parser = platforms.getPlatformProject(platform, platformPath);
     var platform_www = path.join(platformPath, 'platform_www');
     shell.mkdir('-p', platform_www);
     shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));

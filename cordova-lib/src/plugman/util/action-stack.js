@@ -19,7 +19,7 @@
 
 /* jshint quotmark:false */
 
-var platforms = require("../platforms"),
+var platforms = require("../../platforms/platforms"),
     events = require('../../events'),
     Q = require('q');
 
@@ -50,12 +50,13 @@ ActionStack.prototype = {
         var project_files;
 
         // parse platform-specific project files once
-        if (platforms[platform].parseProjectFile) {
+        var platformProject = platforms.getPlatformProject(platform, project_dir);
+        if (platformProject.parseProjectFile) {
             events.emit('verbose', 'Parsing ' + platform + ' project files...');
-            project_files = platforms[platform].parseProjectFile(project_dir);
+            project_files = platformProject.parseProjectFile(project_dir);
         }
 
-        while(this.stack.length) {
+        while (this.stack.length) {
             var action = this.stack.shift();
             var handler = action.handler.run;
             var action_params = action.handler.params;

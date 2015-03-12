@@ -28,7 +28,7 @@ var lazy_load = require('../src/cordova/lazy_load'),
     request = require('request'),
     fs = require('fs'),
     Q = require('q'),
-    platforms = require('../src/cordova/platforms');
+    platforms = require('../src/platforms/platforms');
 
 describe('lazy_load module', function() {
     var custom_path, npm_cache_add, fakeLazyLoad;

@@ -157,7 +157,7 @@ function deleteSvnFolders(dir) {
 }
 
 function listPlatforms(project_dir) {
-    var core_platforms = require('./platforms');
+    var core_platforms = require('../platforms/platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
     if ( !fs.existsSync(platforms_dir)) {
         return [];

@@ -19,7 +19,7 @@
 
 /* jshint expr:true, quotmark:false */
 
-var platform_modules = require('./platforms'),
+var platform_modules = require('../platforms/platforms'),
     path            = require('path'),
     config_changes  = require('./util/config-changes'),
     common          = require('./platforms/common'),
@@ -46,7 +46,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Preparing ' + platform + ' project');
     pluginInfoProvider = pluginInfoProvider || new PluginInfoProvider(); // Allow null for backwards-compat.
     var platformJson = PlatformJson.load(plugins_dir, platform);
-    var wwwDir = www_dir || platform_modules[platform].www_dir(project_dir);
+    var wwwDir = www_dir || platform_modules.getPlatformProject(platform, project_dir).www_dir();
 
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
     // via <js-module> elements

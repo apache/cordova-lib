@@ -22,7 +22,7 @@ var et   = require('elementtree');
 var glob = require('glob');
 var plist = require('plist');
 
-var platforms = require('./../platforms');
+var platforms = require('../../platforms/platforms');
 var plist_helpers = require('./../util/plist-helpers');
 var xml_helpers = require('../../util/xml-helpers');
 
@@ -69,7 +69,7 @@ function ConfigFile_load() {
         self.data = xml_helpers.parseElementtreeSync(filepath);
     } else if (ext == '.pbxproj') {
         self.type = 'pbxproj';
-        var projectFile = platforms.ios.parseProjectFile(self.project_dir);
+        var projectFile = platforms.getPlatformProject('ios', self.project_dir).parseProjectFile(self.project_dir);
         self.data = projectFile.xcode;
         self.cordovaVersion = projectFile.cordovaVersion;
     } else {

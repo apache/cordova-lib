@@ -25,7 +25,7 @@ var shell = require('shelljs'),
     prepare = require('../src/cordova/prepare'),
     lazy_load = require('../src/cordova/lazy_load'),
     ConfigParser = require('../src/configparser/ConfigParser'),
-    platforms = require('../src/cordova/platforms'),
+    platforms = require('../src/platforms/platforms'),
     HooksRunner = require('../src/hooks/HooksRunner'),
     xmlHelpers = require('../src/util/xml-helpers'),
     et = require('elementtree'),
@@ -69,16 +69,17 @@ describe('prepare command', function() {
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        supported_platforms.forEach(function(p) {
-            parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
-            spyOn(platforms[p], 'parser').andReturn({
-                update_project:parsers[p],
-                update_www: jasmine.createSpy(p + ' update_www'),
+
+        spyOn(platforms, 'getPlatformProject').andCallFake(function(platform, rootDir) {
+            return {
+                update_www: jasmine.createSpy(platform + ' update_www'),
                 cordovajs_path: function(libDir) { return 'path/to/cordova.js/in/.cordova/lib';},
-                www_dir:function() { return path.join(project_dir, 'platforms', p, 'www'); },
-                config_xml: function () { return path.join(project_dir, 'platforms', p, 'www', 'config.xml');}
-            });
+                www_dir:function() { return path.join(project_dir, 'platforms', platform, 'www'); },
+                config_xml: function () { return path.join(project_dir, 'platforms', platform, 'www', 'config.xml');},
+                update_project: function () { return Q();},
+            };
         });
+
         plugman_prepare = spyOn(plugman, 'prepare').andReturn(Q());
         find_plugins = spyOn(util, 'findPlugins').andReturn([]);
         spyOn(PlatformJson, 'load').andReturn(new PlatformJson(null, null, {}));
@@ -96,7 +97,7 @@ describe('prepare command', function() {
     describe('failure', function() {
         it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
             is_cordova.andReturn(false);
-            cd_project_root.andCallThrough();//undo spy here because prepare depends on cdprojectRoot for isCordova check
+            cd_project_root.andCallThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
             Q().then(prepare).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
