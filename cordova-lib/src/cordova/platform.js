@@ -233,12 +233,8 @@ function downloadPlatform(projectRoot, platform, version, opts) {
 }
 
 function platformFromName(name) {
-    var platMatch = /^cordova-([a-z0-9]+)$/.exec(name);
-    var ret = platMatch && platMatch[1];
-    if (ret == 'amazon') {
-        ret = 'amazon-fireos';
-    }
-    return ret;
+    var platMatch = /^cordova-([a-z0-9-]+)$/.exec(name);
+    return platMatch && platMatch[1];
 }
 
 // Returns a Promise
