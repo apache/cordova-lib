@@ -48,7 +48,7 @@ var configSymlink = {
       }
     };
 
-describe('cordova create checks for valid-identifier', function(done) {    
+describe('cordova create checks for valid-identifier', function(done) {
 
     it('should reject reserved words from start of id', function(done) {
         cordova.raw.create('projectPath', 'int.bob', 'appName')

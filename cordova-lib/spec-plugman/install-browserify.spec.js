@@ -117,7 +117,7 @@ describe('start', function() {
                 return Q();
             }
         ).then(
-            function(){ 
+            function(){
                 return install('android', project, plugins['com.cordova.engine'], plugins_install_dir, { browserify: true }); }
         ).then(
             function(){

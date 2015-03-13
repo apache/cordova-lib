@@ -6,9 +6,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
- 
+
     http://www.apache.org/licenses/LICENSE-2.0
- 
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -30,7 +30,7 @@ var fs = require('fs'),
     defaults = require('./defaults.json');
 
 
-function readDeps (test) { 
+function readDeps (test) {
     return function (cb) {
         fs.readdir('node_modules', function (er, dir) {
             if (er) return cb();
@@ -101,7 +101,7 @@ if (!package.repository) {
                     return cb(null, yes ? defaults.repository : prompt('git repository', defaults.repository));
                 }
                 return cb(null, yes ? '' : prompt('git repository'));
-            } 
+            }
             gconf = gconf.split(/\r?\n/);
             var i = gconf.indexOf('[remote "origin"]');
             var u;

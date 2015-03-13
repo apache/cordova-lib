@@ -111,7 +111,7 @@ function executeEventHandlersSerially(hook, opts) {
  */
 function runScriptsSerially (scripts, context) {
     return scripts.reduce(function(prevScriptPromise, nextScript) {
-        return prevScriptPromise.then(function() { 
+        return prevScriptPromise.then(function() {
             return runScript(nextScript, context);
         });
     }, Q());

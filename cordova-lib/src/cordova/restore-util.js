@@ -53,7 +53,7 @@ function installPlatformsFromConfigXML(platforms){
     if(!targets || !targets.length  ){
         return Q.all('No platforms are listed in config.xml to restore');
     }
-    // Run platform add for all the platforms seperately 
+    // Run platform add for all the platforms seperately
     // so that failure on one does not affect the other.
     var promises = targets.map(function(target){
        if(target){
@@ -102,7 +102,7 @@ function installPluginsFromConfigXML(args) {
             installFrom += ('@' + pluginEntry.version);
         }
         // Add feature preferences as CLI variables if have any
-        var options = {cli_variables: pluginEntry.variables, 
+        var options = {cli_variables: pluginEntry.variables,
             searchpath: args.searchpath };
             return plugin('add', installFrom, options);
     });

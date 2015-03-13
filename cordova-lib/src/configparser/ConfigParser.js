@@ -246,7 +246,7 @@ ConfigParser.prototype = {
     getSplashScreens: function(platform) {
         return this.getStaticResources(platform, 'splash');
     },
-    
+
     /**
      * Returns all hook scripts for the hook type specified.
      * @param  {String} hook     The hook type.
@@ -270,9 +270,9 @@ ConfigParser.prototype = {
         return scriptElements.filter(filterScriptByHookType);
     },
    /**
-    * Returns a list of plugin (IDs). 
+    * Returns a list of plugin (IDs).
     *
-    * This function also returns any plugin's that 
+    * This function also returns any plugin's that
     * were defined using the legacy <feature> tags.
     * @return {string[]} Array of plugin IDs
     */
@@ -320,7 +320,7 @@ ConfigParser.prototype = {
     /**
      * Retrives the plugin with the given id or null if not found.
      *
-     * This function also returns any plugin's that 
+     * This function also returns any plugin's that
      * were defined using the legacy <feature> tags.
      * @name getPlugin
      * @function
@@ -359,7 +359,7 @@ ConfigParser.prototype = {
     /**
      * Remove the plugin entry with give name (id).
      *
-     * This function also operates on any plugin's that 
+     * This function also operates on any plugin's that
      * were defined using the legacy <feature> tags.
      * @name removePlugin
      * @function
@@ -442,6 +442,6 @@ function featureToPlugin(featureElement){
             plugin.variables[n] = v;
         }
     });
-    return plugin; 
+    return plugin;
 }
 module.exports = ConfigParser;

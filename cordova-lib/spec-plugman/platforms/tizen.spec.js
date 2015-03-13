@@ -21,7 +21,7 @@ var tizen = require('../../src/plugman/platforms/tizen'),
     os = require('osenv'),
     path = require('path'),
     tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
-    
+
     path.join( os.tmpdir(), 'plugman-' + ((function() {
         var index, subIndex,
            set = 'abcdefghijklmnopqrstuvwxyz0123456789',

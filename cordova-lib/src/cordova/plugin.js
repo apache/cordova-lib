@@ -61,7 +61,7 @@ module.exports = function plugin(command, targets, opts) {
     var hooksRunner = new HooksRunner(projectRoot);
     var config_json = config.read(projectRoot);
     var platformList = cordova_util.listPlatforms(projectRoot);
-    
+
     // Massage plugin name(s) / path(s)
     var pluginPath, plugins;
     pluginPath = path.join(projectRoot, 'plugins');
@@ -137,7 +137,7 @@ module.exports = function plugin(command, targets, opts) {
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, pluginInfoProvider: pluginInfoProvider});
                     })
                     .then(function(dir){
-                        // save to config.xml 
+                        // save to config.xml
                         if(saveToConfigXmlOn(config_json,opts)){
                             var pluginInfo =  pluginInfoProvider.get(dir);
                             var existingPluginEntry = cfg.getPlugin(pluginInfo.id);
@@ -168,7 +168,7 @@ module.exports = function plugin(command, targets, opts) {
                                         if(opts.cli_variables.hasOwnProperty(varname)){
                                             variables.push({name:varname, value:opts.cli_variables[varname]});
                                         }
-                                    } 
+                                    }
                                 }
                                 cfg.addPlugin(attributes,variables);
                                 cfg.write();
@@ -243,11 +243,11 @@ module.exports = function plugin(command, targets, opts) {
                     if (plugins.indexOf(target) < 0) {
                         // Convert target from package-name to package-id if necessary
                         // Cordova-plugin-device would get changed to org.apache.cordova.device
-                        var pluginId = pluginMapper[target]; 
+                        var pluginId = pluginMapper[target];
                         if(pluginId) {
                             events.emit('log', 'Plugin "' + target + '" is not present in the project. Converting value to "' + pluginId + '" and trying again.');
                             target = pluginId;
-                        }  
+                        }
                         if (plugins.indexOf(target) < 0) {
                             return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
                         }
@@ -302,7 +302,7 @@ module.exports = function plugin(command, targets, opts) {
 
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
-    return pluginEntry && pluginEntry.version; 
+    return pluginEntry && pluginEntry.version;
 }
 
 function list(projectRoot, hooksRunner) {

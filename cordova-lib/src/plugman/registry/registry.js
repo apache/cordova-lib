@@ -103,8 +103,8 @@ module.exports = {
                     //we will assume that the rename has already happened.
                     events.emit('verbose', 'package.json1 already exists. Will use');
                 } else {
-                    //rename package.json to pacakge.json1 temporarily 
-                    fs.renameSync(path.join(dir,'package.json'),path.join(dir,'package.json1')); 
+                    //rename package.json to pacakge.json1 temporarily
+                    fs.renameSync(path.join(dir,'package.json'),path.join(dir,'package.json1'));
                 }
             }
             return manifest.generatePackageJsonFromPluginXml(dir)
@@ -121,7 +121,7 @@ module.exports = {
                 //rename package.json1 to package.json if it exists
                 if(fs.existsSync(path.join(dir,'package.json1'))) {
                     events.emit('verbose', 'restoring original package.json');
-                    fs.renameSync(path.join(dir,'package.json1'),path.join(dir,'package.json')); 
+                    fs.renameSync(path.join(dir,'package.json1'),path.join(dir,'package.json'));
                 }
             }).catch(function(err){
                 return err;
@@ -257,9 +257,9 @@ function initSettings(useNpmRegistry) {
         'cache-min': oneDay
     });
 
-    // if npm is true, use npm registry. 
-    // ~/.plugman/config overides the above config if it exists. 
-    // Need to reset the registry value in settings 
+    // if npm is true, use npm registry.
+    // ~/.plugman/config overides the above config if it exists.
+    // Need to reset the registry value in settings
     if(useNpmRegistry) {
         settings.registry = NPM_REG_URL;
     }
@@ -347,7 +347,7 @@ function makeRequest (method, where, what, cb_) {
 
 /**
 * @param {Array} with one element - the plugin id or "id@version"
-* @param useNpmRegistry: {Boolean} - to use the npm registry 
+* @param useNpmRegistry: {Boolean} - to use the npm registry
 * @return {Promise.<string>} Promised path to fetched package.
 */
 function fetchPlugin(plugin, client, useNpmRegistry) {

@@ -27,7 +27,7 @@ var Q = require('q'),
 //returns a promise
 function createPackageJson(plugin_path) {
     var pluginInfo = new PluginInfo(plugin_path);
-   
+
     var defaults = {
         id:pluginInfo.id,
         version:pluginInfo.version,
@@ -49,7 +49,7 @@ function createPackageJson(plugin_path) {
         init(dir, initFile, {}, function (err, data) {
             if(err) throw err;
             events.emit('verbose', 'Package.json successfully created');
-        }); 
+        });
     });
     return Q();
 }

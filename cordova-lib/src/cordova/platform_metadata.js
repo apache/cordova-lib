@@ -54,9 +54,9 @@ function getPlatVersionsFromFile(platformsJsonFile){
     } catch(e) {
         return Q.reject(e);
     }
-    
+
     var platformVersions = [];
-    
+
     platformVersions = Object.keys(platformData).map(function(p){
         return {platform: p, version: platformData[p]};
     });
@@ -71,14 +71,14 @@ function getPlatVersionsFromFileSystem(projectRoot){
         var script = path.join(projectRoot, 'platforms', platform, 'cordova', 'version');
         return Q.ninvoke(child_process, 'exec', script, {}).then(function(result){
             var version = result[0];
-            
+
             // clean the version we get back from the script
             // This is necessary because the version script uses console.log to pass back
-            // the version. Using console.log ends up adding additional line breaks/newlines to the value returned. 
+            // the version. Using console.log ends up adding additional line breaks/newlines to the value returned.
             // ToDO: version scripts should be refactored to not use console.log()
             var versionCleaned = version.replace(/\r?\n|\r/g, '');
             return {platform: platform, version: versionCleaned};
-        });        
+        });
     });
 
     return Q.all(platformVersions);
@@ -104,7 +104,7 @@ function remove(projectRoot, platform){
         return;
     }
     var data = getJson(platformJsonFile);
-    delete data[platform]; 
+    delete data[platform];
     fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 4), 'utf-8');
 }
 
