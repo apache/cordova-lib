@@ -239,7 +239,6 @@ module.exports = function plugin(command, targets, opts) {
             if (!targets || !targets.length) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
-
             opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
@@ -272,7 +271,8 @@ module.exports = function plugin(command, targets, opts) {
                     .then(function() {
                         // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
-                    }).then(function(){
+                    })
+                    .then(function(){
                         //remove plugin from config.xml
                         if(saveToConfigXmlOn(config_json, opts)){
                             var configPath = cordova_util.projectConfig(projectRoot);
@@ -291,7 +291,8 @@ module.exports = function plugin(command, targets, opts) {
                         metadata.remove_plugin(pluginsDir, target);
                     });
                 }, Q());
-            }).then(function() {
+            })
+            .then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
