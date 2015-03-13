@@ -136,6 +136,14 @@ ConfigParser.prototype = {
     getGlobalPreference: function (name) {
         return findElementAttributeValue(name, this.doc.findall('preference'));
     },
+    setGlobalPreference: function (name, value) {
+        var pref = this.doc.find('preference[@name="service_worker"]');
+        if (!pref) {
+            pref = new et.Element('preference');
+            this.doc.getroot().append(pref);
+        }
+        pref.attrib.value = value;
+    },
     getPlatformPreference: function (name, platform) {
         return findElementAttributeValue(name, this.doc.findall('platform[@name=\'' + platform + '\']/preference'));
     },
