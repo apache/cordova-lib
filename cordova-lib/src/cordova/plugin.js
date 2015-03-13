@@ -187,8 +187,9 @@ module.exports = function plugin(command, targets, opts) {
                             });
                         if (missingVariables.length) {
                             shell.rm('-rf', dir);
-                            events.emit('results', 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).');
-                            return;
+                            var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
+                            events.emit('results', msg);
+                            return Q.reject(new CordovaError(msg));
                         }
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
