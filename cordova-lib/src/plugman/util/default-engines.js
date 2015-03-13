@@ -35,6 +35,8 @@ module.exports = function(project_dir){
             { 'platform':'wp8', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-windows8':
             { 'platform':'windows8', 'scriptSrc': path.join(project_dir,'cordova','version') },
+        'cordova-windows':
+            { 'platform':'windows', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'apple-xcode' :
             { 'platform':'ios', 'scriptSrc':  path.join(project_dir,'cordova','apple_xcode_version') },
         'apple-ios' :
