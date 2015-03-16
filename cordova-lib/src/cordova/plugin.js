@@ -288,7 +288,7 @@ module.exports = function plugin(command, targets, opts) {
                         // Remove plugin from fetch.json
                         events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
                         var pluginsDir = path.join(projectRoot, 'plugins');
-                        metadata.remove_plugin(pluginsDir, target);
+                        metadata.remove_fetch_metadata(pluginsDir, target);
                     });
                 }, Q());
             }).then(function() {
@@ -323,52 +323,53 @@ function save(projectRoot, opts){
         cfg.removePlugin(plugin);
     });
 
-    // It might be the case that fetch.json file is not yet existent.
-    // for example: when we have never ran the command 'cordova plugin add foo' on the project
-    // in that case, there's nothing to do except bubble up the error
-    function onFileNotFoundException(err){
+    // Then, save top-level plugins and their sources
+    var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
+    var plugins;
+    try {
+        // It might be the case that fetch.json file is not yet existent.
+        // for example: when we have never ran the command 'cordova plugin add foo' on the project
+        // in that case, there's nothing to do except bubble up the error
+        plugins = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
+    } catch (err) {
         return Q.reject(err.message);
     }
 
-    // Then, save top-level plugins and their sources
-    return Q().then(function(){
-        var jsonFile = path.join(projectRoot, 'plugins', 'fetch.json');
-        return JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
-    }).fail(onFileNotFoundException).then(function(plugins){
-        Object.keys(plugins).forEach(function(pluginName){
-            var plugin = plugins[pluginName];
-            var pluginSource = plugin.source;
+    Object.keys(plugins).forEach(function(pluginName){
+        var plugin = plugins[pluginName];
+        var pluginSource = plugin.source;
+
+        // If not a top-level plugin, skip it, don't save it to config.xml
+        if(!plugin.is_top_level){
+            return;
+        }
+
             
-            // If not a top-level plugin, skip it, don't save it to config.xml
-            if(!plugin.is_top_level){
-                return;
+        var attribs = {name: pluginName};
+
+        // Retrieve appropriate property: 'src' or 'version'
+        var src = (function(){
+            if(pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')){
+                return { src: (pluginSource.url || pluginSource.path) };
             }
-
-            
-            var attribs = {name: pluginName};
-
-            // Retrieve appropriate property: 'src' or 'version'
-            var src = (function(){
-                if(pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')){
-                    return { src: (pluginSource.url || pluginSource.path) };
+            if(pluginSource.hasOwnProperty('id')){
+                var parts = pluginSource.id.split('@');
+                var version = parts[1];
+                if(version){
+                    return { version: version };
                 }
-                if(pluginSource.hasOwnProperty('id')){
-                    var parts = pluginSource.id.split('@');
-                    var version = parts[1];
-                    if(version){
-                        return { version: version };
-                    }
-                }                
-                // If there's an id, but no version
-                // If there's no valid property('url', 'path', 'id')
-                return {};
-            }());
-            _.extend(attribs, src);
-            var variables = getPluginVariables(plugin.variables);
-            cfg.addPlugin(attribs, variables);
-        });
-        cfg.write();
+            }
+            // If there's an id, but no version
+            // If there's no valid property('url', 'path', 'id')
+            return {};
+        }());
+        _.extend(attribs, src);
+        var variables = getPluginVariables(plugin.variables);
+        cfg.addPlugin(attribs, variables);
     });
+    cfg.write();
+
+    return Q.resolve();
 }
 
 function getPluginVariables(variables){
