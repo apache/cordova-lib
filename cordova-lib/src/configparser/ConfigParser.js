@@ -388,7 +388,16 @@ ConfigParser.prototype = {
             }
         }
     },
-        
+
+    // Add any element to the root
+    addElement: function(name, attributes) {
+        var el = et.Element(name);
+        for (var a in attributes) {
+            el.attrib[a] = attributes[a];
+        }
+        this.doc.getroot().append(el);
+    },
+
     /**
      * Adds an engine. Does not check for duplicates.
      * @param  {String} name the engine name
