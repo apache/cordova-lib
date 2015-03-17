@@ -81,7 +81,7 @@ describe('fetch', function() {
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "wrongID" but got');
+                expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
         it('should succeed when the expected ID is correct', function(done) {
@@ -90,11 +90,11 @@ describe('fetch', function() {
             });
         });
         it('should fail when the expected ID with version specified doesn\'t match', function(done) {
-            fetch(test_plugin, temp, { expected_id: 'id@wrongVersion' })
+            fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion' })
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "id@wrongVersion" but got');
+                expect(''+err).toContain('to satisfy version "wrongVersion" but got');
             }).fin(done);
         });
         it('should succeed when the plugin version specified is correct', function(done) {
@@ -194,7 +194,7 @@ describe('fetch', function() {
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "wrongID" but got');
+                expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
         it('should fail when the expected ID with version specified doesn\'t match', function(done) {
@@ -202,7 +202,7 @@ describe('fetch', function() {
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "id@wrongVersion" but got');
+                expect(''+err).toContain('Expected plugin to have ID "id" but got');
             }).fin(done);
         });
         it('should succeed when the expected ID is correct', function(done) {
@@ -233,15 +233,15 @@ describe('fetch', function() {
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "wrongID" but got');
+                expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
         it('should fail when the expected ID with version specified doesn\'t match', function(done) {
-            fetch(pluginId, temp, { expected_id: 'id@wrongVersion' })
+            fetch(pluginId, temp, { expected_id: test_plugin_id + '@wrongVersion' })
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(''+err).toContain('Expected fetched plugin to have ID "id@wrongVersion" but got');
+                expect(''+err).toContain('to satisfy version "wrongVersion" but got');
             }).fin(done);
         });
         it('should succeed when the expected ID is correct', function(done) {

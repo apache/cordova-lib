@@ -154,15 +154,15 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
 
 
 // Helper function for checking expected plugin IDs against reality.
-function checkID(expected_id, pinfo) {
-    if (!expected_id) return;
-    var id = pinfo.id;
-    // if id with specific version provided, append version to id
-    if (expected_id.split('@').length > 1) {
-        id = id + '@' + pinfo.version;
+function checkID(expectedIdAndVersion, pinfo) {
+    if (!expectedIdAndVersion) return;
+    var expectedId = expectedIdAndVersion.split('@')[0];
+    var expectedVersion = expectedIdAndVersion.split('@')[1];
+    if (expectedId != pinfo.id) {
+        throw new Error('Expected plugin to have ID "' + expectedId + '" but got "' + pinfo.id + '".');
     }
-    if (expected_id != id) {
-        throw new Error('Expected fetched plugin to have ID "' + expected_id + '" but got "' + id + '".');
+    if (expectedVersion && !semver.satisfies(pinfo.version, expectedVersion)) {
+        throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + expectedVersion + '" but got "' + pinfo.version + '".');
     }
 }
 
