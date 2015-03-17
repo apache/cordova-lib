@@ -97,3 +97,4 @@ function getPlatformProject(platform, platformRootDir) {
 
 module.exports = platforms;
 module.exports.getPlatformProject = getPlatformProject;
+module.exports.PlatformProjectAdapter = PlatformProjectAdapter;
