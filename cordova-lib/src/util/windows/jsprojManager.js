@@ -360,7 +360,7 @@ function createReferenceElement(path, incText, targetConditions, children) {
 }
 
 function getTarget(targetConditions) {
-    var target = targetConditions.target;
+    var target = targetConditions.deviceTarget;
     if (target) {
         target = target.toLowerCase().trim();
         if (target === "all") {
