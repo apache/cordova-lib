@@ -129,6 +129,9 @@ function PluginInfo(dirname) {
             , parent : tag.attrib['parent']
             , after : tag.attrib['after']
             , xmls : tag.getchildren()
+            // To support demuxing via versions
+            , versions : tag.attrib['versions']
+            , deviceTarget: tag.attrib['device-target']
             };
         return configFile;
     }
@@ -207,7 +210,7 @@ function PluginInfo(dirname) {
                 arch: tag.attrib.arch,
                 Include: tag.attrib.Include,
                 versions: tag.attrib.versions,
-                target: tag.attrib.target
+                deviceTarget: tag.attrib['device-target'] || tag.attrib.target
             };
         });
         return libFiles;
@@ -282,7 +285,7 @@ function PluginInfo(dirname) {
                 src: el.attrib.src,
                 weak: isStrTrue(el.attrib.weak),
                 versions: el.attrib.versions,
-                target: el.attrib.target,
+                deviceTarget: el.attrib['device-target'] || el.attrib.target,
                 arch: el.attrib.arch
             };
             return ret;

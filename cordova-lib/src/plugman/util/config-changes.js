@@ -156,11 +156,13 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
             // New windows template separate manifest files for Windows8, Windows8.1 and WP8.1
-            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
-            for (var subst in substs) {
-                events.emit('verbose', 'Applying munge to ' + substs[subst]);
-                self.apply_file_munge(substs[subst], munge.files[file], true);
-            }
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest', 'package.windows10.appxmanifest'];
+            /* jshint loopfunc:true */
+            substs.forEach(function(subst) {
+                events.emit('verbose', 'Applying munge to ' + subst);
+                self.apply_file_munge(subst, munge.files[file], true);
+            });
+            /* jshint loopfunc:false */
         }
         self.apply_file_munge(file, munge.files[file], /* remove = */ true);
     }
@@ -209,11 +211,13 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest'];
-            for (var subst in substs) {
-                events.emit('verbose', 'Applying munge to ' + substs[subst]);
-                self.apply_file_munge(substs[subst], munge.files[file]);
-            }
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest', 'package.windows10.appxmanifest'];
+            /* jshint loopfunc:true */
+            substs.forEach(function(subst) {
+                events.emit('verbose', 'Applying munge to ' + subst);
+                self.apply_file_munge(subst, munge.files[file]);
+            });
+            /* jshint loopfunc:false */
         }
         self.apply_file_munge(file, munge.files[file]);
     }
@@ -277,6 +281,90 @@ function generate_plugin_config_munge(plugin_dir, vars) {
             if (!f.custom) {
                 mungeutil.deep_add(munge, 'framework', f.src, { xml: f.weak, count: 1 });
             }
+        });
+    }
+    
+    // Demux 'package.appxmanifest' into relevant platform-specific appx manifests.
+    // Only spend the cycles if there are version-specific plugin settings
+    if (self.platform === 'windows' && changes.some(function(change) { return ((typeof change.versions !== 'undefined') || (typeof change.deviceTarget !== 'undefined')); })) 
+    {
+        var manifests = {
+            'windows': {
+                '8.0.0': 'package.windows80.appxmanifest',
+                '8.1.0': 'package.windows.appxmanifest',
+                '10.0.0': 'package.windows10.appxmanifest'
+            },
+            'phone': {
+                '8.1.0': 'package.phone.appxmanifest',
+                '10.0.0': 'package.windows10.appxmanifest'
+            },
+            'all': {
+                '8.0.0': 'package.windows80.appxmanifest',
+                '8.1.0': ['package.windows.appxmanifest', 'package.phone.appxmanifest'],
+                '10.0.0': 'package.windows10.appxmanifest'
+            }
+        };
+
+        var oldChanges = changes;
+        changes = [];
+
+        oldChanges.forEach(function(change, changeIndex) {
+            // Only support semver/device-target demux for package.appxmanifest
+            // Pass through in case something downstream wants to use it
+            if (change.target !== 'package.appxmanifest') {
+                changes.push(change);
+                return;
+            }
+
+            var hasVersion = (typeof change.versions !== 'undefined');
+            var hasTargets = (typeof change.deviceTarget !== 'undefined');
+
+            // No semver/device-target for this config-file, pass it through
+            if (!(hasVersion || hasTargets)) {
+                changes.push(change);
+                return;
+            }
+
+            var targetDeviceSet = hasTargets ? change.deviceTarget : 'all';
+            if (['windows', 'phone', 'all'].indexOf(targetDeviceSet) === -1) {
+                // target-device couldn't be resolved, fix it up here to a valid value
+                targetDeviceSet = 'all';
+            }
+            var knownWindowsVersionsForTargetDeviceSet = Object.keys(manifests[targetDeviceSet]);
+
+            // at this point, 'change' targets package.appxmanifest and has a version attribute
+            knownWindowsVersionsForTargetDeviceSet.forEach(function(winver) {
+                // This is a local function that creates the new replacement representing the 
+                // mutation.  Used to save code further down.
+                var createReplacement = function(manifestFile, originalChange) {
+                    var replacement = {
+                        target:         manifestFile,
+                        parent:         originalChange.parent,
+                        after:          originalChange.after,
+                        xmls:           originalChange.xmls,
+                        versions:       originalChange.versions,
+                        deviceTarget:   originalChange.deviceTarget
+                    };
+                    return replacement;
+                };
+
+                // version doesn't satisfy, so skip
+                if (hasVersion && !semver.satisfies(winver, change.versions)) {
+                    return;
+                }
+
+                var versionSpecificManifests = manifests[targetDeviceSet][winver];
+                if (versionSpecificManifests.constructor === Array) {
+                    // e.g. all['8.1.0'] === ['pkg.windows.appxmanifest', 'pkg.phone.appxmanifest']
+                    versionSpecificManifests.forEach(function(manifestFile) {
+                        changes.push(createReplacement(manifestFile, change));
+                    });
+                }
+                else {
+                    // versionSpecificManifests is actually a single string
+                    changes.push(createReplacement(versionSpecificManifests, change));
+                }
+            });
         });
     }
 
