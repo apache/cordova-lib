@@ -143,7 +143,7 @@
 
         <lib-file src="TestSDK1, Version=1.0" arch="x85"/>
         <lib-file src="TestSDK2, Version=1.0" versions="8.0a"/>
-        <lib-file src="TestSDK3, Version=1.0" target="daphne"/>
+        <lib-file src="TestSDK3, Version=1.0" device-target="daphne"/>
 
         <!-- does not exist -->
         <source-file src="src/windows/NotHere.js" />
