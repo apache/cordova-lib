@@ -39,6 +39,7 @@ var configChanges = require('../../src/plugman/util/config-changes'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*'),
     android_two_no_perms_project = path.join(__dirname, '..', 'projects', 'android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '..', 'projects', 'ios-config-xml', '*'),
+    windows_testapp_jsproj = path.join(__dirname, '..', 'projects', 'windows8', 'TestApp.jsproj'),
     plugins_dir = path.join(temp, 'cordova', 'plugins');
 var mungeutil = require('../../src/plugman/util/munge-util');
 var PlatformJson = require('../../src/plugman/util/PlatformJson');
@@ -217,6 +218,9 @@ describe('config-changes module', function() {
             });
         });
         describe('for windows project', function() {
+            beforeEach(function() {
+                shell.cp('-rf', windows_testapp_jsproj, temp);
+            });
             it('should special case config-file elements for windows', function() {
                 var munger = new configChanges.PlatformMunger('windows', temp, 'unused', null, pluginInfoProvider);
                 // Unit testing causes a failure when the package_name function is called from generate_plugin_config_munge
