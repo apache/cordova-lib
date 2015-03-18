@@ -306,9 +306,9 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
         // CB-5238 Don't uninstall non custom frameworks.
         if (item.itemType == 'framework' && !item.custom) return;
         actions.push(actions.createAction(handler.getUninstaller(item.itemType),
-                                          [item, project_dir, plugin_id, options],
+                                          [item, plugin_id, options],
                                           handler.getInstaller(item.itemType),
-                                          [item, plugin_dir, project_dir, plugin_id, options]));
+                                          [item, plugin_dir, plugin_id, options]));
     });
 
     // queue up asset uninstallation

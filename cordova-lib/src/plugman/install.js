@@ -534,9 +534,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     // queue up native stuff
     pluginItems.forEach(function(item) {
         actions.push(actions.createAction(handler.getInstaller(item.itemType),
-                                          [item, plugin_dir, project_dir, pluginInfo.id, options],
+                                          [item, plugin_dir, pluginInfo.id, options],
                                           handler.getUninstaller(item.itemType),
-                                          [item, project_dir, pluginInfo.id, options]));
+                                          [item, pluginInfo.id, options]));
     });
 
     // run through the action stack

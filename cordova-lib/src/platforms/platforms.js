@@ -72,11 +72,17 @@ function PlatformProjectAdapter(platform, platformRootDir) {
     });
 
     self.getInstaller = function(type) {
-        return self.handler[type].install;
+        function installWrapper(item, plugin_dir, plugin_id, options, project) {
+            self.handler[type].install(item, plugin_dir, self.root, plugin_id, options, project);
+        }
+        return installWrapper;
     };
 
     self.getUninstaller = function(type) {
-        return self.handler[type].uninstall;
+        function uninstallWrapper(item, plugin_id, options, project) {
+            self.handler[type].uninstall(item, self.root, plugin_id, options, project);
+        }
+        return uninstallWrapper;
     };
 }
 
