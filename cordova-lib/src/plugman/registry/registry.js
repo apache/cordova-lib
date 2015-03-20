@@ -189,7 +189,6 @@ module.exports = {
             return fetchPlugin(plugin, client, false);
         })
         .fail(function() {
-            module.exports.settings = null;
             return fetchPlugin(plugin, client, true);
         });
     },
@@ -224,18 +223,8 @@ module.exports = {
  * @param {Boolean} determines if we are using the npm registry
  * @return {Promise.<Object>} Promised settings.
  */
-function initSettings(useNpmRegistry) {
+function initSettings() {
     var settings = module.exports.settings;
-    var NPM_REG_URL = 'http://registry.npmjs.org';
-    var CPR_REG_URL = 'http://registry.cordova.io';
-    var registryURL;
-
-    //if useNpmRegistry is true, use npm registry
-    if(useNpmRegistry) {
-        registryURL = NPM_REG_URL;
-    } else {
-        registryURL = CPR_REG_URL;
-    }
 
     // check if settings already set
     if(settings !== null) return Q(settings);
@@ -251,18 +240,11 @@ function initSettings(useNpmRegistry) {
     module.exports.settings =
     rc('plugman', {
         cache: plugmanCacheDir,
-        registry: registryURL,
+        registry: 'http://registry.cordova.io',
         logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
         userconfig: path.resolve(plugmanConfigDir, 'config'),
         'cache-min': oneDay
     });
-
-    // if npm is true, use npm registry.
-    // ~/.plugman/config overides the above config if it exists.
-    // Need to reset the registry value in settings
-    if(useNpmRegistry) {
-        settings.registry = NPM_REG_URL;
-    }
 
     return Q(settings);
 }
@@ -358,15 +340,13 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
     } else {
         registryName = 'cordova plugins registry';
     }
-    return initSettings(useNpmRegistry)
-    .then(function (settings) {
-        return Q.nfcall(npm.load)
-        // configure npm here instead of passing parameters to npm.load due to CB-7670
-        .then(function () {
-            for (var prop in settings){
-                npm.config.set(prop, settings[prop]);
-            }
-        });
+
+    return initSettings().then(function(settings) {
+        // Don't use any option overrides for npm repo.
+        if (useNpmRegistry) {
+            settings = {};
+        }
+        return Q.ninvoke(npm, 'load', settings);
     })
     .then(function() {
         events.emit('log', 'Fetching plugin "' + plugin + '" via ' + registryName);
