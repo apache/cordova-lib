@@ -361,7 +361,7 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
         return unpack.unpackTgz(package_tgz, pluginDir);
     })
     .fail(function(error) {
-        events.emit('log', 'Fetching from ' + registryName + ' failed');
+        events.emit('log', 'Fetching from ' + registryName + ' failed: ' + error.message);
         return Q.reject(error);
     });
 }
