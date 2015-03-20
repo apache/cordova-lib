@@ -110,7 +110,7 @@ describe('firefoxos project parser', function() {
             it('should handle no orientation', function () {
                 getOrientation.andReturn('');
                 p.update_from_config(cfg);
-                expect(manifestJson.orientation).toBeUndefined();
+                expect(manifestJson.orientation).toEqual([ 'portrait' ]);
             });
             it('should handle default orientation', function () {
                 getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);

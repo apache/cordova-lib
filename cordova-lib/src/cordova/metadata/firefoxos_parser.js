@@ -125,10 +125,12 @@ firefoxos_parser.prototype.update_from_config = function(config) {
     // Set orientation preference
     var orientation = this.helper.getOrientation(config);
 
-    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
-        manifest.orientation = [ orientation ];
-    } else {
-        delete manifest.orientation;
+    if (orientation) {
+        if (this.helper.isDefaultOrientation(orientation)) {
+            delete manifest.orientation;
+        } else {
+            manifest.orientation = [ orientation ];
+        }
     }
 
     var permissionNodes = config.doc.findall('permission');

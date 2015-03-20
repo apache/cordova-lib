@@ -81,23 +81,27 @@ ios_parser.prototype.update_from_config = function(config) {
 
     var orientation = this.helper.getOrientation(config);
 
-    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
-        switch (orientation.toLowerCase()) {
-            case 'portrait':
-                infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationPortrait' ];
-                infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ];
-                break;
-            case 'landscape':
-                infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationLandscapeLeft' ];
-                infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ];
-                break;
-            default:
-                infoPlist['UIInterfaceOrientation'] = [ orientation ];
-                delete infoPlist['UISupportedInterfaceOrientations'];
+    if (orientation) {
+
+        if (this.helper.isDefaultOrientation(orientation)) {
+            delete infoPlist['UISupportedInterfaceOrientations'];
+            delete infoPlist['UIInterfaceOrientation'];
+        } else {
+            switch (orientation.toLowerCase()) {
+                case 'portrait':
+                    infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationPortrait' ];
+                    infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ];
+                    break;
+                case 'landscape':
+                    infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationLandscapeLeft' ];
+                    infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ];
+                    break;
+                default:
+                    infoPlist['UIInterfaceOrientation'] = [ orientation ];
+                    delete infoPlist['UISupportedInterfaceOrientations'];
+            }
         }
-    } else {
-        delete infoPlist['UISupportedInterfaceOrientations'];
-        delete infoPlist['UIInterfaceOrientation'];
+
     }
 
     var info_contents = plist.build(infoPlist);

@@ -173,8 +173,8 @@ describe('wp8 project parser', function() {
             it('should handle no orientation', function() {
                 getOrientation.andReturn('');
                 p.update_from_config(cfg);
-                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
-                expect(mainPageXamlXml.getroot().attrib['Orientation']).toBeUndefined();
+                expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('PortraitOrLandscape');
+                expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('VAL');
             });
             it('should handle default orientation', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);

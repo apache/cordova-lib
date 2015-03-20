@@ -65,18 +65,21 @@ wp8_parser.prototype.update_from_config = function(config) {
     var mainPageXAML = xml.parseElementtreeSync(path.join(this.wp8_proj_dir, 'MainPage.xaml'));
 
     var orientation = this.helper.getOrientation(config);
-    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
 
-        mainPageXAML.getroot().attrib['Orientation'] = orientation;
-        mainPageXAML.getroot().attrib['SupportedOrientations'] = orientation;
+    if (orientation) {
 
-        if (!this.helper.isGlobalOrientation(orientation)) {
+        if (this.helper.isDefaultOrientation(orientation)) {
             delete mainPageXAML.getroot().attrib['SupportedOrientations'];
+            delete mainPageXAML.getroot().attrib['Orientation'];
+        } else {
+            mainPageXAML.getroot().attrib['Orientation'] = orientation;
+            mainPageXAML.getroot().attrib['SupportedOrientations'] = orientation;
+
+            if (!this.helper.isGlobalOrientation(orientation)) {
+                delete mainPageXAML.getroot().attrib['SupportedOrientations'];
+            }
         }
 
-    } else {
-        delete mainPageXAML.getroot().attrib['SupportedOrientations'];
-        delete mainPageXAML.getroot().attrib['Orientation'];
     }
 
     //Update app version
