@@ -150,7 +150,7 @@ module.exports = function plugin(command, targets, opts) {
                                 var attributes = {};
                                 attributes.name = pluginInfo.id;
                                 var pluginVersion = versionFromTargetString(target);
-                                if(!pluginVersion && opts.shrinkwrap){
+                                if(!pluginVersion){
                                     pluginVersion = pluginInfo.version;
                                 }
                                 if(pluginVersion){
@@ -358,6 +358,9 @@ function save(projectRoot, opts){
                 if(version){
                     return { version: version };
                 }
+            }
+            if(pluginSource.hasOwnProperty('version')){
+                return { version: pluginSource.version };
             }
             // If there's an id, but no version
             // If there's no valid property('url', 'path', 'id')
