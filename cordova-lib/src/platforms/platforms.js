@@ -102,5 +102,10 @@ function getPlatformProject(platform, platformRootDir) {
 }
 
 module.exports = platforms;
-module.exports.getPlatformProject = getPlatformProject;
-module.exports.PlatformProjectAdapter = PlatformProjectAdapter;
+
+// We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the
+// platforms object to be platforms.
+Object.defineProperties(module.exports, {
+    'getPlatformProject': {value: getPlatformProject, configurable: true, writable: true},
+    'PlatformProjectAdapter': {value: PlatformProjectAdapter, configurable: true, writable: true}
+});
