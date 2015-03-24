@@ -68,5 +68,6 @@ addModuleProperty(module, 'compile', './compile', true);
 addModuleProperty(module, 'run', './run', true);
 addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'targets', './targets', true);
+addModuleProperty(module, 'projectMetadata', './project_metadata', true);
 
 
