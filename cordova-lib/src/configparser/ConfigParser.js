@@ -298,6 +298,11 @@ ConfigParser.prototype = {
         });
         return result;
     },
+    getPlugins: function () {
+        return this.getPluginIdList().map(function (pluginId) {
+            return this.getPlugin(pluginId);
+        }, this);
+    },
     /**
      * Adds a plugin element. Does not check for duplicates.
      * @name addPlugin
