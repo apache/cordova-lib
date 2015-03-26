@@ -49,7 +49,7 @@ function installHelper(type, obj, plugin_dir, project_dir, plugin_id, options, p
         // Make the Xcode reference the file directly.
         // Note: Can't use path.join() here since it collapses 'Plugins/..', and xcode
         // library special-cases Plugins/ prefix.
-        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, trueSrc));
+        project_ref = 'Plugins/' + fixPathSep(path.relative(fs.realpathSync(project.plugins_dir), trueSrc));
     } else {
         common.copyNewFile(plugin_dir, srcFile, project_dir, destFile, link);
         project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, destFile));
@@ -75,7 +75,7 @@ function uninstallHelper(type, obj, project_dir, plugin_id, options, project) {
     var link = !!(options && options.link);
     if (link) {
         var trueSrc = fs.readlinkSync(destFile);
-        project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, trueSrc));
+        project_ref = 'Plugins/' + fixPathSep(path.relative(fs.realpathSync(project.plugins_dir), trueSrc));
     } else {
         project_ref = 'Plugins/' + fixPathSep(path.relative(project.plugins_dir, destFile));
     }
