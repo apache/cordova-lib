@@ -29,6 +29,7 @@ var semver = require('semver'),
     Q = require('q'),
     request = require('request'),
     pluginMapper = require('cordova-registry-mapper').oldToNew,
+    npmhelper = require('../../util/npm-helper'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('../../events'),
     unpack = require('../../util/unpack'),
@@ -52,11 +53,8 @@ module.exports = {
      * @param {Array} args Command argument
      * @return {Promise.<Object>} Promised configuration object.
      */
-    config: function(args) {
-        return initSettings().then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings);
-        })
-        .then(function() {
+    config: function (args) {
+        return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'config', args);
         });
     },
@@ -67,9 +65,7 @@ module.exports = {
      * @return {Promise.<void>} Promise for completion.
      */
     owner: function(args) {
-        return initSettings().then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings);
-        }).then(function() {
+        return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'owner', args);
         });
     },
@@ -79,10 +75,7 @@ module.exports = {
      * @return {Promise.<void>} Promise for completion.
      */
     adduser: function(args) {
-        return initSettings().then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings);
-        })
-        .then(function() {
+        return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'adduser', args);
         });
     },
@@ -108,14 +101,14 @@ module.exports = {
                 }
             }
             return manifest.generatePackageJsonFromPluginXml(dir)
-            .then(function() {
-                return Q.ninvoke(npm, 'load', settings);
-            }).then(function() {
-                // With  no --force we'll get a 409 (conflict) when trying to
-                // overwrite an existing package@version.
-                //npm.config.set('force', true);
-                events.emit('log', 'attempting to publish plugin to registry');
-                return Q.ninvoke(npm.commands, 'publish', args);
+            .then(function () {
+                return npmhelper.loadWithSettingsThenRestore(settings, function () {
+                    // With  no --force we'll get a 409 (conflict) when trying to
+                    // overwrite an existing package@version.
+                    //npm.config.set('force', true);
+                    events.emit('log', 'attempting to publish plugin to registry');
+                    return Q.ninvoke(npm.commands, 'publish', args);
+                });
             }).then(function() {
                 fs.unlink(path.resolve(dir, 'package.json'));
                 //rename package.json1 to package.json if it exists
@@ -135,10 +128,7 @@ module.exports = {
      * @return {Promise.<Object>} Promised search results.
      */
     search: function(args) {
-        return initSettings()
-        .then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings);
-        }).then(function() {
+        return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'search', args, true);
         });
     },
@@ -148,11 +138,8 @@ module.exports = {
      * @param {Array} args Command argument
      * @return {Promise.<Object>} Promised results.
      */
-    unpublish: function(args) {
-        return initSettings()
-        .then(function(settings) {
-            return Q.ninvoke(npm, 'load', settings);
-        }).then(function() {
+    unpublish: function (args) {
+        return initThenLoadSettingsWithRestore(function () {
             // --force is required to delete an entire plugin with all versions.
             // Without --force npm can only unpublish a specific version.
             //npm.config.set('force', true);
@@ -160,11 +147,12 @@ module.exports = {
             // e.g.: `unpublish non.existent.plugin`
             // will complete with no errors.
             events.emit('log', 'attempting to unpublish plugin from registry');
-            return Q.ninvoke(npm.commands, 'unpublish', args);
-        }).then(function() {
-            // npm.unpublish removes the cache for the unpublished package
-            // cleaning the entire cache might not be necessary.
-            return Q.ninvoke(npm.commands, 'cache', ['clean']);
+            return Q.ninvoke(npm.commands, 'unpublish', args)
+            .then(function () {
+                // npm.unpublish removes the cache for the unpublished package
+                // cleaning the entire cache might not be necessary.
+                return Q.ninvoke(npm.commands, 'cache', ['clean']);
+            });
         });
     },
 
@@ -223,11 +211,13 @@ module.exports = {
  * @param {Boolean} determines if we are using the npm registry
  * @return {Promise.<Object>} Promised settings.
  */
-function initSettings() {
+function initSettings(returnEmptySettings) {
     var settings = module.exports.settings;
 
     // check if settings already set
-    if(settings !== null) return Q(settings);
+    if(settings !== null) {
+        return Q(settings);
+    }
 
     // setting up settings
     // obviously if settings dir does not exist settings is going to be empty
@@ -246,7 +236,23 @@ function initSettings() {
         'cache-min': oneDay
     });
 
-    return Q(settings);
+    return Q(returnEmptySettings ? {} : settings);
+}
+
+/**
+ * @description Calls initSettings(), then npmhelper.loadWithSettingsThenRestore, which initializes npm.config with
+ * settings, executes the promises, then restores npm.config. Use this rather than passing settings to npm.load, since
+ * that only works the first time you try to load npm.
+ */
+function initThenLoadSettingsWithRestore(useEmptySettings, promises) {
+    if (typeof useEmptySettings === 'function') {
+        promises = useEmptySettings;
+        useEmptySettings = false;
+    }
+
+    return initSettings(useEmptySettings).then(function (settings) {
+        return npmhelper.loadWithSettingsThenRestore(settings, promises);
+    });
 }
 
 // Send a message to the registry to update download counts.
@@ -341,26 +347,18 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
         registryName = 'cordova plugins registry';
     }
 
-    return initSettings().then(function(settings) {
-        // Don't use any option overrides for npm repo.
-        if (useNpmRegistry) {
-            settings = {};
-        }
-        return Q.ninvoke(npm, 'load', settings);
-    })
-    .then(function() {
+    return initThenLoadSettingsWithRestore(useNpmRegistry, function () {
         events.emit('log', 'Fetching plugin "' + plugin + '" via ' + registryName);
-        return Q.ninvoke(npm.commands, 'cache', ['add', plugin]);
-    })
-    .then(function(info) {
-        var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
-        bumpCounter(info, cl);
-        var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
-        // Unpack the plugin that was added to the cache (CB-8154)
-        var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-        return unpack.unpackTgz(package_tgz, pluginDir);
-    })
-    .fail(function(error) {
+        return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
+        .then(function (info) {
+            var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
+            bumpCounter(info, cl);
+            var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
+            // Unpack the plugin that was added to the cache (CB-8154)
+            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+            return unpack.unpackTgz(package_tgz, pluginDir);
+        });
+    }).fail(function(error) {
         events.emit('log', 'Fetching from ' + registryName + ' failed: ' + error.message);
         return Q.reject(error);
     });
