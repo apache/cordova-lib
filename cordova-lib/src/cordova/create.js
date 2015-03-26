@@ -166,6 +166,7 @@ function create(dir, optionalId, optionalName, cfg) {
 
         if (fs.existsSync(path.join(paths.root, 'config.xml'))) {
             paths.configXml = path.join(paths.root, 'config.xml');
+            paths.configXmlLinkable = true;
         } else {
             paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
         }
@@ -176,6 +177,7 @@ function create(dir, optionalId, optionalName, cfg) {
         }
         if (fs.existsSync(path.join(paths.root, 'hooks'))) {
             paths.hooks = path.join(paths.root, 'hooks');
+            paths.hooksLinkable = true;
         } else {
             paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
         }
@@ -185,45 +187,36 @@ function create(dir, optionalId, optionalName, cfg) {
             fs.mkdirSync(dir);
         }
 
-        if (!!cfg.lib.www.link) {
-            // symlink
-            try {
-                fs.symlinkSync(paths.www, path.join(dir, 'www'), 'dir');
-                if (paths.merges) {
-                    fs.symlinkSync(paths.merges, path.join(dir, 'merges'), 'dir');
+        var tryToLink = !!cfg.lib.www.link;
+        function copyOrLink(src, dst, linkable) {
+            if (src) {
+                if (tryToLink && linkable) {
+                    fs.symlinkSync(src, dst, 'dir');
+                } else {
+                    shell.mkdir(dst);
+                    shell.cp('-R', path.join(src, '*'), dst);
                 }
-                if (paths.hooks) {
-                    fs.symlinkSync(paths.hooks, path.join(dir, 'hooks'), 'dir');
-                }
-                if (paths.configXml) {
-                    fs.symlinkSync(paths.configXml, path.join(dir, 'config.xml'));
-                }
-            } catch (e) {
-                if (!dirAlreadyExisted) {
-                    fs.rmdirSync(dir);
-                }
-                if (process.platform.slice(0, 3) == 'win' && e.code == 'EPERM')  {
-                    throw new CordovaError('Symlinks on Windows require Administrator privileges');
-                }
-                throw e;
             }
-        } else {
-            // copy
-            shell.mkdir(path.join(dir, 'www'));
-            shell.cp('-R', path.join(paths.www, '*'), path.join(dir, 'www'));
-
-            if (paths.merges) {
-                shell.mkdir(path.join(dir, 'merges'));
-                shell.cp('-R', path.join(paths.merges, '*'), path.join(dir, 'merges'));
-            }
-            if (paths.hooks) {
-                shell.mkdir(path.join(dir, 'hooks'));
-                shell.cp('-R', path.join(paths.hooks, '*'), path.join(dir, 'hooks'));
-            }
+        }
+        try {
+            copyOrLink(paths.www, path.join(dir, 'www'), true);
+            copyOrLink(paths.merges, path.join(dir, 'merges'), true);
+            copyOrLink(paths.hooks, path.join(dir, 'hooks'), paths.hooksLinkable);
             if (paths.configXml) {
-                shell.cp(paths.configXml, path.join(dir, 'config.xml'));
+                if (tryToLink && paths.configXmlLinkable) {
+                    fs.symlinkSync(paths.configXml, path.join(dir, 'config.xml'));
+                } else {
+                    shell.cp(paths.configXml, path.join(dir, 'config.xml'));
+                }
             }
-
+        } catch (e) {
+            if (!dirAlreadyExisted) {
+                shell.rm('-rf', dir);
+            }
+            if (process.platform.slice(0, 3) == 'win' && e.code == 'EPERM')  {
+                throw new CordovaError('Symlinks on Windows require Administrator privileges');
+            }
+            throw e;
         }
 
         // Create basic project structure.
