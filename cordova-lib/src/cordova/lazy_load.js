@@ -35,6 +35,7 @@ var path          = require('path'),
     URL           = require('url'),
     Q             = require('q'),
     npm           = require('npm'),
+    npmhelper     = require('../util/npm-helper'),
     unpack        = require('../util/unpack'),
     util          = require('./util'),
     gitclone      = require('../gitclone'),
@@ -148,20 +149,14 @@ function npm_cache_add(pkg) {
         registry: 'https://registry.npmjs.org'
     };
 
-    return Q.nfcall(npm.load)
-    .then(function () {
-        // configure npm here instead of passing parameters to npm.load due to CB-7670
-        for (var prop in platformNpmConfig) {
-            npm.config.set(prop, platformNpmConfig[prop]);
-        }
-    })
-    .then(function() {
-        return Q.ninvoke(npm.commands, 'cache', ['add', pkg]);
-    }).then(function(info) {
-        var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
-        // Unpack the package that was added to the cache (CB-8154)
-        var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-        return unpack.unpackTgz(package_tgz, pkgDir);
+    return npmhelper.loadWithSettingsThenRestore(platformNpmConfig, function () {
+        return Q.ninvoke(npm.commands, 'cache', ['add', pkg])
+        .then(function (info) {
+            var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
+            // Unpack the package that was added to the cache (CB-8154)
+            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+            return unpack.unpackTgz(package_tgz, pkgDir);
+        });
     });
 }
 

@@ -63,9 +63,6 @@ function prepare(options) {
         });
         options.paths = paths;
     })
-    .then(function(){
-        return restore.installPluginsFromConfigXML(options);
-    })
     .then(function() {
         var pluginInfoProvider = new PluginInfoProvider();
 
@@ -130,6 +127,8 @@ function prepare(options) {
         })).then(function() {
             return hooksRunner.fire('after_prepare', options);
         });
+    }).then(function () {
+        return restore.installPluginsFromConfigXML(options);
     });
 }
 
