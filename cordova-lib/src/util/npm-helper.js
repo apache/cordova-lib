@@ -32,7 +32,7 @@ var npm = require('npm'),
  * @param {Function} promiseChain
  */
 function loadWithSettingsThenRestore(settings, promiseChain) {
-    return loadWithSettings(settings).then(promiseChain).then(restoreSettings);
+    return loadWithSettings(settings).then(promiseChain).finally(restoreSettings);
 }
 
 function loadWithSettings(settings) {
@@ -58,7 +58,7 @@ function loadWithSettings(settings) {
     });
 }
 
-function restoreSettings(passthrough) {
+function restoreSettings() {
     if (cachedSettings) {
         cachedSettings.forEach(function (prop) {
             if (prop in cachedSettingsValues) {
@@ -70,7 +70,6 @@ function restoreSettings(passthrough) {
         cachedSettings = null;
         cachedSettingsValues = null;
     }
-    return passthrough;
 }
 
 module.exports.loadWithSettingsThenRestore = loadWithSettingsThenRestore;
