@@ -126,11 +126,13 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             // If not found in local search path, fetch from the registry.
             return registry.fetch([plugin_src], options.client)
             .then(function(dir) {
+                var plugin_ver = (pluginInfoProvider.get(dir)).version;
                 return {
                     pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
-                        id: plugin_src
+                        id: plugin_src,
+                        version: plugin_ver
                     }
                 };
             });
