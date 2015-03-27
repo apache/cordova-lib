@@ -58,7 +58,7 @@ exports.isUrl = isUrl;
 
 function isUrl(value) {
     var u = value && url.parse(value);
-    return !!(u && u.protocol && u.protocol.length > 1); // Account for windows c:/ paths
+    return !!(u && u.protocol && u.protocol.length > 2); // Account for windows c:/ paths
 }
 
 function isRootDir(dir) {
@@ -238,9 +238,9 @@ function preProcessOptions (inputOptions) {
 
 function isDirectory(dir) {
     try {
-	return fs.lstatSync(dir).isDirectory();
-    } catch(e) {
-	return false;
+        return fs.lstatSync(dir).isDirectory();
+    } catch (e) {
+        return false;
     }
 }
 

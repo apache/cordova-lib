@@ -122,12 +122,12 @@ module.exports = function plugin(command, targets, opts) {
                         var id = parts[0];
                         var version = parts[1];
 
-                        // If no version is specified, retrieve the version from config.xml
-                        if(!saveToConfigXmlOn(config_json,opts) && !version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)){
+                        // If no version is specified, retrieve the version (or source) from config.xml
+                        if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
                             events.emit('verbose', 'no version specified, retrieving version from config.xml');
                             var ver = getVersionFromConfigFile(id, cfg);
 
-                            if( cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) ){
+                            if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
                                 target = ver;
                             } else {
                                 target = ver ? (id + '@' + ver) : target;
@@ -145,42 +145,33 @@ module.exports = function plugin(command, targets, opts) {
                         // save to config.xml
                         if(saveToConfigXmlOn(config_json,opts)){
                             var pluginInfo =  pluginInfoProvider.get(dir);
-                            var existingPluginEntry = cfg.getPlugin(pluginInfo.id);
-                            if(!existingPluginEntry){
-                                var attributes = {};
-                                attributes.name = pluginInfo.id;
-                                var pluginVersion = versionFromTargetString(target);
-                                if(!pluginVersion && opts.shrinkwrap){
-                                    pluginVersion = pluginInfo.version;
-                                }
-                                if(pluginVersion){
-                                    attributes.version = pluginVersion;
-                                }
-                                var url = require('url');
 
-                                var uri = url.parse(target);
-                                if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
+                            var attributes = {};
+                            attributes.name = pluginInfo.id;
+                            attributes.version = '^' + pluginInfo.version;
+
+                            var url = require('url');
+                            var uri = url.parse(target);
+                            if (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
+                                attributes.src = target;
+                            } else {
+                                var plugin_dir = cordova_util.fixRelativePath(path.join(target, (opts.subdir || '.')));
+                                if (fs.existsSync(plugin_dir)) {
                                     attributes.src = target;
-                                }else{
-                                    var plugin_dir = cordova_util.fixRelativePath(path.join(target,  (opts.subdir || '.') ));
-                                    if (fs.existsSync(plugin_dir)) {
-                                        attributes.src = target;
-                                    }
                                 }
-                                var variables = [];
-                                if(opts.cli_variables){
-                                    for(var varname in opts.cli_variables){
-                                        if(opts.cli_variables.hasOwnProperty(varname)){
-                                            variables.push({name:varname, value:opts.cli_variables[varname]});
-                                        }
-                                    }
-                                }
-                                cfg.addPlugin(attributes,variables);
-                                cfg.write();
-                                events.emit('results', 'Saved plugin info for "'+pluginInfo.id+'" to config.xml');
-                            }else{
-                                events.emit('results', 'Plugin info for "'+pluginInfo.id+'" already exists in config.xml');
                             }
+                            var variables = [];
+                            if (opts.cli_variables) {
+                                for (var varname in opts.cli_variables) {
+                                    if (opts.cli_variables.hasOwnProperty(varname)) {
+                                        variables.push({name: varname, value: opts.cli_variables[varname]});
+                                    }
+                                }
+                            }
+                            cfg.removePlugin(pluginInfo.id);
+                            cfg.addPlugin(attributes, variables);
+                            cfg.write();
+                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
                         }
                         return dir;
                     })
@@ -448,14 +439,4 @@ function saveToConfigXmlOn(config_json, options){
     options = options || {};
     var autosave =  config_json.auto_save_plugins || false;
     return autosave || options.save;
-}
-
-function versionFromTargetString(target){
-    if (target[target.length - 1] == path.sep) {
-        target = target.substring(0, target.length - 1);
-    }
-    var parts = target.split('@');
-    if(!cordova_util.isUrl(parts[0]) && !cordova_util.isDirectory(parts[0])){
-        return parts[1];
-    }
 }
