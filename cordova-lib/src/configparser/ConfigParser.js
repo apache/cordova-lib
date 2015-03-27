@@ -375,17 +375,15 @@ ConfigParser.prototype = {
      */
     removePlugin: function(id){
         if(id){
-            var theElement = this.doc.find('./plugin/[@name="' + id + '"]');
-            if(!theElement){
-                theElement = this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
-            }
-            if(theElement){
-                var childs = this.doc.getroot().getchildren();
-                var idx = childs.indexOf(theElement);
-                if(idx > -1){
-                    childs.splice(idx,1);
+            var plugins = this.doc.findall('./plugin/[@name="' + id + '"]')
+                .concat(this.doc.findall('./feature/param[@name="id"][@value="' + id + '"]/..'));
+            var children = this.doc.getroot().getchildren();
+            plugins.forEach(function (plugin) {
+                var idx = children.indexOf(plugin);
+                if (idx > -1) {
+                    children.splice(idx, 1);
                 }
-            }
+            });
         }
     },
 
