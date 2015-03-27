@@ -36,6 +36,7 @@ var config            = require('./config'),
     unorm             = require('unorm'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
+    PlatformJson      = require('../plugman/util/PlatformJson'),
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -589,12 +590,20 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
 }
 
 function installPluginsForNewPlatform(platform, projectRoot, cfg, opts) {
-    var output = path.join(projectRoot, 'platforms', platform);
     // Install all currently installed plugins into this new platform.
     var plugins_dir = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(plugins_dir);
-    if (!plugins) return Q();
 
+    // Get a list of all currently installed plugins, ignoring those that have already been installed for this platform
+    // during prepare (installed from config.xml).
+    var platformJson = PlatformJson.load(plugins_dir, platform);
+    var plugins = cordova_util.findPlugins(plugins_dir).filter(function (plugin) {
+        return !platformJson.isPluginInstalled(plugin);
+    });
+    if (plugins.length === 0) {
+        return Q();
+    }
+
+    var output = path.join(projectRoot, 'platforms', platform);
     var plugman = require('../plugman/plugman');
     // Install them serially.
     return plugins.reduce(function(soFar, plugin) {
