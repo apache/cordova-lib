@@ -150,5 +150,5 @@ module.exports = {
 };
 
 function getTargetConditions(obj) {
-    return {versions: obj.versions, target: obj.target, arch: obj.arch};
+    return { versions: obj.versions, deviceTarget: obj.deviceTarget, arch: obj.arch };
 }

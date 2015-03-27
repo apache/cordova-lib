@@ -34,4 +34,28 @@
             <poop/>
         </config-file>
     </platform>
+
+    <platform name="windows">
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities">
+            <Capability Note="should-exist-for-all-appxmanifest-target-files" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions="<=8.0.0">
+            <Capability Note="should-exist-for-win8-only" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions="=8.1.0">
+            <Capability Note="should-exist-for-win81-win-and-phone" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions="<=8.1.0" device-target="windows">
+            <Capability Note="should-exist-for-win8-and-win81-win-only" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions="<=8.1.0" device-target="phone">
+            <Capability Note="should-exist-for-win81-phone-only" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions="<=8.1.0" device-target="all">
+            <Capability Note="should-exist-for-win8-and-win81-both" />
+        </config-file>
+        <config-file target="package.appxmanifest" parent="/Parent/Capabilities" versions=">=10.0.0">
+            <Capability Note="should-exist-in-win10-only" />
+        </config-file>
+    </platform>
 </plugin>

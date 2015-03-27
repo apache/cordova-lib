@@ -330,19 +330,19 @@ beforeEach(function () {
                         .then(function () {
                             var path = 'ItemGroup/SDKReference';
                             var incText = 'TestSDK1, Version=1.0';
-                            var targetConditions = {versions: undefined, target: undefined, arch: 'x86'};
+                            var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x86'};
                             validateUninstalledProjects('lib-file', libfiles[0], path, incText, targetConditions, ['all']);
 
                             incText = 'TestSDK2, Version=1.0';
-                            targetConditions = {versions: '>=8.1', target: undefined, arch: undefined};
+                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('lib-file', libfiles[1], path, incText, targetConditions, ['windows', 'phone']);
 
                             incText = 'TestSDK3, Version=1.0';
-                            targetConditions = {versions: undefined, target: 'phone', arch: undefined};
+                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
                             validateUninstalledProjects('lib-file', libfiles[2], path, incText, targetConditions, ['phone']);
 
                             incText = 'TestSDK4, Version=1.0';
-                            targetConditions = {versions: '8.0', target: 'windows', arch: 'x86'};
+                            targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x86'};
                             validateUninstalledProjects('lib-file', libfiles[3], path, incText, targetConditions, ['windows8']);
 
                             done();
@@ -360,19 +360,19 @@ beforeEach(function () {
                         .then(function () {
                             var path = 'ItemGroup/Reference';
                             var incText = 'dummy1';
-                            var targetConditions = {versions: undefined, target: undefined, arch: 'x64'};
+                            var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x64'};
                             validateUninstalledProjects('framework', frameworks[0], path, incText, targetConditions, ['all']);
 
                             incText = 'dummy2';
-                            targetConditions = {versions: '>=8.0', target: undefined, arch: undefined};
+                            targetConditions = {versions: '>=8.0', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[1], path, incText, targetConditions, ['all']);
 
                             incText = 'dummy3';
-                            targetConditions = {versions: undefined, target: 'windows', arch: undefined};
+                            targetConditions = {versions: undefined, deviceTarget: 'windows', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[2], path, incText, targetConditions, ['windows', 'windows8']);
 
                             incText = 'dummy4';
-                            targetConditions = {versions: '8.1', target: 'phone', arch: 'ARM'};
+                            targetConditions = {versions: '8.1', deviceTarget: 'phone', arch: 'ARM'};
                             validateUninstalledProjects('framework', frameworks[3], path, incText, targetConditions, ['phone']);
 
                             done();
@@ -390,19 +390,19 @@ beforeEach(function () {
                         .then(function () {
                             var xmlPath = 'ItemGroup/ProjectReference';
                             var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy1.vcxproj');
-                            var targetConditions = {versions: undefined, target: undefined, arch: 'x64'};
+                            var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x64'};
                             validateUninstalledProjects('framework', frameworks[4], xmlPath, incText, targetConditions, ['all']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy2.vcxproj');
-                            targetConditions = {versions: '<8.1', target: undefined, arch: undefined};
+                            targetConditions = {versions: '<8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[5], xmlPath, incText, targetConditions, ['windows8']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy3.vcxproj');
-                            targetConditions = {versions: undefined, target: 'win', arch: undefined};
+                            targetConditions = {versions: undefined, deviceTarget: 'win', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[6], xmlPath, incText, targetConditions, ['windows', 'windows8']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy4.vcxproj');
-                            targetConditions = {versions: '8.1', target: 'all', arch: 'x86'};
+                            targetConditions = {versions: '8.1', deviceTarget: 'all', arch: 'x86'};
                             validateUninstalledProjects('framework', frameworks[7], xmlPath, incText, targetConditions, ['windows', 'phone']);
 
                             done();
