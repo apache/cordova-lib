@@ -216,7 +216,7 @@ function initSettings(returnEmptySettings) {
 
     // check if settings already set
     if(settings !== null) {
-        return Q(settings);
+        return Q(returnEmptySettings ? {} : settings);
     }
 
     // setting up settings
