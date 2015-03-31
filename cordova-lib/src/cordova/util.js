@@ -243,6 +243,13 @@ function preProcessOptions (inputOptions) {
         result.platforms = projectPlatforms;
     }
 
+    var buildConfigFound = result.options.some(function (option) {
+        return option.indexOf('--buildConfig') === 0;
+    });
+    if (!buildConfigFound && fs.existsSync(path.join(projectRoot, 'build.json'))) {
+        result.options.push('--buildConfig=' + path.join(projectRoot, 'build.json'));
+    }
+
     return result;
 }
 
