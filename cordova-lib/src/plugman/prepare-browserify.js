@@ -112,7 +112,7 @@ function getPlatformVersion(cId, project_dir) {
     var deferred = Q.defer();
     //run version script for each platform to get platformVersion
     var versionPath = path.join(project_dir, '/cordova/version');
-    childProcess.exec(versionPath, function(err, stdout, stderr) {
+    childProcess.exec('"' + versionPath + '"', function(err, stdout, stderr) {
         if (err) {
             events.emit('log', 'Error running platform version script');
             events.emit('log', err);
