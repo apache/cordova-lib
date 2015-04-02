@@ -486,11 +486,11 @@ proj.prototype = {
 
 function jsproj(location) {
     function targetPlatformIdentifierToDevice(jsprojPlatform) {
-        var index = ["Windows", "WindowsPhoneApp"].indexOf(jsprojPlatform);
+        var index = ["Windows", "WindowsPhoneApp", "UAP"].indexOf(jsprojPlatform);
         if (index < 0) {
             throw new Error("Unknown TargetPlatformIdentifier '" + jsprojPlatform + "' in project file '" + location + "'");
         }
-        return ["windows", "phone"][index];
+        return ["windows", "phone", "windows"][index];
     }
 
     function validateVersion(version) {
