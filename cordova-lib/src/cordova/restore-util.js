@@ -30,43 +30,45 @@ exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
 
-function installPlatformsFromConfigXML(platforms){
+function installPlatformsFromConfigXML(platforms) {
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var cfg = new ConfigParser(configPath);
 
     var engines = cfg.getEngines(projectHome);
-    var targets = engines.map(function(engine){
+    var installAllPlatforms = !platforms || platforms.length === 0;
+
+    var targets = engines.map(function (engine) {
         var platformPath = path.join(projectHome, 'platforms', engine.name);
         var platformAlreadyAdded = fs.existsSync(platformPath);
 
-       //if no platforms are specified we skip.
-       if( (platforms && platforms.indexOf(engine.name)> -1 ) && !platformAlreadyAdded ){
-         var t = engine.name;
-         if(engine.version){
-           t += '@'+engine.version;
-         }
-         return t;
-       }
+        //if no platforms are specified we add all.
+        if ((installAllPlatforms || platforms.indexOf(engine.name) > -1 ) && !platformAlreadyAdded) {
+            var t = engine.name;
+            if (engine.version) {
+                t += '@' + engine.version;
+            }
+            return t;
+        }
     });
 
-    if(!targets || !targets.length  ){
+    if (!targets || !targets.length) {
         return Q.all('No platforms are listed in config.xml to restore');
     }
     // Run platform add for all the platforms seperately
     // so that failure on one does not affect the other.
-    var promises = targets.map(function(target){
-       if(target){
-         events.emit('log', 'Restoring platform '+target+ ' referenced on config.xml');
-         return cordova.raw.platform('add',target);
-       }
-       return Q();
+    var promises = targets.map(function (target) {
+        if (target) {
+            events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
+            return cordova.raw.platform('add', target);
+        }
+        return Q();
     });
     return Q.allSettled(promises).then(
         function (results) {
-            for(var i =0; i<results.length; i++){
+            for (var i = 0; i < results.length; i++) {
                 //log the rejections otherwise they are lost
-                if(results[i].state ==='rejected'){
+                if (results[i].state === 'rejected') {
                     events.emit('log', results[i].reason.message);
                 }
             }
