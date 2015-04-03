@@ -19,6 +19,8 @@ var fs = require('fs');
 var path = require('path');
 var shelljs = require('shelljs');
 var mungeutil = require('./munge-util');
+var pluginMappernto = require('cordova-registry-mapper').newToOld;
+var pluginMapperotn = require('cordova-registry-mapper').oldToNew;
 
 function PlatformJson(filePath, platform, root) {
     this.filePath = filePath;
@@ -43,13 +45,14 @@ PlatformJson.prototype.save = function() {
 PlatformJson.prototype.isPluginInstalled = function(pluginId) {
     var installed_plugin_id;
     var json = this.root;
+
     for (installed_plugin_id in json.installed_plugins) {
-        if (installed_plugin_id == pluginId) {
+        if ((installed_plugin_id == pluginId)||(installed_plugin_id == pluginMappernto[pluginId]) || (installed_plugin_id == pluginMapperotn[pluginId])) {
             return true;
         }
     }
     for (installed_plugin_id in json.dependent_plugins) {
-        if (installed_plugin_id == pluginId) {
+        if ((installed_plugin_id == pluginId)||(installed_plugin_id == pluginMappernto[pluginId]) || (installed_plugin_id == pluginMapperotn[pluginId])) {
             return true;
         }
     }
