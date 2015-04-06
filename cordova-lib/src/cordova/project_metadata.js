@@ -33,11 +33,17 @@ function getPlatforms(projectRoot){
 
     // If an engine's 'version' property is really its source, map that to the appropriate field.
     var engines = cfg.getEngines().map(function (engine) {
-        if (engine.version && !engine.src && !semver.validRange(engine.version)) {
-            engine.src = engine.version;
-            delete engine.version;
+        var result = {
+            name: engine.name
+        };
+
+        if (semver.validRange(engine.spec, true)) {
+            result.version = engine.spec;
+        } else {
+            result.src = engine.spec;
         }
-        return engine;
+
+        return result;
     });
 
     return Q(engines);
@@ -53,6 +59,16 @@ function getPlugins(projectRoot){
 
     // Map variables object to an array
     var plugins = cfg.getPlugins().map(function (plugin) {
+        var result = {
+            name: plugin.name
+        };
+
+        if (semver.validRange(plugin.spec, true)) {
+            result.version = plugin.spec;
+        } else {
+            result.src = plugin.spec;
+        }
+
         var variablesObject = plugin.variables;
         var variablesArray = [];
         if (variablesObject) {
@@ -63,8 +79,8 @@ function getPlugins(projectRoot){
                 });
             }
         }
-        plugin.variables = variablesArray;
-        return plugin;
+        result.variables = variablesArray;
+        return result;
     });
 
     return Q(plugins);

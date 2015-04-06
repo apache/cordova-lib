@@ -30,8 +30,7 @@ var cordova_util  = require('./util'),
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('../events'),
-    metadata      = require('../plugman/util/metadata'),
-    _             = require('underscore');
+    metadata      = require('../plugman/util/metadata');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -148,18 +147,10 @@ module.exports = function plugin(command, targets, opts) {
 
                             var attributes = {};
                             attributes.name = pluginInfo.id;
-                            attributes.version = '^' + pluginInfo.version;
 
-                            var url = require('url');
-                            var uri = url.parse(target);
-                            if (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
-                                attributes.src = target;
-                            } else {
-                                var plugin_dir = cordova_util.fixRelativePath(path.join(target, (opts.subdir || '.')));
-                                if (fs.existsSync(plugin_dir)) {
-                                    attributes.src = target;
-                                }
-                            }
+                            var src = parseSource(target, opts);
+                            attributes.spec = src ? src : '^' + pluginInfo.version;
+
                             var variables = [];
                             if (opts.cli_variables) {
                                 for (var varname in opts.cli_variables) {
@@ -335,26 +326,12 @@ function save(projectRoot, opts){
             return;
         }
 
-            
         var attribs = {name: pluginName};
+        var spec = getSpec(pluginSource, projectRoot, pluginName);
+        if (spec) {
+            attribs.spec = spec;
+        }
 
-        // Retrieve appropriate property: 'src' or 'version'
-        var src = (function(){
-            if(pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')){
-                return { src: (pluginSource.url || pluginSource.path) };
-            }
-            if(pluginSource.hasOwnProperty('id')){
-                var parts = pluginSource.id.split('@');
-                var version = parts[1];
-                if(version){
-                    return { version: version };
-                }
-            }
-            // If there's an id, but no version
-            // If there's no valid property('url', 'path', 'id')
-            return {};
-        }());
-        _.extend(attribs, src);
         var variables = getPluginVariables(plugin.variables);
         cfg.addPlugin(attribs, variables);
     });
@@ -368,7 +345,7 @@ function getPluginVariables(variables){
     if(!variables){
         return result;
     }
-    
+
     Object.keys(variables).forEach(function(pluginVar){
         result.push({name: pluginVar, value: variables[pluginVar]});
     });
@@ -378,7 +355,7 @@ function getPluginVariables(variables){
 
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
-    return pluginEntry && (pluginEntry.src || pluginEntry.version); 
+    return pluginEntry && pluginEntry.spec;
 }
 
 function list(projectRoot, hooksRunner) {
@@ -439,4 +416,66 @@ function saveToConfigXmlOn(config_json, options){
     options = options || {};
     var autosave =  config_json.auto_save_plugins || false;
     return autosave || options.save;
+}
+
+function parseSource(target, opts) {
+    var url = require('url');
+    var uri = url.parse(target);
+    if (uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !target.match(/^\w+:\\/)) {
+        return target;
+    } else {
+        var plugin_dir = cordova_util.fixRelativePath(path.join(target, (opts.subdir || '.')));
+        if (fs.existsSync(plugin_dir)) {
+            return target;
+        }
+    }
+    return null;
+}
+
+function getSpec(pluginSource, projectRoot, pluginName) {
+    if (pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')) {
+        return pluginSource.url || pluginSource.path;
+    }
+
+    var version = null;
+    if (pluginSource.hasOwnProperty('id')) {
+        // Note that currently version is only saved here if it was explicitly specified when the plugin was added.
+        var parts = pluginSource.id.split('@');
+        version = parts[1];
+        if (version) {
+            version = versionString(version);
+        }
+    }
+
+    if (!version) {
+        // Fallback on getting version from the plugin folder, if it's there
+        var pluginInfoProvider = new PluginInfoProvider();
+        var dir = path.join(projectRoot, 'plugins', pluginName);
+
+        try {
+            // pluginInfoProvider.get() will throw if directory does not exist.
+            var pluginInfo = pluginInfoProvider.get(dir);
+            if (pluginInfo) {
+                version = versionString(pluginInfo.version);
+            }
+        } catch (err) {
+        }
+    }
+
+    return version;
+}
+
+function versionString(version) {
+    var validVersion = semver.valid(version, true);
+    if (validVersion) {
+        return '^' + validVersion;
+    }
+
+    if (semver.validRange(version, true)) {
+        // Return what we were passed rather than the result of the validRange() call, as that call makes modifications
+        // we don't want, like converting '^1.2.3' to '>=1.2.3-0 <2.0.0-0'
+        return version;
+    }
+
+    return null;
 }

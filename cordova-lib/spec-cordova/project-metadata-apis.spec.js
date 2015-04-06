@@ -31,13 +31,13 @@ describe('retrieval of project metadata', function () {
             .then(function (platforms) {
                 expect(platforms.length).toBe(2);
 
-                // Android platform has version defined, not source
+                // Android platform has version defined in deprecated version field - should still work.
                 var androidPlatform = findPlatform(platforms, 'android');
                 expect(androidPlatform).not.toBeNull();
                 expect(androidPlatform.version).toBe(androidVersion);
                 expect(androidPlatform.src).toBeUndefined();
 
-                // Browser platform has source defined in the version field
+                // Browser platform has source defined in the spec field.
                 var browserPlatform = findPlatform(platforms, 'browser');
                 expect(browserPlatform).not.toBeNull();
                 expect(browserPlatform.version).toBeUndefined();
@@ -54,11 +54,14 @@ describe('retrieval of project metadata', function () {
         var cameraVariableName = 'TEST_VARIABLE';
         var cameraVariableValue = 'My Test Variable';
 
+        var fileId = 'org.apache.cordova.file';
+        var fileSource = 'https://github.com/apache/cordova-plugin-file.git';
+
         cordova.raw.projectMetadata.getPlugins(projectRoot)
             .then(function (plugins) {
-                expect(plugins.length).toBe(2);
+                expect(plugins.length).toBe(3);
 
-                // Device plugin
+                // Device plugin uses current spec attribute to specify version - should be returned in version field.
                 var devicePlugin = findPlugin(plugins, deviceId);
                 expect(devicePlugin).not.toBeNull();
                 expect(devicePlugin.version).toBe(deviceVersion);
@@ -69,7 +72,7 @@ describe('retrieval of project metadata', function () {
                 expect(Array.isArray(deviceVariables)).toBeTruthy();
                 expect(deviceVariables.length).toBe(0);
 
-                // Camera plugin
+                // Camera plugin uses deprecated src attribute - still should work.
                 var cameraPlugin = findPlugin(plugins, cameraId);
                 expect(cameraPlugin).not.toBeNull();
                 expect(cameraPlugin.src).toBe(cameraSrc);
@@ -80,6 +83,17 @@ describe('retrieval of project metadata', function () {
                 expect(cameraVariables.length).toBe(1);
                 expect(cameraVariables[0].name).toBe(cameraVariableName);
                 expect(cameraVariables[0].value).toBe(cameraVariableValue);
+
+                // File plugin uses deprecated src and version attributes - version should be ignored.
+                var filePlugin = findPlugin(plugins, fileId);
+                expect(filePlugin).not.toBeNull();
+                expect(filePlugin.version).toBeUndefined();
+                expect(filePlugin.src).toBe(fileSource);
+
+                var fileVariables = filePlugin.variables;
+                expect(fileVariables).not.toBeNull();
+                expect(Array.isArray(fileVariables)).toBeTruthy();
+                expect(fileVariables.length).toBe(0);
             }).finally(done);
     });
 });

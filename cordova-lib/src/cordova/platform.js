@@ -86,30 +86,32 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
             var platform = parts[0];
-            var version = parts[1];
+            var spec = parts[1];
 
             return Q.when().then(function() {
                 if (!(platform in platforms)) {
-                    version = platform;
+                    spec = platform;
                     platform = null;
+                }
+
+                if (platform && !spec && cmd == 'add') {
+                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+                    spec = getVersionFromConfigFile(platform, cfg);
                 }
 
                 // If --save/autosave on && no version specified, use the pinned version
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                if( (opts.save || autosave) && !version ){
-                    version = platforms[platform].version;
+                if( (opts.save || autosave) && !spec ){
+                    spec = platforms[platform].version;
                 }
-                if (platform && !version && cmd == 'add') {
-                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
-                    version = getVersionFromConfigFile(platform, cfg);
-                }
-                if (version) {
-                    var maybeDir = cordova_util.fixRelativePath(version);
+
+                if (spec) {
+                    var maybeDir = cordova_util.fixRelativePath(spec);
                     if (cordova_util.isDirectory(maybeDir)) {
                         return getPlatformDetailsFromDir(maybeDir, platform);
                     }
                 }
-                return downloadPlatform(projectRoot, platform, version, opts);
+                return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
@@ -165,18 +167,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
                     }
                 }).then(function() {
-                    // Save platform@version into platforms.json. i.e: 'android@https://github.com/apache/cordova-android.git'
-                    // If no version was specified, save the edge version
-                    var versionToSave = version || platforms[platform].version;
+                    var saveVersion = !spec || semver.validRange(spec, true);
+
+                    // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
+                    // source location was specified, we always save that. Otherwise we save the version that was
+                    // actually installed.
+                    var versionToSave = saveVersion ? platDetails.version : spec;
                     events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
-                }).then(function() {
+
                     if(opts.save || autosave){
+                        // Similarly here, we save the source location if that was specified, otherwise the version that
+                        // was installed. However, we save it with the "^" attribute.
+                        spec = saveVersion ? '^' + platDetails.version : spec;
+
                         // Save target into config.xml, overriding already existing settings
                         events.emit('log', '--save flag or autosave detected');
-                        events.emit('log', 'Saving ' + platform + '@' + version + ' into config.xml file ...');
+                        events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
                         cfg.removeEngine(platform);
-                        cfg.addEngine(platform, version);
+                        cfg.addEngine(platform, spec);
                         cfg.write();
                     }
                 });
@@ -281,7 +290,7 @@ function getVersionFromConfigFile(platform, cfg) {
         return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
-    return engine && engine.version;
+    return engine && engine.spec;
 }
 
 function remove(hooksRunner, projectRoot, targets, opts) {
