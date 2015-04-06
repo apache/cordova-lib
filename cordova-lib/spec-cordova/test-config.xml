@@ -26,9 +26,18 @@
     <plugin name="org.apache.cordova.pluginwithversion" version="1.1.1" />
     <plugin name="org.apache.cordova.pluginwithurlandversion" src="http://cordova.apache.org/pluginwithurlandversion" version="1.1.1" />
     <plugin name="org.apache.cordova.justaplugin" />
-    <feature name="Legacy plugin entry">
-        <param name="id" value="org.apache.cordova.legacyfeature" />
+    <feature name="Legacy plugin entry with version">
+        <param name="id" value="org.apache.cordova.legacyfeatureversion" />
         <param name="version" value="1.2.3" />
         <param name="aVar" value="aValue" />
+    </feature>
+    <feature name="Legacy plugin entry with url">
+        <param name="id" value="org.apache.cordova.legacyfeatureurl" />
+        <param name="url" value="http://cordova.apache.org/legacyfeatureurl" />
+    </feature>
+    <feature name="Legacy plugin entry with version and url">
+        <param name="id" value="org.apache.cordova.legacyfeatureversionandurl" />
+        <param name="version" value="1.2.3" />
+        <param name="url" value="http://cordova.apache.org/legacyfeatureversionandurl" />
     </feature>
 </widget>

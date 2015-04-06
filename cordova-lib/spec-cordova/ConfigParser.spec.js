@@ -122,7 +122,9 @@ describe('config.xml parser', function () {
                    'org.apache.cordova.pluginwithversion',
                    'org.apache.cordova.pluginwithurlandversion',
                    'org.apache.cordova.justaplugin',
-                   'org.apache.cordova.legacyfeature'
+                   'org.apache.cordova.legacyfeatureversion',
+                   'org.apache.cordova.legacyfeatureurl',
+                   'org.apache.cordova.legacyfeatureversionandurl'
                ];
                var list = cfg.getPluginIdList();
                expect(list.length).toEqual(expectedList.length);
@@ -140,13 +142,17 @@ describe('config.xml parser', function () {
                 var plugin = cfg.getPlugin('org.apache.cordova.undefinedplugin');
                 expect(plugin).not.toBeDefined();
             });
-            it('should read plugin with src', function(){
+            it('should read plugin with src and store it in spec field', function(){
                 var plugin = cfg.getPlugin('org.apache.cordova.pluginwithurl');
-                expect(plugin.src).toEqual('http://cordova.apache.org/pluginwithurl');
+                expect(plugin.spec).toEqual('http://cordova.apache.org/pluginwithurl');
             });
-            it('should read plugin with version', function(){
+            it('should read plugin with version and store it in spec field', function(){
                 var plugin = cfg.getPlugin('org.apache.cordova.pluginwithversion');
-                expect(plugin.version).toEqual('1.1.1');
+                expect(plugin.spec).toEqual('1.1.1');
+            });
+            it('should read plugin with source and version and store source in spec field', function(){
+                var plugin = cfg.getPlugin('org.apache.cordova.pluginwithurlandversion');
+                expect(plugin.spec).toEqual('http://cordova.apache.org/pluginwithurlandversion');
             });
             it('should read plugin variables', function () {
                 var plugin = cfg.getPlugin('org.apache.cordova.pluginwithvars');
@@ -179,13 +185,25 @@ describe('config.xml parser', function () {
                 expect(variables[0].attrib.name).toEqual('paraname');
                 expect(variables[0].attrib.value).toEqual('paravalue');
             });
-            it('should be able to read legacy feature entries', function(){
-                var plugin = cfg.getPlugin('org.apache.cordova.legacyfeature');
+            it('should be able to read legacy feature entries with a version', function(){
+                var plugin = cfg.getPlugin('org.apache.cordova.legacyfeatureversion');
                 expect(plugin).toBeDefined();
-                expect(plugin.name).toEqual('org.apache.cordova.legacyfeature');
-                expect(plugin.version).toEqual('1.2.3');
+                expect(plugin.name).toEqual('org.apache.cordova.legacyfeatureversion');
+                expect(plugin.spec).toEqual('1.2.3');
                 expect(plugin.variables).toBeDefined();
                 expect(plugin.variables.aVar).toEqual('aValue');
+            });
+            it('should be able to read legacy feature entries with a url', function(){
+                var plugin = cfg.getPlugin('org.apache.cordova.legacyfeatureurl');
+                expect(plugin).toBeDefined();
+                expect(plugin.name).toEqual('org.apache.cordova.legacyfeatureurl');
+                expect(plugin.spec).toEqual('http://cordova.apache.org/legacyfeatureurl');
+            });
+            it('should be able to read legacy feature entries with a version and a url', function(){
+                var plugin = cfg.getPlugin('org.apache.cordova.legacyfeatureversionandurl');
+                expect(plugin).toBeDefined();
+                expect(plugin.name).toEqual('org.apache.cordova.legacyfeatureversionandurl');
+                expect(plugin.spec).toEqual('http://cordova.apache.org/legacyfeatureversionandurl');
             });
             it('it should remove given plugin', function(){
                 cfg.removePlugin('org.apache.cordova.justaplugin');

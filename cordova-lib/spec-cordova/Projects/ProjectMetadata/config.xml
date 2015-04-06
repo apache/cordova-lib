@@ -22,10 +22,11 @@
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
-    <engine name="android" version="3.7.1" />
-    <engine name="browser" version="https://github.com/apache/cordova-browser.git" />
-    <plugin name="org.apache.cordova.device" version="0.3.0" />
-    <plugin name="org.apache.cordova.camera" src="https://github.com/apache/cordova-plugin-camera.git">
+    <engine name="android" version="3.7.1" /> <!-- this uses deprecated version attribute-->
+    <engine name="browser" spec="https://github.com/apache/cordova-browser.git" /> <!-- this uses current spec attribute -->
+    <plugin name="org.apache.cordova.device" spec="0.3.0" /> <!-- this uses current spec attribute -->
+    <plugin name="org.apache.cordova.camera" src="https://github.com/apache/cordova-plugin-camera.git"> <!-- this uses deprecated src attribute-->
         <variable name="TEST_VARIABLE" value="My Test Variable" />
-	</plugin>
+    </plugin>
+    <plugin name="org.apache.cordova.file" src="https://github.com/apache/cordova-plugin-file.git" version="1.2.3" /> <!-- this uses outdated src and version attributes -->
 </widget>
