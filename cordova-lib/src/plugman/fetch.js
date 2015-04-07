@@ -239,11 +239,14 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(pinfo, plugins_dir, link) {
+
     var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
+
+
     shell.rm('-rf', dest);
     if (link) {
-        var isRelativePath = plugin_dir[1] != ':' && plugin_dir[0] != path.sep;
+        var isRelativePath = plugin_dir.charAt(1) != ':' && plugin_dir.charAt(0) != path.sep;
         var fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;
         events.emit('verbose', 'Linking "' + dest + '" => "' + fixedPath + '"');
         fs.symlinkSync(fixedPath, dest, 'dir');
