@@ -162,7 +162,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     return require('./cordova').raw.prepare(prepOpts);
                 }).then(function() {
                     if (cmd == 'add') {
-                        return installPluginsForNewPlatform(platform, projectRoot, cfg, opts);
+                        return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
                 }).then(function() {
                     // Save platform@version into platforms.json. i.e: 'android@https://github.com/apache/cordova-android.git'
@@ -589,7 +589,7 @@ function getCreateArgs(platDetails, projectRoot, cfg, template_dir, opts) {
     return args;
 }
 
-function installPluginsForNewPlatform(platform, projectRoot, cfg, opts) {
+function installPluginsForNewPlatform(platform, projectRoot, opts) {
     // Install all currently installed plugins into this new platform.
     var plugins_dir = path.join(projectRoot, 'plugins');
 
@@ -605,31 +605,30 @@ function installPluginsForNewPlatform(platform, projectRoot, cfg, opts) {
 
     var output = path.join(projectRoot, 'platforms', platform);
     var plugman = require('../plugman/plugman');
+    var fetchMetadata = require('../plugman/util/metadata');
+
     // Install them serially.
-    return plugins.reduce(function(soFar, plugin) {
-        return soFar.then(function() {
+    return plugins.reduce(function (soFar, plugin) {
+        return soFar.then(function () {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
             plugin = path.basename(plugin);
-            var options = (function(){
-                // Get plugin preferences from config features if have any
-                // Pass them as cli_variables to plugman
-                var pluginEntry = cfg.getPlugin(plugin);
-                var variables = pluginEntry && pluginEntry.variables;
-                if (!!variables) {
-                    events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
-                    return {
-                        cli_variables: variables
-                    };
-                }
-                return {};
-            })();
-            options.searchpath = opts.searchpath;
+
+            var options = {
+                searchpath: opts.searchpath
+            };
+
+            // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
+            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
+            var variables = pluginMetadata && pluginMetadata.variables;
+            if (variables) {
+                events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
+                options.cli_variables = variables;
+            }
 
             return plugman.raw.install(platform, output, plugin, plugins_dir, options);
         });
     }, Q());
 }
-
 
 // Copty the cordova.js file to platforms/<platform>/platform_www/
 // The www dir is nuked on each prepare so we keep cordova.js in platform_www
