@@ -470,7 +470,7 @@ function tryFetchDependency(dep, install, options) {
     }
 
     // Test relative to parent folder
-    if( dep.url && isRelativePath(dep.url) ) {
+    if( dep.url && !isAbsolutePath(dep.url) ) {
         relativePath = path.resolve(install.top_plugin_dir, '../' + dep.url);
 
         if( fs.existsSync(relativePath) ) {
@@ -585,13 +585,11 @@ function interp_vars(vars, text) {
     return text;
 }
 
-function isAbsolutePath(path) {
-    return path && (path[0] === '/' || path[0] === '\\' || path.indexOf(':\\') > 0 );
+function isAbsolutePath(_path) {
+    // some valid abs paths: 'c:' '/' '\' and possibly ? 'file:' 'http:'
+    return _path && (_path.charAt(0) === path.sep || _path.indexOf(':') > 0);
 }
 
-function isRelativePath(path) {
-    return !isAbsolutePath(path);
-}
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
