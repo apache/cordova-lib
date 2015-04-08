@@ -137,9 +137,10 @@ ConfigParser.prototype = {
         return findElementAttributeValue(name, this.doc.findall('preference'));
     },
     setGlobalPreference: function (name, value) {
-        var pref = this.doc.find('preference[@name="service_worker"]');
+        var pref = this.doc.find('preference[@name="' + name + '"]');
         if (!pref) {
             pref = new et.Element('preference');
+            pref.attrib.name = name;
             this.doc.getroot().append(pref);
         }
         pref.attrib.value = value;
