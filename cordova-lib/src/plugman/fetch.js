@@ -29,7 +29,9 @@ var shell   = require('shelljs'),
     metadata = require('./util/metadata'),
     path    = require('path'),
     Q       = require('q'),
-    registry = require('./registry/registry');
+    registry = require('./registry/registry'),
+    pluginMappernto = require('cordova-registry-mapper').newToOld,
+    pluginMapperotn = require('cordova-registry-mapper').oldToNew;
 var cordovaUtil = require('../cordova/util');
 
 // Cache of PluginInfo objects for plugins in search path.
@@ -238,11 +240,30 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
+// if plugin exists in plugins_dir/plugin_id, skip copy
 function copyPlugin(pinfo, plugins_dir, link) {
 
     var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
+    var altDest;
 
+    //check if alternative id already exists in plugins directory
+    if(pluginMapperotn[pinfo.id]) {
+        altDest = path.join(plugins_dir, pluginMapperotn[pinfo.id]);
+    }   
+    if(pluginMappernto[pinfo.id]) {
+        altDest = path.join(plugins_dir, pluginMappernto[pinfo.id]);
+    }
+
+    if(fs.existsSync(dest)) {
+        events.emit('log', pinfo.id + '" already exists in "' + dest + '"');
+        return dest;
+
+    }
+    if(fs.existsSync(altDest)) {
+        events.emit('log', pinfo.id + '" already exists in "' + altDest + '"');
+        return altDest;
+    }
 
     shell.rm('-rf', dest);
     if (link) {
