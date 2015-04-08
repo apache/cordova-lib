@@ -240,7 +240,7 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
-// if plugin exists in plugins_dir/plugin_id, skip copy
+// if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying 
 function copyPlugin(pinfo, plugins_dir, link) {
 
     var plugin_dir = pinfo.dir;
@@ -250,16 +250,10 @@ function copyPlugin(pinfo, plugins_dir, link) {
     //check if alternative id already exists in plugins directory
     if(pluginMapperotn[pinfo.id]) {
         altDest = path.join(plugins_dir, pluginMapperotn[pinfo.id]);
-    }   
-    if(pluginMappernto[pinfo.id]) {
+    } else if(pluginMappernto[pinfo.id]) {
         altDest = path.join(plugins_dir, pluginMappernto[pinfo.id]);
     }
 
-    if(fs.existsSync(dest)) {
-        events.emit('log', pinfo.id + '" already exists in "' + dest + '"');
-        return dest;
-
-    }
     if(fs.existsSync(altDest)) {
         events.emit('log', pinfo.id + '" already exists in "' + altDest + '"');
         return altDest;
