@@ -184,8 +184,8 @@ ConfigParser.prototype = {
             res.src = elt.attrib.src;
             res.density = elt.attrib['density'] || elt.attrib[that.cdvNamespacePrefix+':density'] || elt.attrib['gap:density'];
             res.platform = elt.platform || null; // null means icon represents default icon (shared between platforms)
-            res.width = elt.attrib.width;
-            res.height = elt.attrib.height;
+            res.width = +elt.attrib.width || undefined;
+            res.height = +elt.attrib.height || undefined;
 
             // default icon
             if (!res.width && !res.height && !res.density) {
@@ -201,19 +201,13 @@ ConfigParser.prototype = {
          * @return {Resource} Resource object or null if not found.
          */
         ret.getBySize = function(width, height) {
-            if (!width && !height){
-                throw 'One of width or height must be defined';
-            }
-            for (var idx in this){
-                var res = this[idx];
-                // If only one of width or height is not specified, use another parameter for comparation
-                // If both specified, compare both.
-                if ((!width || (width == res.width)) &&
-                    (!height || (height == res.height))){
-                    return res;
+            return ret.filter(function(res) {
+                if (!res.width && !res.height) {
+                    return false;
                 }
-            }
-            return null;
+                return ((!res.width || (width == res.width)) &&
+                    (!res.height || (height == res.height)));
+            })[0] || null;
         };
 
         /**
@@ -221,13 +215,10 @@ ConfigParser.prototype = {
          * @param  {string} density Density of resource.
          * @return {Resource}       Resource object or null if not found.
          */
-        ret.getByDensity = function (density) {
-            for (var idx in this) {
-                if (this[idx].density == density) {
-                    return this[idx];
-                }
-            }
-            return null;
+        ret.getByDensity = function(density) {
+            return ret.filter(function(res) {
+                return res.density == density;
+            })[0] || null;
         };
 
         /** Returns default icons */
