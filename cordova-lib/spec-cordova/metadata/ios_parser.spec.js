@@ -143,6 +143,7 @@ describe('ios project parser', function () {
                 getOrientation.andCallThrough();
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
+                    expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
                 });
             });
@@ -150,6 +151,7 @@ describe('ios project parser', function () {
                 getOrientation.andReturn('');
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
+                    expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toBeUndefined();
                 });
             });
@@ -157,6 +159,7 @@ describe('ios project parser', function () {
                 getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
+                    expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toBeUndefined();
                 });
             });
