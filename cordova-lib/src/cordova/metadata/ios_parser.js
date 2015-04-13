@@ -96,9 +96,11 @@ ios_parser.prototype.update_from_config = function(config) {
             default:
                 infoPlist['UIInterfaceOrientation'] = [ orientation ];
                 delete infoPlist['UISupportedInterfaceOrientations'];
+                delete infoPlist['UISupportedInterfaceOrientations~ipad'];
         }
     } else {
         delete infoPlist['UISupportedInterfaceOrientations'];
+        delete infoPlist['UISupportedInterfaceOrientations~ipad'];
         delete infoPlist['UIInterfaceOrientation'];
     }
 
