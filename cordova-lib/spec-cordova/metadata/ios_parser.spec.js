@@ -143,6 +143,7 @@ describe('ios project parser', function () {
                 getOrientation.andCallThrough();
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
+                    expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
                 });
             });

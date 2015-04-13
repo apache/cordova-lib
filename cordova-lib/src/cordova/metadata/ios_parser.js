@@ -86,10 +86,12 @@ ios_parser.prototype.update_from_config = function(config) {
             case 'portrait':
                 infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationPortrait' ];
                 infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ];
+                infoPlist['UISupportedInterfaceOrientations~ipad'] = [ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ];
                 break;
             case 'landscape':
                 infoPlist['UIInterfaceOrientation'] = [ 'UIInterfaceOrientationLandscapeLeft' ];
                 infoPlist['UISupportedInterfaceOrientations'] = [ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ];
+                infoPlist['UISupportedInterfaceOrientations~ipad'] = [ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ];
                 break;
             default:
                 infoPlist['UIInterfaceOrientation'] = [ orientation ];
