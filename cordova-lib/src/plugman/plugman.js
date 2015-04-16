@@ -67,6 +67,7 @@ addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
 addProperty(plugman, 'prepare', './prepare');
 addProperty(plugman, 'prepareBrowserify', './prepare-browserify');
+addProperty(plugman, 'help', './help');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
 addProperty(plugman, 'adduser', './adduser', true);
