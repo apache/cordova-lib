@@ -2,7 +2,7 @@
   "author": "Apache Software Foundation",
   "name": "cordova-lib",
   "description": "Apache Cordova tools core lib and API",
-  "version": "4.3.1-dev",
+  "version": "5.0.0",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
@@ -18,8 +18,8 @@
   "engineStrict": true,
   "dependencies": {
     "bplist-parser": "0.0.6",
-    "cordova-app-hello-world": "3.8.0",
-    "cordova-js": "3.8.0",
+    "cordova-app-hello-world": "3.9.0",
+    "cordova-js": "3.9.0",
     "cordova-registry-mapper": "1.x",
     "d8": "0.4.4",
     "dep-graph": "1.1.0",

@@ -20,6 +20,81 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.0.0 (Apr 16, 2015)
+* CB-8865 fixed plugman.help()
+* Pinned Cordova-Android version 4.0.0
+* CB-8775 updated warning message to be more descriptive
+* Fix getPlatformVersion fails for paths with spaces
+* CB-8799 Save plugin/platform src and version to 'spec' attribute.
+* CB-8807 Platform Add fails to add plugins with variables.
+* CB-8832 Fix iOS icon copying logic to not use default for every size
+* Updated pinned versions of windows and wp8
+* CB-8775 adding a plugin will still copy it to plugins folder, except if the plugin's new or old id is already installed.
+* CB-8775 removed failing test
+* Fix setGlobalPreference() in ConfigParser
+* removed mostly unused relativePath checking and added missing cases for isAbsolutePath
+* use string method for clarity
+* CB-8775 new style plugins won't install if same RDS plugin is installed and vice versa
+* CB-8791 Recognize UAP as a valid TargetPlatformIdentifier
+* CB-8784 Prepare with no platforms should restore all platforms.
+* Fix plugman install failure on iOS containing &
+* CB-8703: Test failure after merge to head.
+* CB-8703: Add support for semver and device-specific targeting of config-file to Windows
+* CB-8596 Expose APIs to retrieve platforms and plugins saved in config.xml.
+* CB-8741 Make plugin --save work more like npm install
+* CB-8755 Plugin --save: Multiple config.xml entries don't get removed
+* CB-8754 Auto-restoring a plugin fails when adding a platform.
+* CB-8651 Restoring platforms causes plugin install to be triggered twice  (close #196)
+* CB-8731 updated app hello world dependency to 3.9.0
+* CB-8757 ios: Make paths with --link relative to the real project path (close #192)
+* CB-8286 Fix regression from e70432f2: Never want to link to app-hello-world
+* CB-8737 Available platforms list includes extraneous values
+* Bugfix to json.parse before using cfg
+* Add merges/ by default, now all tests pass
+* Move cordova-app-hello-world dependency to cordova-lib
+* Support the old 4-argument version of create again
+* [CB-8286] Update create.js to always require passing in a www
+* Show npm failure message when plugin fetch fails
+* CB-8725 Fix plugin add from npm when authenticated to CPR
+* CB-8499 Remove project_dir from (un)installers signature
+* Add addElement() to ConfigParser
+* CB-8696 Fix fetching of dependencies with semver constraints rather than exact versions
+* CB-7747 Add `<allow-intent>` for App Store on iOS
+* Export PlatformProjectAdapter from platforms.js
+* Allow subdirs for icons on BB10
+* CB-8670 Error when set engine name to "cordova-windows" in plugin.xml
+* Allow hyphen in platform name
+* CB-8521 Cleans up plugin metadata save method
+* CB-8521 Adds `cordova plugin save` which saves all installed plugins to config.xml
+* CB-7698 BugFix: For plugins which require variables, 'cordova plugin add FOO' should fail when no variables specified.
+* Add setGlobalPreference() to ConfigParser
+* CB-8499 Merge platforms.js from cordova and plugman
+* rename references to feature to plugin
+* Deprecate the old feature syntax from config.xml
+* CB-8634 Fixes missed merge/rebase issue
+* CB-8634 Adds support for custom branches for `cordova platform add`
+* CB-8633 BugFix: Support for urls to tarballs was broken
+* CB-8499 `cordova platform save`: save installed platforms and their sources (versions/git_urls/folders) into config.xml
+* CB-8499 When deleting a platform, remove it from platforms.json
+* CB-8499 When adding a platform, capture version/folder/url being added to allow us to be able to save all installed platforms and their versions later on by doing 'cordova platform save'
+* CB-8602 plugman: publish fail early if unsupported npm is active
+* CB-7747 Add `<allow-intent>`s to default template
+* CB-8616 Support 9-patch images for default android splashscreen
+* CB-8551 fixed regex in isValidCprName
+* CB-8551 updated version of registry mapper and cordova plugin rm code
+* CB-8551 merged fetchNPM and fetchPlugReg into fetchPlugin
+* CB-8551 updated regex in isValidCprName to exclude matching @version
+* CB-8551 split up changePluginId into two functions
+* CB-8457 Ignore version specifier when running hooks (close #165)
+* CB-8578 `cordova plugin add <plugin>` should be able to restore urls and folders in addition to versions. (close #173)
+* CB-7827 Add support for `android-activityName` within `config.xml` (close #171)
+* Add org.apache.cordova.test-framework to plugman publish whitelist
+* CB-8577 - Read plugin variables from correct tag
+* CB-8555 Incremented package version to -dev
+* CB-8551 added plugin-name support for removing plugins.
+* CB-8551 Skip CPR if pluginID isn't reverse domain name style
+* CB-8551 added npm fetching as fallback
+
 ### 4.3.0 (Feb 27, 2015)
 * updated pinned versions of ios to 3.8.0 and android to 3.7.1
 * CB-8524 Switched to the latest Windows release
