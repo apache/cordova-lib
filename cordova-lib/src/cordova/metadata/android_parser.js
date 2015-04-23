@@ -114,15 +114,20 @@ android_parser.prototype.handleSplashes = function(config) {
 
         var projectRoot = util.isCordova(this.path);
 
-        if (resources.defaultResource) {
-            me.copyImage(path.join(projectRoot, resources.defaultResource.src), '', 'screen.png');
-        }
+        var hadMdpi = false;
         resources.forEach(function (resource) {
             if (!resource.density) {
                 return;
             }
+            if (resource.density == 'mdpi') {
+                hadMdpi = true;
+            }
             me.copyImage(path.join(projectRoot, resource.src), resource.density, 'screen.png');
         });
+        // There's no "default" drawable, so assume default == mdpi.
+        if (!hadMdpi && resources.defaultResource) {
+            me.copyImage(path.join(projectRoot, resources.defaultResource.src), 'mdpi', 'screen.png');
+        }
     }
 };
 
@@ -182,14 +187,13 @@ android_parser.prototype.handleIcons = function(config) {
         }
     }
     var projectRoot = util.isCordova(this.path);
-    // copy the default icon to the drawable folder
-    if (default_icon) {
-        this.copyImage(path.join(projectRoot, default_icon.src), '', 'icon.png');
-    }
-
-     for (var density in android_icons) {
+    for (var density in android_icons) {
         this.copyImage(path.join(projectRoot, android_icons[density].src), density, 'icon.png');
-     }
+    }
+    // There's no "default" drawable, so assume default == mdpi.
+    if (default_icon && !android_icons.mdpi) {
+        this.copyImage(path.join(projectRoot, default_icon.src), 'mdpi', 'icon.png');
+    }
 };
 
 android_parser.prototype.update_from_config = function(config) {
