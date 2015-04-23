@@ -107,7 +107,7 @@ module.exports = {
             if ((matchingKid = findChild(node, parent)) !== null) {
                 // stupid elementtree takes an index argument it doesn't use
                 // and does not conform to the python lib
-                parent.remove(0, matchingKid);
+                parent.remove(matchingKid);
             }
         });
 
