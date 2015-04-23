@@ -47,7 +47,7 @@ csproj.prototype = {
     removeSDKRef:function(incText) {
         var item_group = this.xml.find('ItemGroup/SDKReference[@Include="' + incText + '"]/..');
         if(item_group) {
-            this.xml.getroot().remove(0, item_group);
+            this.xml.getroot().remove(item_group);
         }
     },
     addReference:function(relPath) {
@@ -81,7 +81,7 @@ csproj.prototype = {
         var item_groups = this.xml.findall('ItemGroup/Reference[@Include="' + includeText + '"]/..');
 
         if(item_groups.length > 0 ) {
-            this.xml.getroot().remove(0, item_groups[0]);
+            this.xml.getroot().remove(item_groups[0]);
         }
     },
 
@@ -165,12 +165,12 @@ csproj.prototype = {
 
             filesToRemove.forEach(function(file){
                 // remove file reference
-                group.remove(0, file);
+                group.remove(file);
             });
 
             // remove ItemGroup if empty
             if(group.findall('*').length < 1) {
-                root.remove(0, group);
+                root.remove(group);
             }
         });
     }

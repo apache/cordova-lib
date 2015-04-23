@@ -170,7 +170,7 @@ function mergeXml(src, dest, platform, clobber) {
                 foundChild = dest.find(query);
                 if (foundChild) {
                     destChild = foundChild;
-                    dest.remove(0, destChild);
+                    dest.remove(destChild);
                 }
             } else {
                 //Check for an exact match and if you find one don't add
@@ -180,7 +180,7 @@ function mergeXml(src, dest, platform, clobber) {
                 foundChild = dest.find(query);
                 if (foundChild && textMatch(srcChild, foundChild)) {
                     destChild = foundChild;
-                    dest.remove(0, destChild);
+                    dest.remove(destChild);
                     shouldMerge = false;
                 }
             }

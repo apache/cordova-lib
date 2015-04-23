@@ -23,7 +23,7 @@
     "cordova-registry-mapper": "1.x",
     "d8": "0.4.4",
     "dep-graph": "1.1.0",
-    "elementtree": "0.1.5",
+    "elementtree": "0.1.6",
     "glob": "4.0.6",
     "init-package-json": "^1.2.0",
     "mime": "1.2.11",
