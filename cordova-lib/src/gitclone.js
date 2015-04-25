@@ -22,7 +22,7 @@ var  Q             = require('q'),
      events        = require('./events'),
      path          = require('path'),
      semver        = require('semver'),
-     superspwan    = require('./cordova/superspawn'),
+     superspawn    = require('./cordova/superspawn'),
      os            = require('os');
 
 
@@ -44,7 +44,7 @@ function clone(git_url, git_ref, clone_dir){
     shell.rm('-rf', tmp_dir);
     shell.mkdir('-p', tmp_dir);
 
-    return superspwan.spawn('git', ['--version'])
+    return superspawn.spawn('git', ['--version'])
     .then(function(output) {
         var gitVersion = /\d+\.\d+(\.\d+)?/.exec(output);
         gitVersion = gitVersion ? gitVersion[0] : '1.0.0';
@@ -60,10 +60,10 @@ function clone(git_url, git_ref, clone_dir){
             cloneArgs.push('--depth=1');
         }
         cloneArgs.push('--', git_url, tmp_dir);
-        return superspwan.spawn('git', cloneArgs);
+        return superspawn.spawn('git', cloneArgs);
     }).then(function() {
 	if (needsGitCheckout){
-            return superspwan.spawn('git', ['checkout', git_ref], {
+            return superspawn.spawn('git', ['checkout', git_ref], {
                 cwd: tmp_dir
             });
 	}
