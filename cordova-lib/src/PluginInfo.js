@@ -334,7 +334,8 @@ function PluginInfo(dirname) {
         self.keywords = self.keywords.split(',').map( function(s) { return s.trim(); } );
     }
     self.getKeywordsAndPlatforms = function () {
-        return self.keywords.concat('ecosystem:cordova').concat(addCordova(self.getPlatformsArray()));
+        var ret = self.keywords || [];
+        return ret.concat('ecosystem:cordova').concat(addCordova(self.getPlatformsArray()));
     };
 }  // End of PluginInfo constructor.
 
