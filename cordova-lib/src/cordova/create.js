@@ -55,7 +55,24 @@ function create(dir, optionalId, optionalName, cfg) {
             throw new CordovaError('At least the dir must be provided to create new project. See `' + cordova_util.binname + ' help`.');
         }
 
-        cfg = cfg || config.read(dir);
+        //read projects .cordova/config.json file for project settings
+        var configFile = config.read(dir);
+        
+        //if data exists in the configFile, lets combine it with cfg
+        //cfg values take priority over config file
+        if(configFile) {
+            var finalConfig = {};
+            for(var key1 in configFile) {
+                finalConfig[key1] = configFile[key1];
+            }
+
+            for(var key2 in cfg) {
+                finalConfig[key2] = cfg[key2];
+            }
+
+            cfg = finalConfig;
+        }
+        
         if (!cfg) {
             throw new CordovaError('Must provide a project configuration.');
         } else if (typeof cfg == 'string') {
