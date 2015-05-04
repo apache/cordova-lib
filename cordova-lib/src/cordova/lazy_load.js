@@ -145,8 +145,7 @@ function npm_cache_add(pkg) {
     // does not ask the registry if it got a fresher version.
     var platformNpmConfig = {
         'cache-min': 3600*24,
-        cache: npm_cache_dir,
-        registry: 'https://registry.npmjs.org'
+        cache: npm_cache_dir
     };
 
     return npmhelper.loadWithSettingsThenRestore(platformNpmConfig, function () {
