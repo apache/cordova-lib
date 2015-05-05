@@ -231,10 +231,12 @@ android_parser.prototype.update_from_config = function(config) {
     // Set the android:screenOrientation in the AndroidManifest
     var orientation = this.helper.getOrientation(config);
 
-    if (orientation && !this.helper.isDefaultOrientation(orientation)) {
-        act.attrib['android:screenOrientation'] = orientation;
-    } else {
-        delete act.attrib['android:screenOrientation'];
+    if (orientation) {
+        if (this.helper.isDefaultOrientation(orientation)) {
+            delete act.attrib['android:screenOrientation'];
+        } else {
+            act.attrib['android:screenOrientation'] = orientation;
+        }
     }
 
     // Set android:launchMode in AndroidManifest

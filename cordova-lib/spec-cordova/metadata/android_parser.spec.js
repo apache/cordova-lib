@@ -130,7 +130,7 @@ describe('android project parser', function() {
             it('should handle no orientation', function() {
                 getOrientation.andReturn('');
                 p.update_from_config(cfg);
-                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toBeUndefined();
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('VAL');
             });
             it('should handle default orientation', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
