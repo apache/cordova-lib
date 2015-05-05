@@ -43,6 +43,9 @@ var PluginInfoProvider = require('../PluginInfoProvider');
 // Returns a promise.
 module.exports = uninstall;
 function uninstall(platform, project_dir, id, plugins_dir, options) {
+    project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
+    plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
+
     options = options || {};
     options.is_top_level = true;
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
@@ -62,6 +65,9 @@ function uninstall(platform, project_dir, id, plugins_dir, options) {
 
 // Returns a promise.
 module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_dir, options) {
+    project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
+    plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
+
     options = options || {};
     options.is_top_level = true;
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
@@ -91,6 +97,8 @@ module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_d
 
 // Returns a promise.
 module.exports.uninstallPlugin = function(id, plugins_dir, options) {
+    plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
+
     options = options || {};
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
     var pluginInfoProvider = options.pluginInfoProvider;

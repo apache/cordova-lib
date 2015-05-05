@@ -66,6 +66,9 @@ var PluginInfoProvider = require('../PluginInfoProvider');
 // possible options: subdir, cli_variables, www_dir
 // Returns a promise.
 module.exports = function installPlugin(platform, project_dir, id, plugins_dir, options) {
+    project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
+    plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
+
     options = options || {};
     options.is_top_level = true;
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
@@ -246,6 +249,10 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
 // Returns a promise.
 module.exports.runInstall = runInstall;
 function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, options) {
+    project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
+    plugin_dir = cordovaUtil.convertToRealPathSafe(plugin_dir);
+    plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
+
     options = options || {};
     options.graph = options.graph || new dep_graph();
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();

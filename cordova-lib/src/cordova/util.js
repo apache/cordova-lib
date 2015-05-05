@@ -53,6 +53,7 @@ exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports.fixRelativePath = fixRelativePath;
+exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
 
@@ -141,6 +142,15 @@ function fixRelativePath(value, /* optional */ cwd) {
     var pathDiff = path.relative(newDir, origDir);
     var ret = path.normalize(path.join(pathDiff, value));
     return ret;
+}
+
+// Resolve any symlinks in order to avoid relative path issues. See https://issues.apache.org/jira/browse/CB-8757
+function convertToRealPathSafe(path) {
+    if (path && fs.existsSync(path)) {
+        return fs.realpathSync(path);
+    }
+
+    return path;
 }
 
 // Recursively deletes .svn folders from a target path
