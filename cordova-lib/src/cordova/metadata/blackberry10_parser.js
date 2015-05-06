@@ -102,6 +102,11 @@ blackberry_parser.prototype.cordovajs_path = function(libDir) {
     return path.resolve(jsPath);
 };
 
+blackberry_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
+    return path.resolve(jsPath);
+};
+
 // Replace the www dir with contents of platform_www and app www.
 blackberry_parser.prototype.update_www = function() {
     var projectRoot = util.isCordova(this.path);
