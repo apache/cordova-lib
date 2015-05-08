@@ -146,7 +146,7 @@ describe('start', function() {
                 expect(error).toBeUndefined();
             }
         );
-        waitsFor(function() { return done; }, 'promise never resolved', 500);
+        waitsFor(function() { return done; }, 'promise never resolved', 2000);
     });
 });
 

@@ -75,7 +75,7 @@ describe('start', function() {
         }, function(err) {
             done = err.stack;
         });
-        waitsFor(function() { return done; }, 'promise never resolved', 500);
+        waitsFor(function() { return done; }, 'promise never resolved', 2000);
         runs(function() {
             expect(done).toBe(true);
         });
