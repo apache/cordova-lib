@@ -187,6 +187,7 @@ ConfigParser.prototype = {
             res.platform = elt.platform || null; // null means icon represents default icon (shared between platforms)
             res.width = +elt.attrib.width || undefined;
             res.height = +elt.attrib.height || undefined;
+            res.name = elt.attrib.name;
 
             // default icon
             if (!res.width && !res.height && !res.density) {
@@ -246,6 +247,15 @@ ConfigParser.prototype = {
      */
     getSplashScreens: function(platform) {
         return this.getStaticResources(platform, 'splash');
+    },
+    
+    /**
+     * Returns all images for specific platform.
+     * @param  {string} platform Platform name
+     * @return {Resource[]}      Array of Image objects.
+     */
+    getImages: function(platform) {
+        return this.getStaticResources(platform, 'image');
     },
 
     /**
