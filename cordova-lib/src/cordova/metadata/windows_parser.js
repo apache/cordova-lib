@@ -71,6 +71,9 @@ windows_parser.prototype.update_from_config = function(config) {
     } else throw new Error('update_from_config requires a ConfigParser object');
 
     if (!this.isOldProjectTemplate) {
+        // If there is platform-defined prepare script, require and exec it
+        var platformPrepare = require(path.join(this.projDir, 'cordova', 'lib', 'prepare'));
+        platformPrepare.applyPlatformConfig();
         return;
     }
 
