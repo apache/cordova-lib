@@ -61,6 +61,7 @@ function maybeQuote(a) {
 //          'inherit' means pipe the input & output. This is required for anything that prompts.
 //   env: Map of extra environment variables.
 //   cwd: Working directory for the command.
+//   chmod: If truthy, will attempt to set the execute bit before executing on non-Windows platforms.
 // Returns a promise that succeeds only for return code = 0.
 exports.spawn = function(cmd, args, opts) {
     args = args || [];
@@ -93,6 +94,9 @@ exports.spawn = function(cmd, args, opts) {
     }
     if (opts.env) {
         spawnOpts.env = _.extend(_.extend({}, process.env), opts.env);
+    }
+    if (opts.chmod && !iswin32) {
+        fs.chmodSync(cmd, '755');
     }
 
     events.emit(opts.printCommand ? 'log' : 'verbose', 'Running command: ' + maybeQuote(cmd) + ' ' + args.map(maybeQuote).join(' '));

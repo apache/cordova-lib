@@ -288,7 +288,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         if (options.platformVersion) {
             return Q(options.platformVersion);
         }
-        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version')));
+        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
         return callEngineScripts(theEngines);

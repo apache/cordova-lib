@@ -149,7 +149,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }).then(function(args) {
                     var bin = path.join(platDetails.libDir, 'bin', cmd == 'add' ? 'create' : 'update');
-                    var copts = { stdio: 'inherit' };
+                    var copts = { stdio: 'inherit', chmod: true };
                     if ('spawnoutput' in opts) {
                         copts = { stdio: opts.spawnoutput };
                     }
@@ -368,7 +368,7 @@ function check(hooksRunner, projectRoot) {
                 d_cur = Q.defer();
             add(h, scratch, [p], {spawnoutput: {stdio: 'ignore'}})
             .then(function() {
-                superspawn.maybeSpawn(path.join(scratch, 'platforms', p, 'cordova', 'version'))
+                superspawn.maybeSpawn(path.join(scratch, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
                 .then(function(avail) {
                     if (!avail) {
                         /* Platform version script was silent, we can't work with this */
@@ -386,7 +386,7 @@ function check(hooksRunner, projectRoot) {
                 d_avail.resolve('install-failed');
             });
 
-            superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
+            superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
             .then(function(v) {
                 d_cur.resolve(v || '');
             }).catch(function () {
@@ -460,7 +460,7 @@ function list(hooksRunner, projectRoot) {
     .then(function() {
         // Acquire the version number of each platform we have installed, and output that too.
         return Q.all(platforms_on_fs.map(function(p) {
-            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'))
+            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
             .then(function(v) {
                 if (!v) return p;
                 return p + ' ' + v;

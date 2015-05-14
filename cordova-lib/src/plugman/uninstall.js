@@ -88,7 +88,7 @@ module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_d
         if (options.platformVersion) {
             return Q(options.platformVersion);
         }
-        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version')));
+        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
         return runUninstallPlatform(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);

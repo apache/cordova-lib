@@ -38,7 +38,7 @@ module.exports = function run(options) {
         // Deploy in parallel (output gets intermixed though...)
         return Q.all(options.platforms.map(function(platform) {
             var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'run');
-            return superspawn.spawn(cmd, options.options, { printCommand: true, stdio: 'inherit' });
+            return superspawn.spawn(cmd, options.options, { printCommand: true, stdio: 'inherit', chmod: true });
         }));
     }).then(function() {
         return hooksRunner.fire('after_run', options);
