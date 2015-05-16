@@ -184,7 +184,19 @@ module.exports = {
 
 
         var xcBuildConfiguration = xcodeproj.pbxXCBuildConfigurationSection();
-        var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { return entry.buildSettings && entry.buildSettings.INFOPLIST_FILE; });
+
+        var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { 
+            if (entry.buildSettings && entry.buildSettings.INFOPLIST_FILE)
+             { 
+                var plist_file = path.join(project_dir, entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
+                var plist = fs.readFileSync(plist_file,{encoding: 'utf8'});
+                // selecting non watchkit plist
+                if (plist.indexOf("WKCompanionAppBundleIdentifier")==-1 && plist.indexOf("WKAppBundleIdentifier")==-1 )
+                    return true;
+              }
+            return false;
+        });
+
         var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
         var config_file = path.join(path.dirname(plist_file), 'config.xml');
 
