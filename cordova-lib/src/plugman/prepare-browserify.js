@@ -69,7 +69,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
 
     var addSymbolList = through.obj(function(row, enc, next) {
         if(symbolList === null) {
-            symbolList = requireTr.getModules();
+            symbolList = requireTr.getModules(platform);
             this.push(util.format('var symbolList = %s;\n%s\n', JSON.stringify(symbolList), row));
         } else {
             this.push(row);
@@ -231,13 +231,13 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         events.emit('verbose', 'Writing out cordova_plugins.js...');
         fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
 
-        libraryRelease.transform(requireTr.transform);
+        //libraryRelease.transform(requireTr.transform);
 
         scripts.forEach(function(script) {
             libraryRelease.add(script);
         });
 
         var outReleaseFile = path.join(wwwDir, 'cordova.js');
-        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules());
+        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules(platform));
     });
 };
