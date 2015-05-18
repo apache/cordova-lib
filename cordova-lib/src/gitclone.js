@@ -62,14 +62,14 @@ function clone(git_url, git_ref, clone_dir){
         cloneArgs.push('--', git_url, tmp_dir);
         return superspawn.spawn('git', cloneArgs);
     }).then(function() {
-	if (needsGitCheckout){
+        if (needsGitCheckout){
             return superspawn.spawn('git', ['checkout', git_ref], {
                 cwd: tmp_dir
             });
-	}
+        }
     }).then(function(){
         events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + (git_ref || "master") + '".');
-	    return tmp_dir;
+        return tmp_dir;
     }).fail(function (err) {
         shell.rm('-rf', tmp_dir);
         return Q.reject(err);
