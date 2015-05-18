@@ -39,7 +39,7 @@ function clone(git_url, git_ref, clone_dir){
     // If no clone_dir is specified, create a tmp dir which git will clone into.
     var tmp_dir = clone_dir;
     if(!tmp_dir){
-	tmp_dir = path.join(os.tmpdir(), 'git', String((new Date()).valueOf()));
+        tmp_dir = path.join(os.tmpdir(), 'git', String((new Date()).valueOf()));
     }
     shell.rm('-rf', tmp_dir);
     shell.mkdir('-p', tmp_dir);
@@ -68,8 +68,8 @@ function clone(git_url, git_ref, clone_dir){
             });
 	}
     }).then(function(){
-        events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + git_ref + '".');
-	return tmp_dir;
+        events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + (git_ref || "master") + '".');
+	    return tmp_dir;
     }).fail(function (err) {
         shell.rm('-rf', tmp_dir);
         return Q.reject(err);
