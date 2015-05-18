@@ -204,6 +204,11 @@ wp8_parser.prototype.cordovajs_path = function(libDir) {
     return path.resolve(jsPath);
 };
 
+wp8_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
+    return path.resolve(jsPath);
+};
+
 // Replace the www dir with contents of platform_www and app www and updates the csproj file.
 wp8_parser.prototype.update_www = function() {
     var projectRoot = util.isCordova(this.wp8_proj_dir);

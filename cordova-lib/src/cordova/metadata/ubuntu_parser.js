@@ -68,6 +68,11 @@ ubuntu_parser.prototype.cordovajs_path = function(libDir) {
     return path.resolve(jsPath);
 };
 
+ubuntu_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
+    return path.resolve(jsPath);
+};
+
 ubuntu_parser.prototype.update_manifest = function() {
     var nodearch2debarch = { 'arm': 'armhf',
                              'ia32': 'i386',

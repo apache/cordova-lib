@@ -69,7 +69,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
 
     var addSymbolList = through.obj(function(row, enc, next) {
         if(symbolList === null) {
-            symbolList = requireTr.getModules();
+            symbolList = requireTr.getModules(platform);
             this.push(util.format('var symbolList = %s;\n%s\n', JSON.stringify(symbolList), row));
         } else {
             this.push(row);
@@ -238,6 +238,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         });
 
         var outReleaseFile = path.join(wwwDir, 'cordova.js');
-        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules());
+        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules(platform));
     });
 };

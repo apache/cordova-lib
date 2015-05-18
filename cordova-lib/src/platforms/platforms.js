@@ -36,6 +36,7 @@ var cachedProjects = {};
 var PARSER_PUBLIC_METHODS = [
     'config_xml',
     'cordovajs_path',
+    'cordovajs_src_path',
     'update_from_config',
     'update_project',
     'update_www',
