@@ -231,7 +231,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         events.emit('verbose', 'Writing out cordova_plugins.js...');
         fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
 
-        //libraryRelease.transform(requireTr.transform);
+        libraryRelease.transform(requireTr.transform);
 
         scripts.forEach(function(script) {
             libraryRelease.add(script);
