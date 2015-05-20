@@ -122,6 +122,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         if (platformAlreadyAdded) {
                             throw new CordovaError('Platform ' + platform + ' already added.');
                         }
+
+                        // Remove the <platform>.json file from the plugins directory, so we start clean (otherwise we
+                        // can get into trouble not installing plugins if someone deletes the platform folder but
+                        // <platform>.json still exists).
+                        removePlatformPluginsJson(projectRoot, target);
+
                         var template_dir = config_json && config_json.lib && config_json.lib[platform] && config_json.lib[platform].template || null;
                         events.emit('log', 'Adding ' + platform + ' project...');
 
@@ -302,8 +308,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     .then(function() {
         targets.forEach(function(target) {
             shell.rm('-rf', path.join(projectRoot, 'platforms', target));
-            var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
-            if (fs.existsSync(plugins_json)) shell.rm(plugins_json);
+            removePlatformPluginsJson(projectRoot, target);
         });
     }).then(function() {
         var config_json = config.read(projectRoot);
@@ -661,6 +666,12 @@ function copy_cordovajs_src(projectRoot, platform, platLib) {
     if(fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platform_www);
     } 
+}
+
+// Remove <platform>.json file from plugins directory.
+function removePlatformPluginsJson(projectRoot, target) {
+    var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
+    shell.rm('-f', plugins_json);
 }
 
 module.exports.add = add;
