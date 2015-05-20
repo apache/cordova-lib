@@ -49,7 +49,9 @@ module.exports = {
             // should probably copy over entire plugin git repo contents into plugins_dir and handle subdir separately during install.
             var plugin_dir = path.join(plugins_dir, plugin_id);
             events.emit('verbose', 'Copying fetched plugin over "' + plugin_dir + '"...');
-            shell.cp('-R', path.join(tmp_dir, '*'), plugin_dir);
+            shell.mkdir('-p', plugin_dir);
+            shell.mv(path.join(tmp_dir, '*'), plugin_dir);
+            shell.rm('-Rf', tmp_dir);
             pluginInfo.dir = plugin_dir;
             if (pluginInfoProvider) {
                 pluginInfoProvider.put(pluginInfo);
