@@ -185,25 +185,33 @@ module.exports = {
 
         var xcBuildConfiguration = xcodeproj.pbxXCBuildConfigurationSection();
 
-        var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { 
-            if (entry.buildSettings && entry.buildSettings.INFOPLIST_FILE)
-             { 
+        // CB-9033
+        var plist_file_index;
+        var plist_file_entry = _.find(xcBuildConfiguration, function (entry,index) { 
+            if (entry.buildSettings && entry.buildSettings.INFOPLIST_FILE) { 
+
                 var plist_file = path.join(project_dir, entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
-                var plist = fs.readFileSync(plist_file,{encoding: 'utf8'});
-                // selecting non watchkit plist
-                if (plist.indexOf("WKCompanionAppBundleIdentifier")==-1 && plist.indexOf("WKAppBundleIdentifier")==-1 )
-                    return true;
+                 if (!fs.existsSync(plist_file)) 
+                    return false; 
+                
+                var config_file = path.join(path.dirname(plist_file), 'config.xml'); 
+                  if (!fs.existsSync(config_file)) 
+                    return false; 
+
+                // only return project that contains both a plist and a config.xml (especially to discard apple watch extension/app)
+                plist_file_index = index;
+                return true;
               }
+
             return false;
         });
+      
+
+        if (!plist_file_entry)
+            throw new CordovaError('could not find -Info.plist file, or config.xml file.');
 
         var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
-        var config_file = path.join(path.dirname(plist_file), 'config.xml');
-
-        if (!fs.existsSync(plist_file) || !fs.existsSync(config_file)) {
-            throw new CordovaError('could not find -Info.plist file, or config.xml file.');
-        }
-
+       
         var xcode_dir = path.dirname(plist_file);
         var pluginsDir = path.resolve(xcode_dir, 'Plugins');
         var resourcesDir = path.resolve(xcode_dir, 'Resources');
