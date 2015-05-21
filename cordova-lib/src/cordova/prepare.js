@@ -30,7 +30,8 @@ var cordova_util      = require('./util'),
     plugman           = require('../plugman/plugman'),
     PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
     PlatformJson      = require('../plugman/util/PlatformJson'),
-    restore           = require('./restore-util');
+    restore           = require('./restore-util'),
+    config            = require('./config');
 
 
 var PluginInfoProvider = require('../PluginInfoProvider');
@@ -40,6 +41,7 @@ exports = module.exports = prepare;
 function prepare(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     var xml = cordova_util.projectConfig(projectRoot);
+    var config_json = config.read(projectRoot);
 
     if (!options) {
         options = {
@@ -48,6 +50,8 @@ function prepare(options) {
             options: []
         };
     }
+
+    options.searchpath = options.searchpath || config_json.plugin_search_path;
 
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)

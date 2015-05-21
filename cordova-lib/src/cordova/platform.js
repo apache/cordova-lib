@@ -160,7 +160,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }).then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {
-                        platforms :[platform]
+                        platforms :[platform],
+                        searchpath :opts.searchpath
                     };
                     return require('./cordova').raw.prepare(prepOpts);
                 }).then(function() {
