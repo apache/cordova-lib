@@ -37,7 +37,7 @@ CordovaProject.prototype.getPlatformApi = function(platform) {
     return PlatformApi.getPlatformApi(platform);
 };
 
-Object.defineProperty(CordovaProject.prototype, 'platforms', {
+Object.defineProperty(CordovaProject.prototype, 'platformNames', {
     get: function () {
         var platforms_dir = path.join(this.root, 'platforms');
         if ( !fs.existsSync(platforms_dir)) {
@@ -47,6 +47,15 @@ Object.defineProperty(CordovaProject.prototype, 'platforms', {
         return subdirs.filter(function(p) {
             return Object.keys(knownPlatforms).indexOf(p) > -1;
         });
+    }
+});
+
+Object.defineProperty(CordovaProject.prototype, 'platforms', {
+    get: function () {
+        return this.platformNames
+        .map(function function_name (platformName) {
+            return this.getPlatformApi(platformName);
+        }, this);
     }
 });
 
