@@ -64,9 +64,8 @@ module.exports = function plugin(command, targets, opts) {
     var platformList = cordova_util.listPlatforms(projectRoot);
 
     // Massage plugin name(s) / path(s)
-    var pluginPath, plugins;
-    pluginPath = path.join(projectRoot, 'plugins');
-    plugins = cordova_util.findPlugins(pluginPath);
+    var pluginPath = path.join(projectRoot, 'plugins');
+    var plugins = cordova_util.findPlugins(pluginPath);
     if (!targets || !targets.length) {
         if (command == 'add' || command == 'rm') {
             return Q.reject(new CordovaError('You need to qualify `'+cordova_util.binname+' plugin add` or `'+cordova_util.binname+' plugin remove` with one or more plugins!'));
@@ -106,12 +105,11 @@ module.exports = function plugin(command, targets, opts) {
                 searchPath = undefined;
             }
 
-            opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('before_plugin_add', opts)
             .then(function() {
                 var pluginInfoProvider = new PluginInfoProvider();
                 return opts.plugins.reduce(function(soFar, target) {
-                    var pluginsDir = path.join(projectRoot, 'plugins');
                     return soFar.then(function() {
                         if (target[target.length - 1] == path.sep) {
                             target = target.substring(0, target.length - 1);
@@ -136,7 +134,7 @@ module.exports = function plugin(command, targets, opts) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
 
-                        return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, 
+                        return plugman.raw.fetch(target, pluginPath, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link,
                                                                        pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables,
                                                                        is_top_level: true });
                     })
@@ -207,13 +205,13 @@ module.exports = function plugin(command, targets, opts) {
                                 }
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options);
+                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginPath, options);
                             });
                         }, Q());
                     });
                 }, Q()); // end Q.all
             }).then(function() {
-                opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+                opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_add', opts);
             });
         case 'rm':
@@ -222,23 +220,15 @@ module.exports = function plugin(command, targets, opts) {
                 return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
             }
 
-            opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('before_plugin_rm', opts)
             .then(function() {
                 return opts.plugins.reduce(function(soFar, target) {
-                    // Check if we have the plugin.
-                    if (plugins.indexOf(target) < 0) {
-                        // Convert target from package-name to package-id if necessary
-                        // Cordova-plugin-device would get changed to org.apache.cordova.device
-                        var pluginId = pluginMapper[target];
-                        if(pluginId) {
-                            events.emit('log', 'Plugin "' + target + '" is not present in the project. Converting value to "' + pluginId + '" and trying again.');
-                            target = pluginId;
-                        }
-                        if (plugins.indexOf(target) < 0) {
-                            return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `'+cordova_util.binname+' plugin list`.'));
-                        }
+                    var validatedPluginId = validatePluginId(target, plugins);
+                    if (!validatedPluginId) {
+                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.'));
                     }
+                    target = validatedPluginId;
 
                     // Iterate over all installed platforms and uninstall.
                     // If this is a web-only or dependency-only plugin, then
@@ -248,12 +238,12 @@ module.exports = function plugin(command, targets, opts) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
                              events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                            return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'));
+                            return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath);
                         });
                     }, Q())
                     .then(function() {
                         // TODO: Should only uninstallPlugin when no platforms have it.
-                        return plugman.raw.uninstall.uninstallPlugin(target, path.join(projectRoot, 'plugins'));
+                        return plugman.raw.uninstall.uninstallPlugin(target, pluginPath);
                     }).then(function(){
                         //remove plugin from config.xml
                         if(saveToConfigXmlOn(config_json, opts)){
@@ -269,12 +259,11 @@ module.exports = function plugin(command, targets, opts) {
                     .then(function(){
                         // Remove plugin from fetch.json
                         events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
-                        var pluginsDir = path.join(projectRoot, 'plugins');
-                        metadata.remove_fetch_metadata(pluginsDir, target);
+                        metadata.remove_fetch_metadata(pluginPath, target);
                     });
                 }, Q());
             }).then(function() {
-                opts.cordova = { plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')) };
+                opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
         case 'search':
@@ -295,6 +284,22 @@ module.exports = function plugin(command, targets, opts) {
             return list(projectRoot, hooksRunner);
     }
 };
+
+function validatePluginId(pluginId, installedPlugins) {
+    if (installedPlugins.indexOf(pluginId) >= 0) {
+        return pluginId;
+    }
+
+    var oldStylePluginId = pluginMapper[pluginId];
+    if (oldStylePluginId) {
+        events.emit('log', 'Plugin "' + pluginId + '" is not present in the project. Converting value to "' + oldStylePluginId + '" and trying again.');
+        return installedPlugins.indexOf(oldStylePluginId) >= 0 ? oldStylePluginId : null;
+    }
+
+    if (pluginId.indexOf('cordova-plugin-') < 0) {
+        return validatePluginId('cordova-plugin-' + pluginId, installedPlugins);
+    }
+}
 
 function save(projectRoot, opts){
     var xml = cordova_util.projectConfig(projectRoot);
