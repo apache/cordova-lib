@@ -18,7 +18,6 @@
 */
 
 var cordova_util = require('./util');
-var path         = require('path');
 var Q            = require('q');
 var CordovaError = require('../CordovaError');
 var platform_lib = require('../platforms/platforms');

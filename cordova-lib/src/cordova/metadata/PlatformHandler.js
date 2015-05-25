@@ -48,7 +48,7 @@ function PlatformHandler (platform, projectPath) {
 
 /**
  * Base implementation for getConfigXml. Assumes that config.xml
- * is being placed at the root of project.
+ * is placed at the root of project.
  * @return {String} Path to platform's config.xml file
  */
 PlatformHandler.prototype.getConfigXml = function() {
@@ -57,7 +57,7 @@ PlatformHandler.prototype.getConfigXml = function() {
 
 /**
  * Base implementation for getWwwDir. Assumes that
- * www directory is being placed at the root of project.
+ * www directory is placed at the root of project.
  * @return {String} Path to platform's www directory.
  */
 PlatformHandler.prototype.getWwwDir = function() {
@@ -66,7 +66,7 @@ PlatformHandler.prototype.getWwwDir = function() {
 
 /**
  * Base implementation for getCordovaJsSrc. Assumes that cordova.js
- * source is being placed at the root of platform's source dir.
+ * source is placed at the root of platform's source dir.
  * @return {String} Path to platform's 'cordova-js-src' folder.
  */
 PlatformHandler.prototype.getCordovaJsSrc = function(platformSource) {
@@ -96,24 +96,5 @@ PlatformHandler.prototype.updateWww = function() {
  * Always should be overridden by platform.
  */
 PlatformHandler.prototype.updateProject = function() { };
-
-
-// Renaming these methods to have more js-style naming.
-// To make transition from old names to new ones we're creating a mappings old->new
-// TODO: This could be removed once all old methods' usages will be replaced
-var COMPAT_MAP = {
-    // old name            new name
-    'config_xml'        : 'getConfigXml',
-    'www_dir'           : 'getWwwDir',
-    'cordovajs_src_path': 'getCordovaJsSrc',
-    'update_www'        : 'updateWww',
-    'update_project'    : 'updateProject'
-};
-
-for (var oldName in COMPAT_MAP) {
-    var newName = COMPAT_MAP[oldName];
-    // Bind old-style handler methods to new ones to maintain compatibility
-    PlatformHandler.prototype[oldName] = PlatformHandler.prototype[newName].bind(PlatformHandler.prototype);
-}
 
 module.exports = PlatformHandler;

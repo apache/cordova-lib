@@ -29,20 +29,10 @@ var BasePluginHandler = require('../plugman/platforms/PluginHandler');
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedProjects = {};
 
-// A single class that exposes functionality from platform specific files from
-// both places cordova/metadata and plugman/platforms. Hopefully, to be soon
-// replaced by real unified platform specific classes.
-function BasePlatformApi(platform, platformRootDir) {
-    this.root = platformRootDir;
-    this.platform = platform;
-}
-
-// Expose all public methods from the parser and handler, properly bound.
-// TODO: This is left as-is for backward compatibility and probably should be removed.
-// Renaming these methods to have more js-style naming.
-// To make transition from old names to new ones we're creating a mappings old->new
+// The objects below defines PlatformHandler and PluginHandler methods, which we need
+// to expose at the PlatformApi level. These objects also defines a mappings from old
+// methods names to new ones (more JS-styled).
 // TODO: This could be removed once all old methods' usages will be replaced
-
 var PARSER_PUBLIC_METHODS = {
     'config_xml': 'getConfigXml',
     'cordovajs_path': '',
@@ -53,40 +43,19 @@ var PARSER_PUBLIC_METHODS = {
     'www_dir': 'getWwwDir'
 };
 
-// Need to iterate through PARSER_PUBLIC_METHODS this way to avoid common closure problems.
-Object.keys(PARSER_PUBLIC_METHODS).forEach(function (methodName) {
-    var newName = PARSER_PUBLIC_METHODS[methodName];
-    BasePlatformApi.prototype[methodName] = function () {
-        var platformHandler = this.getPlatformHandler();
-        if (platformHandler[newName]) {
-            return platformHandler[newName].apply(platformHandler, arguments);
-        }
-    };
-});
+var HANDLER_PUBLIC_METHODS = {
+    'package_name': 'getPackageName',
+    'parseProjectFile': '',
+    'purgeProjectFileCache': ''
+};
 
-var HANDLER_PUBLIC_METHODS = [
-    'package_name',
-    'parseProjectFile',
-    'purgeProjectFileCache',
-];
-
-HANDLER_PUBLIC_METHODS.forEach(function(method) {
-    BasePlatformApi.prototype[method] = function () {
-        if (this.handler[method]) {
-            return this.handler[method].apply(this.handler, arguments);
-        }
-    };
-});
-
-// TODO: These props are left for backward compatibility
-// The proper way to get platform/plugin handlers - use getPlatformHandler/getPluginHandler methods
-Object.defineProperty(BasePlatformApi.prototype, 'parser', {
-    get: function () { return this.getPlatformHandler(); }
-});
-
-Object.defineProperty(BasePlatformApi.prototype, 'handler', {
-    get: function () { return this.getPluginHandler(); }
-});
+// A single class that exposes functionality from platform specific files from
+// both places cordova/metadata and plugman/platforms. Hopefully, to be soon
+// replaced by real unified platform specific classes.
+function BasePlatformApi(platform, platformRootDir) {
+    this.root = platformRootDir;
+    this.platform = platform;
+}
 
 /**
  * Gets a platform handler (former 'parser') for this project's platform.
@@ -115,7 +84,10 @@ BasePlatformApi.prototype.getPlatformHandler = function() {
             PlatformHandlerImpl = require(platforms[this.platform].parser_file);
         }
 
-        // Extend BasePlatformApi with platform implementation
+        // Extend BasePlatformApi with platform implementation.
+        // We need to provide PARSER_PUBLIC_METHODS as mapping object to maintain backward compat
+        // between legacy parsers' methods and methods, exposed by PlatformHandler class.
+        // TODO: Remove PARSER_PUBLIC_METHODS parameter after transition to PlatformHandler usage.
         PlatformHandler = inherit(PlatformHandlerImpl, BasePlatformHandler, PARSER_PUBLIC_METHODS);
         this._platformHandler = new PlatformHandler(this.root);
     }
@@ -283,3 +255,45 @@ function inherit(ctor, superCtor, compatMap) {
 
     return ctor;
 }
+
+// BACKWARD COMPATIBILITY SECTION
+
+// Expose all public methods from the parser and handler, properly bound
+// and map old-style names to new ones. This is required only for backward
+// compatibility and probably should be removed after transition to new
+// PlatformApi will be completed.
+// TODO: This could be removed once all old methods' usages will be replaced
+
+// Need to iterate through PARSER_PUBLIC_METHODS this way to avoid common closure problems.
+Object.keys(PARSER_PUBLIC_METHODS).forEach(function (methodName) {
+    var newName = PARSER_PUBLIC_METHODS[methodName];
+    BasePlatformApi.prototype[methodName] = function () {
+        var platformHandler = this.getPlatformHandler();
+        var handlerMethod = platformHandler[newName] || platformHandler[methodName];
+        if (handlerMethod) {
+            return handlerMethod.apply(platformHandler, arguments);
+        }
+    };
+});
+
+Object.keys(HANDLER_PUBLIC_METHODS).forEach(function (methodName) {
+    var newName = HANDLER_PUBLIC_METHODS[methodName];
+    BasePlatformApi.prototype[methodName] = function () {
+        var pluginHandler = this.getPluginHandler();
+        var handlerMethod = pluginHandler[newName] || pluginHandler[methodName];
+        if (handlerMethod) {
+            return handlerMethod.apply(pluginHandler, arguments);
+        }
+    };
+});
+
+// These props are left for backward compatibility. The proper way to
+// get platform/plugin handlers - use getPlatformHandler/getPluginHandler methods
+// TODO: Remove this after migrating to PlatformHandler/PluginHandler usage.
+Object.defineProperty(BasePlatformApi.prototype, 'parser', {
+    get: function () { return this.getPlatformHandler(); }
+});
+
+Object.defineProperty(BasePlatformApi.prototype, 'handler', {
+    get: function () { return this.getPluginHandler(); }
+});
