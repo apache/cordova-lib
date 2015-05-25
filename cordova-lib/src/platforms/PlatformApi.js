@@ -23,6 +23,8 @@ var fs = require('fs'),
     superspawn = require('../cordova/superspawn'),
     platforms = require('./platformsConfig.json');
 
+var BasePlatformHandler = require('../cordova/metadata/PlatformHandler');
+
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedProjects = {};
 
@@ -36,31 +38,36 @@ function BasePlatformApi(platform, platformRootDir) {
 
 // Expose all public methods from the parser and handler, properly bound.
 // TODO: This is left as-is for backward compatibility and probably should be removed.
-// TODO: Rename these methods in PlatformHandler class to have more js-style naming. Proposed names inline
-// To ensure that code is backaward compatible we'll need to have mappings from old names to new
-var PARSER_PUBLIC_METHODS = [
-    'config_xml',           // Proposed: getConfigXml()
-    'cordovajs_path',       // Proposed: getCordovaJs()
-    'cordovajs_src_path',   // Proposed: getCordovaJsSrc()
-    'update_from_config',   // Proposed: remove this method in favor of updateProject as more semantic-correct
-    'update_project',       // Proposed: updateProject()
-    'update_www',           // Proposed: updateWww()
-    'www_dir',              // Proposed: getWwwDir()
-];
+// Renaming these methods to have more js-style naming.
+// To make transition from old names to new ones we're creating a mappings old->new
+// TODO: This could be removed once all old methods' usages will be replaced
+
+var PARSER_PUBLIC_METHODS = {
+    'config_xml': 'getConfigXml',
+    'cordovajs_path': '',
+    'cordovajs_src_path': 'getCordovaJsSrc',
+    'update_from_config': '',
+    'update_project': 'updateProject',
+    'update_www': 'updateWww',
+    'www_dir': 'getWwwDir'
+};
+
+// Need to iterate through PARSER_PUBLIC_METHODS this way to avoid common closure problems.
+Object.keys(PARSER_PUBLIC_METHODS).forEach(function (methodName) {
+    var newName = PARSER_PUBLIC_METHODS[methodName];
+    BasePlatformApi.prototype[methodName] = function () {
+        var platformHandler = this.getPlatformHandler();
+        if (platformHandler[newName]) {
+            return platformHandler[newName].apply(platformHandler, arguments);
+        }
+    };
+});
 
 var HANDLER_PUBLIC_METHODS = [
     'package_name',
     'parseProjectFile',
     'purgeProjectFileCache',
 ];
-
-PARSER_PUBLIC_METHODS.forEach(function(method) {
-    BasePlatformApi.prototype[method] = function () {
-        if (this.parser[method]) {
-            return this.parser[method].apply(this.parser, arguments);
-        }
-    };
-});
 
 HANDLER_PUBLIC_METHODS.forEach(function(method) {
     BasePlatformApi.prototype[method] = function () {
@@ -70,20 +77,45 @@ HANDLER_PUBLIC_METHODS.forEach(function(method) {
     };
 });
 
+// TODO: These props are left for backward compatibility
+// The proper way to get platform/plugin handlers - use getPlatformHandler/getPluginHandler methods
+Object.defineProperty(BasePlatformApi.prototype, 'parser', {
+    get: function () { return this.getPlatformHandler(); }
+});
+
+Object.defineProperty(BasePlatformApi.prototype, 'handler', {
+    get: function () { return this.getPluginHandler(); }
+});
+
+/**
+ * Gets a platform handler (former 'parser') for this project's platform.
+ * Platform can provide it's own implementation for PlatformHandler by
+ * exposing PlatformApi.PlatformHandler constructor. If platform doesn't
+ * provides its own implementation, then embedded PlatformHandler will be used.
+ * (Taken from platformConfig.json/<platform>/parser_file field)
+ *
+ * @return {PlatformHandler} Instance of PlatformHandler class that exposes
+ *                                    platform-related functionality for cordova.
+ */
 BasePlatformApi.prototype.getPlatformHandler = function() {
     if (!this._platformHandler) {
         // Default PlatformHandler
-        var PlatformHandler = require(platforms[this.platform].parser_file);
+        var PlatformHandler = BasePlatformHandler;
+        var PlatformHandlerImpl;
+
         // Try find whether platform exposes its' API via js module
         var platformApiModule = path.join(this.root, 'cordova', 'Api.js');
         if (fs.existsSync(platformApiModule)) {
-            var PlatformHandlerImpl = require(platformApiModule).PlatformHandler;
-            // Another check to ensure that platform exposes PlatformHandler implementation
-            if (PlatformHandlerImpl) {
-                PlatformHandler = inherit(PlatformHandlerImpl, PlatformHandler);
-            }
+            PlatformHandlerImpl = require(platformApiModule).PlatformHandler;
         }
 
+        if (!PlatformHandlerImpl) {
+            // If platform doesn't provide Platformhandler, use embedded one for current platform
+            PlatformHandlerImpl = require(platforms[this.platform].parser_file);
+        }
+
+        // Extend BasePlatformApi with platform implementation
+        PlatformHandler = inherit(PlatformHandlerImpl, BasePlatformHandler, PARSER_PUBLIC_METHODS);
         this._platformHandler = new PlatformHandler(this.root);
     }
 
@@ -96,16 +128,6 @@ BasePlatformApi.prototype.getPluginHandler = function() {
     }
     return this._pluginHandler;
 };
-
-// TODO: These props are left for backward compatibility
-// The proper way to get platform/plugin handlers - use getPlatformHandler/getPluginHandler methods
-Object.defineProperty(BasePlatformApi.prototype, 'parser', {
-    get: function () { return this.getPlatformHandler(); }
-});
-
-Object.defineProperty(BasePlatformApi.prototype, 'handler', {
-    get: function () { return this.getPluginHandler(); }
-});
 
 BasePlatformApi.prototype.getInstaller = function(type) {
     var self = this;
@@ -186,9 +208,11 @@ module.exports.BasePlatformApi = BasePlatformApi;
  *
  * @param  {Function} ctor      The constructor of class to be inherited from Base class.
  * @param  {Function} superCtor Base constructor.
+ * @param  {Object}   compatMap The object that configures mapping of inherited class methods
+ *                              from old names to new ones.
  * @return {Function}           The constructor of inherited class.
  */
-function inherit(ctor, superCtor) {
+function inherit(ctor, superCtor, compatMap) {
     ctor.super_ = superCtor;
 
     // Back up prototype methods, otherwise they'll be ovewritten
@@ -209,7 +233,14 @@ function inherit(ctor, superCtor) {
 
     // Restore inherited prototype members
     for (methodName in ctorProtoMethods) {
-        ctor.prototype[methodName] = ctorProtoMethods[methodName];
+        // If there is compatibility map provided, remap methods of
+        // prototype according to that map, so the ctor.<new_name> will point to ctor.<old_name>
+        if (compatMap && compatMap[methodName]) {
+            var newName = compatMap[methodName];
+            ctor.prototype[newName] = ctor.prototype[methodName] = ctorProtoMethods[methodName];
+        } else {
+            ctor.prototype[methodName] = ctorProtoMethods[methodName];
+        }
     }
 
     return ctor;
