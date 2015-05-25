@@ -24,6 +24,7 @@ var fs = require('fs'),
     platforms = require('./platformsConfig.json');
 
 var BasePlatformHandler = require('../cordova/metadata/PlatformHandler');
+var BasePluginHandler = require('../plugman/platforms/PluginHandler');
 
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedProjects = {};
@@ -122,10 +123,44 @@ BasePlatformApi.prototype.getPlatformHandler = function() {
     return this._platformHandler;
 };
 
+/**
+ * Gets a plugin handler (former 'handler') for this project's platform.
+ * Platform can provide it's own implementation for PluginHandler by
+ * exposing PlatformApi.PluginHandler constructor. If platform doesn't
+ * provides its own implementation, then embedded PluginHandler will be used.
+ * (Taken from platformConfig.json/<platform>/handler_file field)
+ *
+ * @return {PluginHandler} Instance of PluginHandler class that exposes
+ *                                  platform-related functionality for cordova.
+ */
 BasePlatformApi.prototype.getPluginHandler = function() {
     if (!this._pluginHandler) {
-        this._pluginHandler = require(platforms[this.platform].handler_file);
+        var PluginHandler = BasePluginHandler;
+        var PluginHandlerImpl;
+
+        // Try find whether platform exposes its' API via js module
+        var platformApiModule = path.join(this.root, 'cordova', 'Api.js');
+        if (fs.existsSync(platformApiModule)) {
+            PluginHandlerImpl = require(platformApiModule).PluginHandler;
+        }
+
+        if (!PluginHandlerImpl) {
+            // If platform doesn't provide PluginHandler, use embedded one for current platform
+            // The platform implementation, shipped with cordova-lib, isn't constructable so
+            // we need to create a dummy class and copy implementation to its prototype.
+            var LegacyPluginHandler = function LegacyPluginHandler () {};
+            LegacyPluginHandler.prototype = require(platforms[this.platform].handler_file);
+            PluginHandlerImpl = LegacyPluginHandler;
+        }
+
+        // Extend BasePlatformApi with platform implementation.
+        // We need to provide HANDLER_PUBLIC_METHODS as mapping object to maintain backward compat
+        // between legacy handlers' methods and methods, exposed by PluginHandler class.
+        // TODO: Remove HANDLER_PUBLIC_METHODS parameter after transition to PluginHandler usage.
+        PluginHandler = inherit(PluginHandlerImpl, BasePluginHandler, HANDLER_PUBLIC_METHODS);
+        this._pluginHandler = new PluginHandler();
     }
+
     return this._pluginHandler;
 };
 
@@ -171,10 +206,13 @@ BasePlatformApi.prototype.requirements = function(options) {
 // PlatformProject classes for now.
 function getPlatformApi(platform, platformRootDir) {
     // if platformRootDir is not specified, try to detect it first
-    var projectRootDir = util.isCordova();
-    if (!platformRootDir && projectRootDir) {
-        platformRootDir = path.join(projectRootDir, 'platforms', platform);
-    } else {
+    if (!platformRootDir) {
+        var projectRootDir = util.isCordova();
+        platformRootDir = projectRootDir && path.join(projectRootDir, 'platforms', platform);
+    }
+
+    if (!platformRootDir) {
+        // If platformRootDir is still undefined, then we're probably is not inside of cordova project
         throw new Error('Current location is not a Cordova project');
     }
 
