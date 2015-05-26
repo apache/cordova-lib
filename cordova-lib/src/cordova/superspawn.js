@@ -48,9 +48,7 @@ function resolveWindowsExe(cmd) {
 }
 
 function maybeQuote(a) {
-    if (a.indexOf(' ') != -1) {
-        a = '"' + a + '"';
-    }
+    if (/^[^"].*[ &].*[^"]/.test(a)) return '"' + a + '"';
     return a;
 }
 
@@ -73,14 +71,15 @@ exports.spawn = function(cmd, args, opts) {
         cmd = resolveWindowsExe(cmd);
         // If we couldn't find the file, likely we'll end up failing,
         // but for things like "del", cmd will do the trick.
-        if (path.extname(cmd) != '.exe' && cmd.indexOf(' ') != -1) {
+        if (path.extname(cmd) != '.exe') {
+            var cmdArgs = '"' + [cmd].concat(args).map(maybeQuote).join(' ') + '"';
             // We need to use /s to ensure that spaces are parsed properly with cmd spawned content
-            args = [['/s', '/c', '"' + [cmd].concat(args).map(function(a){if (/^[^"].* .*[^"]/.test(a)) return '"' + a + '"'; return a;}).join(' ')+'"'].join(' ')];
+            args = [['/s', '/c', cmdArgs].join(' ')];
             cmd = 'cmd';
             spawnOpts.windowsVerbatimArguments = true;
         } else if (!fs.existsSync(cmd)) {
             // We need to use /s to ensure that spaces are parsed properly with cmd spawned content
-            args = ['/s', '/c', cmd].concat(args);
+            args = ['/s', '/c', cmd].concat(args).map(maybeQuote);
         }
     }
 
