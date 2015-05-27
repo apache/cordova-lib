@@ -40,9 +40,7 @@ function PlatformHandler (platform, projectPath) {
     // Extend with a ParserHelper instance
     Object.defineProperty(this, 'helper', {
         value: new ParserHelper(this.platform),
-        enumerable: true,
-        configurable: false,
-        writable: false
+        enumerable: true
     });
 }
 
@@ -75,17 +73,21 @@ PlatformHandler.prototype.getCordovaJsSrc = function(platformSource) {
 
 /**
  * Base implementation for updateWww.
+ * @param {string} [wwwSource] Source dir for www files. If not provided, method
+ *                             will try to find www directory from cordova project
  */
-PlatformHandler.prototype.updateWww = function() {
-    var projectRoot = util.isCordova(this.root);
-    var appWww = util.projectWww(projectRoot);
+PlatformHandler.prototype.updateWww = function(wwwSource) {
+    if (!wwwSource) {
+        var projectRoot = util.isCordova(this.root);
+        wwwSource = util.projectWww(projectRoot);
+    }
     var platformWww = path.join(this.root, 'platform_www');
 
     // Clear the www dir
     shell.rm('-rf', this.getWwwDir());
     shell.mkdir(this.getWwwDir());
     // Copy over all app www assets
-    shell.cp('-rf', path.join(appWww, '*'), this.getWwwDir());
+    shell.cp('-rf', path.join(wwwSource, '*'), this.getWwwDir());
     // Copy over stock platform www assets (cordova.js)
     shell.cp('-rf', path.join(platformWww, '*'), this.getWwwDir());
 };
