@@ -35,7 +35,8 @@ describe('preferences', function() {
             expect(preferences.ORIENTATION_DEFAULT).toEqual('default');
             expect(preferences.ORIENTATION_PORTRAIT).toEqual('portrait');
             expect(preferences.ORIENTATION_LANDSCAPE).toEqual('landscape');
-            expect(preferences.ORIENTATION_GLOBAL_ORIENTATIONS).toEqual([ 'default', 'portrait', 'landscape' ]);
+            expect(preferences.ORIENTATION_ALL).toEqual('all');
+            expect(preferences.ORIENTATION_GLOBAL_ORIENTATIONS).toEqual([ 'default', 'portrait', 'landscape', 'all' ]);
         });
 
     });
