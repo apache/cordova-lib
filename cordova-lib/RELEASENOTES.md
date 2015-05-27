@@ -20,6 +20,29 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.1.0 (May 27, 2015)
+* CB-8783 - Revert 'all' as a global preference value for Orientation (specific to iOS for now)
+* CB-8783 - 'default' value for Orientation does not support both landscape and portrait orientations. (new 'all' value)
+* CB-9075 pinned platforms will include patch updates without new tools release
+* CB-9051 Plugins don't get re-added if platforms folder deleted.
+* CB-9025 Call windows `prepare` logic on as part of cordova-lib `prepare`. This closes #217
+* CB-9048 Clean up git cloned directories (close #222)
+* CB-8965 readded browserify transform
+* CB-8965 copy platform specific js into platform_www when adding new platforms for browserify workflow
+* CB-8965 passing platform as argument when getting symbolList
+* CB-8965 copy platform specific js into platform_www when adding new platforms for browserify workflow
+* Add support to specify a build config file. If none is specified `build.json` in the project root is used as a default This closes #215
+* CB-9030: Modifies superspawn to support a "chmod" option. When truthy, attempts to set the target file mode to 755 before executing.  Specifies this argument as truthy for common CLI operations (compile, run, and steps in plugman).  Didn't add it for hooks runner since that particular mode is in legacy support.
+* CB-8989 - cordova-lib jasmine tests are failing on older hardware
+* CB-6462 CB-6026 - Orientation preference now updates `UISupportedInterfaceOrientations~ipad` too.
+* CB-8898 Introduces `requirements` cordova module
+* Update elementtree dependency to 0.1.6. Note it has a breaking API change. https://github.com/racker/node-elementtree/issues/24 (closes #209)
+* CB-8757 Resolve symlinks in order to avoid relative path issues (close #212)
+* CB-8956 Remove hardcoded reference to registry.npmjs.org
+* CB-8934 fixed regression with projects config.json not being used in cordova create
+* CB-8908 Make fetching via git faster via --depth=1
+* CB-8897 Make default icon/splash on Android map to mdpi
+
 ### 5.0.0 (Apr 16, 2015)
 * CB-8865 fixed plugman.help()
 * Pinned Cordova-Android version 4.0.0
