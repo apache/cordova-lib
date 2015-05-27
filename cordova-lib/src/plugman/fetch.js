@@ -146,11 +146,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         });
     }).then(function(result){
         checkID(options.expected_id, result.pinfo);
-        var data = { source: result.fetchJsonSource };
-        data.is_top_level = options.is_top_level; 
-        data.variables = options.variables || {};
-        metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, data);
-        return result.dest;
+        return result;
     });
 }
 
