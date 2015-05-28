@@ -113,7 +113,7 @@ ConfigParser.prototype = {
         el.text = name;
     },
     description: function() {
-        return this.doc.find('description').text.trim();
+        return getNodeTextSafe(this.doc.find('description'));
     },
     setDescription: function(text) {
         var el = findOrCreate(this.doc, 'description');

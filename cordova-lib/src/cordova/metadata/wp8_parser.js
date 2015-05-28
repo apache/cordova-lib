@@ -89,8 +89,6 @@ wp8_parser.prototype.update_from_config = function(config) {
     if(prev_name != name) {
         //console.log('Updating app name from ' + prev_name + " to " + name);
         manifest.find('.//App').attrib.Title = name;
-        manifest.find('.//App').attrib.Publisher = name + ' Publisher';
-        manifest.find('.//App').attrib.Author = name + ' Author';
         manifest.find('.//PrimaryToken').attrib.TokenID = name;
         //update name of sln and csproj.
         name = name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); //make it a ligitamate name
@@ -106,6 +104,13 @@ wp8_parser.prototype.update_from_config = function(config) {
         shell.mv('-f', sln_path, path.join(this.wp8_proj_dir, name + '.sln'));
         this.sln_path    = path.join(this.wp8_proj_dir, name + '.sln');
     }
+
+    // Update author, publisher and description
+    var author = config.author() || '',
+        description = config.description() || '';
+    manifest.find('.//App').attrib.Author = author;
+    manifest.find('.//App').attrib.Publisher = author;
+    manifest.find('.//App').attrib.Description = description;
 
     // Update package name by changing:
     /*  - CordovaAppProj.csproj
