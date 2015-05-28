@@ -20,10 +20,10 @@
 var fs = require('fs'),
     path = require('path'),
     util = require('../cordova/util'),
+    shell = require('shelljs'),
     superspawn = require('../cordova/superspawn'),
     platforms = require('./platformsConfig.json');
 
-var BasePlatformHandler = require('../cordova/metadata/PlatformHandler');
 var BasePluginHandler = require('../plugman/platforms/PluginHandler');
 
 // Avoid loading the same platform projects more than once (identified by path)
@@ -55,45 +55,29 @@ var HANDLER_PUBLIC_METHODS = {
 function BasePlatformApi(platform, platformRootDir) {
     this.root = platformRootDir;
     this.platform = platform;
+
+    // Parser property of Platform API left for backward compatibility
+    // and smooth transition to ne API. It also does the job of requiring
+    // and constructing legacy Parser instance, which required for platforms
+    // that still stores their code in cordova-lib.
+    var parser;
+    Object.defineProperty(this, 'parser', {
+        get: function () {
+            if (parser)return parser;
+
+            var ParserConstructor;
+            try {
+                ParserConstructor = require(platforms[this.platform].parser_file);
+            } catch (e) { }
+
+            // parser === null is the special case which means that we've tried
+            // to get embedded platform parser and failed. In this case instead of
+            // parser's methods will be called PlatformApi default implementations.
+            parser = ParserConstructor ? new ParserConstructor(this.root) : null;
+            return parser;
+        }
+    });
 }
-
-/**
- * Gets a platform handler (former 'parser') for this project's platform.
- * Platform can provide it's own implementation for PlatformHandler by
- * exposing PlatformApi.PlatformHandler constructor. If platform doesn't
- * provides its own implementation, then embedded PlatformHandler will be used.
- * (Taken from platformConfig.json/<platform>/parser_file field)
- *
- * @return {PlatformHandler} Instance of PlatformHandler class that exposes
- *                                    platform-related functionality for cordova.
- */
-BasePlatformApi.prototype.getPlatformHandler = function() {
-    if (!this._platformHandler) {
-        // Default PlatformHandler
-        var PlatformHandler = BasePlatformHandler;
-        var PlatformHandlerImpl;
-
-        // Try find whether platform exposes its' API via js module
-        var platformApiModule = path.join(this.root, 'cordova', 'Api.js');
-        if (fs.existsSync(platformApiModule)) {
-            PlatformHandlerImpl = require(platformApiModule).PlatformHandler;
-        }
-
-        if (!PlatformHandlerImpl) {
-            // If platform doesn't provide Platformhandler, use embedded one for current platform
-            PlatformHandlerImpl = require(platforms[this.platform].parser_file);
-        }
-
-        // Extend BasePlatformApi with platform implementation.
-        // We need to provide PARSER_PUBLIC_METHODS as mapping object to maintain backward compat
-        // between legacy parsers' methods and methods, exposed by PlatformHandler class.
-        // TODO: Remove PARSER_PUBLIC_METHODS parameter after transition to PlatformHandler usage.
-        PlatformHandler = inherit(PlatformHandlerImpl, BasePlatformHandler, PARSER_PUBLIC_METHODS);
-        this._platformHandler = new PlatformHandler(this.root);
-    }
-
-    return this._platformHandler;
-};
 
 /**
  * Gets a plugin handler (former 'handler') for this project's platform.
@@ -151,6 +135,83 @@ BasePlatformApi.prototype.getUninstaller = function(type) {
     }
     return uninstallWrapper;
 };
+
+/**
+ * Base implementation for getConfigXml. Assumes that config.xml
+ * is placed at the root of project.
+ * @return {String} Path to platform's config.xml file
+ */
+BasePlatformApi.prototype.getConfigXml = function() {
+    if (this.parser && this.parser.config_xml()) {
+        return this.parser.config_xml();
+    }
+
+    return  path.join(this.root, 'config.xml');
+};
+
+/**
+ * Base implementation for getWwwDir. Assumes that
+ * www directory is placed at the root of project.
+ * @return {String} Path to platform's www directory.
+ */
+BasePlatformApi.prototype.getWwwDir = function() {
+    if (this.parser && this.parser.www_dir()) {
+        return this.parser.www_dir();
+    }
+
+    return  path.join(this.root, 'www');
+};
+
+/**
+ * Base implementation for getCordovaJsSrc. Assumes that cordova.js
+ * source is placed at the root of platform's source dir.
+ * @return {String} Path to platform's 'cordova-js-src' folder.
+ */
+BasePlatformApi.prototype.getCordovaJsSrc = function(platformSource) {
+    if (this.parser && this.parser.cordovajs_src_path) {
+        return this.parser.cordovajs_src_path(platformSource);
+    }
+
+    return path.resolve(platformSource, 'cordova-js-src');
+};
+
+/**
+ * Base implementation for updateWww.
+ * @param {string} [wwwSource] Source dir for www files. If not provided, method
+ *                             will try to find www directory from cordova project
+ */
+BasePlatformApi.prototype.updateWww = function(wwwSource) {
+    if (this.parser && this.parser.update_www) {
+        return this.parser.update_www();
+    }
+
+    if (!wwwSource) {
+        var projectRoot = util.isCordova(this.root);
+        wwwSource = util.projectWww(projectRoot);
+    }
+    var platformWww = path.join(this.root, 'platform_www');
+
+    // Clear the www dir
+    shell.rm('-rf', this.getWwwDir());
+    shell.mkdir(this.getWwwDir());
+    // Copy over all app www assets
+    shell.cp('-rf', path.join(wwwSource, '*'), this.getWwwDir());
+    // Copy over stock platform www assets (cordova.js)
+    shell.cp('-rf', path.join(platformWww, '*'), this.getWwwDir());
+};
+
+/**
+ * Base implementation for updateProject. Does nothing
+ * since implementation is heavily depends on platform specifics.
+ * Always should be overridden by platform.
+ */
+BasePlatformApi.prototype.updateProject = function(configParser) {
+    if (this.parser && this.parser.update_project) {
+        return this.parser.update_project(configParser);
+    }
+};
+
+// PLATFORM ACTIONS
 
 /**
  * Default implementation for platform build. Uses executable script shipped with platform to build project.
@@ -267,13 +328,7 @@ function inherit(ctor, superCtor, compatMap) {
 // Need to iterate through PARSER_PUBLIC_METHODS this way to avoid common closure problems.
 Object.keys(PARSER_PUBLIC_METHODS).forEach(function (methodName) {
     var newName = PARSER_PUBLIC_METHODS[methodName];
-    BasePlatformApi.prototype[methodName] = function () {
-        var platformHandler = this.getPlatformHandler();
-        var handlerMethod = platformHandler[newName] || platformHandler[methodName];
-        if (handlerMethod) {
-            return handlerMethod.apply(platformHandler, arguments);
-        }
-    };
+    BasePlatformApi.prototype[methodName] = BasePlatformApi.prototype[newName];
 });
 
 Object.keys(HANDLER_PUBLIC_METHODS).forEach(function (methodName) {
@@ -287,13 +342,9 @@ Object.keys(HANDLER_PUBLIC_METHODS).forEach(function (methodName) {
     };
 });
 
-// These props are left for backward compatibility. The proper way to
-// get platform/plugin handlers - use getPlatformHandler/getPluginHandler methods
-// TODO: Remove this after migrating to PlatformHandler/PluginHandler usage.
-Object.defineProperty(BasePlatformApi.prototype, 'parser', {
-    get: function () { return this.getPlatformHandler(); }
-});
-
+// This property is left for backward compatibility. The proper way to
+// get plugin handler - use getPluginHandler method
+// TODO: Remove this after migrating to PluginHandler usage.
 Object.defineProperty(BasePlatformApi.prototype, 'handler', {
     get: function () { return this.getPluginHandler(); }
 });
