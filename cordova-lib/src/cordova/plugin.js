@@ -135,45 +135,17 @@ module.exports = function plugin(command, targets, opts) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-
                         return plugman.raw.fetch(target, pluginsDir, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link, 
-                                                                       pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables,
-                                                                       is_top_level: true });
+                                                                       pluginInfoProvider: pluginInfoProvider }); 
                     })
-                    .then(function(dir){
-                        // save to config.xml
-                        if(saveToConfigXmlOn(config_json,opts)){
-                            var pluginInfo =  pluginInfoProvider.get(dir);
-
-                            var attributes = {};
-                            attributes.name = pluginInfo.id;
-
-                            var src = parseSource(target, opts);
-                            attributes.spec = src ? src : '^' + pluginInfo.version;
-
-                            var variables = [];
-                            if (opts.cli_variables) {
-                                for (var varname in opts.cli_variables) {
-                                    if (opts.cli_variables.hasOwnProperty(varname)) {
-                                        variables.push({name: varname, value: opts.cli_variables[varname]});
-                                    }
-                                }
-                            }
-                            cfg.removePlugin(pluginInfo.id);
-                            cfg.addPlugin(attributes, variables);
-                            cfg.write();
-                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
-                        }
-                        return dir;
-                    })
-                    .then(function(dir) {
+                    .then(function(result) {
                         // Validate top-level required variables
-                        var pluginVariables = pluginInfoProvider.get(dir).getPreferences(),
+                        var pluginVariables = pluginInfoProvider.get(result.dest).getPreferences(),
                             missingVariables = pluginVariables.filter(function (v) {
                                 return !(v in opts.cli_variables);
                             });
                         if (missingVariables.length) {
-                            shell.rm('-rf', dir);
+                            shell.rm('-rf', result.dest);
                             var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
                             return Q.reject(new CordovaError(msg));
                         }
@@ -206,10 +178,41 @@ module.exports = function plugin(command, targets, opts) {
                                     }
                                 }
 
-                                events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options);
+                                events.emit('verbose', 'Calling plugman.install on plugin "' + result.dest + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
+                                return plugman.raw.install(platform, platformRoot, path.basename(result.dest), pluginsDir, options);
                             });
-                        }, Q());
+                        }, Q()).then(function(){
+                            return Q(result);
+                        });
+                    })                    
+                    .then(function(result){
+                        metadata.save_fetch_metadata(pluginsDir, result.pinfo.id, { source: result.fetchJsonSource, variables: opts.cli_variables, is_top_level: true });
+                        return Q(result.dest);
+                    })
+                    .then(function(dir){
+                        // save to config.xml
+                        if(saveToConfigXmlOn(config_json,opts)){
+                            var pluginInfo =  pluginInfoProvider.get(dir);
+
+                            var attributes = {};
+                            attributes.name = pluginInfo.id;
+
+                            var src = parseSource(target, opts);
+                            attributes.spec = src ? src : '^' + pluginInfo.version;
+
+                            var variables = [];
+                            if (opts.cli_variables) {
+                                for (var varname in opts.cli_variables) {
+                                    if (opts.cli_variables.hasOwnProperty(varname)) {
+                                        variables.push({name: varname, value: opts.cli_variables[varname]});
+                                    }
+                                }
+                            }
+                            cfg.removePlugin(pluginInfo.id);
+                            cfg.addPlugin(attributes, variables);
+                            cfg.write();
+                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
+                        }                        
                     });
                 }, Q()); // end Q.all
             }).then(function() {

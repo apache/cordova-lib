@@ -23,7 +23,6 @@ var fetch   = require('../src/plugman/fetch'),
     shell   = require('shelljs'),
     realrm = shell.rm,
     //xml_helpers = require('../src/util/xml-helpers'),
-    metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
     test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
     //test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
@@ -58,12 +57,11 @@ describe('fetch', function() {
     });
 */
     describe('local plugins', function() {
-        var rm, sym, cp, save_metadata;
+        var rm, sym, cp;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             cp = spyOn(shell, 'cp').andCallThrough();
-            save_metadata = spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
         });
 
@@ -106,7 +104,7 @@ describe('fetch', function() {
         });
     });
     describe('git plugins', function() {
-        var clone, save_metadata, done;
+        var clone, done;
 
         function fetchPromise(f) {
             f.then(function() { done = true; }, function(err) { done = err; });
@@ -114,7 +112,6 @@ describe('fetch', function() {
 
         beforeEach(function() {
             clone = spyOn(plugins, 'clonePluginGitRepo').andReturn(Q(test_plugin));
-            save_metadata = spyOn(metadata, 'save_fetch_metadata');
             done = false;
         });
         it('should call clonePluginGitRepo for https:// and git:// based urls', function() {
@@ -126,7 +123,6 @@ describe('fetch', function() {
             runs(function() {
                 expect(done).toBe(true);
                 expect(clone).toHaveBeenCalledWith(url, temp, '.', undefined, undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir if applicable', function() {
@@ -138,7 +134,6 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined, undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
@@ -151,7 +146,6 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref from the URL hash, if provided', function() {
@@ -163,7 +157,6 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef', undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the subdir from the URL hash, if provided', function() {
@@ -175,7 +168,6 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined, undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should extract the git ref and subdir from the URL hash, if provided', function() {
@@ -187,7 +179,6 @@ describe('fetch', function() {
             waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
             runs(function() {
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef', undefined);
-                expect(save_metadata).toHaveBeenCalled();
             });
         });
         it('should fail when the expected ID doesn\'t match', function(done) {
@@ -214,11 +205,10 @@ describe('fetch', function() {
     });
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
-        var rm, sym, save_metadata;
+        var rm, sym;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
-            save_metadata = spyOn(metadata, 'save_fetch_metadata');
             sFetch = spyOn(registry, 'fetch').andReturn(Q(test_plugin));
             realrm('-rf', temp);
         });
