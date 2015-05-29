@@ -28,12 +28,12 @@ function graftPLIST(doc, xml, selector) {
 
     var node = doc[selector];
     if (node && Array.isArray(node) && Array.isArray(obj)){
-        node.concat(obj);
+        node = node.concat(obj);
         for (var i =0;i<node.length; i++){
-          for (var j=i+1; j<node.length; ++j) {
-            if (node[i] === node[j])
-              node.splice(j--,1);
-          }
+            for (var j=i+1; j<node.length; ++j) {
+                if (node[i] === node[j])
+                    node.splice(j--,1);
+            }
         }
         doc[selector] = node;
     } else {

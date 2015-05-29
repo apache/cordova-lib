@@ -311,16 +311,15 @@ describe('config-changes module', function() {
                     configChanges.process(plugins_dir, temp, 'ios', platformJson, pluginInfoProvider);
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
                 });
-            });
-            describe('plist merge dictionaries', function() {
-                it('should write empty string nodes with no whitespace', function() {
+                it('should merge dictionaries and arrays, removing duplicates', function() {
                     shell.cp('-rf', ios_config_xml, temp);
                     shell.cp('-rf', plistplugin, plugins_dir);
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
                     platformJson.addInstalledPluginToPrepareQueue('org.apache.plist', {});
                     configChanges.process(plugins_dir, temp, 'ios', platformJson, pluginInfoProvider);
-
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>UINewsstandIcon<\/key>[\s\S]*<key>CFBundlePrimaryIcon<\/key>/);
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<string>schema-b<\/string>/);
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).not.toMatch(/(<string>schema-a<\/string>[^]*){2,}/);
                 });
             });
             describe('of pbxproject framework files', function() {
