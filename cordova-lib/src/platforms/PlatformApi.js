@@ -17,12 +17,15 @@
     under the License.
 */
 
-var fs = require('fs'),
+var Q = require('q'),
+    fs = require('fs'),
     path = require('path'),
-    util = require('../cordova/util'),
     shell = require('shelljs'),
+    events = require('../events'),
+    util = require('../cordova/util'),
     superspawn = require('../cordova/superspawn'),
-    platforms = require('./platformsConfig.json');
+    platforms = require('./platformsConfig.json'),
+    ConfigParser = require('../configparser/ConfigParser');
 
 var BasePluginHandler = require('../plugman/platforms/PluginHandler');
 
@@ -150,6 +153,39 @@ BasePlatformApi.prototype.getConfigXml = function() {
 };
 
 /**
+ * Base implementation for updateConfig. Reset platform's config to default.
+ * @return {String} Path to platform's config.xml file
+ */
+BasePlatformApi.prototype.updateConfig = function(optSource) {
+    debugger;
+    var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
+    var ownConfig = this.getConfigXml();
+    // If defaults.xml is present, overwrite platform config.xml with it
+    if (fs.existsSync(defaultConfig)) {
+        shell.cp('-f', defaultConfig, ownConfig);
+        events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
+    } else {
+        shell.cp('-f', ownConfig, defaultConfig);
+    }
+
+    // Update platform config.xml based on top level config.xml
+    var baseConfig = optSource || util.projectConfig(util.isCordova(this.root));
+
+    var baseCfg = new ConfigParser(baseConfig);
+    var ownCfg = new ConfigParser(ownConfig);
+    util.mergeXml(baseCfg.doc.getroot(), ownCfg.doc.getroot(), this.platform, true);
+
+    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
+    // we allow using windows8 tag for new windows platform
+    // TODO: this section should be moved to windows platform's implementation of PlatformApi
+    if (this.platform == 'windows') {
+        util.mergeXml(baseCfg.doc.getroot(), ownCfg.doc.getroot(), 'windows8', true);
+    }
+
+    return Q.when(ownCfg.write());
+};
+
+/**
  * Base implementation for getWwwDir. Assumes that
  * www directory is placed at the root of project.
  * @return {String} Path to platform's www directory.
@@ -182,7 +218,7 @@ BasePlatformApi.prototype.getCordovaJsSrc = function(platformSource) {
  */
 BasePlatformApi.prototype.updateWww = function(wwwSource) {
     if (this.parser && this.parser.update_www) {
-        return this.parser.update_www();
+        return Q.when(this.parser.update_www());
     }
 
     if (!wwwSource) {
@@ -197,7 +233,11 @@ BasePlatformApi.prototype.updateWww = function(wwwSource) {
     // Copy over all app www assets
     shell.cp('-rf', path.join(wwwSource, '*'), this.getWwwDir());
     // Copy over stock platform www assets (cordova.js)
-    shell.cp('-rf', path.join(platformWww, '*'), this.getWwwDir());
+    runShellSilent(function () {
+        shell.cp('-rf', path.join(platformWww, '*'), this.getWwwDir());
+    });
+
+    return Q();
 };
 
 /**
@@ -206,9 +246,11 @@ BasePlatformApi.prototype.updateWww = function(wwwSource) {
  * Always should be overridden by platform.
  */
 BasePlatformApi.prototype.updateProject = function(configParser) {
+    configParser = configParser || new ConfigParser(this.getConfigXml());
     if (this.parser && this.parser.update_project) {
-        return this.parser.update_project(configParser);
+        return Q.when(this.parser.update_project(configParser));
     }
+    return Q();
 };
 
 // PLATFORM ACTIONS
@@ -360,3 +402,10 @@ Object.keys(HANDLER_PUBLIC_METHODS).forEach(function (methodName) {
 Object.defineProperty(BasePlatformApi.prototype, 'handler', {
     get: function () { return this.getPluginHandler(); }
 });
+
+function runShellSilent(callback) {
+    var silentstate = shell.config.silent;
+    shell.config.silent = true;
+    callback();
+    shell.config.silent = silentstate;
+}

@@ -70,13 +70,20 @@ describe('prepare command', function() {
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
 
-        spyOn(platforms, 'getPlatformProject').andCallFake(function(platform, rootDir) {
+        spyOn(platforms, 'getPlatformApi').andCallFake(function(platform, rootDir) {
             return {
-                update_www: jasmine.createSpy(platform + ' update_www'),
-                cordovajs_path: function(libDir) { return 'path/to/cordova.js/in/.cordova/lib';},
-                www_dir:function() { return path.join(project_dir, 'platforms', platform, 'www'); },
-                config_xml: function () { return path.join(project_dir, 'platforms', platform, 'www', 'config.xml');},
-                update_project: function () { return Q();},
+                updateWww: jasmine.createSpy(platform + ' update_www').andReturn(Q()),
+                getWwwDir:function() { return path.join(project_dir, 'platforms', platform, 'www'); },
+                getConfigXml: function () { return path.join(project_dir, 'platforms', platform, 'www', 'config.xml');},
+                updateProject: function () { return Q();},
+                updateConfig: function () { return Q();},
+                parser: {
+                    update_www: jasmine.createSpy(platform + ' update_www'),
+                    cordovajs_path: function(libDir) { return 'path/to/cordova.js/in/.cordova/lib';},
+                    www_dir:function() { return path.join(project_dir, 'platforms', platform, 'www'); },
+                    config_xml: function () { return path.join(project_dir, 'platforms', platform, 'www', 'config.xml');},
+                    update_project: function () { return Q();},
+                }
             };
         });
 
