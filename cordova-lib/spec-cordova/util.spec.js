@@ -22,12 +22,31 @@
 var shell = require('shelljs'),
     path = require('path'),
     fs = require('fs'),
+    et = require('elementtree'),
     util = require('../src/cordova/util'),
     temp = path.join(__dirname, '..', 'temp');
 
 var cwd = process.cwd();
 var home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 var origPWD = process.env['PWD'];
+
+var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
+    '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
+    '        id        = "io.cordova.hellocordova"\n' +
+    '        version   = "0.0.1">\n' +
+    '    <name>Hello Cordova</name>\n' +
+    '    <description>\n' +
+    '        A sample Apache Cordova application that responds to the deviceready event.\n' +
+    '    </description>\n' +
+    '    <author href="http://cordova.io" email="dev@cordova.apache.org">\n' +
+    '        Apache Cordova Team\n' +
+    '    </author>\n' +
+    '    <content src="index.html" />\n' +
+    '    <access origin="*" />\n' +
+    '    <preference name="fullscreen" value="true" />\n' +
+    '    <preference name="webviewbounce" value="true" />\n' +
+    '</widget>\n';
 
 describe('util module', function() {
     describe('isCordova method', function() {
@@ -182,6 +201,99 @@ describe('util module', function() {
             var res = util.findPlugins(plugins);
             expect(res.length).toEqual(2);
             expect(res.indexOf('CVS')).toEqual(-1);
+        });
+    });
+    describe('mergeXml method', function () {
+        var dstXml;
+        beforeEach(function() {
+            dstXml = et.XML(TEST_XML);
+        });
+        it('should merge attributes and text of the root element without clobbering', function () {
+            var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
+            util.mergeXml(testXml, dstXml);
+            expect(dstXml.attrib.foo).toEqual('bar');
+            expect(dstXml.attrib.id).not.toEqual('NOTANID');
+            expect(dstXml.text).not.toEqual('TEXT');
+        });
+
+        it('should merge attributes and text of the root element with clobbering', function () {
+            var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
+            util.mergeXml(testXml, dstXml, 'foo', true);
+            expect(dstXml.attrib.foo).toEqual('bar');
+            expect(dstXml.attrib.id).toEqual('NOTANID');
+            expect(dstXml.text).toEqual('TEXT');
+        });
+
+        it('should not merge platform tags with the wrong platform', function () {
+            var testXml = et.XML('<widget><platform name="bar"><testElement testAttrib="value">testTEXT</testElement></platform></widget>'),
+                origCfg = et.tostring(dstXml);
+
+            util.mergeXml(testXml, dstXml, 'foo', true);
+            expect(et.tostring(dstXml)).toEqual(origCfg);
+        });
+
+        it('should merge platform tags with the correct platform', function () {
+            var testXml = et.XML('<widget><platform name="bar"><testElement testAttrib="value">testTEXT</testElement></platform></widget>'),
+                origCfg = et.tostring(dstXml);
+
+            util.mergeXml(testXml, dstXml, 'bar', true);
+            expect(et.tostring(dstXml)).not.toEqual(origCfg);
+            var testElement = dstXml.find('testElement');
+            expect(testElement).toBeDefined();
+            expect(testElement.attrib.testAttrib).toEqual('value');
+            expect(testElement.text).toEqual('testTEXT');
+        });
+
+        it('should merge singelton children without clobber', function () {
+            var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
+
+            util.mergeXml(testXml, dstXml);
+            var testElements = dstXml.findall('author');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].attrib.testAttrib).toEqual('value');
+            expect(testElements[0].attrib.href).toEqual('http://cordova.io');
+            expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
+            expect(testElements[0].text).toContain('Apache Cordova Team');
+        });
+
+        it('should clobber singelton children with clobber', function () {
+            var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
+
+            util.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('author');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].attrib.testAttrib).toEqual('value');
+            expect(testElements[0].attrib.href).toEqual('http://www.nowhere.com');
+            expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
+            expect(testElements[0].text).toEqual('SUPER_AUTHOR');
+        });
+
+        it('should append non singelton children', function () {
+            var testXml = et.XML('<widget><preference num="1"/> <preference num="2"/></widget>');
+
+            util.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('preference');
+            expect(testElements.length).toEqual(4);
+        });
+
+        it('should handle namespaced elements', function () {
+            var testXml = et.XML('<widget><foo:bar testAttrib="value">testText</foo:bar></widget>');
+
+            util.mergeXml(testXml, dstXml, 'foo', true);
+            var testElement = dstXml.find('foo:bar');
+            expect(testElement).toBeDefined();
+            expect(testElement.attrib.testAttrib).toEqual('value');
+            expect(testElement.text).toEqual('testText');
+        });
+
+        it('should not append duplicate non singelton children', function () {
+            var testXml = et.XML('<widget><preference name="fullscreen" value="true"/></widget>');
+
+            util.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('preference');
+            expect(testElements.length).toEqual(2);
         });
     });
 });

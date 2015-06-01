@@ -22,6 +22,7 @@ var fs            = require('fs'),
     path          = require('path'),
     CordovaError  = require('../CordovaError'),
     shell         = require('shelljs'),
+    et            = require('elementtree'),
     url           = require('url');
 
 // Global configuration paths
@@ -292,3 +293,72 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
         });
     }
 }
+
+
+var BLACKLIST = ['platform', 'feature','plugin','engine'];
+var SINGLETONS = ['content', 'author'];
+function mergeXml(src, dest, platform, clobber) {
+    // Do nothing for blacklisted tags.
+    if (BLACKLIST.indexOf(src.tag) != -1) return;
+
+    //Handle attributes
+    Object.getOwnPropertyNames(src.attrib).forEach(function (attribute) {
+        if (clobber || !dest.attrib[attribute]) {
+            dest.attrib[attribute] = src.attrib[attribute];
+        }
+    });
+    //Handle text
+    if (src.text && (clobber || !dest.text)) {
+        dest.text = src.text;
+    }
+    //Handle platform
+    if (platform) {
+        src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
+            platformElement.getchildren().forEach(mergeChild);
+        });
+    }
+
+    //Handle children
+    src.getchildren().forEach(mergeChild);
+
+    function textMatch(elm1, elm2) {
+        var text1 = elm1.text ? elm1.text.replace(/\s+/, '') : '',
+            text2 = elm2.text ? elm2.text.replace(/\s+/, '') : '';
+        return (text1 === '' || text1 === text2);
+    }
+
+    function mergeChild (srcChild) {
+        var srcTag = srcChild.tag,
+            destChild = new et.Element(srcTag),
+            foundChild,
+            query = srcTag + '',
+            shouldMerge = true;
+
+        if (BLACKLIST.indexOf(srcTag) === -1) {
+            if (SINGLETONS.indexOf(srcTag) !== -1) {
+                foundChild = dest.find(query);
+                if (foundChild) {
+                    destChild = foundChild;
+                    dest.remove(destChild);
+                }
+            } else {
+                //Check for an exact match and if you find one don't add
+                Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
+                    query += '[@' + attribute + '="' + srcChild.attrib[attribute] + '"]';
+                });
+                foundChild = dest.find(query);
+                if (foundChild && textMatch(srcChild, foundChild)) {
+                    destChild = foundChild;
+                    dest.remove(destChild);
+                    shouldMerge = false;
+                }
+            }
+
+            mergeXml(srcChild, destChild, platform, clobber && shouldMerge);
+            dest.append(destChild);
+        }
+    }
+}
+
+// Expose for testing.
+exports.mergeXml = mergeXml;
