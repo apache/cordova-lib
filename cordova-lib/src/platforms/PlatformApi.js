@@ -221,7 +221,19 @@ BasePlatformApi.prototype.updateProject = function(configParser) {
  */
 BasePlatformApi.prototype.build = function(options) {
     var cmd = path.join(this.root, 'cordova', 'build');
-    return superspawn.spawn(cmd, options.options, { printCommand: true, stdio: 'inherit' });
+    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit' });
+};
+
+/**
+ * Default implementation for platform run. Uses executable script shipped with platform
+ * to deploy and run project. Could be overridden using PlatformApi implementation if it
+ * is provided by platform.
+ * @param  {Object}  options Complex object that provides cordova API to method
+ * @return {Promise}         Promise, either resolved or rejected with error code.
+ */
+BasePlatformApi.prototype.run = function(options) {
+    var cmd = path.join(this.root, 'cordova', 'run');
+    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit' });
 };
 
 /**
