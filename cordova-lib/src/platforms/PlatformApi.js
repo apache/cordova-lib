@@ -32,20 +32,6 @@ var BasePluginHandler = require('../plugman/platforms/PluginHandler');
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedProjects = {};
 
-// The objects below defines PlatformHandler and PluginHandler methods, which we need
-// to expose at the PlatformApi level. These objects also defines a mappings from old
-// methods names to new ones (more JS-styled).
-// TODO: This could be removed once all old methods' usages will be replaced
-var PARSER_PUBLIC_METHODS = {
-    'config_xml': 'getConfigXml',
-    'cordovajs_path': '',
-    'cordovajs_src_path': 'getCordovaJsSrc',
-    'update_from_config': '',
-    'update_project': 'updateProject',
-    'update_www': 'updateWww',
-    'www_dir': 'getWwwDir'
-};
-
 var HANDLER_PUBLIC_METHODS = {
     'package_name': 'getPackageName',
     'parseProjectFile': '',
@@ -157,7 +143,6 @@ BasePlatformApi.prototype.getConfigXml = function() {
  * @return {String} Path to platform's config.xml file
  */
 BasePlatformApi.prototype.updateConfig = function(optSource) {
-    debugger;
     var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
     var ownConfig = this.getConfigXml();
     // If defaults.xml is present, overwrite platform config.xml with it
@@ -370,38 +355,6 @@ function inherit(ctor, superCtor, compatMap) {
 
     return ctor;
 }
-
-// BACKWARD COMPATIBILITY SECTION
-
-// Expose all public methods from the parser and handler, properly bound
-// and map old-style names to new ones. This is required only for backward
-// compatibility and probably should be removed after transition to new
-// PlatformApi will be completed.
-// TODO: This could be removed once all old methods' usages will be replaced
-
-// Need to iterate through PARSER_PUBLIC_METHODS this way to avoid common closure problems.
-Object.keys(PARSER_PUBLIC_METHODS).forEach(function (methodName) {
-    var newName = PARSER_PUBLIC_METHODS[methodName];
-    BasePlatformApi.prototype[methodName] = BasePlatformApi.prototype[newName];
-});
-
-Object.keys(HANDLER_PUBLIC_METHODS).forEach(function (methodName) {
-    var newName = HANDLER_PUBLIC_METHODS[methodName];
-    BasePlatformApi.prototype[methodName] = function () {
-        var pluginHandler = this.getPluginHandler();
-        var handlerMethod = pluginHandler[newName] || pluginHandler[methodName];
-        if (handlerMethod) {
-            return handlerMethod.apply(pluginHandler, arguments);
-        }
-    };
-});
-
-// This property is left for backward compatibility. The proper way to
-// get plugin handler - use getPluginHandler method
-// TODO: Remove this after migrating to PluginHandler usage.
-Object.defineProperty(BasePlatformApi.prototype, 'handler', {
-    get: function () { return this.getPluginHandler(); }
-});
 
 function runShellSilent(callback) {
     var silentstate = shell.config.silent;

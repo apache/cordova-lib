@@ -36,11 +36,5 @@ module.exports = platforms;
 // platforms object to be platforms.
 Object.defineProperties(module.exports, {
     'getPlatformApi': {value: platformApi.getPlatformApi, configurable: true, writable: true},
-    // This property left for backward compatibility only
-    // TODO: ensure that it is not used anywhere else
-    'getPlatformProject': {value: platformApi.getPlatformApi, configurable: true, writable: true},
-    'BasePlatformApi': {value: platformApi.BasePlatformApi, configurable: true, writable: true},
-    // This property left for backward compatibility only
-    // TODO: ensure that it is not used anywhere else
-    'PlatformProjectAdapter': {value: platformApi.BasePlatformApi, configurable: true, writable: true}
+    'BasePlatformApi': {value: platformApi.BasePlatformApi, configurable: true, writable: true}
 });

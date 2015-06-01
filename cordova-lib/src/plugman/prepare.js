@@ -46,7 +46,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     events.emit('verbose', 'Preparing ' + platform + ' project');
     pluginInfoProvider = pluginInfoProvider || new PluginInfoProvider(); // Allow null for backwards-compat.
     var platformJson = PlatformJson.load(plugins_dir, platform);
-    var wwwDir = www_dir || platform_modules.getPlatformProject(platform, project_dir).www_dir();
+    var wwwDir = www_dir || platform_modules.getPlatformApi(platform, project_dir).getWwwDir();
 
     // Check if there are any plugins queued for uninstallation, and if so, remove any of their plugin web assets loaded in
     // via <js-module> elements

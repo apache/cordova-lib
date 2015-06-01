@@ -111,19 +111,19 @@ function launchServer(projectRoot, port) {
         urlPath = urlPath.slice(platformId.length + 1);
 
         try {
-            parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
+            parser = platforms.getPlatformApi(platformId, path.join(projectRoot, 'platforms', platformId));
         } catch (e) {
             return do404();
         }
         var filePath = null;
 
         if (urlPath == '/config.xml') {
-            filePath = parser.config_xml();
+            filePath = parser.getConfigXml();
         } else if (urlPath == '/project.json') {
             processAddRequest(request, response, platformId, projectRoot);
             return '';
         } else if (/^\/www\//.test(urlPath)) {
-            filePath = path.join(parser.www_dir(), urlPath.slice(5));
+            filePath = path.join(parser.getWwwDir(), urlPath.slice(5));
         } else if (/^\/+[^\/]*$/.test(urlPath)) {
             return do302('/' + platformId + '/www/');
         } else {
@@ -220,8 +220,8 @@ function calculateMd5(fileName) {
 }
 
 function processAddRequest(request, response, platformId, projectRoot) {
-    var parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
-    var wwwDir = parser.www_dir();
+    var parser = platforms.getPlatformApi(platformId, path.join(projectRoot, 'platforms', platformId));
+    var wwwDir = parser.getWwwDir();
     var payload = {
         'configPath': '/' + platformId + '/config.xml',
         'wwwPath': '/' + platformId + '/www',

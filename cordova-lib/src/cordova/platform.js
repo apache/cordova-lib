@@ -649,23 +649,23 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
 // The www dir is nuked on each prepare so we keep cordova.js in platform_www
 function copy_cordova_js(projectRoot, platform) {
     var platformPath = path.join(projectRoot, 'platforms', platform);
-    var parser = platforms.getPlatformProject(platform, platformPath);
+    var parser = platforms.getPlatformApi(platform, platformPath);
     var platform_www = path.join(platformPath, 'platform_www');
     shell.mkdir('-p', platform_www);
-    shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
+    shell.cp('-f', path.join(parser.getWwwDir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
 }
 
-// Copy cordova-js-src directory into platform_www directory. 
+// Copy cordova-js-src directory into platform_www directory.
 // We need these files to build cordova.js if using browserify method.
 function copy_cordovajs_src(projectRoot, platform, platLib) {
     var platformPath = path.join(projectRoot, 'platforms', platform);
-    var parser = platforms.getPlatformProject(platform, platformPath);
+    var parser = platforms.getPlatformApi(platform, platformPath);
     var platform_www = path.join(platformPath, 'platform_www');
-    var cordovaJsSrcPath = parser.cordovajs_src_path(platLib);
+    var cordovaJsSrcPath = parser.getCordovaJsSrc(platLib);
     //only exists for platforms that have shipped cordova-js-src directory
     if(fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platform_www);
-    } 
+    }
 }
 
 // Remove <platform>.json file from plugins directory.
