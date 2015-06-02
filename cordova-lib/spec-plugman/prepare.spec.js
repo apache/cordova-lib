@@ -53,7 +53,9 @@ describe('prepare', function() {
         describe('uninstallation/removal', function() {
             var existsSync;
             beforeEach(function() {
-                existsSync = spyOn(fs, 'existsSync').andReturn(true);
+                existsSync = spyOn(fs, 'existsSync').andCallFake(function (fileName) {
+                    return path.basename(fileName) !== 'Api.js';
+                });
                 platform_json.andReturn(new PlatformJson(null, null, {installed_plugins:{},dependent_plugins:{},prepare_queue:{uninstalled:[{
                     plugin:'nickelback',
                     id:'nickelback',
