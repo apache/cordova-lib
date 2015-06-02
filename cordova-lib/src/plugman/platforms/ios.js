@@ -219,47 +219,36 @@ module.exports = {
 
       
         var target;
-
-        // requires node_xcode request https://github.com/alunny/node-xcode/pull/47 to properly manage targets
-        // if not, the file will be properly added to the projet, but would need to manually be moved to the proper target
-        
-        if (typeof xcodeproj.pbxXCConfigurationList == 'function' && typeof xcodeproj.pbxNativeTarget == 'function'
-         )  {
-
-            // Find Target from BuildConfiguration
-
-            var XCConfigurationList = xcodeproj.pbxXCConfigurationList();
-            var buildConf;
-            var entry = _.find(XCConfigurationList, function (entry,index) { 
-                for(var i in entry.buildConfigurations)
+        var XCConfigurationList = xcodeproj.pbxXCConfigurationList();
+        var buildConf;
+        var entry = _.find(XCConfigurationList, function (entry,index) { 
+            for(var i in entry.buildConfigurations)
+            {
+                var b = entry.buildConfigurations[i];
+                if (b.value==plist_file_index)
                 {
-                    var b = entry.buildConfigurations[i];
-                    if (b.value==plist_file_index)
-                    {
-                        buildConf=index;
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (!buildConf)
-                throw new CordovaError('could not find buildConfiguration.');
-
-            var nativeTargets = xcodeproj.pbxNativeTarget();
-            entry = _.find(nativeTargets, function (entry,index) { 
-                if (entry.buildConfigurationList==buildConf)
-                {
-                    target = index;
+                    buildConf=index;
                     return true;
                 }
-                return false;
-            });
+            }
+            return false;
+        });
 
-            if (!target)
-                throw new CordovaError('could not find find target.');
-       
-       }
+        if (!buildConf)
+            throw new CordovaError('could not find buildConfiguration.');
+
+        var nativeTargets = xcodeproj.pbxNativeTarget();
+        entry = _.find(nativeTargets, function (entry,index) { 
+            if (entry.buildConfigurationList==buildConf)
+            {
+                target = index;
+                return true;
+            }
+            return false;
+        });
+
+        if (!target)
+            throw new CordovaError('could not find find target.');   
 
 
         var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
