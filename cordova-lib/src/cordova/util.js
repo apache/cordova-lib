@@ -22,12 +22,15 @@ var fs            = require('fs'),
     path          = require('path'),
     CordovaError  = require('../CordovaError'),
     shell         = require('shelljs'),
-    url           = require('url');
+    url           = require('url'),
+    npm           = require('npm'),
+    Q             = require('q'),
+    semver        = require('semver');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
 if (!global_config_path) {
-	var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
+    var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
     global_config_path = path.join(HOME, '.cordova');
 }
 
@@ -56,6 +59,8 @@ exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
+exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
+exports.getAvailableNpmVersions = getAvailableNpmVersions;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -291,4 +296,45 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
             set : function(v) { val = v; }
         });
     }
+}
+
+/**
+ * Returns the latest version of the specified module on npm that matches the specified version or range.
+ * @param {string} module_name - npm module name.
+ * @param {string} version - semver version or range (loose allowed).
+ * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
+ */
+function getLatestMatchingNpmVersion(module_name, version) {
+    var validVersion = semver.valid(version, /* loose */ true);
+    if (validVersion) {
+        // This method is really intended to work with ranges, so if a version rather than a range is specified, we just
+        // assume it is available and return it, bypassing the need for the npm call.
+        return Q(validVersion);
+    }
+
+    var validRange = semver.validRange(version, /* loose */ true);
+    if (!validRange) {
+        // Just return what we were passed
+        return Q(version);
+    }
+
+    return getAvailableNpmVersions(module_name).then(function (versions) {
+        return semver.maxSatisfying(versions, validRange) || version;
+    });
+}
+
+/**
+ * Returns a promise for an array of versions available for the specified npm module.
+ * @param {string} module_name - npm module name.
+ * @returns {Promise} Promise for an array of versions.
+ */
+function getAvailableNpmVersions(module_name) {
+    return Q.nfcall(npm.load).then(function () {
+        return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
+            // result is an object in the form:
+            //     {'<version>': {versions: ['1.2.3', '1.2.4', ...]}}
+            // (where <version> is the latest version)
+            return result[Object.keys(result)[0]].versions;
+        });
+    });
 }
