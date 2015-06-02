@@ -72,7 +72,12 @@ describe('common platform handler', function() {
         it('should allow symlink src, if inside plugin', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
-            fs.symlinkSync(java_file, symlink_file);
+
+            // This will fail on windows if not admin - ignore the error in that case.
+            if (ignoreEPERMonWin32(java_file, symlink_file)) {
+                return;
+            }
+
             common.copyFile(test_dir, symlink_file, project_dir, dest);
             shell.rm('-rf', project_dir);
         });
@@ -80,16 +85,15 @@ describe('common platform handler', function() {
         it('should throw if symlink is linked to a file outside the plugin', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
-            fs.symlinkSync(non_plugin_file, symlink_file);
+
+            // This will fail on windows if not admin - ignore the error in that case.
+            if (ignoreEPERMonWin32(non_plugin_file, symlink_file)) {
+                return;
+            }
+
             expect(function(){common.copyFile(test_dir, symlink_file, project_dir, dest);}).
                 toThrow(new Error('"' + symlink_file + '" not located within plugin!'));
             shell.rm('-rf', project_dir);
-        });
-
-        it('should throw if target path exists', function(){
-            shell.mkdir('-p', dest);
-            expect(function(){common.copyFile(test_dir, src, project_dir, dest);}).toThrow();
-            shell.rm('-rf', dest);
         });
 
         it('should throw if dest is outside the project directory', function(){
@@ -131,6 +135,16 @@ describe('common platform handler', function() {
 
     });
 
+    describe('copyNewFile', function () {
+        it('should throw if target path exists', function(){
+            shell.mkdir('-p', dest);
+            expect(function(){common.copyNewFile(test_dir, src, project_dir, dest);}).
+                toThrow(new Error('"' + dest + '" already exists!'));
+            shell.rm('-rf', dest);
+        });
+
+    });
+
     describe('deleteJava', function() {
         it('should call fs.unlinkSync on the provided paths', function(){
             shell.mkdir('-p', java_dir);
@@ -167,3 +181,15 @@ describe('common platform handler', function() {
         });
     });
 });
+
+function ignoreEPERMonWin32(symlink_src, symlink_dest) {
+    try {
+        fs.symlinkSync(symlink_src, symlink_dest);
+    } catch (e) {
+        if (process.platform === 'win32' && e.message.indexOf('Error: EPERM, operation not permitted' > -1)) {
+            return true;
+        }
+        throw e;
+    }
+    return false;
+}
