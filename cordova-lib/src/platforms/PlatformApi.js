@@ -64,7 +64,8 @@ function BasePlatformApi(platform, platformRootDir) {
             // parser's methods will be called PlatformApi default implementations.
             parser = ParserConstructor ? new ParserConstructor(this.root) : null;
             return parser;
-        }
+        },
+        configurable: true
     });
 }
 
@@ -131,7 +132,7 @@ BasePlatformApi.prototype.getUninstaller = function(type) {
  * @return {String} Path to platform's config.xml file
  */
 BasePlatformApi.prototype.getConfigXml = function() {
-    if (this.parser && this.parser.config_xml()) {
+    if (this.parser && this.parser.config_xml) {
         return this.parser.config_xml();
     }
 
@@ -176,7 +177,7 @@ BasePlatformApi.prototype.updateConfig = function(optSource) {
  * @return {String} Path to platform's www directory.
  */
 BasePlatformApi.prototype.getWwwDir = function() {
-    if (this.parser && this.parser.www_dir()) {
+    if (this.parser && this.parser.www_dir) {
         return this.parser.www_dir();
     }
 
@@ -220,7 +221,7 @@ BasePlatformApi.prototype.updateWww = function(wwwSource) {
     // Copy over stock platform www assets (cordova.js)
     runShellSilent(function () {
         shell.cp('-rf', path.join(platformWww, '*'), this.getWwwDir());
-    });
+    }.bind(this));
 
     return Q();
 };
