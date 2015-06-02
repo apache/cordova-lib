@@ -137,7 +137,7 @@ describe('android project handler', function() {
             var finalProjectProperties = fs.readFileSync(mainProjectPropsFile, 'utf8');
             expect(finalProjectProperties).toMatch('\nandroid.library.reference.3='+dummy_id+'/'+packageIdSuffix+'-plugin-lib', 'Reference to library not added');
             var subProjectProperties = fs.readFileSync(subProjectPropsFile, 'utf8');
-            expect(subProjectProperties).toMatch(/\btarget=android-19\n/, 'target SDK version not copied to library');
+            expect(subProjectProperties).toMatch(/\btarget=android-19$/m, 'target SDK version not copied to library');
             expect(exec).toHaveBeenCalledWith('android update lib-project --path "' + subDir + '"');
 
             // Now test uninstall
