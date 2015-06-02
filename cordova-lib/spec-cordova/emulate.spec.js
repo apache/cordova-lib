@@ -86,14 +86,18 @@ describe('emulate command', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module', function(done) {
                 cordova.raw.emulate(['android', 'ios']).then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_emulate', {verbose: false, platforms:['android', 'ios'], options: []});
+                    expect(fire).toHaveBeenCalledWith('before_emulate',
+                        jasmine.objectContaining({verbose: false, platforms:['android', 'ios']})
+                    );
                     done();
                 });
             });
             it('should fire after hooks through the hooker module', function(done) {
                 cordova.raw.emulate('android').then(function() {
-                     expect(fire).toHaveBeenCalledWith('after_emulate', {verbose: false, platforms:['android'], options: []});
-                     done();
+                    expect(fire).toHaveBeenCalledWith('after_emulate',
+                        jasmine.objectContaining({verbose: false, platforms:['android']})
+                    );
+                    done();
                 });
             });
         });

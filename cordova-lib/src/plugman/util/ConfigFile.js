@@ -69,7 +69,8 @@ function ConfigFile_load() {
         self.data = xml_helpers.parseElementtreeSync(filepath);
     } else if (ext == '.pbxproj') {
         self.type = 'pbxproj';
-        var projectFile = platforms.getPlatformProject('ios', self.project_dir).parseProjectFile(self.project_dir);
+        var projectFile = platforms.getPlatformApi('ios', self.project_dir)
+            .getPluginHandler().parseProjectFile(self.project_dir);
         self.data = projectFile.xcode;
         self.cordovaVersion = projectFile.cordovaVersion;
     } else {

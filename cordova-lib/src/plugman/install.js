@@ -534,15 +534,15 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
-    var handler = platform_modules.getPlatformProject(platform, project_dir);
+    var platformApi = platform_modules.getPlatformApi(platform, project_dir);
     var frameworkFiles = pluginInfo.getFrameworks(platform); // Frameworks are needed later
     var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
 
     // queue up native stuff
     pluginItems.forEach(function(item) {
-        actions.push(actions.createAction(handler.getInstaller(item.itemType),
+        actions.push(actions.createAction(platformApi.getInstaller(item.itemType),
                                           [item, plugin_dir, pluginInfo.id, options],
-                                          handler.getUninstaller(item.itemType),
+                                          platformApi.getUninstaller(item.itemType),
                                           [item, pluginInfo.id, options]));
     });
 

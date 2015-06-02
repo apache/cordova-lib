@@ -17,7 +17,8 @@
     under the License.
 */
 
-var platforms = require('./platformsConfig.json');
+var platforms = require('./platformsConfig.json'),
+    platformApi = require('./PlatformApi');
 
 // Remove this block soon. The parser property is no longer used in
 // cordova-lib but some downstream tools still use it.
@@ -29,84 +30,11 @@ Object.keys(platforms).forEach(function(key) {
     }
 });
 
-
-// Avoid loading the same platform projects more than once (identified by path)
-var cachedProjects = {};
-
-var PARSER_PUBLIC_METHODS = [
-    'config_xml',
-    'cordovajs_path',
-    'cordovajs_src_path',
-    'update_from_config',
-    'update_project',
-    'update_www',
-    'www_dir',
-];
-
-var HANDLER_PUBLIC_METHODS = [
-    'package_name',
-    'parseProjectFile',
-    'purgeProjectFileCache',
-];
-
-
-// A single class that exposes functionality from platform specific files from
-// both places cordova/metadata and plugman/platforms. Hopefully, to be soon
-// replaced by real unified platform specific classes.
-function PlatformProjectAdapter(platform, platformRootDir) {
-    var self = this;
-    self.root = platformRootDir;
-    self.platform = platform;
-    var ParserConstructor = require(platforms[platform].parser_file);
-    self.parser = new ParserConstructor(platformRootDir);
-    self.handler = require(platforms[platform].handler_file);
-
-    // Expose all public methods from the parser and handler, properly bound.
-    PARSER_PUBLIC_METHODS.forEach(function(method) {
-        self[method] = self.parser[method].bind(self.parser);
-    });
-
-    HANDLER_PUBLIC_METHODS.forEach(function(method) {
-        if (self.handler[method]) {
-            self[method] = self.handler[method].bind(self.handler);
-        }
-    });
-
-    self.getInstaller = function(type) {
-        function installWrapper(item, plugin_dir, plugin_id, options, project) {
-            self.handler[type].install(item, plugin_dir, self.root, plugin_id, options, project);
-        }
-        return installWrapper;
-    };
-
-    self.getUninstaller = function(type) {
-        function uninstallWrapper(item, plugin_id, options, project) {
-            self.handler[type].uninstall(item, self.root, plugin_id, options, project);
-        }
-        return uninstallWrapper;
-    };
-}
-
-// getPlatformProject() should be the only method of instantiating the
-// PlatformProject classes for now.
-function getPlatformProject(platform, platformRootDir) {
-    var cached = cachedProjects[platformRootDir];
-    if (cached && cached.platform == platform) {
-        return cachedProjects[platformRootDir];
-    } else if (platforms[platform]) {
-        var adapter = new PlatformProjectAdapter(platform, platformRootDir);
-        cachedProjects[platformRootDir] = adapter;
-        return adapter;
-    } else {
-        throw new Error('Unknown platform ' + platform);
-    }
-}
-
 module.exports = platforms;
 
 // We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the
 // platforms object to be platforms.
 Object.defineProperties(module.exports, {
-    'getPlatformProject': {value: getPlatformProject, configurable: true, writable: true},
-    'PlatformProjectAdapter': {value: PlatformProjectAdapter, configurable: true, writable: true}
+    'getPlatformApi': {value: platformApi.getPlatformApi, configurable: true, writable: true},
+    'BasePlatformApi': {value: platformApi.BasePlatformApi, configurable: true, writable: true}
 });
