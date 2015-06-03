@@ -33,10 +33,10 @@ var CordovaError = require('../CordovaError');
  *                                      check results for each platform
  */
 module.exports = function check_reqs(platforms) {
-    var projectRoot = cordova_util.isCordova();
-    var platformsDir = path.join(projectRoot, 'platforms');
     platforms = cordova_util.preProcessOptions(platforms).platforms;
 
+    var projectRoot = cordova_util.isCordova();
+    var platformsDir = path.join(projectRoot, 'platforms');
     var platformChecks = platforms.map(function (platform) {
         var modulePath = path.join(platformsDir, platform, 'cordova', 'lib', 'check_reqs');
         try {
