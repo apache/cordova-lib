@@ -24,7 +24,8 @@ var uninstall = require('../src/plugman/uninstall'),
     actions = require('../src/plugman/util/action-stack'),
     PlatformJson = require('../src/plugman/util/PlatformJson'),
     events  = require('../src/events'),
-    plugman = require('../src/plugman/plugman'),
+    plugman = require('../src/plugman/plugman'),    
+    HooksRunner = require('../src/hooks/HooksRunner'),
     common  = require('./common'),
     fs      = require('fs'),
     path    = require('path'),
@@ -41,7 +42,8 @@ var uninstall = require('../src/plugman/uninstall'),
     plugins_install_dir2 = path.join(project2, 'cordova', 'plugins'),
 
     plugins = {
-        'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
+        'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),    
+        'org.test.plugin-with-hooks' : path.join(plugins_dir, 'org.test.plugin-with-hooks'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'C' : path.join(plugins_dir, 'dependencies', 'C')
     },
@@ -64,6 +66,8 @@ describe('start', function() {
         promise = Q()
         .then(function(){
             return install('android', project, plugins['org.test.plugins.dummyplugin']);
+        }).then(function(){
+            return install('android', project, plugins['org.test.plugin-with-hooks']);
         }).then(function(){
             return install('android', project, plugins['A']);
         }).then( function(){
@@ -97,7 +101,7 @@ describe('uninstallPlatform', function() {
         add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
         done = false;
     });
-    describe('success', function() {
+    describe('success', function() {        
         it('should call prepare after a successful uninstall', function() {
             runs(function() {
                 uninstallPromise(uninstall.uninstallPlatform('android', project, dummy_id));
@@ -177,7 +181,7 @@ describe('uninstallPlugin', function() {
         done = false;
     });
     describe('with dependencies', function() {
-
+                
         it('should delete all dependent plugins', function() {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('A', plugins_install_dir) );
@@ -234,15 +238,26 @@ describe('uninstallPlugin', function() {
 });
 
 describe('uninstall', function() {
-    var fsWrite, rm, add_to_queue;
+    var fsWrite, rm, add_to_queue, fire;
 
     beforeEach(function() {
         fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
         add_to_queue = spyOn(PlatformJson.prototype, 'addUninstalledPluginToPrepareQueue');
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         done = false;
     });
     describe('success', function() {
+        it('should fire hooks on plugin successful uninstalled', function() {
+           runs(function() {
+               uninstallPromise( uninstall('android', project, plugins['org.test.plugin-with-hooks']) );
+           });
+           waitsFor(function() { return done; }, 'promise never resolved', 200);
+           runs(function() {
+               expect(fire).toHaveBeenCalled();
+           });           
+        });
+        
         it('should call the config-changes module\'s add_uninstalled_plugin_to_prepare_queue method after processing an install', function() {
             runs(function() {
                 uninstallPromise( uninstall('android', project, plugins['org.test.plugins.dummyplugin']) );
@@ -284,6 +299,10 @@ describe('end', function() {
         promise.then(
             function(){
                 return uninstall('android', project, plugins['org.test.plugins.dummyplugin']);
+            }
+        ).then(
+            function(){
+                return uninstall('android', project, plugins['org.test.plugin-with-hooks']);
             }
         ).then(
             function(){

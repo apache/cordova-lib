@@ -25,6 +25,7 @@ var install = require('../src/plugman/install'),
     events  = require('../src/events'),
     plugman = require('../src/plugman/plugman'),
     platforms = require('../src/plugman/platforms/common'),
+    HooksRunner = require('../src/hooks/HooksRunner'),
     common  = require('./common'),
     fs      = require('fs'),
     os      = require('os'),
@@ -47,6 +48,7 @@ var install = require('../src/plugman/install'),
         'org.test.plugins.childbrowser' : path.join(plugins_dir, 'org.test.plugins.childbrowser'),
         'com.adobe.vars' : path.join(plugins_dir, 'com.adobe.vars'),
         'org.test.defaultvariables' : path.join(plugins_dir, 'org.test.defaultvariables'),
+        'org.test.plugin-with-hooks' : path.join(plugins_dir, 'org.test.plugin-with-hooks'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
@@ -154,7 +156,7 @@ describe('start', function() {
 });
 
 describe('install', function() {
-    var chmod, exec, add_to_queue, prepare, cp, rm, fetchSpy;
+    var chmod, exec, add_to_queue, prepare, cp, rm, fetchSpy, fire;
     var spawnSpy;
 
     beforeEach(function() {
@@ -173,11 +175,32 @@ describe('install', function() {
         spyOn(fs, 'writeFileSync').andReturn(true);
         cp = spyOn(shell, 'cp').andReturn(true);
         rm = spyOn(shell, 'rm').andReturn(true);
-        add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
-        done = false;
+        add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue'); 
+        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
+        done = false;       
     });
 
     describe('success', function() {
+        it('should fire hooks on plugin successful install', function() {
+           runs(function() {
+               installPromise( install('android', project, plugins['org.test.plugin-with-hooks']) );
+           });
+           waitsFor(function() { return done; }, 'install promise never resolved', 200);
+           runs(function() {
+               expect(fire).toHaveBeenCalled();
+           });           
+        });
+                
+        it('should not fire hooks on plugin successful install when run_hooks=false', function() {
+           runs(function() {
+               installPromise( install('android', project, plugins['org.test.plugin-with-hooks'], {run_hooks:false}) );
+           });
+           waitsFor(function() { return done; }, 'install promise never resolved', 200);
+           runs(function() {
+               expect(fire).not.toHaveBeenCalled();
+           });           
+        });
+        
         it('should call prepare after a successful install', function() {
            expect(results['prepareCount']).toBe(5);
         });

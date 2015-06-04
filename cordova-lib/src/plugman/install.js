@@ -336,16 +336,15 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         }
     ).then(
         function(){
-            var install_plugin_dir = path.join(plugins_dir, pluginInfo.id);
+            var install_plugin_dir = path.join(plugins_dir, pluginInfo.id),
+            run_hooks = options.hasOwnProperty('run_hooks') ? options.run_hooks : true;
 
             // may need to copy to destination...
             if ( !fs.existsSync(install_plugin_dir) ) {
                 copyPlugin(plugin_dir, plugins_dir, options.link, pluginInfoProvider);
             }
 
-            var projectRoot = cordovaUtil.isCordova();
-
-            if(projectRoot) {
+            if(run_hooks) {
                 // using unified hooksRunner
                 var hookOptions = {
                     cordova: { platforms: [ platform ] },
@@ -357,7 +356,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                     }
                 };
 
-                var hooksRunner = new HooksRunner(projectRoot);
+                var hooksRunner = new HooksRunner(cordovaUtil.isCordova() || project_dir);
 
                 return hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
                     return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
