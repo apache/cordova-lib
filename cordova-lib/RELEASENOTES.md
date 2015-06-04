@@ -20,7 +20,7 @@
 -->
 # Cordova-lib Release Notes
 
-### 5.1.0 (May 27, 2015)
+### 5.1.1 (June 4, 2015)
 * CB-9087 Updated pinned version of cordova-windows to 4.0.0
 * CB-9108 Handle version ranges when add platform with --usegit.
 * CB-8898 Makes error message descriptive when `requirements` is called outside of cordova project.
