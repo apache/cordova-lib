@@ -21,6 +21,14 @@
 # Cordova-lib Release Notes
 
 ### 5.1.0 (May 27, 2015)
+* CB-9087 Updated pinned version of cordova-windows to 4.0.0
+* CB-9108 Handle version ranges when add platform with --usegit.
+* CB-8898 Makes error message descriptive when `requirements` is called outside of cordova project.
+* Fix four failing tests on Windows.
+* CB-8007 Two cordova plugins modifying “*-Info.plist” CFBundleURLTypes
+* CB-9065 Allow removing plugins by short name.
+* CB-9001 Set WMAppManifest.xml Author, Description and Publisher attributes based on config.xml
+* CB-9073 Allow to add platform if project path contains `&` symbol
 * CB-8783 - Revert 'all' as a global preference value for Orientation (specific to iOS for now)
 * CB-8783 - 'default' value for Orientation does not support both landscape and portrait orientations. (new 'all' value)
 * CB-9075 pinned platforms will include patch updates without new tools release
