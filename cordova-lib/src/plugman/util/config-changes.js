@@ -70,7 +70,7 @@ function PlatformMunger(platform, project_dir, plugins_dir, platformJson, plugin
     this.platform = platform;
     this.project_dir = project_dir;
     this.plugins_dir = plugins_dir;
-    this.platform_handler = platforms.getPlatformProject(platform, project_dir);
+    this.platform_handler = platforms.getPlatformApi(platform, project_dir);
     this.config_keeper = new ConfigKeeper(project_dir);
     this.platformJson = platformJson;
     this.pluginInfoProvider = pluginInfoProvider;
@@ -265,7 +265,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
     vars = vars || {};
     // Add PACKAGE_NAME variable into vars
     if (!vars['PACKAGE_NAME']) {
-        vars['PACKAGE_NAME'] = self.platform_handler.package_name(self.project_dir);
+        vars['PACKAGE_NAME'] = self.platform_handler.getPluginHandler().getPackageName(self.project_dir);
     }
 
     var munge = { files: {} };
@@ -283,10 +283,10 @@ function generate_plugin_config_munge(plugin_dir, vars) {
             }
         });
     }
-    
+
     // Demux 'package.appxmanifest' into relevant platform-specific appx manifests.
     // Only spend the cycles if there are version-specific plugin settings
-    if (self.platform === 'windows' && changes.some(function(change) { return ((typeof change.versions !== 'undefined') || (typeof change.deviceTarget !== 'undefined')); })) 
+    if (self.platform === 'windows' && changes.some(function(change) { return ((typeof change.versions !== 'undefined') || (typeof change.deviceTarget !== 'undefined')); }))
     {
         var manifests = {
             'windows': {
@@ -334,7 +334,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
 
             // at this point, 'change' targets package.appxmanifest and has a version attribute
             knownWindowsVersionsForTargetDeviceSet.forEach(function(winver) {
-                // This is a local function that creates the new replacement representing the 
+                // This is a local function that creates the new replacement representing the
                 // mutation.  Used to save code further down.
                 var createReplacement = function(manifestFile, originalChange) {
                     var replacement = {
