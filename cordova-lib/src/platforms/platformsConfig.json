@@ -10,7 +10,7 @@
         "parser_file": "../cordova/metadata/android_parser",
         "handler_file": "../plugman/platforms/android",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~4.0.1"
+        "version": "~4.0.2"
     },
     "ubuntu": {
         "hostos": ["linux"],
