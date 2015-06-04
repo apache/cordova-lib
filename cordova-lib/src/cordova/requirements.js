@@ -18,10 +18,10 @@
 */
 
 var cordova_util = require('./util');
-var events       = require('../events');
-var path         = require('path');
 var Q            = require('q');
 var CordovaError = require('../CordovaError');
+var platform_lib = require('../platforms/platforms');
+
 
 /**
  * Runs requirements check against platforms specified in 'platfoms' argument
@@ -35,34 +35,21 @@ var CordovaError = require('../CordovaError');
 module.exports = function check_reqs(platforms) {
     platforms = cordova_util.preProcessOptions(platforms).platforms;
 
-    var projectRoot = cordova_util.isCordova();
-    var platformsDir = path.join(projectRoot, 'platforms');
-    var platformChecks = platforms.map(function (platform) {
-        var modulePath = path.join(platformsDir, platform, 'cordova', 'lib', 'check_reqs');
-        try {
-            events.emit('verbose', 'Checking requirements for ' + platform + ' platform');
-            return require(modulePath).check_all();
-        } catch (e) {
-            var errorMsg = 'Failed to check requirements for ' + platform + ' platform. ' +
-                'check_reqs module is missing for platfrom. Skipping it...';
-            return Q.reject(errorMsg);
-        }
+    var platformChecks = platforms
+    .map(function (platform) {
+        return platform_lib
+            .getPlatformApi(platform)
+            .requirements();
     });
-
-    var checks = {};
 
     return Q.allSettled(platformChecks)
     .then(function (settledChecks) {
-
-        settledChecks.forEach(function (settledCheck, idx) {
+        return settledChecks.reduce(function (accumulator, settledCheck, idx) {
             var platformName = platforms[idx];
-            var result  = settledCheck.state === 'fulfilled' ?
+            accumulator[platformName] = settledCheck.state === 'fulfilled' ?
                 settledCheck.value :
                 new CordovaError(settledCheck.reason);
-
-            checks[platformName] = result;
-        });
-
-        return checks;
+            return accumulator;
+        }, {});
     });
 };

@@ -301,8 +301,8 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, plugins_dir, is_top_level, options) {
     var plugin_id = pluginInfo.id;
     var plugin_dir = pluginInfo.dir;
-    var handler = platform_modules.getPlatformProject(platform, project_dir);
-    www_dir = www_dir || handler.www_dir();
+    var platformApi = platform_modules.getPlatformApi(platform, project_dir);
+    www_dir = www_dir || platformApi.getWwwDir();
     events.emit('log', 'Uninstalling ' + plugin_id + ' from ' + platform);
 
     var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
@@ -313,9 +313,9 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
     pluginItems.forEach(function(item) {
         // CB-5238 Don't uninstall non custom frameworks.
         if (item.itemType == 'framework' && !item.custom) return;
-        actions.push(actions.createAction(handler.getUninstaller(item.itemType),
+        actions.push(actions.createAction(platformApi.getUninstaller(item.itemType),
                                           [item, plugin_id, options],
-                                          handler.getInstaller(item.itemType),
+                                          platformApi.getInstaller(item.itemType),
                                           [item, plugin_dir, plugin_id, options]));
     });
 

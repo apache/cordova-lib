@@ -50,10 +50,10 @@ ActionStack.prototype = {
         var project_files;
 
         // parse platform-specific project files once
-        var platformProject = platforms.getPlatformProject(platform, project_dir);
-        if (platformProject.parseProjectFile) {
+        var platformProject = platforms.getPlatformApi(platform, project_dir);
+        if (platformProject.getPluginHandler().parseProjectFile) {
             events.emit('verbose', 'Parsing ' + platform + ' project files...');
-            project_files = platformProject.parseProjectFile(project_dir);
+            project_files = platformProject.getPluginHandler().parseProjectFile(project_dir);
         }
 
         while (this.stack.length) {

@@ -225,7 +225,9 @@ describe('config-changes module', function() {
                 var munger = new configChanges.PlatformMunger('windows', temp, 'unused', null, pluginInfoProvider);
                 // Unit testing causes a failure when the package_name function is called from generate_plugin_config_munge
                 // the results aren't really important during the unit test
-                munger.platform_handler.package_name = function() { return 'org.apache.testapppackage'; };
+                munger.platform_handler.getPluginHandler = function() {
+                    return { getPackageName: function () { return 'org.apache.testapppackage'; } };
+                };
 
                 var munge = munger.generate_plugin_config_munge(configplugin, {});
                 var packageAppxManifest = munge.files['package.appxmanifest'];
