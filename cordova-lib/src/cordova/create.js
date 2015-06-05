@@ -57,7 +57,7 @@ function create(dir, optionalId, optionalName, cfg) {
 
         //read projects .cordova/config.json file for project settings
         var configFile = config.read(dir);
-        
+
         //if data exists in the configFile, lets combine it with cfg
         //cfg values take priority over config file
         if(configFile) {
@@ -72,7 +72,7 @@ function create(dir, optionalId, optionalName, cfg) {
 
             cfg = finalConfig;
         }
-        
+
         if (!cfg) {
             throw new CordovaError('Must provide a project configuration.');
         } else if (typeof cfg == 'string') {
@@ -162,7 +162,14 @@ function create(dir, optionalId, optionalName, cfg) {
             return cfg.lib.www.url;
         } else {
             events.emit('verbose', 'Copying assets."');
-            return lazy_load.custom({ 'www': cfg.lib.www }, 'www');
+            return lazy_load.custom({ 'www': cfg.lib.www }, 'www')
+            .fail(function (error) {
+                var message = 'Failed to fetch custom www assets from ' + cfg.lib.www +
+                    '\nProbably this is either a connection problem, or assets URL is incorrect.' +
+                    '\nCheck your connection and assets URL.' +
+                    '\n' + error;
+                return Q.reject(message);
+            });
         }
     })
     .then(function(import_from_path) {

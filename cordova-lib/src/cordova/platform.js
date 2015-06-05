@@ -242,10 +242,14 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             });
         }
         return lazy_load.based_on_config(projectRoot, target, opts);
+    }).fail(function (error) {
+        var message = 'Failed to fetch platform ' + target +
+            '\nProbably this is either a connection problem, or platform spec is incorrect.' +
+            '\nCheck your connection and platform name/version/URL.' +
+            '\n' + error;
+        return Q.reject(new CordovaError(message));
     }).then(function(libDir) {
         return getPlatformDetailsFromDir(libDir, platform);
-    }, function(err) {
-        throw new CordovaError('Unable to fetch platform ' + target + ': ' + err);
     });
 }
 
@@ -655,7 +659,7 @@ function copy_cordova_js(projectRoot, platform) {
     shell.cp('-f', path.join(parser.www_dir(), 'cordova.js'), path.join(platform_www, 'cordova.js'));
 }
 
-// Copy cordova-js-src directory into platform_www directory. 
+// Copy cordova-js-src directory into platform_www directory.
 // We need these files to build cordova.js if using browserify method.
 function copy_cordovajs_src(projectRoot, platform, platLib) {
     var platformPath = path.join(projectRoot, 'platforms', platform);
@@ -665,7 +669,7 @@ function copy_cordovajs_src(projectRoot, platform, platLib) {
     //only exists for platforms that have shipped cordova-js-src directory
     if(fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platform_www);
-    } 
+    }
 }
 
 // Remove <platform>.json file from plugins directory.
