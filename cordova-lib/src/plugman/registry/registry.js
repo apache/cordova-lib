@@ -358,9 +358,6 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
             var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
             return unpack.unpackTgz(package_tgz, pluginDir);
         });
-    }).fail(function(error) {
-        events.emit('log', 'Fetching from ' + registryName + ' failed: ' + error.message);
-        return Q.reject(error);
     });
 }
 
