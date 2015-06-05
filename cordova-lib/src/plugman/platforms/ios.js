@@ -195,16 +195,16 @@ module.exports = {
 
         // CB-9033
         var plist_file_index;
-        var plist_file_entry = _.find(xcBuildConfiguration, function (entry,index) { 
+        var plist_file_entry = _.find(xcBuildConfiguration, function (entry,index) {
             if (entry.buildSettings && entry.buildSettings.INFOPLIST_FILE && entry.buildSettings.SKIP_INSTALL != 'YES') {
 
                 var plist_file = path.join(project_dir, entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
                  if (!fs.existsSync(plist_file)) 
-                    return false; 
+                    return false;
                 
-                var config_file = path.join(path.dirname(plist_file), 'config.xml'); 
+                var config_file = path.join(path.dirname(plist_file), 'config.xml');
                   if (!fs.existsSync(config_file)) 
-                    return false; 
+                    return false;
 
                 plist_file_index = index;
                 return true;
