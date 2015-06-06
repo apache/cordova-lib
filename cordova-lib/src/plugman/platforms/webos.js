@@ -55,12 +55,12 @@ module.exports = {
         return widget_doc._root.attrib['id'];
     },
     'source-file':{
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
-            common.copyFile(plugin_dir, source_el.attrib['src'], project_dir, dest);
+        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+            var dest = path.join(obj.targetDir, path.basename(obj.src));
+            common.copyFile(plugin_dir, obj.src, project_dir, dest);
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
-            var dest = path.join(source_el.attrib['target-dir'], path.basename(source_el.attrib['src']));
+        uninstall:function(obj, project_dir, plugin_id, options) {
+            var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.removeFile(project_dir, dest);
         }
     },
