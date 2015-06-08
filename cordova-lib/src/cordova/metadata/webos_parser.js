@@ -27,14 +27,13 @@ var fs = require('fs'),
     shell = require('shelljs'),
     util = require('../util'),
     Q = require('q'),
-    Parser = require('./parser'),
-    ConfigParser = require('../../configparser/ConfigParser');
+    Parser = require('./parser');
 
 function webos_parser(project) {
     // Call the base class constructor
     Parser.call(this, 'webos', project);
     this.path = project;
-};
+}
 
 require('util').inherits(webos_parser, Parser);
 

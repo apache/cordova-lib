@@ -16,14 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platforms = require('../../src/cordova/platforms'),
+var platforms = require('../../src/platforms/platforms'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    cordova = require('../../src/cordova/cordova');
+    ConfigParser = require('../../src/configparser/ConfigParser');
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 describe('webos project parser', function() {
