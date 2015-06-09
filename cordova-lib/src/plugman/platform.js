@@ -23,7 +23,8 @@ var Q = require('q'),
     et = require('elementtree'),
     fs = require('fs'),
     shell = require('shelljs'),
-    path = require('path');
+    path = require('path'),
+    stripLicense = require('./util/strip-license');
 
 /**
  * Used for adding templates for plugin platforms to plugin.xml
@@ -115,9 +116,9 @@ function doPlatformBase( templatesDir, platformName, pluginName, pluginID, plugi
     case 'android':
         baseFiles.push (
             {
-                file: fs.readFileSync( templatesDir + "base.java", "utf-8" )
-                    .replace( /%pluginName%/g, pluginName )
-                    .replace( /%pluginID%/g, pluginID ),
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.java", "utf-8")
+                    .replace(/%pluginName%/g, pluginName)
+                    .replace(/%pluginID%/g, pluginID)),
                 extension: "java"
             }
         );
@@ -126,8 +127,8 @@ function doPlatformBase( templatesDir, platformName, pluginName, pluginID, plugi
     case 'ios':
         baseFiles.push(
             {
-                file: fs.readFileSync( templatesDir + "base.m", "utf-8" )
-                    .replace( /%pluginName%/g, pluginName ),
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.m", "utf-8")
+                    .replace(/%pluginName%/g, pluginName)),
                 extension: "m"
             }
         );

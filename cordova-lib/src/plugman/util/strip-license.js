@@ -17,31 +17,9 @@
  under the License.
  */
 
-/********* %pluginName%.m Cordova Plugin Implementation *******/
-
-#import <Cordova/CDV.h>
-
-@interface %pluginName% : CDVPlugin {
-  // Member variables go here.
-}
-
-- (void)coolMethod:(CDVInvokedUrlCommand*)command;
-@end
-
-@implementation %pluginName%
-
-- (void)coolMethod:(CDVInvokedUrlCommand*)command
-{
-    CDVPluginResult* pluginResult = nil;
-    NSString* echo = [command.arguments objectAtIndex:0];
-
-    if (echo != nil && [echo length] > 0) {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:echo];
-    } else {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+module.exports = {
+    fromCode: function (code) {
+        // For simplicity, relies on the fact that the Apache license header doesn't contain a "*"
+        return code.replace(/^\s*\/\*\*[^\*]*\*\/\s*/, "");
     }
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-@end
+};
