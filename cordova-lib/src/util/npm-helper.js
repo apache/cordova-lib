@@ -40,7 +40,7 @@ function loadWithSettings(settings) {
         throw new Error('Trying to initialize npm when settings have not been restored from a previous initialization.');
     }
 
-    return Q.nfcall(npm.load).then(function () {
+    return Q.nfcall(npm.load, settings).then(function () {
         for (var prop in settings) {
             var currentValue = npm.config.get(prop);
             var newValue = settings[prop];
