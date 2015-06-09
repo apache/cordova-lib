@@ -271,4 +271,25 @@ describe('prepare._mergeXml', function () {
         var testElements = dstXml.findall('preference');
         expect(testElements.length).toEqual(2);
     });
+
+    it('should not skip partial duplicate non singelton children', function () {
+        //remove access tags from dstXML
+        var testElements = dstXml.findall('access');
+        for(var i = 0; i < testElements.length; i++) {
+            dstXml.remove(testElements[i]);
+        }
+        testElements = dstXml.findall('access');
+        expect(testElements.length).toEqual(0);
+        //add an external whitelist access tag
+        var testXml = et.XML('<widget><access origin="*" launch-external="yes"/></widget>');
+        prepare._mergeXml(testXml, dstXml, '', true);
+        testElements = dstXml.findall('access');
+        expect(testElements.length).toEqual(1);
+        //add an internal whitelist access tag
+        testXml = et.XML('<widget><access origin="*"/></widget>');
+        prepare._mergeXml(testXml, dstXml, '', true);
+        testElements = dstXml.findall('access');
+        expect(testElements.length).toEqual(2);
+
+    });    
 });
