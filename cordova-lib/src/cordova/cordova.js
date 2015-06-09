@@ -70,5 +70,4 @@ addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'targets', './targets', true);
 addModuleProperty(module, 'requirements', './requirements', true);
 addModuleProperty(module, 'projectMetadata', './project_metadata', true);
-
-
+addModuleProperty(module, 'clean', './clean', true);
