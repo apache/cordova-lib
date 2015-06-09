@@ -181,11 +181,15 @@ function mergeXml(src, dest, platform, clobber) {
                 Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
                     query += '[@' + attribute + '="' + srcChild.attrib[attribute] + '"]';
                 });
-                foundChild = dest.find(query);
-                if (foundChild && textMatch(srcChild, foundChild)) {
-                    destChild = foundChild;
-                    dest.remove(destChild);
-                    shouldMerge = false;
+                var foundChildren = dest.findall(query);
+                for(var i = 0; i < foundChildren.length; i++) {
+                    foundChild = foundChildren[i];
+                    if (foundChild && textMatch(srcChild, foundChild) && (Object.keys(srcChild.attrib).length==Object.keys(foundChild.attrib).length)) {
+                        destChild = foundChild;
+                        dest.remove(destChild);
+                        shouldMerge = false;
+                        break;
+                    }
                 }
             }
 
