@@ -360,6 +360,14 @@ function getPluginVariables(variables){
 
 function getVersionFromConfigFile(plugin, cfg){
     var pluginEntry = cfg.getPlugin(plugin);
+    if (!pluginEntry) {
+        // If the provided plugin id is in the new format (e.g. cordova-plugin-camera), it might be stored in config.xml
+        // under the old format (e.g. org.apache.cordova.camera), so check for that.
+        var oldStylePluginId = pluginMapper[plugin];
+        if (oldStylePluginId) {
+            pluginEntry = cfg.getPlugin(oldStylePluginId);
+        }
+    }
     return pluginEntry && pluginEntry.spec;
 }
 

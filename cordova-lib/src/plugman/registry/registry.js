@@ -349,7 +349,7 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
 
     return initThenLoadSettingsWithRestore(useNpmRegistry, function () {
         events.emit('log', 'Fetching plugin "' + plugin + '" via ' + registryName);
-        return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
+        return Q.ninvoke(npm.commands, 'cache', ['add', processPluginVersion(plugin)])
         .then(function (info) {
             var cl = (client === 'plugman' ? 'plugman' : 'cordova-cli');
             bumpCounter(info, cl);
@@ -359,6 +359,26 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
             return unpack.unpackTgz(package_tgz, pluginDir);
         });
     });
+}
+
+function processPluginVersion(plugin) {
+    // If plugin includes a version that is a caret range, the ancient version of npm we're using won't know how to
+    // handle it. So we'll use our current version of semver to turn it into a usable range.
+
+    var parts = plugin.split('@');
+    var version = parts[1];
+
+    if (!version || version.charAt(0) !== '^') {
+        return plugin;
+    }
+
+    var validRange = semver.validRange(version, /* loose */ true);
+    if (!validRange) {
+        return plugin;
+    }
+
+    // Because validRange may include spaces, we need to wrap it in quotes.
+    return parts[0] + '@"' + validRange + '"';
 }
 
 /**

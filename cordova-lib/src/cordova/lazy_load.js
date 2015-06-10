@@ -139,7 +139,9 @@ function cordova_npm(platform) {
             return Q(git_dload_dir);
         }
 
-        var pkg = platform.packageName + '@' + platform.version;
+        // Note that because the version of npm we use internally doesn't support caret versions, in order to allow them
+        // from the command line and in config.xml, we use the actual version returned by getLatestMatchingNpmVersion().
+        var pkg = platform.packageName + '@' + version;
         return exports.npm_cache_add(pkg);
     });
 }
