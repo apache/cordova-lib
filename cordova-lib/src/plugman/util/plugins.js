@@ -50,8 +50,14 @@ module.exports = {
             var plugin_dir = path.join(plugins_dir, plugin_id);
             events.emit('verbose', 'Copying fetched plugin over "' + plugin_dir + '"...');
             shell.mkdir('-p', plugin_dir);
-            shell.mv(path.join(tmp_dir, '*'), plugin_dir);
+
+            // use cp instead of mv, as it would fail if tmp_dir is mounted
+            // on a different device from the plugin_dir
+            shell.cp('-R', path.join(tmp_dir, '*'), plugin_dir);
+
+            // the tmp_dir is cleaned after copy
             shell.rm('-Rf', tmp_dir);
+
             pluginInfo.dir = plugin_dir;
             if (pluginInfoProvider) {
                 pluginInfoProvider.put(pluginInfo);
