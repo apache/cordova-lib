@@ -33,9 +33,16 @@ var ParserHelper = require('../cordova/metadata/parserhelper/ParserHelper');
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedProjects = {};
 
-// A single class that exposes functionality from platform specific files from
-// both places cordova/metadata and plugman/platforms. Hopefully, to be soon
-// replaced by real unified platform specific classes.
+/**
+ * A single class that exposes platform-dependent functionality for cordova and
+ * plugman. This class works as a base, and provides some default implementation
+ * for that functionality. It should not be instantiated directly, only through
+ * 'getPlatformApi' module method.
+ * @param  {String} platform        Name of platform. Should be one of names, declared
+ *                                  in platformsConfig.json
+ * @param  {String} platformRootDir Optional. Path to platform directory. If not provided
+ *                                  default value is set to<cordova_project>/platforms/<platform>
+ */
 function BasePlatformApi(platform, platformRootDir) {
     this.root = platformRootDir;
     this.platform = platform;
@@ -110,6 +117,21 @@ BasePlatformApi.prototype.getPluginHandler = function() {
     return this._pluginHandler;
 };
 
+/**
+ * Gets an installer function, that handles installation for specific type of plugin's files
+ * (such as <src-file>, <lib-file>, etc.). Used in plugman only.
+ * @param  {String} type Plugin file type (<src-file>, <lib-file>, etc.)
+ * @return {Function}    Handler function for file, that accepts the following set of arguments:
+ *                               item: corresponding item from plugin.xml file.
+ *                                   Could be get by PluginInfo.get* methods.
+ *                               plugin_dir: source directory for plugin
+ *                               plugin_id: plugin id, such as 'org.apache.cordova.camera'
+ *                               options: complex object, passed by plugman.
+ *                                   See plugman/install module for reference.
+ *                               project: object that represents underlying IDE project for plaform.
+ *                                   For Android it's an instance of plugman/util/android-project,
+ *                                   for Windows - util/windows/jsprojmanager, etc.
+ */
 BasePlatformApi.prototype.getInstaller = function(type) {
     var self = this;
     function installWrapper(item, plugin_dir, plugin_id, options, project) {
@@ -118,6 +140,20 @@ BasePlatformApi.prototype.getInstaller = function(type) {
     return installWrapper;
 };
 
+/**
+ * Gets an uninstaller function, that handles uninstallation for specific type of plugin's files
+ * (such as <src-file>, <lib-file>, etc.). Used in plugman only.
+ * @param  {String} type Plugin file type (<src-file>, <lib-file>, etc.)
+ * @return {Function}    Handler function for file, that accepts the following set of arguments:
+ *                               item: corresponding item from plugin.xml file.
+ *                                   Could be get by PluginInfo.get* methods.
+ *                               plugin_id: plugin id, such as 'org.apache.cordova.camera'
+ *                               options: complex object, passed by plugman.
+ *                                   See plugman/install module for reference.
+ *                               project: object that represents underlying IDE project for plaform.
+ *                                   For Android it's an instance of plugman/util/android-project,
+ *                                   for Windows - util/windows/jsprojmanager, etc.
+ */
 BasePlatformApi.prototype.getUninstaller = function(type) {
     var self = this;
     function uninstallWrapper(item, plugin_id, options, project) {
@@ -249,7 +285,7 @@ BasePlatformApi.prototype.updateProject = function(configSource) {
  */
 BasePlatformApi.prototype.build = function(options) {
     var cmd = path.join(this.root, 'cordova', 'build');
-    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit' });
+    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit', chmod: true });
 };
 
 /**
@@ -261,7 +297,7 @@ BasePlatformApi.prototype.build = function(options) {
  */
 BasePlatformApi.prototype.run = function(options) {
     var cmd = path.join(this.root, 'cordova', 'run');
-    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit' });
+    return superspawn.spawn(cmd, options.options, { printCommand: options.verbose, stdio: 'inherit', chmod: true });
 };
 
 /**
@@ -275,8 +311,18 @@ BasePlatformApi.prototype.requirements = function(options) {
     return require(modulePath).check_all();
 };
 
-// getPlatformApi() should be the only method of instantiating the
-// PlatformProject classes for now.
+/**
+ * Method that works like a getter for PlatformApi instance for particular
+ * platforms. Creates a new PlatfromApi instance for platform specified or
+ * returns cached one. It also handles platform-provided PlatformApi overrides
+ * by adding them into newly instantiated class.
+ * This method should be the only method of instantiating the PlatformApi class.
+ * @param  {String} platform        Name of platform. Should be one of names, declared
+ *                                  in platformsConfig.json
+ * @param  {String} platformRootDir Optional. Path to platform directory. If not provided
+ *                                  default value is set to<cordova_project>/platforms/<platform>
+ * @return {PlatformApi}            PlatformApi instance for specified platform.
+ */
 function getPlatformApi(platform, platformRootDir) {
     // if platformRootDir is not specified, try to detect it first
     if (!platformRootDir) {
@@ -360,6 +406,9 @@ function inherit(ctor, superCtor, compatMap) {
 function runShellSilent(callback) {
     var silentstate = shell.config.silent;
     shell.config.silent = true;
-    callback();
-    shell.config.silent = silentstate;
+    try {
+        callback();
+    } finally {
+        shell.config.silent = silentstate;
+    }
 }
