@@ -44,13 +44,22 @@ function PluginInfo(dirname) {
     // Used to require a variable to be specified via --variable when installing the plugin.
     self.getPreferences = getPreferences;
     function getPreferences(platform) {
-        var prefs = _getTags(self._et, 'preference', platform, _parsePreference);
+        var arprefs = _getTags(self._et, 'preference', platform, _parsePreference);
+
+        var prefs= {};
+        for(var i in arprefs)
+        {
+            var pref=arprefs[i];
+            prefs[pref.preference]=pref.default;
+        }
+        // returns { key : default | null}
         return prefs;
     }
 
     function _parsePreference(prefTag) {
-        var pref = prefTag.attrib.name.toUpperCase();
-        return pref;
+        var name = prefTag.attrib.name.toUpperCase();
+        var def = prefTag.attrib.default || null;
+        return {preference:name,default:def};
     }
 
     // <asset>

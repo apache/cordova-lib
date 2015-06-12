@@ -168,10 +168,19 @@ module.exports = function plugin(command, targets, opts) {
                     })
                     .then(function(dir) {
                         // Validate top-level required variables
-                        var pluginVariables = pluginInfoProvider.get(dir).getPreferences(),
-                            missingVariables = pluginVariables.filter(function (v) {
+                        var pluginVariables = pluginInfoProvider.get(dir).getPreferences();
+                        var requiredVariables = [];
+                        for(var i in pluginVariables)
+                        {
+                            var v = pluginVariables[i];
+                            // discard variables with default value
+                            if (!v.default)
+                                requiredVariables.push(v.preference);
+                        }   
+                        var missingVariables = requiredVariables.filter(function (v) {
                                 return !(v in opts.cli_variables);
                             });
+                        
                         if (missingVariables.length) {
                             shell.rm('-rf', dir);
                             var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
