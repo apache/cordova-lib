@@ -295,16 +295,28 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     }).then(function(engines) {
         return checkEngines(engines);
     }).then(function() {
-            // checking preferences, if certain variables are not provided, we should throw.
             var prefs = pluginInfo.getPreferences(platform);
+            var keys = underscore.keys(prefs);
+
             options.cli_variables = options.cli_variables || {};
-            filtered_variables = underscore.pick(options.cli_variables, prefs);
-            var missing_vars = underscore.difference(prefs, Object.keys(options.cli_variables));
-            install.filtered_variables = filtered_variables;
+            var missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
+
+            underscore.each(missing_vars,function(_key) {
+                var def = prefs[_key];
+                if (def)
+                     // adding default variables
+                    options.cli_variables[_key]=def;
+            });
+
+            // test missing vars once again after having default
+            missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
 
             if (missing_vars.length > 0) {
                 throw new Error('Variable(s) missing: ' + missing_vars.join(', '));
             }
+
+            filtered_variables = underscore.pick(options.cli_variables, keys);
+            install.filtered_variables = filtered_variables;
 
             // Check for dependencies
             var dependencies = pluginInfo.getDependencies(platform);
@@ -559,7 +571,7 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         } else {
             return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
         }
-	}).then (function() {
+    }).then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
 
         if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
