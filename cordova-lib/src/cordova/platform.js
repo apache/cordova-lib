@@ -186,8 +186,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
-                        // was installed. However, we save it with the "^" attribute.
-                        spec = saveVersion ? '^' + platDetails.version : spec;
+                        // was installed. However, we save it with the "~" attribute (this allows for patch updates).
+                        spec = saveVersion ? '~' + platDetails.version : spec;
 
                         // Save target into config.xml, overriding already existing settings
                         events.emit('log', '--save flag or autosave detected');
@@ -216,10 +216,16 @@ function save(hooksRunner, projectRoot, opts) {
     // Save installed platforms into config.xml
     return platformMetadata.getPlatformVersions(projectRoot).then(function(platformVersions){
         platformVersions.forEach(function(platVer){
-            cfg.addEngine(platVer.platform, platVer.version);
+            cfg.addEngine(platVer.platform, getSpecString(platVer.version));
         });
         cfg.write();
     });
+}
+
+function getSpecString(spec) {
+    var validVersion = semver.valid(spec, true);
+    return validVersion ? '~' + validVersion : spec;
+
 }
 
 // Downloads via npm or via git clone (tries both)

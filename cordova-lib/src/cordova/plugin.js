@@ -147,7 +147,7 @@ module.exports = function plugin(command, targets, opts) {
                             attributes.name = pluginInfo.id;
 
                             var src = parseSource(target, opts);
-                            attributes.spec = src ? src : '^' + pluginInfo.version;
+                            attributes.spec = src ? src : '~' + pluginInfo.version;
 
                             var variables = [];
                             if (opts.cli_variables) {
@@ -481,7 +481,7 @@ function getSpec(pluginSource, projectRoot, pluginName) {
 function versionString(version) {
     var validVersion = semver.valid(version, true);
     if (validVersion) {
-        return '^' + validVersion;
+        return '~' + validVersion;
     }
 
     if (semver.validRange(version, true)) {
