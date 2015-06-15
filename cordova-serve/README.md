@@ -68,9 +68,9 @@ The opts object passed to `launchServer()` and `servePlatform()` supports the fo
   path to local file system path.   
 * **port**: The port for the server. Note that if this port is already in use, it will be incremented until a free port
   is found.
-* **urlPathProcessor**: An optional method to handle special case URLs - `cordova-serve` will by default
-  treat the URL as relative to the platform's `www_dir`, but will first call this method, if provided, to support
-  custom handling.
+* **urlPathHandler**: An optional method to provide custom handling for processing URLs and serving up the resulting data.
+  Can serve up the data itself using `response.write()`, or determine a custom local file path and call `serveFile()` to
+  serve it up, or do no processing and call `serveFile` with no params to treat `urlPath` as relative to the root.
 * **streamHandler**: An optional custom stream handler - `cordova-serve` will by default stream files using
   `sendStream()`, described above, which just streams files, but will first call this method, if provided, to
   support custom streaming. This method is described in more detail below.
@@ -78,12 +78,12 @@ The opts object passed to `launchServer()` and `servePlatform()` supports the fo
   additional things with the server (like attach to certain events, for example). This method is described in more
   detail below.
 
-## urlPathProcessor()
-Provide this method if you need to do custom processing of URL paths. That is, custom mapping of URL path to local file path. 
-The signature of this method is as follows:
+## urlPathHandler()
+Provide this method if you need to do custom processing of URL paths (that is, custom mapping of URL path to local file
+path) and potentially directly handle serving up the resulting data. The signature of this method is as follows:
 
 ``` js
-urlPathProcessor(urlPath, request, response, do302, do404)
+urlPathHandler(urlPath, request, response, do302, do404, serveFile)
 ```
 
 Parameters:
@@ -93,17 +93,9 @@ Parameters:
 * **response**: The server response object.
 * **do302**: A helper method to do a 302 HTTP response (redirection). It takes a single parameter - the URL to redirect to.
 * **do404**: A helper method to do a 404 HTTP response (not found).
-
-Return value:
-
-Broadly, there are three possible actions you can take in your `urlPathProcessor` handler:
-
-1. You completely handle the request (presumably by doing some sort of response and ultimately calling `response.end()`.
-   In this scenario, you should return `null`. 
-2. You have mapped the URL path to a custom local file path. In this scenario, you should return `{filePath: <value>}`,
-   where `<value>` is the local file path.
-3. You have determined you don't need to do any custom processing and will let cordova-serve to its default mapping. In
-   this scenario, you should return `{filePath: null}`.
+* **serveFile**: A helper method to serve up the resulting file. If `urlPathHandler()` doesn't write the response itself,
+  it should call this method either passing it the local file path to be served, or passing it nothing. In the latter case,
+  it will treat `urlPath` as relative to the root.
 
 ## streamHandler()
 Provide this method if you wish to perform custom stream handling. The signature of this method is as follows:
