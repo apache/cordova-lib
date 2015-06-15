@@ -175,7 +175,7 @@ module.exports = function plugin(command, targets, opts) {
                             var v = pluginVariables[i];
                             // discard variables with default value
                             if (!v)
-                                requiredVariables.push(v);
+                                requiredVariables.push(i);
                         }   
                         var missingVariables = requiredVariables.filter(function (v) {
                                 return !(v in opts.cli_variables);
