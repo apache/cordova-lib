@@ -20,3 +20,5 @@
 -->
 # Cordova-serve Release Notes
 
+### 0.1.2 (June 15, 2015)
+Initial release

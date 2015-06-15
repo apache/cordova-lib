@@ -1,6 +1,6 @@
 {
   "name": "cordova-serve",
-  "version": "0.1.2-dev",
+  "version": "0.1.2",
   "description": "Apache Cordova server support for cordova-lib and cordova-browser.",
   "main": "serve.js",
   "repository": {
@@ -13,7 +13,7 @@
     "apache"
   ],
   "author": "Apache Software Foundation",
-  "license": "Apache version 2.0",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://issues.apache.org/jira/browse/CB",
     "email": "dev@cordova.apache.org"
@@ -23,7 +23,7 @@
     "d8": "^0.4.4",
     "mime": "^1.2.11",
     "q": "^1.4.1",
-    "shelljs": "^0.4.0"
+    "shelljs": "^0.5.1"
   },
   "devDependencies": {
     "jshint": "^2.8.0"
