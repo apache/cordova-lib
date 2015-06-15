@@ -72,11 +72,7 @@ webos_parser.prototype.update_from_config = function(config) {
         if(index===0 || index===1) {
             return src.substring(index+4);
         } else {
-            shell.mkdir('-p', path.join(www, 'assets'));
-            var newSrc = 'assets/' + type + '.png';
-            if(type==='icon') {
-                newSrc = 'icon.png';
-            }
+            var newSrc = type + '.png';
             shell.cp('-f', path.join(projectRoot, src), path.join(www, newSrc));
             return newSrc;
         }
