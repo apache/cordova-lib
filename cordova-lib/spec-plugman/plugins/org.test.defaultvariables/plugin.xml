@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.test.defaultvariables"
@@ -10,9 +9,8 @@
 
     <!-- android -->
     <platform name="android">
-		   <preference name="ENABLE_LOG" default="yes" />
+            <preference name="ENABLE_LOG" default="yes" />
             <preference name="API_KEY" />
     </platform>
 
-   
 </plugin>
