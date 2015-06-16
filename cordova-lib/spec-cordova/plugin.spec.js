@@ -27,6 +27,7 @@ var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
 var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
 var pluginId = 'org.apache.cordova.fakeplugin1';
+var org_test_defaultvariables = 'org.test.defaultvariables';
 
 describe('plugin end-to-end', function() {
     var results;
@@ -75,6 +76,13 @@ describe('plugin end-to-end', function() {
             return cordova.raw.plugin('ls');
         }).then(function() {
             expect(results).toMatch(/No plugins added/gi);
+        }).then(function() {
+            // Testing Default Variables plugin
+            return cordova.raw.plugin('add', path.join(pluginsDir, org_test_defaultvariables),{cli_variables: { REQUIRED:'yes', REQUIRED_ANDROID:'yes'}});
+         }).then(function() {
+            return cordova.raw.plugin('ls');
+        }).then(function() {
+            expect(results).toContain(org_test_defaultvariables);
         }).fail(function(err) {
             console.log(err.stack);
             expect(err).toBeUndefined();

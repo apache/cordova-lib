@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.test.defaultvariables"
+    version="3.0.0">
+
+    <name>Test plugin variables</name>
+
+    <preference name="DEFAULT" default="yes" />
+    <preference name="REQUIRED" />
+    
+    <!-- android -->
+    <platform name="android">            
+        <preference name="DEFAULT_ANDROID" default="yes" />
+        <preference name="REQUIRED_ANDROID" />
+    </platform>
+
+</plugin>
