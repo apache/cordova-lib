@@ -29,6 +29,7 @@ TODO (kamrik): refactor this to not use sync functions and return promises.
 
 
 var path = require('path')
+  , fs = require('fs')
   , xml_helpers = require('./util/xml-helpers')
   , CordovaError = require('./CordovaError')
   ;
@@ -315,6 +316,9 @@ function PluginInfo(dirname) {
 
     ///// PluginInfo Constructor logic  /////
     self.filepath = path.join(dirname, 'plugin.xml');
+    if (!fs.existsSync(self.filepath)) {
+        throw new CordovaError('Cannot find plugin.xml for plugin \'' + path.basename(dirname) + '\'. Please try adding it again.');
+    }
 
     self.dir = dirname;
     var et = self._et = xml_helpers.parseElementtreeSync(self.filepath);
