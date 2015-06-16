@@ -46,6 +46,7 @@ var install = require('../src/plugman/install'),
         'com.cordova.engine-android' : path.join(plugins_dir, 'com.cordova.engine-android'),
         'org.test.plugins.childbrowser' : path.join(plugins_dir, 'org.test.plugins.childbrowser'),
         'com.adobe.vars' : path.join(plugins_dir, 'com.adobe.vars'),
+        'org.test.defaultvariables' : path.join(plugins_dir, 'org.test.defaultvariables'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
@@ -143,7 +144,7 @@ describe('start', function() {
             }
         ).fail(
             function(error) {
-                expect(error).toBeUndefined();
+                expect(error).toEqual({});
             }
         );
         waitsFor(function() { return done; }, 'promise never resolved', 2000);
@@ -456,6 +457,16 @@ describe('install', function() {
             waitsFor(function(){ return done; }, 'install promise never resolved', 200);
             runs(function() {
                 expect(''+done).toContain('Variable(s) missing: API_KEY');
+            });
+        });
+         it('should not throw exception on default variables', function() {
+            runs(function() {
+                installPromise( install('android', project, plugins['org.test.defaultvariables'], plugins_install_dir, { browserify: true , cli_variables:{API_KEY:'del7a' }}) );
+  
+            });
+            waitsFor(function() { return done; }, 'install promise never resolved', 200);
+            runs(function() {
+                expect(''+done).toEqual('true');
             });
         });
         it('should throw if git is not found on the path and a remote url is requested', function() {
