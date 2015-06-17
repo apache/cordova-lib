@@ -480,7 +480,7 @@ describe('install', function() {
                 expect(''+done).toContain('"git" command line tool is not installed: make sure it is accessible on your PATH.');
             });
         });
-        it('should throw if plugin version is less than the minimum requirement', function(){
+        it('should not fail if plugin version is less than the minimum requirement. Instead skip.', function(){
             spyOn(semver, 'satisfies').andReturn(false);
             exec.andCallFake(function(cmd, cb) {
                 cb(null, '0.0.1\n');
@@ -490,7 +490,7 @@ describe('install', function() {
             });
             waitsFor(function(){ return done; }, 'install promise never resolved', 200);
             runs(function() {
-                expect(''+done).toContain('Plugin doesn\'t support this project\'s cordova version. cordova: 0.0.1, failed version requirement: >=2.3.0');
+                expect(''+done).toMatch(true);
             });
         });
     });
