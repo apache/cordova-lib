@@ -116,7 +116,8 @@ function checkEngines(engines) {
             var msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
                       engine.name + ': ' + engine.currentVersion +
                       ', failed version requirement: ' + engine.minVersion;
-            return Q.reject(new CordovaError(msg));
+            events.emit('warn', msg);
+            return Q.reject('skip');
         }
     }
 
@@ -361,8 +362,13 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         }
     ).fail(
         function (error) {
-            events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\':' + error.stack);
-            throw error;
+            
+            if(error === 'skip') {
+                events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
+            } else {
+                events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\':' + error.stack);
+                throw error;
+            }
         }
     );
 }
