@@ -61,7 +61,6 @@ function uninstallQueuedPlugins(platformJson, wwwDir) {
 }
 
 function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
-
     var deferred = Q.defer();
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
@@ -78,7 +77,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
     });
 
     libraryRelease.pipeline.get('wrap').push(addSymbolList);
-
+    
     writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
     var releaseBundle = libraryRelease.bundle();
@@ -143,6 +142,7 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
     var platformJson = PlatformJson.load(plugins_dir, platform);
     var wwwDir = www_dir || platform_modules.getPlatformProject(platform, project_dir).www_dir();
     var scripts = [];
+    var cordovaRequires = [];
 
     uninstallQueuedPlugins(platformJson, www_dir);
 
@@ -210,15 +210,23 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                     requireTr.addModule({symbol: moduleName, path: scriptPath});
                 }
 
+
+                // Handles clobbers and merges
+                // Writes needed requires to cordovaRequires Array
+                // which gets written to cordova_requires.js which
+                // gets added to the browserify build
+                var namespace;
                 module.clobbers.forEach(function(child) {
-                    fs.appendFileSync(scriptPath,
-                        prepareNamespace(child.target, 'c'),
-                        'utf-8');
+                    namespace = prepareNamespace(child.target, 'c');
+                    if(cordovaRequires.indexOf(namespace) !== -1) {
+                        cordovaRequires.push(namespace);
+                    }
                 });
                 module.merges.forEach(function(child) {
-                    fs.appendFileSync(scriptPath,
-                        prepareNamespace(child.target, 'm'),
-                        'utf-8');
+                    namespace = prepareNamespace(child.target, 'm');
+                    if(cordovaRequires.indexOf(namespace) === -1) {
+                        cordovaRequires.push(namespace);
+                    }
                 });
                 scripts.push(scriptPath);
             });
@@ -229,7 +237,15 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         cordova_plugins += 'modules.exports = modules.exports.metadata;';
 
         events.emit('verbose', 'Writing out cordova_plugins.js...');
-        fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
+        fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');  
+
+        if(cordovaRequires.length > 0) {
+            var cordovaRequiresString = cordovaRequires.join('\n');
+            events.emit('verbose', 'Writing out cordova_requires.js...');
+            fs.writeFileSync(path.join(wwwDir, 'cordova_requires.js'), cordovaRequiresString, 'utf8');
+            //add it to browserify
+            libraryRelease.add(path.join(wwwDir, 'cordova_requires.js'));
+        }
 
         libraryRelease.transform(requireTr.transform);
 
@@ -238,6 +254,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         });
 
         var outReleaseFile = path.join(wwwDir, 'cordova.js');
-        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion, requireTr.getModules(platform));
+        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
     });
 };
