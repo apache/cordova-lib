@@ -133,6 +133,13 @@ function doPlatformBase( templatesDir, platformName, pluginName, pluginID, plugi
             }
         );
         break;
+    case 'windows':
+        baseFiles.push(
+            {
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.js", "utf-8")),
+                extension: "js"
+            }
+        );
     }
 
     shell.mkdir( '-p', 'src/' + platformName );
