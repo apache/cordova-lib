@@ -161,7 +161,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                     return superspawn.spawn(bin, args, copts);
                 }).then(function() {
-                    platform_www = path.join(projectRoot, 'platforms', platform, 'platform_www');
+                    var platform_www = path.join(projectRoot, 'platforms', platform, 'platform_www');
 
                     // only want to copy cordova_js once, when the platform is added
                     if (!fs.existsSync(path.join(platform_www, 'cordova.js'))) {
