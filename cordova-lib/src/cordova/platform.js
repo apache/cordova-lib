@@ -168,8 +168,17 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                     return superspawn.spawn(bin, args, copts);
                 }).then(function() {
-                    copy_cordova_js(projectRoot, platform);
-                    copy_cordovajs_src(projectRoot, platform, platDetails.libDir);
+                    platform_www = path.join(projectRoot, 'platforms', platform, 'platform_www');
+
+                    // only want to copy cordova_js once, when the platform is added
+                    if (!fs.existsSync(path.join(platform_www, 'cordova.js'))) {
+                        copy_cordova_js(projectRoot, platform);
+                    }
+
+                    // only want to copy cordova-js-src once, when the platform is added
+                    if (!fs.existsSync(path.join(platform_www, 'cordova-js-src'))) {
+                        copy_cordovajs_src(projectRoot, platform, platDetails.libDir);
+                    }
                 }).then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {
