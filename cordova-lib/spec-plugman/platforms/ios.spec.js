@@ -303,15 +303,15 @@ describe('ios project handler', function() {
             runs(function() {
                 var xcode = ios.parseProjectFile(temp).xcode;
                 // from org.test.plugins.dummyplugin
-                expect(xcode.hasFile(path.join('Resources', 'DummyPlugin.bundle'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Resources', 'DummyPlugin.bundle'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
                 expect(xcode.hasFile('usr/lib/src/ios/libsqlite3.dylib')).toBe(true);
-                expect(xcode.hasFile(path.join('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBe(true);
                 // from org.test.plugins.weblessplugin
-                expect(xcode.hasFile(path.join('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
                 expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);
                 expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBe(true);
