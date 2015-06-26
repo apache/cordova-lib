@@ -17,12 +17,25 @@
     under the License.
 */
 
-var path = require('path'),
-    fs = require('fs'),
-    shell = require('shelljs'),
-    os = require('os');
+var path         = require('path'),
+    fs           = require('fs'),
+    shell        = require('shelljs'),
+    os           = require('os'),
+    ConfigParser = require('../src/configparser/ConfigParser');
 
-module.exports.tmpDir = function(subdir) {
+// Just use Android everywhere; we're mocking out any calls to the `android` binary.
+module.exports.testPlatform = 'android';
+
+function getConfigPath(dir) {
+    // if path ends with 'config.xml', return it
+    if (dir.indexOf('config.xml') == dir.length - 10) {
+        return dir;
+    }
+    // otherwise, add 'config.xml' to the end of it
+    return path.join(dir, 'config.xml');
+}
+
+module.exports.tmpDir = function (subdir) {
     var dir = path.join(os.tmpdir(), 'e2e-test');
     if (subdir) {
         dir = path.join(dir, subdir);
@@ -43,17 +56,101 @@ if (host.match(/win/)) {
 }
 */
 
-// Just use Android everywhere; we're mocking out any calls to the `android` binary.
-module.exports.testPlatform = 'android';
+module.exports.setEngineSpec = function (appPath, engine, spec) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath);
+
+    parser.removeEngine(engine);
+    parser.addEngine(engine, spec);
+    parser.write();
+};
+
+module.exports.getEngineSpec = function (appPath, engine) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath),
+        engines = parser.getEngines();
+
+    for (var i = 0; i < engines.length; i++) {
+        if (engines[i].name === module.exports.testPlatform) {
+            return engines[i].spec;
+        }
+    }
+    return null;
+};
+
+module.exports.removeEngine = function (appPath, engine) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath);
+
+    parser.removeEngine(module.exports.testPlatform);
+    parser.write();
+};
+
+module.exports.setPluginSpec = function (appPath, plugin, spec) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath),
+        p = parser.getPlugin(plugin),
+        variables = [];
+
+    if (p) {
+        parser.removePlugin(p.name);
+        if (p.variables.length && p.variables.length > 0) {
+            variables = p.variables;
+        }
+    }
+
+    parser.addPlugin({ 'name': plugin, 'spec': spec }, variables);
+    parser.write();
+};
+
+module.exports.getPluginSpec = function (appPath, plugin) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath),
+        p = parser.getPlugin(plugin);
+
+    if (p) {
+        return p.spec;
+    }
+    return null;
+};
+
+module.exports.getPluginVariable = function (appPath, plugin, variable) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath),
+        p = parser.getPlugin(plugin);
+
+    if (p && p.variables) {
+        return p.variables[variable];
+    }
+    return null;
+};
+
+module.exports.removePlugin = function (appPath, plugin) {
+    appPath = getConfigPath(appPath);
+    var parser = new ConfigParser(appPath);
+
+    parser.removePlugin(plugin);
+    parser.write();
+};
+
+module.exports.getConfigContent = function (appPath) {
+    var configFile = path.join(appPath, 'config.xml');
+    return fs.readFileSync(configFile, 'utf-8');
+};
+
+module.exports.writeConfigContent = function (appPath, configContent) {
+    var configFile = path.join(appPath, 'config.xml');
+    fs.writeFileSync(configFile, configContent, 'utf-8');
+};
 
 // Add the toExist matcher.
-beforeEach(function() {
+beforeEach(function () {
     this.addMatchers({
-        'toExist': function() {
+        'toExist': function () {
             var notText = this.isNot ? ' not' : '';
             var self = this;
 
-            this.message = function() {
+            this.message = function () {
                 return 'Expected file ' + self.actual + notText + ' to exist.';
             };
 
