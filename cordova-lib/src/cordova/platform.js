@@ -72,7 +72,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         msg = '\nWARNING: The --usegit flag has been deprecated! \n' +
               'Instead, please use: `cordova platform add git-url#custom-branch`. \n' +
               'e.g: cordova platform add https://github.com/apache/cordova-android.git#2.4.0 \n';
-        events.emit('warning', msg);
+        events.emit('warn', msg);
     }
 
     var xml = cordova_util.projectConfig(projectRoot);
