@@ -44,7 +44,7 @@ module.exports = function check_reqs(platforms) {
             return require(modulePath).check_all();
         } catch (e) {
             var errorMsg = 'Failed to check requirements for ' + platform + ' platform. ' +
-                'check_reqs module is missing for platfrom. Skipping it...';
+                'check_reqs module is missing for platform. Skipping it...';
             return Q.reject(errorMsg);
         }
     });
