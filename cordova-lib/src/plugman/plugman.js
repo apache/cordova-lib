@@ -70,9 +70,6 @@ addProperty(plugman, 'prepareBrowserify', './prepare-browserify');
 addProperty(plugman, 'help', './help');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
-addProperty(plugman, 'adduser', './adduser', true);
-addProperty(plugman, 'publish', './publish', true);
-addProperty(plugman, 'unpublish', './unpublish', true);
 addProperty(plugman, 'search', './search', true);
 addProperty(plugman, 'info', './info', true);
 addProperty(plugman, 'create', './create', true);
@@ -139,12 +136,6 @@ plugman.commands =  {
 
         return p;
     },
-    'adduser'  : function(cli_opts) {
-        plugman.adduser(function(err) {
-            if (err) throw err;
-            else console.log('user added');
-        });
-    },
     'search'   : function(cli_opts) {
         plugman.search(cli_opts.argv.remain, function(err, plugins) {
             if (err) throw err;
@@ -167,35 +158,6 @@ plugman.commands =  {
                     }
                 }
             }
-        });
-    },
-
-    'publish'  : function(cli_opts) {
-        var plugin_path = cli_opts.argv.remain;
-        if(!plugin_path) {
-            return console.log(plugman.help());
-        }
-        plugman.publish(plugin_path, function(arg1, err) {
-            if (err) {
-                console.log('Error Code: '+err.code);
-                throw err;
-            } else {
-                console.log('Plugin published');
-            }
-        });
-    },
-
-    'unpublish': function(cli_opts) {
-        var plugin = cli_opts.argv.remain;
-        if(!plugin) {
-            return console.log(plugman.help());
-        }
-        plugman.unpublish(plugin, function(arg1, err) {
-            if (err) {
-                console.log('Error Code: ' + err.code);
-                throw err;
-            }
-            else console.log('Plugin unpublished');
         });
     },
     'create': function(cli_opts) {
