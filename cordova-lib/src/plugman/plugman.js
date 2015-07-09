@@ -160,6 +160,16 @@ plugman.commands =  {
             }
         });
     },
+    'publish'  : function() {
+        events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
+            'has moved to read-only state. For publishing use corresponding \'npm\' commands.\n\n' +
+            'If for any reason you still need for \'plugman publish\' - consider downgrade to plugman@0.23.3');
+    },
+    'unpublish': function(cli_opts) {
+        events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
+            'has moved to read-only state. For publishing/unpublishing use corresponding \'npm\' commands.\n\n' +
+            'If for any reason you still need for \'plugman unpublish\' - consider downgrade to plugman@0.23.3');
+    },
     'create': function(cli_opts) {
         if( !cli_opts.name || !cli_opts.plugin_id || !cli_opts.plugin_version) {
             return console.log( plugman.help() );
