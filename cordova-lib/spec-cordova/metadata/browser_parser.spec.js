@@ -17,7 +17,7 @@
     under the License.
 */
 
-var platforms = require('../../src/platforms/platforms'),
+var browserParser = require('../../src/cordova/metadata/browser_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -35,16 +35,16 @@ describe('browser project parser', function() {
     describe('constructions', function() {
         it('should create an instance with a path', function() {
             expect(function() {
-                var p = new platforms.browser.parser(proj);
+                var p = new browserParser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.browser.parser(proj) instanceof Parser).toBe(true);
+            expect(new browserParser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.browser.parser(proj);
+            var p = new browserParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'browser', proj);
         });
     });
@@ -54,7 +54,7 @@ describe('browser project parser', function() {
         var browser_proj = path.join(proj, 'platforms', 'browser');
 
         beforeEach(function() {
-            p = new platforms.browser.parser(browser_proj);
+            p = new browserParser(browser_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mkdir = spyOn(shell, 'mkdir');

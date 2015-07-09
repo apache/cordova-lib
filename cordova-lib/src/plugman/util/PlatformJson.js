@@ -81,6 +81,26 @@ PlatformJson.prototype.isPluginInstalled = function(pluginId) {
         this.isPluginDependent(pluginId);
 };
 
+PlatformJson.prototype.addPlugin = function(pluginId, variables, isTopLevel) {
+    var pluginsList = isTopLevel ?
+        this.root.installed_plugins :
+        this.root.dependent_plugins;
+
+    pluginsList[pluginId] = variables;
+
+    return this;
+};
+
+PlatformJson.prototype.removePlugin = function(pluginId, isTopLevel) {
+    var pluginsList = isTopLevel ?
+        this.root.installed_plugins :
+        this.root.dependent_plugins;
+
+    delete pluginsList[pluginId];
+
+    return this;
+};
+
 PlatformJson.prototype.addInstalledPluginToPrepareQueue = function(pluginDirName, vars, is_top_level) {
     this.root.prepare_queue.installed.push({'plugin':pluginDirName, 'vars':vars, 'topLevel':is_top_level});
 };

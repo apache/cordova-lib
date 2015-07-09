@@ -30,7 +30,6 @@ var path = require('path'),
     Q = require('q'),
     events = require('../events'),
     platform_modules = require('../platforms/platforms'),
-    plugman = require('./plugman'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil      = require('../cordova/util');
@@ -299,49 +298,23 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
 // Returns a promise.
 function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, plugins_dir, is_top_level, options) {
-    var plugin_id = pluginInfo.id;
-    var plugin_dir = pluginInfo.dir;
-    var handler = platform_modules.getPlatformProject(platform, project_dir);
-    www_dir = www_dir || handler.www_dir();
-    events.emit('log', 'Uninstalling ' + plugin_id + ' from ' + platform);
+    events.emit('log', 'Uninstalling ' + pluginInfo.id + ' from ' + platform);
 
-    var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
-    var assets = pluginInfo.getAssets(platform);
-    var frameworkFiles = pluginInfo.getFrameworks(platform);
-
-    // queue up native stuff
-    pluginItems.forEach(function(item) {
-        // CB-5238 Don't uninstall non custom frameworks.
-        if (item.itemType == 'framework' && !item.custom) return;
-        actions.push(actions.createAction(handler.getUninstaller(item.itemType),
-                                          [item, plugin_id, options],
-                                          handler.getInstaller(item.itemType),
-                                          [item, plugin_dir, plugin_id, options]));
-    });
-
-    // queue up asset uninstallation
-    var common = require('./platforms/common');
-    assets.forEach(function(asset) {
-        actions.push(actions.createAction(common.asset.uninstall, [asset, www_dir, plugin_id], common.asset.install, [asset, plugin_dir, www_dir]));
-    });
-
-    // run through the action stack
-    return actions.process(platform, project_dir)
+    // Set up platform to uninstall asset files/js modules
+    // from <platform>/platform_www dir instead of <platform>/www.
+    options.usePlatformWww = true;
+    return platform_modules.getPlatformApi(platform, project_dir)
+    .removePlugin(pluginInfo, options)
     .then(function() {
-        // WIN!
-        events.emit('verbose', plugin_id + ' uninstalled from ' + platform + '.');
-        // queue up the plugin so prepare can remove the config changes
-        var platformJson = PlatformJson.load(plugins_dir, platform);
-        platformJson.addUninstalledPluginToPrepareQueue(plugin_id, is_top_level);
-        platformJson.save();
-        // call prepare after a successful uninstall
-        if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
-        } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, www_dir, is_top_level, options.pluginInfoProvider);
-        }
-    }).then(function() {
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
+        // Remove plugin from installed list. This already done in platform,
+        // but need to be duplicated here to remove plugin entry from project's
+        // plugin list to manage dependencies properly.
+        PlatformJson.load(plugins_dir, platform)
+            .removePlugin(pluginInfo.id, is_top_level)
+            .save();
+
+        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
+                pluginInfo.getFrameworks(platform).length > 0) {
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
             try {

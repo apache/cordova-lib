@@ -83,7 +83,11 @@ function PluginInfo(dirname) {
             throw new Error(msg);
         }
 
-        var asset = { src: src, target: target };
+        var asset = {
+            itemType: 'asset',
+            src: src,
+            target: target
+        };
         return asset;
     }
 
@@ -258,6 +262,7 @@ function PluginInfo(dirname) {
 
     function _parseJsModule(tag) {
         var ret = {
+            itemType: 'js-module',
             name: tag.attrib.name,
             src: tag.attrib.src,
             clobbers: tag.findall('clobbers').map(function(tag) { return { target: tag.attrib.target }; }),

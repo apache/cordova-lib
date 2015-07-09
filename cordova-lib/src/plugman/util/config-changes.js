@@ -54,8 +54,8 @@ var keep_these_frameworks = [
 exports.PlatformMunger = PlatformMunger;
 
 exports.process = function(plugins_dir, project_dir, platform, platformJson, pluginInfoProvider) {
-    var munger = new PlatformMunger(platform, project_dir, plugins_dir, platformJson, pluginInfoProvider);
-    munger.process();
+    var munger = new PlatformMunger(platform, project_dir, platformJson, pluginInfoProvider);
+    munger.process(plugins_dir);
     munger.save_all();
 };
 
@@ -65,12 +65,10 @@ exports.process = function(plugins_dir, project_dir, platform, platformJson, plu
 * Can deal with config file of a single project.
 * Parsed config files are cached in a ConfigKeeper object.
 ******************************************************************************/
-function PlatformMunger(platform, project_dir, plugins_dir, platformJson, pluginInfoProvider) {
+function PlatformMunger(platform, project_dir, platformJson, pluginInfoProvider) {
     checkPlatform(platform);
     this.platform = platform;
     this.project_dir = project_dir;
-    this.plugins_dir = plugins_dir;
-    this.platform_handler = platforms.getPlatformProject(platform, project_dir);
     this.config_keeper = new ConfigKeeper(project_dir);
     this.platformJson = platformJson;
     this.pluginInfoProvider = pluginInfoProvider;
@@ -130,14 +128,15 @@ function PlatformMunger_apply_file_munge(file, munge, remove) {
 
 
 PlatformMunger.prototype.remove_plugin_changes = remove_plugin_changes;
-function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
+function remove_plugin_changes(pluginInfo, is_top_level) {
     var self = this;
     var platform_config = self.platformJson.root;
-    var plugin_dir = path.join(self.plugins_dir, plugin_name);
-    var plugin_vars = (is_top_level ? platform_config.installed_plugins[plugin_id] : platform_config.dependent_plugins[plugin_id]);
+    var plugin_vars = is_top_level ?
+        platform_config.installed_plugins[pluginInfo.id] :
+        platform_config.dependent_plugins[pluginInfo.id];
 
     // get config munge, aka how did this plugin change various config files
-    var config_munge = self.generate_plugin_config_munge(plugin_dir, plugin_vars);
+    var config_munge = self.generate_plugin_config_munge(pluginInfo, plugin_vars);
     // global munge looks at all plugins' changes to config files
     var global_munge = platform_config.config_munge;
     var munge = mungeutil.decrement_munge(global_munge, config_munge);
@@ -147,7 +146,7 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
             // TODO: remove this check and <plugins-plist> sections in spec/plugins/../plugin.xml files.
             events.emit(
                 'warn',
-                'WARNING: Plugin "' + plugin_id + '" uses <plugins-plist> element(s), ' +
+                'WARNING: Plugin "' + pluginInfo.id + '" uses <plugins-plist> element(s), ' +
                 'which are no longer supported. Support has been removed as of Cordova 3.4.'
             );
             continue;
@@ -168,22 +167,18 @@ function remove_plugin_changes(plugin_name, plugin_id, is_top_level) {
     }
 
     // Remove from installed_plugins
-    if (is_top_level) {
-        delete platform_config.installed_plugins[plugin_id];
-    } else {
-        delete platform_config.dependent_plugins[plugin_id];
-    }
+    self.platformJson.removePlugin(pluginInfo.id, is_top_level);
+    return self;
 }
 
 
 PlatformMunger.prototype.add_plugin_changes = add_plugin_changes;
-function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increment) {
+function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increment) {
     var self = this;
     var platform_config = self.platformJson.root;
-    var plugin_dir = path.join(self.plugins_dir, plugin_id);
 
     // get config munge, aka how should this plugin change various config files
-    var config_munge = self.generate_plugin_config_munge(plugin_dir, plugin_vars);
+    var config_munge = self.generate_plugin_config_munge(pluginInfo, plugin_vars);
     // global munge looks at all plugins' changes to config files
 
     // TODO: The should_increment param is only used by cordova-cli and is going away soon.
@@ -203,7 +198,7 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
         if (file == 'plugins-plist' && self.platform == 'ios') {
             events.emit(
                 'warn',
-                'WARNING: Plugin "' + plugin_id + '" uses <plugins-plist> element(s), ' +
+                'WARNING: Plugin "' + pluginInfo.id + '" uses <plugins-plist> element(s), ' +
                 'which are no longer supported. Support has been removed as of Cordova 3.4.'
             );
             continue;
@@ -222,12 +217,9 @@ function add_plugin_changes(plugin_id, plugin_vars, is_top_level, should_increme
         self.apply_file_munge(file, munge.files[file]);
     }
 
-    // Move to installed_plugins if it is a top-level plugin
-    if (is_top_level) {
-        platform_config.installed_plugins[plugin_id] = plugin_vars || {};
-    } else {
-        platform_config.dependent_plugins[plugin_id] = plugin_vars || {};
-    }
+    // Move to installed/dependent_plugins
+    self.platformJson.addPlugin(pluginInfo.id, plugin_vars || {}, is_top_level);
+    return self;
 }
 
 
@@ -253,24 +245,19 @@ function reapply_global_munge () {
 
         self.apply_file_munge(file, global_munge.files[file]);
     }
+
+    return self;
 }
 
 
 // generate_plugin_config_munge
 // Generate the munge object from plugin.xml + vars
 PlatformMunger.prototype.generate_plugin_config_munge = generate_plugin_config_munge;
-function generate_plugin_config_munge(plugin_dir, vars) {
+function generate_plugin_config_munge(pluginInfo, vars) {
     var self = this;
 
     vars = vars || {};
-    // Add PACKAGE_NAME variable into vars
-    if (!vars['PACKAGE_NAME']) {
-        vars['PACKAGE_NAME'] = self.platform_handler.package_name(self.project_dir);
-    }
-
     var munge = { files: {} };
-    var pluginInfo = self.pluginInfoProvider.get(plugin_dir);
-
     var changes = pluginInfo.getConfigFiles(self.platform);
 
     // note down pbxproj framework munges in special section of munge obj
@@ -283,10 +270,14 @@ function generate_plugin_config_munge(plugin_dir, vars) {
             }
         });
     }
-    
+
     // Demux 'package.appxmanifest' into relevant platform-specific appx manifests.
     // Only spend the cycles if there are version-specific plugin settings
-    if (self.platform === 'windows' && changes.some(function(change) { return ((typeof change.versions !== 'undefined') || (typeof change.deviceTarget !== 'undefined')); })) 
+    if (self.platform === 'windows' &&
+            changes.some(function(change) {
+                return ((typeof change.versions !== 'undefined') ||
+                    (typeof change.deviceTarget !== 'undefined'));
+            }))
     {
         var manifests = {
             'windows': {
@@ -334,7 +325,7 @@ function generate_plugin_config_munge(plugin_dir, vars) {
 
             // at this point, 'change' targets package.appxmanifest and has a version attribute
             knownWindowsVersionsForTargetDeviceSet.forEach(function(winver) {
-                // This is a local function that creates the new replacement representing the 
+                // This is a local function that creates the new replacement representing the
                 // mutation.  Used to save code further down.
                 var createReplacement = function(manifestFile, originalChange) {
                     var replacement = {
@@ -389,18 +380,20 @@ function generate_plugin_config_munge(plugin_dir, vars) {
 // Go over the prepare queue and apply the config munges for each plugin
 // that has been (un)installed.
 PlatformMunger.prototype.process = PlatformMunger_process;
-function PlatformMunger_process() {
+function PlatformMunger_process(plugins_dir) {
     var self = this;
     var platform_config = self.platformJson.root;
 
     // Uninstallation first
     platform_config.prepare_queue.uninstalled.forEach(function(u) {
-        self.remove_plugin_changes(u.plugin, u.id, u.topLevel);
+        var pluginInfo = self.pluginInfoProvider.get(path.join(plugins_dir, u.plugin));
+        self.remove_plugin_changes(pluginInfo, u.topLevel);
     });
 
     // Now handle installation
     platform_config.prepare_queue.installed.forEach(function(u) {
-        self.add_plugin_changes(u.plugin, u.vars, u.topLevel, true);
+        var pluginInfo = self.pluginInfoProvider.get(path.join(plugins_dir, u.plugin));
+        self.add_plugin_changes(pluginInfo, u.vars, u.topLevel, true);
     });
 
     // Empty out installed/ uninstalled queues.

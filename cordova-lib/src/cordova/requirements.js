@@ -18,51 +18,31 @@
 */
 
 var cordova_util = require('./util');
-var events       = require('../events');
-var path         = require('path');
 var Q            = require('q');
 var CordovaError = require('../CordovaError');
+var knownPlatforms = require('../platforms/platforms');
 
 /**
  * Runs requirements check against platforms specified in 'platfoms' argument
  *
- * @param  {String[]} platforms List of platforms for requirements check. If none, all
- *                                      platforms, added to project will be checked
+ * @param  {String[]} platforms List of platforms for requirements check. If
+ *   none, all platforms, added to project will be checked
  *
- * @return {Promise}            Promise fullfilled with map of platforms and requirements
- *                                      check results for each platform
+ * @return {Promise<Object>}    Promise fullfilled with map of platforms and
+ *   requirements check results for each platform.
  */
 module.exports = function check_reqs(platforms) {
     platforms = cordova_util.preProcessOptions(platforms).platforms;
 
-    var projectRoot = cordova_util.isCordova();
-    var platformsDir = path.join(projectRoot, 'platforms');
-    var platformChecks = platforms.map(function (platform) {
-        var modulePath = path.join(platformsDir, platform, 'cordova', 'lib', 'check_reqs');
-        try {
-            events.emit('verbose', 'Checking requirements for ' + platform + ' platform');
-            return require(modulePath).check_all();
-        } catch (e) {
-            var errorMsg = 'Failed to check requirements for ' + platform + ' platform. ' +
-                'check_reqs module is missing for platform. Skipping it...';
-            return Q.reject(errorMsg);
-        }
-    });
-
-    var checks = {};
-
-    return Q.allSettled(platformChecks)
+    return Q.allSettled(platforms.map(function (platform) {
+        return knownPlatforms.getPlatformApi(platform).requirements();
+    }))
     .then(function (settledChecks) {
-
-        settledChecks.forEach(function (settledCheck, idx) {
+        return settledChecks.reduce(function (result, settledCheck, idx) {
             var platformName = platforms[idx];
-            var result  = settledCheck.state === 'fulfilled' ?
+            result[platformName] = settledCheck.state === 'fulfilled' ?
                 settledCheck.value :
                 new CordovaError(settledCheck.reason);
-
-            checks[platformName] = result;
-        });
-
-        return checks;
+        }, {});
     });
 };

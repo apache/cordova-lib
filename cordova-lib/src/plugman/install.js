@@ -471,7 +471,6 @@ function tryFetchDependency(dep, install, options) {
                 dep.subdir = '';
                 return Q(url);
             }).fail(function(error){
-//console.log("Failed to resolve url='.': " + error);
                 return Q(dep.url);
             });
 
@@ -565,35 +564,27 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
-    var handler = platform_modules.getPlatformProject(platform, project_dir);
-    var frameworkFiles = pluginInfo.getFrameworks(platform); // Frameworks are needed later
-    var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
 
-    // queue up native stuff
-    pluginItems.forEach(function(item) {
-        actions.push(actions.createAction(handler.getInstaller(item.itemType),
-                                          [item, plugin_dir, pluginInfo.id, options],
-                                          handler.getUninstaller(item.itemType),
-                                          [item, pluginInfo.id, options]));
-    });
+    options.variables = filtered_variables;
+    // Set up platform to install asset files/js modules to <platform>/platform_www dir
+    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+    // files platform_www directory, so they'll be applied to www on each prepare.
+    options.usePlatformWww = true;
 
-    // run through the action stack
-    return actions.process(platform, project_dir)
-    .then(function(err) {
-        // queue up the plugin so prepare knows what to do.
-        var platformJson = PlatformJson.load(plugins_dir, platform);
-        platformJson.addInstalledPluginToPrepareQueue(pluginInfo.id, filtered_variables, options.is_top_level);
-        platformJson.save();
-        // call prepare after a successful install
-        if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
-        } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
-        }
-    }).then (function() {
+    return platform_modules.getPlatformApi(platform, project_dir)
+    .addPlugin(pluginInfo, options)
+    .then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
+        // Add plugin to installed list. This already done in platform,
+        // but need to be duplicated here to manage dependencies properly.
+        PlatformJson.load(plugins_dir, platform)
+            .addPlugin(pluginInfo.id, filtered_variables, options.is_top_level)
+            .save();
 
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
+        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
+                pluginInfo.getFrameworks('platform').length > 0) {
+
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
             try {

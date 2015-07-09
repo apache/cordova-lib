@@ -19,7 +19,7 @@
 
 /* jshint boss:true, sub:true */
 
-var platforms = require('../../src/platforms/platforms'),
+var wp8Parser = require('../../src/cordova/metadata/wp8_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -105,22 +105,22 @@ describe('wp8 project parser', function() {
         it('should throw if provided directory does not contain a csproj file', function() {
             readdir.andReturn([]);
             expect(function() {
-                new platforms.wp8.parser(proj);
+                new wp8Parser(proj);
             }).toThrow();
         });
         it('should create an instance with path, manifest properties', function() {
             expect(function() {
-                var p = new platforms.wp8.parser(proj);
+                var p = new wp8Parser(proj);
                 expect(p.wp8_proj_dir).toEqual(proj);
                 expect(p.manifest_path).toEqual(path.join(proj, 'Properties', 'WMAppManifest.xml'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.wp8.parser(proj) instanceof Parser).toBe(true);
+            expect(new wp8Parser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.wp8.parser(proj);
+            var p = new wp8Parser(proj);
             expect(call).toHaveBeenCalledWith(p, 'wp8', proj);
         });
     });
@@ -129,7 +129,7 @@ describe('wp8 project parser', function() {
         var p, cp, rm, is_cordova, write, read, mv, mkdir, getOrientation;
         var wp8_proj = path.join(proj, 'platforms', 'wp8');
         beforeEach(function() {
-            p = new platforms.wp8.parser(wp8_proj);
+            p = new wp8Parser(wp8_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');

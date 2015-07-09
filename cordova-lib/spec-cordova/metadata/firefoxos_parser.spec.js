@@ -19,7 +19,7 @@
 
 /* jshint boss:true */
 
-var platforms = require('../../src/platforms/platforms'),
+var firefoxosParser = require('../../src/cordova/metadata/firefoxos_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -53,18 +53,18 @@ describe('firefoxos project parser', function() {
     describe('constructions', function() {
         it('should create an instance with a path', function() {
             expect(function() {
-                var p = new platforms.firefoxos.parser(proj);
+                var p = new firefoxosParser(proj);
                 expect(p.path).toEqual(proj);
                 expect(p.config_path).toEqual(path.join(proj, 'config.xml'));
                 expect(p.manifest_path).toEqual(path.join(p.www_dir(), 'manifest.webapp'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.firefoxos.parser(proj) instanceof Parser).toBe(true);
+            expect(new firefoxosParser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.firefoxos.parser(proj);
+            var p = new firefoxosParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'firefoxos', proj);
         });
     });
@@ -74,7 +74,7 @@ describe('firefoxos project parser', function() {
         var ff_proj = path.join(proj, 'platforms', 'firefoxos');
         var manifestJson = null;
         beforeEach(function() {
-            p = new platforms.firefoxos.parser(ff_proj);
+            p = new firefoxosParser(ff_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);

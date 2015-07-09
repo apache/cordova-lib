@@ -19,8 +19,7 @@
 
 /* jshint quotmark:false */
 
-var platforms = require("../../platforms/platforms"),
-    events = require('../../events'),
+var events = require('../../events'),
     Q = require('q');
 
 function ActionStack() {
@@ -47,22 +46,11 @@ ActionStack.prototype = {
     // Returns a promise.
     process:function(platform, project_dir) {
         events.emit('verbose', 'Beginning processing of action stack for ' + platform + ' project...');
-        var project_files;
-
-        // parse platform-specific project files once
-        var platformProject = platforms.getPlatformProject(platform, project_dir);
-        if (platformProject.parseProjectFile) {
-            events.emit('verbose', 'Parsing ' + platform + ' project files...');
-            project_files = platformProject.parseProjectFile(project_dir);
-        }
 
         while (this.stack.length) {
             var action = this.stack.shift();
             var handler = action.handler.run;
             var action_params = action.handler.params;
-            if (project_files) {
-                action_params.push(project_files);
-            }
 
             try {
                 handler.apply(null, action_params);
@@ -75,10 +63,6 @@ ActionStack.prototype = {
                     var undo = this.completed.shift();
                     var revert = undo.reverter.run;
                     var revert_params = undo.reverter.params;
-
-                    if (project_files) {
-                        revert_params.push(project_files);
-                    }
 
                     try {
                         revert.apply(null, revert_params);
@@ -94,10 +78,6 @@ ActionStack.prototype = {
         }
         events.emit('verbose', 'Action stack processing complete.');
 
-        if (project_files) {
-            events.emit('verbose', 'Writing out ' + platform + ' project files...');
-            project_files.write();
-        }
         return Q();
     }
 };

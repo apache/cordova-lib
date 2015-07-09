@@ -49,14 +49,11 @@ module.exports = function targets(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
-    // Remove --list from parameters
-    options.options.splice(options.options.indexOf('--list'), 1);
-
     var result = Q();
     options.platforms.forEach(function(platform) {
-        if (options.options.indexOf('--device') >= 0) {
+        if (options.options.device) {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options));
-        } else if(options.options.indexOf('--emulator') >= 0) {
+        } else if(options.options.emulator) {
             result = result.then(displayVirtualDevices.bind(null, projectRoot, platform, options.options));
         } else {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options))

@@ -30,7 +30,8 @@ var cordova_util  = require('./util'),
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('../events'),
-    metadata      = require('../plugman/util/metadata');
+    metadata      = require('../plugman/util/metadata'),
+    chainMap      = require('../util/promise-util').Q_chainmap;
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -134,14 +135,23 @@ module.exports = function plugin(command, targets, opts) {
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
 
-                        return plugman.raw.fetch(target, pluginPath, { searchpath: searchPath, noregistry: opts.noregistry, link: opts.link,
-                                                                       pluginInfoProvider: pluginInfoProvider, variables: opts.cli_variables,
-                                                                       is_top_level: true });
+                        var fetchOptions = {
+                            searchpath: searchPath,
+                            noregistry: opts.noregistry,
+                            link: opts.link,
+                            pluginInfoProvider: pluginInfoProvider,
+                            variables: opts.cli_variables,
+                            is_top_level: true
+                        };
+
+                        return plugman.raw.fetch(target, pluginPath, fetchOptions)
+                        .then(function (directory) {
+                            return pluginInfoProvider.get(directory);
+                        });
                     })
-                    .then(function(dir){
+                    .then(function(pluginInfo){
                         // save to config.xml
-                        if(saveToConfigXmlOn(config_json,opts)){
-                            var pluginInfo =  pluginInfoProvider.get(dir);
+                        if(saveToConfigXmlOn(config_json, opts)){
 
                             var attributes = {};
                             attributes.name = pluginInfo.id;
@@ -149,77 +159,48 @@ module.exports = function plugin(command, targets, opts) {
                             var src = parseSource(target, opts);
                             attributes.spec = src ? src : '~' + pluginInfo.version;
 
-                            var variables = [];
-                            if (opts.cli_variables) {
-                                for (var varname in opts.cli_variables) {
-                                    if (opts.cli_variables.hasOwnProperty(varname)) {
-                                        variables.push({name: varname, value: opts.cli_variables[varname]});
-                                    }
-                                }
-                            }
+                            var variables = Object.keys(opts.cli_variables || [])
+                            .map(function (variableName) {
+                                return {name: variableName, value: opts.cli_variables[variableName]};
+                            });
+
                             cfg.removePlugin(pluginInfo.id);
                             cfg.addPlugin(attributes, variables);
                             cfg.write();
                             events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
                         }
-                        return dir;
+                        return pluginInfo;
                     })
-                    .then(function(dir) {
+                    .then(function(pluginInfo) {
                         // Validate top-level required variables
-                        var pluginVariables = pluginInfoProvider.get(dir).getPreferences();
-                        var requiredVariables = [];
-
-                        for(var i in pluginVariables) {
-                            var v = pluginVariables[i];
+                        var pluginVariables = pluginInfo.getPreferences();
+                        var missingVariables = Object.keys(pluginVariables)
+                        .filter(function (variableName) {
                             // discard variables with default value
-                            if (!v) {
-                                requiredVariables.push(i);
-                            }
-                        }
-
-                        opts.cli_variables = opts.cli_variables || {}; 
-                        var missingVariables = requiredVariables.filter(function (v) {
-                            return !(v in opts.cli_variables);
+                            return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
                         });
 
                         if (missingVariables.length) {
-                            shell.rm('-rf', dir);
+                            shell.rm('-rf', pluginInfo.dir);
                             var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
                             return Q.reject(new CordovaError(msg));
                         }
+
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
-                        return platformList.reduce(function(soFar, platform) {
-                            return soFar.then(function() {
-                                var platformRoot = path.join(projectRoot, 'platforms', platform),
-                                    options = {
-                                        cli_variables: opts.cli_variables || {},
-                                        browserify: opts.browserify || false,
-                                        searchpath: searchPath,
-                                        noregistry: opts.noregistry,
-                                        link: opts.link,
-                                        pluginInfoProvider: pluginInfoProvider
-                                    },
-                                    tokens,
-                                    key,
-                                    i;
+                        return chainMap(platformList, function (platform) {
+                            var platformRoot = path.join(projectRoot, 'platforms', platform),
+                            options = {
+                                cli_variables: opts.cli_variables || {},
+                                browserify: opts.browserify || false,
+                                searchpath: searchPath,
+                                noregistry: opts.noregistry,
+                                link: opts.link,
+                                pluginInfoProvider: pluginInfoProvider
+                            };
 
-                                // TODO: Remove this. CLI vars are passed as part of the opts object after "nopt" refactoring.
-                                // Keeping for now for compatibility for API users.
-                                //parse variables into cli_variables
-                                for (i=0; i< opts.options.length; i++) {
-                                    if (opts.options[i] === '--variable' && typeof opts.options[++i] === 'string') {
-                                        tokens = opts.options[i].split('=');
-                                        key = tokens.shift().toUpperCase();
-                                        if (/^[\w-_]+$/.test(key)) {
-                                            options.cli_variables[key] = tokens.join('=');
-                                        }
-                                    }
-                                }
-
-                                events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
-                                return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginPath, options);
-                            });
-                        }, Q());
+                            events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
+                            return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
+                        });
                     });
                 }, Q()); // end Q.all
             }).then(function() {

@@ -192,3 +192,75 @@ function findInsertIdx(children, after) {
     //add to the beginning if no matching nodes are found
     return typeof foundIndex === 'undefined' ? 0 : foundIndex+1;
 }
+
+var BLACKLIST = ['platform', 'feature','plugin','engine'];
+var SINGLETONS = ['content', 'author'];
+function mergeXml(src, dest, platform, clobber) {
+    // Do nothing for blacklisted tags.
+    if (BLACKLIST.indexOf(src.tag) != -1) return;
+
+    //Handle attributes
+    Object.getOwnPropertyNames(src.attrib).forEach(function (attribute) {
+        if (clobber || !dest.attrib[attribute]) {
+            dest.attrib[attribute] = src.attrib[attribute];
+        }
+    });
+    //Handle text
+    if (src.text && (clobber || !dest.text)) {
+        dest.text = src.text;
+    }
+    //Handle platform
+    if (platform) {
+        src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
+            platformElement.getchildren().forEach(mergeChild);
+        });
+    }
+
+    //Handle children
+    src.getchildren().forEach(mergeChild);
+
+    function mergeChild (srcChild) {
+        var srcTag = srcChild.tag,
+            destChild = new et.Element(srcTag),
+            foundChild,
+            query = srcTag + '',
+            shouldMerge = true;
+
+        if (BLACKLIST.indexOf(srcTag) === -1) {
+            if (SINGLETONS.indexOf(srcTag) !== -1) {
+                foundChild = dest.find(query);
+                if (foundChild) {
+                    destChild = foundChild;
+                    dest.remove(destChild);
+                }
+            } else {
+                //Check for an exact match and if you find one don't add
+                Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
+                    query += '[@' + attribute + '="' + srcChild.attrib[attribute] + '"]';
+                });
+                var foundChildren = dest.findall(query);
+                for(var i = 0; i < foundChildren.length; i++) {
+                    foundChild = foundChildren[i];
+                    if (foundChild && textMatch(srcChild, foundChild) && (Object.keys(srcChild.attrib).length==Object.keys(foundChild.attrib).length)) {
+                        destChild = foundChild;
+                        dest.remove(destChild);
+                        shouldMerge = false;
+                        break;
+                    }
+                }
+            }
+
+            mergeXml(srcChild, destChild, platform, clobber && shouldMerge);
+            dest.append(destChild);
+        }
+    }
+}
+
+// Expose for testing.
+module.exports.mergeXml = mergeXml;
+
+function textMatch(elm1, elm2) {
+    var text1 = elm1.text ? elm1.text.replace(/\s+/, '') : '',
+        text2 = elm2.text ? elm2.text.replace(/\s+/, '') : '';
+    return (text1 === '' || text1 === text2);
+}

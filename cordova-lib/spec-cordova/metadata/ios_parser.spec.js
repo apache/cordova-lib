@@ -16,7 +16,7 @@
  specific language governing permissions and limitations
  under the License.
  */
-var platforms = require('../../src/platforms/platforms'),
+var iosParser = require('../../src/cordova/metadata/ios_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -55,23 +55,23 @@ describe('ios project parser', function () {
         it('should throw if provided directory does not contain an xcodeproj file', function() {
             readdir.andReturn(['noxcodehere']);
             expect(function() {
-                new platforms.ios.parser(proj);
+                new iosParser(proj);
             }).toThrow();
         });
         it('should create an instance with path, pbxproj, xcodeproj, originalName and cordovaproj properties', function() {
             expect(function() {
-                var p = new platforms.ios.parser(proj);
+                var p = new iosParser(proj);
                 expect(p.path).toEqual(proj);
                 expect(p.pbxproj).toEqual(path.join(proj, 'test.xcodeproj', 'project.pbxproj'));
                 expect(p.xcodeproj).toEqual(path.join(proj, 'test.xcodeproj'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.ios.parser(proj) instanceof Parser).toBe(true);
+            expect(new iosParser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.ios.parser(proj);
+            var p = new iosParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'ios', proj);
         });
     });
@@ -80,7 +80,7 @@ describe('ios project parser', function () {
         var p, cp, rm, mkdir, is_cordova, write, read, getOrientation;
         var ios_proj = path.join(proj, 'platforms', 'ios');
         beforeEach(function() {
-            p = new platforms.ios.parser(ios_proj);
+            p = new iosParser(ios_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mkdir = spyOn(shell, 'mkdir');
