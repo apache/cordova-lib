@@ -106,28 +106,29 @@ function prepare(options) {
             if (options.browserify) {
                 plugman.prepare = require('../plugman/prepare-browserify');
             }
-            plugman.prepare(platformPath, platform, plugins_dir, null, true, pluginInfoProvider);
-
-            // Make sure that config changes for each existing plugin is in place
-            var platformJson = PlatformJson.load(plugins_dir, platform);
-            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson, pluginInfoProvider);
-            munger.reapply_global_munge();
-            munger.save_all();
-
-            // Update platform config.xml based on top level config.xml
-            var cfg = new ConfigParser(xml);
-            var platform_cfg = new ConfigParser(parser.config_xml());
-            exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
-
-            // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-            // we allow using windows8 tag for new windows platform
-            if (platform == 'windows') {
-                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
-            }
-
-            platform_cfg.write();
-
-            return parser.update_project(cfg);
+            
+            return plugman.prepare(platformPath, platform, plugins_dir, null, true, pluginInfoProvider).then(function () {              
+                // Make sure that config changes for each existing plugin is in place
+                var platformJson = PlatformJson.load(plugins_dir, platform);
+                var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson, pluginInfoProvider);
+                munger.reapply_global_munge();
+                munger.save_all();
+    
+                // Update platform config.xml based on top level config.xml
+                var cfg = new ConfigParser(xml);
+                var platform_cfg = new ConfigParser(parser.config_xml());
+                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
+    
+                // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
+                // we allow using windows8 tag for new windows platform
+                if (platform == 'windows') {
+                    exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
+                }
+    
+                platform_cfg.write();
+    
+                return parser.update_project(cfg);
+            });
         })).then(function() {
             return hooksRunner.fire('after_prepare', options);
         });
