@@ -95,7 +95,12 @@ exports.spawn = function(cmd, args, opts) {
         spawnOpts.env = _.extend(_.extend({}, process.env), opts.env);
     }
     if (opts.chmod && !iswin32) {
-        fs.chmodSync(cmd, '755');
+        try {
+            // This fails when module is installed in a system directory (e.g. via sudo npm install)
+            fs.chmodSync(cmd, '755');
+        } catch (e) {
+            // If the perms weren't set right, then this will come as an error upon execution.
+        }
     }
 
     events.emit(opts.printCommand ? 'log' : 'verbose', 'Running command: ' + maybeQuote(cmd) + ' ' + args.map(maybeQuote).join(' '));
