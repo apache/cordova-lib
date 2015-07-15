@@ -104,10 +104,6 @@ ios_parser.prototype.update_from_config = function(config) {
                 delete infoPlist['UISupportedInterfaceOrientations'];
                 delete infoPlist['UISupportedInterfaceOrientations~ipad'];
         }
-    } else {
-        delete infoPlist['UISupportedInterfaceOrientations'];
-        delete infoPlist['UISupportedInterfaceOrientations~ipad'];
-        delete infoPlist['UIInterfaceOrientation'];
     }
     
     // replace Info.plist ATS entries according to <access> and <allow-navigation> config.xml entries 
