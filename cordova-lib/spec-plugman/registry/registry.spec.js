@@ -20,7 +20,6 @@ var registry = require('../../src/plugman/registry/registry'),
     manifest = require('../../src/plugman/registry/manifest'),
     fs = require('fs'),
     path = require('path'),
-    Q = require('q'),
     shell   = require('shelljs'),
     os = require('os'),
     npm = require('npm');
@@ -117,31 +116,6 @@ describe('registry', function() {
             registryPromise(true, registry.config(params).then(function() {
                 expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object),jasmine.any(Function));
                 expect(fakeNPMCommands.config).toHaveBeenCalledWith(params, jasmine.any(Function));
-            }));
-        });
-        it('should run adduser', function() {
-            registryPromise(true, registry.adduser(null).then(function() {
-                expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object),jasmine.any(Function));
-                expect(fakeNPMCommands.adduser).toHaveBeenCalledWith(null, jasmine.any(Function));
-            }));
-        });
-        it('should run publish', function() {
-            var params = [__dirname + '/../plugins/org.test.plugins.dummyplugin'];
-            var spyGenerate = spyOn(manifest, 'generatePackageJsonFromPluginXml').andReturn(Q());
-            var spyUnlink = spyOn(fs, 'unlink');
-            registryPromise(true, registry.publish(params).then(function() {
-                expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object),jasmine.any(Function));
-                expect(spyGenerate).toHaveBeenCalledWith(params[0]);
-                expect(fakeNPMCommands.publish).toHaveBeenCalledWith(params, jasmine.any(Function));
-                expect(spyUnlink).toHaveBeenCalledWith(path.resolve(params[0], 'package.json'));
-            }));
-        });
-        it('should run unpublish', function() {
-            var params = ['dummyplugin@0.6.0'];
-            registryPromise(true, registry.unpublish(params).then(function() {
-                expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object),jasmine.any(Function));
-                expect(fakeNPMCommands.unpublish).toHaveBeenCalledWith(params, jasmine.any(Function));
-                expect(fakeNPMCommands.cache).toHaveBeenCalledWith(['clean'], jasmine.any(Function));
             }));
         });
         it('should run search', function() {
