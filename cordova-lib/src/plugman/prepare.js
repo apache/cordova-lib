@@ -25,6 +25,7 @@ var platform_modules = require('../platforms/platforms'),
     common          = require('./platforms/common'),
     fs              = require('fs'),
     shell           = require('shelljs'),
+    Q               = require('q'),
     events          = require('../events');
 var PlatformJson = require('./util/PlatformJson');
 var PluginInfoProvider = require('../PluginInfoProvider');
@@ -153,4 +154,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
     events.emit('verbose', 'Writing out cordova_plugins.js...');
     fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), final_contents, 'utf-8');
+    
+    return Q();
 };
