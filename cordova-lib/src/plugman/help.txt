@@ -52,14 +52,14 @@ Parameters:
 Interacting with the registry
 =============================
 
-NOTICE: The Cordova Plugin registry became read-only, so the following commands are not actual anymore and were removed:
+NOTICE: The Cordova Plugin registry is moving to read-only. Please move your plugins over to npm. The following commands have been removed:
 
     $ plugman adduser
     $ plugman publish
     $ plugman unpublish
     $ plugman owner add/rm
 
-For managing plugins from NPM registry use corresponding NPM commands. For more info on NPM commands see `npm help <command>`
+For managing plugins on the npm registry, use the corresponding npm commands. For more info on npm commands see `npm help <command>`
 
 Search for a plugin
 -------------------
