@@ -21,7 +21,6 @@ var  Q             = require('q'),
      shell         = require('shelljs'),
      events        = require('./events'),
      path          = require('path'),
-     semver        = require('semver'),
      superspawn    = require('./cordova/superspawn'),
      os            = require('os');
 
@@ -31,6 +30,7 @@ exports.clone = clone;
 //  clone_dir, if provided is the directory that git will clone into.
 //  if no clone_dir is supplied, a temp directory will be created and used by git.
 function clone(git_url, git_ref, clone_dir){
+    
     var needsGitCheckout = !!git_ref;
     if (!shell.which('git')) {
         return Q.reject(new Error('"git" command line tool is not installed: make sure it is accessible on your PATH.'));
@@ -43,34 +43,26 @@ function clone(git_url, git_ref, clone_dir){
     }
     shell.rm('-rf', tmp_dir);
     shell.mkdir('-p', tmp_dir);
-
-    return superspawn.spawn('git', ['--version'])
-    .then(function(output) {
-        var gitVersion = /\d+\.\d+(\.\d+)?/.exec(output);
-        gitVersion = gitVersion ? gitVersion[0] : '1.0.0';
-        var cloneArgs = ['clone'];
-        if (semver.gte(gitVersion, '1.7.0')) {
-            if (git_ref) {
-                cloneArgs.push('--branch', git_ref);
-                needsGitCheckout = false;
-            }
-            if (semver.gte(gitVersion, '1.7.10')) {
-                cloneArgs.push('--single-branch');
-            }
-            cloneArgs.push('--depth=1');
-        }
-        cloneArgs.push('--', git_url, tmp_dir);
-        return superspawn.spawn('git', cloneArgs);
-    }).then(function() {
+    
+    var cloneArgs = ['clone'];
+    if(!needsGitCheckout) {
+        // only get depth of 1 if there is no branch/commit specified
+        cloneArgs.push('--depth=1');
+    }
+    cloneArgs.push(git_url, tmp_dir);
+    return superspawn.spawn('git', cloneArgs)
+    .then(function() {
         if (needsGitCheckout){
             return superspawn.spawn('git', ['checkout', git_ref], {
                 cwd: tmp_dir
             });
         }
-    }).then(function(){
+    })
+    .then(function(){
         events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + (git_ref || 'master') + '".');
         return tmp_dir;
-    }).fail(function (err) {
+    })
+    .fail(function (err) {
         shell.rm('-rf', tmp_dir);
         return Q.reject(err);
     });
