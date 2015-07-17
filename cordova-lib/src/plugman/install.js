@@ -110,6 +110,14 @@ function checkEngines(engines) {
     for(var i = 0; i < engines.length; i++) {
         var engine = engines[i];
 
+        // This is a hack to allow plugins with <engine> tag to be installed with
+        // engine with '-dev' suffix. It is required due to new semver range logic,
+        // introduced in semver@3.x. For more details see https://github.com/npm/node-semver#prerelease-tags.
+        //
+        // This may lead to false-positive checks, when engine version with dropped
+        // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
+        // However this shouldn't be a problem, because this only should happen in dev workflow.
+        engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev$/, '');
         if ( semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null ) {
             // engine ok!
         } else {
