@@ -5,7 +5,7 @@ install:
   - cd ..
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-js
-  - npm install
+  - npm install --msvs_version=2013
   - npm link
   - cd ..\cordova-lib\cordova-lib
   - npm link cordova-js
