@@ -298,6 +298,7 @@ describe('install', function() {
                 // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
 
                 var plugmanVersion = require('../package.json').version;
+                plugmanVersion = plugmanVersion.replace(/-dev$/, '');
 
                 expect(spy.calls.length).toBe(4);
                 expect(spy.calls[0].args).toEqual([ null, '>=2.3.0' ]);
