@@ -102,7 +102,7 @@ function installPluginsFromConfigXML(args) {
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
         var pluginSpec = pluginEntry.spec;
-        var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginSpec;
+        var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginEntry.name;
 
         // Add feature preferences as CLI variables if have any
         var options = {cli_variables: pluginEntry.variables,
