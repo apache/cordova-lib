@@ -57,6 +57,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     var uri = url.parse(plugin_src);
 
     // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
+    // git-ref can be a commit SHA, a tag, or a branch
     // NB: No leading or trailing slash on the subdir.
     if (uri.hash) {
         var result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
