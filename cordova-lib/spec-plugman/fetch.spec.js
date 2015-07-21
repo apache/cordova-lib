@@ -212,6 +212,33 @@ describe('fetch', function() {
             });
         });
     });
+
+    describe('github plugins', function() {
+        // these tests actually pull a plugin from github
+        beforeEach(function(){
+            realrm('-rf',temp);
+        });
+
+        // this commit uses the new id
+        it('should fetch from a commit-sha', function(done) {
+            wrapper(fetch("http://github.com/apache/cordova-plugin-device.git#ad5f1e7bfd05ef98c01df549a0fa98036a5625db", temp, { expected_id: "cordova-plugin-device" }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+        // this branch uses the old id
+        it('should fetch from a branch', function(done) {
+            wrapper(fetch("http://github.com/apache/cordova-plugin-device.git#cdvtest", temp, { expected_id: "org.apache.cordova.device" }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+        // this tag uses the new id
+        it('should fetch from a tag', function(done) {
+            wrapper(fetch("http://github.com/apache/cordova-plugin-device.git#r1.0.0", temp, { expected_id: "cordova-plugin-device" }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+    });
+
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
         var rm, sym, save_metadata;
