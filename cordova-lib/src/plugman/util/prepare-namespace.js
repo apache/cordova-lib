@@ -20,12 +20,17 @@
 
 var util = require('util');
 
-// FIXME this is extremely guettho
+/**
+ * Used to handle plugin merges and clobbers
+ * @param {string} target - target namespace to clobber or merge with
+ * @param {boolean} doClobber - Determines if clobbers or merges. Clobbers if true.
+ * @param {string} scriptPath - Path to the javascript file
+ */
 module.exports = prepare_namespace;
-function prepare_namespace(target, method) {
+
+function prepare_namespace(target, doClobber, scriptPath) {
     var old = target;
     target = target.replace(/^window(\.)?/, '');
-
     var lastDot = target.lastIndexOf('.');
     var lastName = target.substr(lastDot + 1);
     var props = target.split('.');
@@ -37,24 +42,22 @@ function prepare_namespace(target, method) {
             code += util.format('window.%s = window.%s || {};\n', sub, sub);
         }
     }
-
     props.unshift('window');
     var object = props.slice(0, props.length - 1).join('.');
-    //  code = '\n';
-    if(method === 'c') {
+    if(doClobber === true) {
         return util.format(
-                "%s\nrequire('cordova/builder').assignOrWrapInDeprecateGetter(%s, '%s', module.exports);",
+                "%s\n;require('cordova/builder').assignOrWrapInDeprecateGetter(%s, '%s', require('%s'));",
                 code,
                 object,
-                lastName
+                lastName,
+                scriptPath
                 );
-    } else if(method === 'm' && old !== '') {
+    } else if(old !== '') {
         return util.format(
-                "%s\n;require('cordova/builder').recursiveMerge(%s, module.exports);",
+                "%s\n;require('cordova/builder').recursiveMerge(%s, require('%s'));",
                 code,
-                old
+                old,
+                scriptPath
                 );
-    } else {
-        return '// no clobber or merges';
     }
 }

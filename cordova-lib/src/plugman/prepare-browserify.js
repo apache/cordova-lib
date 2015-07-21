@@ -214,16 +214,16 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 // Handles clobbers and merges
                 // Writes needed requires to cordovaRequires Array
                 // which gets written to cordova_requires.js which
-                // gets added to the browserify build
+                // gets added to the browserify bundle.
                 var namespace;
                 module.clobbers.forEach(function(child) {
-                    namespace = prepareNamespace(child.target, 'c');
-                    if(cordovaRequires.indexOf(namespace) !== -1) {
+                    namespace = prepareNamespace(child.target, true, scriptPath);
+                    if(cordovaRequires.indexOf(namespace) === -1) {
                         cordovaRequires.push(namespace);
                     }
                 });
                 module.merges.forEach(function(child) {
-                    namespace = prepareNamespace(child.target, 'm');
+                    namespace = prepareNamespace(child.target, false, scriptPath);
                     if(cordovaRequires.indexOf(namespace) === -1) {
                         cordovaRequires.push(namespace);
                     }
@@ -239,17 +239,20 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
         events.emit('verbose', 'Writing out cordova_plugins.js...');
         fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');  
 
+        //Write out cordova_requires.js. 
         if(cordovaRequires.length > 0) {
             var cordovaRequiresString = cordovaRequires.join('\n');
             events.emit('verbose', 'Writing out cordova_requires.js...');
             fs.writeFileSync(path.join(wwwDir, 'cordova_requires.js'), cordovaRequiresString, 'utf8');
-            //add it to browserify
+            //add it to the browserify bundle
             libraryRelease.add(path.join(wwwDir, 'cordova_requires.js'));
         }
-
+        
+        //run transforms on plugin files
         libraryRelease.transform(requireTr.transform);
 
         scripts.forEach(function(script) {
+            //add every plugin javascript file to browserify bundle
             libraryRelease.add(script);
         });
 
