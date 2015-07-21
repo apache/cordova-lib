@@ -64,7 +64,7 @@ function installPlatformsFromConfigXML(platforms) {
 
     // CB-9278 : Run `platform add` serially, one platform after another
     // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
-    // gets executed more simultaneously by each platform and leads to an exception being thrown
+    // gets executed simultaneously by each platform and leads to an exception being thrown
     return promiseutil.Q_chainmap_graceful(targets, function(target) {
         if (target) {
             events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
@@ -72,7 +72,7 @@ function installPlatformsFromConfigXML(platforms) {
         }
         return Q();
     }, function(err) {
-        events.emit('log', err);
+        events.emit('warn', err);
     });
 }
 
