@@ -18,7 +18,6 @@
 */
 
 var Q = require('q');
-var events = require('../events');
 
 // Given a function and an array of values, creates a chain of promises that
 // will sequentially execute func(args[i]).
