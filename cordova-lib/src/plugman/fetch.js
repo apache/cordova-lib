@@ -272,6 +272,11 @@ function copyPlugin(pinfo, plugins_dir, link) {
         return altDest;
     }
 
+    if(!link && dest.indexOf(path.resolve(plugin_dir)) == 0) {
+        events.emit('verbose', 'Copy plugin destination is child of src. Forcing --link mode.');
+        link = true;
+    }
+
     shell.rm('-rf', dest);
     if (link) {
         var isRelativePath = plugin_dir.charAt(1) != ':' && plugin_dir.charAt(0) != path.sep;
