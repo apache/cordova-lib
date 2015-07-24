@@ -122,6 +122,9 @@ ConfigParser.prototype = {
     version: function() {
         return this.doc.getroot().attrib['version'];
     },
+    windows_packageVersion: function() {
+        return this.doc.getroot().attrib('windows-packageVersion');
+    },
     android_versionCode: function() {
         return this.doc.getroot().attrib['android-versionCode'];
     },
