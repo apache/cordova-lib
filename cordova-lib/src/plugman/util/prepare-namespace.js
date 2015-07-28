@@ -46,7 +46,7 @@ function prepare_namespace(target, doClobber, scriptPath) {
     var object = props.slice(0, props.length - 1).join('.');
     if(doClobber === true) {
         return util.format(
-                "%s\n;require('cordova/builder').assignOrWrapInDeprecateGetter(%s, '%s', require('%s'));",
+                "%srequire('cordova/builder').assignOrWrapInDeprecateGetter(%s, '%s', require('%s'));",
                 code,
                 object,
                 lastName,
@@ -54,10 +54,11 @@ function prepare_namespace(target, doClobber, scriptPath) {
                 );
     } else if(old !== '') {
         return util.format(
-                "%s\n;require('cordova/builder').recursiveMerge(%s, require('%s'));",
+                "%srequire('cordova/builder').recursiveMerge(%s, require('%s'));",
                 code,
                 old,
                 scriptPath
                 );
     }
+    return "";
 }

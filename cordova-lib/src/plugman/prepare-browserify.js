@@ -217,14 +217,20 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
                 // gets added to the browserify bundle.
                 var namespace;
                 module.clobbers.forEach(function(child) {
-                    namespace = prepareNamespace(child.target, true, scriptPath);
-                    if(cordovaRequires.indexOf(namespace) === -1) {
+                    namespace = prepareNamespace(child.target, true, scriptPath)
+                        // Need to duplicate all backslashes, otherwise paths in
+                        // `require` calls will get corrupted on Windows
+                        .replace(/\\/g, '\\\\');
+                    if(namespace && cordovaRequires.indexOf(namespace) === -1) {
                         cordovaRequires.push(namespace);
                     }
                 });
                 module.merges.forEach(function(child) {
-                    namespace = prepareNamespace(child.target, false, scriptPath);
-                    if(cordovaRequires.indexOf(namespace) === -1) {
+                    namespace = prepareNamespace(child.target, false, scriptPath)
+                        // Need to duplicate all backslashes, otherwise paths in
+                        // `require` calls will get corrupted on Windows
+                        .replace(/\\/g, '\\\\');
+                    if(namespace && cordovaRequires.indexOf(namespace) === -1) {
                         cordovaRequires.push(namespace);
                     }
                 });
