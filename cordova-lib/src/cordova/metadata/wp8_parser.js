@@ -106,8 +106,20 @@ wp8_parser.prototype.update_from_config = function(config) {
     }
 
     // Update author, publisher and description
-    var author = config.author() || '',
-        description = config.description() || '';
+    // limit both to 256 char including spaces
+    var author = config.author() || '';
+    var description = config.description() || '';
+
+    if(author.length > 256) {
+        events.emit('warn','Author length from config.xml is too long. Truncating to 256 char');
+        author = author.substr(0,256);
+    }
+
+    if(description.length > 256) {
+        events.emit('warn','Description length from config.xml is too long. Truncating to 256 char');
+        description = author.substr(0,256);
+    }
+
     manifest.find('.//App').attrib.Author = author;
     manifest.find('.//App').attrib.Publisher = author;
     manifest.find('.//App').attrib.Description = description;
