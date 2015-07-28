@@ -30,7 +30,8 @@ var cordova = require('../src/cordova/cordova'),
     helpers = require('./helpers'),
     PluginInfo = require('../src/PluginInfo'),
     superspawn = require('../src/cordova/superspawn'),
-    config = require('../src/cordova/config');
+    config = require('../src/cordova/config'),
+    platform_modules = require('../src/platforms/platforms');
 
 var platform = os.platform();
 var tmpDir = helpers.tmpDir('hooks_test');
@@ -426,10 +427,14 @@ describe('HooksRunner', function() {
                         var pluginInfo = new PluginInfo(testPluginInstalledPath);
 
                         var cordovaVersion = require('../package').version;
+                        
+                        var project_dir = path.join(projectRoot, 'platforms', 'android');
+                        var platformProject =  platform_modules.getPlatformProject('android', project_dir);
 
                         var androidPluginOpts = {
                             cordova: {
                                 platforms: [ 'android' ],
+                                project: platformProject,
                                 plugins: ['com.plugin.withhooks'],
                                 version: cordovaVersion
                             },
