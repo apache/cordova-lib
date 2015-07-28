@@ -236,7 +236,8 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
     versions.forEach(function(pinfo) {
         // Ignore versions that don't satisfy the the requested version range.
-        if (!semver.satisfies(pinfo.version, versionspec)) {
+        // Ignore -dev suffix because latest semver versions doesn't handle it properly (CB-9421)
+        if (!semver.satisfies(pinfo.version.replace(/-dev$/, ''), versionspec)) {
             return;
         }
         if (!latest) {
