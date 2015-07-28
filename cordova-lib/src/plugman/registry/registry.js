@@ -85,20 +85,17 @@ module.exports = {
     fetch: function(plugin, client) {
         plugin = plugin.shift();
         return Q.fcall(function() {
-            //check to see if pluginID is reverse domain name style
-            if(isValidCprName(plugin)){
-                return Q();
-            } else {
-                //make promise fail so it will fetch from npm
-                events.emit('verbose', 'Skipping CPR');
-                return Q.reject();
-            }
-        })
-        .then(function() {
-            return fetchPlugin(plugin, client, false);
-        })
-        .fail(function() {
+            //fetch from npm
             return fetchPlugin(plugin, client, true);
+        })
+        .fail(function(error) {
+            //check to see if pluginID is reverse domain name style
+            if(isValidCprName(plugin)) {
+                //fetch from CPR
+                return fetchPlugin(plugin, client, false);
+            } else {
+                return Q.reject(error);
+            }
         });
     },
 
