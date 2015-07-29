@@ -16,7 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var fetch   = require('../src/plugman/fetch'),
+var rewire  = require('rewire'),
+    fetch   = rewire('../src/plugman/fetch'),
     fs      = require('fs'),
     os      = require('osenv'),
     path    = require('path'),
@@ -26,6 +27,7 @@ var fetch   = require('../src/plugman/fetch'),
     metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
     test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
+    test_plugin_searchpath = path.join(test_plugin, '..'),
     //test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
     //test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
     test_plugin_id = 'org.test.plugins.childbrowser',
@@ -65,10 +67,16 @@ describe('fetch', function() {
             cp = spyOn(shell, 'cp').andCallThrough();
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
+            fetch.__set__('localPlugins', null);
         });
 
         it('should copy locally-available plugin to plugins directory', function(done) {
             wrapper(fetch(test_plugin, temp), done, function() {
+                expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
+            });
+        });
+        it('should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function(done) {
+            wrapper(fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }), done, function() {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
