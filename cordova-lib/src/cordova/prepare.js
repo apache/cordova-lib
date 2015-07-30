@@ -127,7 +127,7 @@ function prepare(options) {
     
                 platform_cfg.write();
     
-                return parser.update_project(cfg);
+                return parser.update_project(platform_cfg);
             });
         })).then(function() {
             return hooksRunner.fire('after_prepare', options);
