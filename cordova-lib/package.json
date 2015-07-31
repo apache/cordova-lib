@@ -17,6 +17,7 @@
   },
   "engineStrict": true,
   "dependencies": {
+    "aliasify": "^1.7.2",
     "bplist-parser": "0.0.6",
     "cordova-app-hello-world": "3.9.0",
     "cordova-js": "4.0.0",
