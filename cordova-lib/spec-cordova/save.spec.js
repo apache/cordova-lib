@@ -471,6 +471,48 @@ describe('(save flag)', function () {
                 done();
             });
         });
+
+	it('spec.25 should restore multiple specified platforms', function(done) {
+	    var iosPlatformName = 'ios';
+	    var iosPlatformSpec = '3.8.0';
+	    helpers.setEngineSpec(appPath, platformName, platformGitRef);
+	    helpers.setEngineSpec(appPath, iosPlatformName, iosPlatformSpec);
+	    var options = {
+	        verbose: false,
+	        platforms: [platformName, iosPlatformName],
+	        options: []
+	    };
+	    prepare(options)
+	        .then(function() {
+	            expect(path.join(appPath, 'platforms', platformName)).toExist();
+	            expect(path.join(appPath, 'platforms', iosPlatformName)).toExist();
+	            done();
+	        }).catch(function(err) {
+	            expect(true).toBe(false);
+	            console.log(err.message);
+	            done();
+	        });
+	});
+
+	it('spec.26: proceed with restoration even if some of the platforms fail to be restored', function(done) {
+	    var iosPlatformName = 'ios';
+	    helpers.setEngineSpec(appPath, platformName, platformGitRef);
+	    
+	    // Force an exception to be thrown while attempting to restore the 'ios' platform
+	    helpers.setEngineSpec(appPath, iosPlatformName, 'WrongVersion'); 
+
+	    var options = {
+	        verbose: false,
+	        platforms: [iosPlatformName, platformName],
+	        options: []
+	    };
+	    prepare(options)
+	        .finally(function() {
+	            expect(path.join(appPath, 'platforms', platformName)).toExist();
+		    expect(path.join(appPath, 'platforms', iosPlatformName)).not.toExist();
+	            done();
+	        });
+	});
     });
 
     describe('(cleanup)', function () {
