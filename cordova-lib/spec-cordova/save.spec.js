@@ -497,7 +497,10 @@ describe('(save flag)', function () {
 	it('spec.26: proceed with restoration even if some of the platforms fail to be restored', function(done) {
 	    var iosPlatformName = 'ios';
 	    helpers.setEngineSpec(appPath, platformName, platformGitRef);
-	    helpers.setEngineSpec(appPath, iosPlatformName, 'WrongVersion');
+	    
+	    // Force an exception to be thrown while attempting to restore the 'ios' platform
+	    helpers.setEngineSpec(appPath, iosPlatformName, 'WrongVersion'); 
+
 	    var options = {
 	        verbose: false,
 	        platforms: [iosPlatformName, platformName],
