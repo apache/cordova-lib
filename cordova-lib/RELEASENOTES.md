@@ -20,6 +20,53 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.2.0 (Aug 06, 2015)
+* CB-9436 Removes `require-tr` bundle transformation
+* updated pinned ios version to ~3.9.0
+* CB-9278: Restoring multiple platforms fails. This closes #266
+* updated pinned android to ~4.1.0
+* CB-9421 Added a test for plugin fetch with searchpath parameter
+* CB-9421 Fixed searchpath parameter being ignored. This closes #269
+* Update xcode dependency to latest stable version. This closes #272
+* CB-9420 Fixes malformed require calls in browserify bundle. This closes #270
+* CB-9405 limit author/description to 256 char per WMAppManifest schema
+* CB-9414 plugin fetching now defaults to npm, CPR fallback
+* CB-9384 Added tests that test plugin fetch from github branch|tag|sha
+* added comment outlining the types of things git_ref can be : commit SHA | branch | tag
+* actually checkout git_ref because it may be a branch OR a commit SHA
+* CB-9332 Upgrade npm and semver to actual versions
+* CB-9330 updated wording for warning messages for removal of publish/unpublish commands
+* Adds stubs for `publish`/`unpublish` commands. This closes #254
+* CB-9330 Removes 'plugman publish' related functionality
+* CB-9335: Windows quality-of-life improvements.  To align with the change in Cordova-Windows which removes the Windows 8 project from the solution file used by Windows 8.1 and Windows 10, the same is done in the spec.
+* Fix prepare to wait the promise from plugman prepare.
+* CB-9362 Don't fail if superspawn can't chmod a file
+* CB-9122 Added tests for platform/plugin add/rm/update with --save flag. This closes #246
+* Fixed ios node-xcode related tests failing on Windows according to version update
+* Added webOS parsers for project creation/manipulation
+* CB-8965 Prevent cli from copying cordova.js and cordova-js-src/ multiple times
+* CB-9114: Log deprecation message when --usegit flag is used. This closes #234
+* CB-9126 Fix ios pbxproj' resources paths when adding ios platform on non-OSX environment. This closes #237
+* CB-9221 Updates `cordova serve` command to use cordova-serve module.
+* CB-9225 Add windows platform support to `plugman platform add`
+* CB-9163 when engine check isn't satisfied, skip that plugin install
+* CB-9162 Adds support for default values for plugin variables.
+* CB-9188 Confusing error after delete plugin folder then prepare.
+* CB-9145 prepare can lose data during config munge
+* CB-9177 Use tilde instead of caret when save to config.xml.
+* CB-9147 Adding a platform via caret version adds latest rather than the latest matching.
+* CB-5578 Adds `clean` module to cordova. This closes #241
+* CB-9124 Makes network-related errors' messages more descriptive.
+* CB-9067 fixed plugman config set registry and adduser
+* CB-8993 Plugin restore ignores search path. This closes #224
+* CB-9087 updated pinned windows platform to 4.0.0
+* CB-9108 Handle version ranges when add platform with --usegit.
+* CB-8898 Makes error message descriptive when `requirements` is called outside of cordova project.
+* CB-8007 Two cordova plugins modifying “*-Info.plist” CFBundleURLTypes
+* CB-9065 Allow removing plugins by short name.
+* CB-9001 Set WMAppManifest.xml Author, Description and Publisher attributes based on config.xml
+* CB-9073 Allow to add platform if project path contains `&` symbol
+
 ### 5.1.1 (June 4, 2015)
 * CB-9087 Updated pinned version of cordova-windows to 4.0.0
 * CB-9108 Handle version ranges when add platform with --usegit.
