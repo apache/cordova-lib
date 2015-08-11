@@ -48,7 +48,12 @@ function jsprojManager(location) {
     this.projects = [];
     this.master = this.isUniversalWindowsApp ? new proj(location) : new jsproj(location);
     this.projectFolder = path.dirname(location);
+}
 
+function getProjectName(pluginProjectXML, relative_path) {
+    var projNameElt = pluginProjectXML.find("PropertyGroup/ProjectName");
+    // Falling back on project file name in case ProjectName is missing
+    return !!projNameElt ? projNameElt.text : path.basename(relative_path, path.extname(relative_path));
 }
 
 jsprojManager.prototype = {
@@ -138,7 +143,7 @@ jsprojManager.prototype = {
 
         // find the guid + name of the referenced project
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
-        var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
+        var projName = getProjectName(pluginProjectXML, relative_path);
 
         // get the project type
         var projectTypeGuid = getProjectTypeGuid(relative_path);
@@ -217,7 +222,7 @@ jsprojManager.prototype = {
         // find the guid + name of the referenced project
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
-        var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
+        var projName = getProjectName(pluginProjectXML, relative_path);
 
         // get the project type
         var projectTypeGuid = getProjectTypeGuid(relative_path);
@@ -416,7 +421,7 @@ proj.prototype = {
         var itemGroup = this.xml.find(xpath);
         if (itemGroup) {
             this.touched = true;
-            this.xml.getroot().remove(0, itemGroup);
+            this.xml.getroot().remove(itemGroup);
         }
     },
 
@@ -470,12 +475,12 @@ proj.prototype = {
 
             filesToRemove.forEach(function (file) {
                 // remove file reference
-                group.remove(0, file);
+                group.remove(file);
             });
             // remove ItemGroup if empty
             if (group.findall('*').length < 1) {
                 that.touched = true;
-                root.remove(0, group);
+                root.remove(group);
             }
         });
     }

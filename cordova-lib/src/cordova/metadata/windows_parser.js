@@ -150,7 +150,7 @@ windows_parser.prototype.update_from_config = function(config) {
         capabilities = capabilitiesRoot._children || [];
 
     capabilities.forEach(function(elem){
-        capabilitiesRoot.remove(0, elem);
+        capabilitiesRoot.remove(elem);
     });
     capabilities.sort(function(a, b) {
         return (a.tag > b.tag)? 1: -1;

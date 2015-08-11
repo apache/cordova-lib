@@ -75,7 +75,7 @@ module.exports = {
         }
 
         // Remove the Platform in question
-        pluginxml.getroot().remove( 0, pluginxml.find("./platform/[@name='"+ platformName +"']") );
+        pluginxml.getroot().remove(pluginxml.find("./platform/[@name='"+ platformName +"']") );
 
         // Rewrite the plugin.xml file back out
         fs.writeFileSync( "plugin.xml", pluginxml.write( "plugin.xml", {indent: 4} ), 'utf-8' );
