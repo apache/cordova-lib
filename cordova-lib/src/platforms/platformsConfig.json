@@ -6,6 +6,13 @@
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
         "version": "~3.9.0"
     },
+    "osx": {
+        "hostos": ["darwin"],
+        "parser_file": "../cordova/metadata/ios_parser",
+        "handler_file": "../plugman/platforms/ios",
+        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-osx.git",
+        "version": "~4.0.0"
+    },
     "android": {
         "parser_file": "../cordova/metadata/android_parser",
         "handler_file": "../plugman/platforms/android",
