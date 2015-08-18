@@ -146,7 +146,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
         var pluginMetadata = {};
         var modulesMetadata = [];
-        var bundleFiles = [];
         var cordova_plugins = '';
 
         var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
@@ -167,22 +166,20 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             .forEach(function(jsModule) {
                 var moduleName = jsModule.name ? jsModule.name : path.basename(jsModule.src, '.js');
                 var moduleId = pluginInfo.id + '.' + moduleName;
+                var moduleMetadata = {file: jsModule.src, id: moduleId, name: moduleName};
 
-                modulesMetadata.push({file: jsModule.src, id: moduleId, name: moduleName});
-                libraryRelease.require([{file: path.join(pluginDir, jsModule.src), expose: moduleId}]);
+                if (jsModule.clobbers.length > 0) {
+                    moduleMetadata.clobbers = jsModule.clobbers.map(function(o) { return o.target; });
+                }
+                if (jsModule.merges.length > 0) {
+                    moduleMetadata.merges = jsModule.merges.map(function(o) { return o.target; });
+                }
+                if (jsModule.runs) {
+                    moduleMetadata.runs = true;
+                }
 
-                jsModule.clobbers.forEach(function(child) {
-                    if (child.target) cordova_plugins +=
-                        'require(\'cordova/modulemapper\').clobbers(\'' +
-                        moduleId + '\', \'' + child.target + '\');\n';
-                });
-                jsModule.merges.forEach(function(child) {
-                    if (child.target) cordova_plugins +=
-                        'require(\'cordova/modulemapper\').merges(\'' +
-                        moduleId + '\', \'' + child.target + '\');\n';
-                });
-                if (jsModule.runs)
-                    cordova_plugins += 'require(\'' + moduleId + '\');\n';
+                modulesMetadata.push(moduleMetadata);
+                libraryRelease.require(path.join(pluginDir, jsModule.src), { expose: moduleId });
             });
         });
 
