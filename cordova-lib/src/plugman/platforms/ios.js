@@ -93,6 +93,39 @@ function uninstallHelper(type, obj, project_dir, plugin_id, options, project) {
     }
 }
 
+// special handlers to add frameworks to the 'Embed Frameworks' build phase, needed for custom frameworks
+// see CB-9517. should probably be moved to node-xcode.
+var util = require('util');
+function pbxBuildPhaseObj(file) {
+    var obj = Object.create(null);
+    obj.value = file.uuid;
+    obj.comment = longComment(file);
+    return obj;
+}
+
+function longComment(file) {
+    return util.format("%s in %s", file.basename, file.group);
+}
+
+xcode.project.prototype.pbxEmbedFrameworksBuildPhaseObj = function (target) {
+    return this.buildPhaseObject('PBXCopyFilesBuildPhase', 'Embed Frameworks', target);
+};
+
+xcode.project.prototype.addToPbxEmbedFrameworksBuildPhase = function (file) {
+    var sources = this.pbxEmbedFrameworksBuildPhaseObj(file.target);
+    if (sources) {
+        sources.files.push(pbxBuildPhaseObj(file));
+    }
+};
+xcode.project.prototype.removeFromPbxEmbedFrameworksBuildPhase = function (file) {
+    var sources = this.pbxEmbedFrameworksBuildPhaseObj(file.target);
+    if (sources) {
+        sources.files = _.reject(sources.files, function(file){
+            return file.comment === longComment(file);
+        });
+    }
+};
+
 module.exports = {
     www_dir:function(project_dir) {
         return path.join(project_dir, 'www');
@@ -146,12 +179,14 @@ module.exports = {
             shell.mkdir('-p', path.dirname(targetDir));
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
-            project.xcode.addFramework(project_relative, {customFramework: true});
+            var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true});
+            project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
             var src = obj.src,
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
-            project.xcode.removeFramework(targetDir, {customFramework: true});
+            var pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
+            project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
             shell.rm('-rf', targetDir);
         }
     },
