@@ -22,8 +22,7 @@ var chalk  = require('chalk'),
     http   = require('http'),
     url    = require('url'),
     path   = require('path'),
-    Q      = require('q'),
-    stream = require('./stream');
+    Q      = require('q');
 
 /**
  * @desc Launches a server with the specified options and optional custom handlers.
@@ -123,7 +122,7 @@ module.exports = function (opts) {
                 } else if (!isFileChanged(filePath)) {
                     do304();
                 } else {
-                    var streamHandler = opts.streamHandler || stream;
+                    var streamHandler = opts.streamHandler || require('./stream');
                     streamHandler(filePath, request, response);
                 }
             });
