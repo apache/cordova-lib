@@ -63,7 +63,7 @@ module.exports = function (filePath, request, response, readStream, noCache) {
 
     respHeaders['Last-Modified'] = new Date(fs.statSync(filePath).mtime).format('r');
     if (noCache) {
-        respHeaders['Cache-Control'] = 'no-cache';
+        respHeaders['Cache-Control'] = 'no-store';
     }
     console.log('200 ' + request.url + ' (' + filePath + ')');
     response.writeHead(200, respHeaders);
