@@ -17,9 +17,11 @@
  under the License.
  */
 
-var fs = require('fs'),
+var chalk = require('chalk'),
+    fs = require('fs'),
     mime = require('mime'),
-    zlib = require('zlib');
+    zlib = require('zlib'),
+    server = require('./server');
 
 // d8 is a date parsing and formatting micro-framework
 // Used only for RFC 2822 formatting
@@ -51,12 +53,13 @@ module.exports = function (filePath, request, response, readStream, noCache) {
     }
 
     var acceptEncoding = request.headers['accept-encoding'] || '';
+    var encoding = '';
     if (acceptEncoding.match(/\bgzip\b/)) {
-        console.log('gzip');
+        encoding ='(gzip)';
         respHeaders['content-encoding'] = 'gzip';
         readStream = readStream.pipe(zlib.createGzip());
     } else if (acceptEncoding.match(/\bdeflate\b/)) {
-        console.log('deflate');
+        encoding ='(deflate)';
         respHeaders['content-encoding'] = 'deflate';
         readStream = readStream.pipe(zlib.createDeflate());
     }
@@ -65,7 +68,7 @@ module.exports = function (filePath, request, response, readStream, noCache) {
     if (noCache) {
         respHeaders['Cache-Control'] = 'no-store';
     }
-    console.log('200 ' + request.url + ' (' + filePath + ')');
+    server.log(chalk.green('200 ') + request.url + ' ' + encoding);
     response.writeHead(200, respHeaders);
     readStream.pipe(response);
     return readStream;

@@ -19,6 +19,7 @@
     "email": "dev@cordova.apache.org"
   },
   "dependencies": {
+    "chalk": "^1.1.1",
     "combined-stream": "^1.0.3",
     "d8": "^0.4.4",
     "mime": "^1.2.11",
