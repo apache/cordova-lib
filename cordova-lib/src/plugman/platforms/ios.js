@@ -104,7 +104,7 @@ function pbxBuildPhaseObj(file) {
 }
 
 function longComment(file) {
-    return util.format("%s in %s", file.basename, file.group);
+    return util.format('%s in %s', file.basename, file.group);
 }
 
 xcode.project.prototype.pbxEmbedFrameworksBuildPhaseObj = function (target) {
@@ -180,13 +180,17 @@ module.exports = {
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
             var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true});
-            project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
+            if (pbxFile) {
+                project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
+            }
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
             var src = obj.src,
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
             var pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
-            project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
+            if (pbxFile) {
+                project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
+            }
             shell.rm('-rf', targetDir);
         }
     },
