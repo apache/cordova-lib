@@ -33,7 +33,8 @@ var platform_modules   = require('../platforms/platforms'),
     bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
     writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
     Q                  = require('q'),
-    computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id');
+    computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id'),
+    Readable           = require('stream').Readable;
 
 var PlatformJson = require('./util/PlatformJson');
 var PluginInfoProvider = require('../PluginInfoProvider');
@@ -146,7 +147,6 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
 
         var pluginMetadata = {};
         var modulesMetadata = [];
-        var cordova_plugins = '';
 
         var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
         events.emit('verbose', 'Iterating over installed plugins:', plugins);
@@ -183,24 +183,30 @@ module.exports = function handlePrepare(project_dir, platform, plugins_dir, www_
             });
         });
 
-        cordova_plugins += 'module.exports.metadata = \n' +
-            JSON.stringify(pluginMetadata, null, 4) + ';\n' +
-            'module.exports = \n' +
-            JSON.stringify(modulesMetadata, null, 4) + ';\n';
-
         events.emit('verbose', 'Writing out cordova_plugins.js...');
-        fs.writeFileSync(path.join(wwwDir, 'cordova_plugins.js'), cordova_plugins, 'utf8');
-        libraryRelease.add(path.join(wwwDir, 'cordova_plugins.js'), {expose: 'cordova/plugin_list'});
 
-        fs.writeFileSync(path.join(wwwDir, 'init.js'), 'require(\'cordova/init\');\n', 'utf8');
-        libraryRelease.add(path.resolve(wwwDir, 'init.js'));
+        // Create a stream and write plugin metadata into it
+        // instead of generating intermediate file on FS
+        var cordova_plugins = new Readable();
+        cordova_plugins.push(
+            'module.exports.metadata = ' + JSON.stringify(pluginMetadata, null, 4) + ';\n' +
+            'module.exports = ' + JSON.stringify(modulesMetadata, null, 4) + ';\n', 'utf8');
+        cordova_plugins.push(null);
+
+        var bootstrap = new Readable();
+        bootstrap.push('require(\'cordova/init\');\n', 'utf8');
+        bootstrap.push(null);
 
         var moduleAliases = modulesMetadata
         .reduce(function (accum, meta) {
             accum['./' + meta.name] = meta.id;
             return accum;
         }, {});
-        libraryRelease.transform(aliasify, {aliases: moduleAliases, verbose: true});
+
+        libraryRelease
+            .add(cordova_plugins, {file: path.join(wwwDir, 'cordova_plugins.js'), expose: 'cordova/plugin_list'})
+            .add(bootstrap)
+            .transform(aliasify, {aliases: moduleAliases});
 
         var outReleaseFile = path.join(wwwDir, 'cordova.js');
         return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
