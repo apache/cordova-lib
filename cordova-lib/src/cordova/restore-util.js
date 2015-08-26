@@ -90,7 +90,11 @@ function installPluginsFromConfigXML(args) {
         return Q.all('No config.xml plugins to install');
     }
 
-    var promises = plugins.map(function(featureId) {
+    // CB-9560 : Run `plugin add` serially, one plugin after another
+    // We need to wait for the plugin and its dependencies to be installed
+    // before installing the next root plugin otherwise we can have common
+    // plugin dependencies installed twice which throws a nasty error.
+    return promiseutil.Q_chainmap_graceful(plugins, function(featureId) {
         var pluginPath = path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
@@ -111,5 +115,4 @@ function installPluginsFromConfigXML(args) {
         };
         return plugin('add', installFrom, options);
     });
-    return Q.allSettled(promises);
 }
