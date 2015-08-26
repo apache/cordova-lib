@@ -42,21 +42,43 @@ PlatformJson.prototype.save = function() {
     fs.writeFileSync(this.filePath, JSON.stringify(this.root, null, 4), 'utf-8');
 };
 
-PlatformJson.prototype.isPluginInstalled = function(pluginId) {
-    var installed_plugin_id;
-    var json = this.root;
+/**
+ * Indicates whether the specified plugin is installed as a top-level (not as
+ *  dependency to others)
+ * @method function
+ * @param  {String} pluginId A plugin id to check for.
+ * @return {Boolean} true if plugin installed as top-level, otherwise false.
+ */
+PlatformJson.prototype.isPluginTopLevel = function(pluginId) {
+    var installedPlugins = this.root.installed_plugins;
+    return installedPlugins[pluginId] ||
+        installedPlugins[pluginMappernto[pluginId]] ||
+        installedPlugins[pluginMapperotn[pluginId]];
+};
 
-    for (installed_plugin_id in json.installed_plugins) {
-        if ((installed_plugin_id == pluginId)||(installed_plugin_id == pluginMappernto[pluginId]) || (installed_plugin_id == pluginMapperotn[pluginId])) {
-            return true;
-        }
-    }
-    for (installed_plugin_id in json.dependent_plugins) {
-        if ((installed_plugin_id == pluginId)||(installed_plugin_id == pluginMappernto[pluginId]) || (installed_plugin_id == pluginMapperotn[pluginId])) {
-            return true;
-        }
-    }
-    return false;
+/**
+ * Indicates whether the specified plugin is installed as a dependency to other
+ *  plugin.
+ * @method function
+ * @param  {String} pluginId A plugin id to check for.
+ * @return {Boolean} true if plugin installed as a dependency, otherwise false.
+ */
+PlatformJson.prototype.isPluginDependent = function(pluginId) {
+    var dependentPlugins = this.root.dependent_plugins;
+    return dependentPlugins[pluginId] ||
+        dependentPlugins[pluginMappernto[pluginId]] ||
+        dependentPlugins[pluginMapperotn[pluginId]];
+};
+
+/**
+ * Indicates whether plugin is installed either as top-level or as dependency.
+ * @method function
+ * @param  {String} pluginId A plugin id to check for.
+ * @return {Boolean} true if plugin installed, otherwise false.
+ */
+PlatformJson.prototype.isPluginInstalled = function(pluginId) {
+    return this.isPluginTopLevel(pluginId) ||
+        this.isPluginDependent(pluginId);
 };
 
 PlatformJson.prototype.addInstalledPluginToPrepareQueue = function(pluginDirName, vars, is_top_level) {
@@ -67,6 +89,21 @@ PlatformJson.prototype.addUninstalledPluginToPrepareQueue = function(pluginId, i
     this.root.prepare_queue.uninstalled.push({'plugin':pluginId, 'id':pluginId, 'topLevel':is_top_level});
 };
 
+/**
+ * Moves plugin, specified by id to top-level plugins. If plugin is top-level
+ *  already, then does nothing.
+ * @method function
+ * @param  {String} pluginId A plugin id to make top-level.
+ * @return {PlatformJson} PlatformJson instance.
+ */
+PlatformJson.prototype.makeTopLevel = function(pluginId) {
+    var plugin = this.root.dependent_plugins[pluginId];
+    if (plugin) {
+        delete this.root.dependent_plugins[pluginId];
+        this.root.installed_plugins[pluginId] = plugin;
+    }
+    return this;
+};
 
 // convert a munge from the old format ([file][parent][xml] = count) to the current one
 function fix_munge(root) {

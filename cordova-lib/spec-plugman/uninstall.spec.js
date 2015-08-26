@@ -35,10 +35,12 @@ var uninstall = require('../src/plugman/uninstall'),
     srcProject = path.join(spec, 'projects', 'android_uninstall'),
     project = path.join(spec, 'projects', 'android_uninstall.test'),
     project2 = path.join(spec, 'projects', 'android_uninstall.test2'),
+    project3 = path.join(spec, 'projects', 'android_uninstall.test3'),
 
     plugins_dir = path.join(spec, 'plugins'),
     plugins_install_dir = path.join(project, 'cordova', 'plugins'),
     plugins_install_dir2 = path.join(project2, 'cordova', 'plugins'),
+    plugins_install_dir3 = path.join(project3, 'cordova', 'plugins'),
 
     plugins = {
         'org.test.plugins.dummyplugin' : path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
@@ -55,10 +57,10 @@ function uninstallPromise(f) {
 describe('start', function() {
 
     it('start', function() {
-        shell.rm('-rf', project);
-        shell.rm('-rf', project2);
+        shell.rm('-rf', project, project2, project3);
         shell.cp('-R', path.join(srcProject, '*'), project);
         shell.cp('-R', path.join(srcProject, '*'), project2);
+        shell.cp('-R', path.join(srcProject, '*'), project3);
 
         done = false;
         promise = Q()
@@ -70,6 +72,10 @@ describe('start', function() {
             return install('android', project2, plugins['C']);
         }).then(function(){
             return install('android', project2, plugins['A']);
+        }).then(function(){
+            return install('android', project3, plugins['A']);
+        }).then(function(){
+            return install('android', project3, plugins['C']);
         }).then(function(){
             done = true;
         }, function(err) {
@@ -230,6 +236,21 @@ describe('uninstallPlugin', function() {
                 ]);
             });
         });
+
+        it('should not remove dependent plugin if it was installed after as top-level', function() {
+            runs(function() {
+                uninstallPromise( uninstall.uninstallPlugin('A', plugins_install_dir3) );
+            });
+            waitsFor(function() { return done; }, 'promise never resolved', 200);
+            runs(function() {
+                var del = common.spy.getDeleted(emit);
+
+                expect(del).toEqual([
+                    'Deleted "D"',
+                    'Deleted "A"'
+                ]);
+            });
+        });
     });
 });
 
@@ -303,8 +324,7 @@ describe('end', function() {
             if(err)
                 plugman.emit('error', err);
 
-            shell.rm('-rf', project);
-            shell.rm('-rf', project2);
+            shell.rm('-rf', project, project2, project3);
             done = true;
         });
 

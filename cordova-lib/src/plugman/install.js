@@ -274,7 +274,12 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
     if (platformJson.isPluginInstalled(pluginInfo.id)) {
         if (options.is_top_level) {
-            events.emit('results', 'Plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
+            var msg = 'Plugin "' + pluginInfo.id + '" already installed on ' + platform + '.';
+            if (platformJson.isPluginDependent(pluginInfo.id)) {
+                msg += ' Making it top-level.';
+                platformJson.makeTopLevel(pluginInfo.id).save();
+            }
+            events.emit('verbose', msg);
         } else {
             events.emit('verbose', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
