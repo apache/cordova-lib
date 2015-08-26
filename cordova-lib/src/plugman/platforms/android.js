@@ -93,13 +93,19 @@ module.exports = {
     'lib-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options) {
             var src = obj.src;
+            var custom = obj.custom;
+            var parent = obj.parent;
+            var src_dir = custom ? plugin_dir : getProjectSdkDir(project_dir);
+            var dest_dir = obj.parent ? path.resolve(project_dir, getCustomSubprojectRelativeDir(plugin_id, project_dir, parent)) : project_dir;
             var dest = path.join('libs', path.basename(src));
-            common.copyFile(plugin_dir, src, project_dir, dest, !!(options && options.link));
+            common.copyFile(src_dir, src, dest_dir, dest, !!(options && options.link));
         },
         uninstall:function(obj, project_dir, plugin_id, options) {
             var src = obj.src;
+            var parent = obj.parent;
             var dest = path.join('libs', path.basename(src));
-            common.removeFile(project_dir, dest);
+            var dest_dir = obj.parent ? path.resolve(project_dir, getCustomSubprojectRelativeDir(plugin_id, project_dir, parent)) : project_dir;
+            common.removeFile(dest_dir, dest);
         }
     },
     'resource-file':{
