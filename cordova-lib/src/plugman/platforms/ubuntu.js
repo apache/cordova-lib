@@ -72,7 +72,7 @@ module.exports = {
 
             src = src.replace('INSERT_HEADER_HERE', '#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"\nINSERT_HEADER_HERE');
             var class_name;
-            var class_prefix = "cordova-plugin-";
+            var class_prefix = 'cordova-plugin-';
             if(plugin_id.indexOf(class_prefix) === 0) {
                 class_name = plugin_id.substr(class_prefix.length);
             } else {
@@ -91,7 +91,13 @@ module.exports = {
             var src = String(fs.readFileSync(plugins));
 
             src = src.replace('#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"', '');
-            var class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
+            var class_name;
+            var class_prefix = 'cordova-plugin-';
+            if(plugin_id.indexOf(class_prefix) === 0) {
+                class_name = plugin_id.substr(class_prefix.length);
+            } else {
+                class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
+            }
             class_name = toCamelCase(class_name);
             src = src.replace('INIT_PLUGIN(' + class_name + ');', '');
 
