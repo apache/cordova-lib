@@ -213,6 +213,77 @@ describe('android project handler', function() {
             finalProjectProperties = fs.readFileSync(mainProjectPropsFile, 'utf8');
             expect(finalProjectProperties).not.toMatch('\ncordova.system.library.1=' + 'extras/android/support/v4', 'Sublibrary not added');
         });
+        it('with custom=true and parent', function () {
+            var packageIdSuffix = 'childapp';
+            var frameworkElement = { src: 'plugin-lib', custom: true };
+            var frameworkElementChild = { src: 'plugin-lib2', custom: true, parent: 'plugin-lib' };
+            var parentDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElementChild.parent);
+            var parentProjectPropsFile = path.resolve(parentDir, 'project.properties');
+            var subDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElement.src);
+            var subProjectPropsFile = path.resolve(subDir, 'project.properties');
+
+            var exec = spyOn(shell, 'exec');
+
+            android['framework'].install(frameworkElement, dummyplugin, temp, dummy_id, { platformVersion: '3.0.0' });
+            android['framework'].install(frameworkElementChild, dummyplugin, temp, dummy_id, { platformVersion: '3.0.0' });
+            android.parseProjectFile(temp).write();
+
+            var finalProjectProperties = fs.readFileSync(parentProjectPropsFile, 'utf8');
+            expect(finalProjectProperties).toMatch('\nandroid.library.reference.1=../' + packageIdSuffix + '-plugin-lib2', 'Reference to library not added');
+            var subProjectProperties = fs.readFileSync(subProjectPropsFile, 'utf8');
+            expect(subProjectProperties).toMatch(/\btarget=android-19$/m, 'target SDK version not copied to library');
+            expect(exec).toHaveBeenCalledWith('android update lib-project --path "' + subDir + '"');
+
+            // Now test uninstall
+            android.purgeProjectFileCache(temp);
+            android['framework'].uninstall(frameworkElementChild, temp, dummy_id, { platformVersion: '3.0.0' });
+            android.parseProjectFile(temp).write();
+
+            finalProjectProperties = fs.readFileSync(parentProjectPropsFile, 'utf8');
+            expect(finalProjectProperties).not.toMatch('\nandroid.library.reference.1=../' + packageIdSuffix + '-plugin-lib2', 'Reference to library not removed');
+
+            android['framework'].uninstall(frameworkElement, temp, dummy_id, { platformVersion: '3.0.0' });
+            android.parseProjectFile(temp).write();
+
+            expect(fs.existsSync(subDir)).toBe(false, 'Should delete subdir');
+        });
+        it('with custom=false and parent', function () {
+            var packageIdSuffix = 'childapp';
+            var frameworkElement = { src: 'plugin-lib', custom: true };
+            var frameworkElementChild = { src: 'extras/android/support/v4', custom: false, parent: 'plugin-lib' };
+            var parentDir = path.resolve(temp, dummy_id, packageIdSuffix + '-' + frameworkElementChild.parent);
+            var parentProjectPropsFile = path.resolve(parentDir, 'project.properties');
+            var sdkLibRelativeDir = path.join('..', 'SDK', 'extras', 'android', 'support', 'v4');
+            var exec = spyOn(shell, 'exec');
+
+            android['framework'].install(frameworkElement, dummyplugin, temp, dummy_id, { platformVersion: '3.0.0' });
+            fs.writeFileSync(path.join(temp, 'local.properties'), 'sdk.dir=' + path.join(temp, '..', 'SDK').replace(/\\/g, '/'));
+            android['framework'].install(frameworkElementChild, dummyplugin, temp, dummy_id, { platformVersion: '3.0.0' });
+
+            android.parseProjectFile(temp).write();
+            android.parseProjectFile(parentDir).write();
+
+            exec.reset();
+
+            var finalProjectProperties = fs.readFileSync(parentProjectPropsFile, 'utf8');
+            var libReference = '\nandroid.library.reference.1=' + path.join('..', '..', sdkLibRelativeDir).replace(/\\/g, '/');
+            expect(finalProjectProperties).toMatch(libReference, 'Reference to library not added');
+            // exec doesn't get called since sublibrary dir doesn't actually exist.
+            expect(exec).not.toHaveBeenCalled();
+
+            // Now test uninstall
+            android.purgeProjectFileCache(temp);
+            android.purgeProjectFileCache(parentDir);
+            android['framework'].uninstall(frameworkElementChild, temp, dummy_id, { platformVersion: '3.0.0' });
+            android.parseProjectFile(temp).write();
+            android.parseProjectFile(parentDir).write();
+
+            finalProjectProperties = fs.readFileSync(parentProjectPropsFile, 'utf8');
+            expect(finalProjectProperties).not.toMatch(libReference, 'Reference to library not removed');
+
+            android['framework'].uninstall(frameworkElement, temp, dummy_id, { platformVersion: '3.0.0' });
+            android.parseProjectFile(temp).write();
+        });
     });
     describe('uninstallation', function() {
         beforeEach(function() {
