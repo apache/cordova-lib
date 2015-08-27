@@ -51,6 +51,7 @@
         </config-file>
 
         <framework src="plugin-lib" custom="true" />
+        <framework src="plugin-lib2" custom="true" parent="plugin-lib" />
         <framework src="extras/android/support/v7/appcompat" />
         <framework src="extra.gradle" type="gradleReference" />
         <resource-file src="android-resource.xml" target="res/xml/dummy.xml" />
