@@ -76,7 +76,7 @@
         "parser_file": "../cordova/metadata/webos_parser",
         "handler_file": "../plugman/platforms/webos",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-webos.git",
-        "version": "~4.0.0"
+        "version": "~3.7.0"
     },
     "browser": {
         "parser_file": "../cordova/metadata/browser_parser",
