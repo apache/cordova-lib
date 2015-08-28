@@ -20,6 +20,17 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.3.0 (Aug 28, 2015)
+* pinned blackberry@3.8.0 in prepartion for its release
+* pinned browser@4.0.0, windows@4.1.0 and webos@4.0.0
+* CB-9559 Adding a plugin with caret in version results in an error
+* Update cordova-serve required version to 0.1.3.
+* CB-6506 RTC: Add support for OSX (closes #278)
+* CB-9517 Adding a plugin on iOS/OSX that uses a private framework does not work (closes #281)
+* CB-9549 Removes excess JS files from browserified app
+* CB-9505 Correct plugin modules loading within browserify flow
+* CB-8532 Adding Windows Plugin Failed with "Cannot read property 'text' of null" Updated elementtree API according 0.1.6 release. This closes #277
+
 ### 5.2.0 (Aug 06, 2015)
 * CB-9436 Removes `require-tr` bundle transformation
 * updated pinned ios version to ~3.9.0
