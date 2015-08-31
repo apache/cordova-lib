@@ -37,8 +37,16 @@ function prepare(options) {
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
     .then(function(){
-        var platformsToRestore = options && options.platforms || [];
-        return restore.installPlatformsFromConfigXML(platformsToRestore);
+        return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath });
+    })
+    .then(function(){
+        options = cordova_util.preProcessOptions(options);
+        var paths = options.platforms.map(function(p) {
+            var platform_path = path.join(projectRoot, 'platforms', p);
+            var parser = platforms.getPlatformProject(p, platform_path);
+            return parser.www_dir();
+        });
+        options.paths = paths;
     })
     .then(function() {
         options = cordova_util.preProcessOptions(options);

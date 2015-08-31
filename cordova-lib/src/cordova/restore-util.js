@@ -32,7 +32,7 @@ exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
 
-function installPlatformsFromConfigXML(platforms) {
+function installPlatformsFromConfigXML(platforms, opts) {
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var cfg = new ConfigParser(configPath);
@@ -68,7 +68,7 @@ function installPlatformsFromConfigXML(platforms) {
     return promiseutil.Q_chainmap_graceful(targets, function(target) {
         if (target) {
             events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
-            return cordova.raw.platform('add', target);
+            return cordova.raw.platform('add', target, opts);
         }
         return Q();
     }, function(err) {
