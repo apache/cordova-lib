@@ -31,7 +31,7 @@ function graftPLIST(doc, xml, selector) {
         node = node.concat(obj);
         for (var i =0;i<node.length; i++){
             for (var j=i+1; j<node.length; ++j) {
-                if (node[i] === node[j])
+              if (nodeEqual(node[i], node[j]))
                     node.splice(j--,1);
             }
         }
