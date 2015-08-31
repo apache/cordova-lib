@@ -56,7 +56,7 @@ function prepare(options) {
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
     .then(function(){
-        return restore.installPlatformsFromConfigXML(options.platforms);
+        return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath });
     })
     .then(function(){
         options = cordova_util.preProcessOptions(options);
