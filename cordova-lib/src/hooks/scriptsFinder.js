@@ -106,6 +106,7 @@ function getApplicationHookScriptsFromDir(dir) {
 function getScriptsFromConfigXml(hook, opts) {
     var configPath = cordovaUtil.projectConfig(opts.projectRoot);
 
+    // When plugman is used the config xml in project root folder will not exist
     if (!(fs.existsSync(configPath))) {
         return [];
     }

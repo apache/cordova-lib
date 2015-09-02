@@ -70,8 +70,12 @@ DefaultHooksRunner.prototype.fire = function fire(hook, opts) {
 function CordovaHooksRunner(projectRoot) {
     DefaultHooksRunner.call(this, projectRoot);
     var root = cordovaUtil.isCordova(projectRoot);
-    if (!root) throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
-    else this.projectRoot = root;
+    if (!root) {
+        throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
+    }
+    else {
+        this.projectRoot = root;
+    }
 }
 
 require('util').inherits(CordovaHooksRunner, DefaultHooksRunner);
@@ -95,7 +99,10 @@ CordovaHooksRunner.prototype.prepareOptions = function(opts) {
 
     return opts;
 };
-
+/**
+ * Construct the appropriate HooksRunner for the specified project.
+ * The project can be multi-platform project created with Cordova CLI or can be platform specific created using one of the cordova-{platform} scripts.
+ */
 function HooksRunner(projectRoot) {
     var root = cordovaUtil.isCordova(projectRoot);
     this.hooksRunner = root ? new CordovaHooksRunner(root) : new DefaultHooksRunner(projectRoot);
