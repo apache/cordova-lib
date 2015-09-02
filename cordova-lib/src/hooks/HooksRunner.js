@@ -33,17 +33,21 @@ var isWindows = os.platform().slice(0, 3) === 'win';
  * Tries to create a HooksRunner for passed project root.
  * @constructor
  */
-function HooksRunner(projectRoot) {
-    var root = cordovaUtil.isCordova(projectRoot);
-    if (!root) throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
-    else this.projectRoot = root;
+function DefaultHooksRunner(projectRoot) {
+    this.projectRoot = projectRoot;
 }
+
+DefaultHooksRunner.prototype.prepareOptions = function(opts) {
+    opts = opts || {};
+    opts.projectRoot = this.projectRoot;
+    return opts;
+};
 
 /**
  * Fires all event handlers and scripts for a passed hook type.
  * Returns a promise.
  */
-HooksRunner.prototype.fire = function fire(hook, opts) {
+DefaultHooksRunner.prototype.fire = function fire(hook, opts) {
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
@@ -60,11 +64,23 @@ HooksRunner.prototype.fire = function fire(hook, opts) {
 };
 
 /**
+ * Tries to create a CordovaHooksRunner for passed project root.
+ * @constructor
+ */
+function CordovaHooksRunner(projectRoot) {
+    DefaultHooksRunner.call(this, projectRoot);
+    var root = cordovaUtil.isCordova(projectRoot);
+    if (!root) throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
+    else this.projectRoot = root;
+}
+
+require('util').inherits(CordovaHooksRunner, DefaultHooksRunner);
+
+/**
  * Refines passed options so that all required parameters are set.
  */
-HooksRunner.prototype.prepareOptions = function(opts) {
-    opts = opts || {};
-    opts.projectRoot = this.projectRoot;
+CordovaHooksRunner.prototype.prepareOptions = function(opts) {
+	opts = DefaultHooksRunner.prototype.prepareOptions.call(this, opts);
     opts.cordova = opts.cordova || {};
     opts.cordova.platforms = opts.cordova.platforms || opts.platforms || cordovaUtil.listPlatforms(opts.projectRoot);
     opts.cordova.platforms = opts.cordova.platforms.map(function(platform) { return platform.split('@')[0]; } );
@@ -78,6 +94,15 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     }
 
     return opts;
+};
+
+function HooksRunner(projectRoot) {
+    var root = cordovaUtil.isCordova(projectRoot);
+    this.hooksRunner = root ? new CordovaHooksRunner(root) : new DefaultHooksRunner(projectRoot);
+}
+
+HooksRunner.prototype.fire = function fire(hook, opts) {
+    return this.hooksRunner.fire(hook, opts);
 };
 
 module.exports = HooksRunner;

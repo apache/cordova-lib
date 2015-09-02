@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.test.plugin-with-hooks" version="0.0.1">
+
+    <name>Plugin With Hooks</name>
+    <license>Commercial</license>
+    <keywords>cordova,device</keywords>
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <hook type="before_plugin_install" src="scripts/beforeInstall.js" />
+    <hook type="after_plugin_install" src="scripts/afterInstall.js" />
+    <hook type="before_plugin_uninstall" src="scripts/beforeUninstall.js" />
+</plugin>

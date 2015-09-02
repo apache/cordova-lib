@@ -105,6 +105,11 @@ function getApplicationHookScriptsFromDir(dir) {
  */
 function getScriptsFromConfigXml(hook, opts) {
     var configPath = cordovaUtil.projectConfig(opts.projectRoot);
+
+    if (!(fs.existsSync(configPath))) {
+        return [];
+    }
+
     var configXml = new ConfigParser(configPath);
 
     return configXml.getHookScripts(hook, opts.cordova.platforms).map(function(scriptElement) {
