@@ -264,7 +264,8 @@ jsprojManager.prototype = {
 
         if (target || versions) {
             var matchingProjects = this.projects.filter(function (project) {
-                return (!target || target === project.target) && (!versions || semver.satisfies(project.version, versions, /* loose */ true));
+                return (!target || target === project.target) &&
+                    (!versions || semver.satisfies(project.getSemVersion(), versions, /* loose */ true));
             });
 
             if (matchingProjects.length < this.projects.length) {
@@ -528,6 +529,21 @@ util.inherits(jsproj, proj);
 
 jsproj.prototype.target = null;
 jsproj.prototype.version = null;
+
+// Returns valid semantic version (http://semver.org/).
+jsproj.prototype.getSemVersion = function () {
+    // For example, for version 10.0.10240.0 we will return 10.0.10240 (first three components)
+    var semVersion = this.version;
+    var splittedVersion = semVersion.split('.');
+    if (splittedVersion.length > 3) {
+        semVersion = splittedVersion.splice(0, 3).join('.');
+    }
+
+    return semVersion;
+	// Alternative approach could be replacing last dot with plus sign to
+	// be complaint w/ semver specification, for example
+	// 10.0.10240.0 -> 10.0.10240+0
+};
 
 /* Common support functions */
 
