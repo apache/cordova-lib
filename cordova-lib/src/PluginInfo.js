@@ -305,6 +305,7 @@ function PluginInfo(dirname) {
                 src: el.attrib.src,
                 weak: isStrTrue(el.attrib.weak),
                 versions: el.attrib.versions,
+                targetDir: el.attrib['target-dir'],
                 deviceTarget: el.attrib['device-target'] || el.attrib.target,
                 arch: el.attrib.arch
             };
