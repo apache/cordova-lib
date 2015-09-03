@@ -64,8 +64,6 @@ function PlatformApiPoly(platform, platformRootDir) {
     this._platformJson = PlatformJson.load(this.root, platform);
     this._pluginInfoProvider = new PluginInfoProvider();
     this._munger = new PlatformMunger(platform, this.root, this._platformJson, this._pluginInfoProvider);
-
-    this._config = new ConfigParser(this.getPlatformInfo().locations.configXml);
 }
 
 /**
@@ -181,10 +179,10 @@ PlatformApiPoly.prototype.getPlatformInfo = function () {
  *   CordovaError instance.
  */
 PlatformApiPoly.prototype.prepare = function (cordovaProject) {
-
     // First cleanup current config and merge project's one into own
     var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
-    var ownConfig = this._config.path;
+    var ownConfig = this.getPlatformInfo().locations.configXml;
+
     var sourceCfg = cordovaProject.projectConfig.path;
     // If defaults.xml is present, overwrite platform config.xml with it.
     // Otherwise save whatever is there as defaults so it can be
@@ -192,13 +190,13 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     if (fs.existsSync(defaultConfig)) {
         // events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
         shell.cp('-f', defaultConfig, ownConfig);
-        this._config = new ConfigParser(ownConfig);
     } else if (fs.existsSync(ownConfig)) {
         shell.cp('-f', ownConfig, defaultConfig);
     } else {
         shell.cp('-f', sourceCfg.path, ownConfig);
-        this._config = new ConfigParser(ownConfig);
     }
+
+    this._config = new ConfigParser(ownConfig);
 
     xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
         this._config.doc.getroot(), this.platform, true);
