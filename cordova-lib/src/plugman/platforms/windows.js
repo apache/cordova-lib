@@ -118,7 +118,9 @@ module.exports = {
             }
             else {
                 // if(isCustom) {}
-                dest = path.join('plugins', plugin_id, path.basename(src));
+                var targetDir = obj.targetDir || '';
+                // path.join ignores empty paths passed so we don't check whether targetDir is not empty
+                dest = path.join('plugins', plugin_id, targetDir, path.basename(src));
                 common.copyFile(plugin_dir, src, project_dir, dest);
                 project_file.addReference(dest, getTargetConditions(obj));
             }
