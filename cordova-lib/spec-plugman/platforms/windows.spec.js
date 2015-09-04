@@ -73,7 +73,8 @@ beforeEach(function () {
             all: 'CordovaApp.projitems',
             phone: 'CordovaApp.Phone.jsproj',
             windows: 'CordovaApp.Windows.jsproj',
-            windows8: 'CordovaApp.Windows80.jsproj'
+            windows8: 'CordovaApp.Windows80.jsproj',
+            windows10: 'CordovaApp.Windows10.jsproj'
         }, windows8: {
             all: 'TestApp.jsproj',
             windows8: 'TestApp.jsproj'
@@ -125,8 +126,35 @@ beforeEach(function () {
                     projects.push(proj_files.master);
                 }
 
+                // Check that installed framework reference is properly added to project.
+                var checkInstalledFrameworkReference = function (tag, elementToInstall, xml) {
+                    var frameworkCustomPathElement = xml.find(xpath);
+                    expect(frameworkCustomPathElement).not.toBe(null);
+                    var frameworkCustomPath = frameworkCustomPathElement.text;
+                    expect(frameworkCustomPath).not.toBe(null);
+                    var targetDir = elementToInstall.targetDir || '';
+                    var frameworkCustomExpectedPath = path.join('plugins', dummy_id, targetDir,
+                        path.basename(elementToInstall.src));
+                    expect(frameworkCustomPath).toEqual(frameworkCustomExpectedPath);
+                };
+
+                // Check that framework file was copied to correct path
+                var checkInstalledFrameworkPath = function (framework) {
+                    var targetDir = framework.targetDir || '';
+                    var dest = path.join(cordovaProjectWindowsPlatformDir, 'plugins', dummy_id, targetDir, path.basename(framework.src));
+                    var copiedSuccessfully = fs.existsSync(path.resolve(dest));
+                    expect(copiedSuccessfully).toBe(true);
+                };
+
                 var appendToRootFake = function (itemGroup) {
                     expect(itemGroup).toContainXmlPath(xpath);
+                    // In case we install framework with 'custom' attribute set to 'true'
+                    // we verify that file is copied to correct dir and reference is added properly.
+                    // This is not required in case of 'projectReference' attribute is used.
+                    if (tag === 'framework' && elementToInstall.type !== 'projectReference') {
+                        checkInstalledFrameworkReference(tag, elementToInstall, itemGroup);
+                        checkInstalledFrameworkPath(elementToInstall);
+                    }
                 };
 
                 var projectsAddedToSpies = [];
@@ -194,7 +222,7 @@ beforeEach(function () {
                     validateInstalledProjects('lib-file', libfiles[0], xpath, ['all']);
 
                     xpath = 'SDKReference[@Include="TestSDK2, Version=1.0"]';
-                    validateInstalledProjects('lib-file', libfiles[1], xpath, ['windows', 'phone']);
+                    validateInstalledProjects('lib-file', libfiles[1], xpath, ['windows', 'phone', 'windows10']);
 
                     xpath = 'SDKReference[@Include="TestSDK3, Version=1.0"]';
                     validateInstalledProjects('lib-file', libfiles[2], xpath, ['phone']);
@@ -231,10 +259,16 @@ beforeEach(function () {
                     validateInstalledProjects('framework', frameworks[1], xpath, ['all']);
 
                     xpath = 'Reference[@Include="dummy3"]/HintPath';
-                    validateInstalledProjects('framework', frameworks[2], xpath, ['windows', 'windows8']);
+                    validateInstalledProjects('framework', frameworks[2], xpath, ['windows', 'windows8', 'windows10']);
 
                     xpath = 'Reference[@Include="dummy4"][@Condition="\'$(Platform)\'==\'ARM\'"]/HintPath';
                     validateInstalledProjects('framework', frameworks[3], xpath, ['phone']);
+
+                    xpath = 'Reference[@Include="dummy5"]/HintPath';
+                    validateInstalledProjects('framework', frameworks[4], xpath, ['phone']);
+
+                    xpath = 'Reference[@Include="dummy6"]/HintPath';
+                    validateInstalledProjects('framework', frameworks[5], xpath, ['windows', 'windows10', 'phone']);
                 });
             });
 
@@ -243,16 +277,16 @@ beforeEach(function () {
 
                 it('should write to correct project files when conditions are specified', function () {
                     var xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy1.vcxproj') + '"][@Condition="\'$(Platform)\'==\'x64\'"]';
-                    validateInstalledProjects('framework', frameworks[4], xpath, ['all']);
+                    validateInstalledProjects('framework', frameworks[6], xpath, ['all']);
 
                     xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy2.vcxproj') + '"]';
-                    validateInstalledProjects('framework', frameworks[5], xpath, ['windows8']);
+                    validateInstalledProjects('framework', frameworks[7], xpath, ['windows8']);
 
                     xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy3.vcxproj') + '"]';
-                    validateInstalledProjects('framework', frameworks[6], xpath, ['windows', 'windows8']);
+                    validateInstalledProjects('framework', frameworks[8], xpath, ['windows', 'windows8', 'windows10']);
 
                     xpath = 'ProjectReference[@Include="' + windowsJoin(dummyplugin, 'src', 'windows', 'dummy4.vcxproj') + '"][@Condition="\'$(Platform)\'==\'x86\'"]';
-                    validateInstalledProjects('framework', frameworks[7], xpath, ['windows', 'phone']);
+                    validateInstalledProjects('framework', frameworks[9], xpath, ['windows', 'phone']);
                 });
             });
         });
@@ -335,7 +369,7 @@ beforeEach(function () {
 
                             incText = 'TestSDK2, Version=1.0';
                             targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
-                            validateUninstalledProjects('lib-file', libfiles[1], path, incText, targetConditions, ['windows', 'phone']);
+                            validateUninstalledProjects('lib-file', libfiles[1], path, incText, targetConditions, ['windows', 'phone', 'windows10']);
 
                             incText = 'TestSDK3, Version=1.0';
                             targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
@@ -369,11 +403,19 @@ beforeEach(function () {
 
                             incText = 'dummy3';
                             targetConditions = {versions: undefined, deviceTarget: 'windows', arch: undefined};
-                            validateUninstalledProjects('framework', frameworks[2], path, incText, targetConditions, ['windows', 'windows8']);
+                            validateUninstalledProjects('framework', frameworks[2], path, incText, targetConditions, ['windows', 'windows8', 'windows10']);
 
                             incText = 'dummy4';
                             targetConditions = {versions: '8.1', deviceTarget: 'phone', arch: 'ARM'};
                             validateUninstalledProjects('framework', frameworks[3], path, incText, targetConditions, ['phone']);
+
+                            incText = 'dummy5';
+                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
+                            validateUninstalledProjects('framework', frameworks[4], path, incText, targetConditions, ['phone']);
+
+                            incText = 'dummy6';
+                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
+                            validateUninstalledProjects('framework', frameworks[5], path, incText, targetConditions, ['windows', 'windows10', 'phone']);
 
                             done();
                         });
@@ -391,19 +433,19 @@ beforeEach(function () {
                             var xmlPath = 'ItemGroup/ProjectReference';
                             var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy1.vcxproj');
                             var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x64'};
-                            validateUninstalledProjects('framework', frameworks[4], xmlPath, incText, targetConditions, ['all']);
+                            validateUninstalledProjects('framework', frameworks[6], xmlPath, incText, targetConditions, ['all']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy2.vcxproj');
                             targetConditions = {versions: '<8.1', deviceTarget: undefined, arch: undefined};
-                            validateUninstalledProjects('framework', frameworks[5], xmlPath, incText, targetConditions, ['windows8']);
+                            validateUninstalledProjects('framework', frameworks[7], xmlPath, incText, targetConditions, ['windows8']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy3.vcxproj');
                             targetConditions = {versions: undefined, deviceTarget: 'win', arch: undefined};
-                            validateUninstalledProjects('framework', frameworks[6], xmlPath, incText, targetConditions, ['windows', 'windows8']);
+                            validateUninstalledProjects('framework', frameworks[8], xmlPath, incText, targetConditions, ['windows', 'windows8', 'windows10']);
 
                             incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy4.vcxproj');
                             targetConditions = {versions: '8.1', deviceTarget: 'all', arch: 'x86'};
-                            validateUninstalledProjects('framework', frameworks[7], xmlPath, incText, targetConditions, ['windows', 'phone']);
+                            validateUninstalledProjects('framework', frameworks[9], xmlPath, incText, targetConditions, ['windows', 'phone']);
 
                             done();
                         });
