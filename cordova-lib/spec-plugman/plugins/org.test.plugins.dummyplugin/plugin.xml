@@ -192,6 +192,8 @@
         <framework src="src/windows/dummy2.dll" versions=">=8.0"/>
         <framework src="src/windows/dummy3.dll" device-target="windows"/>
         <framework src="src/windows/dummy4.dll" device-target="phone" versions="8.1" arch="ARM"/>
+        <framework src="src/windows/dummy5.dll" custom="true" target-dir="phoneDir" device-target="phone" />
+        <framework src="src/windows/dummy6.dll" custom="true" target-dir="sharedDir" versions="&gt;=8.1" />
 
         <framework src="src/windows/dummy1.vcxproj" type="projectReference" arch="x64"/>
         <framework src="src/windows/dummy2.vcxproj" type="projectReference" versions="<8.1"/>
