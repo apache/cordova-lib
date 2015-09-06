@@ -38,11 +38,14 @@ module.exports = function check_reqs(platforms) {
         return knownPlatforms.getPlatformApi(platform).requirements();
     }))
     .then(function (settledChecks) {
-        return settledChecks.reduce(function (result, settledCheck, idx) {
+        var res = {};
+        settledChecks.reduce(function (result, settledCheck, idx) {
             var platformName = platforms[idx];
             result[platformName] = settledCheck.state === 'fulfilled' ?
                 settledCheck.value :
                 new CordovaError(settledCheck.reason);
-        }, {});
+            return result;
+        }, res);
+        return res;
     });
 };

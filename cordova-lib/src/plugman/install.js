@@ -279,9 +279,9 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                 msg += ' Making it top-level.';
                 platformJson.makeTopLevel(pluginInfo.id).save();
             }
-            events.emit('verbose', msg);
+            events.emit('log', msg);
         } else {
-            events.emit('verbose', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
+            events.emit('log', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
         return Q();
     }

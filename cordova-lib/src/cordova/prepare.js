@@ -43,8 +43,7 @@ function prepare(options) {
         options = cordova_util.preProcessOptions(options);
         var paths = options.platforms.map(function(p) {
             var platform_path = path.join(projectRoot, 'platforms', p);
-            var parser = platforms.getPlatformProject(p, platform_path);
-            return parser.www_dir();
+            return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
         });
         options.paths = paths;
     })
