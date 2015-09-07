@@ -31,7 +31,8 @@ var cordova_util  = require('./util'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('../events'),
     metadata      = require('../plugman/util/metadata'),
-    chainMap      = require('../util/promise-util').Q_chainmap;
+    chainMap      = require('../util/promise-util').Q_chainmap,
+    cordova       = require('./cordova');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -204,6 +205,8 @@ module.exports = function plugin(command, targets, opts) {
                     });
                 }, Q()); // end Q.all
             }).then(function() {
+                return cordova.raw.prepare(opts);
+            }).then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_add', opts);
             });
@@ -255,6 +258,8 @@ module.exports = function plugin(command, targets, opts) {
                         metadata.remove_fetch_metadata(pluginPath, target);
                     });
                 }, Q());
+            }).then(function () {
+                return cordova.raw.prepare(opts);
             }).then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_rm', opts);
