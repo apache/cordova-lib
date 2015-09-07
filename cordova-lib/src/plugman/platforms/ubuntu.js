@@ -29,6 +29,19 @@ function toCamelCase(str) {
     }).join('');
 }
 
+function findClassName(str) {
+    var class_name;
+
+    if (str.match(/\.[^.]+$/)) {
+        // old-style plugin name
+        class_name = str.match(/\.[^.]+$/)[0].substr(1);
+    } else {
+        class_name = str.match(/cordova\-plugin\-([\w\-]+)$/)[0].substr(15);
+    }
+
+    return class_name;
+}
+
 var shell = require('shelljs')
    , fs = require('fs')
    , path = require('path')
@@ -71,7 +84,7 @@ module.exports = {
             var src = String(fs.readFileSync(plugins));
 
             src = src.replace('INSERT_HEADER_HERE', '#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"\nINSERT_HEADER_HERE');
-            var class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
+            var class_name = findClassName(plugin_id);
             class_name = toCamelCase(class_name);
             src = src.replace('INSERT_PLUGIN_HERE', 'INIT_PLUGIN(' + class_name + ');INSERT_PLUGIN_HERE');
 
@@ -85,7 +98,7 @@ module.exports = {
             var src = String(fs.readFileSync(plugins));
 
             src = src.replace('#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"', '');
-            var class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
+            var class_name = findClassName(plugin_id);
             class_name = toCamelCase(class_name);
             src = src.replace('INIT_PLUGIN(' + class_name + ');', '');
 
