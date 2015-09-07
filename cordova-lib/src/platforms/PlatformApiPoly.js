@@ -196,8 +196,9 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
         shell.cp('-f', sourceCfg.path, ownConfig);
     }
 
-    this._config = new ConfigParser(ownConfig);
+    this._munger.reapply_global_munge().save_all();
 
+    this._config = new ConfigParser(ownConfig);
     xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
         this._config.doc.getroot(), this.platform, true);
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
@@ -211,10 +212,8 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     // Update own www dir with project's www assets and plugins' assets and js-files
     this._parser.update_www(cordovaProject.locations.www);
 
-    this._munger.reapply_global_munge().save_all();
-
     // update project according to config.xml changes.
-    return this._parser.update_project(cordovaProject.projectConfig);
+    return this._parser.update_project(this._config);
 };
 
 /**
