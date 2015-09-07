@@ -17,7 +17,8 @@
     under the License.
 */
 
-var browserParser = require('../../src/cordova/metadata/browser_parser'),
+var rewire = require('rewire'),
+    browserParser = rewire('../../src/cordova/metadata/browser_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -26,10 +27,18 @@ var browserParser = require('../../src/cordova/metadata/browser_parser'),
 
 describe('browser project parser', function() {
     var proj = path.join('some', 'path');
-    var exists;
+    var exists, origDirExists;
 
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
+        origDirExists = browserParser.__get__('dirExists');
+        browserParser.__set__('dirExists', function () {
+            return true;
+        });
+    });
+
+    afterEach(function() {
+        browserParser.__set__('dirExists', origDirExists);
     });
 
     describe('constructions', function() {
