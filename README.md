@@ -29,6 +29,8 @@
 # cordova-lib
 Contains npm modules used primarily by [cordova](https://github.com/apache/cordova-cli/) and [plugman](https://github.com/apache/cordova-plugman/).
 
+:warning: Check issues on the [JIRA issue tracker](https://issues.apache.org/jira/browse/CB-9604?jql=project%20%3D%20CB%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20CordovaLib%20ORDER%20BY%20priority%20DESC)
+
 ## Setup
 * Clone this repository onto your local machine.
     `git clone https://git-wip-us.apache.org/repos/asf/cordova-lib.git`
