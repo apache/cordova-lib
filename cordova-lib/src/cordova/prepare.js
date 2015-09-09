@@ -51,33 +51,7 @@ function prepare(options) {
         options = cordova_util.preProcessOptions(options);
         options.searchpath = options.searchpath || config_json.plugin_search_path;
         // Iterate over each added platform
-        return Q.all(options.platforms.map(function(platform) {
-            // TODO: this need to be replaced by real projectInfo
-            // instance for current project.
-            var project = {
-                root: projectRoot,
-                projectConfig: new ConfigParser(cordova_util.projectConfig(projectRoot)),
-                locations: {
-                    plugins: path.join(projectRoot, 'plugins'),
-                    www: cordova_util.projectWww(projectRoot)
-                }
-            };
-
-            // platformApi prepare takes care of all functionality
-            // which previously had been executed by cordova.prepare:
-            //   - reset config.xml and then merge changes from project's one,
-            //   - update www directory from project's one and merge assets from platform_www,
-            //   - reapply config changes, made by plugins,
-            //   - update platform's project
-            // Please note that plugins' changes, such as installes js files, assets and
-            // config changes is not being reinstalled on each prepare.
-            var platformApi = platforms.getPlatformApi(platform);
-            return platformApi.prepare(project)
-            .then(function () {
-                if (options.browserify)
-                    return browserify(project, platformApi);
-            });
-        }));
+        return preparePlatforms(options.platforms, projectRoot, options);
     }).then(function() {
         options.paths = options.platforms.map(function(platform) {
             return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
@@ -87,3 +61,43 @@ function prepare(options) {
         return restore.installPluginsFromConfigXML(options);
     });
 }
+
+/**
+ * Calls `platformApi.prepare` for each platform in project
+ *
+ * @param   {string[]}  platformList  List of platforms, added to current project
+ * @param   {string}    projectRoot   Project root directory
+ *
+ * @return  {Promise}
+ */
+function preparePlatforms (platformList, projectRoot, options) {
+    return Q.all(platformList.map(function(platform) {
+        // TODO: this need to be replaced by real projectInfo
+        // instance for current project.
+        var project = {
+            root: projectRoot,
+            projectConfig: new ConfigParser(cordova_util.projectConfig(projectRoot)),
+            locations: {
+                plugins: path.join(projectRoot, 'plugins'),
+                www: cordova_util.projectWww(projectRoot)
+            }
+        };
+
+        // platformApi prepare takes care of all functionality
+        // which previously had been executed by cordova.prepare:
+        //   - reset config.xml and then merge changes from project's one,
+        //   - update www directory from project's one and merge assets from platform_www,
+        //   - reapply config changes, made by plugins,
+        //   - update platform's project
+        // Please note that plugins' changes, such as installes js files, assets and
+        // config changes is not being reinstalled on each prepare.
+        var platformApi = platforms.getPlatformApi(platform);
+        return platformApi.prepare(project)
+        .then(function () {
+            if (options.browserify)
+                return browserify(project, platformApi);
+        });
+    }));
+}
+
+module.exports.preparePlatforms = preparePlatforms;
