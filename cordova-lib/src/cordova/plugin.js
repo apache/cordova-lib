@@ -31,8 +31,7 @@ var cordova_util  = require('./util'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('../events'),
     metadata      = require('../plugman/util/metadata'),
-    chainMap      = require('../util/promise-util').Q_chainmap,
-    cordova       = require('./cordova');
+    chainMap      = require('../util/promise-util').Q_chainmap;
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -200,7 +199,9 @@ module.exports = function plugin(command, targets, opts) {
                     });
                 }, Q()); // end Q.all
             }).then(function() {
-                return cordova.raw.prepare(opts);
+                // Need to require right here instead of doing this at the beginning of file
+                // otherwise tests are failing without any real reason.
+                return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
             }).then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_add', opts);
@@ -228,7 +229,7 @@ module.exports = function plugin(command, targets, opts) {
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
-                             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
+                            events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath);
                         });
                     }, Q())
@@ -254,7 +255,7 @@ module.exports = function plugin(command, targets, opts) {
                     });
                 }, Q());
             }).then(function () {
-                return cordova.raw.prepare(opts);
+                return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
             }).then(function() {
                 opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
                 return hooksRunner.fire('after_plugin_rm', opts);
