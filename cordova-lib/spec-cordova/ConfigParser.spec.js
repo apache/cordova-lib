@@ -170,20 +170,18 @@ describe('config.xml parser', function () {
             });
             it('should allow adding features with params', function(){
                 cfg.addPlugin({name:'aplugin'}, [{name:'paraname',value:'paravalue'}]);
-                var plugins = cfg.doc.findall('plugin');
-                var plugin  = (function(){
-                    var i = plugins.length;
-                    var f;
-                    while (--i >= 0) {
-                        f = plugins[i];
-                        if ('aplugin' === f.attrib.name) return f;
-                    }
-                    return undefined;
-                })();
-                expect(plugin).toBeDefined();
-                var variables = plugin.findall('variable');
-                expect(variables[0].attrib.name).toEqual('paraname');
-                expect(variables[0].attrib.value).toEqual('paravalue');
+                // Additional check for new parameters syntax
+                cfg.addPlugin({name:'bplugin'}, {paraname: 'paravalue'});
+                var plugins = cfg.doc.findall('plugin')
+                .filter(function (plugin) {
+                    return plugin.attrib.name === 'aplugin' || plugin.attrib.name === 'bplugin';
+                });
+                expect(plugins.length).toBe(2);
+                plugins.forEach(function (plugin) {
+                    var variables = plugin.findall('variable');
+                    expect(variables[0].attrib.name).toEqual('paraname');
+                    expect(variables[0].attrib.value).toEqual('paravalue');
+                });
             });
             it('should be able to read legacy feature entries with a version', function(){
                 var plugin = cfg.getPlugin('org.apache.cordova.legacyfeatureversion');

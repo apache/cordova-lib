@@ -150,28 +150,6 @@ module.exports = function plugin(command, targets, opts) {
                             return pluginInfoProvider.get(directory);
                         });
                     })
-                    .then(function(pluginInfo){
-                        // save to config.xml
-                        if(saveToConfigXmlOn(config_json, opts)){
-
-                            var attributes = {};
-                            attributes.name = pluginInfo.id;
-
-                            var src = parseSource(target, opts);
-                            attributes.spec = src ? src : '~' + pluginInfo.version;
-
-                            var variables = Object.keys(opts.cli_variables || [])
-                            .map(function (variableName) {
-                                return {name: variableName, value: opts.cli_variables[variableName]};
-                            });
-
-                            cfg.removePlugin(pluginInfo.id);
-                            cfg.addPlugin(attributes, variables);
-                            cfg.write();
-                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
-                        }
-                        return pluginInfo;
-                    })
                     .then(function(pluginInfo) {
                         // Validate top-level required variables
                         var pluginVariables = pluginInfo.getPreferences();
@@ -201,7 +179,24 @@ module.exports = function plugin(command, targets, opts) {
 
                             events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
                             return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
-                        });
+                        })
+                        .thenResolve(pluginInfo);
+                    })
+                    .then(function(pluginInfo){
+                        // save to config.xml
+                        if(saveToConfigXmlOn(config_json, opts)){
+                            var src = parseSource(target, opts);
+                            var attributes = {
+                                name: pluginInfo.id,
+                                spec: src ? src : '~' + pluginInfo.version
+                            };
+
+                            cfg.removePlugin(pluginInfo.id);
+                            cfg.addPlugin(attributes, opts.cli_variables);
+                            cfg.write();
+
+                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
+                        }
                     });
                 }, Q()); // end Q.all
             }).then(function() {
