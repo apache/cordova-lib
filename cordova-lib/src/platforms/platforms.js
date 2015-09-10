@@ -20,6 +20,7 @@
 var path = require('path');
 var util = require('../cordova/util');
 var platforms = require('./platformsConfig.json');
+var events = require('../events');
 
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedApis = {};
@@ -55,7 +56,7 @@ function getPlatformApi(platform, platformRootDir) {
         PlatformApi = require('./PlatformApiPoly');
     }
 
-    var platformApi = new PlatformApi(platform, platformRootDir);
+    var platformApi = new PlatformApi(platform, platformRootDir, events);
     cachedApis[platformRootDir] = platformApi;
     return platformApi;
 }

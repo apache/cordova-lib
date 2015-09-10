@@ -32,7 +32,8 @@ exports = module.exports = {
     cordova_platforms: require('./src/platforms/platforms'),
     ////  MAIN CORDOVA TOOLS API
     PluginInfo: require('./src/PluginInfo'),
-    CordovaError: require('./src/CordovaError')
+    CordovaError: require('./src/CordovaError'),
+    CordovaExternalToolErrorContext: require('./src/CordovaExternalToolErrorContext')
 }
 
 
