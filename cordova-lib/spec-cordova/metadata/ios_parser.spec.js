@@ -102,7 +102,7 @@ describe('ios project parser', function () {
                 update_name = jasmine.createSpy('update_name');
                 xc_write = jasmine.createSpy('xcode writeSync');
                 xc = spyOn(xcode, 'project').andReturn({
-                    parse:function(cb) {cb();},
+                    parseSync: function() {},
                     updateProductName:update_name,
                     writeSync:xc_write
                 });
