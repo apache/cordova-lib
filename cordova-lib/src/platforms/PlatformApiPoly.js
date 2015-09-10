@@ -47,12 +47,13 @@ var PluginInfoProvider = require('../PluginInfoProvider');
  *
  * * platform: String that defines a platform name.
  */
-function PlatformApiPoly(platform, platformRootDir) {
+function PlatformApiPoly(platform, platformRootDir, events) {
     if (!platform) throw new CordovaError('\'platform\' argument is missing');
     if (!platformRootDir) throw new CordovaError('platformRootDir argument is missing');
 
     this.root = platformRootDir;
     this.platform = platform;
+    this.events = events || require('../events');
 
     if (!(platform in knownPlatforms))
         throw new CordovaError('Unknown platform ' + platform);
@@ -188,7 +189,7 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     // Otherwise save whatever is there as defaults so it can be
     // restored or copy project config into platform if none exists.
     if (fs.existsSync(defaultConfig)) {
-        // events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
+        this.events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
         shell.cp('-f', defaultConfig, ownConfig);
     } else if (fs.existsSync(ownConfig)) {
         shell.cp('-f', ownConfig, defaultConfig);
