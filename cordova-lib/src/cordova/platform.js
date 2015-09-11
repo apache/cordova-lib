@@ -363,6 +363,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
             platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {
+        opts.cordova.platforms = cordova_util.listPlatforms(opts.projectRoot);
         return hooksRunner.fire('after_platform_rm', opts);
     });
 }
