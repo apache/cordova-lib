@@ -52,7 +52,7 @@ module.exports = common = {
         shell.mkdir('-p', path.dirname(dest));
 
         if (link) {
-            fs.symlinkSync(path.relative(path.dirname(dest), src), dest);
+            fs.symlinkSync(path.relative(fs.realpathSync(path.dirname(dest)), src), dest);
         } else if (fs.statSync(src).isDirectory()) {
             // XXX shelljs decides to create a directory when -R|-r is used which sucks. http://goo.gl/nbsjq
             shell.cp('-Rf', src+'/*', dest);
