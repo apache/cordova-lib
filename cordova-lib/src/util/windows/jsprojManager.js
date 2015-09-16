@@ -74,7 +74,7 @@ jsprojManager.prototype = {
     addSDKRef: function (incText, targetConditions) {
         events.emit('verbose', 'jsprojManager.addSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
-        var item = createReferenceElement('ItemGroup/SDKReference', incText, targetConditions);
+        var item = createItemGroupElement('ItemGroup/SDKReference', incText, targetConditions);
         this._getMatchingProjects(targetConditions).forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -84,7 +84,33 @@ jsprojManager.prototype = {
         events.emit('verbose', 'jsprojManager.removeSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/SDKReference', incText, targetConditions);
+            project.removeItemGroupElement('ItemGroup/SDKReference', incText, targetConditions);
+        });
+    },
+
+    addResourceFileToProject: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.addResourceFile(relPath: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        // add hint path with full path
+        var link = new et.Element('Link');
+        link.text = relPath;
+        var children = [link];
+
+        var copyToOutputDirectory = new et.Element('CopyToOutputDirectory');
+        copyToOutputDirectory.text = 'Always';
+        children.push(copyToOutputDirectory);
+
+        var item = createItemGroupElement('ItemGroup/Content', relPath, targetConditions, children);
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.appendToRoot(item);
+        });
+    },
+
+    removeResourceFileFromProject: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.removeResourceFile(relPath: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.removeItemGroupElement('ItemGroup/Content', relPath, targetConditions);
         });
     },
 
@@ -103,7 +129,7 @@ jsprojManager.prototype = {
             children.push(mdFileTag);
         }
 
-        var item = createReferenceElement('ItemGroup/Reference', path.basename(relPath, extName), targetConditions, children);
+        var item = createItemGroupElement('ItemGroup/Reference', path.basename(relPath, extName), targetConditions, children);
         this._getMatchingProjects(targetConditions).forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -117,7 +143,7 @@ jsprojManager.prototype = {
         var includeText = path.basename(relPath, extName);
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/Reference', includeText, targetConditions);
+            project.removeItemGroupElement('ItemGroup/Reference', includeText, targetConditions);
         });
     },
 
@@ -205,7 +231,7 @@ jsprojManager.prototype = {
 
         // Add the ItemGroup/ProjectReference to each matching cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
-        var item = createReferenceElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
+        var item = createItemGroupElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
         matchingProjects.forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -252,14 +278,14 @@ jsprojManager.prototype = {
         });
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/ProjectReference', inserted_path, targetConditions);
+            project.removeItemGroupElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
         });
     },
 
     _getMatchingProjects: function (targetConditions) {
         // If specified, target can be 'all' (default), 'phone' or 'windows'. Ultimately should probably allow a comma
         // separated list, but not needed now.
-        var target = getTarget(targetConditions);
+        var target = getDeviceTarget(targetConditions);
         var versions = getVersions(targetConditions);
 
         if (target || versions) {
@@ -336,7 +362,7 @@ function getProjectTypeGuid(projectPath) {
     return null;
 }
 
-function createReferenceElement(path, incText, targetConditions, children) {
+function createItemGroupElement(path, incText, targetConditions, children) {
     path = path.split('/');
     path.reverse();
 
@@ -365,7 +391,7 @@ function createReferenceElement(path, incText, targetConditions, children) {
     return lastElement;
 }
 
-function getTarget(targetConditions) {
+function getDeviceTarget(targetConditions) {
     var target = targetConditions.deviceTarget;
     if (target) {
         target = target.toLowerCase().trim();
@@ -375,7 +401,7 @@ function getTarget(targetConditions) {
             // Allow "win" as alternative to "windows"
             target = "windows";
         } else if (target !== 'phone' && target !== 'windows') {
-            throw new Error('Invalid lib-file target attribute (must be "all", "phone", "windows" or "win"): ' + target);
+            throw new Error('Invalid device-target attribute (must be "all", "phone", "windows" or "win"): ' + target);
         }
     }
     return target;
@@ -384,7 +410,7 @@ function getTarget(targetConditions) {
 function getVersions(targetConditions) {
     var versions = targetConditions.versions;
     if (versions && !semver.validRange(versions, /* loose */ true)) {
-        throw new Error('Invalid lib-file versions attribute (must be a valid a valid node semantic version range): ' + versions);
+        throw new Error('Invalid versions attribute (must be a valid semantic version range): ' + versions);
     }
     return versions;
 }
@@ -411,7 +437,7 @@ proj.prototype = {
         this.xml.getroot().append(element);
     },
 
-    removeReferenceElementItemGroup: function (path, incText, targetConditions) {
+    removeItemGroupElement: function (path, incText, targetConditions) {
         var xpath = path + '[@Include="' + incText + '"]';
         var condition = createConditionAttrib(targetConditions);
         if (condition) {
@@ -554,7 +580,7 @@ function createConditionAttrib(targetConditions) {
             // Specifcally allow "arm" as alternative to "ARM"
             arch = "ARM";
         } else if (arch !== "x86" && arch !== "x64" && arch !== "ARM") {
-            throw new Error('Invalid lib-file arch attribute (must be "x86", "x64" or "ARM"): ' + arch);
+            throw new Error('Invalid arch attribute (must be "x86", "x64" or "ARM"): ' + arch);
         }
         return "'$(Platform)'=='" + arch + "'";
     }

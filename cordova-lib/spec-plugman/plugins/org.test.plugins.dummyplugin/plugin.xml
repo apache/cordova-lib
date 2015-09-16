@@ -183,6 +183,11 @@
 
         <source-file src="src/windows/dummer.js"/>
 
+        <resource-file src="src/windows/text_sample1.txt" target="text_samples/text_sample1.txt" arch="x86" />
+        <resource-file src="src/windows/text_sample2.txt" target="text_samples/text_sample2.txt" versions="&gt;=8.1" />
+        <resource-file src="src/windows/text_sample3.txt" target="text_samples/text_sample3.txt" device-target="phone"/>
+        <resource-file src="src/windows/text_sample4.txt" target="text_samples/text_sample4.txt" device-target="windows" versions="8.0" arch="x64"/>
+
         <lib-file src="TestSDK1, Version=1.0" arch="x86"/>
         <lib-file src="TestSDK2, Version=1.0" versions=">=8.1"/>
         <lib-file src="TestSDK3, Version=1.0" device-target="phone"/>

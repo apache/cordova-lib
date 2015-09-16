@@ -35,12 +35,14 @@ var PluginInfo = require('../../src/PluginInfo');
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;
 var valid_source = dummyPluginInfo.getSourceFiles('windows');
+var valid_resourceFiles = dummyPluginInfo.getResourceFiles('windows');
 var valid_libfiles = dummyPluginInfo.getLibFiles('windows');
 var valid_frameworks = dummyPluginInfo.getFrameworks('windows');
 
 var faultyPluginInfo = new PluginInfo(faultyplugin);
 var faulty_id = faultyPluginInfo.id;
 var invalid_source = faultyPluginInfo.getSourceFiles('windows');
+var invalid_resourceFiles = faultyPluginInfo.getResourceFiles('windows');
 var invalid_libfiles = faultyPluginInfo.getLibFiles('windows');
 
 function copyArray(arr) {
@@ -146,15 +148,25 @@ beforeEach(function () {
                     expect(copiedSuccessfully).toBe(true);
                 };
 
+                // Check that resource file was copied to correct path
+                var checkInstalledResourcePath = function (resource) {
+                    var dest = path.join(cordovaProjectWindowsPlatformDir, resource.target);
+                    var copiedSuccessfully = fs.existsSync(path.resolve(dest));
+                    expect(copiedSuccessfully).toBe(true);
+                };
+
                 var appendToRootFake = function (itemGroup) {
-                    expect(itemGroup).toContainXmlPath(xpath);
                     // In case we install framework with 'custom' attribute set to 'true'
                     // we verify that file is copied to correct dir and reference is added properly.
                     // This is not required in case of 'projectReference' attribute is used.
                     if (tag === 'framework' && elementToInstall.type !== 'projectReference') {
                         checkInstalledFrameworkReference(tag, elementToInstall, itemGroup);
                         checkInstalledFrameworkPath(elementToInstall);
+                        return;
+                    } else if (tag === 'resource-file') {
+                        checkInstalledResourcePath(elementToInstall);
                     }
+                    expect(itemGroup).toContainXmlPath(xpath);
                 };
 
                 var projectsAddedToSpies = [];
@@ -211,6 +223,41 @@ beforeEach(function () {
                 });
             });
 
+            describe('of <resource-file> elements', function () {
+                var resourceFiles = copyArray(valid_resourceFiles);
+                var invalidResourceFiles = copyArray(invalid_resourceFiles);
+
+                // This could be separated into individual specs, but that results in a lot of copying and deleting the
+                // project files, which is not needed.
+                it('should write to correct project files when conditions are specified', function () {
+                    var xpath = 'Content[@Include="' + resourceFiles[0].target + '"][@Condition="\'$(Platform)\'==\'x86\'"]';
+                    validateInstalledProjects('resource-file', resourceFiles[0], xpath, ['all']);
+
+                    xpath = 'Content[@Include="' + resourceFiles[1].target + '"]';
+                    validateInstalledProjects('resource-file', resourceFiles[1], xpath, ['windows', 'phone', 'windows10']);
+
+                    xpath = 'Content[@Include="' + resourceFiles[2].target + '"]';
+                    validateInstalledProjects('resource-file', resourceFiles[2], xpath, ['phone']);
+
+                    xpath = 'Content[@Include="' + resourceFiles[3].target + '"][@Condition="\'$(Platform)\'==\'x64\'"]';
+                    validateInstalledProjects('resource-file', resourceFiles[3], xpath, ['windows8']);
+                });
+
+                it('should throw if conditions are invalid', function () {
+                    expect(function () {
+                        windows['resource-file'].install(invalidResourceFiles[0], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
+                    }).toThrow('Invalid arch attribute (must be "x86", "x64" or "ARM"): x85');
+
+                    expect(function () {
+                        windows['resource-file'].install(invalidResourceFiles[1], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
+                    }).toThrow('Invalid versions attribute (must be a valid a valid node semantic version range): 8.0a');
+
+                    expect(function () {
+                        windows['resource-file'].install(invalidResourceFiles[2], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
+                    }).toThrow('Invalid device-target attribute (must be "all", "phone", "windows" or "win"): daphne');
+                });
+            });
+
             describe('of <lib-file> elements', function () {
                 var libfiles = copyArray(valid_libfiles);
                 var invalidLibFiles = copyArray(invalid_libfiles);
@@ -234,15 +281,15 @@ beforeEach(function () {
                 it('should throw if conditions are invalid', function () {
                     expect(function () {
                         windows['lib-file'].install(invalidLibFiles[0], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('Invalid lib-file arch attribute (must be "x86", "x64" or "ARM"): x85');
+                    }).toThrow('Invalid arch attribute (must be "x86", "x64" or "ARM"): x85');
 
                     expect(function () {
                         windows['lib-file'].install(invalidLibFiles[1], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('Invalid lib-file versions attribute (must be a valid a valid node semantic version range): 8.0a');
+                    }).toThrow('Invalid versions attribute (must be a valid a valid node semantic version range): 8.0a');
 
                     expect(function () {
                         windows['lib-file'].install(invalidLibFiles[2], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('Invalid lib-file target attribute (must be "all", "phone", "windows" or "win"): daphne');
+                    }).toThrow('Invalid device-target attribute (must be "all", "phone", "windows" or "win"): daphne');
                 });
             });
 
@@ -321,7 +368,7 @@ beforeEach(function () {
                 });
 
                 projects.forEach(function (project) {
-                    var spy = spyOn(project, 'removeReferenceElementItemGroup');
+                    var spy = spyOn(project, 'removeItemGroupElement');
                     if (projectsAddedTo.indexOf(path.basename(project.location)) > -1) {
                         projectsAddedToSpies.push(spy);
                     } else {
@@ -349,6 +396,36 @@ beforeEach(function () {
                             var source = copyArray(valid_source);
                             windows['source-file'].uninstall(source[0], cordovaProjectWindowsPlatformDir, dummy_id, null, proj_files);
                             expect(s).toHaveBeenCalledWith(cordovaProjectWindowsPlatformDir, path.join('plugins', 'org.test.plugins.dummyplugin', 'dummer.js'));
+                            done();
+                        });
+                });
+            });
+
+            describe('of <resource-file> elements', function () {
+                // This could be separated into individual specs, but that results in a lot of copying and deleting the
+                // project files, which is not needed.
+                it('should remove from correct project files when conditions specified', function (done) {
+                    var resourcefiles = copyArray(valid_resourceFiles);
+
+                    install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
+                        .then(function () {
+                            var path = 'ItemGroup/Content';
+                            var incText = resourcefiles[0].target;
+                            var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x86'};
+                            validateUninstalledProjects('resource-file', resourcefiles[0], path, incText, targetConditions, ['all']);
+
+                            incText = resourcefiles[1].target;
+                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
+                            validateUninstalledProjects('resource-file', resourcefiles[1], path, incText, targetConditions, ['windows', 'phone', 'windows10']);
+
+                            incText = resourcefiles[2].target;
+                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
+                            validateUninstalledProjects('resource-file', resourcefiles[2], path, incText, targetConditions, ['phone']);
+
+                            incText = resourcefiles[3].target;
+                            targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x64'};
+                            validateUninstalledProjects('resource-file', resourcefiles[3], path, incText, targetConditions, ['windows8']);
+
                             done();
                         });
                 });
