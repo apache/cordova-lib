@@ -18,8 +18,8 @@
 */
 var path = require('path'),
     fs = require('fs'),
-    ConfigParser = require('../src/configparser/ConfigParser'),
-    xml = path.join(__dirname, 'test-config.xml'),
+    ConfigParser = require('../../src/ConfigParser/ConfigParser'),
+    xml = path.join(__dirname, '../fixtures/test-config.xml'),
     xml_contents = fs.readFileSync(xml, 'utf-8');
 
 describe('config.xml parser', function () {
