@@ -250,7 +250,7 @@ beforeEach(function () {
 
                     expect(function () {
                         windows['resource-file'].install(invalidResourceFiles[1], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('Invalid versions attribute (must be a valid a valid node semantic version range): 8.0a');
+                    }).toThrow('Invalid versions attribute (must be a valid semantic version range): 8.0a');
 
                     expect(function () {
                         windows['resource-file'].install(invalidResourceFiles[2], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
@@ -285,7 +285,7 @@ beforeEach(function () {
 
                     expect(function () {
                         windows['lib-file'].install(invalidLibFiles[1], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
-                    }).toThrow('Invalid versions attribute (must be a valid a valid node semantic version range): 8.0a');
+                    }).toThrow('Invalid versions attribute (must be a valid semantic version range): 8.0a');
 
                     expect(function () {
                         windows['lib-file'].install(invalidLibFiles[2], faultyplugin, cordovaProjectWindowsPlatformDir, faulty_id, null, proj_files);
