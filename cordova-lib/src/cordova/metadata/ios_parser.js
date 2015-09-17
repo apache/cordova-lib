@@ -175,40 +175,41 @@ ios_parser.prototype.update_from_config = function(config) {
         }
     });
 
-    var me = this;
+    var parser = this;
     return this.update_build_settings(config).then(function() {
-        if (name == me.originalName) {
-            events.emit('verbose', 'iOS Product Name has not changed (still "' + me.originalName + '")');
+        if (name == parser.originalName) {
+            events.emit('verbose', 'iOS Product Name has not changed (still "' + parser.originalName + '")');
             return Q();
         }
 
         // Update product name inside pbxproj file
-        var proj = new xcode.project(me.pbxproj);
-        var parser = me;
-        var d = Q.defer();
-        proj.parse(function(err,hash) {
-            if (err) {
-                d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            } else {
-                proj.updateProductName(name);
-                fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
-                // Move the xcodeproj and other name-based dirs over.
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
-                shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
-                shell.mv(parser.cordovaproj, path.join(parser.path, name));
-                // Update self object with new paths
-                var old_name = parser.originalName;
-                parser = new module.exports(parser.path);
-                // Hack this shi*t
-                var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
-                pbx_contents = pbx_contents.split(old_name).join(name);
-                fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
-                events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
-                d.resolve();
-            }
-        });
-        return d.promise;
+        var proj = new xcode.project(parser.pbxproj);
+        try {
+            proj.parseSync();
+        } catch (err) {
+            return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+        }
+
+        proj.updateProductName(name);
+        fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
+
+        // Move the xcodeproj and other name-based dirs over.
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
+        shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
+        shell.mv(parser.cordovaproj, path.join(parser.path, name));
+
+        // Update self object with new paths
+        var old_name = parser.originalName;
+        parser = new module.exports(parser.path);
+
+        // Hack this shi*t
+        var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
+        pbx_contents = pbx_contents.split(old_name).join(name);
+        fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
+        events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
+
+        return Q();
     });
 };
 
@@ -276,26 +277,27 @@ ios_parser.prototype.update_build_settings = function(config) {
         return Q();
     }
 
-    var me = this;
-    var d = Q.defer();
     var proj = new xcode.project(this.pbxproj);
-    proj.parse(function(err,hash) {
-        if (err) {
-            d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            return;
-        }
-        if (targetDevice) {
-            events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
-            proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
-        }
-        if (deploymentTarget) {
-            events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
-            proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
-        }
-        fs.writeFileSync(me.pbxproj, proj.writeSync(), 'utf-8');
-        d.resolve();
-    });
-    return d.promise;
+
+    try {
+        proj.parseSync();
+    } catch (err) {
+        return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+    }
+
+    if (targetDevice) {
+        events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
+        proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
+    }
+
+    if (deploymentTarget) {
+        events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
+        proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
+    }
+
+    fs.writeFileSync(this.pbxproj, proj.writeSync(), 'utf-8');
+
+    return Q();
 };
 
 // Construct a default value for CFBundleVersion as the version with any
