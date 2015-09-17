@@ -156,14 +156,3 @@ osx_parser.prototype.update_from_config = function(config) {
 function default_CFBundleVersion(version) {
     return version.split('-')[0];
 }
-
-// Converts cordova specific representation of target device to XCode value
-function parseTargetDevicePreference(value) {
-    if (!value) return null;
-    var map = { 'universal': '"1,2"', 'handset': '"1"', 'tablet': '"2"'};
-    if (map[value.toLowerCase()]) {
-        return map[value.toLowerCase()];
-    }
-    events.emit('warn', 'Unknown target-device preference value: "' + value + '".');
-    return null;
-}
