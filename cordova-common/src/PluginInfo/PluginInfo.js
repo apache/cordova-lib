@@ -31,7 +31,7 @@ TODO (kamrik): refactor this to not use sync functions and return promises.
 var path = require('path')
   , fs = require('fs')
   , xml_helpers = require('../util/xml-helpers')
-  , CordovaError = require('../CordovaError')
+  , CordovaError = require('../CordovaError/CordovaError')
   ;
 
 function PluginInfo(dirname) {
