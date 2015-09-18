@@ -139,12 +139,21 @@ ios_parser.prototype.update_from_config = function(config) {
         {dest: 'icon-50.png', width: 50, height: 50},
         {dest: 'icon-50@2x.png', width: 100, height: 100}
     ];
+    
+    var destIconsFolder, destSplashFolder;
+    var xcassetsExists = folderExists(path.join(platformRoot, 'Images.xcassets/'));
+    
+    if (xcassetsExists) {
+        destIconsFolder = 'Images.xcassets/AppIcon.appiconset/';
+    } else {
+        destIconsFolder = 'Resources/icons/';
+    }
 
     platformIcons.forEach(function (item) {
         var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
         if (icon){
             var src = path.join(appRoot, icon.src),
-                dest = path.join(platformRoot, 'Resources/icons/', item.dest);
+                dest = path.join(platformRoot, destIconsFolder, item.dest);
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
@@ -153,23 +162,29 @@ ios_parser.prototype.update_from_config = function(config) {
     // Update splashscreens
     var splashScreens = config.getSplashScreens('ios');
     var platformSplashScreens = [
-        {dest: 'Resources/splash/Default~iphone.png', width: 320, height: 480},
-        {dest: 'Resources/splash/Default@2x~iphone.png', width: 640, height: 960},
-        {dest: 'Resources/splash/Default-Portrait~ipad.png', width: 768, height: 1024},
-        {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
-        {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
-        {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
-        {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136},
-        {dest: 'Resources/splash/Default-667h.png', width: 750, height: 1334},
-        {dest: 'Resources/splash/Default-736h.png', width: 1242, height: 2208},
-        {dest: 'Resources/splash/Default-Landscape-736h.png', width: 2208, height: 1242}
+        {dest: 'Default~iphone.png', width: 320, height: 480},
+        {dest: 'Default@2x~iphone.png', width: 640, height: 960},
+        {dest: 'Default-Portrait~ipad.png', width: 768, height: 1024},
+        {dest: 'Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
+        {dest: 'Default-Landscape~ipad.png', width: 1024, height: 768},
+        {dest: 'Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
+        {dest: 'Default-568h@2x~iphone.png', width: 640, height: 1136},
+        {dest: 'Default-667h.png', width: 750, height: 1334},
+        {dest: 'Default-736h.png', width: 1242, height: 2208},
+        {dest: 'Default-Landscape-736h.png', width: 2208, height: 1242}
     ];
+    
+    if (xcassetsExists) {
+        destSplashFolder = 'Images.xcassets/LaunchImage.launchimage/';
+    } else {
+        destSplashFolder = 'Resources/splash/';
+    }
 
     platformSplashScreens.forEach(function(item) {
         var splash = splashScreens.getBySize(item.width, item.height);
         if (splash){
             var src = path.join(appRoot, splash.src),
-                dest = path.join(platformRoot, item.dest);
+                dest = path.join(platformRoot, destSplashFolder, item.dest);
             events.emit('verbose', 'Copying splash from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
@@ -299,6 +314,15 @@ ios_parser.prototype.update_build_settings = function(config) {
 
     return Q();
 };
+
+function folderExists(folderPath) {
+    try {
+        var stat = fs.statSync(folderPath);
+        return stat && stat.isDirectory();
+    } catch (e) {
+        return false;
+    }
+}
 
 // Construct a default value for CFBundleVersion as the version with any
 // -rclabel stripped=.
