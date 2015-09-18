@@ -25,7 +25,8 @@ exports = module.exports = {
     superspawn: require('./src/superspawn'),
 
     ActionStack: require('./src/ActionStack'),
-    CordovaError: require('./src/CordovaError'),
+    CordovaError: require('./src/CordovaError/CordovaError'),
+    CordovaExternalToolErrorContext: require('./src/CordovaError/CordovaExternalToolErrorContext'),
     PlatformJson: require('./src/PlatformJson'),
     ConfigParser: require('./src/ConfigParser/ConfigParser.js'),
 

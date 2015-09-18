@@ -21,7 +21,7 @@
 
 var et = require('elementtree'),
     xml= require('../util/xml-helpers'),
-    CordovaError = require('../CordovaError'),
+    CordovaError = require('../CordovaError/CordovaError'),
     fs = require('fs'),
     events = require('../events');
 
