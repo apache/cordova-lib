@@ -144,7 +144,7 @@ ios_parser.prototype.update_from_config = function(config) {
         var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
         if (icon){
             var src = path.join(appRoot, icon.src),
-                dest = path.join(platformRoot, 'Resources/icons/', item.dest);
+                dest = path.join(platformRoot, 'Resources/Images.xcassets/AppIcon/', item.dest);
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
@@ -153,23 +153,23 @@ ios_parser.prototype.update_from_config = function(config) {
     // Update splashscreens
     var splashScreens = config.getSplashScreens('ios');
     var platformSplashScreens = [
-        {dest: 'Resources/splash/Default~iphone.png', width: 320, height: 480},
-        {dest: 'Resources/splash/Default@2x~iphone.png', width: 640, height: 960},
-        {dest: 'Resources/splash/Default-Portrait~ipad.png', width: 768, height: 1024},
-        {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
-        {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
-        {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
-        {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136},
-        {dest: 'Resources/splash/Default-667h.png', width: 750, height: 1334},
-        {dest: 'Resources/splash/Default-736h.png', width: 1242, height: 2208},
-        {dest: 'Resources/splash/Default-Landscape-736h.png', width: 2208, height: 1242}
+        {dest: 'Default~iphone.png', width: 320, height: 480},
+        {dest: 'Default@2x~iphone.png', width: 640, height: 960},
+        {dest: 'Default-Portrait~ipad.png', width: 768, height: 1024},
+        {dest: 'Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
+        {dest: 'Default-Landscape~ipad.png', width: 1024, height: 768},
+        {dest: 'Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
+        {dest: 'Default-568h@2x~iphone.png', width: 640, height: 1136},
+        {dest: 'Default-667h.png', width: 750, height: 1334},
+        {dest: 'Default-736h.png', width: 1242, height: 2208},
+        {dest: 'Default-Landscape-736h.png', width: 2208, height: 1242}
     ];
 
     platformSplashScreens.forEach(function(item) {
         var splash = splashScreens.getBySize(item.width, item.height);
         if (splash){
             var src = path.join(appRoot, splash.src),
-                dest = path.join(platformRoot, item.dest);
+                dest = path.join(platformRoot, 'Resources/Images.xcassets/LaunchImage/', item.dest);
             events.emit('verbose', 'Copying splash from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
