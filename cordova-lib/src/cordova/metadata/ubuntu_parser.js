@@ -100,7 +100,7 @@ ubuntu_parser.prototype.update_manifest = function() {
     var content = '[Desktop Entry]\nName=' + name + '\nExec=./cordova-ubuntu www/\nTerminal=false\nType=Application\nX-Ubuntu-Touch=true';
 
     if (this.config.doc.find('icon') && this.config.doc.find('icon').attrib.src) {
-        var iconPath = path.join(this.path, this.config.doc.find('icon').attrib.src);
+        var iconPath = path.join(this.path, '../..', this.config.doc.find('icon').attrib.src);
         if (fs.existsSync(iconPath))
             content += '\nIcon=www/' + this.config.doc.find('icon').attrib.src;
         else
