@@ -26,7 +26,6 @@ var npm = require('npm'),
     rc = require('rc'),
     Q = require('q'),
     request = require('request'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew,
     npmhelper = require('../../util/npm-helper'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('cordova-common').events,
@@ -292,22 +291,6 @@ function isValidCprName(plugin) {
     //If matches equals null, plugin is not reverse domain name style
     if(matches === null) {
         return false;
-    } else {
-        warnIfIdInMapper(splitVersion[0]);
-    }
+    } 
     return true;
-}
-
-/**
- * @param plugin:{Array} - the plugin id or "id@version"
- * @param matches:{Array} - the array containing the RDN style plugin id without @version
- */
-function warnIfIdInMapper(plugin) {
-    //Reverse domain name style plugin ID
-    //Check if a mapping exists for the plugin id
-    //if it does, warn the users to use package-name
-    var packageName = pluginMapper[plugin];
-    if(packageName) {
-        events.emit('log', 'WARNING: ' + plugin + ' has been renamed to ' + packageName + '. You may not be getting the latest version! We suggest you `cordova plugin rm ' + plugin + '` and `cordova plugin add ' + packageName + '`.');
-    }
 }

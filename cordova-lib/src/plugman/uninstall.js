@@ -32,7 +32,8 @@ var path = require('path'),
     platform_modules = require('../platforms/platforms'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
-    cordovaUtil      = require('../cordova/util');
+    cordovaUtil = require('../cordova/util'),
+    pluginMapper = require('cordova-registry-mapper').oldToNew;
 
 var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -142,10 +143,19 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var pluginInfo = pluginInfoProvider.get(depPluginDir);
         // TODO: Should remove dependencies in a separate step, since dependencies depend on platform.
         var deps = pluginInfo.getDependencies();
+        var deps_path;
         deps.forEach(function (d) {
-            if (toDelete.indexOf(d.id) === -1) {
-                toDelete.push(d.id);
-                findDependencies(d.id);
+            var splitVersion = d.id.split('@');
+            deps_path = path.join(plugin_dir, '..', splitVersion[0]);
+            if (!fs.existsSync(deps_path)) {
+                    var newId = pluginMapper[splitVersion[0]];
+                    if (newId && toDelete.indexOf(newId) === -1) {
+                        toDelete.push(newId);
+                        findDependencies(newId);
+                    }
+            } else if (toDelete.indexOf(d.id) === -1) {
+                    toDelete.push(d.id);
+                    findDependencies(d.id);
             }
         });
     }
@@ -256,9 +266,18 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         promise = promiseutil.Q_chainmap(danglers, function(dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
 
+            //try to convert ID if old-id path doesn't exist. 
+            if (!fs.existsSync(dependent_path)) {
+                var splitVersion = dangler.split('@');
+                var newId = pluginMapper[splitVersion[0]];
+                if(newId) {
+                    dependent_path = path.join(plugins_dir, newId);
+                }
+            }
+
             var opts = underscore.extend({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
-                depsInfo: depsInfo
+                depsInfo: depsInfo  
             });
 
             return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);

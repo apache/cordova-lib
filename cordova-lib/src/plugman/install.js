@@ -36,6 +36,7 @@ var path = require('path'),
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
+    pluginMapper = require('cordova-registry-mapper').oldToNew,
     cordovaUtil = require('../cordova/util');
 
 var superspawn = require('cordova-common').superspawn;
@@ -48,7 +49,8 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
    providing a high-level logic flow overview.
    1. module.exports (installPlugin)
      a) checks that the platform is supported
-     b) invokes possiblyFetch
+     b) converts oldIds into newIds (CPR -> npm)
+     c) invokes possiblyFetch
    2. possiblyFetch
      a) checks that the plugin is fetched. if so, calls runInstall
      b) if not, invokes plugman.fetch, and when done, calls runInstall
@@ -56,7 +58,7 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
      a) checks if the plugin is already installed. if so, calls back (done).
      b) if possible, will check the version of the project and make sure it is compatible with the plugin (checks <engine> tags)
      c) makes sure that any variables required by the plugin are specified. if they are not specified, plugman will throw or callback with an error.
-     d) if dependencies are listed in the plugin, it will recurse for each dependent plugin and call possiblyFetch (2) on each one. When each dependent plugin is successfully installed, it will then proceed to call handleInstall (4)
+     d) if dependencies are listed in the plugin, it will recurse for each dependent plugin, autoconvert IDs to newIDs and call possiblyFetch (2) on each one. When each dependent plugin is successfully installed, it will then proceed to call handleInstall (4)
    4. handleInstall
      a) queues up actions into a queue (asset, source-file, headers, etc)
      b) processes the queue
@@ -68,7 +70,6 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 module.exports = function installPlugin(platform, project_dir, id, plugins_dir, options) {
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
-
     options = options || {};
     options.is_top_level = true;
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
@@ -79,6 +80,19 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 
     var current_stack = new action_stack();
 
+    // Split @Version from the plugin id if it exists.
+    var splitVersion = id.split('@');
+    //Check if a mapping exists for the plugin id
+    //if it does, convert id to new name id 
+    var newId = pluginMapper[splitVersion[0]];
+    if(newId) {
+        events.emit('log', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+        if(splitVersion[1]) {
+            id = newId +'@'+splitVersion[1];
+        } else {
+            id = newId;
+        }
+     }     
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
         return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -404,6 +418,20 @@ function installDependencies(install, dependencies, options) {
     return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
+                // Split @Version from the plugin id if it exists.
+                var splitVersion = dep.id.split('@');
+                //Check if a mapping exists for the plugin id
+                //if it does, convert id to new name id 
+                var newId = pluginMapper[splitVersion[0]];
+                if(newId) {
+                    events.emit('log', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+                    if(splitVersion[1]) {
+                        dep.id = newId +'@'+splitVersion[1];
+                    } else {
+                        dep.id = newId;
+                    }
+                }
+
                 dep.git_ref = dep.commit;
 
                 if (dep.subdir) {
@@ -528,7 +556,6 @@ function installDependency(dep, install, options) {
     var opts;
 
     dep.install_dir = path.join(install.plugins_dir, dep.id);
-
     if ( fs.existsSync(dep.install_dir) ) {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
         opts = underscore.extend({}, options, {

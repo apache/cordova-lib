@@ -167,7 +167,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     });
 }
 
-
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
@@ -180,6 +179,7 @@ function checkID(expectedIdAndVersion, pinfo) {
         throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + expectedVersion + '" but got "' + pinfo.version + '".');
     }
 }
+
 
 // Note, there is no cache invalidation logic for local plugins.
 // As of this writing loadLocalPlugins() is never called with different
