@@ -219,6 +219,14 @@ describe('config.xml parser', function () {
                 });
                 expect(pluginNames).not.toContain('org.apache.cordova.legacyplugin');
             });
+            it('it should read <access> tag entries', function(){
+                var accesses = cfg.getAccesses();
+                expect(accesses.length).not.toEqual(0);
+            });
+            it('it should read <allow-navigation> tag entries', function(){
+                var navigations = cfg.getAllowNavigations();
+                expect(navigations.length).not.toEqual(0);
+            });
         });
     });
 });
