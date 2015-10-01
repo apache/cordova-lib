@@ -211,6 +211,8 @@ ios_parser.prototype.update_from_config = function(config) {
         // Move the xcodeproj and other name-based dirs over.
         shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
         shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
+        // CB-8914 remove userdata otherwise project is un-usable in xcode 
+        shell.rm('-rf',path.join(parser.xcodeproj,'xcuserdata/'));
         shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
         shell.mv(parser.cordovaproj, path.join(parser.path, name));
 
