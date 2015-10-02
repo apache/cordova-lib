@@ -102,7 +102,7 @@ ubuntu_parser.prototype.update_manifest = function() {
     if (this.config.doc.find('icon') && this.config.doc.find('icon').attrib.src) {
         var iconPath = path.join(this.path, '../..', this.config.doc.find('icon').attrib.src);
         if (fs.existsSync(iconPath))
-            content += '\nIcon=www/' + this.config.doc.find('icon').attrib.src;
+            content += '\nIcon=' + this.config.doc.find('icon').attrib.src;
         else
             return Q.reject(new Error('icon does not exist: ' + iconPath));
     } else {
