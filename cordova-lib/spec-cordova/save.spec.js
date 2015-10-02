@@ -49,7 +49,7 @@ describe('(save flag)', function () {
         pluginOldVersion    = '0.2.11',
         gitPluginName       = 'cordova-plugin-device',
         gitPluginUrl        = 'https://github.com/apache/cordova-plugin-device.git',
-        variablePluginName  = 'com.phonegap.plugins.facebookconnect',
+        variablePluginName  = 'phonegap-facebook-plugin',
         variablePluginUrl   = 'https://github.com/Wizcorp/phonegap-facebook-plugin',
         localPluginName     = 'org.apache.cordova.fakeplugin1',
         localPluginPath     = path.join(__dirname, 'fixtures', 'plugins', 'fake1'),
