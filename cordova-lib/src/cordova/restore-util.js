@@ -25,6 +25,7 @@ var cordova_util = require('./util'),
     plugin       = require('./plugin'),
     events       = require('cordova-common').events,
     cordova      = require('./cordova'),
+    semver      = require('semver'),
     promiseutil = require('../util/promise-util');
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
@@ -114,3 +115,4 @@ function installPluginsFromConfigXML(args) {
         };
         return plugin('add', installFrom, options);
     });
+}

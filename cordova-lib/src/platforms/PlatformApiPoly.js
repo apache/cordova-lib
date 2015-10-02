@@ -24,6 +24,8 @@ var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
+var common = require('../plugman/platforms/common');
+
 var superspawn = require('cordova-common').superspawn;
 var xmlHelpers = require('cordova-common').xmlHelpers;
 var knownPlatforms = require('./platforms');
@@ -52,7 +54,7 @@ function PlatformApiPoly(platform, platformRootDir, events) {
 
     this.root = platformRootDir;
     this.platform = platform;
-    this.events = events || require('../events');
+    this.events = events || require('cordova-common').events;
 
     if (!(platform in knownPlatforms))
         throw new CordovaError('Unknown platform ' + platform);

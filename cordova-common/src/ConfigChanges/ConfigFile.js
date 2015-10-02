@@ -61,6 +61,8 @@ function ConfigFile_load() {
         return;
     }
     self.exists = true;
+    self.mtime = fs.statSync(self.filepath).mtime;
+
     var ext = path.extname(filepath);
     // Windows8 uses an appxmanifest, and wp8 will likely use
     // the same in a future release

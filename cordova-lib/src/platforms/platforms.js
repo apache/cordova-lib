@@ -20,7 +20,7 @@
 var path = require('path');
 var util = require('../cordova/util');
 var platforms = require('./platformsConfig.json');
-var events = require('../events');
+var events = require('cordova-common').events;
 
 // Avoid loading the same platform projects more than once (identified by path)
 var cachedApis = {};

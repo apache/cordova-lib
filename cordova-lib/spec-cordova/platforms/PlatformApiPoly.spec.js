@@ -18,6 +18,7 @@
 */
 
 var Q = require('q');
+var fs = require('fs');
 var et = require('elementtree');
 var path = require('path');
 var shell = require('shelljs');
