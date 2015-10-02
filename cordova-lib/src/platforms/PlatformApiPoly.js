@@ -310,10 +310,7 @@ PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
     plugin.getFilesAndFrameworks(this.platform)
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
-    .filter(function (item) {
-        // CB-5238 Skip (don't uninstall) non custom frameworks.
-        return !(item.itemType == 'framework' && !item.custom);
-    }).forEach(function(item) {
+    .forEach(function(item) {
         actions.push(actions.createAction(
             self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile],
             self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile]));

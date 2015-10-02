@@ -26,6 +26,7 @@ var path = require('path')
   , xcode = require('xcode')
   , plist = require('plist')
   , shell = require('shelljs')
+  , semver = require('semver')
   , events = require('cordova-common').events
   , _ = require('underscore')
   , CordovaError = require('cordova-common').CordovaError
@@ -126,6 +127,13 @@ xcode.project.prototype.removeFromPbxEmbedFrameworksBuildPhase = function (file)
     }
 };
 
+// These frameworks are required by cordova-ios by default. We should never add/remove them.
+var keep_these_frameworks = [
+    'MobileCoreServices.framework',
+    'CoreGraphics.framework',
+    'AssetsLibrary.framework'
+];
+
 module.exports = {
     www_dir:function(project_dir) {
         return path.join(project_dir, 'www');
@@ -170,10 +178,23 @@ module.exports = {
     'framework':{ // CB-5238 custom frameworks only
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
             var src = obj.src,
-                custom = obj.custom,
-                srcFile = path.resolve(plugin_dir, src),
+                custom = obj.custom;
+
+            if (!custom) {
+                var keepFrameworks = keep_these_frameworks;
+                // CoreLocation dependency removed in cordova-ios@3.6.0.
+                if (semver.lt(project.cordovaVersion, '3.6.0-dev')) {
+                    keepFrameworks = keepFrameworks.concat(['CoreLocation.framework']);
+                }
+                if (keepFrameworks.indexOf(src) < 0) {
+                    project.xcode.addFramework(src, {weak: obj.weak});
+                    project.frameworks[src] = (project.frameworks[src] || 0) + 1;
+                }
+                return;
+            }
+
+            var srcFile = path.resolve(plugin_dir, src),
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
-            if (!custom) return; //non-custom frameworks are processed in config-changes.js
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <framework>');
             if (fs.existsSync(targetDir)) throw new Error('target destination "' + targetDir + '" already exists');
             shell.mkdir('-p', path.dirname(targetDir));
@@ -185,9 +206,28 @@ module.exports = {
             }
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
-            var src = obj.src,
-                targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
-            var pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
+            var src = obj.src;
+
+            if (!obj.custom) {
+                var keepFrameworks = keep_these_frameworks;
+                // CoreLocation dependency removed in cordova-ios@3.6.0.
+                if (semver.lt(project.cordovaVersion, '3.6.0-dev')) {
+                    keepFrameworks = keepFrameworks.concat(['CoreLocation.framework']);
+                }
+                if (keepFrameworks.indexOf(src) < 0) {
+                    project.frameworks[src] -= (project.frameworks[src] || 1) - 1;
+                    if (project.frameworks[src] < 1) {
+                        // Only remove non-custom framework from xcode project
+                        // if there is no references remains
+                        project.xcode.removeFramework(src);
+                        delete project.frameworks[src];
+                    }
+                }
+                return;
+            }
+
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src)),
+                pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
             if (pbxFile) {
                 project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
             }
@@ -222,7 +262,6 @@ module.exports = {
         var xcodeproj = xcode.project(pbxPath);
         xcodeproj.parseSync();
 
-
         var xcBuildConfiguration = xcodeproj.pbxXCBuildConfigurationSection();
         var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { return entry.buildSettings && entry.buildSettings.INFOPLIST_FILE; });
         var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
@@ -231,6 +270,12 @@ module.exports = {
         if (!fs.existsSync(plist_file) || !fs.existsSync(config_file)) {
             throw new CordovaError('could not find -Info.plist file, or config.xml file.');
         }
+
+        var frameworks_file = path.join(project_dir, 'frameworks.json');
+        var frameworks = {};
+        try {
+            frameworks = require(frameworks_file);
+        } catch (e) { }
 
         var xcode_dir = path.dirname(plist_file);
         var pluginsDir = path.resolve(xcode_dir, 'Plugins');
@@ -245,8 +290,15 @@ module.exports = {
             pbx: pbxPath,
             write: function () {
                 fs.writeFileSync(pbxPath, xcodeproj.writeSync());
+                if (Object.keys(this.frameworks).length === 0){
+                    // If there is no framework references remain in the project, just remove this file
+                    shell.rm('-rf', frameworks_file);
+                    return;
+                }
+                fs.writeFileSync(frameworks_file, JSON.stringify(this.frameworks, null, 4));
             },
-            cordovaVersion: cordovaVersion
+            cordovaVersion: cordovaVersion,
+            frameworks: frameworks
         };
 
         return cachedProjectFiles[project_dir];

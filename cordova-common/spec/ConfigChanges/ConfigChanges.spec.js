@@ -26,7 +26,6 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     et      = require('elementtree'),
     path    = require('path'),
     shell   = require('shelljs'),
-    xcode = require('xcode'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     dummyplugin = path.join(__dirname, '../fixtures/plugins/org.test.plugins.dummyplugin'),
     cbplugin = path.join(__dirname, '../fixtures/plugins/org.test.plugins.childbrowser'),
@@ -189,20 +188,6 @@ describe('config-changes module', function() {
             });
         });
 
-        describe('for ios projects', function() {
-            beforeEach(function() {
-                shell.cp('-rf', ios_config_xml, temp);
-            });
-            it('should special case framework elements for ios', function() {
-                var munger = new configChanges.PlatformMunger('ios', temp, 'unused', null, pluginInfoProvider);
-                var munge = munger.generate_plugin_config_munge(pluginInfoProvider.get(cbplugin), {});
-                expect(munge.files['framework']).toBeDefined();
-                expect(get_munge_change(munge, 'framework', 'libsqlite3.dylib', false)).toBeDefined();
-                expect(get_munge_change(munge, 'framework', 'social.framework', true)).toBeDefined();
-                expect(get_munge_change(munge, 'framework', 'music.framework', false)).toBeDefined();
-                expect(munge.files['framework'].parents['Custom.framework']).not.toBeDefined();
-            });
-        });
         describe('for windows project', function() {
             beforeEach(function() {
                 shell.cp('-rf', windows_testapp_jsproj, temp);
@@ -303,24 +288,6 @@ describe('config-changes module', function() {
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>UINewsstandIcon<\/key>[\s\S]*<key>CFBundlePrimaryIcon<\/key>/);
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<string>schema-b<\/string>/);
                     expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).not.toMatch(/(<string>schema-a<\/string>[^]*){2,}/);
-                });
-            });
-            describe('of pbxproject framework files', function() {
-                var xcode_add;
-                beforeEach(function() {
-                    shell.cp('-rf', ios_config_xml, temp);
-                    shell.cp('-rf', cbplugin, plugins_dir);
-                    xcode_add = spyOn(xcode.project.prototype, 'addFramework').andCallThrough();
-                });
-                it('should call into xcode.addFramework if plugin has <framework> file defined and is ios',function() {
-                    var platformJson = PlatformJson.load(plugins_dir, 'ios');
-                    platformJson.addInstalledPluginToPrepareQueue('org.test.plugins.childbrowser', {});
-                    var munger = new configChanges.PlatformMunger('ios', temp, platformJson, pluginInfoProvider);
-                    munger.process(plugins_dir);
-                    expect(xcode_add).toHaveBeenCalledWith('libsqlite3.dylib', {weak:false});
-                    expect(xcode_add).toHaveBeenCalledWith('social.framework', {weak:true});
-                    expect(xcode_add).toHaveBeenCalledWith('music.framework', {weak:false});
-                    expect(xcode_add).not.toHaveBeenCalledWith('Custom.framework');
                 });
             });
             it('should resolve wildcard config-file targets to the project, if applicable', function() {

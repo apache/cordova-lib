@@ -21,7 +21,6 @@
  * This module deals with shared configuration / dependency "stuff". That is:
  * - XML configuration files such as config.xml, AndroidManifest.xml or WMAppManifest.xml.
  * - plist files in iOS
- * - pbxproj files in iOS
  * Essentially, any type of shared resources that we need to handle with awareness
  * of how potentially multiple plugins depend on a single shared resource, should be
  * handled in this module.
@@ -40,15 +39,6 @@ var fs   = require('fs'),
     ConfigKeeper = require('./ConfigKeeper');
 
 var mungeutil = require('./munge-util');
-
-
-// These frameworks are required by cordova-ios by default. We should never add/remove them.
-var keep_these_frameworks = [
-    'MobileCoreServices.framework',
-    'CoreGraphics.framework',
-    'AssetsLibrary.framework'
-];
-
 
 exports.PlatformMunger = PlatformMunger;
 
@@ -84,41 +74,14 @@ function PlatformMunger_save_all() {
 PlatformMunger.prototype.apply_file_munge = PlatformMunger_apply_file_munge;
 function PlatformMunger_apply_file_munge(file, munge, remove) {
     var self = this;
-    var xml_child;
 
-    if ( file === 'framework' && self.platform === 'ios' ) {
-        // ios pbxproj file
-        var pbxproj = self.config_keeper.get(self.project_dir, self.platform, 'framework');
-        // CoreLocation dependency removed in cordova-ios@3.6.0.
-        var keepFrameworks = keep_these_frameworks;
-        if (semver.lt(pbxproj.cordovaVersion, '3.6.0-dev')) {
-            keepFrameworks = keepFrameworks.concat(['CoreLocation.framework']);
-        }
-        for (var src in munge.parents) {
-            for (xml_child in munge.parents[src]) {
-                var weak = munge.parents[src][xml_child].xml;
-                // Only add the framework if it's not a cordova-ios core framework
-                if (keep_these_frameworks.indexOf(src) == -1) {
-                    // xml_child in this case is whether the framework should use weak or not
-                    if (remove) {
-                        pbxproj.data.removeFramework(src);
-                    } else {
-                        pbxproj.data.addFramework(src, {weak: weak});
-                    }
-                    pbxproj.is_changed = true;
-                }
-            }
-        }
-    } else {
-        // all other types of files
-        for (var selector in munge.parents) {
-            for (xml_child in munge.parents[selector]) {
-                // this xml child is new, graft it (only if config file exists)
-                var config_file = self.config_keeper.get(self.project_dir, self.platform, file);
-                if (config_file.exists) {
-                    if (remove) config_file.prune_child(selector, munge.parents[selector][xml_child]);
-                    else config_file.graft_child(selector, munge.parents[selector][xml_child]);
-                }
+    for (var selector in munge.parents) {
+        for (var xml_child in munge.parents[selector]) {
+            // this xml child is new, graft it (only if config file exists)
+            var config_file = self.config_keeper.get(self.project_dir, self.platform, file);
+            if (config_file.exists) {
+                if (remove) config_file.prune_child(selector, munge.parents[selector][xml_child]);
+                else config_file.graft_child(selector, munge.parents[selector][xml_child]);
             }
         }
     }
@@ -140,15 +103,6 @@ function remove_plugin_changes(pluginInfo, is_top_level) {
     var munge = mungeutil.decrement_munge(global_munge, config_munge);
 
     for (var file in munge.files) {
-        if (file == 'plugins-plist' && self.platform == 'ios') {
-            // TODO: remove this check and <plugins-plist> sections in spec/plugins/../plugin.xml files.
-            events.emit(
-                'warn',
-                'WARNING: Plugin "' + pluginInfo.id + '" uses <plugins-plist> element(s), ' +
-                'which are no longer supported. Support has been removed as of Cordova 3.4.'
-            );
-            continue;
-        }
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
@@ -192,15 +146,6 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
     }
 
     for (var file in munge.files) {
-        // TODO: remove this warning some time after 3.4 is out.
-        if (file == 'plugins-plist' && self.platform == 'ios') {
-            events.emit(
-                'warn',
-                'WARNING: Plugin "' + pluginInfo.id + '" uses <plugins-plist> element(s), ' +
-                'which are no longer supported. Support has been removed as of Cordova 3.4.'
-            );
-            continue;
-        }
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
@@ -231,16 +176,6 @@ function reapply_global_munge () {
     var platform_config = self.platformJson.root;
     var global_munge = platform_config.config_munge;
     for (var file in global_munge.files) {
-        // TODO: remove this warning some time after 3.4 is out.
-        if (file == 'plugins-plist' && self.platform == 'ios') {
-            events.emit(
-                'warn',
-                'WARNING: One of your plugins uses <plugins-plist> element(s), ' +
-                'which are no longer supported. Support has been removed as of Cordova 3.4.'
-            );
-            continue;
-        }
-
         self.apply_file_munge(file, global_munge.files[file]);
     }
 
@@ -257,17 +192,6 @@ function generate_plugin_config_munge(pluginInfo, vars) {
     vars = vars || {};
     var munge = { files: {} };
     var changes = pluginInfo.getConfigFiles(self.platform);
-
-    // note down pbxproj framework munges in special section of munge obj
-    // CB-5238 this is only for systems frameworks
-    if (self.platform === 'ios') {
-        var frameworks = pluginInfo.getFrameworks(self.platform);
-        frameworks.forEach(function (f) {
-            if (!f.custom) {
-                mungeutil.deep_add(munge, 'framework', f.src, { xml: f.weak, count: 1 });
-            }
-        });
-    }
 
     // Demux 'package.appxmanifest' into relevant platform-specific appx manifests.
     // Only spend the cycles if there are version-specific plugin settings
