@@ -148,14 +148,14 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
             var splitVersion = d.id.split('@');
             deps_path = path.join(plugin_dir, '..', splitVersion[0]);
             if (!fs.existsSync(deps_path)) {
-                    var newId = pluginMapper[splitVersion[0]];
-                    if (newId && toDelete.indexOf(newId) === -1) {
-                        toDelete.push(newId);
-                        findDependencies(newId);
-                    }
+                var newId = pluginMapper[splitVersion[0]];
+                if (newId && toDelete.indexOf(newId) === -1) {
+                   toDelete.push(newId);
+                   findDependencies(newId);
+                }
             } else if (toDelete.indexOf(d.id) === -1) {
-                    toDelete.push(d.id);
-                    findDependencies(d.id);
+                toDelete.push(d.id);
+                findDependencies(d.id);
             }
         });
     }
@@ -277,7 +277,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
             var opts = underscore.extend({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
-                depsInfo: depsInfo  
+                depsInfo: depsInfo
             });
 
             return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);
