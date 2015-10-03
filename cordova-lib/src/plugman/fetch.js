@@ -180,7 +180,6 @@ function checkID(expectedIdAndVersion, pinfo) {
     }
 }
 
-
 // Note, there is no cache invalidation logic for local plugins.
 // As of this writing loadLocalPlugins() is never called with different
 // search paths and such case would not be handled properly.
