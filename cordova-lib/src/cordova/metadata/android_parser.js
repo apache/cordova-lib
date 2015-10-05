@@ -227,6 +227,13 @@ android_parser.prototype.update_from_config = function(config) {
     manifest.getroot().attrib.package = pkg;
 
     var act = manifest.getroot().find('./application/activity');
+    
+    // CB-9747
+    var actname = act.attrib['android:name'] ;
+    var l = actname.lastIndexOf('.');
+    // To use the android name as a package, it must not begin with .
+    if (l !== 0 && l !== -1)
+        orig_pkg = actname.substring(0,l);
 
     // Set the android:screenOrientation in the AndroidManifest
     var orientation = this.helper.getOrientation(config);
