@@ -20,6 +20,9 @@
 -->
 # Cordova-serve Release Notes
 
+### 1.0.0 (Oct 05, 2015)
+* Refactor cordova-serve to use Express.
+
 ### 0.1.3 (Aug 22, 2015)
 * Clean up cordova-serve console output.
 * CB-9546 cordova-serve.servePlatform() should provide project folders
