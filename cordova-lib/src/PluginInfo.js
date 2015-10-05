@@ -83,7 +83,11 @@ function PluginInfo(dirname) {
             throw new Error(msg);
         }
 
-        var asset = { src: src, target: target };
+        var asset = {
+            itemType: 'asset',
+            src: src,
+            target: target
+        };
         return asset;
     }
 
@@ -199,14 +203,17 @@ function PluginInfo(dirname) {
 
     // <resource-file>
     // Example:
-    // <resource-file src="FooPluginStrings.xml" target="res/values/FooPluginStrings.xml" />
+    // <resource-file src="FooPluginStrings.xml" target="res/values/FooPluginStrings.xml" device-target="win" arch="x86" versions="&gt;=8.1" />
     self.getResourceFiles = getResourceFiles;
     function getResourceFiles(platform) {
         var resourceFiles = _getTagsInPlatform(self._et, 'resource-file', platform, function(tag) {
             return {
                 itemType: 'resource-file',
                 src: tag.attrib.src,
-                target: tag.attrib.target
+                target: tag.attrib.target,
+                versions: tag.attrib.versions,
+                deviceTarget: tag.attrib['device-target'],
+                arch: tag.attrib.arch
             };
         });
         return resourceFiles;
@@ -258,6 +265,7 @@ function PluginInfo(dirname) {
 
     function _parseJsModule(tag) {
         var ret = {
+            itemType: 'js-module',
             name: tag.attrib.name,
             src: tag.attrib.src,
             clobbers: tag.findall('clobbers').map(function(tag) { return { target: tag.attrib.target }; }),
@@ -300,6 +308,7 @@ function PluginInfo(dirname) {
                 src: el.attrib.src,
                 weak: isStrTrue(el.attrib.weak),
                 versions: el.attrib.versions,
+                targetDir: el.attrib['target-dir'],
                 deviceTarget: el.attrib['device-target'] || el.attrib.target,
                 arch: el.attrib.arch
             };

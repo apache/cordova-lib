@@ -17,89 +17,48 @@
     under the License.
 */
 
+var path = require('path');
+var util = require('../cordova/util');
 var platforms = require('./platformsConfig.json');
-
-// Remove this block soon. The parser property is no longer used in
-// cordova-lib but some downstream tools still use it.
-var addModuleProperty = require('../cordova/util').addModuleProperty;
-Object.keys(platforms).forEach(function(key) {
-    var obj = platforms[key];
-    if (obj.parser_file) {
-        addModuleProperty(module, 'parser', obj.parser_file, false, obj);
-    }
-});
-
+var events = require('../events');
 
 // Avoid loading the same platform projects more than once (identified by path)
-var cachedProjects = {};
+var cachedApis = {};
 
-var PARSER_PUBLIC_METHODS = [
-    'config_xml',
-    'cordovajs_path',
-    'cordovajs_src_path',
-    'update_from_config',
-    'update_project',
-    'update_www',
-    'www_dir',
-];
-
-var HANDLER_PUBLIC_METHODS = [
-    'package_name',
-    'parseProjectFile',
-    'purgeProjectFileCache',
-];
-
-
-// A single class that exposes functionality from platform specific files from
-// both places cordova/metadata and plugman/platforms. Hopefully, to be soon
-// replaced by real unified platform specific classes.
-function PlatformProjectAdapter(platform, platformRootDir) {
-    var self = this;
-    self.root = platformRootDir;
-    self.platform = platform;
-    var ParserConstructor = require(platforms[platform].parser_file);
-    self.parser = new ParserConstructor(platformRootDir);
-    self.handler = require(platforms[platform].handler_file);
-
-    // Expose all public methods from the parser and handler, properly bound.
-    PARSER_PUBLIC_METHODS.forEach(function(method) {
-        self[method] = self.parser[method].bind(self.parser);
-    });
-
-    HANDLER_PUBLIC_METHODS.forEach(function(method) {
-        if (self.handler[method]) {
-            self[method] = self.handler[method].bind(self.handler);
-        }
-    });
-
-    self.getInstaller = function(type) {
-        function installWrapper(item, plugin_dir, plugin_id, options, project) {
-            self.handler[type].install(item, plugin_dir, self.root, plugin_id, options, project);
-        }
-        return installWrapper;
-    };
-
-    self.getUninstaller = function(type) {
-        function uninstallWrapper(item, plugin_id, options, project) {
-            self.handler[type].uninstall(item, self.root, plugin_id, options, project);
-        }
-        return uninstallWrapper;
-    };
-}
-
-// getPlatformProject() should be the only method of instantiating the
+// getPlatformApi() should be the only method of instantiating the
 // PlatformProject classes for now.
-function getPlatformProject(platform, platformRootDir) {
-    var cached = cachedProjects[platformRootDir];
-    if (cached && cached.platform == platform) {
-        return cachedProjects[platformRootDir];
-    } else if (platforms[platform]) {
-        var adapter = new PlatformProjectAdapter(platform, platformRootDir);
-        cachedProjects[platformRootDir] = adapter;
-        return adapter;
-    } else {
-        throw new Error('Unknown platform ' + platform);
+function getPlatformApi(platform, platformRootDir) {
+
+    // if platformRootDir is not specified, try to detect it first
+    if (!platformRootDir) {
+        var projectRootDir = util.isCordova();
+        platformRootDir = projectRootDir && path.join(projectRootDir, 'platforms', platform);
     }
+
+    if (!platformRootDir) {
+        // If platformRootDir is still undefined, then we're probably is not inside of cordova project
+        throw new Error('Current location is not a Cordova project');
+    }
+
+    var cached = cachedApis[platformRootDir];
+    if (cached && cached.platform == platform) return cached;
+
+    if (!platforms[platform]) throw new Error('Unknown platform ' + platform);
+
+    var PlatformApi;
+    try {
+        // First we need to find whether platform exposes its' API via js module
+        // If it has, then we have to require it and extend BasePlatformApi
+        // with platform's API.
+        var platformApiModule = path.join(platformRootDir, 'cordova', 'Api.js');
+        PlatformApi = require(platformApiModule);
+    } catch (err) {
+        PlatformApi = require('./PlatformApiPoly');
+    }
+
+    var platformApi = new PlatformApi(platform, platformRootDir, events);
+    cachedApis[platformRootDir] = platformApi;
+    return platformApi;
 }
 
 module.exports = platforms;
@@ -107,6 +66,5 @@ module.exports = platforms;
 // We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the
 // platforms object to be platforms.
 Object.defineProperties(module.exports, {
-    'getPlatformProject': {value: getPlatformProject, configurable: true, writable: true},
-    'PlatformProjectAdapter': {value: PlatformProjectAdapter, configurable: true, writable: true}
+    'getPlatformApi': {value: getPlatformApi, configurable: true, writable: true}
 });

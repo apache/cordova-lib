@@ -20,5 +20,11 @@
 -->
 # Cordova-serve Release Notes
 
+### 0.1.3 (Aug 22, 2015)
+* Clean up cordova-serve console output.
+* CB-9546 cordova-serve.servePlatform() should provide project folders
+* CB-9545 Cordova-serve's 'noCache' option does not work in IE.
+* Add support for --target=edge to launch app in Edge browser.
+
 ### 0.1.2 (June 15, 2015)
 Initial release

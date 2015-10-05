@@ -72,7 +72,6 @@ module.exports = function (opts) {
             args.push(url);
         }
         var command = args.join(' ');
-        console.log('Executing command: ' + command);
         return exec(command);
     });
 };

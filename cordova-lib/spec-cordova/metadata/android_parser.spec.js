@@ -19,7 +19,7 @@
 
 /* jshint boss:true */
 
-var platforms = require('../../src/platforms/platforms'),
+var androidParser = require('../../src/cordova/metadata/android_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -65,12 +65,12 @@ describe('android project parser', function() {
         it('should throw if provided directory does not contain an AndroidManifest.xml', function() {
             exists.andReturn(false);
             expect(function() {
-                new platforms.android.parser(android_proj);
+                new androidParser(android_proj);
             }).toThrow();
         });
         it('should create an instance with path, strings, manifest and android_config properties', function() {
             expect(function() {
-                var p = new platforms.android.parser(android_proj);
+                var p = new androidParser(android_proj);
                 expect(p.path).toEqual(android_proj);
                 expect(p.strings).toEqual(path.join(android_proj, 'res', 'values', 'strings.xml'));
                 expect(p.manifest).toEqual(path.join(android_proj, 'AndroidManifest.xml'));
@@ -78,11 +78,11 @@ describe('android project parser', function() {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.android.parser(android_proj) instanceof Parser).toBe(true);
+            expect(new androidParser(android_proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.android.parser(android_proj);
+            var p = new androidParser(android_proj);
             expect(call).toHaveBeenCalledWith(p, 'android', android_proj);
         });
     });
@@ -94,7 +94,7 @@ describe('android project parser', function() {
         beforeEach(function() {
             stringsRoot = null;
             manifestRoot = null;
-            p = new platforms.android.parser(android_proj);
+            p = new androidParser(android_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             is_cordova = spyOn(util, 'isCordova').andReturn(android_proj);

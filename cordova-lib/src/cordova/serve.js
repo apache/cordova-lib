@@ -63,7 +63,6 @@ function processUrlPath(urlPath, request, response, do302, do404, serveFile) {
     }
 
     var firstSegment = /\/(.*?)\//.exec(urlPath);
-    var parser;
 
     if (!firstSegment) {
         doRoot();
@@ -77,8 +76,9 @@ function processUrlPath(urlPath, request, response, do302, do404, serveFile) {
     // Strip the platform out of the path.
     urlPath = urlPath.slice(platformId.length + 1);
 
+    var platformApi;
     try {
-        parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
+        platformApi = platforms.getPlatformApi(platformId);
     } catch (e) {
         do404();
         return;
@@ -87,12 +87,12 @@ function processUrlPath(urlPath, request, response, do302, do404, serveFile) {
     var filePath = null;
 
     if (urlPath == '/config.xml') {
-        filePath = parser.config_xml();
+        filePath = platformApi.getPlatformInfo().configXml;
     } else if (urlPath == '/project.json') {
-        processAddRequest(request, response, platformId, projectRoot);
+        processAddRequest(request, response, platformApi);
         return;
     } else if (/^\/www\//.test(urlPath)) {
-        filePath = path.join(parser.www_dir(), urlPath.slice(5));
+        filePath = path.join(platformApi.getPlatformInfo().locations.www, urlPath.slice(5));
     } else if (/^\/+[^\/]*$/.test(urlPath)) {
         do302('/' + platformId + '/www/');
         return;
@@ -125,12 +125,11 @@ function calculateMd5(fileName) {
     return md5sum.digest('hex');
 }
 
-function processAddRequest(request, response, platformId, projectRoot) {
-    var parser = platforms.getPlatformProject(platformId, path.join(projectRoot, 'platforms', platformId));
-    var wwwDir = parser.www_dir();
+function processAddRequest(request, response, platformApi) {
+    var wwwDir = platformApi.getPlatformInfo().locations.www;
     var payload = {
-        'configPath': '/' + platformId + '/config.xml',
-        'wwwPath': '/' + platformId + '/www',
+        'configPath': '/' + platformApi.platform + '/config.xml',
+        'wwwPath': '/' + platformApi.platform + '/www',
         'wwwFileList': shell.find(wwwDir)
             .filter(function(a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
             .map(function(a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })

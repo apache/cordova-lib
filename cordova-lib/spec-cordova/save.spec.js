@@ -23,9 +23,11 @@ describe('(save flag)', function () {
         helpers     = require('./helpers'),
         path        = require('path'),
         Q           = require('q'),
+        fs          = require('fs'),
         shell       = require('shelljs'),
         util        = require('../src/cordova/util'),
         prepare     = require('../src/cordova/prepare'),
+        PlatformApi = require('../src/platforms/PlatformApiPoly'),
         platform    = rewire('../src/cordova/platform');
 
     var appName             = 'testApp',
@@ -47,16 +49,15 @@ describe('(save flag)', function () {
         pluginOldVersion    = '0.2.11',
         gitPluginName       = 'cordova-plugin-device',
         gitPluginUrl        = 'https://github.com/apache/cordova-plugin-device.git',
-        variablePluginName  = 'com.phonegap.plugins.facebookconnect',
+        variablePluginName  = 'phonegap-facebook-plugin',
         variablePluginUrl   = 'https://github.com/Wizcorp/phonegap-facebook-plugin',
         localPluginName     = 'org.apache.cordova.fakeplugin1',
         localPluginPath     = path.join(__dirname, 'fixtures', 'plugins', 'fake1'),
         timeout             = 60 * 1000;
 
     //mock variables
-    var revert_copy_cordova_js,
-        revert_copy_cordovajs_src,
-        revert_install_plugins_for_new_platform;
+    var revert_install_plugins_for_new_platform,
+        createPlatformOrig = PlatformApi.createPlatform;
 
     beforeEach(function (done) {
         // initial cleanup
@@ -68,9 +69,10 @@ describe('(save flag)', function () {
         spyOn(util, 'cdProjectRoot').andReturn(appPath);
         spyOn(cordova.raw, 'prepare').andReturn(Q());
 
+        spyOn(PlatformApi, 'createPlatform').andReturn(Q());
+        spyOn(PlatformApi, 'updatePlatform').andReturn(Q());
+
         //rewire mocks
-        revert_copy_cordova_js = platform.__set__('copy_cordova_js', function () {});
-        revert_copy_cordovajs_src = platform.__set__('copy_cordovajs_src', function () {});
         revert_install_plugins_for_new_platform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
 
        //creating test app
@@ -86,8 +88,6 @@ describe('(save flag)', function () {
     }, timeout);
 
     afterEach(function () {
-        revert_copy_cordova_js();
-        revert_copy_cordovajs_src();
         revert_install_plugins_for_new_platform();
     });
 
@@ -232,7 +232,11 @@ describe('(save flag)', function () {
             helpers.setEngineSpec(appPath, platformName, platformVersionNew);
             platform('add', platformName + '@' + platformVersionNew)
             .then(function () {
-                return cordova.raw.platform('update', platformName + '@' + platformVersionOld, { 'save': true });
+                var fsExistsSync = fs.existsSync.bind(fs);
+                spyOn(fs, 'existsSync').andCallFake(function (somePath) {
+                    return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
+                });
+                return platform('update', platformName + '@' + platformVersionOld, { 'save': true });
             }).then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionOld);
                 done();
@@ -247,7 +251,11 @@ describe('(save flag)', function () {
             helpers.setEngineSpec(appPath, platformName, platformVersionNew);
             platform('add', platformName + '@' + platformVersionNew)
             .then(function () {
-                return cordova.raw.platform('update', platformGitUrl, { 'save': true });
+                var fsExistsSync = fs.existsSync.bind(fs);
+                spyOn(fs, 'existsSync').andCallFake(function (somePath) {
+                    return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
+                });
+                return platform('update', platformGitUrl, { 'save': true });
             }).then(function () {
                 var spec = helpers.getEngineSpec(appPath, platformName);
                 expect(spec).not.toBe(null);
@@ -437,6 +445,11 @@ describe('(save flag)', function () {
     });
 
     describe('prepare', function () {
+        beforeEach(function () {
+            // Restore back mocked createPlatform functionality
+            PlatformApi.createPlatform = createPlatformOrig;
+        });
+
         it('spec.23 should restore all platforms and plugins', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformLocalPath);
             helpers.setPluginSpec(appPath, localPluginName, localPluginPath);

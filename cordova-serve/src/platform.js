@@ -37,12 +37,17 @@ module.exports = function (platform, opts) {
         }
 
         opts = opts || {};
-        opts.root = util.getPlatformWwwRoot(findProjectRoot(opts.root), platform);
+        var projectRoot = findProjectRoot(opts.root);
+        var platformRoot = opts.root = util.getPlatformWwwRoot(projectRoot, platform);
         if (!fs.existsSync(opts.root)) {
             throw new Error('Project does not include the specified platform: ' + platform);
         }
 
-        return server(opts);
+        return server(opts).then(function (serverInfo) {
+            serverInfo.projectRoot = projectRoot;
+            serverInfo.platformRoot = platformRoot;
+            return serverInfo;
+        });
     });
 };
 

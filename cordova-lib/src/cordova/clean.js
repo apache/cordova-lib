@@ -17,12 +17,11 @@
     under the License.
 */
 
-var path              = require('path'),
-    cordova_util      = require('./util'),
-    HooksRunner       = require('../hooks/HooksRunner'),
-    events            = require('../events'),
-    chain             = require('../util/promise-util').Q_chainmap,
-    superspawn        = require('./superspawn');
+var cordova_util = require('./util'),
+    HooksRunner  = require('../hooks/HooksRunner'),
+    events       = require('../events'),
+    chain        = require('../util/promise-util').Q_chainmap,
+    platform_lib = require('../platforms/platforms');
 
 // Returns a promise.
 module.exports = function clean(options) {
@@ -34,12 +33,9 @@ module.exports = function clean(options) {
     .then(function () {
         return chain(options.platforms, function (platform) {
             events.emit('verbose', 'Running cleanup for ' + platform + ' platform.');
-            var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'clean');
-            return superspawn.spawn(cmd, options.options, {
-                stdio: options.silent ? 'ignore' : 'inherit', // hide script output in silent mode
-                printCommand: !!options.verbose,              // print command only if --verbose specified
-                chmod: true
-            });
+            return platform_lib
+                .getPlatformApi(platform)
+                .clean();
         });
     })
     .then(function() {

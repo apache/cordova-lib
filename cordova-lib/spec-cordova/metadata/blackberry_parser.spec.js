@@ -17,7 +17,7 @@
     under the License.
 */
 
-var platforms = require('../../src/platforms/platforms'),
+var blackberryParser = require('../../src/cordova/metadata/blackberry10_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -76,22 +76,22 @@ describe('blackberry10 project parser', function() {
         it('should throw an exception with a path that is not a native blackberry project', function() {
             exists.andReturn(false);
             expect(function() {
-                new platforms.blackberry10.parser(proj);
+                new blackberryParser(proj);
             }).toThrow();
         });
         it('should accept a proper native blackberry project path as construction parameter', function() {
             var project;
             expect(function() {
-                project = new platforms.blackberry10.parser(proj);
+                project = new blackberryParser(proj);
             }).not.toThrow();
             expect(project).toBeDefined();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.blackberry10.parser(proj) instanceof Parser).toBe(true);
+            expect(new blackberryParser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.blackberry10.parser(proj);
+            var p = new blackberryParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'blackberry10', proj);
         });
     });
@@ -100,7 +100,7 @@ describe('blackberry10 project parser', function() {
         var p, cp, rm, mkdir, is_cordova, write, read;
         var bb_proj = path.join(proj, 'platforms', 'blackberry10');
         beforeEach(function() {
-            p = new platforms.blackberry10.parser(bb_proj);
+            p = new blackberryParser(bb_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mkdir = spyOn(shell, 'mkdir');

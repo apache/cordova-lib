@@ -79,7 +79,11 @@ module.exports = common = {
     },
     // Sometimes we want to remove some java, and prune any unnecessary empty directories
     deleteJava:function(project_dir, destFile) {
-        var file = path.resolve(project_dir, destFile);
+        common.removeFileAndParents(project_dir, destFile, 'src');
+    },
+    removeFileAndParents:function(baseDir, destFile, stopper) {
+        stopper = stopper || '.';
+        var file = path.resolve(baseDir, destFile);
         if (!fs.existsSync(file)) return;
 
         common.removeFileF(file);
@@ -87,7 +91,7 @@ module.exports = common = {
         // check if directory is empty
         var curDir = path.dirname(file);
 
-        while(curDir !== path.resolve(project_dir, 'src')) {
+        while(curDir !== path.resolve(baseDir, stopper)) {
             if(fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
                 fs.rmdirSync(curDir);
                 curDir = path.resolve(curDir, '..');
@@ -118,6 +122,28 @@ module.exports = common = {
 
             common.removeFile(www_dir, target);
             common.removeFileF(path.resolve(www_dir, 'plugins', plugin_id));
+        }
+    },
+    'js-module': {
+        install: function (jsModule, plugin_dir, plugin_id, www_dir) {
+            // Copy the plugin's files into the www directory.
+            var moduleSource = path.resolve(plugin_dir, jsModule.src);
+            var moduleName = plugin_id + '.' + (jsModule.name || path.parse(jsModule.src).name);
+
+            // Read in the file, prepend the cordova.define, and write it back out.
+            var scriptContent = fs.readFileSync(moduleSource, 'utf-8').replace(/^\ufeff/, ''); // Window BOM
+            if (moduleSource.match(/.*\.json$/)) {
+                scriptContent = 'module.exports = ' + scriptContent;
+            }
+            scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
+
+            var moduleDestination = path.resolve(www_dir, 'plugins', plugin_id, jsModule.src);
+            shell.mkdir('-p', path.dirname(moduleDestination));
+            fs.writeFileSync(moduleDestination, scriptContent, 'utf-8');
+        },
+        uninstall: function (jsModule, www_dir, plugin_id) {
+            var pluginRelativePath = path.join('plugins', plugin_id, jsModule.src);
+            common.removeFileAndParents(www_dir, pluginRelativePath);
         }
     }
 };

@@ -122,6 +122,9 @@ ConfigParser.prototype = {
     version: function() {
         return this.doc.getroot().attrib['version'];
     },
+    windows_packageVersion: function() {
+        return this.doc.getroot().attrib('windows-packageVersion');
+    },
     android_versionCode: function() {
         return this.doc.getroot().attrib['android-versionCode'];
     },
@@ -301,7 +304,7 @@ ConfigParser.prototype = {
      * @name addPlugin
      * @function
      * @param {object} attributes name and spec are supported
-     * @param {Array} variables name, value
+     * @param {Array|object} variables name, value or arbitary object
      */
     addPlugin: function (attributes, variables) {
         if (!attributes && !attributes.name) return;
@@ -310,12 +313,18 @@ ConfigParser.prototype = {
         if (attributes.spec) {
             el.attrib.spec = attributes.spec;
         }
+
+        // support arbitrary object as variables source
+        if (variables && typeof variables === 'object' && !Array.isArray(variables)) {
+            variables = Object.keys(variables)
+            .map(function (variableName) {
+                return {name: variableName, value: variables[variableName]};
+            });
+        }
+
         if (variables) {
             variables.forEach(function (variable) {
-                var v = new et.Element('variable');
-                v.attrib.name = variable.name;
-                v.attrib.value = variable.value;
-                el.append(v);
+                el.append(new et.Element('variable', { name: variable.name, value: variable.value }));
             });
         }
         this.doc.getroot().append(el);

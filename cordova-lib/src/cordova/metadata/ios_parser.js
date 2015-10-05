@@ -139,12 +139,21 @@ ios_parser.prototype.update_from_config = function(config) {
         {dest: 'icon-50.png', width: 50, height: 50},
         {dest: 'icon-50@2x.png', width: 100, height: 100}
     ];
+    
+    var destIconsFolder, destSplashFolder;
+    var xcassetsExists = folderExists(path.join(platformRoot, 'Images.xcassets/'));
+    
+    if (xcassetsExists) {
+        destIconsFolder = 'Images.xcassets/AppIcon.appiconset/';
+    } else {
+        destIconsFolder = 'Resources/icons/';
+    }
 
     platformIcons.forEach(function (item) {
         var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
         if (icon){
             var src = path.join(appRoot, icon.src),
-                dest = path.join(platformRoot, 'Resources/icons/', item.dest);
+                dest = path.join(platformRoot, destIconsFolder, item.dest);
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
@@ -153,62 +162,71 @@ ios_parser.prototype.update_from_config = function(config) {
     // Update splashscreens
     var splashScreens = config.getSplashScreens('ios');
     var platformSplashScreens = [
-        {dest: 'Resources/splash/Default~iphone.png', width: 320, height: 480},
-        {dest: 'Resources/splash/Default@2x~iphone.png', width: 640, height: 960},
-        {dest: 'Resources/splash/Default-Portrait~ipad.png', width: 768, height: 1024},
-        {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
-        {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
-        {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
-        {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136},
-        {dest: 'Resources/splash/Default-667h.png', width: 750, height: 1334},
-        {dest: 'Resources/splash/Default-736h.png', width: 1242, height: 2208},
-        {dest: 'Resources/splash/Default-Landscape-736h.png', width: 2208, height: 1242}
+        {dest: 'Default~iphone.png', width: 320, height: 480},
+        {dest: 'Default@2x~iphone.png', width: 640, height: 960},
+        {dest: 'Default-Portrait~ipad.png', width: 768, height: 1024},
+        {dest: 'Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
+        {dest: 'Default-Landscape~ipad.png', width: 1024, height: 768},
+        {dest: 'Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
+        {dest: 'Default-568h@2x~iphone.png', width: 640, height: 1136},
+        {dest: 'Default-667h.png', width: 750, height: 1334},
+        {dest: 'Default-736h.png', width: 1242, height: 2208},
+        {dest: 'Default-Landscape-736h.png', width: 2208, height: 1242}
     ];
+    
+    if (xcassetsExists) {
+        destSplashFolder = 'Images.xcassets/LaunchImage.launchimage/';
+    } else {
+        destSplashFolder = 'Resources/splash/';
+    }
 
     platformSplashScreens.forEach(function(item) {
         var splash = splashScreens.getBySize(item.width, item.height);
         if (splash){
             var src = path.join(appRoot, splash.src),
-                dest = path.join(platformRoot, item.dest);
+                dest = path.join(platformRoot, destSplashFolder, item.dest);
             events.emit('verbose', 'Copying splash from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
     });
 
-    var me = this;
+    var parser = this;
     return this.update_build_settings(config).then(function() {
-        if (name == me.originalName) {
-            events.emit('verbose', 'iOS Product Name has not changed (still "' + me.originalName + '")');
+        if (name == parser.originalName) {
+            events.emit('verbose', 'iOS Product Name has not changed (still "' + parser.originalName + '")');
             return Q();
         }
 
         // Update product name inside pbxproj file
-        var proj = new xcode.project(me.pbxproj);
-        var parser = me;
-        var d = Q.defer();
-        proj.parse(function(err,hash) {
-            if (err) {
-                d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            } else {
-                proj.updateProductName(name);
-                fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
-                // Move the xcodeproj and other name-based dirs over.
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
-                shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
-                shell.mv(parser.cordovaproj, path.join(parser.path, name));
-                // Update self object with new paths
-                var old_name = parser.originalName;
-                parser = new module.exports(parser.path);
-                // Hack this shi*t
-                var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
-                pbx_contents = pbx_contents.split(old_name).join(name);
-                fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
-                events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
-                d.resolve();
-            }
-        });
-        return d.promise;
+        var proj = new xcode.project(parser.pbxproj);
+        try {
+            proj.parseSync();
+        } catch (err) {
+            return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+        }
+
+        proj.updateProductName(name);
+        fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
+
+        // Move the xcodeproj and other name-based dirs over.
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
+        // CB-8914 remove userdata otherwise project is un-usable in xcode 
+        shell.rm('-rf',path.join(parser.xcodeproj,'xcuserdata/'));
+        shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
+        shell.mv(parser.cordovaproj, path.join(parser.path, name));
+
+        // Update self object with new paths
+        var old_name = parser.originalName;
+        parser = new module.exports(parser.path);
+
+        // Hack this shi*t
+        var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
+        pbx_contents = pbx_contents.split(old_name).join(name);
+        fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
+        events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
+
+        return Q();
     });
 };
 
@@ -276,27 +294,37 @@ ios_parser.prototype.update_build_settings = function(config) {
         return Q();
     }
 
-    var me = this;
-    var d = Q.defer();
     var proj = new xcode.project(this.pbxproj);
-    proj.parse(function(err,hash) {
-        if (err) {
-            d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            return;
-        }
-        if (targetDevice) {
-            events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
-            proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
-        }
-        if (deploymentTarget) {
-            events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
-            proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
-        }
-        fs.writeFileSync(me.pbxproj, proj.writeSync(), 'utf-8');
-        d.resolve();
-    });
-    return d.promise;
+
+    try {
+        proj.parseSync();
+    } catch (err) {
+        return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+    }
+
+    if (targetDevice) {
+        events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
+        proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
+    }
+
+    if (deploymentTarget) {
+        events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
+        proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
+    }
+
+    fs.writeFileSync(this.pbxproj, proj.writeSync(), 'utf-8');
+
+    return Q();
 };
+
+function folderExists(folderPath) {
+    try {
+        var stat = fs.statSync(folderPath);
+        return stat && stat.isDirectory();
+    } catch (e) {
+        return false;
+    }
+}
 
 // Construct a default value for CFBundleVersion as the version with any
 // -rclabel stripped=.
