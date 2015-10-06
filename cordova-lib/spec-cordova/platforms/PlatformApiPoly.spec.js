@@ -18,15 +18,14 @@
 */
 
 var Q = require('q');
-var fs = require('fs');
 var et = require('elementtree');
 var path = require('path');
 var shell = require('shelljs');
-var xmlHelpers = require('../../src/util/xml-helpers');
-var ActionStack = require('../../src/plugman/util/action-stack');
-var superspawn = require('../../src/cordova/superspawn');
-var PluginInfo = require('../../src/PluginInfo');
-var ConfigParser = require('../../src/configparser/ConfigParser');
+var xmlHelpers = require('cordova-common').xmlHelpers;
+var ActionStack = require('cordova-common').ActionStack;
+var superspawn = require('cordova-common').superspawn;
+var PluginInfo = require('cordova-common').PluginInfo;
+var ConfigParser = require('cordova-common').ConfigParser;
 var knownPlatforms = require('../../src/platforms/platforms');
 var PlatformApiPoly = require('../../src/platforms/PlatformApiPoly');
 

@@ -21,26 +21,26 @@
 
 var path = require('path'),
     fs   = require('fs'),
-    action_stack = require('./util/action-stack'),
+    action_stack = require('cordova-common').ActionStack,
     dep_graph = require('dep-graph'),
     child_process = require('child_process'),
     semver = require('semver'),
-    PlatformJson = require('./util/PlatformJson'),
-    CordovaError  = require('../CordovaError'),
+    PlatformJson = require('cordova-common').PlatformJson,
+    CordovaError = require('cordova-common').CordovaError,
     Q = require('q'),
     platform_modules = require('../platforms/platforms'),
     os = require('os'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
-    events = require('../events'),
+    events = require('cordova-common').events,
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     cordovaUtil = require('../cordova/util');
 
-var superspawn = require('../cordova/superspawn');
-var PluginInfo = require('../PluginInfo');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var superspawn = require('cordova-common').superspawn;
+var PluginInfo = require('cordova-common').PluginInfo;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 /* INSTALL FLOW
    ------------

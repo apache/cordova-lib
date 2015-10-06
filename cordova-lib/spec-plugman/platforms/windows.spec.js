@@ -23,14 +23,14 @@ var windows = require('../../src/plugman/platforms/windows'),
     fs = require('fs'),
     shell = require('shelljs'),
     et = require('elementtree'),
-    os = require('osenv'),
+    os = require('os'),
     cordovaProjectDir = path.join(os.tmpdir(), 'plugman'),
     cordovaProjectWindowsPlatformDir = path.join(cordovaProjectDir, 'platforms', 'windows'),
     cordovaProjectPluginsDir = path.join(cordovaProjectDir, 'plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin');
 
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;

@@ -20,12 +20,12 @@
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    events        = require('../events'),
+    events        = require('cordova-common').events,
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
-    CordovaError  = require('../CordovaError'),
-    ConfigParser  = require('../configparser/ConfigParser'),
+    CordovaError  = require('cordova-common').CordovaError,
+    ConfigParser  = require('cordova-common').ConfigParser,
     cordova_util  = require('./util'),
     validateIdentifier = require('valid-identifier');
 

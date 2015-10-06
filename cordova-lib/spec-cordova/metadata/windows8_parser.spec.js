@@ -24,13 +24,13 @@ var windowsParser = require('../../src/cordova/metadata/windows_parser'),
     path = require('path'),
     shell = require('shelljs'),
     child_process = require('child_process'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     Q = require('q'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.

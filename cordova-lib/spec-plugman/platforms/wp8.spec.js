@@ -22,15 +22,15 @@ var wp8 = require('../../src/plugman/platforms/wp8'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
-    os      = require('osenv'),
+    os      = require('os'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
-    xml_helpers = require('../../src/util/xml-helpers'),
+    xml_helpers = require('cordova-common').xmlHelpers,
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     wp8_project = path.join(__dirname, '..', 'projects', 'wp8');
 
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;

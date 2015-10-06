@@ -7,8 +7,12 @@ install:
   - cd cordova-js
   - npm install --msvs_version=2013
   - npm link
-  - cd ..\cordova-lib\cordova-lib
+  - cd ..\cordova-lib\cordova-common
+  - npm install
+  - npm link
+  - cd ..\cordova-lib
   - npm link cordova-js
+  - npm link cordova-common
   - npm install
 
 build: off

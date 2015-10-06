@@ -23,10 +23,10 @@ var blackberryParser = require('../../src/cordova/metadata/blackberry10_parser')
     shell = require('shelljs'),
     fs = require('fs'),
     et = require('elementtree'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 

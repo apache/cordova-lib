@@ -19,7 +19,7 @@
 
 var path = require('path'),
     ParserHelper = require('../../../src/cordova/metadata/parserhelper/ParserHelper'),
-    ConfigParser = require('../../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 // Create a real config object before mocking out everything.
 var xml = path.join(__dirname, '..', '..', 'test-config.xml');

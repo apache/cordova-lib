@@ -24,17 +24,16 @@ var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
-var superspawn = require('../cordova/superspawn');
-var xmlHelpers = require('../util/xml-helpers');
-var common = require('../plugman/platforms/common');
+var superspawn = require('cordova-common').superspawn;
+var xmlHelpers = require('cordova-common').xmlHelpers;
 var knownPlatforms = require('./platforms');
-var CordovaError = require('../CordovaError');
-var PluginInfo = require('../PluginInfo');
-var ConfigParser = require('../configparser/ConfigParser');
-var PlatformJson = require('../plugman/util/PlatformJson');
-var ActionStack = require('../plugman/util/action-stack');
-var PlatformMunger = require('../plugman/util/config-changes').PlatformMunger;
-var PluginInfoProvider = require('../PluginInfoProvider');
+var CordovaError = require('cordova-common').CordovaError;
+var PluginInfo = require('cordova-common').PluginInfo;
+var ConfigParser = require('cordova-common').ConfigParser;
+var PlatformJson = require('cordova-common').PlatformJson;
+var ActionStack = require('cordova-common').ActionStack;
+var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 /**
  * Class, that acts as abstraction over particular platform. Encapsulates the

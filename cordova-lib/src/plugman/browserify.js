@@ -27,7 +27,7 @@ var platform_modules   = require('../platforms/platforms'),
     fs                 = require('fs'),
     childProcess       = require('child_process'),
     util               = require('util'),
-    events             = require('../events'),
+    events             = require('cordova-common').events,
     plugman            = require('./plugman'),
     bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
     writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
@@ -35,8 +35,8 @@ var platform_modules   = require('../platforms/platforms'),
     computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id'),
     Readable           = require('stream').Readable;
 
-var PlatformJson = require('./util/PlatformJson');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
     var deferred = Q.defer();

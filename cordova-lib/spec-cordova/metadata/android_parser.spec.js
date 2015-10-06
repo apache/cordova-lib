@@ -25,11 +25,11 @@ var androidParser = require('../../src/cordova/metadata/android_parser'),
     shell = require('shelljs'),
     fs = require('fs'),
     et = require('elementtree'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    CordovaError = require('../../src/CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError;
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));

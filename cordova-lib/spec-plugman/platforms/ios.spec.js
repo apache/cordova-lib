@@ -24,7 +24,7 @@ var ios = require('../../src/plugman/platforms/ios'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    os = require('osenv'),
+    os = require('os'),
     temp = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     ios_config_xml_project = path.join(__dirname, '..', 'projects', 'ios-config-xml', '*'),
@@ -34,7 +34,7 @@ var ios = require('../../src/plugman/platforms/ios'),
     weblessplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.weblessplugin'),
     done = false;
 
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;

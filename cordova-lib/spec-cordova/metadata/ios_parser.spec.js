@@ -26,7 +26,7 @@ var iosParser = require('../../src/cordova/metadata/ios_parser'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 var iosProjectFixture = path.join(__dirname, '../fixtures/projects/ios');
 var proj = path.join(__dirname, 'some/path');

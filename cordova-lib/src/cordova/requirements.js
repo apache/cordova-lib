@@ -19,7 +19,7 @@
 
 var cordova_util = require('./util');
 var Q            = require('q');
-var CordovaError = require('../CordovaError');
+var CordovaError = require('cordova-common').CordovaError;
 var knownPlatforms = require('../platforms/platforms');
 
 /**

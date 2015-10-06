@@ -25,12 +25,12 @@
 
 
 var util = require('util'),
-    xml_helpers = require('../../util/xml-helpers'),
+    xml_helpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     fs = require('fs'),
     glob = require('glob'),
     shell = require('shelljs'),
-    events = require('../../events'),
+    events = require('cordova-common').events,
     path = require('path'),
     semver = require('semver');
 

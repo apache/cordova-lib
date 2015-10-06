@@ -20,7 +20,7 @@
 /* jshint sub:true */
 var fs            = require('fs'),
     path          = require('path'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
     url           = require('url'),
     npm           = require('npm'),

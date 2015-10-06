@@ -29,7 +29,7 @@ var npm = require('npm'),
     pluginMapper = require('cordova-registry-mapper').oldToNew,
     npmhelper = require('../../util/npm-helper'),
     home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
-    events = require('../../events'),
+    events = require('cordova-common').events,
     unpack = require('../../util/unpack'),
     // if PLUGMAN_HOME env var is specified use it as config directory (see CB-8190)
     plugmanConfigDir = process.env.PLUGMAN_HOME || path.resolve(home, '.plugman'),

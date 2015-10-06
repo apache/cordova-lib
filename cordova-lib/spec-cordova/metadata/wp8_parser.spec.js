@@ -25,13 +25,13 @@ var wp8Parser = require('../../src/cordova/metadata/wp8_parser'),
     shell = require('shelljs'),
     fs = require('fs'),
     et = require('elementtree'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    CordovaError = require('../../src/CordovaError'),
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError,
     HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.

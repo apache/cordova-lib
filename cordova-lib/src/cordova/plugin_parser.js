@@ -17,7 +17,7 @@
     under the License.
 */
 
-var xml = require('../util/xml-helpers');
+var xml = require('cordova-common').xmlHelpers;
 
 /** Deprecated. Use PluginInfo instead. */
 function plugin_parser(xmlPath) {

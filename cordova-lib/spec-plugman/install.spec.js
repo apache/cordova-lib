@@ -20,11 +20,11 @@
 /* jshint sub:true */
 
 var install = require('../src/plugman/install'),
-    actions = require('../src/plugman/util/action-stack'),
-    xmlHelpers = require('../src/util/xml-helpers'),
+    actions = require('cordova-common').ActionStack,
+    xmlHelpers = require('cordova-common').xmlHelpers,
     et      = require('elementtree'),
-    PlatformJson = require('../src/plugman/util/PlatformJson'),
-    events  = require('../src/events'),
+    PlatformJson = require('cordova-common').PlatformJson,
+    events = require('cordova-common').events,
     plugman = require('../src/plugman/plugman'),
     platforms = require('../src/plugman/platforms/common'),
     common  = require('./common'),
@@ -57,7 +57,7 @@ var install = require('../src/plugman/install'),
     },
     promise,
     results = {},
-    superspawn = require('../src/cordova/superspawn');
+    superspawn = require('cordova-common').superspawn;
 
 
 // Pre-crete the temp dir, without it the test fails.

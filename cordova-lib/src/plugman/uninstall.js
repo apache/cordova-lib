@@ -23,20 +23,20 @@ var path = require('path'),
     fs   = require('fs'),
     semver = require('semver'),
     shell= require('shelljs'),
-    action_stack = require('./util/action-stack'),
+    action_stack = require('cordova-common').ActionStack,
     dependencies = require('./util/dependencies'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError = require('cordova-common').CordovaError,
     underscore = require('underscore'),
     Q = require('q'),
-    events = require('../events'),
+    events = require('cordova-common').events,
     platform_modules = require('../platforms/platforms'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil      = require('../cordova/util');
 
-var superspawn = require('../cordova/superspawn');
-var PlatformJson = require('./util/PlatformJson');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var superspawn = require('cordova-common').superspawn;
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 // possible options: cli_variables, www_dir
 // Returns a promise.

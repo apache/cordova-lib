@@ -21,7 +21,7 @@
 
 'use strict';
 
-var events = require('../../../events');
+var events = require('cordova-common').events;
 
 var _ORIENTATION_DEFAULT = 'default';
 var _ORIENTATION_PORTRAIT = 'portrait';

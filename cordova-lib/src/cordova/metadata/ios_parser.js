@@ -24,14 +24,14 @@ var fs            = require('fs'),
     path          = require('path'),
     xcode         = require('xcode'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     plist         = require('plist'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     URL           = require('url'),
-    CordovaError  = require('../../CordovaError');
+    CordovaError = require('cordova-common').CordovaError;
 
 function ios_parser(project) {
 

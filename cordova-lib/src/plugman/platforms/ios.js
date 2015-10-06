@@ -26,9 +26,9 @@ var path = require('path')
   , xcode = require('xcode')
   , plist = require('plist')
   , shell = require('shelljs')
-  , events = require('../../events')
+  , events = require('cordova-common').events
   , _ = require('underscore')
-  , CordovaError = require('../../CordovaError')
+  , CordovaError = require('cordova-common').CordovaError
   , cachedProjectFiles = {}
   ;
 

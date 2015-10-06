@@ -22,11 +22,11 @@
 var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
-    events = require('../../events'),
+    events = require('cordova-common').events,
     util = require('../util'),
     Q = require('q'),
     Parser = require('./parser'),
-    ConfigParser = require('../../configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 function firefoxos_parser(project) {
 
