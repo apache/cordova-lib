@@ -150,6 +150,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
             if (!fs.existsSync(deps_path)) {
                 var newId = pluginMapper[splitVersion[0]];
                 if (newId && toDelete.indexOf(newId) === -1) {
+                   events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
                    toDelete.push(newId);
                    findDependencies(newId);
                 }
@@ -272,6 +273,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
                 var newId = pluginMapper[splitVersion[0]];
                 if(newId) {
                     dependent_path = path.join(plugins_dir, newId);
+                    events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');
                 }
             }
 
