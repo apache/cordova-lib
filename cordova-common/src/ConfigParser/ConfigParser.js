@@ -437,6 +437,32 @@ ConfigParser.prototype = {
             };
         });
     },
+    /* Get all the access tags */
+    getAccesses: function() {
+        var accesses = this.doc.findall('./access');
+        return accesses.map(function(access){
+            var minimum_tls_version = access.attrib['minimum-tls-version']; /* String */
+            var requires_forward_secrecy = access.attrib['requires-forward-secrecy']; /* Boolean */
+            return {
+                'origin': access.attrib.origin,
+                'minimum_tls_version': minimum_tls_version,
+                'requires_forward_secrecy' : requires_forward_secrecy
+            };
+        });
+    },
+    /* Get all the allow-navigation tags */
+    getAllowNavigations: function() {
+        var allow_navigations = this.doc.findall('./allow-navigation');
+        return allow_navigations.map(function(allow_navigation){
+            var minimum_tls_version = allow_navigation.attrib['minimum-tls-version']; /* String */
+            var requires_forward_secrecy = allow_navigation.attrib['requires-forward-secrecy']; /* Boolean */
+            return {
+                'href': allow_navigation.attrib.href,
+                'minimum_tls_version': minimum_tls_version,
+                'requires_forward_secrecy' : requires_forward_secrecy
+            };
+        });
+    },
     write:function() {
         fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');
     }
