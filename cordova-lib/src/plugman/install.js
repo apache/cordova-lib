@@ -351,9 +351,13 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
             var projectRoot = cordovaUtil.isCordova();
 
             if(projectRoot) {
+                var platformProject =  platform_modules.getPlatformProject(platform, project_dir);
                 // using unified hooksRunner
                 var hookOptions = {
-                    cordova: { platforms: [ platform ] },
+                    cordova: { 
+                        platforms: [ platform ], 
+                        project: platformProject
+                    },
                     plugin: {
                         id: pluginInfo.id,
                         pluginInfo: pluginInfo,
