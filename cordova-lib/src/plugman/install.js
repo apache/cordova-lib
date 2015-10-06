@@ -86,7 +86,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     //if it does, convert id to new name id 
     var newId = pluginMapper[splitVersion[0]];
     if(newId) {
-        events.emit('log', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+        events.emit('warn', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
         if(splitVersion[1]) {
             id = newId +'@'+splitVersion[1];
         } else {
@@ -424,7 +424,7 @@ function installDependencies(install, dependencies, options) {
                 //if it does, convert id to new name id 
                 var newId = pluginMapper[splitVersion[0]];
                 if(newId) {
-                    events.emit('log', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+                    events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
                     if(splitVersion[1]) {
                         dep.id = newId +'@'+splitVersion[1];
                     } else {
