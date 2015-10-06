@@ -113,7 +113,7 @@ function create(dir, optionalId, optionalName, cfg) {
         cfg.lib.www.url = cfg.lib.www.url || cfg.lib.www.uri;
 
         if (!cfg.lib.www.url) {
-            cfg.lib.www.url = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world');
+            cfg.lib.www.url = require('cordova-app-hello-world').dirname;
         }
 
         // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
@@ -192,7 +192,7 @@ function create(dir, optionalId, optionalName, cfg) {
             paths.configXml = path.join(paths.root, 'config.xml');
             paths.configXmlLinkable = true;
         } else {
-            paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
+            paths.configXml = path.join(require('cordova-app-hello-world').dirname, 'config.xml');
         }
         if (fs.existsSync(path.join(paths.root, 'merges'))) {
             paths.merges = path.join(paths.root, 'merges');
@@ -203,7 +203,7 @@ function create(dir, optionalId, optionalName, cfg) {
             paths.hooks = path.join(paths.root, 'hooks');
             paths.hooksLinkable = true;
         } else {
-            paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
+            paths.hooks = path.join(require('cordova-app-hello-world').dirname, 'hooks');
         }
 
         var dirAlreadyExisted = fs.existsSync(dir);
