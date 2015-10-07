@@ -34,7 +34,7 @@ var shell = require('shelljs')
    , path = require('path')
    , common = require('./common')
    , events = require('cordova-common').events
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
+   , xml_helpers = require('cordova-common').xmlHelpers;
 
 module.exports = {
     www_dir:function(project_dir) {
