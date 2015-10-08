@@ -496,6 +496,15 @@ describe('ios project parser', function () {
                     expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
                 });
             });
+            it('<allow-navigation> - should ignore wildcards like data:*, https:*, https://*', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    expect(exceptionDomains['']).toBeUndefined();
+                    expect(exceptionDomains['null']).toBeUndefined();
+                    expect(exceptionDomains['undefined']).toBeUndefined();
+                });
+            });
         });
         describe('www_dir method', function() {
             it('should return /www', function() {
