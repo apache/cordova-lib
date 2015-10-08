@@ -72,7 +72,14 @@
     <allow-navigation href="*://server38.com" minimum-tls-version="TLSv1.2" requires-forward-secrecy="false" />
     <allow-navigation href="*://server39.com" minimum-tls-version="TLSv1.1" requires-forward-secrecy="true" />
     <allow-navigation href="*://server40.com" minimum-tls-version="TLSv1.1" requires-forward-secrecy="false" />
-        
+
+    <!-- https://issues.apache.org/jira/browse/CB-9758 Mobilespec crashes adding plugins on OS X -->
+    <allow-navigation href="data:*" />
+    <allow-navigation href="http:*" />
+    <allow-navigation href="https:*" />
+    <allow-navigation href="http://*" />
+    <allow-navigation href="https://*" />
+
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <preference name="orientation" value="portrait" />

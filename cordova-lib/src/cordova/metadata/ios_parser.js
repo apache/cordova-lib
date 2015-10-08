@@ -389,7 +389,10 @@ function processUrlAsATS(ats0, url, minimum_tls_version, requires_forward_secrec
         } else if (href.pathname.indexOf(subdomain3) === 0) {
             includesSubdomains = false;
             hostname = href.pathname.substring(subdomain3.length);
-        } 
+        } else {
+            // Handling "scheme:*" case to avoid creating of a blank key in NSExceptionDomains.
+            return ats;
+        }
     }
 
     // get existing entry, if any
