@@ -147,16 +147,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }
 
-                var cordovaProject = {
-                    root: projectRoot,
-                    projectConfig: cfg,
-                    locations: {
-                        www: path.join(projectRoot, 'www'),
-                        platforms: path.join(projectRoot, 'platforms'),
-                        configXml: path.join(projectRoot, 'config.xml')
-                    }
-                };
-
                 var options = {
                     // We need to pass a platformDetails into update/create
                     // since PlatformApiPoly needs to know something about
@@ -175,8 +165,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 var PlatformApi;
                 try {
                     // Try to get PlatformApi class from platform
-                    PlatformApi = require(path.resolve(platDetails.libDir, 'bin/PlatformApi'));
+                    PlatformApi = require(platDetails.libDir);
+                    events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
                 } catch (err) {
+                    events.emit('verbose', 'Failed to require PlatformApi instance for platform ' + platform +
+                        '. Using polyfill instead.');
                     PlatformApi = require('../platforms/PlatformApiPoly');
                 }
 
@@ -184,7 +177,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     PlatformApi.createPlatform :
                     PlatformApi.updatePlatform;
 
-                return promise(cordovaProject, options)
+                var destination = path.resolve(projectRoot, 'platforms', platform);
+                return promise(destination, cfg, options, events)
                 .then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {

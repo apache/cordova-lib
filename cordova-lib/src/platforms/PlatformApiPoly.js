@@ -86,20 +86,19 @@ function PlatformApiPoly(platform, platformRootDir, events) {
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
  */
-PlatformApiPoly.createPlatform = function (cordovaProject, options) {
+PlatformApiPoly.createPlatform = function (destinationDir, projectConfig, options) {
     if (!options || !options.platformDetails)
-        return Q.reject(CordovaError('Failed to find platform\'s \'create\' script. ' +
+        return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'create');
-    var commandArguments = getCreateArgs(cordovaProject, options);
+    var commandArguments = getCreateArgs(destinationDir, projectConfig, options);
 
     return superspawn.spawn(command, commandArguments,
         { printCommand: true, stdio: 'inherit', chmod: true })
     .then(function () {
-        var destination = path.join(cordovaProject.locations.platforms, options.platformDetails.platform);
         var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destination);
+            .getPlatformApi(options.platformDetails.platform, destinationDir);
         copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
         return platformApi;
     });
@@ -123,19 +122,17 @@ PlatformApiPoly.createPlatform = function (cordovaProject, options) {
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
  */
-PlatformApiPoly.updatePlatform = function (cordovaProject, options) {
+PlatformApiPoly.updatePlatform = function (destinationDir, projectConfig, options) {
     if (!options || !options.platformDetails)
-        return Q.reject(CordovaError('Failed to find platform\'s \'create\' script. ' +
+        return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'update');
-    var destination = path.join(cordovaProject.locations.platforms, options.platformDetails.platform);
-
-    return superspawn.spawn(command, [destination],
+    return superspawn.spawn(command, [destinationDir],
         { printCommand: true, stdio: 'inherit', chmod: true })
     .then(function () {
         var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destination);
+            .getPlatformApi(options.platformDetails.platform, destinationDir);
         copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
         return platformApi;
     });
@@ -468,17 +465,17 @@ module.exports = PlatformApiPoly;
  * @return  {String[]}     An array or arguments which can be passed to
  *   'bin/create'.
  */
-function getCreateArgs(project, options) {
+function getCreateArgs(destinationDir, projectConfig, options) {
     var platformName = options.platformDetails.platform;
     var platformVersion = options.platformDetails.version;
 
     var args = [];
-    args.push(path.join(project.locations.platforms, platformName)); // output
-    args.push(project.projectConfig.packageName().replace(/[^\w.]/g,'_'));
+    args.push(destinationDir); // output
+    args.push(projectConfig.packageName().replace(/[^\w.]/g,'_'));
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
-    args.push(platformName == 'ios' ? unorm.nfd(project.projectConfig.name()) : project.projectConfig.name());
+    args.push(platformName == 'ios' ? unorm.nfd(projectConfig.name()) : projectConfig.name());
 
     if (options.customTemplate) {
         args.push(options.customTemplate);
@@ -490,7 +487,7 @@ function getCreateArgs(project, options) {
     if (options.link) args.push('--link');
 
     if (platformName === 'android' && semver.gte(platformVersion, '4.0.0-dev')) {
-        var activityName = project.projectConfig.android_activityName();
+        var activityName = projectConfig.android_activityName();
         if (activityName) {
             args.push('--activity-name', activityName.replace(/\W/g, ''));
         }
