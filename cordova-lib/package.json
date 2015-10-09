@@ -18,7 +18,7 @@
   "engineStrict": true,
   "dependencies": {
     "aliasify": "^1.7.2",
-    "cordova-app-hello-world": "3.9.0",
+    "cordova-app-hello-world": "git+https://github.com/daserge/cordova-app-hello-world.git#CB-9712",
     "cordova-common": "0.1.x",
     "cordova-js": "4.1.1",
     "cordova-registry-mapper": "1.x",
