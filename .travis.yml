@@ -14,7 +14,11 @@ install:
   - npm install
   - npm test
   - npm link
+  - cd ../cordova-serve
+  - npm install
+  - npm link
   - cd ../cordova-lib
   - npm link cordova-js
   - npm link cordova-common
+  - npm link cordova-serve
   - npm install
