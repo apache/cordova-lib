@@ -165,12 +165,23 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 var PlatformApi;
                 try {
                     // Try to get PlatformApi class from platform
-                    PlatformApi = require(platDetails.libDir);
-                    events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-                } catch (err) {
-                    events.emit('verbose', 'Failed to require PlatformApi instance for platform ' + platform +
-                        '. Using polyfill instead.');
-                    PlatformApi = require('../platforms/PlatformApiPoly');
+                    // Get an entry point for platform package
+                    var apiEntryPoint = require.resolve(platDetails.libDir);
+                    // Validate entry point filename. This required due to most of platforms
+                    // defines 'main' entry in package.json pointing to bin/create which is
+                    // basically a valid NodeJS script but only can be used as standalone executable script.
+                    // Calling require on that script causes
+                    if (path.basename(apiEntryPoint) === 'Api.js') {
+                        PlatformApi = require(apiEntryPoint);
+                        events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
+                    }
+                } catch (e) {
+                } finally {
+                    if (!PlatformApi) {
+                        events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                            '". Using polyfill instead.');
+                        PlatformApi = require('../platforms/PlatformApiPoly');
+                    }
                 }
 
                 var promise = cmd === 'add' ?
