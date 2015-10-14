@@ -31,7 +31,6 @@ var fs            = require('fs'),
     Parser        = require('./parser'),
     ios_parser    = require('./ios_parser'),
     ConfigParser = require('cordova-common').ConfigParser,
-    URL           = require('url'),
     CordovaError = require('cordova-common').CordovaError;
 
 function osx_parser(project) {
