@@ -24,14 +24,15 @@ var fs            = require('fs'),
     path          = require('path'),
     xcode         = require('xcode'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     plist         = require('plist'),
     Q             = require('q'),
-    Parser        = require('./Parser'),
+    Parser        = require('./parser'),
     ios_parser    = require('./ios_parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    URL           = require('url'),
+    CordovaError = require('cordova-common').CordovaError;
 
 function osx_parser(project) {
 
@@ -134,6 +135,8 @@ osx_parser.prototype.update_from_config = function(config) {
         // Move the xcodeproj and other name-based dirs over.
         shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
         shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
+        // CB-8914 remove userdata otherwise project is un-usable in xcode
+        shell.rm('-rf',path.join(parser.xcodeproj,'xcuserdata/'));
         shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
         shell.mv(parser.cordovaproj, path.join(parser.path, name));
 
