@@ -167,10 +167,10 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     // Try to get PlatformApi class from platform
                     // Get an entry point for platform package
                     var apiEntryPoint = require.resolve(platDetails.libDir);
-                    // Validate entry point filename. This required due to most of platforms
+                    // Validate entry point filename. This is required since most of platforms
                     // defines 'main' entry in package.json pointing to bin/create which is
-                    // basically a valid NodeJS script but only can be used as standalone executable script.
-                    // Calling require on that script causes
+                    // basically a valid NodeJS script but intended to be used as a regular
+                    // executable script.
                     if (path.basename(apiEntryPoint) === 'Api.js') {
                         PlatformApi = require(apiEntryPoint);
                         events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);

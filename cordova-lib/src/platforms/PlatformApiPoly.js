@@ -71,17 +71,18 @@ function PlatformApiPoly(platform, platformRootDir, events) {
 /**
  * Installs platform to specified directory and creates a platform project.
  *
- * @param  {CordovaProject} cordovaProject A CordovaProject instance, that defines a
- *   project structure and configuration, that should be applied to new platform
- *   (contains platform's target location and ConfigParser instance for
- *   project's config). This argument is optional and if not defined, this means
- *   that platform is used as standalone project and is not a part of cordova
- *   project.
- * @param  {Object}  options  An options object. The most common options are:
- * @param  {String}  options.customTemplate  A path to custom template, that
+ * @param  {String}  destinationDir  A directory, where platform should be
+ *   created/installed.
+ * @param  {ConfigParser} [projectConfig] A ConfigParser instance, used to get
+ *   some application properties for new platform like application name, package
+ *   id, etc. If not defined, this means that platform is used as standalone
+ *   project and is not a part of cordova project, so platform will use some
+ *   default values.
+ * @param  {Object}   [options]  An options object. The most common options are:
+ * @param  {String}   [options.customTemplate]  A path to custom template, that
  *   should override the default one from platform.
- * @param  {Boolean}  options.link  Flag that indicates that platform's sources
- *   will be linked to installed platform instead of copying.
+ * @param  {Boolean}  [options.link=false]  Flag that indicates that platform's
+ *   sources will be linked to installed platform instead of copying.
  *
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
@@ -107,22 +108,18 @@ PlatformApiPoly.createPlatform = function (destinationDir, projectConfig, option
 /**
  * Updates already installed platform.
  *
- * @param   {CordovaProject}  cordovaProject  A CordovaProject instance, that
- *   defines a project structure and configuration, that should be applied to
- *   new platform (contains platform's target location and ConfigParser instance
- *   for project's config). This argument is optional and if not defined, this
- *   means that platform is used as standalone project and is not a part of
- *   cordova project.
- * @param  {Object}  options  An options object. The most common options are:
- * @param  {String}  options.customTemplate  A path to custom template, that
+ * @param  {String}  destinationDir  A directory, where existing platform
+ *   installed, that should be updated.
+ * @param  {Object}  [options]  An options object. The most common options are:
+ * @param  {String}  [options.customTemplate]  A path to custom template, that
  *   should override the default one from platform.
- * @param  {Boolean}  options.link  Flag that indicates that platform's sources
+ * @param  {Boolean}  [options.link=false]  Flag that indicates that platform's sources
  *   will be linked to installed platform instead of copying.
  *
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
  */
-PlatformApiPoly.updatePlatform = function (destinationDir, projectConfig, options) {
+PlatformApiPoly.updatePlatform = function (destinationDir, options) {
     if (!options || !options.platformDetails)
         return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
