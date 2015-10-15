@@ -129,7 +129,12 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
             .forEach(function(jsModule) {
                 var moduleName = jsModule.name ? jsModule.name : path.basename(jsModule.src, '.js');
                 var moduleId = pluginInfo.id + '.' + moduleName;
-                var moduleMetadata = {file: jsModule.src, id: moduleId, name: moduleName};
+                var moduleMetadata = {
+                    file: jsModule.src,
+                    id: moduleId,
+                    name: moduleName,
+                    pluginId: pluginInfo.id
+                };
 
                 if (jsModule.clobbers.length > 0) {
                     moduleMetadata.clobbers = jsModule.clobbers.map(function(o) { return o.target; });

@@ -566,7 +566,8 @@ PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
         var moduleName = plugin.id + '.' + ( moduleToInstall.name || moduleToInstall.src.match(/([^\/]+)\.js/)[1] );
         var obj = {
             file: ['plugins', plugin.id, moduleToInstall.src].join('/'),
-            id: moduleName
+            id: moduleName,
+            pluginId: plugin.id
         };
         if (moduleToInstall.clobbers.length > 0) {
             obj.clobbers = moduleToInstall.clobbers.map(function(o) { return o.target; });
