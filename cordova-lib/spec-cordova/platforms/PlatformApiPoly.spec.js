@@ -141,7 +141,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should create/update platform through running platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS)])
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.length).toBe(2);
@@ -152,7 +152,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should pass down arguments to platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS)])
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.length).toBe(2);
@@ -167,7 +167,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should copy cordova JS sources into created platform', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS)])
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(shell.cp).toHaveBeenCalled();
                     expect(shell.cp.calls.length).toBe(2);

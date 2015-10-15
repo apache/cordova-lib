@@ -184,13 +184,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }
 
-                var promise = cmd === 'add' ?
-                    PlatformApi.createPlatform :
-                    PlatformApi.updatePlatform;
-
                 var destination = path.resolve(projectRoot, 'platforms', platform);
-                return promise(destination, cfg, options, events)
-                .then(function () {
+                var promise = cmd === 'add' ?
+                    PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
+                    PlatformApi.updatePlatform.bind(null, destination, options, events);
+
+                return promise().then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {
                         platforms :[platform],
