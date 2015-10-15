@@ -19,7 +19,7 @@
 #
 -->
 
-# cordova-lib
+# cordova-common
 Contains shared classes and routines used by [cordova-lib](https://github.com/apache/cordova-lib/) and platforms.
 
 ## Setup
