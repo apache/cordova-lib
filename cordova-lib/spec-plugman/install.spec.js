@@ -255,7 +255,7 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
-                    expect(satisfies).toHaveBeenCalledWith('2.5.0','>=2.3.0');
+                    expect(satisfies).toHaveBeenCalledWith('2.5.0','>=1.0.0');
                     done();
                 });
             });
@@ -264,7 +264,7 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
-                    expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1','>=2.3.0');
+                    expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1','>=1.0.0');
                     done();
                 });
             });
@@ -278,13 +278,14 @@ describe('install', function() {
                 });
             });
             it('should check platform sdk version if specified', function(done) {
+                var cordovaVersion = require('../package.json').version.replace('-dev', '');
                 exec.andCallFake(function(cmd, cb) { cb(null, '18\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
                     expect(satisfies.calls.length).toBe(3);
                     // <engine name="cordova" VERSION=">=3.0.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ '18.0.0', '>=3.0.0' ]);
+                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=3.0.0' ]);
                     // <engine name="cordova-android" VERSION=">=3.1.0"/>
                     expect(satisfies.calls[1].args).toEqual([ '18.0.0', '>=3.1.0' ]);
                     // <engine name="android-sdk" VERSION=">=18"/>
@@ -297,9 +298,10 @@ describe('install', function() {
                 .fail(fail)
                 .fin(function() {
                     var plugmanVersion = require('../package.json').version.replace('-dev', '');
+                    var cordovaVersion = require('../package.json').version.replace('-dev', '');
                     expect(satisfies.calls.length).toBe(4);
                     // <engine name="cordova" version=">=2.3.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ null, '>=2.3.0' ]);
+                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=2.3.0' ]);
                     // <engine name="cordova-plugman" version=">=0.10.0" />
                     expect(satisfies.calls[1].args).toEqual([ plugmanVersion, '>=0.10.0' ]);
                     // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />

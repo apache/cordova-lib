@@ -22,7 +22,7 @@ var path = require('path');
 module.exports = function(project_dir){
     return {
         'cordova':
-            { 'platform':'*', 'scriptSrc': path.join(project_dir,'cordova','version') },
+            { 'platform':'*', 'currentVersion': require('../../../package.json').version },
         'cordova-plugman':
             { 'platform':'*', 'currentVersion': require('../../../package.json').version },
         'cordova-android':
