@@ -155,6 +155,12 @@ ios_parser.prototype.update_from_config = function(config) {
         destIconsFolder = 'Resources/icons/';
     }
 
+    // Ensure destination directory exists.
+    if (!folderExists(destIconsFolder)) {
+      events.emit('verbose', 'Creating directory ' + destIconsFolder);
+      shell.mkdir('-p', destIconsFolder);
+    }
+
     platformIcons.forEach(function (item) {
         var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
         if (icon){
@@ -184,6 +190,12 @@ ios_parser.prototype.update_from_config = function(config) {
         destSplashFolder = 'Images.xcassets/LaunchImage.launchimage/';
     } else {
         destSplashFolder = 'Resources/splash/';
+    }
+
+    // Ensure destination directory exists.
+    if (!folderExists(destSplashFolder)) {
+      events.emit('verbose', 'Creating directory ' + destSplashFolder);
+      shell.mkdir('-p', destSplashFolder);
     }
 
     platformSplashScreens.forEach(function(item) {
