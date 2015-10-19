@@ -249,7 +249,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     if(options.is_top_level && dependents && dependents.length > 0) {
         var msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
         if(options.force) {
-            events.emit('info', msg + ' but forcing removal');
+            events.emit('warn', msg + ' but forcing removal');
         } else {
             return Q.reject( new CordovaError(msg + ', skipping uninstallation.') );
         }
