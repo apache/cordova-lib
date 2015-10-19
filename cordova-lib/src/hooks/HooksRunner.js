@@ -73,8 +73,7 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     try {
         opts.cordova.version = opts.cordova.version || require('../../package').version;
     } catch(ex) {
-        events.emit('err', 'HooksRunner could not load package.json: ' + ex.message);
-        console.log('HooksRunner could not load package.json: ' + ex.message);
+        events.emit('error', 'HooksRunner could not load package.json: ' + ex.message);
     }
 
     return opts;

@@ -68,12 +68,12 @@ function getPluginsHookScripts(hook, opts) {
     // In case before_plugin_install, after_plugin_install, before_plugin_uninstall hooks we receive opts.plugin and
     // retrieve scripts exclusive for this plugin.
     if(opts.plugin) {
-        events.emit('debug', 'Executing "' + hook + '"  hook for "' + opts.plugin.id + '" on ' + opts.plugin.platform + '.');
+        events.emit('verbose', 'Executing "' + hook + '"  hook for "' + opts.plugin.id + '" on ' + opts.plugin.platform + '.');
         // if plugin hook is not run for specific platform then use all available platforms
         return getPluginScriptFiles(opts.plugin, hook, opts.plugin.platform  ? [opts.plugin.platform] : opts.cordova.platforms);
     }
 
-    events.emit('debug', 'Executing "' + hook + '"  hook for all plugins.');
+    events.emit('verbose', 'Executing "' + hook + '"  hook for all plugins.');
     return getAllPluginsHookScriptFiles(hook, opts);
 }
 
