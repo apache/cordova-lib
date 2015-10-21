@@ -281,6 +281,20 @@ android_parser.prototype.update_from_config = function(config) {
     javs_contents = javs_contents.replace(/package [\w\.]*;/, 'package ' + pkg + ';');
     events.emit('verbose', 'Wrote out Android package name to "' + pkg + '"');
     fs.writeFileSync(new_javs, javs_contents, 'utf-8');
+    // remove the original if different from the new.
+    if(orig_pkgDir !== pkgDir){
+      shell.rm('-Rf',orig_javs);
+      // remove any empty directories
+      var curDir = path.dirname(orig_javs);
+      while(curDir !== path.resolve(this.path, 'src')) {
+          if(fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
+              fs.rmdirSync(curDir);
+              curDir = path.resolve(curDir, '..');
+            } else {
+              break;
+            }
+          }
+    }
 };
 
 // Returns the platform-specific www directory.
