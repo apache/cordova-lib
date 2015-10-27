@@ -58,12 +58,14 @@ function installHelper(type, obj, plugin_dir, project_dir, plugin_id, options, p
     if (type == 'header-file') {
         project.xcode.addHeaderFile(project_ref);
     } else if (obj.framework) {
-        var opt = { weak: obj.weak };
+        var opt = { weak: obj.weak, target:project.target };
         var project_relative = path.join(path.basename(project.xcode_path), project_ref);
         project.xcode.addFramework(project_relative, opt);
         project.xcode.addToLibrarySearchPaths({path:project_ref});
     } else {
-        project.xcode.addSourceFile(project_ref, obj.compilerFlags ? {compilerFlags:obj.compilerFlags} : {});
+        var opt2 = obj.compilerFlags ? {compilerFlags:obj.compilerFlags} : {};
+        opt2.target = project.target;
+        project.xcode.addSourceFile(project_ref, opt2);
     }
 }
 
@@ -82,14 +84,16 @@ function uninstallHelper(type, obj, project_dir, plugin_id, options, project) {
 
     shell.rm('-rf', targetDir);
 
+   var opt = { target : project.target};
     if (type == 'header-file') {
         project.xcode.removeHeaderFile(project_ref);
     } else if (obj.framework) {
         var project_relative = path.join(path.basename(project.xcode_path), project_ref);
-        project.xcode.removeFramework(project_relative);
+     
+        project.xcode.removeFramework(project_relative,opt);
         project.xcode.removeFromLibrarySearchPaths({path:project_ref});
     } else {
-        project.xcode.removeSourceFile(project_ref);
+        project.xcode.removeSourceFile(project_ref,opt);
     }
 }
 
@@ -154,16 +158,20 @@ module.exports = {
         install:function(reobj, plugin_dir, project_dir, plugin_id, options, project) {
             var src = reobj.src,
                 srcFile = path.resolve(plugin_dir, src),
-                destFile = path.resolve(project.resources_dir, path.basename(src));
+                destFile = path.resolve(project.resources_dir, path.basename(src)),
+                opt = { target : project.target};
+
             if (!fs.existsSync(srcFile)) throw new Error('cannot find "' + srcFile + '" ios <resource-file>');
             if (fs.existsSync(destFile)) throw new Error('target destination "' + destFile + '" already exists');
-            project.xcode.addResourceFile(path.join('Resources', path.basename(src)));
+            
+            project.xcode.addResourceFile(path.join('Resources', path.basename(src)),opt);
             shell.cp('-R', srcFile, project.resources_dir);
         },
         uninstall:function(reobj, project_dir, plugin_id, options, project) {
             var src = reobj.src,
-                destFile = path.resolve(project.resources_dir, path.basename(src));
-            project.xcode.removeResourceFile(path.join('Resources', path.basename(src)));
+                destFile = path.resolve(project.resources_dir, path.basename(src)),
+                opt = { target : project.target};
+            project.xcode.removeResourceFile(path.join('Resources', path.basename(src)),opt);
             shell.rm('-rf', destFile);
         }
     },
@@ -179,7 +187,8 @@ module.exports = {
             shell.mkdir('-p', path.dirname(targetDir));
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
-            var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true});
+
+            var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true,target:project.target});
             if (pbxFile) {
                 project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
             }
@@ -187,10 +196,12 @@ module.exports = {
         uninstall:function(obj, project_dir, plugin_id, options, project) {
             var src = obj.src,
                 targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
-            var pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
+
+            var pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true, target:project.target});
             if (pbxFile) {
                 project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
             }
+
             shell.rm('-rf', targetDir);
         }
     },
@@ -223,13 +234,66 @@ module.exports = {
 
 
         var xcBuildConfiguration = xcodeproj.pbxXCBuildConfigurationSection();
-        var plist_file_entry = _.find(xcBuildConfiguration, function (entry) { return entry.buildSettings && entry.buildSettings.INFOPLIST_FILE; });
-        var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
-        var config_file = path.join(path.dirname(plist_file), 'config.xml');
 
-        if (!fs.existsSync(plist_file) || !fs.existsSync(config_file)) {
+        // CB-9033
+        var plist_file_index;
+        var plist_file_entry = _.find(xcBuildConfiguration, function (entry,index) {
+            if (entry.buildSettings && entry.buildSettings.INFOPLIST_FILE && entry.buildSettings.SKIP_INSTALL != 'YES') {
+
+                var plist_file = path.join(project_dir, entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
+                 if (!fs.existsSync(plist_file)) 
+                    return false;
+                
+                var config_file = path.join(path.dirname(plist_file), 'config.xml');
+                  if (!fs.existsSync(config_file)) 
+                    return false;
+
+                plist_file_index = index;
+                return true;
+              }
+
+            return false;
+        });
+      
+
+        if (!plist_file_entry)
             throw new CordovaError('could not find -Info.plist file, or config.xml file.');
-        }
+
+      
+        var target;
+        var XCConfigurationList = xcodeproj.pbxXCConfigurationList();
+        var buildConf;
+        var entry = _.find(XCConfigurationList, function (entry,index) { 
+            for(var i in entry.buildConfigurations)
+            {
+                var b = entry.buildConfigurations[i];
+                if (b.value==plist_file_index)
+                {
+                    buildConf=index;
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (!buildConf)
+            throw new CordovaError('could not find buildConfiguration.');
+
+        var nativeTargets = xcodeproj.pbxNativeTarget();
+        entry = _.find(nativeTargets, function (entry,index) { 
+            if (entry.buildConfigurationList==buildConf)
+            {
+                target = index;
+                return true;
+            }
+            return false;
+        });
+
+        if (!target)
+            throw new CordovaError('could not find find target.');   
+
+
+        var plist_file = path.join(project_dir, plist_file_entry.buildSettings.INFOPLIST_FILE.replace(/^"(.*)"$/g, '$1').replace(/\\&/g, '&'));
 
         var xcode_dir = path.dirname(plist_file);
         var pluginsDir = path.resolve(xcode_dir, 'Plugins');
@@ -241,6 +305,7 @@ module.exports = {
             resources_dir:resourcesDir,
             xcode:xcodeproj,
             xcode_path:xcode_dir,
+            target : target,
             pbx: pbxPath,
             write: function () {
                 fs.writeFileSync(pbxPath, xcodeproj.writeSync());
