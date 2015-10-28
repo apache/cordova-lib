@@ -30,34 +30,49 @@ describe('(save flag)', function () {
         PlatformApi = require('../src/platforms/PlatformApiPoly'),
         platform    = rewire('../src/cordova/platform');
 
-    var appName             = 'testApp',
-        tempPath            = path.join(__dirname, 'temp'),
-        appPath             = path.join(tempPath, appName),
-        platformName        = helpers.testPlatform,
-        platformVersionOld  = '4.0.0',
-        platformVersionNew  = '4.0.1',
-        platformLocalPath   = path.join(__dirname, 'cordova-' + platformName),
-        platformGitUrl      = 'https://github.com/apache/cordova-' + platformName,
-        platformGitRef      = '4.0.x',
-        platformTgzUrl      = 'https://git-wip-us.apache.org/repos/asf?p=cordova-' + platformName + '.git;a=snapshot;h=' + platformVersionNew + ';sf=tgz',
-        otherPlatformName   = 'windows',
-        otherPlatformSpec   = '4.0.0',
-        pluginName          = 'cordova-plugin-console',
-        pluginVersion       = '1.0.0',
-        pluginGitUrl        = 'https://github.com/apache/cordova-plugin-console.git',
-        pluginOldName       = 'org.apache.cordova.console',
-        pluginOldVersion    = '0.2.11',
-        gitPluginName       = 'cordova-plugin-device',
-        gitPluginUrl        = 'https://github.com/apache/cordova-plugin-device.git',
-        variablePluginName  = 'phonegap-facebook-plugin',
-        variablePluginUrl   = 'https://github.com/Wizcorp/phonegap-facebook-plugin',
-        localPluginName     = 'org.apache.cordova.fakeplugin1',
-        localPluginPath     = path.join(__dirname, 'fixtures', 'plugins', 'fake1'),
-        timeout             = 60 * 1000;
+    var appName                = 'testApp',
+        tempPath               = path.join(__dirname, 'temp'),
+        appPath                = path.join(tempPath, appName),
+        platformName           = helpers.testPlatform,
+        platformVersionOld     = '4.0.0',
+        platformVersionNew     = '4.0.1',
+        platformVersionNewer   = '4.1.1',
+        platformLocalPathOld   = path.join(__dirname, 'cordova-' + platformName + '-old'),
+        platformLocalPathNew   = path.join(__dirname, 'cordova-' + platformName + '-new'),
+        platformLocalPathNewer = path.join(__dirname, 'cordova-' + platformName + '-newer'),
+        platformGitUrl         = 'https://github.com/apache/cordova-' + platformName,
+        platformGitRef         = '4.0.x',
+        platformTgzUrl         = 'https://git-wip-us.apache.org/repos/asf?p=cordova-' + platformName + '.git;a=snapshot;h=' + platformVersionNew + ';sf=tgz',
+        otherPlatformName      = 'windows',
+        otherPlatformSpec      = '4.0.0',
+        pluginName             = 'cordova-plugin-console',
+        pluginVersion          = '1.0.0',
+        pluginGitUrl           = 'https://github.com/apache/cordova-plugin-console.git',
+        pluginOldName          = 'org.apache.cordova.console',
+        pluginOldVersion       = '0.2.11',
+        gitPluginName          = 'cordova-plugin-device',
+        gitPluginUrl           = 'https://github.com/apache/cordova-plugin-device.git',
+        variablePluginName     = 'phonegap-facebook-plugin',
+        variablePluginUrl      = 'https://github.com/Wizcorp/phonegap-facebook-plugin',
+        localPluginName        = 'org.apache.cordova.fakeplugin1',
+        localPluginPath        = path.join(__dirname, 'fixtures', 'plugins', 'fake1'),
+        TIMEOUT                = 60 * 1000,
+        BIG_TIMEOUT            = 2 * 60 * 1000;
 
     //mock variables
-    var revert_install_plugins_for_new_platform,
+    var revertInstallPluginsForNewPlatform,
+        revertDownloadPlatform,
         createPlatformOrig = PlatformApi.createPlatform;
+
+    function mockDownloadPlatform(libDir, version) {
+        revertDownloadPlatform = platform.__set__('downloadPlatform', function () {
+            return Q({
+                libDir: libDir,
+                platform: platformName,
+                version: version
+            });
+        });
+    }
 
     beforeEach(function (done) {
         // initial cleanup
@@ -73,7 +88,7 @@ describe('(save flag)', function () {
         spyOn(PlatformApi, 'updatePlatform').andReturn(Q());
 
         //rewire mocks
-        revert_install_plugins_for_new_platform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
+        revertInstallPluginsForNewPlatform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
 
        //creating test app
         cordova.raw.create(appPath, undefined, undefined, {}).then(function () {
@@ -85,20 +100,42 @@ describe('(save flag)', function () {
             console.log(err);
             done();
         });
-    }, timeout);
+    }, TIMEOUT);
 
     afterEach(function () {
-        revert_install_plugins_for_new_platform();
+        revertInstallPluginsForNewPlatform();
     });
 
     describe('preparing fixtures', function () {
-        it('cloning platform', function (done) {
-            shell.rm('-rf', platformLocalPath);
-            shell.exec('git clone ' + platformGitUrl + ' --depth 1 ' + platformLocalPath, { silent: true }, function (err) {
+        it('cloning "old" platform', function (done) {
+            shell.rm('-rf', platformLocalPathOld);
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathOld + 
+            ' && cd ' + platformLocalPathOld + 
+            ' && git reset --hard ' + platformVersionOld, { silent: true }, function (err) {
                 expect(err).toBe(0);
                 done();
             });
-        }, timeout);
+        }, BIG_TIMEOUT);
+
+        it('cloning "new" platform', function (done) {
+            shell.rm('-rf', platformLocalPathNew);
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNew + 
+            ' && cd ' + platformLocalPathNew + 
+            ' && git reset --hard ' + platformVersionNew, { silent: true }, function (err) {
+                expect(err).toBe(0);
+                done();
+            });
+        }, BIG_TIMEOUT);
+
+        it('cloning "newer" platform', function (done) {
+            shell.rm('-rf', platformLocalPathNewer);
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNewer + 
+            ' && cd ' + platformLocalPathNewer + 
+            ' && git reset --hard ' + platformVersionNewer, { silent: true }, function (err) {
+                expect(err).toBe(0);
+                done();
+            });
+        }, BIG_TIMEOUT);
     });
 
     describe('platform add --save', function () {
@@ -113,23 +150,29 @@ describe('(save flag)', function () {
                 expect(false).toBe(true);
                 done();
             });
-        }, timeout);
+        }, BIG_TIMEOUT);
 
         it('spec.2 should save platform to config', function (done) {
             helpers.removeEngine(appPath, platformName);
+            mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
+
             platform('add', platformName, { 'save': true })
             .then(function () {
-                expect(helpers.getEngineSpec(appPath, platformName)).not.toBe(null);
+                expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionNew);
                 done();
             }).catch(function (err) {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.3 should overwrite platform in config, spec = version', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformVersionOld);
+            mockDownloadPlatform(platformLocalPathOld, platformVersionOld);
+
             platform('add', platformName, { 'save': true })
             .then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionOld);
@@ -138,24 +181,31 @@ describe('(save flag)', function () {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.4 should overwrite platform in config, spec = path', function (done) {
-            helpers.setEngineSpec(appPath, platformName, platformLocalPath);
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+            mockDownloadPlatform(platformLocalPathNewer, platformVersionNewer);
+
             platform('add', platformName, { 'save': true })
             .then(function () {
-                expect(helpers.getEngineSpec(appPath, platformName)).toBe(platformLocalPath);
+                expect(helpers.getEngineSpec(appPath, platformName)).toBe(platformLocalPathNewer);
                 done();
             }).catch(function (err) {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.5 should fail and should not update config if invalid version is specified', function (done) {
             helpers.removeEngine(appPath, platformName);
+
             platform('add', platformName + '@3.969.696', { 'save': true })
             .then(function () {
                 expect(false).toBe(true);
@@ -169,20 +219,23 @@ describe('(save flag)', function () {
 
         it('spec.6 should save local path as spec if added using only local path', function (done) {
             helpers.removeEngine(appPath, platformName);
-            platform('add', platformLocalPath, { 'save': true })
+
+            platform('add', platformLocalPathNewer, { 'save': true })
             .then(function () {
-                expect(helpers.getEngineSpec(appPath, platformName)).toBe(platformLocalPath);
+                expect(helpers.getEngineSpec(appPath, platformName)).toBe(platformLocalPathNewer);
                 done();
             }).catch(function (err) {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.7 should save git url with git ref properly', function (done) {
             var platformUrl = platformGitUrl + '#' + platformGitRef;
             helpers.removeEngine(appPath, platformName);
+            mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
+
             platform('add', platformUrl, { 'save': true })
             .then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe(platformUrl);
@@ -191,14 +244,17 @@ describe('(save flag)', function () {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('platform remove --save', function () {
         it('spec.8 should not update config if there is no engine in it', function (done) {
             helpers.removeEngine(appPath, platformName);
-            platform('add', platformLocalPath)
+
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.platform('rm', platformName, { 'save': true });
             }).then(function () {
@@ -209,11 +265,12 @@ describe('(save flag)', function () {
                 expect(false).toBe(true);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.9 should remove engine from config', function (done) {
-            helpers.setEngineSpec(appPath, platformName, platformLocalPath);
-            platform('add', platformLocalPath)
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.platform('rm', platformName, { 'save': true });
             }).then(function () {
@@ -224,18 +281,24 @@ describe('(save flag)', function () {
                 expect(false).toBe(true);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('platform update --save', function () {
         it('spec.10 should update config with new spec', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformVersionNew);
+            mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
+
             platform('add', platformName + '@' + platformVersionNew)
             .then(function () {
                 var fsExistsSync = fs.existsSync.bind(fs);
                 spyOn(fs, 'existsSync').andCallFake(function (somePath) {
                     return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
                 });
+
+                revertDownloadPlatform();
+                mockDownloadPlatform(platformLocalPathOld, platformVersionOld);
+
                 return platform('update', platformName + '@' + platformVersionOld, { 'save': true });
             }).then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionOld);
@@ -244,19 +307,26 @@ describe('(save flag)', function () {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.11 should update spec with git url when updating using git url', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformVersionNew);
-            platform('add', platformName + '@' + platformVersionNew)
+            mockDownloadPlatform(platformLocalPathOld, platformVersionOld);
+
+            platform('add', platformName + '@' + platformVersionOld)
             .then(function () {
+                revertDownloadPlatform();
                 var fsExistsSync = fs.existsSync.bind(fs);
                 spyOn(fs, 'existsSync').andCallFake(function (somePath) {
                     return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
                 });
+                mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
                 return platform('update', platformGitUrl, { 'save': true });
             }).then(function () {
+                revertDownloadPlatform();
                 var spec = helpers.getEngineSpec(appPath, platformName);
                 expect(spec).not.toBe(null);
                 expect(spec).not.toBe(platformVersionNew);
@@ -265,13 +335,15 @@ describe('(save flag)', function () {
                 console.log(err);
                 expect(false).toBe(true);
                 done();
+            }).finally(function (err) {
+                
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('plugin add --save', function () {
         it('spec.12 should save plugin to config', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', pluginName, { 'save': true });
             }).then(function () {
@@ -282,10 +354,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.13 should create new plugin tag in config with old plugin id when downgrading from plugin with new id', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 helpers.setPluginSpec(appPath, pluginName, pluginOldVersion);
                 return cordova.raw.plugin('add', pluginName, { 'save': true });
@@ -297,10 +369,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.14 should save variables', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', variablePluginUrl, {
                     'save': true,
@@ -318,10 +390,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.15 save git url as spec', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', pluginGitUrl, { 'save': true });
             }).then(function () {
@@ -332,10 +404,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.16 should save local directory as spec', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', localPluginPath, { 'save': true });
             }).then(function () {
@@ -346,12 +418,12 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('plugin remove --save', function () {
         it('spec.17 should not add plugin to config', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', pluginName);
             }).then(function () {
@@ -364,10 +436,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.18 should remove plugin from config', function (done) {
-            platform('add', platformLocalPath)
+            platform('add', platformLocalPathNewer)
             .then(function () {
                 return cordova.raw.plugin('add', pluginName);
             }).then(function () {
@@ -381,7 +453,7 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('platform save', function () {
@@ -396,9 +468,11 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.20 should add platform to config', function (done) {
+            mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
+
             platform('add', platformName + '@' + platformVersionNew)
             .then(function () {
                 return platform('save');
@@ -409,8 +483,10 @@ describe('(save flag)', function () {
                 expect(true).toBe(false);
                 console.log(err.message);
                 done();
+            }).finally(function () {
+                revertDownloadPlatform();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('plugin save', function () {
@@ -421,7 +497,7 @@ describe('(save flag)', function () {
                 expect(helpers.getConfigContent(appPath)).toBe(configContent);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.22 should update config with plugins: one with version, one with local folder and another one vith git url', function (done) {
             cordova.raw.plugin('add', pluginName + '@' + pluginVersion)
@@ -441,7 +517,7 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
     });
 
     describe('prepare', function () {
@@ -451,7 +527,7 @@ describe('(save flag)', function () {
         });
 
         it('spec.23 should restore all platforms and plugins', function (done) {
-            helpers.setEngineSpec(appPath, platformName, platformLocalPath);
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
             helpers.setPluginSpec(appPath, localPluginName, localPluginPath);
             prepare()
             .then(function () {
@@ -463,10 +539,10 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, timeout);
+        }, TIMEOUT);
 
         it('spec.24 should restore only specified platform', function (done) {
-            helpers.setEngineSpec(appPath, platformName, platformLocalPath);
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
             helpers.setEngineSpec(appPath, otherPlatformName, otherPlatformSpec);
             var options = {
                 verbose: false,
@@ -489,7 +565,9 @@ describe('(save flag)', function () {
     describe('(cleanup)', function () {
         it('removing temp dir', function () {
             shell.rm('-rf', tempPath);
-            shell.rm('-rf', platformLocalPath);
+            shell.rm('-rf', platformLocalPathNewer);
+            shell.rm('-rf', platformLocalPathNew);
+            shell.rm('-rf', platformLocalPathOld);
         });
     });
 });
