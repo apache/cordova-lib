@@ -23,20 +23,21 @@ var path = require('path'),
     fs   = require('fs'),
     semver = require('semver'),
     shell= require('shelljs'),
-    action_stack = require('./util/action-stack'),
+    action_stack = require('cordova-common').ActionStack,
     dependencies = require('./util/dependencies'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError = require('cordova-common').CordovaError,
     underscore = require('underscore'),
     Q = require('q'),
-    events = require('../events'),
+    events = require('cordova-common').events,
     platform_modules = require('../platforms/platforms'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
-    cordovaUtil      = require('../cordova/util');
+    cordovaUtil = require('../cordova/util'),
+    pluginMapper = require('cordova-registry-mapper').oldToNew;
 
-var superspawn = require('../cordova/superspawn');
-var PlatformJson = require('./util/PlatformJson');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var superspawn = require('cordova-common').superspawn;
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -142,8 +143,18 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var pluginInfo = pluginInfoProvider.get(depPluginDir);
         // TODO: Should remove dependencies in a separate step, since dependencies depend on platform.
         var deps = pluginInfo.getDependencies();
+        var deps_path;
         deps.forEach(function (d) {
-            if (toDelete.indexOf(d.id) === -1) {
+            var splitVersion = d.id.split('@');
+            deps_path = path.join(plugin_dir, '..', splitVersion[0]);
+            if (!fs.existsSync(deps_path)) {
+                var newId = pluginMapper[splitVersion[0]];
+                if (newId && toDelete.indexOf(newId) === -1) {
+                   events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
+                   toDelete.push(newId);
+                   findDependencies(newId);
+                }
+            } else if (toDelete.indexOf(d.id) === -1) {
                 toDelete.push(d.id);
                 findDependencies(d.id);
             }
@@ -238,7 +249,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     if(options.is_top_level && dependents && dependents.length > 0) {
         var msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
         if(options.force) {
-            events.emit('info', msg + ' but forcing removal');
+            events.emit('warn', msg + ' but forcing removal');
         } else {
             return Q.reject( new CordovaError(msg + ', skipping uninstallation.') );
         }
@@ -255,6 +266,16 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function(dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
+
+            //try to convert ID if old-id path doesn't exist. 
+            if (!fs.existsSync(dependent_path)) {
+                var splitVersion = dangler.split('@');
+                var newId = pluginMapper[splitVersion[0]];
+                if(newId) {
+                    dependent_path = path.join(plugins_dir, newId);
+                    events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');
+                }
+            }
 
             var opts = underscore.extend({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,

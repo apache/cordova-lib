@@ -19,9 +19,9 @@
 
 var path = require('path'),
     fs = require('fs'),
-    events = require('../../../src/events'),
+    events = require('cordova-common').events,
     preferences = require('../../../src/cordova/metadata/parserhelper/preferences'),
-    ConfigParser = require('../../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 // Create a real config object before mocking out everything.
 var xml = path.join(__dirname, '..', '..', 'test-config.xml');

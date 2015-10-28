@@ -17,17 +17,14 @@
     under the License.
 */
 
-/* jshint unused:false, expr:true */
+/* jshint expr:true */
 
-var platform_modules   = require('../platforms/platforms'),
-    path               = require('path'),
+var path               = require('path'),
     aliasify           = require('aliasify'),
-    config_changes     = require('./util/config-changes'),
     common             = require('./platforms/common'),
     fs                 = require('fs'),
     childProcess       = require('child_process'),
-    util               = require('util'),
-    events             = require('../events'),
+    events             = require('cordova-common').events,
     plugman            = require('./plugman'),
     bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
     writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
@@ -35,14 +32,13 @@ var platform_modules   = require('../platforms/platforms'),
     computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id'),
     Readable           = require('stream').Readable;
 
-var PlatformJson = require('./util/PlatformJson');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
     var deferred = Q.defer();
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
-    var symbolList = null;
 
     writeLicenseHeader(outReleaseFileStream, platform, commitId, platformVersion);
 
@@ -133,7 +129,12 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
             .forEach(function(jsModule) {
                 var moduleName = jsModule.name ? jsModule.name : path.basename(jsModule.src, '.js');
                 var moduleId = pluginInfo.id + '.' + moduleName;
-                var moduleMetadata = {file: jsModule.src, id: moduleId, name: moduleName};
+                var moduleMetadata = {
+                    file: jsModule.src,
+                    id: moduleId,
+                    name: moduleName,
+                    pluginId: pluginInfo.id
+                };
 
                 if (jsModule.clobbers.length > 0) {
                     moduleMetadata.clobbers = jsModule.clobbers.map(function(o) { return o.target; });

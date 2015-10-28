@@ -19,11 +19,11 @@
 
 var path = require('path'),
     shell = require('shelljs'),
-    events = require('../../events'),
+    events = require('cordova-common').events,
     gitclone = require('../../gitclone'),
     tmp_dir;
 
-var PluginInfo = require('../../PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 module.exports = {
     searchAndReplace:require('./search-and-replace'),

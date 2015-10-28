@@ -23,9 +23,9 @@ var fs            = require('fs'),
     util          = require('../util'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError'),
-    events        = require('../../events');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError,
+    events = require('cordova-common').events;
 
 function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {

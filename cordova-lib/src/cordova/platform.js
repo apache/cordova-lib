@@ -20,22 +20,22 @@
 var config            = require('./config'),
     cordova           = require('./cordova'),
     cordova_util      = require('./util'),
-    ConfigParser      = require('../configparser/ConfigParser'),
+    ConfigParser      = require('cordova-common').ConfigParser,
     fs                = require('fs'),
     os                = require('os'),
     path              = require('path'),
     HooksRunner       = require('../hooks/HooksRunner'),
-    events            = require('../events'),
+    events            = require('cordova-common').events,
     lazy_load         = require('./lazy_load'),
-    CordovaError      = require('../CordovaError'),
+    CordovaError      = require('cordova-common').CordovaError,
     Q                 = require('q'),
     platforms         = require('../platforms/platforms'),
     promiseutil       = require('../util/promise-util'),
-    superspawn        = require('./superspawn'),
+    superspawn        = require('cordova-common').superspawn,
     semver            = require('semver'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
-    PlatformJson      = require('../plugman/util/PlatformJson'),
+    PlatformJson      = require('cordova-common').PlatformJson,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -147,16 +147,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }
 
-                var cordovaProject = {
-                    root: projectRoot,
-                    projectConfig: cfg,
-                    locations: {
-                        www: path.join(projectRoot, 'www'),
-                        platforms: path.join(projectRoot, 'platforms'),
-                        configXml: path.join(projectRoot, 'config.xml')
-                    }
-                };
-
                 var options = {
                     // We need to pass a platformDetails into update/create
                     // since PlatformApiPoly needs to know something about
@@ -175,17 +165,31 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 var PlatformApi;
                 try {
                     // Try to get PlatformApi class from platform
-                    PlatformApi = require(path.resolve(platDetails.libDir, 'bin/PlatformApi'));
-                } catch (err) {
-                    PlatformApi = require('../platforms/PlatformApiPoly');
+                    // Get an entry point for platform package
+                    var apiEntryPoint = require.resolve(platDetails.libDir);
+                    // Validate entry point filename. This is required since most of platforms
+                    // defines 'main' entry in package.json pointing to bin/create which is
+                    // basically a valid NodeJS script but intended to be used as a regular
+                    // executable script.
+                    if (path.basename(apiEntryPoint) === 'Api.js') {
+                        PlatformApi = require(apiEntryPoint);
+                        events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
+                    }
+                } catch (e) {
+                } finally {
+                    if (!PlatformApi) {
+                        events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                            '". Using polyfill instead.');
+                        PlatformApi = require('../platforms/PlatformApiPoly');
+                    }
                 }
 
+                var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
-                    PlatformApi.createPlatform :
-                    PlatformApi.updatePlatform;
+                    PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
+                    PlatformApi.updatePlatform.bind(null, destination, options, events);
 
-                return promise(cordovaProject, options)
-                .then(function () {
+                return promise().then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {
                         platforms :[platform],

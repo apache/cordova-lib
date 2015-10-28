@@ -18,15 +18,15 @@
 */
 
 var shell = require('shelljs'),
-    PlatformJson = require('../src/plugman/util/PlatformJson'),
+    PlatformJson = require('cordova-common').PlatformJson,
     path = require('path'),
     util = require('../src/cordova/util'),
     prepare = require('../src/cordova/prepare'),
     lazy_load = require('../src/cordova/lazy_load'),
-    ConfigParser = require('../src/configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     platforms = require('../src/platforms/platforms'),
     HooksRunner = require('../src/hooks/HooksRunner'),
-    xmlHelpers = require('../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     Q = require('q');
 

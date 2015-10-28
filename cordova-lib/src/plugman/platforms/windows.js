@@ -27,8 +27,8 @@ var common = require('./common'),
     fs   = require('fs'),
     glob = require('glob'),
     jsprojManager = require('../../util/windows/jsprojManager'),
-    events = require('../../events'),
-    xml_helpers = require('../../util/xml-helpers');
+    events = require('cordova-common').events,
+    xml_helpers = require('cordova-common').xmlHelpers;
 
 module.exports = {
     platformName: 'windows',

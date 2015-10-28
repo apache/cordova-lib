@@ -19,9 +19,9 @@
 
 var cordova_util = require('./util'),
     Q = require('q'),
-    superspawn = require('./superspawn'),
+    superspawn = require('cordova-common').superspawn,
     path = require('path'),
-    events = require('../events');
+    events = require('cordova-common').events;
 
 function handleError(error) {
     if (error.code === 'ENOENT') {

@@ -22,7 +22,7 @@ var webosParser = require('../../src/cordova/metadata/webos_parser'),
     shell = require('shelljs'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 describe('webos project parser', function() {

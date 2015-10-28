@@ -21,7 +21,6 @@ var bplist = require('bplist-parser');
 var et   = require('elementtree');
 var glob = require('glob');
 var plist = require('plist');
-var xcode = require('xcode');
 
 var plist_helpers = require('../util/plist-helpers');
 var xml_helpers = require('../util/xml-helpers');
@@ -61,16 +60,14 @@ function ConfigFile_load() {
         return;
     }
     self.exists = true;
+    self.mtime = fs.statSync(self.filepath).mtime;
+
     var ext = path.extname(filepath);
     // Windows8 uses an appxmanifest, and wp8 will likely use
     // the same in a future release
     if (ext == '.xml' || ext == '.appxmanifest') {
         self.type = 'xml';
         self.data = xml_helpers.parseElementtreeSync(filepath);
-    } else if (ext == '.pbxproj') {
-        self.type = 'pbxproj';
-        self.data = xcode.project(filepath).parseSync();
-        self.cordovaVersion = fs.readFileSync(path.join(self.project_dir, 'CordovaLib', 'VERSION'), 'utf8').trim();
     } else {
         // plist file
         self.type = 'plist';
@@ -88,8 +85,6 @@ ConfigFile.prototype.save = function ConfigFile_save() {
     var self = this;
     if (self.type === 'xml') {
         fs.writeFileSync(self.filepath, self.data.write({indent: 4}), 'utf-8');
-    } else if (self.type === 'pbxproj') {
-        fs.writeFileSync(self.filepath, self.data.writeSync());
     } else {
         // plist
         var regExp = new RegExp('<string>[ \t\r\n]+?</string>', 'g');
@@ -142,13 +137,6 @@ ConfigFile.prototype.prune_child = function ConfigFile_prune_child(selector, xml
 function resolveConfigFilePath(project_dir, platform, file) {
     var filepath = path.join(project_dir, file);
     var matches;
-
-    // .pbxproj file
-    if (file === 'framework') {
-        var proj_name = getIOSProjectname(project_dir);
-        filepath = path.join(project_dir, proj_name + '.xcodeproj', 'project.pbxproj');
-        return filepath;
-    }
 
     if (file.indexOf('*') > -1) {
         // handle wildcards in targets using glob.

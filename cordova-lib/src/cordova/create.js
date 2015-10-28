@@ -20,12 +20,12 @@
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
-    events        = require('../events'),
+    events        = require('cordova-common').events,
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
-    CordovaError  = require('../CordovaError'),
-    ConfigParser  = require('../configparser/ConfigParser'),
+    CordovaError  = require('cordova-common').CordovaError,
+    ConfigParser  = require('cordova-common').ConfigParser,
     cordova_util  = require('./util'),
     validateIdentifier = require('valid-identifier');
 
@@ -113,7 +113,13 @@ function create(dir, optionalId, optionalName, cfg) {
         cfg.lib.www.url = cfg.lib.www.url || cfg.lib.www.uri;
 
         if (!cfg.lib.www.url) {
-            cfg.lib.www.url = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world');
+            try {
+                cfg.lib.www.url = require('cordova-app-hello-world').dirname;
+            } catch (e) {
+                // Falling back on npm@2 path hierarchy
+                // TODO: Remove fallback after cordova-app-hello-world release
+                cfg.lib.www.url = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world');
+            }
         }
 
         // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
@@ -192,7 +198,13 @@ function create(dir, optionalId, optionalName, cfg) {
             paths.configXml = path.join(paths.root, 'config.xml');
             paths.configXmlLinkable = true;
         } else {
-            paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
+            try {
+                paths.configXml = path.join(require('cordova-app-hello-world').dirname, 'config.xml');
+            } catch (e) {
+                // Falling back on npm@2 path hierarchy
+                // TODO: Remove fallback after cordova-app-hello-world release
+                paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
+            }
         }
         if (fs.existsSync(path.join(paths.root, 'merges'))) {
             paths.merges = path.join(paths.root, 'merges');
@@ -203,7 +215,13 @@ function create(dir, optionalId, optionalName, cfg) {
             paths.hooks = path.join(paths.root, 'hooks');
             paths.hooksLinkable = true;
         } else {
-            paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
+            try {
+                paths.hooks = path.join(require('cordova-app-hello-world').dirname, 'hooks');
+            } catch (e) {
+                // Falling back on npm@2 path hierarchy
+                // TODO: Remove fallback after cordova-app-hello-world release
+                paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
+            }
         }
 
         var dirAlreadyExisted = fs.existsSync(dir);

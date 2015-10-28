@@ -17,8 +17,14 @@
  under the License.
  */
 
-var exec = require('./exec'),
+var child_process = require('child_process'),
+    exec = require('./exec'),
+    fs = require('fs'),
+    path = require('path'),
     Q = require('q');
+
+var NOT_INSTALLED = 'The browser target is not installed: %target%';
+var NOT_SUPPORTED = 'The browser target is not supported: %target%';
 
 /**
  * Launches the specified browser with the given URL.
@@ -33,6 +39,7 @@ module.exports = function (opts) {
     var target = opts.target || 'chrome';
     var url = opts.url || '';
 
+    target = target.toLowerCase();
     return getBrowser(target, opts.dataDir).then(function (browser) {
         var args;
 
@@ -72,7 +79,10 @@ module.exports = function (opts) {
             args.push(url);
         }
         var command = args.join(' ');
-        return exec(command);
+        return exec(command).catch(function (error) {
+            // Assume any error means that the browser is not installed and display that as a more friendly error.
+            throw new Error(NOT_INSTALLED.replace('%target%', target));
+        });
     });
 };
 
@@ -95,16 +105,93 @@ function getBrowser(target, dataDir) {
             'firefox': 'firefox',
             'opera': 'opera'
         },
-        'linux' : {
-            'chrome': 'google-chrome' + chromeArgs ,
+        'linux': {
+            'chrome': 'google-chrome' + chromeArgs,
             'chromium': 'chromium-browser' + chromeArgs,
             'firefox': 'firefox',
             'opera': 'opera'
         }
     };
-    target = target.toLowerCase();
     if (target in browsers[process.platform]) {
-        return Q(browsers[process.platform][target]);
+        var browser = browsers[process.platform][target];
+        if (process.platform === 'win32') {
+            // Windows displays a dialog if the browser is not installed. We'd prefer to avoid that.
+            return checkBrowserExistsWindows(browser, target).then(function () {
+                return browser;
+            });
+        } else {
+            return Q(browser);
+        }
     }
-    return Q.reject('Browser target not supported: ' + target);
+    return Q.reject(NOT_SUPPORTED.replace('%target%', target));
+}
+
+function checkBrowserExistsWindows(browser, target) {
+    var promise = target === 'edge' ? edgeSupported() : browserInstalled(browser);
+    return promise.catch(function (error) {
+        return Q.reject((error && error.toString() || NOT_INSTALLED).replace('%target%', target));
+    });
+}
+
+function edgeSupported() {
+    var d = Q.defer();
+
+    child_process.exec('ver', function (err, stdout, stderr) {
+        if (err || stderr) {
+            d.reject(err || stderr);
+        } else {
+            var windowsVersion = stdout.match(/([0-9.])+/g)[0];
+            if (parseInt(windowsVersion) < 10) {
+                d.reject('The browser target is not supported on this version of Windows: %target%');
+            } else {
+                d.resolve();
+            }
+        }
+    });
+    return d.promise;
+}
+
+var regItemPattern = /\s*\(Default\)\s+(REG_SZ)\s+([^\s].*)\s*/;
+function browserInstalled(browser) {
+    // On Windows, the 'start' command searches the path then 'App Paths' in the registry. We do the same here. Note
+    // that the start command uses the PATHEXT environment variable for the list of extensions to use if no extension is
+    // provided. We simplify that to just '.EXE' since that is what all the supported browsers use.
+
+    // Check path (simple but usually won't get a hit)
+    if (require('shelljs').which(browser)) {
+        return Q.resolve();
+    }
+
+    var d = Q.defer();
+
+    child_process.exec('reg QUERY "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\' + browser.split(' ')[0] + '.EXE" /v ""', function (err, stdout, stderr) {
+        if (err || stderr) {
+            // The registry key does not exist, which just means the app is not installed.
+            d.reject();
+        } else {
+            var result = regItemPattern.exec(stdout);
+            if (!result) {
+                // The registry key exists, but has no default value, which means the app is not installed (note that we
+                // don't expect to hit this, since we'll just get a default value of '(value not set)', but that will
+                // fail the fs.exists() test below to give us the expected result).
+                d.reject();
+            } else {
+                fs.exists(trimRegPath(result[2]), function (exists) {
+                    if (exists) {
+                        d.resolve();
+                    } else {
+                        // The default value is not a file that exists, which means the app is not installed.
+                        d.reject();
+                    }
+                });
+            }
+        }
+    });
+
+    return d.promise;
+}
+
+function trimRegPath(path) {
+    // Trim quotes and whitespace
+    return path.replace(/^[\s"]+|[\s"]+$/g, '');
 }

@@ -21,87 +21,73 @@ var cordova_util = require('./util'),
     crypto       = require('crypto'),
     path         = require('path'),
     shell        = require('shelljs'),
+    url          = require('url'),
     platforms    = require('../platforms/platforms'),
-    ConfigParser = require('../configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     HooksRunner  = require('../hooks/HooksRunner'),
     Q            = require('q'),
     fs           = require('fs'),
+    events       = require('cordova-common').events,
     serve        = require('cordova-serve');
 
 var projectRoot;
+var installedPlatforms;
 
-function processUrlPath(urlPath, request, response, do302, do404, serveFile) {
-    function doRoot() {
-        var p;
-        response.writeHead(200, {'Content-Type': 'text/html'});
-        var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
-        response.write('<html><head><title>'+config.name()+'</title></head><body>');
-        response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
-        for (var c in {'name': true, 'packageName': true, 'version': true}) {
-            response.write('<tr><th>' + c + '</th><td>' + config[c]() + '</td></tr>');
+function handleRoot(request, response, next) {
+    if (url.parse(request.url).pathname !== '/') {
+        response.sendStatus(404);
+        return;
+    }
+
+    response.writeHead(200, {'Content-Type': 'text/html'});
+    var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
+    response.write('<html><head><title>' + config.name() + '</title></head><body>');
+    response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
+    ['name', 'packageName', 'version'].forEach(function (c) {
+        response.write('<tr><th>' + c + '</th><td>' + config[c]() + '</td></tr>');
+    });
+    response.write('</tbody></table>');
+    response.write('<h3>Platforms</h3><ul>');
+    Object.keys(platforms).forEach(function (platform) {
+        if (installedPlatforms.indexOf(platform) >= 0) {
+            response.write('<li><a href="' + platform + '/www/">' + platform + '</a></li>\n');
+        } else {
+            response.write('<li><em>' + platform + '</em></li>\n');
         }
-        response.write('</tbody></table>');
-        response.write('<h3>Platforms</h3><ul>');
-        var installed_platforms = cordova_util.listPlatforms(projectRoot);
-        for (p in platforms) {
-            if (installed_platforms.indexOf(p) >= 0) {
-                response.write('<li><a href="' + p + '/">' + p + '</a></li>\n');
-            } else {
-                response.write('<li><em>' + p + '</em></li>\n');
-            }
+    });
+    response.write('</ul>');
+    response.write('<h3>Plugins</h3><ul>');
+    var pluginPath = path.join(projectRoot, 'plugins');
+    var plugins = cordova_util.findPlugins(pluginPath);
+    Object.keys(plugins).forEach(function (plugin) {
+        response.write('<li>' + plugins[plugin] + '</li>\n');
+    });
+    response.write('</ul>');
+    response.write('</body></html>');
+    response.end();
+}
+
+function getPlatformHandler(platform, wwwDir, configXml) {
+    return function (request, response, next) {
+        switch (url.parse(request.url).pathname) {
+            case '/' + platform + '/config.xml':
+                response.sendFile(configXml);
+                break;
+
+            case '/' + platform + '/project.json':
+                response.send({
+                    'configPath': '/' + platform + '/config.xml',
+                    'wwwPath': '/' + platform + '/www',
+                    'wwwFileList': shell.find(wwwDir)
+                        .filter(function (a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
+                        .map(function (a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })
+                });
+                break;
+
+            default:
+                next();
         }
-        response.write('</ul>');
-        response.write('<h3>Plugins</h3><ul>');
-        var pluginPath = path.join(projectRoot, 'plugins');
-        var plugins = cordova_util.findPlugins(pluginPath);
-        for (p in plugins) {
-            response.write('<li>'+plugins[p]+'</li>\n');
-        }
-        response.write('</ul>');
-        response.write('</body></html>');
-        response.end();
-    }
-
-    var firstSegment = /\/(.*?)\//.exec(urlPath);
-
-    if (!firstSegment) {
-        doRoot();
-        return;
-    }
-    var platformId = firstSegment[1];
-    if (!platforms[platformId]) {
-        do404();
-        return;
-    }
-    // Strip the platform out of the path.
-    urlPath = urlPath.slice(platformId.length + 1);
-
-    var platformApi;
-    try {
-        platformApi = platforms.getPlatformApi(platformId);
-    } catch (e) {
-        do404();
-        return;
-    }
-
-    var filePath = null;
-
-    if (urlPath == '/config.xml') {
-        filePath = platformApi.getPlatformInfo().configXml;
-    } else if (urlPath == '/project.json') {
-        processAddRequest(request, response, platformApi);
-        return;
-    } else if (/^\/www\//.test(urlPath)) {
-        filePath = path.join(platformApi.getPlatformInfo().locations.www, urlPath.slice(5));
-    } else if (/^\/+[^\/]*$/.test(urlPath)) {
-        do302('/' + platformId + '/www/');
-        return;
-    } else {
-        do404();
-        return;
-    }
-
-    serveFile(filePath);
+    };
 }
 
 function calculateMd5(fileName) {
@@ -125,40 +111,30 @@ function calculateMd5(fileName) {
     return md5sum.digest('hex');
 }
 
-function processAddRequest(request, response, platformApi) {
-    var wwwDir = platformApi.getPlatformInfo().locations.www;
-    var payload = {
-        'configPath': '/' + platformApi.platform + '/config.xml',
-        'wwwPath': '/' + platformApi.platform + '/www',
-        'wwwFileList': shell.find(wwwDir)
-            .filter(function(a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
-            .map(function(a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })
-    };
-    console.log('200 ' + request.url);
-    response.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-    });
-    response.write(JSON.stringify(payload));
-    response.end();
-}
-
 module.exports = function server(port) {
     var d = Q.defer();
     projectRoot = cordova_util.cdProjectRoot();
     port = +port || 8000;
 
     var hooksRunner = new HooksRunner(projectRoot);
-    hooksRunner.fire('before_serve')
-    .then(function () {
+    hooksRunner.fire('before_serve').then(function () {
         // Run a prepare first!
         return require('./cordova').raw.prepare([]);
     }).then(function () {
-        var server = serve.launchServer({port: port, urlPathHandler: processUrlPath}).server;
+        var server = serve();
+
+        installedPlatforms = cordova_util.listPlatforms(projectRoot);
+        installedPlatforms.forEach(function (platform) {
+            var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
+            server.app.use('/' + platform + '/www', serve.static(locations.www));
+            server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
+        });
+        server.app.get('*', handleRoot);
+
+        server.launchServer({port: port, events: events});
         hooksRunner.fire('after_serve').then(function () {
-            d.resolve(server);
+            d.resolve(server.server);
         });
     });
     return d.promise;
 };
-

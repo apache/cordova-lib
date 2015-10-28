@@ -28,8 +28,8 @@ var cordova = require('../src/cordova/cordova'),
     Q      = require('q'),
     child_process = require('child_process'),
     helpers = require('./helpers'),
-    PluginInfo = require('../src/PluginInfo'),
-    superspawn = require('../src/cordova/superspawn'),
+    PluginInfo = require('cordova-common').PluginInfo,
+    superspawn = require('cordova-common').superspawn,
     config = require('../src/cordova/config');
 
 var platform = os.platform();

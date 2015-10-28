@@ -24,17 +24,18 @@ var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
-var superspawn = require('../cordova/superspawn');
-var xmlHelpers = require('../util/xml-helpers');
 var common = require('../plugman/platforms/common');
+
+var superspawn = require('cordova-common').superspawn;
+var xmlHelpers = require('cordova-common').xmlHelpers;
 var knownPlatforms = require('./platforms');
-var CordovaError = require('../CordovaError');
-var PluginInfo = require('../PluginInfo');
-var ConfigParser = require('../configparser/ConfigParser');
-var PlatformJson = require('../plugman/util/PlatformJson');
-var ActionStack = require('../plugman/util/action-stack');
-var PlatformMunger = require('../plugman/util/config-changes').PlatformMunger;
-var PluginInfoProvider = require('../PluginInfoProvider');
+var CordovaError = require('cordova-common').CordovaError;
+var PluginInfo = require('cordova-common').PluginInfo;
+var ConfigParser = require('cordova-common').ConfigParser;
+var PlatformJson = require('cordova-common').PlatformJson;
+var ActionStack = require('cordova-common').ActionStack;
+var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 /**
  * Class, that acts as abstraction over particular platform. Encapsulates the
@@ -53,7 +54,7 @@ function PlatformApiPoly(platform, platformRootDir, events) {
 
     this.root = platformRootDir;
     this.platform = platform;
-    this.events = events || require('../events');
+    this.events = events || require('cordova-common').events;
 
     if (!(platform in knownPlatforms))
         throw new CordovaError('Unknown platform ' + platform);
@@ -70,35 +71,35 @@ function PlatformApiPoly(platform, platformRootDir, events) {
 /**
  * Installs platform to specified directory and creates a platform project.
  *
- * @param  {CordovaProject} cordovaProject A CordovaProject instance, that defines a
- *   project structure and configuration, that should be applied to new platform
- *   (contains platform's target location and ConfigParser instance for
- *   project's config). This argument is optional and if not defined, this means
- *   that platform is used as standalone project and is not a part of cordova
- *   project.
- * @param  {Object}  options  An options object. The most common options are:
- * @param  {String}  options.customTemplate  A path to custom template, that
+ * @param  {String}  destinationDir  A directory, where platform should be
+ *   created/installed.
+ * @param  {ConfigParser} [projectConfig] A ConfigParser instance, used to get
+ *   some application properties for new platform like application name, package
+ *   id, etc. If not defined, this means that platform is used as standalone
+ *   project and is not a part of cordova project, so platform will use some
+ *   default values.
+ * @param  {Object}   [options]  An options object. The most common options are:
+ * @param  {String}   [options.customTemplate]  A path to custom template, that
  *   should override the default one from platform.
- * @param  {Boolean}  options.link  Flag that indicates that platform's sources
- *   will be linked to installed platform instead of copying.
+ * @param  {Boolean}  [options.link=false]  Flag that indicates that platform's
+ *   sources will be linked to installed platform instead of copying.
  *
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
  */
-PlatformApiPoly.createPlatform = function (cordovaProject, options) {
+PlatformApiPoly.createPlatform = function (destinationDir, projectConfig, options) {
     if (!options || !options.platformDetails)
-        return Q.reject(CordovaError('Failed to find platform\'s \'create\' script. ' +
+        return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'create');
-    var commandArguments = getCreateArgs(cordovaProject, options);
+    var commandArguments = getCreateArgs(destinationDir, projectConfig, options);
 
     return superspawn.spawn(command, commandArguments,
         { printCommand: true, stdio: 'inherit', chmod: true })
     .then(function () {
-        var destination = path.join(cordovaProject.locations.platforms, options.platformDetails.platform);
         var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destination);
+            .getPlatformApi(options.platformDetails.platform, destinationDir);
         copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
         return platformApi;
     });
@@ -107,34 +108,28 @@ PlatformApiPoly.createPlatform = function (cordovaProject, options) {
 /**
  * Updates already installed platform.
  *
- * @param   {CordovaProject}  cordovaProject  A CordovaProject instance, that
- *   defines a project structure and configuration, that should be applied to
- *   new platform (contains platform's target location and ConfigParser instance
- *   for project's config). This argument is optional and if not defined, this
- *   means that platform is used as standalone project and is not a part of
- *   cordova project.
- * @param  {Object}  options  An options object. The most common options are:
- * @param  {String}  options.customTemplate  A path to custom template, that
+ * @param  {String}  destinationDir  A directory, where existing platform
+ *   installed, that should be updated.
+ * @param  {Object}  [options]  An options object. The most common options are:
+ * @param  {String}  [options.customTemplate]  A path to custom template, that
  *   should override the default one from platform.
- * @param  {Boolean}  options.link  Flag that indicates that platform's sources
+ * @param  {Boolean}  [options.link=false]  Flag that indicates that platform's sources
  *   will be linked to installed platform instead of copying.
  *
  * @return {Promise<PlatformApi>} Promise either fulfilled with PlatformApi
  *   instance or rejected with CordovaError.
  */
-PlatformApiPoly.updatePlatform = function (cordovaProject, options) {
+PlatformApiPoly.updatePlatform = function (destinationDir, options) {
     if (!options || !options.platformDetails)
-        return Q.reject(CordovaError('Failed to find platform\'s \'create\' script. ' +
+        return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'update');
-    var destination = path.join(cordovaProject.locations.platforms, options.platformDetails.platform);
-
-    return superspawn.spawn(command, [destination],
+    return superspawn.spawn(command, [destinationDir],
         { printCommand: true, stdio: 'inherit', chmod: true })
     .then(function () {
         var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destination);
+            .getPlatformApi(options.platformDetails.platform, destinationDir);
         copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
         return platformApi;
     });
@@ -309,10 +304,7 @@ PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
     plugin.getFilesAndFrameworks(this.platform)
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
-    .filter(function (item) {
-        // CB-5238 Skip (don't uninstall) non custom frameworks.
-        return !(item.itemType == 'framework' && !item.custom);
-    }).forEach(function(item) {
+    .forEach(function(item) {
         actions.push(actions.createAction(
             self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile],
             self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile]));
@@ -470,17 +462,17 @@ module.exports = PlatformApiPoly;
  * @return  {String[]}     An array or arguments which can be passed to
  *   'bin/create'.
  */
-function getCreateArgs(project, options) {
+function getCreateArgs(destinationDir, projectConfig, options) {
     var platformName = options.platformDetails.platform;
     var platformVersion = options.platformDetails.version;
 
     var args = [];
-    args.push(path.join(project.locations.platforms, platformName)); // output
-    args.push(project.projectConfig.packageName().replace(/[^\w.]/g,'_'));
+    args.push(destinationDir); // output
+    args.push(projectConfig.packageName().replace(/[^\w.]/g,'_'));
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
-    args.push(platformName == 'ios' ? unorm.nfd(project.projectConfig.name()) : project.projectConfig.name());
+    args.push(platformName == 'ios' ? unorm.nfd(projectConfig.name()) : projectConfig.name());
 
     if (options.customTemplate) {
         args.push(options.customTemplate);
@@ -492,7 +484,7 @@ function getCreateArgs(project, options) {
     if (options.link) args.push('--link');
 
     if (platformName === 'android' && semver.gte(platformVersion, '4.0.0-dev')) {
-        var activityName = project.projectConfig.android_activityName();
+        var activityName = projectConfig.android_activityName();
         if (activityName) {
             args.push('--activity-name', activityName.replace(/\W/g, ''));
         }
@@ -568,7 +560,8 @@ PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
         var moduleName = plugin.id + '.' + ( moduleToInstall.name || moduleToInstall.src.match(/([^\/]+)\.js/)[1] );
         var obj = {
             file: ['plugins', plugin.id, moduleToInstall.src].join('/'),
-            id: moduleName
+            id: moduleName,
+            pluginId: plugin.id
         };
         if (moduleToInstall.clobbers.length > 0) {
             obj.clobbers = moduleToInstall.clobbers.map(function(o) { return o.target; });

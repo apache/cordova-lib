@@ -22,8 +22,8 @@ var helpers = require('./helpers'),
     fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
-    events = require('../src/events'),
-    ConfigParser = require('../src/configparser/ConfigParser'),
+    events = require('cordova-common').events,
+    ConfigParser = require('cordova-common').ConfigParser,
     cordova = require('../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('create_test');

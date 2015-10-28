@@ -27,8 +27,8 @@ var firefoxosParser = require('../../src/cordova/metadata/firefoxos_parser'),
     _ = require('underscore'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    CordovaError = require('../../src/CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError;
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 

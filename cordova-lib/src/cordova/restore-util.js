@@ -18,14 +18,14 @@
 */
 
 var cordova_util = require('./util'),
-    ConfigParser = require('../configparser/ConfigParser'),
-    path = require('path'),
-    Q = require('q'),
-    fs = require('fs'),
-    plugin = require('./plugin'),
-    events = require('../events'),
-    cordova = require('./cordova'),
-    semver = require('semver'),
+    ConfigParser = require('cordova-common').ConfigParser,
+    path         = require('path'),
+    Q            = require('q'),
+    fs           = require('fs'),
+    plugin       = require('./plugin'),
+    events       = require('cordova-common').events,
+    cordova      = require('./cordova'),
+    semver      = require('semver'),
     promiseutil = require('../util/promise-util');
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;

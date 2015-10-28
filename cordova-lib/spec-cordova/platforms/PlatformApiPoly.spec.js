@@ -22,11 +22,11 @@ var fs = require('fs');
 var et = require('elementtree');
 var path = require('path');
 var shell = require('shelljs');
-var xmlHelpers = require('../../src/util/xml-helpers');
-var ActionStack = require('../../src/plugman/util/action-stack');
-var superspawn = require('../../src/cordova/superspawn');
-var PluginInfo = require('../../src/PluginInfo');
-var ConfigParser = require('../../src/configparser/ConfigParser');
+var xmlHelpers = require('cordova-common').xmlHelpers;
+var ActionStack = require('cordova-common').ActionStack;
+var superspawn = require('cordova-common').superspawn;
+var PluginInfo = require('cordova-common').PluginInfo;
+var ConfigParser = require('cordova-common').ConfigParser;
 var knownPlatforms = require('../../src/platforms/platforms');
 var PlatformApiPoly = require('../../src/platforms/PlatformApiPoly');
 
@@ -114,7 +114,7 @@ describe('PlatformApi polyfill', function () {
 
     describe('methods:', function () {
 
-        var FAKE_PROJECT, OPTIONS, getPlatformApi, fail, success;
+        var FAKE_PROJECT, FAKE_CONFIG, OPTIONS, getPlatformApi, fail, success;
 
         beforeEach(function () {
             getPlatformApi = spyOn(knownPlatforms, 'getPlatformApi').andReturn(platformApi);
@@ -127,7 +127,8 @@ describe('PlatformApi polyfill', function () {
             fail = jasmine.createSpy('fail');
             success = jasmine.createSpy('success');
 
-            FAKE_PROJECT = {locations: {platforms: path.dirname(PLATFORM_ROOT), www: path.join(CORDOVA_ROOT, 'www')}, projectConfig: new ConfigParser('/fake/config.xml')};
+            FAKE_CONFIG = new ConfigParser('/fake/config.xml');
+            FAKE_PROJECT = {locations: {platforms: path.dirname(PLATFORM_ROOT), www: path.join(CORDOVA_ROOT, 'www')}, projectConfig: FAKE_CONFIG};
             OPTIONS = {platformDetails: {libDir: PLATFORM_LIB, platform: PLATFORM, version: PLATFORM_VERSION}};
         });
 
@@ -139,8 +140,8 @@ describe('PlatformApi polyfill', function () {
             });
 
             it('should create/update platform through running platforms\' scripts', function (done) {
-                Q.all([PlatformApiPoly.createPlatform(FAKE_PROJECT, OPTIONS),
-                       PlatformApiPoly.updatePlatform(FAKE_PROJECT, OPTIONS)])
+                Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.length).toBe(2);
@@ -150,8 +151,8 @@ describe('PlatformApi polyfill', function () {
             });
 
             it('should pass down arguments to platforms\' scripts', function (done) {
-                Q.all([PlatformApiPoly.createPlatform(FAKE_PROJECT, OPTIONS),
-                       PlatformApiPoly.updatePlatform(FAKE_PROJECT, OPTIONS)])
+                Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.length).toBe(2);
@@ -165,8 +166,8 @@ describe('PlatformApi polyfill', function () {
             });
 
             it('should copy cordova JS sources into created platform', function (done) {
-                Q.all([PlatformApiPoly.createPlatform(FAKE_PROJECT, OPTIONS),
-                       PlatformApiPoly.updatePlatform(FAKE_PROJECT, OPTIONS)])
+                Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(shell.cp).toHaveBeenCalled();
                     expect(shell.cp.calls.length).toBe(2);
@@ -178,8 +179,8 @@ describe('PlatformApi polyfill', function () {
             });
 
             it('should fail immediately if options.platformInfo is not specified', function (done) {
-                Q.all([PlatformApiPoly.createPlatform(FAKE_PROJECT),
-                       PlatformApiPoly.updatePlatform(FAKE_PROJECT)])
+                Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG),
+                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG)])
                 .then(success)
                 .fail(fail)
                 .fin(function function_name (argument) {

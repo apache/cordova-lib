@@ -26,7 +26,7 @@ var fs            = require('fs'),
     Q             = require('q'),
     Parser        = require('./parser'),
     os            = require('os'),
-    ConfigParser  = require('../../configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 function ubuntu_parser(project) {
 

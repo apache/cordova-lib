@@ -24,13 +24,14 @@ var fs            = require('fs'),
     path          = require('path'),
     xcode         = require('xcode'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     plist         = require('plist'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    URL           = require('url'),
+    CordovaError = require('cordova-common').CordovaError;
 
 function ios_parser(project) {
 
@@ -108,6 +109,11 @@ ios_parser.prototype.update_from_config = function(config) {
         delete infoPlist['UISupportedInterfaceOrientations~ipad'];
         delete infoPlist['UIInterfaceOrientation'];
     }
+    
+    var ats = (infoPlist['NSAppTransportSecurity'] || {});
+    ats = processAccessEntriesAsATS(config, ats);
+    ats = processAllowNavigationEntriesAsATS(config, ats);
+    infoPlist['NSAppTransportSecurity'] = ats;
 
     var info_contents = plist.build(infoPlist);
     info_contents = info_contents.replace(/<string>[\s\r\n]*<\/string>/g,'<string></string>');
@@ -316,6 +322,115 @@ ios_parser.prototype.update_build_settings = function(config) {
 
     return Q();
 };
+
+function processAccessEntriesAsATS(config, ats) {
+    // CB-9569 - Support <access> tag to Application Transport Security (ATS) in iOS 9+
+    var accesses = config.getAccesses();
+    
+    // the default is the wildcard, so if there are no access tags, we add the wildcard in
+    if (accesses.length === 0) {
+        accesses.push({ 'origin' : '*'});
+    }
+    
+    if (!ats) {
+        ats = {};
+    }
+    
+    accesses.forEach(function(access) {
+        ats = processUrlAsATS(ats, access.origin, access.minimum_tls_version, access.requires_forward_secrecy);
+    });
+    
+    return ats;
+}
+
+function processAllowNavigationEntriesAsATS(config, ats) {
+    // CB-9569 - Support <allow-navigation> tag to Application Transport Security (ATS) in iOS 9+
+    var allow_navigations = config.getAllowNavigations();
+
+    if (!ats) {
+        ats = {};
+    }
+    
+    allow_navigations.forEach(function(allow_navigation) {
+        ats = processUrlAsATS(ats, allow_navigation.href, allow_navigation.minimum_tls_version, allow_navigation.requires_forward_secrecy);
+    });
+    
+    return ats;
+}
+
+function processUrlAsATS(ats0, url, minimum_tls_version, requires_forward_secrecy) {
+    
+    var ats = JSON.parse(JSON.stringify(ats0)); // (shallow) copy, to prevent side effects, +testable
+    
+    if (url === '*') {
+        ats['NSAllowsArbitraryLoads'] = true;
+        return ats;
+    }
+
+    if (!ats['NSExceptionDomains']) {
+        ats['NSExceptionDomains'] = {};
+    }
+
+    var href = URL.parse(url);
+    var includesSubdomains = false;
+    var hostname = href.hostname;
+
+    if (!hostname) {
+        // check origin, if it allows subdomains (wildcard in hostname), we set NSIncludesSubdomains to YES. Default is NO
+        var subdomain1 = '/*.'; // wildcard in hostname
+        var subdomain2 = '*://*.'; // wildcard in hostname and protocol
+        var subdomain3 = '*://'; // wildcard in protocol only
+        if (href.pathname.indexOf(subdomain1) === 0) {
+            includesSubdomains = true;
+            hostname = href.pathname.substring(subdomain1.length);
+        } else if (href.pathname.indexOf(subdomain2) === 0) {
+            includesSubdomains = true;
+            hostname = href.pathname.substring(subdomain2.length);
+        } else if (href.pathname.indexOf(subdomain3) === 0) {
+            includesSubdomains = false;
+            hostname = href.pathname.substring(subdomain3.length);
+        } else {
+            // Handling "scheme:*" case to avoid creating of a blank key in NSExceptionDomains.
+            return ats;
+        }
+    }
+
+    // get existing entry, if any
+    var exceptionDomain = ats['NSExceptionDomains'][hostname] || {};
+
+    if (includesSubdomains) {
+        exceptionDomain['NSIncludesSubdomains'] = true;
+    } else {
+        delete exceptionDomain['NSIncludesSubdomains'];
+    }
+
+    if (minimum_tls_version && minimum_tls_version !== 'TLSv1.2') { // default is TLSv1.2
+        exceptionDomain['NSExceptionMinimumTLSVersion'] = minimum_tls_version;
+    } else {
+        delete exceptionDomain['NSExceptionMinimumTLSVersion'];
+    }
+
+    var rfs = (requires_forward_secrecy === 'true');
+    if (requires_forward_secrecy && !rfs) { // default is true
+        exceptionDomain['NSExceptionRequiresForwardSecrecy'] = rfs;
+    } else {
+        delete exceptionDomain['NSExceptionRequiresForwardSecrecy'];
+    }
+
+    // if the scheme is HTTP, we set NSExceptionAllowsInsecureHTTPLoads to YES. Default is NO
+    if (href.protocol === 'http:') {
+        exceptionDomain['NSExceptionAllowsInsecureHTTPLoads'] = true;
+    }
+    else if (!href.protocol && href.pathname.indexOf('*:/') === 0) { // wilcard in protocol
+        exceptionDomain['NSExceptionAllowsInsecureHTTPLoads'] = true;
+    } else {
+        delete exceptionDomain['NSExceptionAllowsInsecureHTTPLoads'];
+    }
+
+    ats['NSExceptionDomains'][hostname] = exceptionDomain;
+
+    return ats;
+}
 
 function folderExists(folderPath) {
     try {

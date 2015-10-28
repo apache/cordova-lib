@@ -19,7 +19,7 @@
 
 var cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
-    events       = require('../events'),
+    events       = require('cordova-common').events,
     Q            = require('q'),
     promiseUtil  = require('../util/promise-util'),
     platform_lib = require('../platforms/platforms');

@@ -20,8 +20,8 @@
 var Q = require('q'),
     fs = require('fs'),
     path = require('path'),
-    PluginInfo = require('../PluginInfo'),
-    events = require('../events'),
+    PluginInfo = require('cordova-common').PluginInfo,
+    events = require('cordova-common').events,
     init = require('init-package-json');
 
 //returns a promise

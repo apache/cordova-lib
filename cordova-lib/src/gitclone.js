@@ -19,9 +19,9 @@
 
 var  Q             = require('q'),
      shell         = require('shelljs'),
-     events        = require('./events'),
+     events        = require('cordova-common').events,
      path          = require('path'),
-     superspawn    = require('./cordova/superspawn'),
+     superspawn    = require('cordova-common').superspawn,
      os            = require('os');
 
 
