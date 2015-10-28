@@ -17,6 +17,8 @@
     under the License.
 */
 
+    // Dummy change
+
 var cordovaUtil      = require('./util'),
     HooksRunner           = require('../hooks/HooksRunner');
 
