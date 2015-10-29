@@ -35,14 +35,14 @@ function displayDevices(projectRoot, platform, options) {
     var caller = { 'script': 'list-devices' };
     events.emit('log', 'Available ' + platform + ' devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
-    return superspawn.spawn(cmd, options, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
 }
 
 function displayVirtualDevices(projectRoot, platform, options) {
     var caller = { 'script': 'list-emulator-images' };
     events.emit('log', 'Available ' + platform + ' virtual devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
-    return superspawn.spawn(cmd, options, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
 }
 
 module.exports = function targets(options) {
