@@ -40,7 +40,8 @@
     "underscore": "1.7.0",
     "unorm": "1.3.3",
     "valid-identifier": "0.0.1",
-    "xcode": "0.8.0"
+    "xcode": "0.8.0",
+    "opener": "1.4.1"
   },
   "bundledDependencies": [
     "cordova-common"
