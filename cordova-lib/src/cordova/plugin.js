@@ -31,7 +31,8 @@ var cordova_util  = require('./util'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('cordova-common').events,
     metadata      = require('../plugman/util/metadata'),
-    chainMap      = require('../util/promise-util').Q_chainmap;
+    chainMap      = require('../util/promise-util').Q_chainmap,
+    opener        = require('opener');
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
@@ -263,11 +264,17 @@ module.exports = function plugin(command, targets, opts) {
         case 'search':
             return hooksRunner.fire('before_plugin_search')
             .then(function() {
-                return plugman.raw.search(opts.plugins);
-            }).then(function(plugins) {
-                for(var plugin in plugins) {
-                    events.emit('results', plugins[plugin].name, '-', plugins[plugin].description || 'no description provided');
+                var link = 'http://cordova.apache.org/plugins/';
+                if (opts.plugins.length > 0) {
+                    var keywords = (opts.plugins).join(' ');
+                    var query = link + '?q=' + encodeURI(keywords);
+                    opener(query);
                 }
+                else {
+                    opener(link);
+                }
+                
+                return Q.resolve();
             }).then(function() {
                 return hooksRunner.fire('after_plugin_search');
             });
