@@ -39,13 +39,15 @@ var path          = require('path'),
 // Returns a promise.
 module.exports = create;
 function create(dir, optionalId, optionalName, cfg) {
+    var argumentCount = arguments.length;
+    
     return Q.fcall(function() {
         // Lets check prerequisites first
 
-        if (arguments.length == 3) {
+        if (argumentCount == 3) {
           cfg = optionalName;
           optionalName = undefined;
-        } else if (arguments.length == 2) {
+        } else if (argumentCount == 2) {
           cfg = optionalId;
           optionalId = undefined;
           optionalName = undefined;
