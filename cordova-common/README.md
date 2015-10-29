@@ -77,7 +77,7 @@ console.log('The plugin ' + plugin1.id + ' has version ' + plugin1.version)
 
 ### `ActionStack`
 
-Utility module for dealing with sequential tasks. Allow to provide a set of tasks needs to be done and reverts all tasks that already completed if one of tasks is failed to complete. Used internally by cordova-lib and platforms plugin installation routines.
+Utility module for dealing with sequential tasks. Provides a set of tasks that are needed to be done and reverts all tasks that are already completed if one of those tasks fail to complete. Used internally by cordova-lib and platform's plugin installation routines.
 
 Usage:
 ```
@@ -128,7 +128,7 @@ xml.mergeXml(doc1, doc2); // doc2 now contains all the nodes from doc1
 
 ### Other APIs
 
-The APIs listed below is also exposed but is intended to be used only internally by cordova plugin installation routines.
+The APIs listed below are also exposed but are intended to be only used internally by cordova plugin installation routines.
 
 ```
 PlatformJson
