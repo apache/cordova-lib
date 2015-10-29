@@ -20,7 +20,9 @@
 -->
 # Cordova-common Release Notes
 
-### 0.1.0 (Oct 23, 2015)
+### 1.0.0 (Oct 29, 2015)
+
+* CB-9890 Documents cordova-common
 * CB-9598 Correct cordova-lib -> cordova-common in README
 * Pick ConfigParser changes from apache@0c3614e
 * CB-9743 Removes system frameworks handling from ConfigChanges
