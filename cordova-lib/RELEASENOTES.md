@@ -66,7 +66,10 @@
 * CB-9354 Fix array merging with complex items
 * CB-9556 Don't uninstall dependent plugin if it was installed as a top-level after
 
-### 5.3.0 (Aug 28, 2015)
+### 5.3.2 (Sep 17, 2015)
+* CB-9297 Parse xcode project syncronously to avoid issues with node v4
+
+### 5.3.1 (Aug 28, 2015)
 * pinned blackberry@3.8.0 in prepartion for its release
 * pinned browser@4.0.0 and windows@4.1.0 
 * CB-9559 Adding a plugin with caret in version results in an error

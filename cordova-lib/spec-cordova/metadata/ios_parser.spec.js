@@ -34,6 +34,12 @@ var ios_proj = path.join(proj, 'platforms/ios');
 
 shell.config.silent = true;
 
+var iosProjectFixture = path.join(__dirname, '../fixtures/projects/ios');
+var proj = path.join(__dirname, 'some/path');
+var ios_proj = path.join(proj, 'platforms/ios');
+
+shell.config.silent = true;
+
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 

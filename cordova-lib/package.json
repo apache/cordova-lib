@@ -25,7 +25,7 @@
     "cordova-serve": "^1.0.0",
     "dep-graph": "1.1.0",
     "elementtree": "0.1.6",
-    "glob": "4.0.6",
+    "glob": "^5.0.3",
     "init-package-json": "^1.2.0",
     "npm": "^2.10.x",
     "npmconf": "^2.1.x",
