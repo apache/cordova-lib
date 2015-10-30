@@ -21,6 +21,7 @@
 # Cordova-lib Release Notes
 
 ### 5.4.0 (Oct 30, 2015)
+* CB-9834 Introduce compat map for hook requires
 * CB-9902 Fix broken `cordova run --list`
 * CB-9872 Fixed save.spec.11 failure
 * CB-9800 Fixing contribute link.
