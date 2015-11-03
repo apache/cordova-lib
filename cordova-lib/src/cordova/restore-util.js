@@ -55,7 +55,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     });
 
     if (!targets || !targets.length) {
-        return Q.all('No platforms are listed in config.xml to restore');
+        return Q('No platforms are listed in config.xml to restore');
     }
 
 
@@ -87,7 +87,7 @@ function installPluginsFromConfigXML(args) {
     // Get all configured plugins
     var plugins = cfg.getPluginIdList();
     if (0 === plugins.length) {
-        return Q.all('No config.xml plugins to install');
+        return Q('No config.xml plugins to install');
     }
 
     // CB-9560 : Run `plugin add` serially, one plugin after another
