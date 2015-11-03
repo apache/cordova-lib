@@ -21,6 +21,7 @@
 # Cordova-lib Release Notes
 
 ### 5.4.0 (Oct 30, 2015)
+* CB-9935 Cordova CLI silently fails on node.js v5
 * CB-9834 Introduce compat map for hook requires
 * CB-9902 Fix broken `cordova run --list`
 * CB-9872 Fixed save.spec.11 failure
@@ -29,7 +30,7 @@
 * CB-9675 OSX App Icons are not properly copied.
 * CB-9758 Mobilespec crashes adding plugins on OS X
 * CB-9782 Update create/update signatures for PlatformApi polyfill
-* CB-9815 Engine name="cordova" should check tools version, not platforms. This closes #324
+* CB-9815 Engine name="cordova" should check tools version, not platforms. 
 * CB-9824 removed plugin download counter code from lib
 * CB-9821 Fix EventEmitter incorrect trace level usages
 * CB-9813 Keep module-to-plugin mapping at hand.
@@ -38,7 +39,7 @@
 * CB-9712 CLI 5.3 breaks with node 3.3.3
 * CB-9598 Fixies broken require calls that aren't covered by tests
 * CB-9589 added more warnings and added conversion step to fetch.js
-* CB-9589 auto convert old plugin ids to new npm ids
+* CB-9589 auto convert old plugin ids to new npm ids using [registry-mapper](https://github.com/stevengill/cordova-registry-mapper)
 * Pick ConfigParser changes from apache@0c3614e
 * CB-9743 Removes system frameworks handling from ConfigChanges
 * CB-9598 Cleans out code which has been moved to `cordova-common`
