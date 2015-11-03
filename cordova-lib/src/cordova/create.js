@@ -134,9 +134,11 @@ function create(dir, optionalId, optionalName, cfg) {
         // must start by going up at least one directory or with a drive
         // letter for Windows.
         var rel_path = path.relative(cfg.lib.www.url, dir);
-        var goes_up = rel_path.split(path.sep)[0] == '..';
+        var rel_parts = rel_path.split(path.sep);
+        var goes_up = rel_parts[0] == '..';
+        var is_sibling = rel_parts.length === 1;
 
-        if (!(goes_up || rel_path[1] == ':')) {
+        if (!(goes_up || rel_path[1] == ':' || is_sibling)) {
             throw new CordovaError(
                 'Project dir "' + dir +
                 '" must not be created at/inside the template used to create the project "' +
