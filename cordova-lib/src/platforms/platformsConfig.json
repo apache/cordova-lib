@@ -50,7 +50,7 @@
         "hostos": [],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git",
         "source": "git",
-        "version": "~3.6.3"
+        "version": "~3.10.0"
     },
     "firefoxos": {
         "parser_file": "../cordova/metadata/firefoxos_parser",
