@@ -30,6 +30,7 @@ var tmpDir = helpers.tmpDir('create_test');
 var appName = 'TestBase';
 var appId = 'org.testing';
 var project = path.join(tmpDir, appName);
+
 var configNormal = {
       lib: {
         www: {
@@ -47,6 +48,28 @@ var configSymlink = {
         }
       }
     };
+
+var configGit = {
+    lib: {
+        www: {
+            url: 'https://github.com/apache/cordova-app-hello-world',
+            template: true,
+            version: 'not_versioned',
+            id: 'dummy_id'
+        }
+    }
+};
+
+var configNPM = {
+    lib: {
+        www: {
+            template: true,
+            url: 'cordova-hello-world-mfp',
+            version: '',
+            id: appName + '3'
+        }
+    }
+};
 
 describe('cordova create checks for valid-identifier', function(done) {
 
@@ -69,6 +92,7 @@ describe('cordova create checks for valid-identifier', function(done) {
 
 
 describe('create end-to-end', function() {
+    this.timeout(240000);
 
     beforeEach(function() {
         shell.rm('-rf', project);
@@ -76,7 +100,7 @@ describe('create end-to-end', function() {
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+       // shell.rm('-rf', tmpDir);
     });
 
     function checkProject() {
@@ -107,7 +131,7 @@ describe('create end-to-end', function() {
         Q()
         .then(function() {
             // Create a real project
-            return cordova.raw.create(project, appId, appName, configNormal);
+            return cordova.raw.create(project + '1', appId, appName, configNormal);
         })
         .then(checkProject)
         .fail(function(err) {
@@ -120,22 +144,53 @@ describe('create end-to-end', function() {
     it('should successfully run with symlinked www', function(done) {
         // Call cordova create with no args, should return help.
         cordova.raw.create(project, appId, appName, configSymlink)
-        .then(checkProject)
-        .then(function() {
-            // Check that www is really a symlink
-            expect(fs.lstatSync(path.join(project, 'www')).isSymbolicLink()).toBe(true);
-        })
-        .fail(function(err) {
-            if(process.platform.slice(0, 3) == 'win') {
-                // Allow symlink error if not in admin mode
-                expect(err.message).toBe('Symlinks on Windows require Administrator privileges');
-            } else {
-                if (err) {
-                    console.log(err.stack);
+            .then(checkProject)
+            .then(function() {
+                // Check that www is really a symlink
+                expect(fs.lstatSync(path.join(project, 'www')).isSymbolicLink()).toBe(true);
+            })
+            .fail(function(err) {
+                if(process.platform.slice(0, 3) == 'win') {
+                    // Allow symlink error if not in admin mode
+                    expect(err.message).toBe('Symlinks on Windows require Administrator privileges');
+                } else {
+                    if (err) {
+                        console.log(err.stack);
+                    }
+                    expect(err).toBeUndefined();
                 }
-                expect(err).toBeUndefined();
-            }
-        })
-        .fin(done);
+            })
+            .fin(done);
     });
+
+    it('should successfully run with Git URL', function(done) {
+        // Call cordova create with no args, should return help.
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, configGit);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+
+    it('should successfully run with NPM package', function(done) {
+        // Call cordova create with no args, should return help.
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, configNPM);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+
 });
