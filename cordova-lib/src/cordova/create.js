@@ -22,7 +22,7 @@ var path          = require('path'),
     shell         = require('shelljs'),
     events        = require('cordova-common').events,
     config        = require('./config'),
-    lazy_load     = require('./lazy_load'),
+    remoteLoad = require('./remote_load'),
     Q             = require('q'),
     CordovaError  = require('cordova-common').CordovaError,
     ConfigParser  = require('cordova-common').ConfigParser,
@@ -40,7 +40,7 @@ var path          = require('path'),
 module.exports = create;
 function create(dir, optionalId, optionalName, cfg) {
     var argumentCount = arguments.length;
-    
+
     return Q.fcall(function() {
         // Lets check prerequisites first
 
@@ -165,24 +165,67 @@ function create(dir, optionalId, optionalName, cfg) {
         config.setAutoPersist(origAutoPersist);
     })
     .then(function() {
+        var gitURL;
+        var branch;
+        var parseArr;
+        var packageName;
+        var packageVersion;
+        var isGit;
+        var isNPM;
+
         if (!!cfg.lib.www.link) {
             events.emit('verbose', 'Symlinking assets."');
             return cfg.lib.www.url;
         } else {
             events.emit('verbose', 'Copying assets."');
-            return lazy_load.custom({ 'www': cfg.lib.www }, 'www')
-            .fail(function (error) {
-                var message = 'Failed to fetch custom www assets from ' + cfg.lib.www +
-                    '\nProbably this is either a connection problem, or assets URL is incorrect.' +
-                    '\nCheck your connection and assets URL.' +
-                    '\n' + error;
-                return Q.reject(message);
-            });
+
+            isGit = cfg.lib.www.template && cordova_util.isUrl(cfg.lib.www.url);
+            isNPM = cfg.lib.www.template && (cfg.lib.www.url.indexOf('@') > -1 || !fs.existsSync(path.resolve(cfg.lib.www.url)));
+
+            if (isGit) {
+                parseArr = cfg.lib.www.url.split('#');
+                gitURL = parseArr[0];
+                branch = parseArr[1];
+
+                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' from GitHub...');
+
+                return remoteLoad.gitClone(gitURL, branch).fail(
+                    function(err) {
+                        events.emit('verbose', err);
+                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' from Git.');
+                    }
+                );
+            } else if (isNPM) {
+                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' from NPM...');
+
+                // Determine package name, and version
+                if (cfg.lib.www.url.indexOf('@') !== -1) {
+                    parseArr = cfg.lib.www.url.split('@');
+                    packageName = parseArr[0];
+                    packageVersion = parseArr[1];
+                } else {
+                    packageName = cfg.lib.www.url;
+                    packageVersion = '';
+                }
+
+                return remoteLoad.npmFetch(packageName, packageVersion).fail(
+                    function(err) {
+                        events.emit('verbose', err);
+                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' from NPM.');
+                    }
+                );
+            } else {
+                cfg.lib.www.url = path.resolve(cfg.lib.www.url);
+
+                return Q(cfg.lib.www.url);
+            }
         }
     })
     .then(function(import_from_path) {
+
         if (!fs.existsSync(import_from_path)) {
-            throw new CordovaError('Could not find directory: ' + import_from_path);
+            throw new CordovaError('Could not find directory: ' +
+                import_from_path);
         }
 
         var paths = {
@@ -191,21 +234,27 @@ function create(dir, optionalId, optionalName, cfg) {
         };
 
         // Keep going into child "www" folder if exists in stock app package.
+        // why?
         while (fs.existsSync(path.join(paths.www, 'www'))) {
             paths.root = paths.www;
             paths.www = path.join(paths.root, 'www');
         }
 
+        // find config.xml
         if (fs.existsSync(path.join(paths.root, 'config.xml'))) {
             paths.configXml = path.join(paths.root, 'config.xml');
             paths.configXmlLinkable = true;
         } else {
             try {
-                paths.configXml = path.join(require('cordova-app-hello-world').dirname, 'config.xml');
+                paths.configXml =
+                    path.join(require('cordova-app-hello-world').dirname,
+                        'config.xml');
             } catch (e) {
                 // Falling back on npm@2 path hierarchy
                 // TODO: Remove fallback after cordova-app-hello-world release
-                paths.configXml = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'config.xml');
+                paths.configXml =
+                    path.join(__dirname, '..', '..', 'node_modules',
+                        'cordova-app-hello-world', 'config.xml');
             }
         }
         if (fs.existsSync(path.join(paths.root, 'merges'))) {
@@ -218,11 +267,15 @@ function create(dir, optionalId, optionalName, cfg) {
             paths.hooksLinkable = true;
         } else {
             try {
-                paths.hooks = path.join(require('cordova-app-hello-world').dirname, 'hooks');
+                paths.hooks =
+                    path.join(require('cordova-app-hello-world').dirname,
+                        'hooks');
             } catch (e) {
                 // Falling back on npm@2 path hierarchy
                 // TODO: Remove fallback after cordova-app-hello-world release
-                paths.hooks = path.join(__dirname, '..', '..', 'node_modules', 'cordova-app-hello-world', 'hooks');
+                paths.hooks =
+                    path.join(__dirname, '..', '..', 'node_modules',
+                        'cordova-app-hello-world', 'hooks');
             }
         }
 
@@ -230,6 +283,7 @@ function create(dir, optionalId, optionalName, cfg) {
         if (!dirAlreadyExisted) {
             fs.mkdirSync(dir);
         }
+
 
         var tryToLink = !!cfg.lib.www.link;
         function copyOrLink(src, dst, linkable) {
@@ -242,10 +296,44 @@ function create(dir, optionalId, optionalName, cfg) {
                 }
             }
         }
+
+        /*
+        Copies template files, and directories into a Cordova project directory.
+        Files, and directories not copied include: www, mergers,platforms,
+        plugins, hooks, and config.xml. A template directory, and platform
+        directory must be passed.
+
+        templateDir - Template directory
+        projectDir - Project directory
+         */
+        function copyTemplateFiles(templateDir, projectDir) {
+            var templateFiles;		// Current file
+
+            templateFiles = fs.readdirSync(templateDir);
+
+            // Remove directories, and files that are automatically copied
+            templateFiles = templateFiles.filter(
+                function (value) {
+                    return !(value === 'www' || value === 'mergers' ||
+                    value === 'config.xml' || value === 'platforms' ||
+                    value === 'plugins' || value === 'hooks');
+                }
+            );
+
+            // Copy each template file
+            for (var i = 0; i < templateFiles.length; i++)
+                shell.cp('-R', path.resolve(templateDir, templateFiles[i]), projectDir);
+        }
+
         try {
             copyOrLink(paths.www, path.join(dir, 'www'), true);
             copyOrLink(paths.merges, path.join(dir, 'merges'), true);
-            copyOrLink(paths.hooks, path.join(dir, 'hooks'), paths.hooksLinkable);
+            copyOrLink(paths.hooks, path.join(dir, 'hooks'),
+                paths.hooksLinkable);
+
+            if (cfg.lib.www.template)
+                copyTemplateFiles(import_from_path, dir);
+
             if (paths.configXml) {
                 if (tryToLink && paths.configXmlLinkable) {
                     fs.symlinkSync(paths.configXml, path.join(dir, 'config.xml'));
