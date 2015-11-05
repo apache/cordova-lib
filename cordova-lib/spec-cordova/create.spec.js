@@ -100,7 +100,7 @@ describe('create end-to-end', function() {
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-       // shell.rm('-rf', tmpDir);
+       shell.rm('-rf', tmpDir);
     });
 
     function checkProject() {
