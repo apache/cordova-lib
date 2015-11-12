@@ -277,7 +277,7 @@ describe('config-changes module', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
                     platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {});
                     configChanges.process(plugins_dir, temp, 'ios', platformJson, pluginInfoProvider);
-                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string\/>/m);
                 });
                 it('should merge dictionaries and arrays, removing duplicates', function() {
                     shell.cp('-rf', ios_config_xml, temp);
