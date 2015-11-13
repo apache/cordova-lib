@@ -32,7 +32,7 @@ exports = module.exports = prepare;
 function prepare(options) {
     var projectRoot = cordova_util.cdProjectRoot();
     var config_json = config.read(projectRoot);
-    options = options || { verbose: false, platforms: [], options: [] };
+    options = options || { verbose: false, platforms: [], options: {} };
 
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)

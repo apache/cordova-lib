@@ -82,6 +82,23 @@ describe('emulate command', function() {
             .fail(fail)
             .fin(done);
         });
+        it('should convert options from old format and warn user about this', function (done) {
+            function warnSpy(message) {
+                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+            }
+
+            cordova.on('warn', warnSpy);
+            cordova.raw.emulate({platforms:['ios'], options:['--optionTastic']}).then(function () {
+                expect(prepare_spy).toHaveBeenCalledWith(['ios']);
+                expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({emulator: true, argv: ['--optionTastic']}));
+            })
+            .fail(fail)
+            .fin(function () {
+                cordova.off('warn', warnSpy);
+                done();
+            });
+        });
     });
 
     describe('hooks', function() {
