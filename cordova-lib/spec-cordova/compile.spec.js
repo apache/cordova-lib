@@ -79,6 +79,23 @@ describe('compile command', function() {
             .fail(fail)
             .fin(done);
         });
+
+        it('should convert options from old format and warn user about this', function (done) {
+            function warnSpy(message) {
+                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+            }
+
+            cordova.on('warn', warnSpy);
+            cordova.raw.compile({platforms:['blackberry10'], options:['--release']}).then(function () {
+                expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
+                expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
+            })
+            .fail(fail)
+            .fin(function () {
+                cordova.off('warn', warnSpy);
+                done();
+            });
+        });
     });
 
     describe('hooks', function() {

@@ -84,6 +84,24 @@ describe('run command', function() {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
+        it('should convert parameters from old format and warn user about this', function (done) {
+            function warnSpy(message) {
+                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+            }
+
+            cordova.on('warn', warnSpy);
+            cordova.raw.run({platforms: ['blackberry10'], options:['--password=1q1q']}).then(function() {
+                expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ],
+                    options: jasmine.objectContaining({argv:['--password="1q1q"']}), verbose: false });
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({argv:['--password="1q1q"']}));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(function () {
+                cordova.off('warn', warnSpy);
+                done();
+            });
+        });
     });
 
     describe('hooks', function() {

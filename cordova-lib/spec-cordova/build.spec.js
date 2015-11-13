@@ -72,10 +72,25 @@ describe('build command', function() {
             });
         });
         it('should pass down options', function(done) {
-            cordova.raw.build({platforms: ['android'], options: ['--release']}).then(function() {
-                var opts = {platforms: ['android'], options: ['--release'], verbose: false};
+            cordova.raw.build({platforms: ['android'], options: {release: true}}).then(function() {
+                var opts = {platforms: ['android'], options: {release: true}, verbose: false};
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
+                done();
+            });
+        });
+
+        it('should convert options from old format and warn user about this', function (done) {
+            function warnSpy(message) {
+                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+            }
+
+            cordova.on('warn', warnSpy);
+            cordova.raw.build({platforms:['android'], options:['--release', '--cdvBuildOpt=opt']}).then(function () {
+                var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt="opt"']}), verbose: false};
+                expect(prepare_spy).toHaveBeenCalledWith(opts);
+                expect(compile_spy).toHaveBeenCalledWith(opts);
+                cordova.off('warn', warnSpy);
                 done();
             });
         });

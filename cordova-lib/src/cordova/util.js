@@ -20,10 +20,12 @@
 /* jshint sub:true */
 var fs            = require('fs'),
     path          = require('path'),
+    events        = require('cordova-common').events,
     CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
     url           = require('url'),
     npm           = require('npm'),
+    nopt          = require('nopt'),
     Q             = require('q'),
     semver        = require('semver');
 
@@ -233,7 +235,7 @@ function preProcessOptions (inputOptions) {
     }
     result.verbose = result.verbose || false;
     result.platforms = result.platforms || [];
-    result.options = result.options || {};
+    result.options = ensurePlatformOptionsCompatible(result.options);
 
     var projectRoot = this.isCordova();
 
@@ -253,6 +255,52 @@ function preProcessOptions (inputOptions) {
     }
 
     return result;
+}
+
+/**
+ * Converts options, which is passed to platformApi from old format (array of
+ *   plain strings) to new - nopt-parsed object + array of platform-specific
+ *   options. If options are already in new the format - returns them unchanged.
+ *
+ * @param   {Object|String[]}  platformOptions  A platform options (array of
+ *   strings or object) which is passed down to platform scripts/platformApi
+ *   polyfill.
+ *
+ * @return  {Object}                            Options, converted to new format
+ */
+function ensurePlatformOptionsCompatible (platformOptions) {
+    var opts = platformOptions || {};
+
+    if (!Array.isArray(opts))
+        return opts;
+
+    events.emit('warn', 'The format of cordova.raw.* methods "options" argument was changed in 5.4.0. ' +
+        '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
+        'is still supported, consider updating your cordova.raw.* method calls to use new argument format.');
+
+    var knownArgs = [
+        'debug',
+        'release',
+        'device',
+        'emulator',
+        'nobuild',
+        'list',
+        'buildConfig',
+        'target',
+        'archs'
+    ]
+
+    opts = nopt({}, {}, opts, 0);
+    opts.argv = Object.keys(opts)
+    .filter(function (arg) {
+        return arg !== 'argv' && knownArgs.indexOf(arg) === -1;
+    }).map(function (arg) {
+        return opts[arg] === true ?
+            '--' + arg :
+            '--' + arg + '="' + opts[arg].toString() + '"';
+    });
+
+    return opts;
 }
 
 function isDirectory(dir) {
