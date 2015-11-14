@@ -36,6 +36,7 @@ shell.config.silent = true;
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
+var cfg2 = new ConfigParser(path.join(__dirname, '..', 'test-config-2.xml'));
 
 describe('ios project parser', function () {
     var custom;
@@ -178,6 +179,13 @@ describe('ios project parser', function () {
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationLandscapeLeft' ]);
+                });
+            });
+            it('should handle all orientation on ios', function(done) {
+                getOrientation.andReturn(p.helper.ORIENTATION_ALL);
+                wrapper(p.update_from_config(cfg2), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
                 });
             });
             it('should handle custom orientation', function(done) {

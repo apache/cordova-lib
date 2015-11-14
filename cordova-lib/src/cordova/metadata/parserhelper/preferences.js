@@ -23,17 +23,24 @@
 
 var events = require('cordova-common').events;
 
+var _ORIENTATION_ALL = 'all';
 var _ORIENTATION_DEFAULT = 'default';
 var _ORIENTATION_PORTRAIT = 'portrait';
 var _ORIENTATION_LANDSCAPE = 'landscape';
 var _ORIENTATION_GLOBAL_ORIENTATIONS = [ _ORIENTATION_DEFAULT, _ORIENTATION_PORTRAIT, _ORIENTATION_LANDSCAPE ];
 
+var _ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS = {
+    'ios' : [ _ORIENTATION_ALL ]  
+};
+
 module.exports = {
 
+    ORIENTATION_ALL: _ORIENTATION_ALL,
     ORIENTATION_DEFAULT: _ORIENTATION_DEFAULT,
     ORIENTATION_PORTRAIT: _ORIENTATION_PORTRAIT,
     ORIENTATION_LANDSCAPE: _ORIENTATION_LANDSCAPE,
     ORIENTATION_GLOBAL_ORIENTATIONS: _ORIENTATION_GLOBAL_ORIENTATIONS,
+    ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS: _ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS,
 
     /**
      * @param  {String}  orientation Orientation
@@ -49,6 +56,22 @@ module.exports = {
      */
     isGlobalOrientation: function (orientation) {
         return this.ORIENTATION_GLOBAL_ORIENTATIONS.some(function (supportedOrientation) {
+            return orientation.toLowerCase() === supportedOrientation.toLowerCase();
+        });
+    },
+
+    /**
+     * @param  {String}  orientation Orientation
+     * @return {Boolean}             True if the value equals one of _ORIENTATION_PLATFORM_SPECIFIC_ORIENTATIONS
+     */
+    isOrientationSpecificToAPlatform: function (orientation, platform) {
+        var platformArray = this.ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS[ platform ];
+        
+        if (!platformArray) {
+            return false;
+        } 
+        
+        return platformArray.some(function (supportedOrientation) {
             return orientation.toLowerCase() === supportedOrientation.toLowerCase();
         });
     },
@@ -71,8 +94,8 @@ module.exports = {
 
         globalOrientation = config.getGlobalPreference('orientation');
 
-        // Check if the given global orientation is supported
-        if (globalOrientation && !this.isGlobalOrientation(globalOrientation)) {
+        // Check if the given global orientation is supported, or if the orientation is supported for a platform
+        if ((globalOrientation && !this.isGlobalOrientation(globalOrientation)) && !this.isOrientationSpecificToAPlatform(globalOrientation, platform)) {
             events.emit( 'warn', [ 'Unsupported global orientation:', globalOrientation ].join(' ') );
             events.emit( 'warn', [ 'Defaulting to value:', this.ORIENTATION_DEFAULT ].join(' ') );
             globalOrientation = this.ORIENTATION_DEFAULT;
