@@ -25,7 +25,9 @@ var path = require('path'),
 
 // Create a real config object before mocking out everything.
 var xml = path.join(__dirname, '..', '..', 'test-config.xml');
+var xml2 = path.join(__dirname, '..', '..', 'test-config-2.xml');
 var cfg = new ConfigParser(xml);
+var cfg2 = new ConfigParser(xml2);
 
 describe('preferences', function() {
 
@@ -35,7 +37,11 @@ describe('preferences', function() {
             expect(preferences.ORIENTATION_DEFAULT).toEqual('default');
             expect(preferences.ORIENTATION_PORTRAIT).toEqual('portrait');
             expect(preferences.ORIENTATION_LANDSCAPE).toEqual('landscape');
+            expect(preferences.ORIENTATION_ALL).toEqual('all');
+            
             expect(preferences.ORIENTATION_GLOBAL_ORIENTATIONS).toEqual([ 'default', 'portrait', 'landscape' ]);
+            expect(preferences.ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS.ios).toEqual([ 'all' ]);
+            expect(preferences.ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS.foobar).toBeUndefined();
         });
 
     });
@@ -70,6 +76,17 @@ describe('preferences', function() {
             });
 
         });
+        
+        describe('isOrientationSpecificToAPlatform', function() {
+
+            it('should return true if an orientation is specific to a platform', function() {
+                expect(preferences.isOrientationSpecificToAPlatform('all', 'ios')).toBe(true);
+            });
+            it('should return false if an orientation is not a specific to a platform', function() {
+                expect(preferences.isOrientationSpecificToAPlatform('some-orientation', 'foobar')).toBe(false);
+            });
+
+        });
 
         describe('getOrientation', function() {
 
@@ -84,6 +101,10 @@ describe('preferences', function() {
             it('should handle platform-specific orientation', function() {
                 expect(preferences.getOrientation(cfg, 'android')).toEqual('landscape');
             });
+            it('should handle orientation specific to a platform', function() {
+                expect(preferences.getOrientation(cfg2, 'ios')).toEqual('all');
+            });
+            
             it('should handle no orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget></widget>';
                 readFile.andReturn(configXml);
@@ -99,6 +120,7 @@ describe('preferences', function() {
                 expect(emit).toHaveBeenCalledWith('warn', 'Unsupported global orientation: foobar');
                 expect(emit).toHaveBeenCalledWith('warn', 'Defaulting to value: default');
             });
+            
             it('should handle custom platform-specific orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><platform name="some-platform"><preference name="orientation" value="foobar" /></platform></widget>';
                 readFile.andReturn(configXml);
