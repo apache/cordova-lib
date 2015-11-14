@@ -170,5 +170,10 @@ module.exports = {
         var prefix = module.exports.package_suffix(project_dir);
         var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
         return subRelativeDir;
+    },
+    package_suffix: function (project_dir) {
+        var packageName = module.exports.package_name(project_dir);
+        var lastDotIndex = packageName.lastIndexOf('.');
+        return packageName.substring(lastDotIndex + 1);
     }
 };
