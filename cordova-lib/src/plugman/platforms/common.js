@@ -128,7 +128,7 @@ module.exports = common = {
         install: function (jsModule, plugin_dir, plugin_id, www_dir) {
             // Copy the plugin's files into the www directory.
             var moduleSource = path.resolve(plugin_dir, jsModule.src);
-            var moduleName = plugin_id + '.' + (jsModule.name || path.parse(jsModule.src).name);
+            var moduleName = plugin_id + '.' + (jsModule.name || path.basename(jsModule.src, path.extname (jsModule.src)));
 
             // Read in the file, prepend the cordova.define, and write it back out.
             var scriptContent = fs.readFileSync(moduleSource, 'utf-8').replace(/^\ufeff/, ''); // Window BOM
