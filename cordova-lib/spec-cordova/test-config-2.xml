@@ -12,4 +12,8 @@
     <platform name="ios">
         <preference name="orientation" value="all" />
     </platform>
+    <platform name="android">
+        <preference name="orientation" value="sensorLandscape" />
+    </platform>
+
 </widget>

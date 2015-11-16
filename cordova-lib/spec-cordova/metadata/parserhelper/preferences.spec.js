@@ -25,9 +25,7 @@ var path = require('path'),
 
 // Create a real config object before mocking out everything.
 var xml = path.join(__dirname, '..', '..', 'test-config.xml');
-var xml2 = path.join(__dirname, '..', '..', 'test-config-2.xml');
 var cfg = new ConfigParser(xml);
-var cfg2 = new ConfigParser(xml2);
 
 describe('preferences', function() {
 
@@ -81,6 +79,8 @@ describe('preferences', function() {
 
             it('should return true if an orientation is specific to a platform', function() {
                 expect(preferences.isOrientationSpecificToAPlatform('all', 'ios')).toBe(true);
+                expect(preferences.isOrientationSpecificToAPlatform('sensorLandscape', 'android')).toBe(true);
+                
             });
             it('should return false if an orientation is not a specific to a platform', function() {
                 expect(preferences.isOrientationSpecificToAPlatform('some-orientation', 'foobar')).toBe(false);
@@ -102,7 +102,19 @@ describe('preferences', function() {
                 expect(preferences.getOrientation(cfg, 'android')).toEqual('landscape');
             });
             it('should handle orientation specific to a platform', function() {
-                expect(preferences.getOrientation(cfg2, 'ios')).toEqual('all');
+                var configXml, configParser;
+                
+                configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="all" /></widget>';
+                readFile.andReturn(configXml);
+                configParser = new ConfigParser(xml);
+
+                expect(preferences.getOrientation(configParser, 'ios')).toEqual('all');
+                
+                configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="sensorLandscape" /></widget>';
+                readFile.andReturn(configXml);
+                configParser = new ConfigParser(xml);
+                
+                expect(preferences.getOrientation(configParser, 'android')).toEqual('sensorLandscape');
             });
             
             it('should handle no orientation', function() {
