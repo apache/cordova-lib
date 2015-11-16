@@ -315,8 +315,7 @@ function create(dir, optionalId, optionalName, cfg) {
             templateFiles = templateFiles.filter(
                 function (value) {
                     return !(value === 'www' || value === 'mergers' ||
-                    value === 'config.xml' || value === 'platforms' ||
-                    value === 'plugins' || value === 'hooks');
+                    value === 'config.xml' || value === 'hooks');
                 }
             );
 
@@ -350,10 +349,12 @@ function create(dir, optionalId, optionalName, cfg) {
             }
             throw e;
         }
-
         // Create basic project structure.
-        shell.mkdir(path.join(dir, 'platforms'));
-        shell.mkdir(path.join(dir, 'plugins'));
+        if (!fs.existsSync(path.join(dir, 'platforms')))
+            shell.mkdir(path.join(dir, 'platforms'));
+
+        if (!fs.existsSync(path.join(dir, 'plugins')))
+            shell.mkdir(path.join(dir, 'plugins'));
 
         // Write out id and name to config.xml
         var configPath = cordova_util.projectConfig(dir);
