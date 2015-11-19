@@ -32,10 +32,9 @@ function toCamelCase(str) {
 function getPluginXml(plugin_dir) {
     var et = require('elementtree'),
     fs = require('fs'),
-    shell = require('shelljs'),
     path = require('path');
 
-    var pluginxml = undefined;
+    var pluginxml;
     var config_path = path.join(plugin_dir, 'plugin.xml');
 
     if (fs.existsSync(config_path)) {
