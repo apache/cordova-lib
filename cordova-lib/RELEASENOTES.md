@@ -20,6 +20,13 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.4.1 (Nov 19, 2015)
+* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`. 
+* CB-9981 `path.parse` only available on `node 0.12+`.
+* CB-9987 Adds compatibility layer for `cordova.raw.*` methods
+* CB-9975 Fix issue with using `all" as orientation for **iOS**
+* CB-9984 Bumps `plist` version and fixes failing `cordova-common` test
+
 ### 5.4.0 (Oct 30, 2015)
 * CB-9935 Cordova CLI silently fails on node.js v5
 * CB-9834 Introduce compat map for hook requires
