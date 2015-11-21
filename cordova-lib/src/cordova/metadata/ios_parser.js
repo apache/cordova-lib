@@ -110,10 +110,12 @@ ios_parser.prototype.update_from_config = function(config) {
         delete infoPlist['UIInterfaceOrientation'];
     }
     
-    var ats = (infoPlist['NSAppTransportSecurity'] || {});
-    ats = writeATSEntries(config, ats);
+    // replace Info.plist ATS entries according to <access> and <allow-navigation> config.xml entries 
+    var ats = writeATSEntries(config);
     if (Object.keys(ats).length > 0) {
         infoPlist['NSAppTransportSecurity'] = ats;
+    } else {
+        delete infoPlist['NSAppTransportSecurity'];
     }
 
     var info_contents = plist.build(infoPlist);
@@ -387,7 +389,7 @@ function parseWhitelistUrlForATS(url, minimum_tls_version, requires_forward_secr
     if (url === '*') {
         return {
             Hostname : '*'
-        }
+        };
     }
     
     // Guiding principle: we only set values in retObj if they are NOT the default
@@ -436,30 +438,31 @@ function parseWhitelistUrlForATS(url, minimum_tls_version, requires_forward_secr
     App Transport Security (ATS) writer from <access> and <allow-navigation> tags
     in config.xml
 */
-function writeATSEntries(config, ats0) {
+function writeATSEntries(config) {
   var pObj = processAccessAndAllowNavigationEntries(config);
   
-    var ats = JSON.parse(JSON.stringify(ats0)); // (shallow) copy, to prevent side effects, +testable
+    var ats = {};
 
-    if (!ats['NSExceptionDomains']) {
-        ats['NSExceptionDomains'] = {};
-    }
-    
     for(var hostname in pObj) {
         if (pObj.hasOwnProperty(hostname)) {
-              var entry = pObj[hostname];
-              var exceptionDomain = ats['NSExceptionDomains'][hostname] || {}; // get existing, if any
               if (hostname === '*') {
                   ats['NSAllowsArbitraryLoads'] = true;
                   continue;              
               }
+              
+              var entry = pObj[hostname];
+              var exceptionDomain = {};
               
               for(var key in entry) {
                   if (entry.hasOwnProperty(key) && key !== 'Hostname') {
                       exceptionDomain[key] = entry[key];
                   }
               }
-              // assign the domain to ats
+
+              if (!ats['NSExceptionDomains']) {
+                  ats['NSExceptionDomains'] = {};
+              }
+
               ats['NSExceptionDomains'][hostname] = exceptionDomain;
         }
     }
