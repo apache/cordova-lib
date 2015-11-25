@@ -29,6 +29,51 @@ function toCamelCase(str) {
     }).join('');
 }
 
+function getPluginXml(plugin_dir) {
+    var et = require('elementtree'),
+    fs = require('fs'),
+    path = require('path');
+
+    var pluginxml;
+    var config_path = path.join(plugin_dir, 'plugin.xml');
+
+    if (fs.existsSync(config_path)) {
+        // Get the current plugin.xml file
+        pluginxml = et.parse(fs.readFileSync(config_path, 'utf-8'));
+    }
+ 
+    return pluginxml;
+}
+
+function findClassName(pluginxml, plugin_id) {
+    var class_name;
+
+    // first check if we have a class-name parameter in the plugin config
+    if (pluginxml) {
+	var platform = pluginxml.find("./platform/[@name='ubuntu']/");
+	if (platform) {
+	    var param = platform.find("./config-file/[@target='config.xml']/feature/param/[@name='ubuntu-package']");
+	    if (param && param.attrib) {
+		class_name = param.attrib.value;
+		return class_name;
+	    }
+	}
+    }
+
+    // fallback to guess work, based on the plugin package name
+
+    if (plugin_id.match(/\.[^.]+$/)) {
+        // old-style plugin name
+        class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
+        class_name = toCamelCase(class_name);
+    } else {
+        class_name = plugin_id.match(/cordova\-plugin\-([\w\-]+)$/)[0].substr(15);
+        class_name = toCamelCase(class_name);
+    }
+
+    return class_name;
+}
+
 var shell = require('shelljs')
    , fs = require('fs')
    , path = require('path')
@@ -71,8 +116,9 @@ module.exports = {
             var src = String(fs.readFileSync(plugins));
 
             src = src.replace('INSERT_HEADER_HERE', '#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"\nINSERT_HEADER_HERE');
-            var class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
-            class_name = toCamelCase(class_name);
+
+            var pluginxml  = getPluginXml(plugin_dir);
+            var class_name = findClassName(pluginxml, plugin_id);
             src = src.replace('INSERT_PLUGIN_HERE', 'INIT_PLUGIN(' + class_name + ');INSERT_PLUGIN_HERE');
 
             fs.writeFileSync(plugins, src);
@@ -85,8 +131,7 @@ module.exports = {
             var src = String(fs.readFileSync(plugins));
 
             src = src.replace('#include "plugins/' + plugin_id + '/' + path.basename(obj.src) +'"', '');
-            var class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
-            class_name = toCamelCase(class_name);
+            var class_name = findClassName(undefined, plugin_id);
             src = src.replace('INIT_PLUGIN(' + class_name + ');', '');
 
             fs.writeFileSync(plugins, src);
