@@ -47,7 +47,7 @@ function getPluginXml(plugin_dir) {
 
 function findClassName(pluginxml, plugin_id) {
     var class_name;
-
+    /* jshint ignore:start */
     // first check if we have a class-name parameter in the plugin config
     if (pluginxml) {
 	var platform = pluginxml.find("./platform/[@name='ubuntu']/");
@@ -59,7 +59,7 @@ function findClassName(pluginxml, plugin_id) {
 	    }
 	}
     }
-
+    /* jshint ignore:end */
     // fallback to guess work, based on the plugin package name
 
     if (plugin_id.match(/\.[^.]+$/)) {
