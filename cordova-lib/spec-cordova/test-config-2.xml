@@ -12,4 +12,14 @@
     <platform name="ios">
         <preference name="orientation" value="all" />
     </platform>
+    <platform name="android">
+        <preference name="orientation" value="sensorLandscape" />
+    </platform>
+    
+    <access origin="http://*.apache.org" />
+    <access origin="https://*.apache.org" />
+    
+    <allow-navigation href="http://*.apache.org" />
+    <allow-navigation href="https://*.apache.org" />
+     
 </widget>

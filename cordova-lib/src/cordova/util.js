@@ -288,7 +288,7 @@ function ensurePlatformOptionsCompatible (platformOptions) {
         'buildConfig',
         'target',
         'archs'
-    ]
+    ];
 
     opts = nopt({}, {}, opts, 0);
     opts.argv = Object.keys(opts)
