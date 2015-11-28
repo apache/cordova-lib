@@ -60,7 +60,7 @@ var configGit = {
     }
 };
 
-var configNPM = {
+/*var configNPM = {
     lib: {
         www: {
             template: true,
@@ -69,7 +69,7 @@ var configNPM = {
             id: appName
         }
     }
-};
+};*/
 
 describe('cordova create checks for valid-identifier', function(done) {
 
