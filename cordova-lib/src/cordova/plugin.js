@@ -32,6 +32,7 @@ var cordova_util  = require('./util'),
     events        = require('cordova-common').events,
     metadata      = require('../plugman/util/metadata'),
     chainMap      = require('../util/promise-util').Q_chainmap,
+    pkgJson       = require('../../package.json'),
     opener        = require('opener');
 
 // Returns a promise.
@@ -129,7 +130,14 @@ module.exports = function plugin(command, targets, opts) {
                             if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
                                 target = ver;
                             } else {
-                                target = ver ? (id + '@' + ver) : target;
+                                //if version exists from config.xml, use that
+                                if(ver) {
+                                    target = ver ? (id + '@' + ver) : target;
+                                } else {
+                                    //fetch pinned version from cordova-lib
+                                    var pinnedVer = pkgJson.cordovaPlugins[id];
+                                    target = pinnedVer ? (id + '@' + pinnedVer) : target;
+                                }
                             }
                         }
 
