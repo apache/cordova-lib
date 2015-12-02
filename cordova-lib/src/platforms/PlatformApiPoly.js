@@ -154,7 +154,7 @@ PlatformApiPoly.prototype.getPlatformInfo = function () {
     };
     result.root = self.root;
     result.name = self.platform;
-    result.version = knownPlatforms[self.platform].version;
+    self.version = result.version = self.version || getPlatformVersion(self.root) || knownPlatforms[self.platform].version;
     result.projectConfig = self._config;
 
     return result;
@@ -240,6 +240,9 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
 
     installOptions = installOptions || {};
     installOptions.variables = installOptions.variables || {};
+    // CB-10108 platformVersion option is required for proper plugin installation
+    installOptions.platformVersion = installOptions.platformVersion ||
+        this.getPlatformInfo().version;
 
     var self = this;
     var actions = new ActionStack();
@@ -295,6 +298,11 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
  *   CordovaError instance.
  */
 PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
+
+    uninstallOptions = uninstallOptions || {};
+    // CB-10108 platformVersion option is required for proper plugin installation
+    uninstallOptions.platformVersion = uninstallOptions.platformVersion ||
+        this.getPlatformInfo().version;
 
     var self = this;
     var actions = new ActionStack();
@@ -695,4 +703,22 @@ function copyCordovaSrc(sourceLib, platformInfo) {
     if(fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platformInfo.locations.platformWww);
     }
+}
+
+/**
+ * Gets platform version from 'version' file
+ *
+ * @param   {String}  platformRoot  Platform location
+ * @return  {String|null}           Stringified version of platform or null
+ *   if it is not possible to retrieve version
+ */
+function getPlatformVersion (platformRoot) {
+    var versionFile = path.join(platformRoot, 'cordova/version');
+
+    if (!fs.existsSync(versionFile)) {
+        return null;
+    }
+
+    var version = shell.cat(versionFile).match(/VERSION\s=\s["'](.*)["'];/m);
+    return version && version[1];
 }
