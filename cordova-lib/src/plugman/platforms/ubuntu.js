@@ -67,8 +67,11 @@ function findClassName(pluginxml, plugin_id) {
         class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
         class_name = toCamelCase(class_name);
     } else {
-        class_name = plugin_id.match(/cordova\-plugin\-([\w\-]+)$/)[0].substr(15);
-        class_name = toCamelCase(class_name);
+	match = plugin_id.match(/cordova\-plugin\-([\w\-]+)$/);
+        if (match && match.length > 0)
+	    class_name = match[0].substr(15);
+	else
+            class_name = toCamelCase(class_name);
     }
 
     return class_name;
