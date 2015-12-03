@@ -50,31 +50,36 @@ function findClassName(pluginxml, plugin_id) {
 
     // first check if we have a class-name parameter in the plugin config
     if (pluginxml) {
-	var platform = pluginxml.find("./platform/[@name='ubuntu']/");
-	if (platform) {
-	    var param = platform.find("./config-file/[@target='config.xml']/feature/param/[@name='ubuntu-package']");
-	    if (param && param.attrib) {
-		class_name = param.attrib.value;
-		return class_name;
-	    }
-	}
+        var platform = pluginxml.find("./platform/[@name='ubuntu']/");
+        if (platform) {
+            var param = platform.find("./config-file/[@target='config.xml']/feature/param/[@name='ubuntu-package']");
+            if (param && param.attrib) {
+                class_name = param.attrib.value;
+                return class_name;
+            }
+        }
     }
 
     // fallback to guess work, based on the plugin package name
 
     if (plugin_id.match(/\.[^.]+$/)) {
-        // old-style plugin name
+        // old-style plugin name (Apache Registry)
         class_name = plugin_id.match(/\.[^.]+$/)[0].substr(1);
-        class_name = toCamelCase(class_name);
     } else {
-	match = plugin_id.match(/cordova\-plugin\-([\w\-]+)$/);
-        if (match && match.length > 0)
-	    class_name = match[0].substr(15);
-	else
-            class_name = toCamelCase(class_name);
+        // new-style (NPM registry)
+        var match = plugin_id.match(/cordova\-plugin\-([\w\-]+)$/);
+        if (match && match.length > 0) {
+            class_name = match[0].substr(15);
+        } else {
+            // plugins not using a particular naming convention
+            // and missing a parameter in pluginxml can still
+            // fallback to using a class name equal to their
+            // plugin name (in camel case)
+            class_name = plugin_id;
+        }
     }
 
-    return class_name;
+    return toCamelCase(class_name);
 }
 
 var shell = require('shelljs')
