@@ -17,7 +17,7 @@
     under the License.
 */
 
-var cordova_events = require('../events');
+var cordova_events = require('cordova-common').events;
 var cordova_util = require('./util');
 
 var off = function() {

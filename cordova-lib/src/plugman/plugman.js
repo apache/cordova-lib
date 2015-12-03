@@ -19,7 +19,7 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-var events = require('../events');
+var events = require('cordova-common').events;
 var Q = require('q');
 
 function addProperty(o, symbol, modulePath, doWrap) {
@@ -65,8 +65,7 @@ var plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'prepare', './prepare');
-addProperty(plugman, 'prepareBrowserify', './prepare-browserify');
+addProperty(plugman, 'browserify', './browserify');
 addProperty(plugman, 'help', './help');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);

@@ -48,6 +48,7 @@ function getPluginXml(plugin_dir) {
 function findClassName(pluginxml, plugin_id) {
     var class_name;
 
+    /* jshint ignore:start */
     // first check if we have a class-name parameter in the plugin config
     if (pluginxml) {
         var platform = pluginxml.find("./platform/[@name='ubuntu']/");
@@ -59,6 +60,7 @@ function findClassName(pluginxml, plugin_id) {
             }
         }
     }
+    /* jshint ignore:end */
 
     // fallback to guess work, based on the plugin package name
 
@@ -86,8 +88,8 @@ var shell = require('shelljs')
    , fs = require('fs')
    , path = require('path')
    , common = require('./common')
-   , events = require('../../events')
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'));
+   , events = require('cordova-common').events
+   , xml_helpers = require('cordova-common').xmlHelpers;
 
 module.exports = {
     www_dir:function(project_dir) {

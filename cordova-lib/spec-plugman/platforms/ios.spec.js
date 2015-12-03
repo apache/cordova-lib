@@ -24,7 +24,7 @@ var ios = require('../../src/plugman/platforms/ios'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    os = require('osenv'),
+    os = require('os'),
     temp = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     ios_config_xml_project = path.join(__dirname, '..', 'projects', 'ios-config-xml', '*'),
@@ -34,7 +34,7 @@ var ios = require('../../src/plugman/platforms/ios'),
     weblessplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.weblessplugin'),
     done = false;
 
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;
@@ -263,33 +263,41 @@ describe('ios project handler', function() {
                 expect(spy).toHaveBeenCalledWith('-R', path.join(dummyplugin, 'src', 'ios', 'DummyPlugin.bundle'), path.join(temp, 'SampleApp', 'Resources'));
             });
         });
-        describe('of <framework custom="true"> elements', function() {
-            it('should throw if framework src cannot be found', function() {
-                var frameworks = copyArray(invalid_custom_frameworks);
-                expect(function() {
-                    ios['framework'].install(frameworks[0], faultyplugin, temp, dummy_id, null, proj_files);
-                }).toThrow('cannot find "' + path.resolve(faultyplugin, 'src/ios/NonExistantCustomFramework.framework') + '" ios <framework>');
-            });
-            it('should throw if framework target already exists', function() {
-                var frameworks = copyArray(valid_custom_frameworks);
-                var target = path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework');
-                shell.mkdir('-p', target);
-                expect(function() {
-                    ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                }).toThrow('target destination "' + target + '" already exists');
-            });
+        describe('of <framework> elements', function() {
+
             it('should call into xcodeproj\'s addFramework', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'addFramework');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
                 expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
             });
-            it('should cp the file to the right target location', function() {
-                var frameworks = copyArray(valid_custom_frameworks);
-                var spy = spyOn(shell, 'cp');
-                ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith('-R', path.join(dummyplugin, 'src', 'ios', 'Custom.framework'),
-                                                 path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin'));
+
+            // TODO: Add more tests to cover the cases:
+            // * framework with weak attribute
+            // * framework that shouldn't be added/removed
+
+            describe('with custom="true" attribute', function () {
+                it('should throw if framework src cannot be found', function() {
+                    var frameworks = copyArray(invalid_custom_frameworks);
+                    expect(function() {
+                        ios['framework'].install(frameworks[0], faultyplugin, temp, dummy_id, null, proj_files);
+                    }).toThrow('cannot find "' + path.resolve(faultyplugin, 'src/ios/NonExistantCustomFramework.framework') + '" ios <framework>');
+                });
+                it('should throw if framework target already exists', function() {
+                    var frameworks = copyArray(valid_custom_frameworks);
+                    var target = path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework');
+                    shell.mkdir('-p', target);
+                    expect(function() {
+                        ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
+                    }).toThrow('target destination "' + target + '" already exists');
+                });
+                it('should cp the file to the right target location', function() {
+                    var frameworks = copyArray(valid_custom_frameworks);
+                    var spy = spyOn(shell, 'cp');
+                    ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
+                    expect(spy).toHaveBeenCalledWith('-R', path.join(dummyplugin, 'src', 'ios', 'Custom.framework'),
+                                                     path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin'));
+                });
             });
         });
         it('of two plugins should apply xcode file changes from both', function(){
@@ -408,10 +416,11 @@ describe('ios project handler', function() {
                 expect(spy).toHaveBeenCalledWith('-rf', path.join(temp, 'SampleApp', 'Resources', 'DummyPlugin.bundle'));
             });
         });
-        describe('of <framework custom="true"> elements', function() {
+        describe('of <framework> elements', function() {
             beforeEach(function() {
                 shell.cp('-rf', ios_config_xml_project, temp);
             });
+
             it('should call into xcodeproj\'s removeFramework', function(){
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'removeFramework');
@@ -419,12 +428,19 @@ describe('ios project handler', function() {
                 ios['framework'].uninstall(frameworks[0], temp, dummy_id, null, proj_files);
                 expect(spy).toHaveBeenCalledWith(path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
             });
-            it('should rm the file from the right target location', function(){
-                var frameworks = copyArray(valid_custom_frameworks);
-                var spy = spyOn(shell, 'rm');
 
-                ios['framework'].uninstall(frameworks[0], temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith('-rf', path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'));
+            // TODO: Add more tests to cover the cases:
+            // * framework with weak attribute
+            // * framework that shouldn't be added/removed
+
+            describe('with custom="true" attribute', function () {
+                it('should rm the file from the right target location', function(){
+                    var frameworks = copyArray(valid_custom_frameworks);
+                    var spy = spyOn(shell, 'rm');
+
+                    ios['framework'].uninstall(frameworks[0], temp, dummy_id, null, proj_files);
+                    expect(spy).toHaveBeenCalledWith('-rf', path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'));
+                });
             });
         });
     });

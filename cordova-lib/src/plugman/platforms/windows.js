@@ -27,8 +27,8 @@ var common = require('./common'),
     fs   = require('fs'),
     glob = require('glob'),
     jsprojManager = require('../../util/windows/jsprojManager'),
-    events = require('../../events'),
-    xml_helpers = require('../../util/xml-helpers');
+    events = require('cordova-common').events,
+    xml_helpers = require('cordova-common').xmlHelpers;
 
 module.exports = {
     platformName: 'windows',
@@ -87,9 +87,16 @@ module.exports = {
     },
     'resource-file':{
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project_file) {
-            events.emit('verbose', 'resource-file is not supported for Windows');
+            var src = obj.src;
+            var dest = obj.target;
+            // as per specification resource-file target is specified relative to platform root
+            common.copyFile(plugin_dir, src, project_dir, dest);
+            project_file.addResourceFileToProject(dest, getTargetConditions(obj));
         },
         uninstall:function(obj, project_dir, plugin_id, options, project_file) {
+            var dest = obj.target;
+            common.removeFile(project_dir, dest);
+            project_file.removeResourceFileFromProject(dest, getTargetConditions(obj));
         }
     },
     'lib-file': {
@@ -118,7 +125,9 @@ module.exports = {
             }
             else {
                 // if(isCustom) {}
-                dest = path.join('plugins', plugin_id, path.basename(src));
+                var targetDir = obj.targetDir || '';
+                // path.join ignores empty paths passed so we don't check whether targetDir is not empty
+                dest = path.join('plugins', plugin_id, targetDir, path.basename(src));
                 common.copyFile(plugin_dir, src, project_dir, dest);
                 project_file.addReference(dest, getTargetConditions(obj));
             }

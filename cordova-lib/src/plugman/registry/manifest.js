@@ -22,7 +22,7 @@ var path = require('path'),
     fs = require('fs'),
     whitelist = require('./whitelist');
 
-var PluginInfo = require('../../PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 function validateName(name) {
     if (!name.match(/^(\S+\.){2,}.*$/)) {

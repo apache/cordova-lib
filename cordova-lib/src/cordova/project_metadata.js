@@ -18,7 +18,7 @@
 */
 
 var cordova_util = require('./util'),
-    ConfigParser = require('../configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     Q            = require('q'),
     semver       = require('semver');
 

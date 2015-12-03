@@ -24,7 +24,7 @@ var android = require('../../src/plugman/platforms/android'),
     path    = require('path'),
     fs      = require('fs'),
     shell   = require('shelljs'),
-    os      = require('osenv'),
+    os      = require('os'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
@@ -32,7 +32,7 @@ var android = require('../../src/plugman/platforms/android'),
     android_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
     android_two_project = path.join(__dirname, '..', 'projects', 'android_two', '*');
 
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
 var dummy_id = dummyPluginInfo.id;

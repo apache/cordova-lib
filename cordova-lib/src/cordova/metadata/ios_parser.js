@@ -24,13 +24,14 @@ var fs            = require('fs'),
     path          = require('path'),
     xcode         = require('xcode'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     plist         = require('plist'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    URL           = require('url'),
+    CordovaError = require('cordova-common').CordovaError;
 
 function ios_parser(project) {
 
@@ -108,6 +109,14 @@ ios_parser.prototype.update_from_config = function(config) {
         delete infoPlist['UISupportedInterfaceOrientations~ipad'];
         delete infoPlist['UIInterfaceOrientation'];
     }
+    
+    // replace Info.plist ATS entries according to <access> and <allow-navigation> config.xml entries 
+    var ats = writeATSEntries(config);
+    if (Object.keys(ats).length > 0) {
+        infoPlist['NSAppTransportSecurity'] = ats;
+    } else {
+        delete infoPlist['NSAppTransportSecurity'];
+    }
 
     var info_contents = plist.build(infoPlist);
     info_contents = info_contents.replace(/<string>[\s\r\n]*<\/string>/g,'<string></string>');
@@ -139,12 +148,21 @@ ios_parser.prototype.update_from_config = function(config) {
         {dest: 'icon-50.png', width: 50, height: 50},
         {dest: 'icon-50@2x.png', width: 100, height: 100}
     ];
+    
+    var destIconsFolder, destSplashFolder;
+    var xcassetsExists = folderExists(path.join(platformRoot, 'Images.xcassets/'));
+    
+    if (xcassetsExists) {
+        destIconsFolder = 'Images.xcassets/AppIcon.appiconset/';
+    } else {
+        destIconsFolder = 'Resources/icons/';
+    }
 
     platformIcons.forEach(function (item) {
         var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
         if (icon){
             var src = path.join(appRoot, icon.src),
-                dest = path.join(platformRoot, 'Resources/icons/', item.dest);
+                dest = path.join(platformRoot, destIconsFolder, item.dest);
             events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
@@ -153,62 +171,71 @@ ios_parser.prototype.update_from_config = function(config) {
     // Update splashscreens
     var splashScreens = config.getSplashScreens('ios');
     var platformSplashScreens = [
-        {dest: 'Resources/splash/Default~iphone.png', width: 320, height: 480},
-        {dest: 'Resources/splash/Default@2x~iphone.png', width: 640, height: 960},
-        {dest: 'Resources/splash/Default-Portrait~ipad.png', width: 768, height: 1024},
-        {dest: 'Resources/splash/Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
-        {dest: 'Resources/splash/Default-Landscape~ipad.png', width: 1024, height: 768},
-        {dest: 'Resources/splash/Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
-        {dest: 'Resources/splash/Default-568h@2x~iphone.png', width: 640, height: 1136},
-        {dest: 'Resources/splash/Default-667h.png', width: 750, height: 1334},
-        {dest: 'Resources/splash/Default-736h.png', width: 1242, height: 2208},
-        {dest: 'Resources/splash/Default-Landscape-736h.png', width: 2208, height: 1242}
+        {dest: 'Default~iphone.png', width: 320, height: 480},
+        {dest: 'Default@2x~iphone.png', width: 640, height: 960},
+        {dest: 'Default-Portrait~ipad.png', width: 768, height: 1024},
+        {dest: 'Default-Portrait@2x~ipad.png', width: 1536, height: 2048},
+        {dest: 'Default-Landscape~ipad.png', width: 1024, height: 768},
+        {dest: 'Default-Landscape@2x~ipad.png', width: 2048, height: 1536},
+        {dest: 'Default-568h@2x~iphone.png', width: 640, height: 1136},
+        {dest: 'Default-667h.png', width: 750, height: 1334},
+        {dest: 'Default-736h.png', width: 1242, height: 2208},
+        {dest: 'Default-Landscape-736h.png', width: 2208, height: 1242}
     ];
+    
+    if (xcassetsExists) {
+        destSplashFolder = 'Images.xcassets/LaunchImage.launchimage/';
+    } else {
+        destSplashFolder = 'Resources/splash/';
+    }
 
     platformSplashScreens.forEach(function(item) {
         var splash = splashScreens.getBySize(item.width, item.height);
         if (splash){
             var src = path.join(appRoot, splash.src),
-                dest = path.join(platformRoot, item.dest);
+                dest = path.join(platformRoot, destSplashFolder, item.dest);
             events.emit('verbose', 'Copying splash from ' + src + ' to ' + dest);
             shell.cp('-f', src, dest);
         }
     });
 
-    var me = this;
+    var parser = this;
     return this.update_build_settings(config).then(function() {
-        if (name == me.originalName) {
-            events.emit('verbose', 'iOS Product Name has not changed (still "' + me.originalName + '")');
+        if (name == parser.originalName) {
+            events.emit('verbose', 'iOS Product Name has not changed (still "' + parser.originalName + '")');
             return Q();
         }
 
         // Update product name inside pbxproj file
-        var proj = new xcode.project(me.pbxproj);
-        var parser = me;
-        var d = Q.defer();
-        proj.parse(function(err,hash) {
-            if (err) {
-                d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            } else {
-                proj.updateProductName(name);
-                fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
-                // Move the xcodeproj and other name-based dirs over.
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
-                shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
-                shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
-                shell.mv(parser.cordovaproj, path.join(parser.path, name));
-                // Update self object with new paths
-                var old_name = parser.originalName;
-                parser = new module.exports(parser.path);
-                // Hack this shi*t
-                var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
-                pbx_contents = pbx_contents.split(old_name).join(name);
-                fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
-                events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
-                d.resolve();
-            }
-        });
-        return d.promise;
+        var proj = new xcode.project(parser.pbxproj);
+        try {
+            proj.parseSync();
+        } catch (err) {
+            return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+        }
+
+        proj.updateProductName(name);
+        fs.writeFileSync(parser.pbxproj, proj.writeSync(), 'utf-8');
+
+        // Move the xcodeproj and other name-based dirs over.
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Info.plist'), path.join(parser.cordovaproj, name + '-Info.plist'));
+        shell.mv(path.join(parser.cordovaproj, parser.originalName + '-Prefix.pch'), path.join(parser.cordovaproj, name + '-Prefix.pch'));
+        // CB-8914 remove userdata otherwise project is un-usable in xcode 
+        shell.rm('-rf',path.join(parser.xcodeproj,'xcuserdata/'));
+        shell.mv(parser.xcodeproj, path.join(parser.path, name + '.xcodeproj'));
+        shell.mv(parser.cordovaproj, path.join(parser.path, name));
+
+        // Update self object with new paths
+        var old_name = parser.originalName;
+        parser = new module.exports(parser.path);
+
+        // Hack this shi*t
+        var pbx_contents = fs.readFileSync(parser.pbxproj, 'utf-8');
+        pbx_contents = pbx_contents.split(old_name).join(name);
+        fs.writeFileSync(parser.pbxproj, pbx_contents, 'utf-8');
+        events.emit('verbose', 'Wrote out iOS Product Name and updated XCode project file names from "'+old_name+'" to "' + name + '".');
+
+        return Q();
     });
 };
 
@@ -276,27 +303,181 @@ ios_parser.prototype.update_build_settings = function(config) {
         return Q();
     }
 
-    var me = this;
-    var d = Q.defer();
     var proj = new xcode.project(this.pbxproj);
-    proj.parse(function(err,hash) {
-        if (err) {
-            d.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
-            return;
-        }
-        if (targetDevice) {
-            events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
-            proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
-        }
-        if (deploymentTarget) {
-            events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
-            proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
-        }
-        fs.writeFileSync(me.pbxproj, proj.writeSync(), 'utf-8');
-        d.resolve();
-    });
-    return d.promise;
+
+    try {
+        proj.parseSync();
+    } catch (err) {
+        return Q.reject(new Error('An error occured during parsing of project.pbxproj. Start weeping. Output: ' + err));
+    }
+
+    if (targetDevice) {
+        events.emit('verbose', 'Set TARGETED_DEVICE_FAMILY to ' + targetDevice + '.');
+        proj.updateBuildProperty('TARGETED_DEVICE_FAMILY', targetDevice);
+    }
+
+    if (deploymentTarget) {
+        events.emit('verbose', 'Set IPHONEOS_DEPLOYMENT_TARGET to "' + deploymentTarget + '".');
+        proj.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', deploymentTarget);
+    }
+
+    fs.writeFileSync(this.pbxproj, proj.writeSync(), 'utf-8');
+
+    return Q();
 };
+
+/*
+    Parses all <access> and <allow-navigation> entries and consolidates duplicates (for ATS).
+    Returns an object with a Hostname as the key, and the value an object with properties:
+        { 
+            Hostname, // String
+            NSExceptionAllowsInsecureHTTPLoads, // boolean 
+            NSIncludesSubdomains,  // boolean
+            NSExceptionMinimumTLSVersion, // String
+             NSExceptionRequiresForwardSecrecy // boolean 
+        }
+*/
+function processAccessAndAllowNavigationEntries(config) {
+    var accesses = config.getAccesses();
+    var allow_navigations = config.getAllowNavigations();
+    
+    return allow_navigations
+    // we concat allow_navigations and accesses, after processing accesses
+    .concat(accesses.map(function(obj) {
+        // map accesses to a common key interface using 'href', not origin
+        obj.href = obj.origin;
+        delete obj.origin;
+        return obj;
+    }))
+    // we reduce the array to an object with all the entries processed (key is Hostname)
+    .reduce(function(previousReturn, currentElement) {
+        var obj = parseWhitelistUrlForATS(currentElement.href, currentElement.minimum_tls_version, currentElement.requires_forward_secrecy);
+        if (obj) {
+            // we 'union' duplicate entries
+            var item = previousReturn[obj.Hostname];
+            if (!item) {
+                item = {};
+            }
+            for(var o in obj) {
+                if (obj.hasOwnProperty(o)) {
+                    item[o] = obj[o];
+                }
+            }
+            previousReturn[obj.Hostname] = item;
+        }  
+        return previousReturn;
+    }, {});
+}
+
+/*
+    Parses a URL and returns an object with these keys:
+        { 
+            Hostname, // String
+            NSExceptionAllowsInsecureHTTPLoads, // boolean (default: false)
+            NSIncludesSubdomains,  // boolean (default: false)
+            NSExceptionMinimumTLSVersion, // String (default: 'TLSv1.2')
+            NSExceptionRequiresForwardSecrecy // boolean (default: true)
+        }
+        
+    null is returned if the URL cannot be parsed, or is to be skipped for ATS.
+*/
+function parseWhitelistUrlForATS(url, minimum_tls_version, requires_forward_secrecy) {
+    var href = URL.parse(url);
+    var retObj = {};
+    retObj.Hostname = href.hostname;
+
+    if (url === '*') {
+        return {
+            Hostname : '*'
+        };
+    }
+    
+    // Guiding principle: we only set values in retObj if they are NOT the default
+
+    if (!retObj.Hostname) {
+        // check origin, if it allows subdomains (wildcard in hostname), we set NSIncludesSubdomains to YES. Default is NO
+        var subdomain1 = '/*.'; // wildcard in hostname
+        var subdomain2 = '*://*.'; // wildcard in hostname and protocol
+        var subdomain3 = '*://'; // wildcard in protocol only
+        if (href.pathname.indexOf(subdomain1) === 0) {
+            retObj.NSIncludesSubdomains = true;
+            retObj.Hostname = href.pathname.substring(subdomain1.length);
+        } else if (href.pathname.indexOf(subdomain2) === 0) {
+            retObj.NSIncludesSubdomains = true;
+            retObj.Hostname = href.pathname.substring(subdomain2.length);
+        } else if (href.pathname.indexOf(subdomain3) === 0) {
+            retObj.Hostname = href.pathname.substring(subdomain3.length);
+        } else {
+            // Handling "scheme:*" case to avoid creating of a blank key in NSExceptionDomains.
+            return null;
+        }
+    }
+
+    if (minimum_tls_version && minimum_tls_version !== 'TLSv1.2') { // default is TLSv1.2
+        retObj.NSExceptionMinimumTLSVersion = minimum_tls_version;
+    }
+
+    var rfs = (requires_forward_secrecy === 'true');
+    if (requires_forward_secrecy && !rfs) { // default is true
+        retObj.NSExceptionRequiresForwardSecrecy = false;
+    }
+
+    // if the scheme is HTTP, we set NSExceptionAllowsInsecureHTTPLoads to YES. Default is NO
+    if (href.protocol === 'http:') {
+        retObj.NSExceptionAllowsInsecureHTTPLoads = true;
+    }
+    else if (!href.protocol && href.pathname.indexOf('*:/') === 0) { // wilcard in protocol
+        retObj.NSExceptionAllowsInsecureHTTPLoads = true;
+    }
+    
+    return retObj;
+}
+
+
+/*
+    App Transport Security (ATS) writer from <access> and <allow-navigation> tags
+    in config.xml
+*/
+function writeATSEntries(config) {
+  var pObj = processAccessAndAllowNavigationEntries(config);
+  
+    var ats = {};
+
+    for(var hostname in pObj) {
+        if (pObj.hasOwnProperty(hostname)) {
+              if (hostname === '*') {
+                  ats['NSAllowsArbitraryLoads'] = true;
+                  continue;              
+              }
+              
+              var entry = pObj[hostname];
+              var exceptionDomain = {};
+              
+              for(var key in entry) {
+                  if (entry.hasOwnProperty(key) && key !== 'Hostname') {
+                      exceptionDomain[key] = entry[key];
+                  }
+              }
+
+              if (!ats['NSExceptionDomains']) {
+                  ats['NSExceptionDomains'] = {};
+              }
+
+              ats['NSExceptionDomains'][hostname] = exceptionDomain;
+        }
+    }
+    
+    return ats;
+}
+
+function folderExists(folderPath) {
+    try {
+        var stat = fs.statSync(folderPath);
+        return stat && stat.isDirectory();
+    } catch (e) {
+        return false;
+    }
+}
 
 // Construct a default value for CFBundleVersion as the version with any
 // -rclabel stripped=.

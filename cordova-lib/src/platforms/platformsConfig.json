@@ -8,7 +8,7 @@
     },
     "osx": {
         "hostos": ["darwin"],
-        "parser_file": "../cordova/metadata/ios_parser",
+        "parser_file": "../cordova/metadata/osx_parser",
         "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-osx.git",
         "version": "~4.0.0"
@@ -50,7 +50,7 @@
         "hostos": [],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git",
         "source": "git",
-        "version": "~3.6.3"
+        "version": "~3.10.0"
     },
     "firefoxos": {
         "parser_file": "../cordova/metadata/firefoxos_parser",
@@ -63,14 +63,14 @@
         "parser_file": "../cordova/metadata/windows_parser",
         "handler_file": "../plugman/platforms/windows",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "~4.1.0"
+        "version": "~4.2.0"
     },
     "windows": {
         "hostos": ["win32"],
         "parser_file": "../cordova/metadata/windows_parser",
         "handler_file": "../plugman/platforms/windows",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "~4.1.0"
+        "version": "~4.2.0"
     },
     "webos": {
         "parser_file": "../cordova/metadata/webos_parser",

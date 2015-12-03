@@ -16,13 +16,13 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platforms = require('../../src/platforms/platforms'),
+var webosParser = require('../../src/cordova/metadata/webos_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 describe('webos project parser', function() {
@@ -39,7 +39,7 @@ describe('webos project parser', function() {
     describe('constructions', function() {
         it('should create an instance with a path', function() {
             expect(function() {
-                var p = new platforms.android.parser(proj);
+                var p = new webosParser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
         });
@@ -49,7 +49,7 @@ describe('webos project parser', function() {
         var p, cp, rm, is_cordova, write, read;
         var wos_proj = path.join(proj, 'platforms', 'webos');
         beforeEach(function() {
-            p = new platforms.webos.parser(wos_proj);
+            p = new webosParser(wos_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);

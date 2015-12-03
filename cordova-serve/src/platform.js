@@ -17,8 +17,7 @@
  under the License.
  */
 
-var server = require('./server'),
-    fs     = require('fs'),
+var fs     = require('fs'),
     Q      = require('q'),
     util   = require('./util');
 
@@ -31,6 +30,7 @@ var server = require('./server'),
  * @returns {*|promise}
  */
 module.exports = function (platform, opts) {
+    var that = this;
     return Q().then(function () {
         if (!platform) {
             throw new Error('A platform must be specified');
@@ -38,16 +38,14 @@ module.exports = function (platform, opts) {
 
         opts = opts || {};
         var projectRoot = findProjectRoot(opts.root);
-        var platformRoot = opts.root = util.getPlatformWwwRoot(projectRoot, platform);
+        that.projectRoot = projectRoot;
+
+        opts.root = util.getPlatformWwwRoot(projectRoot, platform);
         if (!fs.existsSync(opts.root)) {
             throw new Error('Project does not include the specified platform: ' + platform);
         }
 
-        return server(opts).then(function (serverInfo) {
-            serverInfo.projectRoot = projectRoot;
-            serverInfo.platformRoot = platformRoot;
-            return serverInfo;
-        });
+        return that.launchServer(opts);
     });
 };
 

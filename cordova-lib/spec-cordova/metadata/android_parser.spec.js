@@ -19,20 +19,21 @@
 
 /* jshint boss:true */
 
-var platforms = require('../../src/platforms/platforms'),
+var androidParser = require('../../src/cordova/metadata/android_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),
     et = require('elementtree'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
-    CordovaError = require('../../src/CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError;
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
+var cfg2 = new ConfigParser(path.join(__dirname, '..', 'test-config-2.xml'));
 
 var STRINGS_XML = '<resources> <string name="app_name">mobilespec</string> </resources>';
 var MANIFEST_XML = '<manifest android:versionCode="1" android:versionName="0.0.1" package="org.apache.mobilespec">\n' +
@@ -65,12 +66,12 @@ describe('android project parser', function() {
         it('should throw if provided directory does not contain an AndroidManifest.xml', function() {
             exists.andReturn(false);
             expect(function() {
-                new platforms.android.parser(android_proj);
+                new androidParser(android_proj);
             }).toThrow();
         });
         it('should create an instance with path, strings, manifest and android_config properties', function() {
             expect(function() {
-                var p = new platforms.android.parser(android_proj);
+                var p = new androidParser(android_proj);
                 expect(p.path).toEqual(android_proj);
                 expect(p.strings).toEqual(path.join(android_proj, 'res', 'values', 'strings.xml'));
                 expect(p.manifest).toEqual(path.join(android_proj, 'AndroidManifest.xml'));
@@ -78,11 +79,11 @@ describe('android project parser', function() {
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.android.parser(android_proj) instanceof Parser).toBe(true);
+            expect(new androidParser(android_proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.android.parser(android_proj);
+            var p = new androidParser(android_proj);
             expect(call).toHaveBeenCalledWith(p, 'android', android_proj);
         });
     });
@@ -94,7 +95,7 @@ describe('android project parser', function() {
         beforeEach(function() {
             stringsRoot = null;
             manifestRoot = null;
-            p = new platforms.android.parser(android_proj);
+            p = new androidParser(android_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             is_cordova = spyOn(util, 'isCordova').andReturn(android_proj);
@@ -146,6 +147,11 @@ describe('android project parser', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
+            });
+            it('should handle sensorLandscape orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_SENSOR_LANDSCAPE);
+                p.update_from_config(cfg2);
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('sensorLandscape');
             });
             it('should handle custom orientation', function() {
                 getOrientation.andReturn('some-custom-orientation');

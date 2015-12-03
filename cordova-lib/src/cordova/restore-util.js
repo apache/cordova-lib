@@ -18,21 +18,21 @@
 */
 
 var cordova_util = require('./util'),
-    ConfigParser = require('../configparser/ConfigParser'),
-    path = require('path'),
-    Q = require('q'),
-    fs = require('fs'),
-    plugin = require('./plugin'),
-    events = require('../events'),
-    cordova = require('./cordova'),
-    semver = require('semver'),
+    ConfigParser = require('cordova-common').ConfigParser,
+    path         = require('path'),
+    Q            = require('q'),
+    fs           = require('fs'),
+    plugin       = require('./plugin'),
+    events       = require('cordova-common').events,
+    cordova      = require('./cordova'),
+    semver      = require('semver'),
     promiseutil = require('../util/promise-util');
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
 
-function installPlatformsFromConfigXML(platforms) {
+function installPlatformsFromConfigXML(platforms, opts) {
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var cfg = new ConfigParser(configPath);
@@ -55,7 +55,7 @@ function installPlatformsFromConfigXML(platforms) {
     });
 
     if (!targets || !targets.length) {
-        return Q.all('No platforms are listed in config.xml to restore');
+        return Q('No platforms are listed in config.xml to restore');
     }
 
 
@@ -68,7 +68,7 @@ function installPlatformsFromConfigXML(platforms) {
     return promiseutil.Q_chainmap_graceful(targets, function(target) {
         if (target) {
             events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
-            return cordova.raw.platform('add', target);
+            return cordova.raw.platform('add', target, opts);
         }
         return Q();
     }, function(err) {
@@ -87,10 +87,14 @@ function installPluginsFromConfigXML(args) {
     // Get all configured plugins
     var plugins = cfg.getPluginIdList();
     if (0 === plugins.length) {
-        return Q.all('No config.xml plugins to install');
+        return Q('No config.xml plugins to install');
     }
 
-    var promises = plugins.map(function(featureId) {
+    // CB-9560 : Run `plugin add` serially, one plugin after another
+    // We need to wait for the plugin and its dependencies to be installed
+    // before installing the next root plugin otherwise we can have common
+    // plugin dependencies installed twice which throws a nasty error.
+    return promiseutil.Q_chainmap_graceful(plugins, function(featureId) {
         var pluginPath = path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
@@ -111,5 +115,4 @@ function installPluginsFromConfigXML(args) {
         };
         return plugin('add', installFrom, options);
     });
-    return Q.allSettled(promises);
 }

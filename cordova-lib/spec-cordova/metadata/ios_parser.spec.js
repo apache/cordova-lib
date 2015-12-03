@@ -16,7 +16,7 @@
  specific language governing permissions and limitations
  under the License.
  */
-var platforms = require('../../src/platforms/platforms'),
+var iosParser = require('../../src/cordova/metadata/ios_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
@@ -26,22 +26,33 @@ var platforms = require('../../src/platforms/platforms'),
     Q = require('q'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
+
+var iosProjectFixture = path.join(__dirname, '../fixtures/projects/ios');
+var proj = path.join(__dirname, 'some/path');
+var ios_proj = path.join(proj, 'platforms/ios');
+
+shell.config.silent = true;
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
+var cfg2 = new ConfigParser(path.join(__dirname, '..', 'test-config-2.xml'));
 
 describe('ios project parser', function () {
-    var proj = path.join('some', 'path');
-    var custom, readdir;
+    var custom;
     beforeEach(function() {
         custom = spyOn(config, 'has_custom_path').andReturn(false);
-        readdir = spyOn(fs, 'readdirSync').andReturn(['test.xcodeproj']);
+        shell.mkdir('-p', ios_proj);
+        shell.cp('-rf', iosProjectFixture + '/*', ios_proj);
+    });
+
+    afterEach(function () {
+        shell.rm('-rf', path.join(__dirname, 'some'));
     });
 
     function wrapper(p, done, post) {
         p.then(post, function(err) {
-            expect(err).toBeUndefined();
+            expect(err.stack).toBeUndefined();
         }).fin(done);
     }
 
@@ -53,58 +64,51 @@ describe('ios project parser', function () {
 
     describe('constructions', function() {
         it('should throw if provided directory does not contain an xcodeproj file', function() {
-            readdir.andReturn(['noxcodehere']);
             expect(function() {
-                new platforms.ios.parser(proj);
+                new iosParser(proj);
             }).toThrow();
         });
         it('should create an instance with path, pbxproj, xcodeproj, originalName and cordovaproj properties', function() {
             expect(function() {
-                var p = new platforms.ios.parser(proj);
-                expect(p.path).toEqual(proj);
-                expect(p.pbxproj).toEqual(path.join(proj, 'test.xcodeproj', 'project.pbxproj'));
-                expect(p.xcodeproj).toEqual(path.join(proj, 'test.xcodeproj'));
+                var p = new iosParser(ios_proj);
+                expect(p.path).toEqual(ios_proj);
+                expect(p.pbxproj).toEqual(path.join(ios_proj, 'test.xcodeproj', 'project.pbxproj'));
+                expect(p.xcodeproj).toEqual(path.join(ios_proj, 'test.xcodeproj'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.ios.parser(proj) instanceof Parser).toBe(true);
+            expect(new iosParser(ios_proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.ios.parser(proj);
-            expect(call).toHaveBeenCalledWith(p, 'ios', proj);
+            var p = new iosParser(ios_proj);
+            expect(call).toHaveBeenCalledWith(p, 'ios', ios_proj);
         });
     });
 
     describe('instance', function() {
-        var p, cp, rm, mkdir, is_cordova, write, read, getOrientation;
-        var ios_proj = path.join(proj, 'platforms', 'ios');
+        var p, is_cordova, getOrientation;
         beforeEach(function() {
-            p = new platforms.ios.parser(ios_proj);
-            cp = spyOn(shell, 'cp');
-            rm = spyOn(shell, 'rm');
-            mkdir = spyOn(shell, 'mkdir');
+            p = new iosParser(ios_proj);
             is_cordova = spyOn(util, 'isCordova').andReturn(proj);
-            write = spyOn(fs, 'writeFileSync');
-            read = spyOn(fs, 'readFileSync').andReturn('');
             getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
         describe('update_from_config method', function() {
             var mv;
             var plist_parse, plist_build, xc;
-            var update_name, xc_write;
+            var update_name;
+            var xcOrig = xcode.project;
             beforeEach(function() {
                 mv = spyOn(shell, 'mv');
                 plist_parse = spyOn(plist, 'parse').andReturn({
                 });
                 plist_build = spyOn(plist, 'build').andReturn('');
-                update_name = jasmine.createSpy('update_name');
-                xc_write = jasmine.createSpy('xcode writeSync');
-                xc = spyOn(xcode, 'project').andReturn({
-                    parse:function(cb) {cb();},
-                    updateProductName:update_name,
-                    writeSync:xc_write
+                xc = spyOn(xcode, 'project')
+                .andCallFake(function (pbxproj) {
+                    var xc = new xcOrig(pbxproj);
+                    update_name = spyOn(xc, 'updateProductName').andCallThrough();
+                    return xc;
                 });
                 cfg.name = function() { return 'testname'; };
                 cfg.packageName = function() { return 'testpkg'; };
@@ -177,11 +181,237 @@ describe('ios project parser', function () {
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationLandscapeLeft' ]);
                 });
             });
+            it('should handle all orientation on ios', function(done) {
+                getOrientation.andReturn(p.helper.ORIENTATION_ALL);
+                wrapper(p.update_from_config(cfg2), done, function() {
+                    expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
+                    expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
+                });
+            });
             it('should handle custom orientation', function(done) {
                 getOrientation.andReturn('some-custom-orientation');
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'some-custom-orientation' ]);
+                });
+            });
+            ///// App Transport Security Tests /////////////////////////////
+            it('<access> - should handle wildcard', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    expect(ats.NSAllowsArbitraryLoads).toEqual(true);
+                });
+            });
+            it('<access> - https, subdomain wildcard', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['server01.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+                    
+                    d = exceptionDomains['server02.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+
+                    d = exceptionDomains['server03.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+                    
+                    d = exceptionDomains['server04.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+                });
+            });
+            it('<access> - http, no wildcard', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['server05.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server06.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+
+                    d = exceptionDomains['server07.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server08.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+                });
+            });
+            it('<access> - https, no wildcard', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['server09.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server10.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+
+                    d = exceptionDomains['server11.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server12.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(null);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+                });
+            });
+            //////////////////////////////////////////////////
+            it('<access>, <allow-navigation> - http and https, no clobber', function(done) {
+                wrapper(p.update_from_config(cfg2), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['apache.org'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+                });
+            });
+            //////////////////////////////////////////////////
+            it('<allow-navigation> - wildcard scheme, wildcard subdomain', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['server33.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server34.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+
+                    d = exceptionDomains['server35.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server36.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(true);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+                });
+            });
+            it('<allow-navigation> - wildcard scheme, no subdomain', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    var d;
+                    
+                    expect(exceptionDomains).toBeTruthy();
+                    
+                    d = exceptionDomains['server37.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server38.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual(null);
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+
+                    d = exceptionDomains['server39.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(null);
+
+                    d = exceptionDomains['server40.com'];
+                    expect(d).toBeTruthy();
+                    expect(d.NSIncludesSubdomains).toEqual(null);
+                    expect(d.NSExceptionAllowsInsecureHTTPLoads).toEqual(true);
+                    expect(d.NSExceptionMinimumTLSVersion).toEqual('TLSv1.1');
+                    expect(d.NSExceptionRequiresForwardSecrecy).toEqual(false);
+                });
+            });
+            it('<allow-navigation> - should ignore wildcards like data:*, https:*, https://*', function(done) {
+                wrapper(p.update_from_config(cfg), done, function() {
+                    var ats = plist_build.mostRecentCall.args[0].NSAppTransportSecurity;
+                    var exceptionDomains = ats.NSExceptionDomains;
+                    expect(exceptionDomains['']).toBeUndefined();
+                    expect(exceptionDomains['null']).toBeUndefined();
+                    expect(exceptionDomains['undefined']).toBeUndefined();
                 });
             });
         });
@@ -196,6 +426,13 @@ describe('ios project parser', function () {
             });
         });
         describe('update_www method', function() {
+            var cp, rm;
+
+            beforeEach(function () {
+                rm = spyOn(shell, 'rm').andCallThrough();
+                cp = spyOn(shell, 'cp').andCallThrough();
+            });
+
             it('should rm project-level www and cp in platform agnostic www', function() {
                 p.update_www(path.join('lib','dir'));
                 expect(rm).toHaveBeenCalled();
@@ -203,16 +440,22 @@ describe('ios project parser', function () {
             });
         });
         describe('update_overrides method', function() {
-            var exists;
+            var exists, rm, cp;
             beforeEach(function() {
-                exists = spyOn(fs, 'existsSync').andReturn(true);
+                exists = spyOn(fs, 'existsSync').andCallThrough();
+                rm = spyOn(shell, 'rm').andCallThrough();
+                cp = spyOn(shell, 'cp').andCallThrough();
             });
             it('should do nothing if merges directory does not exist', function() {
+                cp.reset();
                 exists.andReturn(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
             it('should copy merges path into www', function() {
+                cp.andCallFake(function(){});
+                cp.reset();
+                exists.andReturn(true);
                 p.update_overrides();
                 expect(cp).toHaveBeenCalled();
             });

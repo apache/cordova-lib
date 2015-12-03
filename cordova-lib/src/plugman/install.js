@@ -21,26 +21,27 @@
 
 var path = require('path'),
     fs   = require('fs'),
-    action_stack = require('./util/action-stack'),
+    action_stack = require('cordova-common').ActionStack,
     dep_graph = require('dep-graph'),
     child_process = require('child_process'),
     semver = require('semver'),
-    PlatformJson = require('./util/PlatformJson'),
-    CordovaError  = require('../CordovaError'),
+    PlatformJson = require('cordova-common').PlatformJson,
+    CordovaError = require('cordova-common').CordovaError,
     Q = require('q'),
     platform_modules = require('../platforms/platforms'),
     os = require('os'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
-    events = require('../events'),
+    events = require('cordova-common').events,
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
+    pluginMapper = require('cordova-registry-mapper').oldToNew,
     cordovaUtil = require('../cordova/util');
 
-var superspawn = require('../cordova/superspawn');
-var PluginInfo = require('../PluginInfo');
-var PluginInfoProvider = require('../PluginInfoProvider');
+var superspawn = require('cordova-common').superspawn;
+var PluginInfo = require('cordova-common').PluginInfo;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 /* INSTALL FLOW
    ------------
@@ -48,7 +49,8 @@ var PluginInfoProvider = require('../PluginInfoProvider');
    providing a high-level logic flow overview.
    1. module.exports (installPlugin)
      a) checks that the platform is supported
-     b) invokes possiblyFetch
+     b) converts oldIds into newIds (CPR -> npm)
+     c) invokes possiblyFetch
    2. possiblyFetch
      a) checks that the plugin is fetched. if so, calls runInstall
      b) if not, invokes plugman.fetch, and when done, calls runInstall
@@ -56,7 +58,7 @@ var PluginInfoProvider = require('../PluginInfoProvider');
      a) checks if the plugin is already installed. if so, calls back (done).
      b) if possible, will check the version of the project and make sure it is compatible with the plugin (checks <engine> tags)
      c) makes sure that any variables required by the plugin are specified. if they are not specified, plugman will throw or callback with an error.
-     d) if dependencies are listed in the plugin, it will recurse for each dependent plugin and call possiblyFetch (2) on each one. When each dependent plugin is successfully installed, it will then proceed to call handleInstall (4)
+     d) if dependencies are listed in the plugin, it will recurse for each dependent plugin, autoconvert IDs to newIDs and call possiblyFetch (2) on each one. When each dependent plugin is successfully installed, it will then proceed to call handleInstall (4)
    4. handleInstall
      a) queues up actions into a queue (asset, source-file, headers, etc)
      b) processes the queue
@@ -68,7 +70,6 @@ var PluginInfoProvider = require('../PluginInfoProvider');
 module.exports = function installPlugin(platform, project_dir, id, plugins_dir, options) {
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
-
     options = options || {};
     options.is_top_level = true;
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
@@ -79,6 +80,19 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 
     var current_stack = new action_stack();
 
+    // Split @Version from the plugin id if it exists.
+    var splitVersion = id.split('@');
+    //Check if a mapping exists for the plugin id
+    //if it does, convert id to new name id 
+    var newId = pluginMapper[splitVersion[0]];
+    if(newId) {
+        events.emit('warn', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+        if(splitVersion[1]) {
+            id = newId +'@'+splitVersion[1];
+        } else {
+            id = newId;
+        }
+     }     
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
         return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -279,9 +293,9 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                 msg += ' Making it top-level.';
                 platformJson.makeTopLevel(pluginInfo.id).save();
             }
-            events.emit('verbose', msg);
+            events.emit('log', msg);
         } else {
-            events.emit('verbose', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
+            events.emit('log', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
         return Q();
     }
@@ -404,6 +418,20 @@ function installDependencies(install, dependencies, options) {
     return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
+                // Split @Version from the plugin id if it exists.
+                var splitVersion = dep.id.split('@');
+                //Check if a mapping exists for the plugin id
+                //if it does, convert id to new name id 
+                var newId = pluginMapper[splitVersion[0]];
+                if(newId) {
+                    events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+                    if(splitVersion[1]) {
+                        dep.id = newId +'@'+splitVersion[1];
+                    } else {
+                        dep.id = newId;
+                    }
+                }
+
                 dep.git_ref = dep.commit;
 
                 if (dep.subdir) {
@@ -471,7 +499,6 @@ function tryFetchDependency(dep, install, options) {
                 dep.subdir = '';
                 return Q(url);
             }).fail(function(error){
-//console.log("Failed to resolve url='.': " + error);
                 return Q(dep.url);
             });
 
@@ -529,7 +556,6 @@ function installDependency(dep, install, options) {
     var opts;
 
     dep.install_dir = path.join(install.plugins_dir, dep.id);
-
     if ( fs.existsSync(dep.install_dir) ) {
         events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
         opts = underscore.extend({}, options, {
@@ -565,35 +591,27 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
-    var handler = platform_modules.getPlatformProject(platform, project_dir);
-    var frameworkFiles = pluginInfo.getFrameworks(platform); // Frameworks are needed later
-    var pluginItems = pluginInfo.getFilesAndFrameworks(platform);
 
-    // queue up native stuff
-    pluginItems.forEach(function(item) {
-        actions.push(actions.createAction(handler.getInstaller(item.itemType),
-                                          [item, plugin_dir, pluginInfo.id, options],
-                                          handler.getUninstaller(item.itemType),
-                                          [item, pluginInfo.id, options]));
-    });
+    options.variables = filtered_variables;
+    // Set up platform to install asset files/js modules to <platform>/platform_www dir
+    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+    // files platform_www directory, so they'll be applied to www on each prepare.
+    options.usePlatformWww = true;
 
-    // run through the action stack
-    return actions.process(platform, project_dir)
-    .then(function(err) {
-        // queue up the plugin so prepare knows what to do.
-        var platformJson = PlatformJson.load(plugins_dir, platform);
-        platformJson.addInstalledPluginToPrepareQueue(pluginInfo.id, filtered_variables, options.is_top_level);
-        platformJson.save();
-        // call prepare after a successful install
-        if (options.browserify) {
-            return plugman.prepareBrowserify(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
-        } else {
-            return plugman.prepare(project_dir, platform, plugins_dir, options.www_dir, options.is_top_level, options.pluginInfoProvider);
-        }
-    }).then (function() {
+    return platform_modules.getPlatformApi(platform, project_dir)
+    .addPlugin(pluginInfo, options)
+    .then (function() {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
+        // Add plugin to installed list. This already done in platform,
+        // but need to be duplicated here to manage dependencies properly.
+        PlatformJson.load(plugins_dir, platform)
+            .addPlugin(pluginInfo.id, filtered_variables, options.is_top_level)
+            .save();
 
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') && frameworkFiles.length > 0) {
+        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
+                pluginInfo.getFrameworks('platform').length > 0) {
+
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
             try {

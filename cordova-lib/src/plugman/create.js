@@ -22,7 +22,7 @@ var Q = require('q'),
     path = require('path'),
     shell = require('shelljs'),
     et = require('elementtree'),
-    CordovaError  = require('../CordovaError'),
+    CordovaError  = require('cordova-common').CordovaError,
     stripLicense = require('./util/strip-license');
 
 

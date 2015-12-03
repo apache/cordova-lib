@@ -17,15 +17,15 @@
  under the License.
  */
 var cordovaUtil  = require('../cordova/util'),
-    events = require('../events'),
+    events = require('cordova-common').events,
     Q = require('q'),
     scriptsFinder = require('./scriptsFinder'),
     Context = require('./Context'),
-    CordovaError = require('../CordovaError'),
+    CordovaError = require('cordova-common').CordovaError,
     path = require('path'),
     fs = require('fs'),
     os = require('os'),
-    superspawn = require('../cordova/superspawn');
+    superspawn = require('cordova-common').superspawn;
 
 var isWindows = os.platform().slice(0, 3) === 'win';
 
@@ -73,8 +73,7 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     try {
         opts.cordova.version = opts.cordova.version || require('../../package').version;
     } catch(ex) {
-        events.emit('err', 'HooksRunner could not load package.json: ' + ex.message);
-        console.log('HooksRunner could not load package.json: ' + ex.message);
+        events.emit('error', 'HooksRunner could not load package.json: ' + ex.message);
     }
 
     return opts;

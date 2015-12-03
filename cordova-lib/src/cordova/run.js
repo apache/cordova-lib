@@ -17,12 +17,12 @@
     under the License.
 */
 
-var cordova_util      = require('./util'),
-    path              = require('path'),
-    HooksRunner            = require('../hooks/HooksRunner'),
-    events            = require('../events'),
-    superspawn        = require('./superspawn'),
-    Q                 = require('q');
+var cordova_util = require('./util'),
+    HooksRunner  = require('../hooks/HooksRunner'),
+    events       = require('cordova-common').events,
+    Q            = require('q'),
+    platform_lib = require('../platforms/platforms');
+
 
 // Returns a promise.
 module.exports = function run(options) {
@@ -37,8 +37,9 @@ module.exports = function run(options) {
     }).then(function() {
         // Deploy in parallel (output gets intermixed though...)
         return Q.all(options.platforms.map(function(platform) {
-            var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'run');
-            return superspawn.spawn(cmd, options.options, { printCommand: true, stdio: 'inherit', chmod: true });
+            return platform_lib
+                .getPlatformApi(platform)
+                .run(options.options);
         }));
     }).then(function() {
         return hooksRunner.fire('after_run', options);

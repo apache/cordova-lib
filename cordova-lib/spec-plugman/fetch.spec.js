@@ -19,7 +19,7 @@
 var rewire  = require('rewire'),
     fetch   = rewire('../src/plugman/fetch'),
     fs      = require('fs'),
-    os      = require('osenv'),
+    os      = require('os'),
     path    = require('path'),
     shell   = require('shelljs'),
     realrm = shell.rm,

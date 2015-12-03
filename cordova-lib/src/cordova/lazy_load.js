@@ -26,7 +26,7 @@ var path          = require('path'),
     shell         = require('shelljs'),
     platforms     = require('../platforms/platforms'),
     npmconf       = require('npmconf'),
-    events        = require('../events'),
+    events        = require('cordova-common').events,
     request       = require('request'),
     config        = require('./config'),
     HooksRunner   = require('../hooks/HooksRunner'),
@@ -92,7 +92,7 @@ function based_on_config(project_root, platform, opts) {
 // Returns a promise for the path to the lazy-loaded directory.
 function cordova(platform, opts) {
     platform = new Platform(platform);
-    var use_git = opts && opts.usegit || platform.source === 'git';
+    var use_git = platform.source === 'git';
     if ( use_git ) {
         return module.exports.cordova_git(platform);
     } else {

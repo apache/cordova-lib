@@ -22,10 +22,10 @@ var shell   = require('shelljs'),
     url     = require('url'),
     underscore = require('underscore'),
     semver = require('semver'),
-    PluginInfoProvider = require('../PluginInfoProvider'),
+    PluginInfoProvider = require('cordova-common').PluginInfoProvider,
     plugins = require('./util/plugins'),
-    CordovaError  = require('../CordovaError'),
-    events = require('../events'),
+    CordovaError = require('cordova-common').CordovaError,
+    events = require('cordova-common').events,
     metadata = require('./util/metadata'),
     path    = require('path'),
     Q       = require('q'),
@@ -132,6 +132,11 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
+            var newID = pluginMapperotn[plugin_src];
+            if(newID) {
+                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' and fetched from npm. This is due to our old plugins registry shutting down.');                
+                plugin_src = newID;
+            } 
             return registry.fetch([plugin_src], options.client)
             .fail(function (error) {
                 var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
@@ -142,7 +147,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             })
             .then(function(dir) {
                 return {
-                    pinfo: pluginInfoProvider.get(dir),
+                        pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
                         id: plugin_src
@@ -166,7 +171,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         return result.dest;
     });
 }
-
 
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {

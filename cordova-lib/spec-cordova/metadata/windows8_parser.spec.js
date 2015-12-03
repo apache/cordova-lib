@@ -19,18 +19,18 @@
 
 /* jshint boss:true */
 
-var platforms = require('../../src/platforms/platforms'),
+var windowsParser = require('../../src/cordova/metadata/windows_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     child_process = require('child_process'),
-    xmlHelpers = require('../../src/util/xml-helpers'),
+    xmlHelpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     Q = require('q'),
     fs = require('fs'),
     config = require('../../src/cordova/config'),
     Parser = require('../../src/cordova/metadata/parser'),
-    ConfigParser = require('../../src/configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     HooksRunner = require('../../src/hooks/HooksRunner');
 
 // Create a real config object before mocking out everything.
@@ -81,22 +81,22 @@ describe('windows8 project parser', function() {
         it('should throw if provided directory does not contain a jsproj file', function() {
             readdir.andReturn([]);
             expect(function() {
-                new platforms.windows8.parser(proj);
+                new windowsParser(proj);
             }).toThrow();
         });
         it('should create an instance with path, manifest properties', function() {
             expect(function() {
-                var parser = new platforms.windows8.parser(proj);
+                var parser = new windowsParser(proj);
                 expect(parser.projDir).toEqual(proj);
                 expect(parser.manifestPath).toEqual(path.join(proj, 'package.appxmanifest'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
-            expect(new platforms.windows8.parser(proj) instanceof Parser).toBe(true);
+            expect(new windowsParser(proj) instanceof Parser).toBe(true);
         });
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
-            var p = new platforms.windows8.parser(proj);
+            var p = new windowsParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'windows8', proj);
         });
     });
@@ -105,7 +105,7 @@ describe('windows8 project parser', function() {
         var parser, cp, rm, is_cordova, write, read, mv, mkdir;
         var windows8_proj = path.join(proj, 'platforms', 'windows8');
         beforeEach(function() {
-            parser = new platforms.windows8.parser(windows8_proj);
+            parser = new windowsParser(windows8_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');

@@ -23,10 +23,18 @@ var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
     util = require('../util'),
+    CordovaError = require('cordova-common').CordovaError,
     Q = require('q'),
     Parser = require('./parser');
 
+function dirExists(dir) {
+    return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
+}
+
 function browser_parser(project) {
+    if (!dirExists(project) || !dirExists(path.join(project, 'cordova'))) {
+        throw new CordovaError('The provided path "' + project + '" is not a valid browser project.');
+    }
 
     // Call the base class constructor
     Parser.call(this, 'browser', project);

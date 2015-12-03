@@ -21,7 +21,7 @@ var path         = require('path'),
     fs           = require('fs'),
     shell        = require('shelljs'),
     os           = require('os'),
-    ConfigParser = require('../src/configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 // Just use Android everywhere; we're mocking out any calls to the `android` binary.
 module.exports.testPlatform = 'android';
