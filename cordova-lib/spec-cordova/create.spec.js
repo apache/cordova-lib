@@ -60,16 +60,16 @@ var configGit = {
     }
 };
 
-/*var configNPM = {
+var configNPM = {
     lib: {
         www: {
             template: true,
-            url: 'cordova-hello-world-mfp',
+            url: 'cordova-app-hello-world',
             version: '',
             id: appName
         }
     }
-};*/
+};
 
 describe('cordova create checks for valid-identifier', function(done) {
 
@@ -180,8 +180,6 @@ describe('create end-to-end', function() {
             .fin(done);
     });
 
-    /*
-    TODO: Uncommet after putting a template in NPM.
     it('should successfully run with NPM package', function(done) {
         // Call cordova create with no args, should return help.
         Q()
@@ -196,6 +194,6 @@ describe('create end-to-end', function() {
             })
             .fin(done);
     });
-    */
+
 
 });
