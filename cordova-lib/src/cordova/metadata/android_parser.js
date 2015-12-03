@@ -77,11 +77,13 @@ android_parser.prototype.deleteDefaultResource = function(name) {
         if (filename.indexOf('drawable-') === 0) {
             var imgPath = path.join(res, filename, name);
             if (fs.existsSync(imgPath)) {
+                shell.chmod('u+w', imgPath);
                 fs.unlinkSync(imgPath);
                 events.emit('verbose', 'deleted: ' + imgPath);
             }
             imgPath = imgPath.replace(/\.png$/, '.9.png');
             if (fs.existsSync(imgPath)) {
+                shell.chmod('u+w', imgPath);
                 fs.unlinkSync(imgPath);
                 events.emit('verbose', 'deleted: ' + imgPath);
             }
