@@ -4,7 +4,7 @@
         "parser_file": "../cordova/metadata/ios_parser",
         "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "~3.9.0"
+        "version": "~3.9.2"
     },
     "osx": {
         "hostos": ["darwin"],
@@ -17,14 +17,14 @@
         "parser_file": "../cordova/metadata/android_parser",
         "handler_file": "../plugman/platforms/android",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~4.1.0"
+        "version": "~5.0.0"
     },
     "ubuntu": {
         "hostos": ["linux"],
         "parser_file": "../cordova/metadata/ubuntu_parser",
         "handler_file": "../plugman/platforms/ubuntu",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "~4.0.0"
+        "version": "~4.3.1"
     },
     "amazon-fireos": {
         "parser_file": "../cordova/metadata/amazon_fireos_parser",
@@ -37,7 +37,7 @@
         "parser_file": "../cordova/metadata/wp8_parser",
         "handler_file": "../plugman/platforms/wp8",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git",
-        "version": "~3.8.1",
+        "version": "~3.8.2",
         "altplatform": "wp"
     },
     "blackberry10": {
