@@ -134,10 +134,10 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             // If not found in local search path, fetch from the registry.
             var newID = pluginMapperotn[plugin_src];
             if(newID) {
-                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' and fetched from npm. This is due to our old plugins registry shutting down.');                
+                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');                
                 plugin_src = newID;
             } 
-            return registry.fetch([plugin_src], options.client)
+            return registry.fetch([plugin_src])
             .fail(function (error) {
                 var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
                     '\nProbably this is either a connection problem, or plugin spec is incorrect.' +

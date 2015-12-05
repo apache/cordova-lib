@@ -259,11 +259,6 @@ describe('fetch', function() {
         });
 
 
-        it('should get a plugin from registry and set the right client when argument is not a folder nor URL', function(done) {
-            wrapper(fetch(pluginId, temp, {client: 'plugman'}), done, function() {
-                expect(sFetch).toHaveBeenCalledWith([pluginId], 'plugman');
-            });
-        });
         it('should fail when the expected ID doesn\'t match', function(done) {
             fetch(pluginId, temp, { expected_id: 'wrongID' })
             .then(function() {

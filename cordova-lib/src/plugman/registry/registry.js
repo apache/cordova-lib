@@ -21,17 +21,10 @@
 
 var npm = require('npm'),
     path = require('path'),
-    fs = require('fs'),
-    rc = require('rc'),
     Q = require('q'),
     npmhelper = require('../../util/npm-helper'),
-    home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
     events = require('cordova-common').events,
-    unpack = require('../../util/unpack'),
-    // if PLUGMAN_HOME env var is specified use it as config directory (see CB-8190)
-    plugmanConfigDir = process.env.PLUGMAN_HOME || path.resolve(home, '.plugman'),
-    plugmanCacheDir = path.resolve(plugmanConfigDir, 'cache'),
-    oneDay = 3600*24;
+    unpack = require('../../util/unpack');
 
 module.exports = {
     settings: null,
@@ -78,20 +71,14 @@ module.exports = {
      * @param {Array} with one element - the plugin id or "id@version"
      * @return {Promise.<string>} Promised path to fetched package.
      */
-    fetch: function(plugin, client) {
+    fetch: function(plugin) {
         plugin = plugin.shift();
         return Q.fcall(function() {
             //fetch from npm
-            return fetchPlugin(plugin, client, true);
+            return fetchPlugin(plugin);
         })
         .fail(function(error) {
-            //check to see if pluginID is reverse domain name style
-            if(isValidCprName(plugin)) {
-                //fetch from CPR
-                return fetchPlugin(plugin, client, false);
-            } else {
-                return Q.reject(error);
-            }
+            return Q.reject(error);
         });
     },
 
@@ -102,8 +89,7 @@ module.exports = {
      */
     info: function(plugin) {
         plugin = plugin.shift();
-        return initSettings()
-        .then(Q.nbind(npm.load, npm))
+        return (Q.nbind(npm.load, npm))
         .then(function() {
             // Set cache timout limits to 0 to force npm to call the registry
             // even when it has a recent .cache.json file.
@@ -122,69 +108,21 @@ module.exports = {
 };
 
 /**
- * @param {Boolean} determines if we are using the npm registry
- * @return {Promise.<Object>} Promised settings.
- */
-function initSettings(returnEmptySettings) {
-    var settings = module.exports.settings;
-
-    // check if settings already set
-    if(settings !== null) {
-        return Q(returnEmptySettings ? {} : settings);
-    }
-
-    // setting up settings
-    // obviously if settings dir does not exist settings is going to be empty
-    if(!fs.existsSync(plugmanConfigDir)) {
-        fs.mkdirSync(plugmanConfigDir);
-        fs.mkdirSync(plugmanCacheDir);
-    }
-
-    settings =
-    module.exports.settings =
-    rc('plugman', {
-        cache: plugmanCacheDir,
-        registry: 'http://registry.cordova.io',
-        logstream: fs.createWriteStream(path.resolve(plugmanConfigDir, 'plugman.log')),
-        userconfig: path.resolve(plugmanConfigDir, 'config'),
-        'cache-min': oneDay
-    });
-
-    return Q(returnEmptySettings ? {} : settings);
-}
-
-/**
- * @description Calls initSettings(), then npmhelper.loadWithSettingsThenRestore, which initializes npm.config with
+ * @description Calls npmhelper.loadWithSettingsThenRestore, which initializes npm.config with
  * settings, executes the promises, then restores npm.config. Use this rather than passing settings to npm.load, since
  * that only works the first time you try to load npm.
  */
-function initThenLoadSettingsWithRestore(useEmptySettings, promises) {
-    if (typeof useEmptySettings === 'function') {
-        promises = useEmptySettings;
-        useEmptySettings = false;
-    }
-
-    return initSettings(useEmptySettings).then(function (settings) {
-        return npmhelper.loadWithSettingsThenRestore(settings, promises);
-    });
+function initThenLoadSettingsWithRestore(promises) {
+    return npmhelper.loadWithSettingsThenRestore({}, promises);
 }
 
 /**
 * @param {Array} with one element - the plugin id or "id@version"
-* @param useNpmRegistry: {Boolean} - to use the npm registry
 * @return {Promise.<string>} Promised path to fetched package.
 */
-function fetchPlugin(plugin, client, useNpmRegistry) {
-    //set registry variable to use in log messages below
-    var registryName;
-    if(useNpmRegistry){
-        registryName = 'npm';
-    } else {
-        registryName = 'cordova plugins registry';
-    }
-
-    return initThenLoadSettingsWithRestore(useNpmRegistry, function () {
-        events.emit('log', 'Fetching plugin "' + plugin + '" via ' + registryName);
+function fetchPlugin(plugin) {
+    return initThenLoadSettingsWithRestore(function () {
+        events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
         return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
         .then(function (info) {
             var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
@@ -193,22 +131,4 @@ function fetchPlugin(plugin, client, useNpmRegistry) {
             return unpack.unpackTgz(package_tgz, pluginDir);
         });
     });
-}
-
-/**
- * @param {Array} with one element - the plugin id or "id@version"
- * @return {Boolean} if plugin id is reverse domain name style.
- */
-function isValidCprName(plugin) {
-    // Split @Version from the plugin id if it exists.
-    var splitVersion = plugin.split('@');
-
-    //Create regex that checks for at least two dots with any characters except @ to determine if it is reverse domain name style.
-    var matches = /([^@]*\.[^@]*\.[^@]*)/.exec(splitVersion[0]);
-
-    //If matches equals null, plugin is not reverse domain name style
-    if(matches === null) {
-        return false;
-    } 
-    return true;
 }

@@ -58,7 +58,6 @@
     "plist": "^1.2.0",
     "properties-parser": "0.2.3",
     "q": "1.0.1",
-    "rc": "0.5.2",
     "request": "2.47.0",
     "semver": "^4.3.x",
     "shelljs": "0.3.0",
