@@ -248,7 +248,7 @@ windows_parser.prototype.update_www = function() {
 };
 
 // calls the nessesary functions to update the windows8 project
-windows_parser.prototype.update_project = function(cfg) {
+windows_parser.prototype.update_project = function(cfg, opts) {
     // console.log("Updating windows8 project...");
 
     try {
@@ -261,7 +261,7 @@ windows_parser.prototype.update_project = function(cfg) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
+  return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'], nohooks: opts.nohooks })
     .then(function() {
         // overrides (merges) are handled in update_www()
         that.add_bom();

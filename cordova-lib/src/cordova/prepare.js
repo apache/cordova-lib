@@ -97,7 +97,7 @@ function preparePlatforms (platformList, projectRoot, options) {
             // Please note that plugins' changes, such as installes js files, assets and
             // config changes is not being reinstalled on each prepare.
             var platformApi = platforms.getPlatformApi(platform);
-            return platformApi.prepare(project)
+            return platformApi.prepare(project, options)
             .then(function () {
                 if (options.browserify)
                     return browserify(project, platformApi);
