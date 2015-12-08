@@ -174,7 +174,7 @@ PlatformApiPoly.prototype.getPlatformInfo = function () {
  * @return  {Promise}  Return a promise either fulfilled, or rejected with
  *   CordovaError instance.
  */
-PlatformApiPoly.prototype.prepare = function (cordovaProject) {
+PlatformApiPoly.prototype.prepare = function (cordovaProject, options) {
     // First cleanup current config and merge project's one into own
     var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
     var ownConfig = this.getPlatformInfo().locations.configXml;
@@ -209,7 +209,7 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     this._parser.update_www(cordovaProject.locations.www);
 
     // update project according to config.xml changes.
-    return this._parser.update_project(this._config);
+    return this._parser.update_project(this._config, options);
 };
 
 /**

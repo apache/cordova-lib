@@ -490,9 +490,9 @@ function check(hooksRunner, projectRoot) {
     return result.promise;
 }
 
-function list(hooksRunner, projectRoot) {
+function list(hooksRunner, projectRoot, opts) {
     var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
-    return hooksRunner.fire('before_platform_ls')
+    return hooksRunner.fire('before_platform_ls', opts)
     .then(function() {
         // Acquire the version number of each platform we have installed, and output that too.
         return Q.all(platforms_on_fs.map(function(p) {
@@ -515,7 +515,7 @@ function list(hooksRunner, projectRoot) {
 
         events.emit('results', results);
     }).then(function() {
-        return hooksRunner.fire('after_platform_ls');
+        return hooksRunner.fire('after_platform_ls', opts);
     });
 }
 
@@ -585,7 +585,7 @@ function platform(command, targets, opts) {
         case 'save':
             return save(hooksRunner, projectRoot, opts);
         default:
-            return list(hooksRunner, projectRoot);
+            return list(hooksRunner, projectRoot, opts);
     }
 }
 
