@@ -129,7 +129,7 @@ ios_parser.prototype.update_from_config = function(config) {
     var platformRoot = this.cordovaproj;
     var appRoot = util.isCordova(platformRoot);
 
-    // See https://developer.apple.com/library/ios/documentation/userexperience/conceptual/mobilehig/LaunchImages.html
+    // See https://developer.apple.com/library/ios/documentation/UserExperience/Conceptual/MobileHIG/IconMatrix.html
     // for launch images sizes reference.
     var platformIcons = [
         {dest: 'icon-60.png', width: 60, height: 60},
@@ -139,6 +139,7 @@ ios_parser.prototype.update_from_config = function(config) {
         {dest: 'icon-76@2x.png', width: 152, height: 152},
         {dest: 'icon-small.png', width: 29, height: 29},
         {dest: 'icon-small@2x.png', width: 58, height: 58},
+        {dest: 'icon-small@3x.png', width: 87, height: 87},
         {dest: 'icon-40.png', width: 40, height: 40},
         {dest: 'icon-40@2x.png', width: 80, height: 80},
         {dest: 'icon.png', width: 57, height: 57},
