@@ -260,7 +260,7 @@ wp8_parser.prototype.update_project = function(cfg, opts) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-  return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'], nohooks: opts.nohooks })
+    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'], nohooks: opts? opts.nohooks: []})
     .then(function() {
         util.deleteSvnFolders(that.www_dir());
     });
