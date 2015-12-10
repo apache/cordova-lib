@@ -49,6 +49,7 @@ var install = require('../src/plugman/install'),
         'org.test.plugins.childbrowser' : path.join(plugins_dir, 'org.test.plugins.childbrowser'),
         'com.adobe.vars' : path.join(plugins_dir, 'com.adobe.vars'),
         'org.test.defaultvariables' : path.join(plugins_dir, 'org.test.defaultvariables'),
+        'org.test.invalid.engine.script' : path.join(plugins_dir, 'org.test.invalid.engine.script'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
@@ -502,6 +503,22 @@ describe('install', function() {
             runs(function() {
                 expect(''+done).toMatch(true);
             });
+        });
+        it('should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
+            var success = jasmine.createSpy('success');
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            install('android', project, plugins['org.test.invalid.engine.script'])
+                .then(success)
+                .fail(function(err) {
+                    // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
+                    expect(err).toBeDefined();
+                    expect(err.message.indexOf('security violation:')).toBe(0);
+                    done();
+                })
+                .fin(function() {
+                    expect(success).not.toHaveBeenCalled();
+                    done();
+                });
         });
     });
 });
