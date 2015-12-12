@@ -37,9 +37,8 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     pluginMapper = require('cordova-registry-mapper').oldToNew,
-    cordovaUtil = require('../cordova/util'),
-    security = require('./util/security');
- 
+    cordovaUtil = require('../cordova/util');
+
 var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
@@ -183,17 +182,16 @@ function cleanVersionOutput(version, name){
 
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
-function callEngineScripts(engines, project_root_dir) {
+function callEngineScripts(engines, plugin_dir) {
 
     return Q.all(
         engines.map(function(engine){
-            if (engine.scriptSrc) {
-                security.checkIfOnePathEscape(engine.scriptSrc, project_root_dir, {nojoin: true});
+            if (engine.scriptSrc &&
+                engine.scriptSrc.indexOf(plugin_dir) !== 0) {
+                throw new Error('scriptSrc of '+engine.name+' should be within the top level of the plugin directory.');
             }
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
-
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
-
             if(scriptPath && (isWindows || fs.existsSync(engine.scriptSrc)) ) {
 
                 var d = Q.defer();
@@ -323,7 +321,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
-        return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
+        return callEngineScripts(theEngines, plugin_dir);
     }).then(function(engines) {
         return checkEngines(engines);
     }).then(function() {

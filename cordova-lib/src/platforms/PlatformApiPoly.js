@@ -36,7 +36,6 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var ActionStack = require('cordova-common').ActionStack;
 var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var security = require('../plugman/util/security');
 
 /**
  * Class, that acts as abstraction over particular platform. Encapsulates the
@@ -254,7 +253,6 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
     .forEach(function(item) {
-        security.checkIfPathsEscape(item, ['src'], plugin.dir, path.resolve(this.root, '..'));
         actions.push(actions.createAction(
             self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile],
             self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile]));
