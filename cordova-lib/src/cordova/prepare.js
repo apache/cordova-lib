@@ -23,6 +23,7 @@ var cordova_util      = require('./util'),
     PluginInfoProvider = require('cordova-common').PluginInfoProvider,
     events            = require('cordova-common').events,
     platforms         = require('../platforms/platforms'),
+    PlatformApiPoly = require('../platforms/PlatformApiPoly'),
     HooksRunner       = require('../hooks/HooksRunner'),
     Q                 = require('q'),
     restore           = require('./restore-util'),
@@ -87,17 +88,26 @@ function preparePlatforms (platformList, projectRoot, options) {
 
         // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
         return restoreMissingPluginsForPlatform(platform, projectRoot, options)
-        .then(function (argument) {
+        .then(function () {
             // platformApi prepare takes care of all functionality
             // which previously had been executed by cordova.prepare:
             //   - reset config.xml and then merge changes from project's one,
             //   - update www directory from project's one and merge assets from platform_www,
             //   - reapply config changes, made by plugins,
             //   - update platform's project
-            // Please note that plugins' changes, such as installes js files, assets and
+            // Please note that plugins' changes, such as installed js files, assets and
             // config changes is not being reinstalled on each prepare.
             var platformApi = platforms.getPlatformApi(platform);
             return platformApi.prepare(project)
+            .then(function () {
+                if (platform === 'windows' && !(platformApi instanceof PlatformApiPoly)) {
+                    // Windows Api doesn't fire 'pre_package' hook, so we fire it here
+                    return new HooksRunner(projectRoot).fire('pre_package', {
+                        wwwPath: platformApi.getPlatformInfo().locations.www,
+                        platforms: ['windows']
+                    });
+                }
+            })
             .then(function () {
                 if (options.browserify)
                     return browserify(project, platformApi);
