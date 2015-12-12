@@ -182,13 +182,13 @@ function cleanVersionOutput(version, name){
 
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
-function callEngineScripts(engines, plugin_dir) {
+function callEngineScripts(engines, project_dir) {
 
     return Q.all(
         engines.map(function(engine){
             if (engine.scriptSrc &&
-                engine.scriptSrc.indexOf(plugin_dir) !== 0) {
-                throw new Error('scriptSrc of '+engine.name+' should be within the top level of the plugin directory.');
+                engine.scriptSrc.indexOf(project_dir) !== 0) {
+                throw new Error('scriptSrc of '+engine.name+' should be within the project directory.');
             }
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
@@ -321,7 +321,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
-        return callEngineScripts(theEngines, plugin_dir);
+        return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
     }).then(function(engines) {
         return checkEngines(engines);
     }).then(function() {
