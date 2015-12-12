@@ -186,10 +186,6 @@ function callEngineScripts(engines, project_dir) {
 
     return Q.all(
         engines.map(function(engine){
-            if (engine.scriptSrc &&
-                engine.scriptSrc.indexOf(project_dir) !== 0) {
-                throw new Error('scriptSrc of '+engine.name+' should be within the project directory.');
-            }
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
             if(scriptPath && (isWindows || fs.existsSync(engine.scriptSrc)) ) {
@@ -258,8 +254,13 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
         // check for other engines
         }else{
             platformIndex = engine.platform.indexOf(platform);
+            // CB-7183: security check for scriptSrc path escaping outside the plugin
+            var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
+            if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
+                throw new Error('scriptSrc '+scriptSrcPath+' is out of plugin dir'+plugin_dir);
+            }
             if(platformIndex > -1 || engine.platform === '*'){
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':path.resolve(plugin_dir, engine.scriptSrc), 'minVersion' :  engine.version});
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
             }
         }
     });
