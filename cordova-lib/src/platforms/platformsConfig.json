@@ -4,7 +4,7 @@
         "parser_file": "../cordova/metadata/ios_parser",
         "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "~3.9.2"
+        "version": "~4.0.0"
     },
     "osx": {
         "hostos": ["darwin"],
