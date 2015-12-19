@@ -502,7 +502,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should not execute all hooks when --nohooks option specifies \.', function (done) {
+            it('should not execute all hooks when --nohooks option specifies .', function (done) {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['.'];
 
