@@ -44,6 +44,10 @@ function HooksRunner(projectRoot) {
  * Returns a promise.
  */
 HooksRunner.prototype.fire = function fire(hook, opts) {
+    if (isHookDisabled(opts, hook)) {
+        return Q('hook '+hook+' is disabled.');
+    }
+
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
@@ -95,6 +99,10 @@ module.exports = HooksRunner;
  */
 module.exports.fire = globalFire;
 function globalFire(hook, opts) {
+    if (isHookDisabled(opts, hook)) {
+        return Q('hook '+hook+' is disabled.');
+    }
+
     opts = opts || {};
     return executeEventHandlersSerially(hook, opts);
 }
@@ -234,3 +242,25 @@ function extractSheBangInterpreter(fullpath) {
         hookCmd = shMatch[1];
     return hookCmd;
 }
+
+
+/**
+ * Checks if the given hook type is disabled at the command line option.
+ * @param {Object} opts - the option object that contains command line options
+ * @param {String} hook - the hook type
+ * @returns {Boolean} return true if the passed hook is disabled.
+ */
+function isHookDisabled(opts, hook) {
+    if (opts === undefined || opts.nohooks === undefined) {
+        return false;
+    }
+    var disabledHooks = opts.nohooks;
+    var length = disabledHooks.length;
+    for (var i=0; i<length; i++) {
+        if (hook.match(disabledHooks[i]) !== null) {
+            return true;
+        }
+    }
+    return false;
+}
+ 
