@@ -45,9 +45,7 @@ function HooksRunner(projectRoot) {
  */
 HooksRunner.prototype.fire = function fire(hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        /* jshint -W064 */
         return Q();
-        /* jshint +W064 */
     }
 
     // args check
@@ -94,9 +92,7 @@ module.exports = HooksRunner;
 module.exports.fire = globalFire;
 function globalFire(hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        /* jshint -W064 */
         return Q();
-        /* jshint +W064 */
     }
 
     opts = opts || {};
