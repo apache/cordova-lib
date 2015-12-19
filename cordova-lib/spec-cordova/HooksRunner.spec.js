@@ -466,6 +466,59 @@ describe('HooksRunner', function() {
                     }).fin(done);
                 });
             });
+
+            it('should not execute the designated hook when --nohooks option specifies the exact hook name', function (done) {
+                var test_event = 'before_build';
+                hookOptions.nohooks = ['before_build'];
+
+                return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
+                    expect(msg).toBeDefined();
+                    expect(msg).toBe('hook before_build is disabled.');
+                }).fail(function (err) {
+                    expect(err).toBeUndefined();
+                }).then(function () {
+                    done();
+                });
+            });
+
+            it('should not execute a set of matched hooks when --nohooks option specifies the hook pattern.', function (done) {
+                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
+                hookOptions.nohooks = ['before*'];
+
+                return test_events.reduce(function(soFar, test_event) {
+                    return soFar.then(function() {
+                        return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
+                            if (msg) {
+                                expect(msg).toBe('hook ' + test_event + ' is disabled.');
+                            } else {
+                                expect(test_event).toBe('after_plugin_add');
+                            }
+                        });
+                    });
+                }, Q()).fail(function (err) {
+                    expect(err).toBeUndefined();
+                }).then(function () {
+                    done();
+                });
+            });
+
+            it('should not execute all hooks when --nohooks option specifies \.', function (done) {
+                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
+                hookOptions.nohooks = ['.'];
+
+                return test_events.reduce(function(soFar, test_event) {
+                    return soFar.then(function() {
+                        return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
+                            expect(msg).toBeDefined();
+                            expect(msg).toBe('hook ' + test_event + ' is disabled.');
+                        });
+                    });
+                }, Q()).fail(function (err) {
+                    expect(err).toBeUndefined();
+                }).then(function () {
+                    done();
+                });
+            });
         });
 
         describe('module-level hooks (event handlers)', function() {

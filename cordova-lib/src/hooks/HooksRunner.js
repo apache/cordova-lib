@@ -45,7 +45,7 @@ function HooksRunner(projectRoot) {
  */
 HooksRunner.prototype.fire = function fire(hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        return Q();
+        return Q('hook '+hook+' is disabled.');
     }
 
     // args check
@@ -92,7 +92,7 @@ module.exports = HooksRunner;
 module.exports.fire = globalFire;
 function globalFire(hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        return Q();
+        return Q('hook '+hook+' is disabled.');
     }
 
     opts = opts || {};
