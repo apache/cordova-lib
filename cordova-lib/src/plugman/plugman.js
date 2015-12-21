@@ -19,7 +19,7 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-var events = require('../events');
+var events = require('cordova-common').events;
 var Q = require('q');
 
 function addProperty(o, symbol, modulePath, doWrap) {
@@ -65,14 +65,10 @@ var plugman = {
 addProperty(plugman, 'install', './install', true);
 addProperty(plugman, 'uninstall', './uninstall', true);
 addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'prepare', './prepare');
-addProperty(plugman, 'prepareBrowserify', './prepare-browserify');
+addProperty(plugman, 'browserify', './browserify');
 addProperty(plugman, 'help', './help');
 addProperty(plugman, 'config', './config', true);
 addProperty(plugman, 'owner', './owner', true);
-addProperty(plugman, 'adduser', './adduser', true);
-addProperty(plugman, 'publish', './publish', true);
-addProperty(plugman, 'unpublish', './unpublish', true);
 addProperty(plugman, 'search', './search', true);
 addProperty(plugman, 'info', './info', true);
 addProperty(plugman, 'create', './create', true);
@@ -97,6 +93,7 @@ plugman.commands =  {
             plugman.prepare = require('./prepare-browserify');
         }
         var cli_variables = {};
+
         if (cli_opts.variable) {
             cli_opts.variable.forEach(function (variable) {
                 var tokens = variable.split('=');
@@ -111,7 +108,6 @@ plugman.commands =  {
             searchpath: cli_opts.searchpath,
             link: cli_opts.link
         };
-
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
             p = p.then(function () {
@@ -139,12 +135,6 @@ plugman.commands =  {
 
         return p;
     },
-    'adduser'  : function(cli_opts) {
-        plugman.adduser(function(err) {
-            if (err) throw err;
-            else console.log('user added');
-        });
-    },
     'search'   : function(cli_opts) {
         plugman.search(cli_opts.argv.remain, function(err, plugins) {
             if (err) throw err;
@@ -169,34 +159,15 @@ plugman.commands =  {
             }
         });
     },
-
-    'publish'  : function(cli_opts) {
-        var plugin_path = cli_opts.argv.remain;
-        if(!plugin_path) {
-            return console.log(plugman.help());
-        }
-        plugman.publish(plugin_path, function(arg1, err) {
-            if (err) {
-                console.log('Error Code: '+err.code);
-                throw err;
-            } else {
-                console.log('Plugin published');
-            }
-        });
+    'publish'  : function() {
+        events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
+            'is moving to read-only state. For publishing use corresponding \'npm\' commands.\n\n' +
+            'If for any reason you still need for \'plugman publish\' - consider downgrade to plugman@0.23.3');
     },
-
     'unpublish': function(cli_opts) {
-        var plugin = cli_opts.argv.remain;
-        if(!plugin) {
-            return console.log(plugman.help());
-        }
-        plugman.unpublish(plugin, function(arg1, err) {
-            if (err) {
-                console.log('Error Code: ' + err.code);
-                throw err;
-            }
-            else console.log('Plugin unpublished');
-        });
+        events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
+            'is moving to read-only state. For publishing/unpublishing use corresponding \'npm\' commands.\n\n' +
+            'If for any reason you still need for \'plugman unpublish\' - consider downgrade to plugman@0.23.3');
     },
     'create': function(cli_opts) {
         if( !cli_opts.name || !cli_opts.plugin_id || !cli_opts.plugin_version) {

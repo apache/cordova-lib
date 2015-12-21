@@ -18,20 +18,21 @@
 */
 
 var cordova_util = require('./util'),
-    ConfigParser = require('../configparser/ConfigParser'),
+    ConfigParser = require('cordova-common').ConfigParser,
     path         = require('path'),
     Q            = require('q'),
     fs           = require('fs'),
     plugin       = require('./plugin'),
-    events       = require('../events'),
+    events       = require('cordova-common').events,
     cordova      = require('./cordova'),
-    semver       = require('semver');
+    semver      = require('semver'),
+    promiseutil = require('../util/promise-util');
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
 
-function installPlatformsFromConfigXML(platforms) {
+function installPlatformsFromConfigXML(platforms, opts) {
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var cfg = new ConfigParser(configPath);
@@ -39,12 +40,12 @@ function installPlatformsFromConfigXML(platforms) {
     var engines = cfg.getEngines(projectHome);
     var installAllPlatforms = !platforms || platforms.length === 0;
 
-    var targets = engines.map(function (engine) {
+    var targets = engines.map(function(engine) {
         var platformPath = path.join(projectHome, 'platforms', engine.name);
         var platformAlreadyAdded = fs.existsSync(platformPath);
 
         //if no platforms are specified we add all.
-        if ((installAllPlatforms || platforms.indexOf(engine.name) > -1 ) && !platformAlreadyAdded) {
+        if ((installAllPlatforms || platforms.indexOf(engine.name) > -1) && !platformAlreadyAdded) {
             var t = engine.name;
             if (engine.spec) {
                 t += '@' + engine.spec;
@@ -54,26 +55,25 @@ function installPlatformsFromConfigXML(platforms) {
     });
 
     if (!targets || !targets.length) {
-        return Q.all('No platforms are listed in config.xml to restore');
+        return Q('No platforms are listed in config.xml to restore');
     }
-    // Run platform add for all the platforms seperately
+
+
+    // Run `platform add` for all the platforms separately
     // so that failure on one does not affect the other.
-    var promises = targets.map(function (target) {
+
+    // CB-9278 : Run `platform add` serially, one platform after another
+    // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
+    // gets executed simultaneously by each platform and leads to an exception being thrown
+    return promiseutil.Q_chainmap_graceful(targets, function(target) {
         if (target) {
             events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
-            return cordova.raw.platform('add', target);
+            return cordova.raw.platform('add', target, opts);
         }
         return Q();
+    }, function(err) {
+        events.emit('warn', err);
     });
-    return Q.allSettled(promises).then(
-        function (results) {
-            for (var i = 0; i < results.length; i++) {
-                //log the rejections otherwise they are lost
-                if (results[i].state === 'rejected') {
-                    events.emit('log', results[i].reason.message);
-                }
-            }
-        });
 }
 
 //returns a Promise
@@ -87,11 +87,15 @@ function installPluginsFromConfigXML(args) {
     // Get all configured plugins
     var plugins = cfg.getPluginIdList();
     if (0 === plugins.length) {
-        return Q.all('No config.xml plugins to install');
+        return Q('No config.xml plugins to install');
     }
 
-    var promises = plugins.map(function(featureId){
-        var pluginPath =  path.join(plugins_dir, featureId);
+    // CB-9560 : Run `plugin add` serially, one plugin after another
+    // We need to wait for the plugin and its dependencies to be installed
+    // before installing the next root plugin otherwise we can have common
+    // plugin dependencies installed twice which throws a nasty error.
+    return promiseutil.Q_chainmap_graceful(plugins, function(featureId) {
+        var pluginPath = path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
             return Q();
@@ -105,9 +109,10 @@ function installPluginsFromConfigXML(args) {
         var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginSpec;
 
         // Add feature preferences as CLI variables if have any
-        var options = {cli_variables: pluginEntry.variables,
-            searchpath: args.searchpath };
-            return plugin('add', installFrom, options);
+        var options = {
+            cli_variables: pluginEntry.variables,
+            searchpath: args.searchpath
+        };
+        return plugin('add', installFrom, options);
     });
-    return Q.allSettled(promises);
 }

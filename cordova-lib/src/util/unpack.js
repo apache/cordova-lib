@@ -20,7 +20,7 @@
 // commands for packing and unpacking tarballs
 // this file is used by lib/cache.js
 
-var events = require('../events'),
+var events = require('cordova-common').events,
     fs     = require('fs'),
     Q      = require('q'),
     tar    = require('tar'),

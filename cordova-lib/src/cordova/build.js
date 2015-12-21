@@ -23,15 +23,6 @@ var cordovaUtil      = require('./util'),
 // Returns a promise.
 module.exports = function build(options) {
     var projectRoot = cordovaUtil.cdProjectRoot();
-
-    if (!options) {
-        options = {
-            verbose: false,
-            platforms: [],
-            options: []
-        };
-    }
-
     options = cordovaUtil.preProcessOptions(options);
 
     // fire build hooks

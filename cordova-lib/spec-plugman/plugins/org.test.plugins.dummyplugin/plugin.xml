@@ -51,6 +51,7 @@
         </config-file>
 
         <framework src="plugin-lib" custom="true" />
+        <framework src="plugin-lib2" custom="true" parent="plugin-lib" />
         <framework src="extras/android/support/v7/appcompat" />
         <framework src="extra.gradle" type="gradleReference" />
         <resource-file src="android-resource.xml" target="res/xml/dummy.xml" />
@@ -183,6 +184,11 @@
 
         <source-file src="src/windows/dummer.js"/>
 
+        <resource-file src="src/windows/text_sample1.txt" target="text_samples/text_sample1.txt" arch="x86" />
+        <resource-file src="src/windows/text_sample2.txt" target="text_samples/text_sample2.txt" versions="&gt;=8.1" />
+        <resource-file src="src/windows/text_sample3.txt" target="text_samples/text_sample3.txt" device-target="phone"/>
+        <resource-file src="src/windows/text_sample4.txt" target="text_samples/text_sample4.txt" device-target="windows" versions="8.0" arch="x64"/>
+
         <lib-file src="TestSDK1, Version=1.0" arch="x86"/>
         <lib-file src="TestSDK2, Version=1.0" versions=">=8.1"/>
         <lib-file src="TestSDK3, Version=1.0" device-target="phone"/>
@@ -192,6 +198,8 @@
         <framework src="src/windows/dummy2.dll" versions=">=8.0"/>
         <framework src="src/windows/dummy3.dll" device-target="windows"/>
         <framework src="src/windows/dummy4.dll" device-target="phone" versions="8.1" arch="ARM"/>
+        <framework src="src/windows/dummy5.dll" custom="true" target-dir="phoneDir" device-target="phone" />
+        <framework src="src/windows/dummy6.dll" custom="true" target-dir="sharedDir" versions="&gt;=8.1" />
 
         <framework src="src/windows/dummy1.vcxproj" type="projectReference" arch="x64"/>
         <framework src="src/windows/dummy2.vcxproj" type="projectReference" versions="<8.1"/>

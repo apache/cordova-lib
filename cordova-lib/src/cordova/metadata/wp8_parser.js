@@ -22,13 +22,13 @@
 var fs            = require('fs'),
     path          = require('path'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError'),
-    xml           = require('../../util/xml-helpers'),
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError,
+    xml           = require('cordova-common').xmlHelpers,
     HooksRunner        = require('../../hooks/HooksRunner');
 
 function wp8_parser(project) {
@@ -89,8 +89,6 @@ wp8_parser.prototype.update_from_config = function(config) {
     if(prev_name != name) {
         //console.log('Updating app name from ' + prev_name + " to " + name);
         manifest.find('.//App').attrib.Title = name;
-        manifest.find('.//App').attrib.Publisher = name + ' Publisher';
-        manifest.find('.//App').attrib.Author = name + ' Author';
         manifest.find('.//PrimaryToken').attrib.TokenID = name;
         //update name of sln and csproj.
         name = name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); //make it a ligitamate name
@@ -106,6 +104,25 @@ wp8_parser.prototype.update_from_config = function(config) {
         shell.mv('-f', sln_path, path.join(this.wp8_proj_dir, name + '.sln'));
         this.sln_path    = path.join(this.wp8_proj_dir, name + '.sln');
     }
+
+    // Update author, publisher and description
+    // limit both to 256 char including spaces
+    var author = config.author() || '';
+    var description = config.description() || '';
+
+    if(author.length > 256) {
+        events.emit('warn','Author length from config.xml is too long. Truncating to 256 char');
+        author = author.substr(0,256);
+    }
+
+    if(description.length > 256) {
+        events.emit('warn','Description length from config.xml is too long. Truncating to 256 char');
+        description = author.substr(0,256);
+    }
+
+    manifest.find('.//App').attrib.Author = author;
+    manifest.find('.//App').attrib.Publisher = author;
+    manifest.find('.//App').attrib.Description = description;
 
     // Update package name by changing:
     /*  - CordovaAppProj.csproj
@@ -204,6 +221,11 @@ wp8_parser.prototype.cordovajs_path = function(libDir) {
     return path.resolve(jsPath);
 };
 
+wp8_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
+    return path.resolve(jsPath);
+};
+
 // Replace the www dir with contents of platform_www and app www and updates the csproj file.
 wp8_parser.prototype.update_www = function() {
     var projectRoot = util.isCordova(this.wp8_proj_dir);
@@ -226,7 +248,7 @@ wp8_parser.prototype.update_www = function() {
 
 // calls the nessesary functions to update the wp8 project
 // Returns a promise.
-wp8_parser.prototype.update_project = function(cfg) {
+wp8_parser.prototype.update_project = function(cfg, opts) {
     try {
         this.update_from_config(cfg);
     } catch(e) {
@@ -238,7 +260,7 @@ wp8_parser.prototype.update_project = function(cfg) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'] })
+    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'], nohooks: opts? opts.nohooks: []})
     .then(function() {
         util.deleteSvnFolders(that.www_dir());
     });

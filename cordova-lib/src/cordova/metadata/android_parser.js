@@ -20,14 +20,14 @@
 var fs            = require('fs'),
     path          = require('path'),
     et            = require('elementtree'),
-    xml           = require('../../util/xml-helpers'),
+    xml           = require('cordova-common').xmlHelpers,
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError;
 
 
 function android_parser(project) {
@@ -77,11 +77,13 @@ android_parser.prototype.deleteDefaultResource = function(name) {
         if (filename.indexOf('drawable-') === 0) {
             var imgPath = path.join(res, filename, name);
             if (fs.existsSync(imgPath)) {
+                shell.chmod('u+w', imgPath);
                 fs.unlinkSync(imgPath);
                 events.emit('verbose', 'deleted: ' + imgPath);
             }
             imgPath = imgPath.replace(/\.png$/, '.9.png');
             if (fs.existsSync(imgPath)) {
+                shell.chmod('u+w', imgPath);
                 fs.unlinkSync(imgPath);
                 events.emit('verbose', 'deleted: ' + imgPath);
             }
@@ -281,6 +283,20 @@ android_parser.prototype.update_from_config = function(config) {
     javs_contents = javs_contents.replace(/package [\w\.]*;/, 'package ' + pkg + ';');
     events.emit('verbose', 'Wrote out Android package name to "' + pkg + '"');
     fs.writeFileSync(new_javs, javs_contents, 'utf-8');
+    // remove the original if different from the new.
+    if(orig_pkgDir !== pkgDir){
+      shell.rm('-Rf',orig_javs);
+      // remove any empty directories
+      var curDir = path.dirname(orig_javs);
+      while(curDir !== path.resolve(this.path, 'src')) {
+          if(fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
+              fs.rmdirSync(curDir);
+              curDir = path.resolve(curDir, '..');
+            } else {
+              break;
+            }
+          }
+    }
 };
 
 // Returns the platform-specific www directory.
@@ -295,6 +311,11 @@ android_parser.prototype.config_xml = function(){
 // Used for creating platform_www in projects created by older versions.
 android_parser.prototype.cordovajs_path = function(libDir) {
     var jsPath = path.join(libDir, 'framework', 'assets', 'www', 'cordova.js');
+    return path.resolve(jsPath);
+};
+
+android_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 

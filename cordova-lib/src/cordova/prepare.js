@@ -18,185 +18,165 @@
 */
 
 var cordova_util      = require('./util'),
-    ConfigParser      = require('../configparser/ConfigParser'),
-    path              = require('path'),
+    ConfigParser      = require('cordova-common').ConfigParser,
+    PlatformJson      = require('cordova-common').PlatformJson,
+    PluginInfoProvider = require('cordova-common').PluginInfoProvider,
+    events            = require('cordova-common').events,
     platforms         = require('../platforms/platforms'),
-    fs                = require('fs'),
-    shell             = require('shelljs'),
-    et                = require('elementtree'),
+    PlatformApiPoly = require('../platforms/PlatformApiPoly'),
     HooksRunner       = require('../hooks/HooksRunner'),
-    events            = require('../events'),
     Q                 = require('q'),
-    plugman           = require('../plugman/plugman'),
-    PlatformMunger    = require('../plugman/util/config-changes').PlatformMunger,
-    PlatformJson      = require('../plugman/util/PlatformJson'),
-    restore           = require('./restore-util');
-
-
-var PluginInfoProvider = require('../PluginInfoProvider');
+    restore           = require('./restore-util'),
+    path              = require('path'),
+    browserify = require('../plugman/browserify'),
+    config            = require('./config');
 
 // Returns a promise.
 exports = module.exports = prepare;
 function prepare(options) {
     var projectRoot = cordova_util.cdProjectRoot();
-    var xml = cordova_util.projectConfig(projectRoot);
-
-    if (!options) {
-        options = {
-            verbose: false,
-            platforms: [],
-            options: []
-        };
-    }
+    var config_json = config.read(projectRoot);
+    options = options || { verbose: false, platforms: [], options: {} };
 
     var hooksRunner = new HooksRunner(projectRoot);
     return hooksRunner.fire('before_prepare', options)
     .then(function(){
-        return restore.installPlatformsFromConfigXML(options.platforms);
+        return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath });
     })
     .then(function(){
         options = cordova_util.preProcessOptions(options);
         var paths = options.platforms.map(function(p) {
             var platform_path = path.join(projectRoot, 'platforms', p);
-            var parser = platforms.getPlatformProject(p, platform_path);
-            return parser.www_dir();
+            return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
         });
         options.paths = paths;
-    })
-    .then(function() {
-        var pluginInfoProvider = new PluginInfoProvider();
-
+    }).then(function() {
+        options = cordova_util.preProcessOptions(options);
+        options.searchpath = options.searchpath || config_json.plugin_search_path;
         // Iterate over each added platform
-        return Q.all(options.platforms.map(function(platform) {
-            var platformPath = path.join(projectRoot, 'platforms', platform);
-
-            var parser = platforms.getPlatformProject(platform, platformPath);
-            var defaults_xml_path = path.join(platformPath, 'cordova', 'defaults.xml');
-            // If defaults.xml is present, overwrite platform config.xml with
-            // it Otherwise save whatever is there as defaults so it can be
-            // restored or copy project config into platform if none exists.
-            if (fs.existsSync(defaults_xml_path)) {
-                shell.cp('-f', defaults_xml_path, parser.config_xml());
-                events.emit('verbose', 'Generating config.xml from defaults for platform "' + platform + '"');
-            } else {
-                if(fs.existsSync(parser.config_xml())){
-                    shell.cp('-f', parser.config_xml(), defaults_xml_path);
-                }else{
-                    shell.cp('-f', xml, parser.config_xml());
-                }
-            }
-
-            var stagingPath = path.join(platformPath, '.staging');
-            if (fs.existsSync(stagingPath)) {
-                events.emit('log', 'Deleting now-obsolete intermediate directory: ' + stagingPath);
-                shell.rm('-rf', stagingPath);
-            }
-
-            // Replace the existing web assets with the app master versions
-            parser.update_www();
-
-            // Call plugman --prepare for this platform. sets up js-modules appropriately.
-            var plugins_dir = path.join(projectRoot, 'plugins');
-            events.emit('verbose', 'Calling plugman.prepare for platform "' + platform + '"');
-
-            if (options.browserify) {
-                plugman.prepare = require('../plugman/prepare-browserify');
-            }
-            plugman.prepare(platformPath, platform, plugins_dir, null, true, pluginInfoProvider);
-
-            // Make sure that config changes for each existing plugin is in place
-            var platformJson = PlatformJson.load(plugins_dir, platform);
-            var munger = new PlatformMunger(platform, platformPath, plugins_dir, platformJson, pluginInfoProvider);
-            munger.reapply_global_munge();
-            munger.save_all();
-
-            // Update platform config.xml based on top level config.xml
-            var cfg = new ConfigParser(xml);
-            var platform_cfg = new ConfigParser(parser.config_xml());
-            exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), platform, true);
-
-            // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-            // we allow using windows8 tag for new windows platform
-            if (platform == 'windows') {
-                exports._mergeXml(cfg.doc.getroot(), platform_cfg.doc.getroot(), 'windows8', true);
-            }
-
-            platform_cfg.write();
-
-            return parser.update_project(cfg);
-        })).then(function() {
-            return hooksRunner.fire('after_prepare', options);
+        return preparePlatforms(options.platforms, projectRoot, options);
+    }).then(function() {
+        options.paths = options.platforms.map(function(platform) {
+            return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
         });
+        return hooksRunner.fire('after_prepare', options);
     }).then(function () {
         return restore.installPluginsFromConfigXML(options);
     });
 }
 
-var BLACKLIST = ['platform', 'feature','plugin','engine'];
-var SINGLETONS = ['content', 'author'];
-function mergeXml(src, dest, platform, clobber) {
-    // Do nothing for blacklisted tags.
-    if (BLACKLIST.indexOf(src.tag) != -1) return;
-
-    //Handle attributes
-    Object.getOwnPropertyNames(src.attrib).forEach(function (attribute) {
-        if (clobber || !dest.attrib[attribute]) {
-            dest.attrib[attribute] = src.attrib[attribute];
-        }
-    });
-    //Handle text
-    if (src.text && (clobber || !dest.text)) {
-        dest.text = src.text;
-    }
-    //Handle platform
-    if (platform) {
-        src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
-            platformElement.getchildren().forEach(mergeChild);
-        });
-    }
-
-    //Handle children
-    src.getchildren().forEach(mergeChild);
-
-    function mergeChild (srcChild) {
-        var srcTag = srcChild.tag,
-            destChild = new et.Element(srcTag),
-            foundChild,
-            query = srcTag + '',
-            shouldMerge = true;
-
-        if (BLACKLIST.indexOf(srcTag) === -1) {
-            if (SINGLETONS.indexOf(srcTag) !== -1) {
-                foundChild = dest.find(query);
-                if (foundChild) {
-                    destChild = foundChild;
-                    dest.remove(destChild);
-                }
-            } else {
-                //Check for an exact match and if you find one don't add
-                Object.getOwnPropertyNames(srcChild.attrib).forEach(function (attribute) {
-                    query += '[@' + attribute + '="' + srcChild.attrib[attribute] + '"]';
-                });
-                foundChild = dest.find(query);
-                if (foundChild && textMatch(srcChild, foundChild)) {
-                    destChild = foundChild;
-                    dest.remove(destChild);
-                    shouldMerge = false;
-                }
+/**
+ * Calls `platformApi.prepare` for each platform in project
+ *
+ * @param   {string[]}  platformList  List of platforms, added to current project
+ * @param   {string}    projectRoot   Project root directory
+ *
+ * @return  {Promise}
+ */
+function preparePlatforms (platformList, projectRoot, options) {
+    return Q.all(platformList.map(function(platform) {
+        // TODO: this need to be replaced by real projectInfo
+        // instance for current project.
+        var project = {
+            root: projectRoot,
+            projectConfig: new ConfigParser(cordova_util.projectConfig(projectRoot)),
+            locations: {
+                plugins: path.join(projectRoot, 'plugins'),
+                www: cordova_util.projectWww(projectRoot)
             }
+        };
 
-            mergeXml(srcChild, destChild, platform, clobber && shouldMerge);
-            dest.append(destChild);
-        }
-    }
+        // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
+        return restoreMissingPluginsForPlatform(platform, projectRoot, options)
+        .then(function () {
+            // platformApi prepare takes care of all functionality
+            // which previously had been executed by cordova.prepare:
+            //   - reset config.xml and then merge changes from project's one,
+            //   - update www directory from project's one and merge assets from platform_www,
+            //   - reapply config changes, made by plugins,
+            //   - update platform's project
+            // Please note that plugins' changes, such as installed js files, assets and
+            // config changes is not being reinstalled on each prepare.
+            var platformApi = platforms.getPlatformApi(platform);
+            return platformApi.prepare(project, options)
+            .then(function () {
+                if (platform === 'windows' && !(platformApi instanceof PlatformApiPoly)) {
+                    // Windows Api doesn't fire 'pre_package' hook, so we fire it here
+                    return new HooksRunner(projectRoot).fire('pre_package', {
+                        wwwPath: platformApi.getPlatformInfo().locations.www,
+                        platforms: ['windows'],
+                        nohooks: options.nohooks
+                    });
+                }
+            })
+            .then(function () {
+                if (options.browserify)
+                    return browserify(project, platformApi);
+            });
+        });
+    }));
 }
 
-// Expose for testing.
-exports._mergeXml = mergeXml;
+module.exports.preparePlatforms = preparePlatforms;
 
+/**
+ * Ensures that plugins, installed with previous versions of CLI (<5.4.0) are
+ *   readded to platform correctly. Also triggers regeneration of
+ *   cordova_plugins.js file.
+ *
+ * @param   {String}  platform     Platform name to check for installed plugins
+ * @param   {String}  projectRoot  A current cordova project location
+ * @param   {Object}  [options]    Options that will be passed to
+ *   PlatformApi.pluginAdd/Remove. This object will be extended with plugin
+ *   variables, used to install the plugin initially (picked from "old"
+ *   plugins/<platform>.json)
+ *
+ * @return  {Promise}               Promise that'll be fulfilled if all the
+ *   plugins reinstalled properly.
+ */
+function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
+    events.emit('verbose', 'Searching PlatformJson files for differences between project vs. platform installed plugins');
 
-function textMatch(elm1, elm2) {
-    var text1 = elm1.text ? elm1.text.replace(/\s+/, '') : '',
-        text2 = elm2.text ? elm2.text.replace(/\s+/, '') : '';
-    return (text1 === '' || text1 === text2);
+    // Flow:
+    // 1. Compare <platform>.json file in <project>/plugins ("old") and platforms/<platform> ("new")
+    // 2. If there is any differences - merge "old" one into "new"
+    // 3. Reinstall plugins that are missing and was merged on previous step
+
+    var oldPlatformJson = PlatformJson.load(path.join(projectRoot, 'plugins'), platform);
+    var platformJson = PlatformJson.load(path.join(projectRoot, 'platforms', platform), platform);
+
+    var missingPlugins = Object.keys(oldPlatformJson.root.installed_plugins)
+        .concat(Object.keys(oldPlatformJson.root.dependent_plugins))
+        .reduce(function (result, candidate) {
+            if (!platformJson.isPluginInstalled(candidate))
+                result.push({name: candidate,
+                    // Note: isPluginInstalled is actually returns not a boolean,
+                    // but object which corresponds to this particular plugin
+                    variables: oldPlatformJson.isPluginInstalled(candidate)});
+
+            return result;
+        }, []);
+
+    if (missingPlugins.length === 0) {
+        events.emit('verbose', 'No differences found between project and ' +
+            platform + ' platform. Continuing...');
+        return Q.resolve();
+    }
+
+    var api = platforms.getPlatformApi(platform);
+    var provider = new PluginInfoProvider();
+    return missingPlugins.reduce(function (promise, plugin) {
+        return promise.then(function () {
+            var pluginOptions = options || {};
+            pluginOptions.variables = plugin.variables;
+            pluginOptions.usePlatformWww = true;
+
+            events.emit('verbose', 'Reinstalling missing plugin ' + plugin.name + ' to ' + platform + ' platform');
+            var pluginInfo = provider.get(path.join(projectRoot, 'plugins', plugin.name));
+            return api.removePlugin(pluginInfo, pluginOptions)
+            .then(function () {
+                return api.addPlugin(pluginInfo, pluginOptions);
+            });
+        });
+    }, Q());
 }

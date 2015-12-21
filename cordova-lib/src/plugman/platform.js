@@ -23,7 +23,8 @@ var Q = require('q'),
     et = require('elementtree'),
     fs = require('fs'),
     shell = require('shelljs'),
-    path = require('path');
+    path = require('path'),
+    stripLicense = require('./util/strip-license');
 
 /**
  * Used for adding templates for plugin platforms to plugin.xml
@@ -74,7 +75,7 @@ module.exports = {
         }
 
         // Remove the Platform in question
-        pluginxml.getroot().remove( 0, pluginxml.find("./platform/[@name='"+ platformName +"']") );
+        pluginxml.getroot().remove(pluginxml.find("./platform/[@name='"+ platformName +"']") );
 
         // Rewrite the plugin.xml file back out
         fs.writeFileSync( "plugin.xml", pluginxml.write( "plugin.xml", {indent: 4} ), 'utf-8' );
@@ -115,9 +116,9 @@ function doPlatformBase( templatesDir, platformName, pluginName, pluginID, plugi
     case 'android':
         baseFiles.push (
             {
-                file: fs.readFileSync( templatesDir + "base.java", "utf-8" )
-                    .replace( /%pluginName%/g, pluginName )
-                    .replace( /%pluginID%/g, pluginID ),
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.java", "utf-8")
+                    .replace(/%pluginName%/g, pluginName)
+                    .replace(/%pluginID%/g, pluginID)),
                 extension: "java"
             }
         );
@@ -126,12 +127,19 @@ function doPlatformBase( templatesDir, platformName, pluginName, pluginID, plugi
     case 'ios':
         baseFiles.push(
             {
-                file: fs.readFileSync( templatesDir + "base.m", "utf-8" )
-                    .replace( /%pluginName%/g, pluginName ),
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.m", "utf-8")
+                    .replace(/%pluginName%/g, pluginName)),
                 extension: "m"
             }
         );
         break;
+    case 'windows':
+        baseFiles.push(
+            {
+                file: stripLicense.fromCode(fs.readFileSync(templatesDir + "base.js", "utf-8")),
+                extension: "js"
+            }
+        );
     }
 
     shell.mkdir( '-p', 'src/' + platformName );

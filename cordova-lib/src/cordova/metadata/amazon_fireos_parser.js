@@ -20,14 +20,14 @@
 var fs            = require('fs'),
     path          = require('path'),
     et            = require('elementtree'),
-    xml           = require('../../util/xml-helpers'),
+    xml           = require('cordova-common').xmlHelpers,
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser = require('../../configparser/ConfigParser'),
-    CordovaError = require('../../CordovaError');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError;
 
 
 function amazon_fireos_parser(project) {
@@ -294,6 +294,11 @@ amazon_fireos_parser.prototype.config_xml = function(){
 // Used for creating platform_www in projects created by older versions.
 amazon_fireos_parser.prototype.cordovajs_path = function(libDir) {
     var jsPath = path.join(libDir, 'framework', 'assets', 'www', 'cordova.js');
+    return path.resolve(jsPath);
+};
+
+amazon_fireos_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 

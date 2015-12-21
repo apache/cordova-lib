@@ -20,6 +20,152 @@
 -->
 # Cordova-lib Release Notes
 
+### 5.4.1 (Nov 19, 2015)
+* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`. 
+* CB-9981 `path.parse` only available on `node 0.12+`.
+* CB-9987 Adds compatibility layer for `cordova.raw.*` methods
+* CB-9975 Fix issue with using `all" as orientation for **iOS**
+* CB-9984 Bumps `plist` version and fixes failing `cordova-common` test
+
+### 5.4.0 (Oct 30, 2015)
+* CB-9935 Cordova CLI silently fails on node.js v5
+* CB-9834 Introduce compat map for hook requires
+* CB-9902 Fix broken `cordova run --list`
+* CB-9872 Fixed save.spec.11 failure
+* CB-9800 Fixing contribute link.
+* CB-9736 Extra main activity generated when an android package name is specified
+* CB-9675 OSX App Icons are not properly copied.
+* CB-9758 Mobilespec crashes adding plugins on OS X
+* CB-9782 Update create/update signatures for PlatformApi polyfill
+* CB-9815 Engine name="cordova" should check tools version, not platforms. 
+* CB-9824 removed plugin download counter code from lib
+* CB-9821 Fix EventEmitter incorrect trace level usages
+* CB-9813 Keep module-to-plugin mapping at hand.
+* CB-9598 Fixes broken `require` for FFOS plugin handler
+* Update 'serve' to use 'express' implementation of cordova-serve.
+* CB-9712 CLI 5.3 breaks with node 3.3.3
+* CB-9598 Fixies broken require calls that aren't covered by tests
+* CB-9589 added more warnings and added conversion step to fetch.js
+* CB-9589 auto convert old plugin ids to new npm ids using [registry-mapper](https://github.com/stevengill/cordova-registry-mapper)
+* Pick ConfigParser changes from apache@0c3614e
+* CB-9743 Removes system frameworks handling from ConfigChanges
+* CB-9598 Cleans out code which has been moved to `cordova-common`
+* CB-9598 Switches LIB to use `cordova-common`
+* CB-9569 Support <access> and <allow-navigation> tag translation to Application Transport Security (ATS) Info.plist directives.
+* CB-9737 (save flag) unit test failures for spec.14
+* CB-8914 when project is renamed, remove userdata otherwise project is un-usable in xcode
+* CB-9665 Support .xcassets for icons and splashscreens in the CLI
+* CB-9407 Fixes incorrect applying of plugin-provided config changes.
+* CB-8198 Unified console output logic for core platforms
+* CB-9408 Added support for `windows-packageVersion` on `<widget>`
+* CB-9588 Plugman. Add support for <resource-file> on Windows
+* CB-8615 Improves plugman tests for Windows
+* CB-8615 **Windows** .winmd files with the same names are not added properly when using framework tag with target attribute
+* CB-9297 Parse xcode project syncronously to avoid issues with node v4
+* CB-9617 Do not restore plugins after plugin removal.
+* CB-9631 Save plugin to config.xml only if installation succeeds
+* CB-9601 Fix <framework>.versions support on Windows after semver update
+* CB-9617 Fixes incorrect project state after adding/removing plugins
+* CB-9560 Issue using plugin restore for plugins with common dependencies 
+* CB-8993 Plugin restore ignores search path
+* CB-9587 Check if browser platform added properly before creating parser. 
+* CB-9604 Fix error adding browser platform with PlatformApi polyfill.
+* CB-9597 Initial Implementation of PlatformApiPoly
+* CB-9354 Fix array merging with complex items
+* CB-9556 Don't uninstall dependent plugin if it was installed as a top-level after
+
+### 5.3.2 (Sep 17, 2015)
+* CB-9297 Parse xcode project syncronously to avoid issues with node v4
+
+### 5.3.1 (Aug 28, 2015)
+* pinned blackberry@3.8.0 in prepartion for its release
+* pinned browser@4.0.0 and windows@4.1.0 
+* CB-9559 Adding a plugin with caret in version results in an error
+* Update cordova-serve required version to 0.1.3.
+* CB-6506 RTC: Add support for OSX (closes #278)
+* CB-9517 Adding a plugin on iOS/OSX that uses a private framework does not work (closes #281)
+* CB-9549 Removes excess JS files from browserified app
+* CB-9505 Correct plugin modules loading within browserify flow
+* CB-8532 Adding Windows Plugin Failed with "Cannot read property 'text' of null" Updated elementtree API according 0.1.6 release. This closes #277
+
+### 5.2.0 (Aug 06, 2015)
+* CB-9436 Removes `require-tr` bundle transformation
+* updated pinned ios version to ~3.9.0
+* CB-9278: Restoring multiple platforms fails. This closes #266
+* updated pinned android to ~4.1.0
+* CB-9421 Added a test for plugin fetch with searchpath parameter
+* CB-9421 Fixed searchpath parameter being ignored. This closes #269
+* Update xcode dependency to latest stable version. This closes #272
+* CB-9420 Fixes malformed require calls in browserify bundle. This closes #270
+* CB-9405 limit author/description to 256 char per WMAppManifest schema
+* CB-9414 plugin fetching now defaults to npm, CPR fallback
+* CB-9384 Added tests that test plugin fetch from github branch|tag|sha
+* added comment outlining the types of things git_ref can be : commit SHA | branch | tag
+* actually checkout git_ref because it may be a branch OR a commit SHA
+* CB-9332 Upgrade npm and semver to actual versions
+* CB-9330 updated wording for warning messages for removal of publish/unpublish commands
+* Adds stubs for `publish`/`unpublish` commands. This closes #254
+* CB-9330 Removes 'plugman publish' related functionality
+* CB-9335: Windows quality-of-life improvements.  To align with the change in Cordova-Windows which removes the Windows 8 project from the solution file used by Windows 8.1 and Windows 10, the same is done in the spec.
+* Fix prepare to wait the promise from plugman prepare.
+* CB-9362 Don't fail if superspawn can't chmod a file
+* CB-9122 Added tests for platform/plugin add/rm/update with --save flag. This closes #246
+* Fixed ios node-xcode related tests failing on Windows according to version update
+* Added webOS parsers for project creation/manipulation
+* CB-8965 Prevent cli from copying cordova.js and cordova-js-src/ multiple times
+* CB-9114: Log deprecation message when --usegit flag is used. This closes #234
+* CB-9126 Fix ios pbxproj' resources paths when adding ios platform on non-OSX environment. This closes #237
+* CB-9221 Updates `cordova serve` command to use cordova-serve module.
+* CB-9225 Add windows platform support to `plugman platform add`
+* CB-9163 when engine check isn't satisfied, skip that plugin install
+* CB-9162 Adds support for default values for plugin variables.
+* CB-9188 Confusing error after delete plugin folder then prepare.
+* CB-9145 prepare can lose data during config munge
+* CB-9177 Use tilde instead of caret when save to config.xml.
+* CB-9147 Adding a platform via caret version adds latest rather than the latest matching.
+* CB-5578 Adds `clean` module to cordova. This closes #241
+* CB-9124 Makes network-related errors' messages more descriptive.
+* CB-9067 fixed plugman config set registry and adduser
+* CB-8993 Plugin restore ignores search path. This closes #224
+* CB-9087 updated pinned windows platform to 4.0.0
+* CB-9108 Handle version ranges when add platform with --usegit.
+* CB-8898 Makes error message descriptive when `requirements` is called outside of cordova project.
+* CB-8007 Two cordova plugins modifying “*-Info.plist” CFBundleURLTypes
+* CB-9065 Allow removing plugins by short name.
+* CB-9001 Set WMAppManifest.xml Author, Description and Publisher attributes based on config.xml
+* CB-9073 Allow to add platform if project path contains `&` symbol
+
+### 5.1.1 (June 4, 2015)
+* CB-9087 Updated pinned version of cordova-windows to 4.0.0
+* CB-9108 Handle version ranges when add platform with --usegit.
+* CB-8898 Makes error message descriptive when `requirements` is called outside of cordova project.
+* Fix four failing tests on Windows.
+* CB-8007 Two cordova plugins modifying “*-Info.plist” CFBundleURLTypes
+* CB-9065 Allow removing plugins by short name.
+* CB-9001 Set WMAppManifest.xml Author, Description and Publisher attributes based on config.xml
+* CB-9073 Allow to add platform if project path contains `&` symbol
+* CB-8783 - Revert 'all' as a global preference value for Orientation (specific to iOS for now)
+* CB-8783 - 'default' value for Orientation does not support both landscape and portrait orientations. (new 'all' value)
+* CB-9075 pinned platforms will include patch updates without new tools release
+* CB-9051 Plugins don't get re-added if platforms folder deleted.
+* CB-9025 Call windows `prepare` logic on as part of cordova-lib `prepare`. This closes #217
+* CB-9048 Clean up git cloned directories (close #222)
+* CB-8965 readded browserify transform
+* CB-8965 copy platform specific js into platform_www when adding new platforms for browserify workflow
+* CB-8965 passing platform as argument when getting symbolList
+* CB-8965 copy platform specific js into platform_www when adding new platforms for browserify workflow
+* Add support to specify a build config file. If none is specified `build.json` in the project root is used as a default This closes #215
+* CB-9030: Modifies superspawn to support a "chmod" option. When truthy, attempts to set the target file mode to 755 before executing.  Specifies this argument as truthy for common CLI operations (compile, run, and steps in plugman).  Didn't add it for hooks runner since that particular mode is in legacy support.
+* CB-8989 - cordova-lib jasmine tests are failing on older hardware
+* CB-6462 CB-6026 - Orientation preference now updates `UISupportedInterfaceOrientations~ipad` too.
+* CB-8898 Introduces `requirements` cordova module
+* Update elementtree dependency to 0.1.6. Note it has a breaking API change. https://github.com/racker/node-elementtree/issues/24 (closes #209)
+* CB-8757 Resolve symlinks in order to avoid relative path issues (close #212)
+* CB-8956 Remove hardcoded reference to registry.npmjs.org
+* CB-8934 fixed regression with projects config.json not being used in cordova create
+* CB-8908 Make fetching via git faster via --depth=1
+* CB-8897 Make default icon/splash on Android map to mdpi
+
 ### 5.0.0 (Apr 16, 2015)
 * CB-8865 fixed plugman.help()
 * Pinned Cordova-Android version 4.0.0

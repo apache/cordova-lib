@@ -22,11 +22,11 @@
 var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
-    events = require('../../events'),
+    events = require('cordova-common').events,
     util = require('../util'),
     Q = require('q'),
     Parser = require('./parser'),
-    ConfigParser = require('../../configparser/ConfigParser');
+    ConfigParser = require('cordova-common').ConfigParser;
 
 function firefoxos_parser(project) {
 
@@ -202,6 +202,11 @@ firefoxos_parser.prototype.www_dir = function() {
 // Used for creating platform_www in projects created by older versions.
 firefoxos_parser.prototype.cordovajs_path = function(libDir) {
     var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
+    return path.resolve(jsPath);
+};
+
+firefoxos_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 

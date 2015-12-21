@@ -17,10 +17,10 @@
     under the License.
 */
 var dependencies = require('../../src/plugman/util/dependencies'),
-    xml_helpers = require('../../src/util/xml-helpers'),
+    xml_helpers = require('cordova-common').xmlHelpers,
     path = require('path');
-var PlatformJson = require('../../src/plugman/util/PlatformJson');
-var PluginInfoProvider = require('../../src/PluginInfoProvider');
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 describe('dependency module', function() {
     describe('generateDependencyInfo method', function() {

@@ -23,9 +23,9 @@ var fs            = require('fs'),
     util          = require('../util'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError'),
-    events        = require('../../events');
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError,
+    events = require('cordova-common').events;
 
 function blackberry_parser(project) {
     if (!fs.existsSync(path.join(project, 'www'))) {
@@ -47,8 +47,23 @@ module.exports = blackberry_parser;
 blackberry_parser.prototype.update_from_config = function(config) {
     var projectRoot = util.isCordova(this.path),
         resDir = path.join(this.path, 'platform_www', 'res'),
+        platform_www = path.join(this.path, 'platform_www'),
         icons,
-        i;
+        splashscreens;
+
+    var copyResources = function(resList) {
+        for (var i = 0; i < resList.length; i++) {
+                var src = path.join(projectRoot, resList[i].src),
+                dest = path.join(platform_www, resList[i].src),
+                destFolder = path.dirname(dest);
+
+            if (!fs.existsSync(destFolder)) {
+                shell.mkdir('-p', destFolder); // make sure target dir exists
+            }
+            events.emit('verbose', 'Copying resource from ' + src + ' to ' + dest);
+            shell.cp('-f', src, dest);
+        }
+    };
 
     if (!config instanceof ConfigParser) {
         throw new Error('update_from_config requires a ConfigParser object');
@@ -59,17 +74,12 @@ blackberry_parser.prototype.update_from_config = function(config) {
 
     icons = config.getIcons('blackberry10');
     if (icons) {
-        for (i = 0; i < icons.length; i++) {
-            var src = path.join(projectRoot, icons[i].src),
-                dest = path.join(this.path, 'platform_www', icons[i].src),
-                destFolder = path.dirname(dest);
-
-            if (!fs.existsSync(destFolder)) {
-                shell.mkdir('-p', destFolder); // make sure target dir exists
-            }
-            events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
-            shell.cp('-f', src, dest);
-        }
+        copyResources(icons);
+    }
+    // blackberry10 splash images use custom element rim:splash
+    splashscreens = config.getStaticResources('blackberry10', 'rim:splash');
+    if (splashscreens) {
+        copyResources(splashscreens);
     }
 };
 
@@ -99,6 +109,11 @@ blackberry_parser.prototype.config_xml = function(){
 // Used for creating platform_www in projects created by older versions.
 blackberry_parser.prototype.cordovajs_path = function(libDir) {
     var jsPath = path.join(libDir, 'javascript', 'cordova.blackberry10.js');
+    return path.resolve(jsPath);
+};
+
+blackberry_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 

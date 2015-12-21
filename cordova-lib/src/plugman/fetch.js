@@ -22,10 +22,10 @@ var shell   = require('shelljs'),
     url     = require('url'),
     underscore = require('underscore'),
     semver = require('semver'),
-    PluginInfoProvider = require('../PluginInfoProvider'),
+    PluginInfoProvider = require('cordova-common').PluginInfoProvider,
     plugins = require('./util/plugins'),
-    CordovaError  = require('../CordovaError'),
-    events = require('../events'),
+    CordovaError = require('cordova-common').CordovaError,
+    events = require('cordova-common').events,
     metadata = require('./util/metadata'),
     path    = require('path'),
     Q       = require('q'),
@@ -57,6 +57,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     var uri = url.parse(plugin_src);
 
     // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
+    // git-ref can be a commit SHA, a tag, or a branch
     // NB: No leading or trailing slash on the subdir.
     if (uri.hash) {
         var result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
@@ -81,6 +82,11 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             }
 
             return plugins.clonePluginGit(plugin_src, plugins_dir, options)
+            .fail(function (error) {
+                var message = 'Failed to fetch plugin ' + plugin_src + ' via git.' +
+                    '\nEither there is a connection problems, or plugin spec is incorrect:\n\t' + error;
+                return Q.reject(new CordovaError(message));
+            })
             .then(function(dir) {
                 return {
                     pinfo: pluginInfoProvider.get(dir),
@@ -126,10 +132,22 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            return registry.fetch([plugin_src], options.client)
+            var newID = pluginMapperotn[plugin_src];
+            if(newID) {
+                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');                
+                plugin_src = newID;
+            } 
+            return registry.fetch([plugin_src])
+            .fail(function (error) {
+                var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
+                    '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
+                    '\nCheck your connection and plugin name/version/URL.' +
+                    '\n' + error;
+                return Q.reject(new CordovaError(message));
+            })
             .then(function(dir) {
                 return {
-                    pinfo: pluginInfoProvider.get(dir),
+                        pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
                         id: plugin_src
@@ -147,13 +165,12 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
     }).then(function(result){
         checkID(options.expected_id, result.pinfo);
         var data = { source: result.fetchJsonSource };
-        data.is_top_level = options.is_top_level; 
+        data.is_top_level = options.is_top_level;
         data.variables = options.variables || {};
         metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, data);
         return result.dest;
     });
 }
-
 
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {
@@ -223,7 +240,8 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
     versions.forEach(function(pinfo) {
         // Ignore versions that don't satisfy the the requested version range.
-        if (!semver.satisfies(pinfo.version, versionspec)) {
+        // Ignore -dev suffix because latest semver versions doesn't handle it properly (CB-9421)
+        if (!semver.satisfies(pinfo.version.replace(/-dev$/, ''), versionspec)) {
             return;
         }
         if (!latest) {
@@ -240,7 +258,7 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
 
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
-// if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying 
+// if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying
 function copyPlugin(pinfo, plugins_dir, link) {
 
     var plugin_dir = pinfo.dir;

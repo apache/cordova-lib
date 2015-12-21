@@ -21,11 +21,11 @@
 
 var path = require('path')
    , common = require('./common')
-   , events = require('../../events')
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
+   , events = require('cordova-common').events
+   , xml_helpers = require('cordova-common').xmlHelpers
    , properties_parser = require('properties-parser')
    , android_project = require('../util/android-project')
-   , CordovaError = require('../../CordovaError')
+   , CordovaError = require('cordova-common').CordovaError
    ;
 
 var projectFileCache = {};
@@ -170,5 +170,10 @@ module.exports = {
         var prefix = module.exports.package_suffix(project_dir);
         var subRelativeDir = path.join(plugin_id, prefix + '-' + path.basename(src));
         return subRelativeDir;
+    },
+    package_suffix: function (project_dir) {
+        var packageName = module.exports.package_name(project_dir);
+        var lastDotIndex = packageName.lastIndexOf('.');
+        return packageName.substring(lastDotIndex + 1);
     }
 };

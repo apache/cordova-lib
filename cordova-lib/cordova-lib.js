@@ -27,13 +27,10 @@ exports = module.exports = {
     },
     plugman: require('./src/plugman/plugman'),
     cordova: require('./src/cordova/cordova'),
-    events: require('./src/events'),
-    configparser: require('./src/configparser/ConfigParser.js'),
+    events: require('cordova-common').events,
+    configparser: require('cordova-common').ConfigParser,
     cordova_platforms: require('./src/platforms/platforms'),
     ////  MAIN CORDOVA TOOLS API
-    PluginInfo: require('./src/PluginInfo'),
-    CordovaError: require('./src/CordovaError')
-}
-
-
-
+    PluginInfo: require('cordova-common').PluginInfo,
+    CordovaError: require('cordova-common').CordovaError
+};

@@ -17,7 +17,7 @@
     under the License.
 */
 
-var cordova_events = require('../events');
+var cordova_events = require('cordova-common').events;
 var cordova_util = require('./util');
 
 var off = function() {
@@ -70,5 +70,4 @@ addModuleProperty(module, 'info', './info', true);
 addModuleProperty(module, 'targets', './targets', true);
 addModuleProperty(module, 'requirements', './requirements', true);
 addModuleProperty(module, 'projectMetadata', './project_metadata', true);
-
-
+addModuleProperty(module, 'clean', './clean', true);

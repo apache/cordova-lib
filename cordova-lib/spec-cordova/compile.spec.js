@@ -18,9 +18,7 @@
 */
 var cordova = require('../src/cordova/cordova'),
     platforms = require('../src/platforms/platforms'),
-    path = require('path'),
     HooksRunner = require('../src/hooks/HooksRunner'),
-    superspawn = require('../src/cordova/superspawn'),
     util = require('../src/cordova/util'),
     Q = require('q');
 
@@ -28,7 +26,7 @@ var supported_platforms = Object.keys(platforms).filter(function(p) { return p !
 
 
 describe('compile command', function() {
-    var is_cordova, list_platforms, fire, result, cd_project_root;
+    var is_cordova, list_platforms, fire, result, cd_project_root, fail, platformApi, getPlatformApi;
     var project_dir = '/some/path';
 
     function wrapper(f, post) {
@@ -43,7 +41,9 @@ describe('compile command', function() {
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        spyOn(superspawn, 'spawn').andCallFake(function() { return Q(); });
+        platformApi = { build: jasmine.createSpy('build').andReturn(Q()) };
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+        fail = function (err) { expect(err.stack).not.toBeDefined(); };
     });
     describe('failure', function() {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
@@ -63,15 +63,36 @@ describe('compile command', function() {
     describe('success', function() {
         it('should run inside a Cordova-based project with at least one added platform and shell out to build', function(done) {
             cordova.raw.compile(['android','ios']).then(function() {
-                expect(superspawn.spawn).toHaveBeenCalledWith(path.join(project_dir, 'platforms', 'android', 'cordova', 'build'), [], jasmine.any(Object));
-                expect(superspawn.spawn).toHaveBeenCalledWith(path.join(project_dir, 'platforms', 'ios', 'cordova', 'build'), [], jasmine.any(Object));
-                done();
-            });
+                expect(getPlatformApi).toHaveBeenCalledWith('android');
+                expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                expect(platformApi.build).toHaveBeenCalled();
+            })
+            .fail(fail)
+            .fin(done);
         });
 
         it('should pass down optional parameters', function (done) {
+            cordova.raw.compile({platforms:['blackberry10'], options:{release: true}}).then(function () {
+                expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
+                expect(platformApi.build).toHaveBeenCalledWith({release: true});
+            })
+            .fail(fail)
+            .fin(done);
+        });
+
+        it('should convert options from old format and warn user about this', function (done) {
+            function warnSpy(message) {
+                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+            }
+
+            cordova.on('warn', warnSpy);
             cordova.raw.compile({platforms:['blackberry10'], options:['--release']}).then(function () {
-                expect(superspawn.spawn).toHaveBeenCalledWith(path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'build'), ['--release'], jasmine.any(Object));
+                expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
+                expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
+            })
+            .fail(fail)
+            .fin(function () {
+                cordova.off('warn', warnSpy);
                 done();
             });
         });
@@ -83,13 +104,17 @@ describe('compile command', function() {
                 cordova.raw.compile(['android', 'ios']).then(function() {
                     expect(fire).toHaveBeenCalledWith('before_compile', {verbose: false, platforms:['android', 'ios'], options: []});
                     done();
-                });
+                })
+                .fail(fail)
+                .fin(done);
             });
             it('should fire after hooks through the hooker module', function(done) {
                 cordova.raw.compile('android').then(function() {
                      expect(fire).toHaveBeenCalledWith('after_compile', {verbose: false, platforms:['android'], options: []});
                      done();
-                });
+                })
+                .fail(fail)
+                .fin(done);
             });
         });
 

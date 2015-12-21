@@ -22,7 +22,9 @@ var Q = require('q'),
     path = require('path'),
     shell = require('shelljs'),
     et = require('elementtree'),
-    CordovaError  = require('../CordovaError');
+    CordovaError  = require('cordova-common').CordovaError,
+    stripLicense = require('./util/strip-license');
+
 
 module.exports = function create( name, id, version, pluginPath, options ) {
     var cwd = pluginPath + '/' + name + '/',
@@ -62,7 +64,7 @@ module.exports = function create( name, id, version, pluginPath, options ) {
     shell.mkdir( '-p', cwd + 'src' );
 
     // Create a base plugin.js file
-    baseJS = fs.readFileSync( templatesDir + 'base.js', 'utf-8').replace( /%pluginName%/g, name );
+    baseJS = stripLicense.fromCode(fs.readFileSync(templatesDir + 'base.js', 'utf-8').replace(/%pluginName%/g, name));
     fs.writeFileSync( cwd + 'www/' + name + '.js', baseJS, 'utf-8' );
     // Add it to the xml as a js module
     jsMod = et.Element( 'js-module' );

@@ -22,13 +22,15 @@ var path = require('path');
 module.exports = function(project_dir){
     return {
         'cordova':
-            { 'platform':'*', 'scriptSrc': path.join(project_dir,'cordova','version') },
+            { 'platform':'*', 'currentVersion': require('../../../package.json').version },
         'cordova-plugman':
             { 'platform':'*', 'currentVersion': require('../../../package.json').version },
         'cordova-android':
             { 'platform':'android', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-ios':
             { 'platform':'ios', 'scriptSrc': path.join(project_dir,'cordova','version') },
+        'cordova-osx':
+            { 'platform':'osx', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-blackberry10':
             { 'platform':'blackberry10', 'scriptSrc': path.join(project_dir,'cordova','version') },
         'cordova-wp8':

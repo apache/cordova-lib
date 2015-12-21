@@ -16,9 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-var fetch   = require('../src/plugman/fetch'),
+var rewire  = require('rewire'),
+    fetch   = rewire('../src/plugman/fetch'),
     fs      = require('fs'),
-    os      = require('osenv'),
+    os      = require('os'),
     path    = require('path'),
     shell   = require('shelljs'),
     realrm = shell.rm,
@@ -26,6 +27,7 @@ var fetch   = require('../src/plugman/fetch'),
     metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
     test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
+    test_plugin_searchpath = path.join(test_plugin, '..'),
     //test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
     //test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
     test_plugin_id = 'org.test.plugins.childbrowser',
@@ -65,10 +67,16 @@ describe('fetch', function() {
             cp = spyOn(shell, 'cp').andCallThrough();
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
+            fetch.__set__('localPlugins', null);
         });
 
         it('should copy locally-available plugin to plugins directory', function(done) {
             wrapper(fetch(test_plugin, temp), done, function() {
+                expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
+            });
+        });
+        it('should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function(done) {
+            wrapper(fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }), done, function() {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
@@ -212,6 +220,33 @@ describe('fetch', function() {
             });
         });
     });
+
+    describe('github plugins', function() {
+        // these tests actually pull a plugin from github
+        beforeEach(function(){
+            realrm('-rf',temp);
+        });
+
+        // this commit uses the new id
+        it('should fetch from a commit-sha', function(done) {
+            wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#ad5f1e7bfd05ef98c01df549a0fa98036a5625db', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+        // this branch uses the old id
+        it('should fetch from a branch', function(done) {
+            wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#cdvtest', temp, { expected_id: 'org.apache.cordova.device' }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+        // this tag uses the new id
+        it('should fetch from a tag', function(done) {
+            wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#r1.0.0', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
+                expect(1).toBe(1);
+            });
+        });
+    });
+
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
         var rm, sym, save_metadata;
@@ -224,11 +259,6 @@ describe('fetch', function() {
         });
 
 
-        it('should get a plugin from registry and set the right client when argument is not a folder nor URL', function(done) {
-            wrapper(fetch(pluginId, temp, {client: 'plugman'}), done, function() {
-                expect(sFetch).toHaveBeenCalledWith([pluginId], 'plugman');
-            });
-        });
         it('should fail when the expected ID doesn\'t match', function(done) {
             fetch(pluginId, temp, { expected_id: 'wrongID' })
             .then(function() {

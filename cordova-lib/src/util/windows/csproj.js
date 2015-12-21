@@ -17,7 +17,7 @@
     under the License.
 */
 
-var xml_helpers = require('../../util/xml-helpers'),
+var xml_helpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     fs = require('fs'),
     path = require('path');

@@ -43,5 +43,16 @@
         </dict>
         </dict>
         </config-file>
+
+        <config-file target="*-Info.plist" parent="CFValidSchemas">
+        <array>
+            <string>schema-a</string>
+            <string>schema-b</string>
+            <dict>
+              <key>SchemaName</key>
+              <string>schema-c</string>
+            </dict>
+        </array>
+        </config-file>
     </platform>
 </plugin>

@@ -18,7 +18,7 @@
 
 
 var tizen = require('../../src/plugman/platforms/tizen'),
-    os = require('osenv'),
+    os = require('os'),
     path = require('path'),
     tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
 

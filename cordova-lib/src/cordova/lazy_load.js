@@ -26,10 +26,10 @@ var path          = require('path'),
     shell         = require('shelljs'),
     platforms     = require('../platforms/platforms'),
     npmconf       = require('npmconf'),
-    events        = require('../events'),
+    events        = require('cordova-common').events,
     request       = require('request'),
     config        = require('./config'),
-    HooksRunner        = require('../hooks/HooksRunner'),
+    HooksRunner   = require('../hooks/HooksRunner'),
     zlib          = require('zlib'),
     tar           = require('tar'),
     URL           = require('url'),
@@ -92,7 +92,7 @@ function based_on_config(project_root, platform, opts) {
 // Returns a promise for the path to the lazy-loaded directory.
 function cordova(platform, opts) {
     platform = new Platform(platform);
-    var use_git = opts && opts.usegit || platform.source === 'git';
+    var use_git = platform.source === 'git';
     if ( use_git ) {
         return module.exports.cordova_git(platform);
     } else {
@@ -107,12 +107,16 @@ function cordova_git(platform) {
         return Q.reject(new Error('Cordova library "' + platform.name + '" not recognized.'));
     }
     plat = mixed_platforms[platform.name];
-    if (/^...*:/.test(plat.url)) {
-        plat.url = plat.url + ';a=snapshot;h=' + platform.version + ';sf=tgz';
-    }
     plat.id = 'cordova';
-    plat.version = platform.version;
-    return module.exports.custom(mixed_platforms, platform.name);
+
+    // We can't use a version range when getting from git, so if we have a range, find the latest release on npm that matches.
+    return util.getLatestMatchingNpmVersion(platform.packageName, platform.version).then(function (version) {
+        plat.version = version;
+        if (/^...*:/.test(plat.url)) {
+            plat.url = plat.url + ';a=snapshot;h=' + version + ';sf=tgz';
+        }
+        return module.exports.custom(mixed_platforms, platform.name);
+    });
 }
 
 function cordova_npm(platform) {
@@ -122,18 +126,24 @@ function cordova_npm(platform) {
     // Check if this version was already downloaded from git, if yes, use that copy.
     // TODO: remove this once we fully switch to npm workflow.
     var platdir = platforms[platform.name].altplatform || platform.name;
-    var git_dload_dir = path.join(util.libDirectory, platdir, 'cordova', platform.version);
-    if (fs.existsSync(git_dload_dir)) {
-        var subdir = platforms[platform.name].subdirectory;
-        if (subdir) {
-            git_dload_dir = path.join(git_dload_dir, subdir);
+    // If platform.version specifies a *range*, we need to determine what version we'll actually get from npm (the
+    // latest version that matches the range) to know what local directory to look for.
+    return util.getLatestMatchingNpmVersion(platform.packageName, platform.version).then(function (version) {
+        var git_dload_dir = path.join(util.libDirectory, platdir, 'cordova', version);
+        if (fs.existsSync(git_dload_dir)) {
+            var subdir = platforms[platform.name].subdirectory;
+            if (subdir) {
+                git_dload_dir = path.join(git_dload_dir, subdir);
+            }
+            events.emit('verbose', 'Platform files for "' + platform.name + '" previously downloaded not from npm. Using that copy.');
+            return Q(git_dload_dir);
         }
-        events.emit('verbose', 'Platform files for "' + platform.name + '" previously downloaded not from npm. Using that copy.');
-        return Q(git_dload_dir);
-    }
 
-    var pkg = platform.packageName + '@' + platform.version;
-    return exports.npm_cache_add(pkg);
+        // Note that because the version of npm we use internally doesn't support caret versions, in order to allow them
+        // from the command line and in config.xml, we use the actual version returned by getLatestMatchingNpmVersion().
+        var pkg = platform.packageName + '@' + version;
+        return exports.npm_cache_add(pkg);
+    });
 }
 
 // Equivalent to a command like
@@ -248,6 +258,14 @@ function custom(platforms, platform) {
                 }
             });
             req.pipe(zlib.createUnzip())
+            .on('error', function(err) {
+                // Sometimes if the URL is bad (most likely unavailable version), and git-wip-us.apache.org is
+                // particularly slow at responding, we hit an error because of bad data piped to zlib.createUnzip()
+                // before we hit the request.get() callback above (with a 404 error). Handle that gracefully. It is
+                // likely that we will end up calling d.reject() for an HTTP error in the request() callback above, but
+                // in case not, reject with a useful error here.
+                d.reject(new Error('Unable to fetch platform ' + platform + '@' + version + ': Error: version not found.'));
+            })
             .pipe(tar.Extract({path:tmp_dir}))
             .on('error', function(err) {
                 shell.rm('-rf', tmp_dir);

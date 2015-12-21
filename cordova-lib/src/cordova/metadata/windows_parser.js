@@ -22,13 +22,13 @@
 var fs            = require('fs'),
     path          = require('path'),
     util          = require('../util'),
-    events        = require('../../events'),
+    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     Q             = require('q'),
     Parser        = require('./parser'),
-    ConfigParser  = require('../../configparser/ConfigParser'),
-    CordovaError  = require('../../CordovaError'),
-    xml           = require('../../util/xml-helpers'),
+    ConfigParser = require('cordova-common').ConfigParser,
+    CordovaError = require('cordova-common').CordovaError,
+    xml           = require('cordova-common').xmlHelpers,
     HooksRunner        = require('../../hooks/HooksRunner');
 
 function windows_parser(project) {
@@ -71,6 +71,9 @@ windows_parser.prototype.update_from_config = function(config) {
     } else throw new Error('update_from_config requires a ConfigParser object');
 
     if (!this.isOldProjectTemplate) {
+        // If there is platform-defined prepare script, require and exec it
+        var platformPrepare = require(path.join(this.projDir, 'cordova', 'lib', 'prepare'));
+        platformPrepare.applyPlatformConfig();
         return;
     }
 
@@ -147,7 +150,7 @@ windows_parser.prototype.update_from_config = function(config) {
         capabilities = capabilitiesRoot._children || [];
 
     capabilities.forEach(function(elem){
-        capabilitiesRoot.remove(0, elem);
+        capabilitiesRoot.remove(elem);
     });
     capabilities.sort(function(a, b) {
         return (a.tag > b.tag)? 1: -1;
@@ -217,6 +220,11 @@ windows_parser.prototype.cordovajs_path = function(libDir) {
     return path.resolve(jsPath);
 };
 
+windows_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
+    return path.resolve(jsPath);
+};
+
 // Replace the www dir with contents of platform_www and app www and updates the csproj file.
 windows_parser.prototype.update_www = function() {
     var projectRoot = util.isCordova(this.projDir);
@@ -240,7 +248,7 @@ windows_parser.prototype.update_www = function() {
 };
 
 // calls the nessesary functions to update the windows8 project
-windows_parser.prototype.update_project = function(cfg) {
+windows_parser.prototype.update_project = function(cfg, opts) {
     // console.log("Updating windows8 project...");
 
     try {
@@ -253,7 +261,7 @@ windows_parser.prototype.update_project = function(cfg) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'] })
+    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'], nohooks: opts? opts.nohooks: [] })
     .then(function() {
         // overrides (merges) are handled in update_www()
         that.add_bom();

@@ -22,11 +22,11 @@
 var fs = require('fs');
 var path = require('path')
    , common = require('./common')
-   , events = require('../../events')
-   , xml_helpers = require(path.join(__dirname, '..', '..', 'util', 'xml-helpers'))
+   , events = require('cordova-common').events
+   , xml_helpers = require('cordova-common').xmlHelpers
    , properties_parser = require('properties-parser')
    , android_project = require('../util/android-project')
-   , CordovaError = require('../../CordovaError')
+   , CordovaError = require('cordova-common').CordovaError
    ;
 var semver = require('semver');
 
@@ -122,7 +122,10 @@ module.exports = {
 
             events.emit('verbose', 'Installing Android library: ' + src);
             var parent = obj.parent;
-            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var parentDir = parent ?
+                    path.resolve(project_dir, getCustomSubprojectRelativeDir(plugin_id, project_dir, parent)) :
+                    project_dir;
+
             var subDir;
             var type = obj.type;
 
@@ -157,7 +160,9 @@ module.exports = {
 
             events.emit('verbose', 'Uninstalling Android library: ' + src);
             var parent = obj.parent;
-            var parentDir = parent ? path.resolve(project_dir, parent) : project_dir;
+            var parentDir = parent ?
+                    path.resolve(project_dir, getCustomSubprojectRelativeDir(plugin_id, project_dir, parent)) :
+                    project_dir;
             var subDir;
             var type = obj.type;
 

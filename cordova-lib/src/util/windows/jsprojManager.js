@@ -25,12 +25,12 @@
 
 
 var util = require('util'),
-    xml_helpers = require('../../util/xml-helpers'),
+    xml_helpers = require('cordova-common').xmlHelpers,
     et = require('elementtree'),
     fs = require('fs'),
     glob = require('glob'),
     shell = require('shelljs'),
-    events = require('../../events'),
+    events = require('cordova-common').events,
     path = require('path'),
     semver = require('semver');
 
@@ -48,7 +48,12 @@ function jsprojManager(location) {
     this.projects = [];
     this.master = this.isUniversalWindowsApp ? new proj(location) : new jsproj(location);
     this.projectFolder = path.dirname(location);
+}
 
+function getProjectName(pluginProjectXML, relative_path) {
+    var projNameElt = pluginProjectXML.find("PropertyGroup/ProjectName");
+    // Falling back on project file name in case ProjectName is missing
+    return !!projNameElt ? projNameElt.text : path.basename(relative_path, path.extname(relative_path));
 }
 
 jsprojManager.prototype = {
@@ -69,7 +74,7 @@ jsprojManager.prototype = {
     addSDKRef: function (incText, targetConditions) {
         events.emit('verbose', 'jsprojManager.addSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
-        var item = createReferenceElement('ItemGroup/SDKReference', incText, targetConditions);
+        var item = createItemGroupElement('ItemGroup/SDKReference', incText, targetConditions);
         this._getMatchingProjects(targetConditions).forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -79,7 +84,33 @@ jsprojManager.prototype = {
         events.emit('verbose', 'jsprojManager.removeSDKRef(incText: ' + incText + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/SDKReference', incText, targetConditions);
+            project.removeItemGroupElement('ItemGroup/SDKReference', incText, targetConditions);
+        });
+    },
+
+    addResourceFileToProject: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.addResourceFile(relPath: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        // add hint path with full path
+        var link = new et.Element('Link');
+        link.text = relPath;
+        var children = [link];
+
+        var copyToOutputDirectory = new et.Element('CopyToOutputDirectory');
+        copyToOutputDirectory.text = 'Always';
+        children.push(copyToOutputDirectory);
+
+        var item = createItemGroupElement('ItemGroup/Content', relPath, targetConditions, children);
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.appendToRoot(item);
+        });
+    },
+
+    removeResourceFileFromProject: function (relPath, targetConditions) {
+        events.emit('verbose', 'jsprojManager.removeResourceFile(relPath: ' + relPath + ', targetConditions: ' + JSON.stringify(targetConditions) + ')');
+
+        this._getMatchingProjects(targetConditions).forEach(function (project) {
+            project.removeItemGroupElement('ItemGroup/Content', relPath, targetConditions);
         });
     },
 
@@ -98,7 +129,7 @@ jsprojManager.prototype = {
             children.push(mdFileTag);
         }
 
-        var item = createReferenceElement('ItemGroup/Reference', path.basename(relPath, extName), targetConditions, children);
+        var item = createItemGroupElement('ItemGroup/Reference', path.basename(relPath, extName), targetConditions, children);
         this._getMatchingProjects(targetConditions).forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -112,7 +143,7 @@ jsprojManager.prototype = {
         var includeText = path.basename(relPath, extName);
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/Reference', includeText, targetConditions);
+            project.removeItemGroupElement('ItemGroup/Reference', includeText, targetConditions);
         });
     },
 
@@ -138,7 +169,7 @@ jsprojManager.prototype = {
 
         // find the guid + name of the referenced project
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
-        var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
+        var projName = getProjectName(pluginProjectXML, relative_path);
 
         // get the project type
         var projectTypeGuid = getProjectTypeGuid(relative_path);
@@ -200,7 +231,7 @@ jsprojManager.prototype = {
 
         // Add the ItemGroup/ProjectReference to each matching cordova project :
         // <ItemGroup><ProjectReference Include="blahblah.csproj"/></ItemGroup>
-        var item = createReferenceElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
+        var item = createItemGroupElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
         matchingProjects.forEach(function (project) {
             project.appendToRoot(item);
         });
@@ -217,7 +248,7 @@ jsprojManager.prototype = {
         // find the guid + name of the referenced project
         var pluginProjectXML = xml_helpers.parseElementtreeSync(relative_path);
         var projectGuid = pluginProjectXML.find("PropertyGroup/ProjectGuid").text;
-        var projName = pluginProjectXML.find("PropertyGroup/ProjectName").text;
+        var projName = getProjectName(pluginProjectXML, relative_path);
 
         // get the project type
         var projectTypeGuid = getProjectTypeGuid(relative_path);
@@ -247,19 +278,20 @@ jsprojManager.prototype = {
         });
 
         this._getMatchingProjects(targetConditions).forEach(function (project) {
-            project.removeReferenceElementItemGroup('ItemGroup/ProjectReference', inserted_path, targetConditions);
+            project.removeItemGroupElement('ItemGroup/ProjectReference', inserted_path, targetConditions);
         });
     },
 
     _getMatchingProjects: function (targetConditions) {
         // If specified, target can be 'all' (default), 'phone' or 'windows'. Ultimately should probably allow a comma
         // separated list, but not needed now.
-        var target = getTarget(targetConditions);
+        var target = getDeviceTarget(targetConditions);
         var versions = getVersions(targetConditions);
 
         if (target || versions) {
             var matchingProjects = this.projects.filter(function (project) {
-                return (!target || target === project.target) && (!versions || semver.satisfies(project.version, versions, /* loose */ true));
+                return (!target || target === project.target) &&
+                    (!versions || semver.satisfies(project.getSemVersion(), versions, /* loose */ true));
             });
 
             if (matchingProjects.length < this.projects.length) {
@@ -330,7 +362,7 @@ function getProjectTypeGuid(projectPath) {
     return null;
 }
 
-function createReferenceElement(path, incText, targetConditions, children) {
+function createItemGroupElement(path, incText, targetConditions, children) {
     path = path.split('/');
     path.reverse();
 
@@ -359,7 +391,7 @@ function createReferenceElement(path, incText, targetConditions, children) {
     return lastElement;
 }
 
-function getTarget(targetConditions) {
+function getDeviceTarget(targetConditions) {
     var target = targetConditions.deviceTarget;
     if (target) {
         target = target.toLowerCase().trim();
@@ -369,7 +401,7 @@ function getTarget(targetConditions) {
             // Allow "win" as alternative to "windows"
             target = "windows";
         } else if (target !== 'phone' && target !== 'windows') {
-            throw new Error('Invalid lib-file target attribute (must be "all", "phone", "windows" or "win"): ' + target);
+            throw new Error('Invalid device-target attribute (must be "all", "phone", "windows" or "win"): ' + target);
         }
     }
     return target;
@@ -378,7 +410,7 @@ function getTarget(targetConditions) {
 function getVersions(targetConditions) {
     var versions = targetConditions.versions;
     if (versions && !semver.validRange(versions, /* loose */ true)) {
-        throw new Error('Invalid lib-file versions attribute (must be a valid a valid node semantic version range): ' + versions);
+        throw new Error('Invalid versions attribute (must be a valid semantic version range): ' + versions);
     }
     return versions;
 }
@@ -405,7 +437,7 @@ proj.prototype = {
         this.xml.getroot().append(element);
     },
 
-    removeReferenceElementItemGroup: function (path, incText, targetConditions) {
+    removeItemGroupElement: function (path, incText, targetConditions) {
         var xpath = path + '[@Include="' + incText + '"]';
         var condition = createConditionAttrib(targetConditions);
         if (condition) {
@@ -416,7 +448,7 @@ proj.prototype = {
         var itemGroup = this.xml.find(xpath);
         if (itemGroup) {
             this.touched = true;
-            this.xml.getroot().remove(0, itemGroup);
+            this.xml.getroot().remove(itemGroup);
         }
     },
 
@@ -470,12 +502,12 @@ proj.prototype = {
 
             filesToRemove.forEach(function (file) {
                 // remove file reference
-                group.remove(0, file);
+                group.remove(file);
             });
             // remove ItemGroup if empty
             if (group.findall('*').length < 1) {
                 that.touched = true;
-                root.remove(0, group);
+                root.remove(group);
             }
         });
     }
@@ -524,6 +556,21 @@ util.inherits(jsproj, proj);
 jsproj.prototype.target = null;
 jsproj.prototype.version = null;
 
+// Returns valid semantic version (http://semver.org/).
+jsproj.prototype.getSemVersion = function () {
+    // For example, for version 10.0.10240.0 we will return 10.0.10240 (first three components)
+    var semVersion = this.version;
+    var splittedVersion = semVersion.split('.');
+    if (splittedVersion.length > 3) {
+        semVersion = splittedVersion.splice(0, 3).join('.');
+    }
+
+    return semVersion;
+	// Alternative approach could be replacing last dot with plus sign to
+	// be complaint w/ semver specification, for example
+	// 10.0.10240.0 -> 10.0.10240+0
+};
+
 /* Common support functions */
 
 function createConditionAttrib(targetConditions) {
@@ -533,7 +580,7 @@ function createConditionAttrib(targetConditions) {
             // Specifcally allow "arm" as alternative to "ARM"
             arch = "ARM";
         } else if (arch !== "x86" && arch !== "x64" && arch !== "ARM") {
-            throw new Error('Invalid lib-file arch attribute (must be "x86", "x64" or "ARM"): ' + arch);
+            throw new Error('Invalid arch attribute (must be "x86", "x64" or "ARM"): ' + arch);
         }
         return "'$(Platform)'=='" + arch + "'";
     }

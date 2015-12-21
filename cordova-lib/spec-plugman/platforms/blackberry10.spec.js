@@ -21,10 +21,10 @@ var blackberry10 = require('../../src/plugman/platforms/blackberry10'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
-    os = require('osenv'),
+    os = require('os'),
     temp = path.join(os.tmpdir(), 'plugman'),
     blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*');
-var PluginInfo = require('../../src/PluginInfo');
+var PluginInfo = require('cordova-common').PluginInfo;
 
 var plugins = {
     dummy: new PluginInfo(path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin')),

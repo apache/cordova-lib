@@ -23,10 +23,18 @@ var fs = require('fs'),
     path = require('path'),
     shell = require('shelljs'),
     util = require('../util'),
+    CordovaError = require('cordova-common').CordovaError,
     Q = require('q'),
     Parser = require('./parser');
 
+function dirExists(dir) {
+    return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
+}
+
 function browser_parser(project) {
+    if (!dirExists(project) || !dirExists(path.join(project, 'cordova'))) {
+        throw new CordovaError('The provided path "' + project + '" is not a valid browser project.');
+    }
 
     // Call the base class constructor
     Parser.call(this, 'browser', project);
@@ -50,6 +58,11 @@ browser_parser.prototype.www_dir = function() {
 // Used for creating platform_www in projects created by older versions.
 browser_parser.prototype.cordovajs_path = function(libDir) {
     var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
+    return path.resolve(jsPath);
+};
+
+browser_parser.prototype.cordovajs_src_path = function(libDir) {
+    var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 

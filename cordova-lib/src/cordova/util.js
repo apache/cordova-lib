@@ -20,14 +20,19 @@
 /* jshint sub:true */
 var fs            = require('fs'),
     path          = require('path'),
-    CordovaError  = require('../CordovaError'),
+    events        = require('cordova-common').events,
+    CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
-    url           = require('url');
+    url           = require('url'),
+    npm           = require('npm'),
+    nopt          = require('nopt'),
+    Q             = require('q'),
+    semver        = require('semver');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
 if (!global_config_path) {
-	var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
+    var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
     global_config_path = path.join(HOME, '.cordova');
 }
 
@@ -56,6 +61,8 @@ exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
+exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
+exports.getAvailableNpmVersions = getAvailableNpmVersions;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -228,7 +235,7 @@ function preProcessOptions (inputOptions) {
     }
     result.verbose = result.verbose || false;
     result.platforms = result.platforms || [];
-    result.options = result.options || [];
+    result.options = ensurePlatformOptionsCompatible(result.options);
 
     var projectRoot = this.isCordova();
 
@@ -243,7 +250,57 @@ function preProcessOptions (inputOptions) {
         result.platforms = projectPlatforms;
     }
 
+    if (!result.options.buildConfig && fs.existsSync(path.join(projectRoot, 'build.json'))) {
+        result.options.buildConfig = path.join(projectRoot, 'build.json');
+    }
+
     return result;
+}
+
+/**
+ * Converts options, which is passed to platformApi from old format (array of
+ *   plain strings) to new - nopt-parsed object + array of platform-specific
+ *   options. If options are already in new the format - returns them unchanged.
+ *
+ * @param   {Object|String[]}  platformOptions  A platform options (array of
+ *   strings or object) which is passed down to platform scripts/platformApi
+ *   polyfill.
+ *
+ * @return  {Object}                            Options, converted to new format
+ */
+function ensurePlatformOptionsCompatible (platformOptions) {
+    var opts = platformOptions || {};
+
+    if (!Array.isArray(opts))
+        return opts;
+
+    events.emit('warn', 'The format of cordova.raw.* methods "options" argument was changed in 5.4.0. ' +
+        '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
+        'is still supported, consider updating your cordova.raw.* method calls to use new argument format.');
+
+    var knownArgs = [
+        'debug',
+        'release',
+        'device',
+        'emulator',
+        'nobuild',
+        'list',
+        'buildConfig',
+        'target',
+        'archs'
+    ];
+
+    opts = nopt({}, {}, opts, 0);
+    opts.argv = Object.keys(opts)
+    .filter(function (arg) {
+        return arg !== 'argv' && knownArgs.indexOf(arg) === -1;
+    }).map(function (arg) {
+        return opts[arg] === true ?
+            '--' + arg :
+            '--' + arg + '="' + opts[arg].toString() + '"';
+    });
+
+    return opts;
 }
 
 function isDirectory(dir) {
@@ -284,4 +341,45 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
             set : function(v) { val = v; }
         });
     }
+}
+
+/**
+ * Returns the latest version of the specified module on npm that matches the specified version or range.
+ * @param {string} module_name - npm module name.
+ * @param {string} version - semver version or range (loose allowed).
+ * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
+ */
+function getLatestMatchingNpmVersion(module_name, version) {
+    var validVersion = semver.valid(version, /* loose */ true);
+    if (validVersion) {
+        // This method is really intended to work with ranges, so if a version rather than a range is specified, we just
+        // assume it is available and return it, bypassing the need for the npm call.
+        return Q(validVersion);
+    }
+
+    var validRange = semver.validRange(version, /* loose */ true);
+    if (!validRange) {
+        // Just return what we were passed
+        return Q(version);
+    }
+
+    return getAvailableNpmVersions(module_name).then(function (versions) {
+        return semver.maxSatisfying(versions, validRange) || version;
+    });
+}
+
+/**
+ * Returns a promise for an array of versions available for the specified npm module.
+ * @param {string} module_name - npm module name.
+ * @returns {Promise} Promise for an array of versions.
+ */
+function getAvailableNpmVersions(module_name) {
+    return Q.nfcall(npm.load).then(function () {
+        return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
+            // result is an object in the form:
+            //     {'<version>': {versions: ['1.2.3', '1.2.4', ...]}}
+            // (where <version> is the latest version)
+            return result[Object.keys(result)[0]].versions;
+        });
+    });
 }
