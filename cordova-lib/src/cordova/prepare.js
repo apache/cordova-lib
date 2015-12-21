@@ -98,7 +98,7 @@ function preparePlatforms (platformList, projectRoot, options) {
             // Please note that plugins' changes, such as installed js files, assets and
             // config changes is not being reinstalled on each prepare.
             var platformApi = platforms.getPlatformApi(platform);
-            return platformApi.prepare(project)
+            return platformApi.prepare(project, options)
             .then(function () {
                 if (platform === 'windows' && !(platformApi instanceof PlatformApiPoly)) {
                     // Windows Api doesn't fire 'pre_package' hook, so we fire it here

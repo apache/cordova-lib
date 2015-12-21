@@ -147,6 +147,7 @@ module.exports = function plugin(command, targets, opts) {
                         var fetchOptions = {
                             searchpath: searchPath,
                             noregistry: opts.noregistry,
+                            nohooks: opts.nohooks,
                             link: opts.link,
                             pluginInfoProvider: pluginInfoProvider,
                             variables: opts.cli_variables,
@@ -270,7 +271,7 @@ module.exports = function plugin(command, targets, opts) {
                 return hooksRunner.fire('after_plugin_rm', opts);
             });
         case 'search':
-            return hooksRunner.fire('before_plugin_search')
+            return hooksRunner.fire('before_plugin_search', opts)
             .then(function() {
                 var link = 'http://cordova.apache.org/plugins/';
                 if (opts.plugins.length > 0) {
@@ -284,7 +285,7 @@ module.exports = function plugin(command, targets, opts) {
                 
                 return Q.resolve();
             }).then(function() {
-                return hooksRunner.fire('after_plugin_search');
+                return hooksRunner.fire('after_plugin_search', opts);
             });
         case 'save':
             // save the versions/folders/git-urls of currently installed plugins into config.xml
@@ -380,9 +381,9 @@ function getVersionFromConfigFile(plugin, cfg){
     return pluginEntry && pluginEntry.spec;
 }
 
-function list(projectRoot, hooksRunner) {
+function list(projectRoot, hooksRunner, opts) {
     var pluginsList = [];
-    return hooksRunner.fire('before_plugin_ls')
+    return hooksRunner.fire('before_plugin_ls', opts)
     .then(function() {
         var pluginsDir = path.join(projectRoot, 'plugins');
         // TODO: This should list based off of platform.json, not directories within plugins/
@@ -427,7 +428,7 @@ function list(projectRoot, hooksRunner) {
         events.emit('results', lines.join('\n'));
     })
     .then(function() {
-        return hooksRunner.fire('after_plugin_ls');
+        return hooksRunner.fire('after_plugin_ls', opts);
     })
     .then(function() {
         return pluginsList;

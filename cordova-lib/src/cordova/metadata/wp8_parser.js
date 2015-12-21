@@ -248,7 +248,7 @@ wp8_parser.prototype.update_www = function() {
 
 // calls the nessesary functions to update the wp8 project
 // Returns a promise.
-wp8_parser.prototype.update_project = function(cfg) {
+wp8_parser.prototype.update_project = function(cfg, opts) {
     try {
         this.update_from_config(cfg);
     } catch(e) {
@@ -260,7 +260,7 @@ wp8_parser.prototype.update_project = function(cfg) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'] })
+    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['wp8'], nohooks: opts? opts.nohooks: []})
     .then(function() {
         util.deleteSvnFolders(that.www_dir());
     });
