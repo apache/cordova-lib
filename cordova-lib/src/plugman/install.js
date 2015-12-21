@@ -257,7 +257,7 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
             // CB-7183: security check for scriptSrc path escaping outside the plugin
             var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
             if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
-                throw new Error('scriptSrc '+scriptSrcPath+' is out of plugin dir'+plugin_dir);
+                throw new Error('security violation: scriptSrc '+scriptSrcPath+' is out of plugin dir '+plugin_dir);
             }
             if(platformIndex > -1 || engine.platform === '*'){
                 uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
