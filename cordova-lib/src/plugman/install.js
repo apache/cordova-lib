@@ -375,7 +375,8 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                         id: pluginInfo.id,
                         pluginInfo: pluginInfo,
                         platform: install.platform,
-                        dir: install.top_plugin_dir
+                        dir: install.top_plugin_dir,
+                        variables: filtered_variables
                     }
                 };
 
