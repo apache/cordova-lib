@@ -596,11 +596,6 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     options.variables = filtered_variables;
-    // Set up platform to install asset files/js modules to <platform>/platform_www dir
-    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
-    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
-    // files platform_www directory, so they'll be applied to www on each prepare.
-    options.usePlatformWww = true;
 
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
