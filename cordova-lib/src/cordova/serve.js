@@ -128,6 +128,36 @@ module.exports = function server(port, opts) {
             var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
             server.app.use('/' + platform + '/www', serve.static(locations.www));
             server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
+
+            // https://github.com/apache/cordova-lib/blob/master/cordova-lib/src/cordova/serve.js
+            server.app.put('/' + platform + '/*', function (req, res, next) {
+              var file = './' + req.url.split('/').slice(2).join('/')
+              var	stream = fs.createWriteStream(file);
+              // console.log('Accessing the secret section ...');
+              // console.log(url.parse(req.url).pathname);
+              stream.on('error', function(error) {
+                res.writeHead(400, {'Content-Type' : 'text/plain',
+                                    'Access-Control-Allow-Origin' : '*'});
+                res.write('File could not be created. Did you forget to create the src directory on the server?');
+
+                res.end();
+              });
+              stream.on('close', function() {
+                res.writeHead(201, {'Content-Type' : 'text/plain',
+                                    'Access-Control-Allow-Origin' : '*'});
+                res.end();
+              });
+              req.setEncoding('utf8');
+              req.on('data', function(data) {
+                stream.write(data);
+              });
+              req.on('end', function() {
+                stream.end();
+              });
+
+              ///next(); // pass control to the next handler
+            })
+
         });
         server.app.get('*', handleRoot);
 
