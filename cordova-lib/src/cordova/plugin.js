@@ -183,16 +183,13 @@ module.exports = function plugin(command, targets, opts) {
                                 searchpath: searchPath,
                                 noregistry: opts.noregistry,
                                 link: opts.link,
-                                pluginInfoProvider: pluginInfoProvider
-                            };
-
-                            if (!('www_dir' in options) || options.www_dir === undefined) {
+                                pluginInfoProvider: pluginInfoProvider,
                                 // Set up platform to install asset files/js modules to <platform>/platform_www dir
                                 // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
                                 // and files from 'platform_www' merged into 'www'. Thus we need to persist these
                                 // files platform_www directory, so they'll be applied to www on each prepare.
-                              options.usePlatformWww = true;
-                            }
+                                usePlatformWww: true
+                            };
 
                             events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
                             return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
