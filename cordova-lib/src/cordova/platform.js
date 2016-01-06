@@ -93,6 +93,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                if(platform === 'amazon-fireos') {
+                    events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
+                }
+                if(platform === 'wp8') {
+                    events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
+                }
                 if (platform && !spec && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
