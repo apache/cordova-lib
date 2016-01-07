@@ -247,6 +247,22 @@ describe('fetch', function() {
         });
     });
 
+    describe('fetch recursive error CB-8809', function(){
+
+        var srcDir = path.join(__dirname, 'plugins/recursivePlug');
+        var appDir = path.join(__dirname, 'plugins/recursivePlug/demo');
+
+        it('should skip copy to avoid recursive error', function(done) {
+
+            var cp = spyOn(shell, 'cp').andCallFake(function(){});
+
+            wrapper(fetch(srcDir, appDir),done, function() {
+                expect(cp).not.toHaveBeenCalled();
+            });
+        });
+
+    });
+
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
         var rm, sym, save_metadata;
