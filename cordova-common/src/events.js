@@ -16,4 +16,22 @@
     specific language governing permissions and limitations
     under the License.
 */
-module.exports = new (require('events').EventEmitter)();
+
+var EventEmitter = require('events').EventEmitter;
+var INSTANCE;
+
+function get () {
+    return INSTANCE || (INSTANCE = new EventEmitter());
+}
+
+function set (value) {
+    if (!(value instanceof EventEmitter))
+        throw new Error('EventEmitter instance must be used to override events');
+
+    INSTANCE = value;
+
+    return module.exports;
+}
+
+module.exports.get = get;
+module.exports.set = set;

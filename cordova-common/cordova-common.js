@@ -19,9 +19,10 @@
 
 /* jshint node:true */
 
+var events = require('./src/events');
+
 // For now expose plugman and cordova just as they were in the old repos
 exports = module.exports = {
-    events: require('./src/events'),
     superspawn: require('./src/superspawn'),
 
     ActionStack: require('./src/ActionStack'),
@@ -40,3 +41,12 @@ exports = module.exports = {
 
     xmlHelpers: require('./src/util/xml-helpers')
 };
+
+Object.defineProperty(module.exports, 'events', {
+    get: function () {
+        return events.get();
+    },
+    set: function (value) {
+        return events.set(value);
+    }
+});

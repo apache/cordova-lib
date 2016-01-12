@@ -347,7 +347,7 @@ ConfigParser.prototype = {
         if (null === pluginElement) {
             var legacyFeature =  this.doc.find('./feature/param[@name="id"][@value="' + id + '"]/..');
             if(legacyFeature){
-                 events.emit('log', 'Found deprecated feature entry for ' + id +' in config.xml.');
+                events.get().emit('log', 'Found deprecated feature entry for ' + id +' in config.xml.');
                 return featureToPlugin(legacyFeature);
             }
             return undefined;
