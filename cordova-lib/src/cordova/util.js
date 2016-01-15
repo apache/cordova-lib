@@ -27,7 +27,8 @@ var fs            = require('fs'),
     npm           = require('npm'),
     nopt          = require('nopt'),
     Q             = require('q'),
-    semver        = require('semver');
+    semver        = require('semver'),
+    superspawn    = require('cordova-common').superspawn;
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -63,6 +64,7 @@ exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
+exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -182,6 +184,22 @@ function listPlatforms(project_dir) {
     var subdirs = fs.readdirSync(platforms_dir);
     return subdirs.filter(function(p) {
         return Object.keys(core_platforms).indexOf(p) > -1;
+    });
+}
+
+function getInstalledPlatformsWithVersions(project_dir) {
+    var result = {};
+    var platforms_on_fs = listPlatforms(project_dir);
+
+    return Q.all(platforms_on_fs.map(function(p) {
+        return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
+        .then(function(v) {
+            result[p] = v || null;
+        }, function(v) {
+            result[p] = 'broken';
+        });
+    })).then(function() {
+        return result;
     });
 }
 

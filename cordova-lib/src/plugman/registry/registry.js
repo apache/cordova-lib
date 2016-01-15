@@ -89,20 +89,18 @@ module.exports = {
      */
     info: function(plugin) {
         plugin = plugin.shift();
-        return (Q.nbind(npm.load, npm))
-        .then(function() {
-            // Set cache timout limits to 0 to force npm to call the registry
-            // even when it has a recent .cache.json file.
-            npm.config.set('cache-min', 0);
-            npm.config.set('cache-max', 0);
-            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true );
-        })
-        .then(function(info) {
-            // Plugin info should be accessed as info[version]. If a version
-            // specifier like >=x.y.z was used when calling npm view, info
-            // can contain several versions, but we take the first one here.
-            var version = Object.keys(info)[0];
-            return info[version];
+        return npmhelper.loadWithSettingsThenRestore({
+            'cache-min': 0,
+            'cache-max': 0
+        }, function() {
+            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true )
+            .then(function(info) {
+                // Plugin info should be accessed as info[version]. If a version
+                // specifier like >=x.y.z was used when calling npm view, info
+                // can contain several versions, but we take the first one here.
+                var version = Object.keys(info)[0];
+                return info[version];
+            });
         });
     }
 };

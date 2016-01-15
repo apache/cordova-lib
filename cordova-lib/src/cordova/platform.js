@@ -492,26 +492,21 @@ function check(hooksRunner, projectRoot) {
 }
 
 function list(hooksRunner, projectRoot, opts) {
-    var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
     return hooksRunner.fire('before_platform_ls', opts)
     .then(function() {
-        // Acquire the version number of each platform we have installed, and output that too.
-        return Q.all(platforms_on_fs.map(function(p) {
-            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-            .then(function(v) {
-                if (!v) return p;
-                return p + ' ' + v;
-            }, function(v) {
-                return p + ' broken';
-            });
-        }));
-    }).then(function(platformsText) {
+        return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
+    }).then(function(platformMap) {
+        var platformsText = [];
+        for (var plat in platformMap) {
+            platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
+        }
+
         platformsText = addDeprecatedInformationToPlatforms(platformsText);
         var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
-            return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
+            return !platformMap[p]; // Only those not already installed.
         });
 
         available = available.map(function (p){
