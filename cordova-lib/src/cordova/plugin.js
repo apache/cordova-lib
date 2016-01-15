@@ -31,6 +31,7 @@ var cordova_util  = require('./util'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
     events        = require('cordova-common').events,
     metadata      = require('../plugman/util/metadata'),
+    registry      = require('../plugman/registry/registry'),
     chainMap      = require('../util/promise-util').Q_chainmap,
     pkgJson       = require('../../package.json'),
     opener        = require('opener');
@@ -121,32 +122,7 @@ module.exports = function plugin(command, targets, opts) {
                                 target = target.substring(0, target.length - 1);
                             }
 
-                            var parts = target.split('@');
-                            var id = parts[0];
-                            var version = parts[1];
-
-                            // If no version is specified, retrieve the version (or source) from config.xml
-                            if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
-                                events.emit('verbose', 'no version specified, retrieving version from config.xml');
-                                var ver = getVersionFromConfigFile(id, cfg);
-
-                                if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
-                                    target = ver;
-                                } else {
-                                    //if version exists from config.xml, use that
-                                    if(ver) {
-                                        target = ver ? (id + '@' + ver) : target;
-                                    } else {
-                                        //fetch pinned version from cordova-lib
-                                        var pinnedVer = pkgJson.cordovaPlugins[id];
-                                        target = pinnedVer ? (id + '@' + pinnedVer) : target;
-                                    }
-                                }
-                            }
-
                             // Fetch the plugin first.
-                            events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-
                             var fetchOptions = {
                                 searchpath: searchPath,
                                 noregistry: opts.noregistry,
@@ -157,7 +133,12 @@ module.exports = function plugin(command, targets, opts) {
                                 is_top_level: true
                             };
 
-                            return plugman.raw.fetch(target, pluginPath, fetchOptions)
+                            return determinePluginTarget(projectRoot, cfg, target)
+                            .then(function(resolvedTarget) {
+                                target = resolvedTarget;
+                                events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
+                                return plugman.raw.fetch(target, pluginPath, fetchOptions);
+                            })
                             .then(function (directory) {
                                 return pluginInfoProvider.get(directory);
                             });
@@ -305,6 +286,42 @@ module.exports = function plugin(command, targets, opts) {
     });
 };
 
+function determinePluginTarget(projectRoot, cfg, target) {
+    var parts = target.split('@');
+    var id = parts[0];
+    var version = parts[1];
+
+    // If no version is specified, retrieve the version (or source) from config.xml
+    if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
+        events.emit('verbose', 'No version specified, retrieving version from config.xml');
+        var ver = getVersionFromConfigFile(id, cfg);
+
+        if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
+            target = ver;
+        } else if (ver) {
+            // If version exists in config.xml, use that
+            target = id + '@' + ver;
+        } else {
+            // If no version is given at all, We need to decide what version to
+            // fetch based on the current project
+            events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
+            return registry.info([id])
+            .then(function(pluginInfo) {
+                return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
+            })
+            .then(function(fetchVersion) {
+                // Fallback to pinned version if available
+                fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
+                return fetchVersion ? (id + '@' + fetchVersion) : target;
+            });
+        }
+    }
+    return Q(target);
+}
+
+// Exporting for testing purposes
+module.exports.getFetchVersion = getFetchVersion;
+
 function validatePluginId(pluginId, installedPlugins) {
     if (installedPlugins.indexOf(pluginId) >= 0) {
         return pluginId;
@@ -395,10 +412,7 @@ function list(projectRoot, hooksRunner, opts) {
     var pluginsList = [];
     return hooksRunner.fire('before_plugin_ls', opts)
     .then(function() {
-        var pluginsDir = path.join(projectRoot, 'plugins');
-        // TODO: This should list based off of platform.json, not directories within plugins/
-        var pluginInfoProvider = new PluginInfoProvider();
-        return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
+        return getInstalledPlugins(projectRoot);
     })
     .then(function(plugins) {
         if (plugins.length === 0) {
@@ -443,6 +457,13 @@ function list(projectRoot, hooksRunner, opts) {
     .then(function() {
         return pluginsList;
     });
+}
+
+function getInstalledPlugins(projectRoot) {
+    var pluginsDir = path.join(projectRoot, 'plugins');
+    // TODO: This should list based off of platform.json, not directories within plugins/
+    var pluginInfoProvider = new PluginInfoProvider();
+    return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
 }
 
 function saveToConfigXmlOn(config_json, options){
@@ -511,4 +532,132 @@ function versionString(version) {
     }
 
     return null;
+}
+
+/**
+ * Gets the version of a plugin that should be fetched for a given project based
+ * on the plugin's engine information from NPM and the platforms/plugins installed
+ * in the project. The cordovaDependencies object in the package.json's engines
+ * entry takes the form of an object that maps plugin versions to a series of
+ * constraints and semver ranges. For example:
+ *
+ *     { plugin-version: { constraint: semver-range, ...}, ...}
+ *
+ * Constraint can be a plugin, platform, or cordova version. Plugin-version
+ * can be either a single version (e.g. 3.0.0) or an upper bound (e.g. <3.0.0)
+ *
+ * @param {string}  projectRoot     The path to the root directory of the project
+ * @param {object}  pluginInfo      The NPM info of the plugin be fetched (e.g. the
+ *                                  result of calling `registry.info()`)
+ * @param {string}  cordovaVersion  The semver version of cordova-lib
+ *
+ * @return {Promise}                A promise that will resolve to either a string
+ *                                  if there is a version of the plugin that this
+ *                                  project satisfies or null if there is not
+ */
+function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
+    // Figure out the project requirements
+    if (pluginInfo.engines && pluginInfo.engines.cordovaDependencies) {
+        var pluginList = getInstalledPlugins(projectRoot);
+        var pluginMap = {};
+
+        pluginList.forEach(function(plugin) {
+            pluginMap[plugin.id] = plugin.version;
+        });
+
+        return cordova_util.getInstalledPlatformsWithVersions(projectRoot)
+        .then(function(platformVersions) {
+            return determinePluginVersionToFetch(
+                pluginInfo.versions,
+                pluginInfo.engines.cordovaDependencies,
+                pluginMap,
+                platformVersions,
+                cordovaVersion);
+        });
+    } else {
+        // If we have no engine, we want to fall back to the default behavior
+        events.emit('verbose', 'No plugin engine info found, falling back to latest or pinned version');
+        return Q(null);
+    }
+}
+
+function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformMap, cordovaVersion) {
+    var upperBounds = [];
+    var versions = [];
+
+    for(var version in engine) {
+        if(version.indexOf('<') === 0 && semver.valid(version.substring(1))) {
+            // We only care about upper bounds that our project does not support
+            if(!satisfiesProjectRequirements(engine[version], pluginMap, platformMap, cordovaVersion, version)) {
+                upperBounds.push(version);
+            }
+        } else if(semver.valid(version) && allVersions.indexOf(version) !== -1) {
+            versions.push(version);
+        }
+    }
+
+    // Sort in descending order; we want to start at latest and work back
+    versions.sort(semver.rcompare);
+
+    for(var i = 0; i < versions.length; i++) {
+        for(var j = 0; j < upperBounds.length; j++) {
+            if(semver.satisfies(versions[i], upperBounds[j])) {
+                // Because we sorted in desc. order, if we find an upper bound
+                // that applies to this version (and the ones below) we can just
+                // quit (we already filtered out ones that our project supports)
+                return null;
+            }
+        }
+
+        // Check the version constraint
+        if(satisfiesProjectRequirements(engine[versions[i]], pluginMap, platformMap, cordovaVersion, versions[i])) {
+            // Because we sorted in descending order, we can stop searching once
+            // we hit a satisfied constraint
+            var latest = allVersions[allVersions.length - 1];
+            var index = versions.indexOf(versions[i]);
+            if(index > 0) {
+                // Return the highest plugin version below the next highest
+                // constrained version
+                var nextHighest = versions[index - 1];
+                var targetVersion = allVersions[allVersions.indexOf(nextHighest) - 1];
+
+                events.emit('warn', 'Fetching highest version of plugin that this project supports: ' + targetVersion + ' (latest is ' + latest + ')');
+                return targetVersion;
+            } else {
+                // Return the latest plugin version
+                return latest;
+            }
+        }
+    }
+
+    events.emit('warn', 'Current project does not satisfy the engine requirements specified by any version of this plugin. Fetching latest or pinned version of plugin anyway (may be incompatible)');
+
+    // No constraints were satisfied
+    return null;
+}
+
+function satisfiesProjectRequirements(reqs, pluginMap, platformMap, cordovaVersion, constraintVersion) {
+    for (var req in reqs) {
+        var okay = true;
+
+        if(pluginMap[req]) {
+            okay = semver.satisfies(pluginMap[req], reqs[req]);
+        } else if(req === 'cordova') {
+            okay = semver.satisfies(cordovaVersion, reqs[req]);
+        } else if(req.indexOf('cordova-') === 0) {
+            // Might be a platform constraint
+            var platform = req.substring(8);
+            if(platformMap[platform]) {
+                okay = semver.satisfies(platformMap[platform], reqs[req]);
+            }
+        }
+
+        if(!okay) {
+            events.emit('verbose', 'Project does not fulfill plugin version ' + constraintVersion +
+                ' requirement ' + req + ': ' + reqs[req]);
+            return false;
+        }
+    }
+
+    return true;
 }
