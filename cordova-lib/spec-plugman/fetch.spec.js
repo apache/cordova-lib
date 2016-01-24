@@ -251,15 +251,26 @@ describe('fetch', function() {
 
         var srcDir = path.join(__dirname, 'plugins/recursivePlug');
         var appDir = path.join(__dirname, 'plugins/recursivePlug/demo');
-
-        it('should skip copy to avoid recursive error', function(done) {
-
-            var cp = spyOn(shell, 'cp').andCallFake(function(){});
-
-            wrapper(fetch(srcDir, appDir),done, function() {
-                expect(cp).not.toHaveBeenCalled();
+        
+        if(/^win/.test(process.platform)) {
+            it('should copy all but the /demo/ folder',function(done) {
+                var cp = spyOn(shell, 'cp');
+                wrapper(fetch(srcDir, appDir),done, function() {
+                    expect(cp).toHaveBeenCalledWith('-R',path.join(srcDir,'asset.txt'),path.join(appDir,'test-recursive'));
+                    expect(cp).not.toHaveBeenCalledWith('-R',srcDir,path.join(appDir,'test-recursive'));
+                });
             });
-        });
+        }
+        else {
+            it('should skip copy to avoid recursive error', function(done) {
+
+                var cp = spyOn(shell, 'cp').andCallFake(function(){});
+
+                wrapper(fetch(srcDir, appDir),done, function() {
+                    expect(cp).not.toHaveBeenCalled();
+                });
+            });
+        }
 
     });
 
