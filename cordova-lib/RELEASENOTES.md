@@ -20,6 +20,30 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.0.0 (Jan 25, 2016)
+* CB-10432 Fix plugin installation for newly added platform
+* CB-10423 allow recursive folder copy skipping whatever .. was
+* CB-10394 updated pinned **Android** version to `~5.1.0`
+* CB-10299 updated pinned **windows** version to `~4.3.0`
+* CB-10274 Make www directory the default for plugman
+* CB-10121 added deprecation notice for **amazon-fireos** and **wp8**
+* CB-7183 prevent read/write/modify files outside project from plugins
+* CB-8455 Added `--nohooks` option.
+* CB-10193 Add deprecation notice about `pre_package` removal
+* CB-10147 updated pinned **iOS** to `~4.0.0`
+* CB-10125: Android build fails on read-only files.
+* CB-6698 Fix directory resolution of framework with parent.
+* CB-9653 Adds copying of **blackberry10** splashscreens
+* **Ubuntu** support for the new plugin naming convention
+* CB-9957 removed support for fetching from Cordova Plugins Registry. Only fetch plugins from **npm** now.
+* CB-10108 Fixes **android** frameworks installation/removal
+* CB-9964 Added `--template` support to `cordova create`
+* Removing the `--usegit` flag from `cordova platform`. Recommended method is to use `cordova platform add git_url#branch`
+* CB-10081 pinned plugin versions. These are default versions fetched when adding a plugin.
+* add missing `package_suffix` function on **amazon-fireos** platform for plugman installations.
+* CB-10057 - removing `<access>` tag does not remove `ATS` entry
+* CB-10048 clobbering of `<access>` tags to `ATS` directives
+
 ### 5.4.1 (Nov 19, 2015)
 * CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`. 
 * CB-9981 `path.parse` only available on `node 0.12+`.
