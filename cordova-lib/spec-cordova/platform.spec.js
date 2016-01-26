@@ -30,6 +30,7 @@ var helpers = require('./helpers'),
     platform = rewire('../src/cordova/platform.js');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
+var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
 
 describe('platform end-to-end', function () {
 
@@ -40,33 +41,7 @@ describe('platform end-to-end', function () {
 
     beforeEach(function() {
         shell.rm('-rf', tmpDir);
-    });
-    afterEach(function() {
-        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
-    });
 
-    // Factoring out some repeated checks.
-    function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms: (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
-        });
-    }
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms: (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
-    // The flows we want to test are add, rm, list, and upgrade.
-    // They should run the appropriate hooks.
-    // They should fail when not inside a Cordova project.
-    // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('should successfully run', function(done) {
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
         shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
@@ -94,6 +69,34 @@ describe('platform end-to-end', function () {
         });
 
         events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms: (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms: (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+
+    // The flows we want to test are add, rm, list, and upgrade.
+    // They should run the appropriate hooks.
+    // They should fail when not inside a Cordova project.
+    // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
+    it('should successfully run', function(done) {
 
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {
@@ -121,6 +124,27 @@ describe('platform end-to-end', function () {
         .fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
+    });
+
+    it('should install plugins correctly while adding platform', function(done) {
+
+        cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
+        .then(function() {
+            return cordova.raw.platform('add', [helpers.testPlatform]);
+        })
+        .then(function () {
+            return cordova.raw.prepare([helpers.testPlatform]);
+        })
+        .then(function() {
+            // Check the platform add was successful.
+            expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
+            // Check that plugin files exists in www dir
+            expect(path.join(project, 'platforms', helpers.testPlatform, 'assets/www/test.js')).toExist();
+        })
+        .fail(function(err) {
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
     });
 });
 
