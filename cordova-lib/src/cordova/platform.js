@@ -527,8 +527,8 @@ function list(hooksRunner, projectRoot, opts) {
 }
 
 function addDeprecatedInformationToPlatforms(platformsList){
-    platformsList = platformsList.replace("wp8", "wp8 (deprecated)");
-    platformsList = platformsList.replace("amazon-fireos", "amazon-fireos (deprecated)");
+    platformsList = platformsList.replace('wp8', 'wp8 (deprecated)');
+    platformsList = platformsList.replace('amazon-fireos', 'amazon-fireos (deprecated)');
     return platformsList;
 }
 
