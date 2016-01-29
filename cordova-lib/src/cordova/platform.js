@@ -511,18 +511,32 @@ function list(hooksRunner, projectRoot, opts) {
             });
         }));
     }).then(function(platformsText) {
+        platformsText = addDeprecatedInformationToPlatforms(platformsText);
         var results = 'Installed platforms: ' + platformsText.sort().join(', ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
             return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
         });
-        results += 'Available platforms: ' + available.sort().join(', ');
+
+        available = addDeprecatedInformationToPlatforms(available);
+        results += 'Available platforms: ' + available.sort().join(', ');        
 
         events.emit('results', results);
     }).then(function() {
         return hooksRunner.fire('after_platform_ls', opts);
     });
+}
+
+function addDeprecatedInformationToPlatforms(platformsList){
+    platformsList = platformsList.map(function(p){
+        var platformKey = p.split(' ')[0]; //Remove Version Information
+        if(platforms[platformKey].deprecated){
+            p = p.concat(' ', '(deprecated)');
+        }
+        return p;
+    });
+    return platformsList;
 }
 
 // Returns a promise.
