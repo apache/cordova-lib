@@ -518,11 +518,18 @@ function list(hooksRunner, projectRoot, opts) {
             return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
         });
         results += 'Available platforms: ' + available.sort().join(', ');
+        results = addDeprecatedInformationToPlatforms(results);
 
         events.emit('results', results);
     }).then(function() {
         return hooksRunner.fire('after_platform_ls', opts);
     });
+}
+
+function addDeprecatedInformationToPlatforms(platformsList){
+    platformsList = platformsList.replace("wp8", "wp8(deprecated)");
+    platformsList = platformsList.replace("amazon-fireos", "amazon-fireos(deprecated)");
+    return platformsList;
 }
 
 // Returns a promise.
