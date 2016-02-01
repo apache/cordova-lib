@@ -28,7 +28,7 @@ var iswin32 = process.platform == 'win32';
 
 // On Windows, spawn() for batch files requires absolute path & having the extension.
 function resolveWindowsExe(cmd) {
-    var winExtensions = ['.exe', '.cmd', '.bat', '.js', '.vbs'];
+    var winExtensions = ['.exe', '.bat', '.cmd', '.js', '.vbs'];
     function isValidExe(c) {
         return winExtensions.indexOf(path.extname(c)) !== -1 && fs.existsSync(c);
     }
