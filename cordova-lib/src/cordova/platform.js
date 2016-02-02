@@ -93,6 +93,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                if(platform === 'amazon-fireos') {
+                    events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
+                }
+                if(platform === 'wp8') {
+                    events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
+                }
                 if (platform && !spec && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
@@ -628,7 +634,16 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
             plugin = path.basename(plugin);
 
             var options = {
-                searchpath: opts.searchpath
+                searchpath: opts.searchpath,
+                // Set up platform to install asset files/js modules to <platform>/platform_www dir
+                // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+                // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+                // files platform_www directory, so they'll be applied to www on each prepare.
+
+                // NOTE: there is another code path for plugin installation (see CB-10274 and the
+                // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
+                // specify the option below in both places
+                usePlatformWww: true
             };
 
             // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman

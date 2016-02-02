@@ -278,6 +278,37 @@ function copyPlugin(pinfo, plugins_dir, link) {
     }
 
     shell.rm('-rf', dest);
+
+    if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
+        
+        if(/^win/.test(process.platform)) {
+            /*
+                [CB-10423]
+                This is a special case. On windows we cannot create a symlink unless we are run as admin
+                The error that we have is because src contains dest, so we end up with a recursive folder explosion
+                This code avoids copy the one folder that will explode, and allows plugins to contain a demo project
+                and to install the plugin via `cordova plugin add ../`
+            */
+            var resolvedSrcPath = path.resolve(plugin_dir);
+            var filenames = fs.readdirSync(resolvedSrcPath);
+            var relPath = path.relative(resolvedSrcPath,dest);
+            var relativeRootFolder = relPath.split('\\')[0];
+            filenames.splice(filenames.indexOf(relativeRootFolder),1);
+            shell.mkdir('-p', dest);
+            events.emit('verbose', 'Copying plugin "' + resolvedSrcPath + '" => "' + dest + '"');
+            events.emit('verbose', 'Skipping folder "' + relativeRootFolder + '"');
+            
+            filenames.forEach(function(elem) {
+                shell.cp('-R', path.join(resolvedSrcPath,elem) , dest);
+            });
+            return dest;
+        }
+        else {
+            events.emit('verbose', 'Copy plugin destination is child of src. Forcing --link mode.');
+            link = true;
+        }
+    }
+
     if (link) {
         var isRelativePath = plugin_dir.charAt(1) != ':' && plugin_dir.charAt(0) != path.sep;
         var fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;

@@ -182,14 +182,12 @@ function cleanVersionOutput(version, name){
 
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
-function callEngineScripts(engines) {
+function callEngineScripts(engines, project_dir) {
 
     return Q.all(
         engines.map(function(engine){
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
-
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
-
             if(scriptPath && (isWindows || fs.existsSync(engine.scriptSrc)) ) {
 
                 var d = Q.defer();
@@ -256,8 +254,13 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
         // check for other engines
         }else{
             platformIndex = engine.platform.indexOf(platform);
+            // CB-7183: security check for scriptSrc path escaping outside the plugin
+            var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
+            if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
+                throw new Error('security violation: scriptSrc '+scriptSrcPath+' is out of plugin dir '+plugin_dir);
+            }
             if(platformIndex > -1 || engine.platform === '*'){
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':path.resolve(plugin_dir, engine.scriptSrc), 'minVersion' :  engine.version});
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
             }
         }
     });
@@ -319,7 +322,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
-        return callEngineScripts(theEngines);
+        return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
     }).then(function(engines) {
         return checkEngines(engines);
     }).then(function() {
@@ -593,11 +596,6 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     options.variables = filtered_variables;
-    // Set up platform to install asset files/js modules to <platform>/platform_www dir
-    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
-    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
-    // files platform_www directory, so they'll be applied to www on each prepare.
-    options.usePlatformWww = true;
 
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
