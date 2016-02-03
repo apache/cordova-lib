@@ -512,15 +512,19 @@ function list(hooksRunner, projectRoot, opts) {
         }));
     }).then(function(platformsText) {
         platformsText = addDeprecatedInformationToPlatforms(platformsText);
-        var results = 'Installed platforms: ' + platformsText.sort().join(', ') + '\n';
+        var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
             return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
         });
 
+        available = available.map(function (p){
+            return p.concat(' ', platforms[p].version);
+        });
+
         available = addDeprecatedInformationToPlatforms(available);
-        results += 'Available platforms: ' + available.sort().join(', ');        
+        results += 'Available platforms: \n  ' + available.sort().join('\n  ');
 
         events.emit('results', results);
     }).then(function() {
