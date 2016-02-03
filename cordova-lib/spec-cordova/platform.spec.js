@@ -79,14 +79,14 @@ describe('platform end-to-end', function () {
     // Factoring out some repeated checks.
     function emptyPlatformList() {
         return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms: (.*)/);
+            var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
     function fullPlatformList() {
         return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms: (.*)/);
+            var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
