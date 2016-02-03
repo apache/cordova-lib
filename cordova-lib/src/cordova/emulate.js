@@ -33,7 +33,7 @@ module.exports = function emulate(options) {
     return hooksRunner.fire('before_emulate', options)
     .then(function() {
         // Run a prepare first!
-        return require('./cordova').raw.prepare(options.platforms);
+        return require('./cordova').raw.prepare(options);
     }).then(function() {
         // Deploy in parallel (output gets intermixed though...)
         return Q.all(options.platforms.map(function(platform) {
