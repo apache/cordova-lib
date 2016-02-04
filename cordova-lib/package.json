@@ -16,7 +16,7 @@
     "node": ">=0.9.9"
   },
   "engineStrict": true,
-  "cordovaPlugins" : {
+  "cordovaPlugins": {
     "cordova-plugin-battery-status": "~1.1.1",
     "cordova-plugin-camera": "~2.1.0",
     "cordova-plugin-console": "~1.0.2",
@@ -71,6 +71,7 @@
     "cordova-common"
   ],
   "devDependencies": {
+    "codecov": "^1.0.1",
     "istanbul": "^0.3.4",
     "jasmine-node": "1.14.5",
     "jshint": "2.5.8",
@@ -78,9 +79,10 @@
   },
   "scripts": {
     "test": "npm run jshint && npm run jasmine",
-    "jshint": "node node_modules/jshint/bin/jshint src && node node_modules/jshint/bin/jshint spec-cordova && node node_modules/jshint/bin/jshint spec-plugman",
-    "jasmine": "node node_modules/jasmine-node/bin/jasmine-node --captureExceptions --color spec-plugman spec-cordova",
-    "cover": "node node_modules/istanbul/lib/cli.js cover --root src --print detail node_modules/jasmine-node/bin/jasmine-node -- spec-cordova spec-plugman"
+    "ci": "npm run jshint && npm run cover && codecov",
+    "jshint": "jshint src spec-cordova spec-plugman",
+    "jasmine": "jasmine-node --captureExceptions --color spec-plugman spec-cordova",
+    "cover": "istanbul cover --root src --print detail node_modules/jasmine-node/bin/jasmine-node -- spec-cordova spec-plugman"
   },
   "contributors": [
     {

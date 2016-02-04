@@ -7,20 +7,13 @@ node_js:
   - "0.12"
   - "4.2"
 install:
-  - cd ..
   - git clone https://github.com/apache/cordova-js --depth 10
-  - cd cordova-js
+  - cd cordova-lib
+  - npm link ../cordova-js
+  - npm link ../cordova-common
+  - npm link ../cordova-serve
   - npm install
-  - npm link
-  - cd ../cordova-lib/cordova-common
-  - npm install
-  - npm test
-  - npm link
-  - cd ../cordova-serve
-  - npm install
-  - npm link
-  - cd ../cordova-lib
-  - npm link cordova-js
-  - npm link cordova-common
-  - npm link cordova-serve
-  - npm install
+
+script:
+  - "(cd ../cordova-common && npm test)"
+  - "npm run ci"

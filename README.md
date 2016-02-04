@@ -21,6 +21,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/q9s459ssqvs1t7j6/branch/master)](https://ci.appveyor.com/project/Humbedooh/cordova-lib)
 [![Build Status](https://travis-ci.org/apache/cordova-lib.svg?branch=master)](https://travis-ci.org/apache/cordova-lib)
+[![Code coverage](https://codecov.io/github/apache/cordova-lib/coverage.svg?branch=master)](https://codecov.io/github/apache/cordova-lib?branch=master)
 [![NPM](https://nodei.co/npm/cordova.png)](https://nodei.co/npm/cordova/)
 
 [BuildBot waterfall](http://ci.cordova.io/) with [cordova-mobile-spec](https://github.com/apache/cordova-mobile-spec) running on real Android and iOS devices.

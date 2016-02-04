@@ -2,22 +2,11 @@
 # http://www.appveyor.com/docs/appveyor-yml
 
 install:
-  - cd ..
   - git clone https://github.com/apache/cordova-js --depth 10
-  - cd cordova-js
-  - npm install
-  - npm link
-  - cd ..\cordova-lib\cordova-common
-  - npm install
-  - npm test
-  - npm link
-  - cd ..\cordova-serve
-  - npm install
-  - npm link
-  - cd ..\cordova-lib
-  - npm link cordova-js
-  - npm link cordova-common
-  - npm link cordova-serve
+  - cd cordova-lib
+  - npm link ../cordova-js
+  - npm link ../cordova-common
+  - npm link ../cordova-serve
   - npm install
 
 build: off
@@ -25,4 +14,5 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - npm test
+  - "cd ../cordova-common && npm test"
+  - "cd ../cordova-lib && npm test"
