@@ -1,0 +1,39 @@
+{
+  "name": "cordova-fetch",
+  "version": "1.0.0-dev",
+  "description": "Apache Cordova fetch module. Fetches from git and npm.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
+  },
+  "keywords": [
+    "cordova",
+    "fetch",
+    "apache",
+    "ecosystem:cordova",
+    "cordova:tool"
+  ],
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://issues.apache.org/jira/browse/CB",
+    "email": "dev@cordova.apache.org"
+  },
+  "dependencies": {
+    "cordova-common": "^1.0.0"
+  },
+  "devDependencies": {
+    "jasmine-node": "^1.14.5",
+    "jshint": "^2.8.0"
+  },
+  "scripts": {
+    "test" : "npm run jasmine",
+    "jasmine": "node node_modules/jasmine-node/bin/jasmine-node --captureExceptions --color spec",
+    "jshint": "node node_modules/jshint/bin/jshint src"
+  },
+  "engines": {
+    "node": ">= 0.12.0",
+    "npm": ">= 2.5.1"
+  }
+}
