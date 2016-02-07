@@ -608,7 +608,7 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
             .save();
 
         if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
-                pluginInfo.getFrameworks('platform').length > 0) {
+                pluginInfo.getFrameworks(platform).length > 0) {
 
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
