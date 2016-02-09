@@ -21,13 +21,20 @@ var Q = require('q');
 var shell = require('shelljs');
 var superspawn = require('cordova-common').superspawn;
 var events = require('cordova-common').events;
-var util = require('./src/util');
-var path = require('path');
 
+/* 
+ * A module that fetches npm modules and git urls
+ *
+ * @param {String} spec     the packageID or git url
+ * @param {String} dest     destination of where to fetch the modules
+ * @param {Object} opts     [opts={save:true}] options to pass to fetch module
+ *
+ * @return {boolean||Promise}   Returns true for a successful fetch or a rejected promise.
+ *
+ */
 module.exports = function(spec, dest, opts) {
-    var d = Q.defer();
     var fetchArgs = ['install'];
-    var opts = opts || {};
+    opts = opts || {};
 
     if(!shell.which('npm')) {
         return Q.reject(new Error('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
@@ -36,18 +43,23 @@ module.exports = function(spec, dest, opts) {
     if(spec) {
         fetchArgs.push(spec);
     }
-    //d.resolve({spec});
 
-    console.log(util.libDirectory)
-    console.log(fetchArgs)
+    //set the directory where npm install will be run
+    opts.cwd = dest;
 
-    //todo: REMOVE!
-    //Directory should be passed in as a arg
-    opts.cwd = util.libDirectory;
-    console.log(opts)
+    //if user added --save flag, pass it to npm install command
+    if(opts.save) {
+        fetchArgs.push('--save'); 
+        console.log('save');
+    } 
 
     return superspawn.spawn('npm', fetchArgs, opts)
-
-
+    .then(function(output) {
+        events.emit('verbose', 'fetched ' + spec);
+        return true;
+    })
+    .fail(function(err){
+        return Q.reject(err);
+    });
 };
 

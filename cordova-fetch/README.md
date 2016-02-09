@@ -21,3 +21,16 @@
 
 # cordova-fetch
 
+This module is used for fetching modules from npm and gitURLs. It fetches the modules via `npm install`. 
+
+Usage:
+```
+var fetch = require('cordova-fetch');
+
+fetch(spec, dest, opts);
+```
+
+`spec` can be a string containg a npm `packageID` or a `git URL`. 
+`dest` is string of the directory location you wish to `npm install` these modules.
+`opts` is an Object of options cordova fetch handles. Currently, fetch only support the `save` option.
+    eg. `{'save':true}`
