@@ -197,12 +197,6 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject, options) {
     this._config = new ConfigParser(ownConfig);
     xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
         this._config.doc.getroot(), this.platform, true);
-    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-    // we allow using windows8 tag for new windows platform
-    if (this.platform == 'windows') {
-        xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
-            this._config.doc.getroot(), 'windows8', true);
-    }
     this._config.write();
 
     // Update own www dir with project's www assets and plugins' assets and js-files

@@ -136,14 +136,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
                             cordova_util.binname + ' platform list`.');
                     }
-
-                    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform
-                    if (platform == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
-                        var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
-                        fs.renameSync(platformPath, platformPathWindows);
-                        platform = 'windows';
-                        platformPath = platformPathWindows;
-                    }
                 }
 
                 var options = {
@@ -592,11 +584,6 @@ function platform(command, targets, opts) {
 
     switch (command) {
         case 'add':
-            // CB-6976 Windows Universal Apps. windows8 is now alias for windows
-            var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >=0) {
-                targets[idxWindows8] = 'windows';
-            }
             return add(hooksRunner, projectRoot, targets, opts);
         case 'rm':
         case 'remove':

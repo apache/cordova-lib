@@ -232,11 +232,11 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
     var cordovaEngineIndex, cordovaPlatformEngineIndex, theName, platformIndex, defaultPlatformIndex;
     // load in known defaults and update when necessary
 
-    engines.forEach(function(engine){
+    engines.forEach(function(engine) {
         theName = engine.name;
 
         // check to see if the engine is listed as a default engine
-        if(defaultEngines[theName]){
+        if (defaultEngines[theName]) {
             // make sure engine is for platform we are installing on
             defaultPlatformIndex = defaultEngines[theName].platform.indexOf(platform);
             if(defaultPlatformIndex > -1 || defaultEngines[theName].platform === '*'){
@@ -252,14 +252,19 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
                 uncheckedEngines.push(defaultEngines[theName]);
             }
         // check for other engines
-        }else{
+        } else {
+            if (typeof engine.platform === 'undefined' || typeof engine.scriptSrc === 'undefined') {
+                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine \'' +
+                    theName + '\' from plugin \'' + pluginInfo.id + '\' for ' + platform);
+            }
+
             platformIndex = engine.platform.indexOf(platform);
             // CB-7183: security check for scriptSrc path escaping outside the plugin
             var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
             if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
                 throw new Error('security violation: scriptSrc '+scriptSrcPath+' is out of plugin dir '+plugin_dir);
             }
-            if(platformIndex > -1 || engine.platform === '*'){
+            if (platformIndex > -1 || engine.platform === '*') {
                 uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
             }
         }

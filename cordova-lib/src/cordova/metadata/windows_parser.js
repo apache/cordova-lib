@@ -22,39 +22,27 @@
 var fs            = require('fs'),
     path          = require('path'),
     util          = require('../util'),
-    events        = require('cordova-common').events,
     shell         = require('shelljs'),
     Q             = require('q'),
     Parser        = require('./parser'),
     ConfigParser = require('cordova-common').ConfigParser,
     CordovaError = require('cordova-common').CordovaError,
-    xml           = require('cordova-common').xmlHelpers,
     HooksRunner        = require('../../hooks/HooksRunner');
 
 function windows_parser(project) {
-
     try {
-        this.isOldProjectTemplate = false;
         // Check that it's a universal windows store project
         var projFile = fs.readdirSync(project).filter(function(e) { return e.match(/\.projitems$/i); })[0];
+
         if (!projFile) {
-            this.isOldProjectTemplate = true;
-            projFile = fs.readdirSync(project).filter(function(e) { return e.match(/\.jsproj$/i); })[0];
-        }
-        if (!projFile) {
-            throw new CordovaError('No project file in "'+project+'"');
+            throw new CordovaError('No project file in "' + project + '"');
         }
 
         // Call the base class constructor
-        Parser.call(this, 'windows8', project);
+        Parser.call(this, 'windows', project);
 
         this.projDir = project;
         this.projFilePath = path.join(this.projDir, projFile);
-
-        if (this.isOldProjectTemplate) {
-            this.manifestPath = path.join(this.projDir, 'package.appxmanifest');
-        }
-
     } catch(e) {
         throw new CordovaError('The provided path "' + project + '" is not a Windows project. ' + e);
     }
@@ -65,134 +53,22 @@ require('util').inherits(windows_parser, Parser);
 module.exports = windows_parser;
 
 windows_parser.prototype.update_from_config = function(config) {
-
     //check config parser
     if (config instanceof ConfigParser) {
     } else throw new Error('update_from_config requires a ConfigParser object');
 
-    if (!this.isOldProjectTemplate) {
-        // If there is platform-defined prepare script, require and exec it
-        var platformPrepare = require(path.join(this.projDir, 'cordova', 'lib', 'prepare'));
+    var platformPrepare;
+    try {
+        // The platform must contain the prepare script - require and exec it
+        platformPrepare = require(path.join(this.projDir, 'cordova', 'lib', 'prepare'));
+    } catch (e) {
+        throw new CordovaError('prepare script not found in the platform path "' + this.projDir + '"');
+    }
+
+    try {
         platformPrepare.applyPlatformConfig();
-        return;
-    }
-
-    // code below is required for compatibility reason. New template version is not required this anymore.
-
-    //Get manifest file
-    var manifest = xml.parseElementtreeSync(this.manifestPath);
-
-    var version = this.fixConfigVersion(config.version());
-    var name = config.name();
-    var pkgName = config.packageName();
-    var author = config.author();
-
-    var identityNode = manifest.find('.//Identity');
-    if(identityNode) {
-        // Update app name in identity
-        var appIdName = identityNode['attrib']['Name'];
-        if (appIdName != pkgName) {
-            identityNode['attrib']['Name'] = pkgName;
-        }
-
-        // Update app version
-        var appVersion = identityNode['attrib']['Version'];
-        if(appVersion != version) {
-            identityNode['attrib']['Version'] = version;
-        }
-    }
-
-    // Update name (windows8 has it in the Application[@Id] and Application.VisualElements[@DisplayName])
-    var app = manifest.find('.//Application');
-    if(app) {
-
-        var appId = app['attrib']['Id'];
-
-        if (appId != pkgName) {
-            app['attrib']['Id'] = pkgName;
-        }
-
-        var visualElems = manifest.find('.//VisualElements') || manifest.find('.//m2:VisualElements');
-
-        if(visualElems) {
-            var displayName = visualElems['attrib']['DisplayName'];
-            if(displayName != name) {
-                visualElems['attrib']['DisplayName'] = name;
-            }
-        }
-        else {
-            throw new Error('update_from_config expected a valid package.appxmanifest' +
-                            ' with a <VisualElements> node');
-        }
-    }
-    else {
-        throw new Error('update_from_config expected a valid package.appxmanifest' +
-                        ' with a <Application> node');
-    }
-
-    // Update properties
-    var properties = manifest.find('.//Properties');
-    if (properties && properties.find) {
-        var displayNameElement = properties.find('.//DisplayName');
-        if (displayNameElement && displayNameElement.text != name) {
-            displayNameElement.text = name;
-        }
-
-        var publisherNameElement = properties.find('.//PublisherDisplayName');
-        if (publisherNameElement && publisherNameElement.text != author) {
-            publisherNameElement.text = author;
-        }
-    }
-
-    // sort Capability elements as per CB-5350 Windows8 build fails due to invalid 'Capabilities' definition
-    // to sort elements we remove them and then add again in the appropriate order
-    var capabilitiesRoot = manifest.find('.//Capabilities'),
-        capabilities = capabilitiesRoot._children || [];
-
-    capabilities.forEach(function(elem){
-        capabilitiesRoot.remove(elem);
-    });
-    capabilities.sort(function(a, b) {
-        return (a.tag > b.tag)? 1: -1;
-    });
-    capabilities.forEach(function(elem){
-        capabilitiesRoot.append(elem);
-    });
-
-    //Write out manifest
-    fs.writeFileSync(this.manifestPath, manifest.write({indent: 4}), 'utf-8');
-
-    // Update icons
-    var icons = config.getIcons('windows8');
-    var platformRoot = this.projDir;
-    var appRoot = util.isCordova(platformRoot);
-
-    // Icons, that should be added to platform
-    var platformIcons = [
-        {dest: 'images/logo.png', width: 150, height: 150},
-        {dest: 'images/smalllogo.png', width: 30, height: 30},
-        {dest: 'images/storelogo.png', width: 50, height: 50},
-    ];
-
-    platformIcons.forEach(function (item) {
-        var icon = icons.getBySize(item.width, item.height) || icons.getDefault();
-        if (icon){
-            var src = path.join(appRoot, icon.src),
-                dest = path.join(platformRoot, item.dest);
-            events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
-            shell.cp('-f', src, dest);
-        }
-    });
-
-    // Update splashscreen
-    // Image size for Windows 8 should be 620 x 300 px
-    // See http://msdn.microsoft.com/en-us/library/windows/apps/hh465338.aspx for reference
-    var splash = config.getSplashScreens('windows8').getBySize(620, 300);
-    if (splash){
-        var src = path.join(appRoot, splash.src),
-            dest = path.join(platformRoot, 'images/splashscreen.png');
-        events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
-        shell.cp('-f', src, dest);
+    } catch (e) {
+        throw new CordovaError('Error occured while trying to call legacy applyPlatformConfig method of the platform prepare script: "' + e + '"');
     }
 };
 
@@ -238,19 +114,14 @@ windows_parser.prototype.update_www = function() {
     shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
 
     // Copy all files from merges directory.
-    // CB-6976 Windows Universal Apps. For smooth transition from 'windows8' platform
-    // we allow using 'windows8' merges for new 'windows' platform
-    this.copy_merges('windows8');
     this.copy_merges('windows');
 
     // Copy over stock platform www assets (cordova.js)
     shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
 };
 
-// calls the nessesary functions to update the windows8 project
+// calls the nessesary functions to update the windows project
 windows_parser.prototype.update_project = function(cfg, opts) {
-    // console.log("Updating windows8 project...");
-
     try {
         this.update_from_config(cfg);
     } catch(e) {
@@ -261,7 +132,7 @@ windows_parser.prototype.update_project = function(cfg, opts) {
     var projectRoot = util.isCordova(process.cwd());
 
     var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: [this.isOldProjectTemplate ? 'windows8' : 'windows'], nohooks: opts? opts.nohooks: [] })
+    return hooksRunner.fire('pre_package', { wwwPath:this.www_dir(), platforms: ['windows'], nohooks: opts? opts.nohooks: [] })
     .then(function() {
         // overrides (merges) are handled in update_www()
         that.add_bom();

@@ -67,14 +67,6 @@
         "version": "~3.6.3",
         "deprecated": false
     },
-    "windows8": {
-        "hostos": ["win32"],
-        "parser_file": "../cordova/metadata/windows_parser",
-        "handler_file": "../plugman/platforms/windows",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "~4.3.0",
-        "deprecated": false
-    },
     "windows": {
         "hostos": ["win32"],
         "parser_file": "../cordova/metadata/windows_parser",
