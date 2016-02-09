@@ -103,6 +103,7 @@ function remove_plugin_changes(pluginInfo, is_top_level) {
     var munge = mungeutil.decrement_munge(global_munge, config_munge);
 
     for (var file in munge.files) {
+        events.get().emit('verbose', 'Applying munge to ' + file);
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
@@ -110,7 +111,7 @@ function remove_plugin_changes(pluginInfo, is_top_level) {
             var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest', 'package.windows10.appxmanifest'];
             /* jshint loopfunc:true */
             substs.forEach(function(subst) {
-                events.emit('verbose', 'Applying munge to ' + subst);
+                events.get().emit('verbose', 'Applying munge to ' + subst);
                 self.apply_file_munge(subst, munge.files[file], true);
             });
             /* jshint loopfunc:false */
@@ -146,13 +147,14 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
     }
 
     for (var file in munge.files) {
+        events.get().emit('verbose', 'Applying munge to ' + file);
         // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
         if (self.platform == 'windows' && file == 'package.appxmanifest' &&
             !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
             var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows80.appxmanifest', 'package.windows10.appxmanifest'];
             /* jshint loopfunc:true */
             substs.forEach(function(subst) {
-                events.emit('verbose', 'Applying munge to ' + subst);
+                events.get().emit('verbose', 'Applying munge to ' + subst);
                 self.apply_file_munge(subst, munge.files[file]);
             });
             /* jshint loopfunc:false */

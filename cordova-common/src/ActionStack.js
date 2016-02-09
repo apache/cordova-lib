@@ -45,7 +45,7 @@ ActionStack.prototype = {
     },
     // Returns a promise.
     process:function(platform) {
-        events.emit('verbose', 'Beginning processing of action stack for ' + platform + ' project...');
+        events.get().emit('verbose', 'Beginning processing of action stack for ' + platform + ' project...');
 
         while (this.stack.length) {
             var action = this.stack.shift();
@@ -55,7 +55,7 @@ ActionStack.prototype = {
             try {
                 handler.apply(null, action_params);
             } catch(e) {
-                events.emit('warn', 'Error during processing of action! Attempting to revert...');
+                events.get().emit('warn', 'Error during processing of action! Attempting to revert...');
                 this.stack.unshift(action);
                 var issue = 'Uh oh!\n';
                 // revert completed tasks
@@ -67,7 +67,7 @@ ActionStack.prototype = {
                     try {
                         revert.apply(null, revert_params);
                     } catch(err) {
-                        events.emit('warn', 'Error during reversion of action! We probably really messed up your project now, sorry! D:');
+                        events.get().emit('warn', 'Error during reversion of action! We probably really messed up your project now, sorry! D:');
                         issue += 'A reversion action failed: ' + err.message + '\n';
                     }
                 }
@@ -76,7 +76,7 @@ ActionStack.prototype = {
             }
             this.completed.push(action);
         }
-        events.emit('verbose', 'Action stack processing complete.');
+        events.get().emit('verbose', 'Action stack processing complete.');
 
         return Q();
     }

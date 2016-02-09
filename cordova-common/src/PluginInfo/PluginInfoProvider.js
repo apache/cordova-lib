@@ -72,7 +72,7 @@ function getAllHelper(absPath, provider) {
             try {
                 plugins.push(provider.get(d));
             } catch (e) {
-                events.emit('warn', 'Error parsing ' + path.join(d, 'plugin.xml.\n' + e.stack));
+                events.get().emit('warn', 'Error parsing ' + path.join(d, 'plugin.xml.\n' + e.stack));
             }
         }
     });

@@ -129,7 +129,7 @@ exports.spawn = function(cmd, args, opts) {
         }
     }
 
-    events.emit(opts.printCommand ? 'log' : 'verbose', 'Running command: ' + maybeQuote(cmd) + ' ' + args.map(maybeQuote).join(' '));
+    events.get().emit(opts.printCommand ? 'log' : 'verbose', 'Running command: ' + maybeQuote(cmd) + ' ' + args.map(maybeQuote).join(' '));
 
     var child = child_process.spawn(cmd, args, spawnOpts);
     var capturedOut = '';
@@ -158,7 +158,7 @@ exports.spawn = function(cmd, args, opts) {
         child.removeListener('error', whenDone);
         var code = typeof arg == 'number' ? arg : arg && arg.code;
 
-        events.emit('verbose', 'Command finished with error code ' + code + ': ' + cmd + ' ' + args);
+        events.get().emit('verbose', 'Command finished with error code ' + code + ': ' + cmd + ' ' + args);
         if (code === 0) {
             d.resolve(capturedOut.trim());
         } else {
