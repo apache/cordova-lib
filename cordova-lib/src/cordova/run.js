@@ -30,6 +30,11 @@ module.exports = function run(options) {
     options = cordova_util.preProcessOptions(options);
 
     var hooksRunner = new HooksRunner(projectRoot);
+
+    // ToDO: `cordova run` should also fire the 'before_build' & 'after_build' hooks
+    //         ... since a run also does a build.
+    // That will require changing the current architecture of cordova-lib and cordova-platforms
+    // For more details, see: https://issues.apache.org/jira/browse/CB-9434?filter=-1
     return hooksRunner.fire('before_run', options)
     .then(function() {
         // Run a prepare first, then shell out to run
