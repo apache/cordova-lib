@@ -112,29 +112,30 @@ function calculateMd5(fileName) {
 }
 
 module.exports = function server(port, opts) {
-    var d = Q.defer();
-    projectRoot = cordova_util.cdProjectRoot();
     port = +port || 8000;
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    hooksRunner.fire('before_serve', opts).then(function () {
-        // Run a prepare first!
-        return require('./cordova').raw.prepare([]);
-    }).then(function () {
-        var server = serve();
+    return Q.promise(function(resolve) {
+        projectRoot = cordova_util.cdProjectRoot();
 
-        installedPlatforms = cordova_util.listPlatforms(projectRoot);
-        installedPlatforms.forEach(function (platform) {
-            var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
-            server.app.use('/' + platform + '/www', serve.static(locations.www));
-            server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
-        });
-        server.app.get('*', handleRoot);
+        var hooksRunner = new HooksRunner(projectRoot);
+        hooksRunner.fire('before_serve', opts).then(function () {
+            // Run a prepare first!
+            return require('./cordova').raw.prepare([]);
+        }).then(function () {
+            var server = serve();
 
-        server.launchServer({port: port, events: events});
-        hooksRunner.fire('after_serve', opts).then(function () {
-            d.resolve(server.server);
+            installedPlatforms = cordova_util.listPlatforms(projectRoot);
+            installedPlatforms.forEach(function (platform) {
+                var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
+                server.app.use('/' + platform + '/www', serve.static(locations.www));
+                server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
+            });
+            server.app.get('*', handleRoot);
+
+            server.launchServer({port: port, events: events});
+            hooksRunner.fire('after_serve', opts).then(function () {
+                resolve(server.server);
+            });
         });
     });
-    return d.promise;
 };

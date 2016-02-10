@@ -25,17 +25,9 @@ var cordova = require('../src/cordova/cordova'),
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
 describe('emulate command', function() {
-    var is_cordova, cd_project_root, list_platforms, fire, result, fail;
+    var is_cordova, cd_project_root, list_platforms, fire, fail;
     var project_dir = '/some/path';
     var prepare_spy, platformApi, getPlatformApi;
-
-    function wrapper(f, post) {
-        runs(function() {
-            Q().then(f).then(function() { result = true; }, function(err) { result = err; });
-        });
-        waitsFor(function() { return result; }, 'promise never resolved', 500);
-        runs(post);
-    }
 
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
@@ -48,16 +40,29 @@ describe('emulate command', function() {
         getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
+        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.andReturn([]);
-            wrapper(cordova.raw.emulate, function() {
-                expect(''+ result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            var success = jasmine.createSpy('success');
+            cordova.raw.compile()
+            .then(success, function(result) {
+                expect(result instanceof Error).toBe(true);
+                expect('' + result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            })
+            .fin(function() {
+                expect(success).not.toHaveBeenCalled();
+                done();
             });
         });
-        it('should not run outside of a Cordova-based project', function() {
+        it('should not run outside of a Cordova-based project', function(done) {
             is_cordova.andReturn(false);
-            wrapper(cordova.raw.emulate, function() {
+            var success = jasmine.createSpy('success');
+            cordova.raw.compile()
+            .then(success, function(result) {
                 expect(result instanceof Error).toBe(true);
+            })
+            .fin(function() {
+                expect(success).not.toHaveBeenCalled();
+                done();
             });
         });
     });

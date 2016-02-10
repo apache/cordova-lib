@@ -541,66 +541,69 @@ function addDeprecatedInformationToPlatforms(platformsList){
 // Returns a promise.
 module.exports = platform;
 function platform(command, targets, opts) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    var msg;
-    var hooksRunner = new HooksRunner(projectRoot);
+    // CB-10519 wrap function code into promise so throwing error
+    // would result in promise rejection instead of uncaught exception
+    return Q().then(function() {
+        var msg;
+        var projectRoot = cordova_util.cdProjectRoot();
+        var hooksRunner = new HooksRunner(projectRoot);
 
-    if (arguments.length === 0) command = 'ls';
+        if (arguments.length === 0) command = 'ls';
 
-    // Verify that targets look like platforms. Examples:
-    // - android
-    // - android@3.5.0
-    // - ../path/to/dir/with/platform/files
-    // - https://github.com/apache/cordova-android.git
-    if (targets) {
-        if (!(targets instanceof Array)) targets = [targets];
-        targets.forEach(function (t) {
-            // Trim the @version part if it's there.
-            var p = t.split('@')[0];
-            // OK if it's one of known platform names.
-            if (p in platforms) return;
-            // Not a known platform name, check if its a real path.
-            var pPath = path.resolve(t);
-            if (fs.existsSync(pPath)) return;
+        // Verify that targets look like platforms. Examples:
+        // - android
+        // - android@3.5.0
+        // - ../path/to/dir/with/platform/files
+        // - https://github.com/apache/cordova-android.git
+        if (targets) {
+            if (!(targets instanceof Array)) targets = [targets];
+            targets.forEach(function (t) {
+                // Trim the @version part if it's there.
+                var p = t.split('@')[0];
+                // OK if it's one of known platform names.
+                if (p in platforms) return;
+                // Not a known platform name, check if its a real path.
+                var pPath = path.resolve(t);
+                if (fs.existsSync(pPath)) return;
 
-            var msg;
-        // If target looks like a url, we will try cloning it with git
-            if (/[~:/\\.]/.test(t)) {
-                return;
-            } else {
-        // Neither path, git-url nor platform name - throw.
-                msg = 'Platform "' + t +
-                '" not recognized as a core cordova platform. See `' +
-                cordova_util.binname + ' platform list`.'
-                ;
-            }
-            throw new CordovaError(msg);
-        });
-    } else if (command == 'add' || command == 'rm') {
-        msg = 'You need to qualify `add` or `remove` with one or more platforms!';
-        return Q.reject(new CordovaError(msg));
-    }
+                var msg;
+                // If target looks like a url, we will try cloning it with git
+                if (/[~:/\\.]/.test(t)) {
+                    return;
+                } else {
+                    // Neither path, git-url nor platform name - throw.
+                    msg = 'Platform "' + t +
+                    '" not recognized as a core cordova platform. See `' +
+                    cordova_util.binname + ' platform list`.'
+                    ;
+                }
+                throw new CordovaError(msg);
+            });
+        } else if (command == 'add' || command == 'rm') {
+            msg = 'You need to qualify `add` or `remove` with one or more platforms!';
+            return Q.reject(new CordovaError(msg));
+        }
 
+        opts = opts || {};
+        opts.platforms = targets;
 
-    opts = opts || {};
-    opts.platforms = targets;
-
-    switch (command) {
-        case 'add':
-            return add(hooksRunner, projectRoot, targets, opts);
-        case 'rm':
-        case 'remove':
-            return remove(hooksRunner, projectRoot, targets, opts);
-        case 'update':
-        case 'up':
-            return update(hooksRunner, projectRoot, targets, opts);
-        case 'check':
-            return check(hooksRunner, projectRoot);
-        case 'save':
-            return save(hooksRunner, projectRoot, opts);
-        default:
-            return list(hooksRunner, projectRoot, opts);
-    }
+        switch (command) {
+            case 'add':
+                return add(hooksRunner, projectRoot, targets, opts);
+            case 'rm':
+            case 'remove':
+                return remove(hooksRunner, projectRoot, targets, opts);
+            case 'update':
+            case 'up':
+                return update(hooksRunner, projectRoot, targets, opts);
+            case 'check':
+                return check(hooksRunner, projectRoot);
+            case 'save':
+                return save(hooksRunner, projectRoot, opts);
+            default:
+                return list(hooksRunner, projectRoot, opts);
+        }
+    });
 }
 
 // Used to prevent attempts of installing platforms that are not supported on

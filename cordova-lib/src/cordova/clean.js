@@ -17,7 +17,8 @@
     under the License.
 */
 
-var cordova_util = require('./util'),
+var Q = require('q'),
+    cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
     events       = require('cordova-common').events,
     chain        = require('../util/promise-util').Q_chainmap,
@@ -25,20 +26,22 @@ var cordova_util = require('./util'),
 
 // Returns a promise.
 module.exports = function clean(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    options = cordova_util.preProcessOptions(options);
+    return Q().then(function() {
+        var projectRoot = cordova_util.cdProjectRoot();
+        options = cordova_util.preProcessOptions(options);
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('before_clean', options)
-    .then(function () {
-        return chain(options.platforms, function (platform) {
-            events.emit('verbose', 'Running cleanup for ' + platform + ' platform.');
-            return platform_lib
-                .getPlatformApi(platform)
-                .clean();
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('before_clean', options)
+        .then(function () {
+            return chain(options.platforms, function (platform) {
+                events.emit('verbose', 'Running cleanup for ' + platform + ' platform.');
+                return platform_lib
+                    .getPlatformApi(platform)
+                    .clean();
+            });
+        })
+        .then(function() {
+            return hooksRunner.fire('after_clean', options);
         });
-    })
-    .then(function() {
-        return hooksRunner.fire('after_clean', options);
     });
 };

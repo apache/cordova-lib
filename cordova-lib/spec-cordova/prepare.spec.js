@@ -95,7 +95,7 @@ describe('prepare command', function() {
         it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
             is_cordova.andReturn(false);
             cd_project_root.andCallThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
-            Q().then(prepare).then(function() {
+            prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect('' + err).toContain('Current working directory is not a Cordova-based project.');
@@ -103,7 +103,7 @@ describe('prepare command', function() {
         });
         it('should not run inside a cordova-based project with no platforms', function(done) {
             list_platforms.andReturn([]);
-            Q().then(prepare).then(function() {
+            prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect('' + err).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');

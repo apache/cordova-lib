@@ -37,268 +37,272 @@ var cordova_util  = require('./util'),
 
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
-    var projectRoot = cordova_util.cdProjectRoot();
+    // CB-10519 wrap function code into promise so throwing error
+    // would result in promise rejection instead of uncaught exception
+    return Q().then(function () {
+        var projectRoot = cordova_util.cdProjectRoot();
 
-    // Dance with all the possible call signatures we've come up over the time. They can be:
-    // 1. plugin() -> list the plugins
-    // 2. plugin(command, Array of targets, maybe opts object)
-    // 3. plugin(command, target1, target2, target3 ... )
-    // The targets are not really targets, they can be a mixture of plugins and options to be passed to plugman.
+        // Dance with all the possible call signatures we've come up over the time. They can be:
+        // 1. plugin() -> list the plugins
+        // 2. plugin(command, Array of targets, maybe opts object)
+        // 3. plugin(command, target1, target2, target3 ... )
+        // The targets are not really targets, they can be a mixture of plugins and options to be passed to plugman.
 
-    command = command || 'ls';
-    targets = targets || [];
-    opts = opts || {};
-    if ( opts.length ) {
-        // This is the case with multiple targets as separate arguments and opts is not opts but another target.
-        targets = Array.prototype.slice.call(arguments, 1);
-        opts = {};
-    }
-    if ( !Array.isArray(targets) ) {
-        // This means we had a single target given as string.
-        targets = [targets];
-    }
-    opts.options = opts.options || [];
-    opts.plugins = [];
-
-    // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
-    var HooksRunner = require('../hooks/HooksRunner');
-    var hooksRunner = new HooksRunner(projectRoot);
-    var config_json = config.read(projectRoot);
-    var platformList = cordova_util.listPlatforms(projectRoot);
-
-    // Massage plugin name(s) / path(s)
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath);
-    if (!targets || !targets.length) {
-        if (command == 'add' || command == 'rm') {
-            return Q.reject(new CordovaError('You need to qualify `'+cordova_util.binname+' plugin add` or `'+cordova_util.binname+' plugin remove` with one or more plugins!'));
-        } else {
-            targets = [];
+        command = command || 'ls';
+        targets = targets || [];
+        opts = opts || {};
+        if ( opts.length ) {
+            // This is the case with multiple targets as separate arguments and opts is not opts but another target.
+            targets = Array.prototype.slice.call(arguments, 1);
+            opts = {};
         }
-    }
-
-    //Split targets between plugins and options
-    //Assume everything after a token with a '-' is an option
-    var i;
-    for (i = 0; i < targets.length; i++) {
-        if (targets[i].match(/^-/)) {
-            opts.options = targets.slice(i);
-            break;
-        } else {
-            opts.plugins.push(targets[i]);
+        if ( !Array.isArray(targets) ) {
+            // This means we had a single target given as string.
+            targets = [targets];
         }
-    }
+        opts.options = opts.options || [];
+        opts.plugins = [];
 
-    switch(command) {
-        case 'add':
-            if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
+        // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
+        var HooksRunner = require('../hooks/HooksRunner');
+        var hooksRunner = new HooksRunner(projectRoot);
+        var config_json = config.read(projectRoot);
+        var platformList = cordova_util.listPlatforms(projectRoot);
+
+        // Massage plugin name(s) / path(s)
+        var pluginPath = path.join(projectRoot, 'plugins');
+        var plugins = cordova_util.findPlugins(pluginPath);
+        if (!targets || !targets.length) {
+            if (command == 'add' || command == 'rm') {
+                return Q.reject(new CordovaError('You need to qualify `'+cordova_util.binname+' plugin add` or `'+cordova_util.binname+' plugin remove` with one or more plugins!'));
+            } else {
+                targets = [];
             }
+        }
 
-            var xml = cordova_util.projectConfig(projectRoot);
-            var cfg = new ConfigParser(xml);
-            var searchPath = config_json.plugin_search_path || [];
-            if (typeof opts.searchpath == 'string') {
-                searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
-            } else if (opts.searchpath) {
-                searchPath = opts.searchpath.concat(searchPath);
+        //Split targets between plugins and options
+        //Assume everything after a token with a '-' is an option
+        var i;
+        for (i = 0; i < targets.length; i++) {
+            if (targets[i].match(/^-/)) {
+                opts.options = targets.slice(i);
+                break;
+            } else {
+                opts.plugins.push(targets[i]);
             }
-            // Blank it out to appease unit tests.
-            if (searchPath.length === 0) {
-                searchPath = undefined;
-            }
+        }
 
-            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-            return hooksRunner.fire('before_plugin_add', opts)
-            .then(function() {
-                var pluginInfoProvider = new PluginInfoProvider();
-                return opts.plugins.reduce(function(soFar, target) {
-                    return soFar.then(function() {
-                        if (target[target.length - 1] == path.sep) {
-                            target = target.substring(0, target.length - 1);
-                        }
+        switch(command) {
+            case 'add':
+                if (!targets || !targets.length) {
+                    return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `'+cordova_util.binname+' plugin search`.'));
+                }
 
-                        var parts = target.split('@');
-                        var id = parts[0];
-                        var version = parts[1];
+                var xml = cordova_util.projectConfig(projectRoot);
+                var cfg = new ConfigParser(xml);
+                var searchPath = config_json.plugin_search_path || [];
+                if (typeof opts.searchpath == 'string') {
+                    searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
+                } else if (opts.searchpath) {
+                    searchPath = opts.searchpath.concat(searchPath);
+                }
+                // Blank it out to appease unit tests.
+                if (searchPath.length === 0) {
+                    searchPath = undefined;
+                }
 
-                        // If no version is specified, retrieve the version (or source) from config.xml
-                        if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
-                            events.emit('verbose', 'no version specified, retrieving version from config.xml');
-                            var ver = getVersionFromConfigFile(id, cfg);
+                opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
+                return hooksRunner.fire('before_plugin_add', opts)
+                .then(function() {
+                    var pluginInfoProvider = new PluginInfoProvider();
+                    return opts.plugins.reduce(function(soFar, target) {
+                        return soFar.then(function() {
+                            if (target[target.length - 1] == path.sep) {
+                                target = target.substring(0, target.length - 1);
+                            }
 
-                            if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
-                                target = ver;
-                            } else {
-                                //if version exists from config.xml, use that
-                                if(ver) {
-                                    target = ver ? (id + '@' + ver) : target;
+                            var parts = target.split('@');
+                            var id = parts[0];
+                            var version = parts[1];
+
+                            // If no version is specified, retrieve the version (or source) from config.xml
+                            if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
+                                events.emit('verbose', 'no version specified, retrieving version from config.xml');
+                                var ver = getVersionFromConfigFile(id, cfg);
+
+                                if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
+                                    target = ver;
                                 } else {
-                                    //fetch pinned version from cordova-lib
-                                    var pinnedVer = pkgJson.cordovaPlugins[id];
-                                    target = pinnedVer ? (id + '@' + pinnedVer) : target;
+                                    //if version exists from config.xml, use that
+                                    if(ver) {
+                                        target = ver ? (id + '@' + ver) : target;
+                                    } else {
+                                        //fetch pinned version from cordova-lib
+                                        var pinnedVer = pkgJson.cordovaPlugins[id];
+                                        target = pinnedVer ? (id + '@' + pinnedVer) : target;
+                                    }
                                 }
                             }
-                        }
 
-                        // Fetch the plugin first.
-                        events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
+                            // Fetch the plugin first.
+                            events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
 
-                        var fetchOptions = {
-                            searchpath: searchPath,
-                            noregistry: opts.noregistry,
-                            nohooks: opts.nohooks,
-                            link: opts.link,
-                            pluginInfoProvider: pluginInfoProvider,
-                            variables: opts.cli_variables,
-                            is_top_level: true
-                        };
-
-                        return plugman.raw.fetch(target, pluginPath, fetchOptions)
-                        .then(function (directory) {
-                            return pluginInfoProvider.get(directory);
-                        });
-                    })
-                    .then(function(pluginInfo) {
-                        // Validate top-level required variables
-                        var pluginVariables = pluginInfo.getPreferences();
-                        var missingVariables = Object.keys(pluginVariables)
-                        .filter(function (variableName) {
-                            // discard variables with default value
-                            return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
-                        });
-
-                        if (missingVariables.length) {
-                            shell.rm('-rf', pluginInfo.dir);
-                            var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
-                            return Q.reject(new CordovaError(msg));
-                        }
-
-                        // Iterate (in serial!) over all platforms in the project and install the plugin.
-                        return chainMap(platformList, function (platform) {
-                            var platformRoot = path.join(projectRoot, 'platforms', platform),
-                            options = {
-                                cli_variables: opts.cli_variables || {},
-                                browserify: opts.browserify || false,
+                            var fetchOptions = {
                                 searchpath: searchPath,
                                 noregistry: opts.noregistry,
+                                nohooks: opts.nohooks,
                                 link: opts.link,
                                 pluginInfoProvider: pluginInfoProvider,
-                                // Set up platform to install asset files/js modules to <platform>/platform_www dir
-                                // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
-                                // and files from 'platform_www' merged into 'www'. Thus we need to persist these
-                                // files platform_www directory, so they'll be applied to www on each prepare.
-                                usePlatformWww: true,
-                                nohooks: opts.nohooks
+                                variables: opts.cli_variables,
+                                is_top_level: true
                             };
 
-                            events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
-                            return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
+                            return plugman.raw.fetch(target, pluginPath, fetchOptions)
+                            .then(function (directory) {
+                                return pluginInfoProvider.get(directory);
+                            });
                         })
-                        .thenResolve(pluginInfo);
-                    })
-                    .then(function(pluginInfo){
-                        // save to config.xml
-                        if(saveToConfigXmlOn(config_json, opts)){
-                            var src = parseSource(target, opts);
-                            var attributes = {
-                                name: pluginInfo.id,
-                                spec: src ? src : '~' + pluginInfo.version
-                            };
+                        .then(function(pluginInfo) {
+                            // Validate top-level required variables
+                            var pluginVariables = pluginInfo.getPreferences();
+                            var missingVariables = Object.keys(pluginVariables)
+                            .filter(function (variableName) {
+                                // discard variables with default value
+                                return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
+                            });
 
-                            cfg.removePlugin(pluginInfo.id);
-                            cfg.addPlugin(attributes, opts.cli_variables);
-                            cfg.write();
-
-                            events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
-                        }
-                    });
-                }, Q()); // end Q.all
-            }).then(function() {
-                // Need to require right here instead of doing this at the beginning of file
-                // otherwise tests are failing without any real reason.
-                return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
-            }).then(function() {
-                opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-                return hooksRunner.fire('after_plugin_add', opts);
-            });
-        case 'rm':
-        case 'remove':
-            if (!targets || !targets.length) {
-                return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
-            }
-
-            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-            return hooksRunner.fire('before_plugin_rm', opts)
-            .then(function() {
-                return opts.plugins.reduce(function(soFar, target) {
-                    var validatedPluginId = validatePluginId(target, plugins);
-                    if (!validatedPluginId) {
-                        return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.'));
-                    }
-                    target = validatedPluginId;
-
-                    // Iterate over all installed platforms and uninstall.
-                    // If this is a web-only or dependency-only plugin, then
-                    // there may be nothing to do here except remove the
-                    // reference from the platform's plugin config JSON.
-                    return platformList.reduce(function(soFar, platform) {
-                        return soFar.then(function() {
-                            var platformRoot = path.join(projectRoot, 'platforms', platform);
-                            events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                            return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath);
-                        });
-                    }, Q())
-                    .then(function() {
-                        // TODO: Should only uninstallPlugin when no platforms have it.
-                        return plugman.raw.uninstall.uninstallPlugin(target, pluginPath);
-                    }).then(function(){
-                        //remove plugin from config.xml
-                        if(saveToConfigXmlOn(config_json, opts)){
-                            var configPath = cordova_util.projectConfig(projectRoot);
-                            if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
-                                var configXml = new ConfigParser(configPath);
-                                configXml.removePlugin(target);
-                                configXml.write();
-                                events.emit('results', 'config.xml entry for ' +target+ ' is removed');
+                            if (missingVariables.length) {
+                                shell.rm('-rf', pluginInfo.dir);
+                                var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
+                                return Q.reject(new CordovaError(msg));
                             }
-                        }
-                    })
-                    .then(function(){
-                        // Remove plugin from fetch.json
-                        events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
-                        metadata.remove_fetch_metadata(pluginPath, target);
-                    });
-                }, Q());
-            }).then(function () {
-                return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
-            }).then(function() {
+
+                            // Iterate (in serial!) over all platforms in the project and install the plugin.
+                            return chainMap(platformList, function (platform) {
+                                var platformRoot = path.join(projectRoot, 'platforms', platform),
+                                options = {
+                                    cli_variables: opts.cli_variables || {},
+                                    browserify: opts.browserify || false,
+                                    searchpath: searchPath,
+                                    noregistry: opts.noregistry,
+                                    link: opts.link,
+                                    pluginInfoProvider: pluginInfoProvider,
+                                    // Set up platform to install asset files/js modules to <platform>/platform_www dir
+                                    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+                                    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+                                    // files platform_www directory, so they'll be applied to www on each prepare.
+                                    usePlatformWww: true,
+                                    nohooks: opts.nohooks
+                                };
+
+                                events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
+                                return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
+                            })
+                            .thenResolve(pluginInfo);
+                        })
+                        .then(function(pluginInfo){
+                            // save to config.xml
+                            if(saveToConfigXmlOn(config_json, opts)){
+                                var src = parseSource(target, opts);
+                                var attributes = {
+                                    name: pluginInfo.id,
+                                    spec: src ? src : '~' + pluginInfo.version
+                                };
+
+                                cfg.removePlugin(pluginInfo.id);
+                                cfg.addPlugin(attributes, opts.cli_variables);
+                                cfg.write();
+
+                                events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
+                            }
+                        });
+                    }, Q()); // end Q.all
+                }).then(function() {
+                    // Need to require right here instead of doing this at the beginning of file
+                    // otherwise tests are failing without any real reason.
+                    return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
+                }).then(function() {
+                    opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
+                    return hooksRunner.fire('after_plugin_add', opts);
+                });
+            case 'rm':
+            case 'remove':
+                if (!targets || !targets.length) {
+                    return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See `'+cordova_util.binname+' plugin list`.'));
+                }
+
                 opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-                return hooksRunner.fire('after_plugin_rm', opts);
-            });
-        case 'search':
-            return hooksRunner.fire('before_plugin_search', opts)
-            .then(function() {
-                var link = 'http://cordova.apache.org/plugins/';
-                if (opts.plugins.length > 0) {
-                    var keywords = (opts.plugins).join(' ');
-                    var query = link + '?q=' + encodeURI(keywords);
-                    opener(query);
-                }
-                else {
-                    opener(link);
-                }
-                
-                return Q.resolve();
-            }).then(function() {
-                return hooksRunner.fire('after_plugin_search', opts);
-            });
-        case 'save':
-            // save the versions/folders/git-urls of currently installed plugins into config.xml
-            return save(projectRoot, opts);
-        default:
-            return list(projectRoot, hooksRunner);
-    }
+                return hooksRunner.fire('before_plugin_rm', opts)
+                .then(function() {
+                    return opts.plugins.reduce(function(soFar, target) {
+                        var validatedPluginId = validatePluginId(target, plugins);
+                        if (!validatedPluginId) {
+                            return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.'));
+                        }
+                        target = validatedPluginId;
+
+                        // Iterate over all installed platforms and uninstall.
+                        // If this is a web-only or dependency-only plugin, then
+                        // there may be nothing to do here except remove the
+                        // reference from the platform's plugin config JSON.
+                        return platformList.reduce(function(soFar, platform) {
+                            return soFar.then(function() {
+                                var platformRoot = path.join(projectRoot, 'platforms', platform);
+                                events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
+                                return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath);
+                            });
+                        }, Q())
+                        .then(function() {
+                            // TODO: Should only uninstallPlugin when no platforms have it.
+                            return plugman.raw.uninstall.uninstallPlugin(target, pluginPath);
+                        }).then(function(){
+                            //remove plugin from config.xml
+                            if(saveToConfigXmlOn(config_json, opts)){
+                                var configPath = cordova_util.projectConfig(projectRoot);
+                                if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
+                                    var configXml = new ConfigParser(configPath);
+                                    configXml.removePlugin(target);
+                                    configXml.write();
+                                    events.emit('results', 'config.xml entry for ' +target+ ' is removed');
+                                }
+                            }
+                        })
+                        .then(function(){
+                            // Remove plugin from fetch.json
+                            events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
+                            metadata.remove_fetch_metadata(pluginPath, target);
+                        });
+                    }, Q());
+                }).then(function () {
+                    return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
+                }).then(function() {
+                    opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
+                    return hooksRunner.fire('after_plugin_rm', opts);
+                });
+            case 'search':
+                return hooksRunner.fire('before_plugin_search', opts)
+                .then(function() {
+                    var link = 'http://cordova.apache.org/plugins/';
+                    if (opts.plugins.length > 0) {
+                        var keywords = (opts.plugins).join(' ');
+                        var query = link + '?q=' + encodeURI(keywords);
+                        opener(query);
+                    }
+                    else {
+                        opener(link);
+                    }
+
+                    return Q.resolve();
+                }).then(function() {
+                    return hooksRunner.fire('after_plugin_search', opts);
+                });
+            case 'save':
+                // save the versions/folders/git-urls of currently installed plugins into config.xml
+                return save(projectRoot, opts);
+            default:
+                return list(projectRoot, hooksRunner);
+        }
+    });
 };
 
 function validatePluginId(pluginId, installedPlugins) {

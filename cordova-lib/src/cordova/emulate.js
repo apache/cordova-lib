@@ -24,24 +24,26 @@ var cordova_util = require('./util'),
 
 // Returns a promise.
 module.exports = function emulate(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    options = cordova_util.preProcessOptions(options);
-    options.options.device = false;
-    options.options.emulator = true;
+    return Q().then(function() {
+        var projectRoot = cordova_util.cdProjectRoot();
+        options = cordova_util.preProcessOptions(options);
+        options.options.device = false;
+        options.options.emulator = true;
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('before_emulate', options)
-    .then(function() {
-        // Run a prepare first!
-        return require('./cordova').raw.prepare(options);
-    }).then(function() {
-        // Deploy in parallel (output gets intermixed though...)
-        return Q.all(options.platforms.map(function(platform) {
-            return platform_lib
-                .getPlatformApi(platform)
-                .run(options.options);
-        }));
-    }).then(function() {
-        return hooksRunner.fire('after_emulate', options);
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('before_emulate', options)
+        .then(function() {
+            // Run a prepare first!
+            return require('./cordova').raw.prepare(options);
+        }).then(function() {
+            // Deploy in parallel (output gets intermixed though...)
+            return Q.all(options.platforms.map(function(platform) {
+                return platform_lib
+                    .getPlatformApi(platform)
+                    .run(options.options);
+            }));
+        }).then(function() {
+            return hooksRunner.fire('after_emulate', options);
+        });
     });
 };

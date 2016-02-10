@@ -32,20 +32,22 @@ var knownPlatforms = require('../platforms/platforms');
  *   requirements check results for each platform.
  */
 module.exports = function check_reqs(platforms) {
-    platforms = cordova_util.preProcessOptions(platforms).platforms;
+    return Q().then(function() {
+        var platforms = cordova_util.preProcessOptions(platforms).platforms;
 
-    return Q.allSettled(platforms.map(function (platform) {
-        return knownPlatforms.getPlatformApi(platform).requirements();
-    }))
-    .then(function (settledChecks) {
-        var res = {};
-        settledChecks.reduce(function (result, settledCheck, idx) {
-            var platformName = platforms[idx];
-            result[platformName] = settledCheck.state === 'fulfilled' ?
-                settledCheck.value :
-                new CordovaError(settledCheck.reason);
-            return result;
-        }, res);
-        return res;
+        return Q.allSettled(platforms.map(function (platform) {
+            return knownPlatforms.getPlatformApi(platform).requirements();
+        }))
+        .then(function (settledChecks) {
+            var res = {};
+            settledChecks.reduce(function (result, settledCheck, idx) {
+                var platformName = platforms[idx];
+                result[platformName] = settledCheck.state === 'fulfilled' ?
+                    settledCheck.value :
+                    new CordovaError(settledCheck.reason);
+                return result;
+            }, res);
+            return res;
+        });
     });
 };

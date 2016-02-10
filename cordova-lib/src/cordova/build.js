@@ -17,22 +17,25 @@
     under the License.
 */
 
-var cordovaUtil      = require('./util'),
-    HooksRunner           = require('../hooks/HooksRunner');
+var Q = require('q'),
+    cordovaUtil = require('./util'),
+    HooksRunner = require('../hooks/HooksRunner');
 
 // Returns a promise.
 module.exports = function build(options) {
-    var projectRoot = cordovaUtil.cdProjectRoot();
-    options = cordovaUtil.preProcessOptions(options);
+    return Q().then(function() {
+        var projectRoot = cordovaUtil.cdProjectRoot();
+        options = cordovaUtil.preProcessOptions(options);
 
-    // fire build hooks
-    var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('before_build', options)
-    .then(function() {
-        return require('./cordova').raw.prepare(options);
-    }).then(function() {
-        return require('./cordova').raw.compile(options);
-    }).then(function() {
-        return hooksRunner.fire('after_build', options);
+        // fire build hooks
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('before_build', options)
+        .then(function() {
+            return require('./cordova').raw.prepare(options);
+        }).then(function() {
+            return require('./cordova').raw.compile(options);
+        }).then(function() {
+            return hooksRunner.fire('after_build', options);
+        });
     });
 };

@@ -40,7 +40,8 @@ describe('build command', function() {
     describe('failure', function() {
         it('should not run inside a project with no platforms', function(done) {
             list_platforms.andReturn([]);
-            Q().then(cordova.raw.build).then(function() {
+            cordova.raw.build()
+            .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect(err.message).toEqual(
@@ -52,7 +53,8 @@ describe('build command', function() {
         it('should not run outside of a Cordova-based project', function(done) {
             is_cordova.andReturn(false);
 
-            Q().then(cordova.raw.build).then(function() {
+            cordova.raw.build()
+            .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect(err.message).toEqual(

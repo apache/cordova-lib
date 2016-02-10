@@ -26,16 +26,9 @@ var supported_platforms = Object.keys(platforms).filter(function(p) { return p !
 
 
 describe('compile command', function() {
-    var is_cordova, list_platforms, fire, result, cd_project_root, fail, platformApi, getPlatformApi;
+    var is_cordova, list_platforms, fire, cd_project_root, fail, platformApi, getPlatformApi;
     var project_dir = '/some/path';
 
-    function wrapper(f, post) {
-        runs(function() {
-            Q().then(f).then(function() { result = true; }, function(err) { result = err; });
-        });
-        waitsFor(function() { return result; }, 'promise never resolved', 500);
-        runs(post);
-    }
     beforeEach(function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
@@ -46,16 +39,29 @@ describe('compile command', function() {
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
+        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.andReturn([]);
-            wrapper(cordova.raw.compile, function() {
+            var success = jasmine.createSpy('success');
+            cordova.raw.compile()
+            .then(success, function(result) {
+                expect(result instanceof Error).toBe(true);
                 expect('' + result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            })
+            .fin(function() {
+                expect(success).not.toHaveBeenCalled();
+                done();
             });
         });
-        it('should not run outside of a Cordova-based project', function() {
+        it('should not run outside of a Cordova-based project', function(done) {
             is_cordova.andReturn(false);
-            wrapper(cordova.raw.compile, function() {
+            var success = jasmine.createSpy('success');
+            cordova.raw.compile()
+            .then(success, function(result) {
                 expect(result instanceof Error).toBe(true);
+            })
+            .fin(function() {
+                expect(success).not.toHaveBeenCalled();
+                done();
             });
         });
     });
