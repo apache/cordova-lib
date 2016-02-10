@@ -106,7 +106,7 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
         commitId = cId;
         return getPlatformVersion(commitId, platformApi.root);
     }).then(function(platformVersion){
-        var libraryRelease = bundle(platform, false, commitId, platformVersion);
+        var libraryRelease = bundle(platform, false, commitId, platformVersion, platformApi.getPlatformInfo().locations.platformWww);
 
         var pluginMetadata = {};
         var modulesMetadata = [];
