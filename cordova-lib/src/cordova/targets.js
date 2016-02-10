@@ -25,9 +25,9 @@ var cordova_util = require('./util'),
 
 function handleError(error) {
     if (error.code === 'ENOENT') {
-        events.emit('log', 'Platform does not support ' + this.script);
+        events.emit('warn', 'Platform does not support ' + this.script);
     } else {
-        events.emit('log', 'An unexpected error has occured');
+        events.emit('warn', 'An unexpected error has occured while running ' + this.script);
     }
 }
 

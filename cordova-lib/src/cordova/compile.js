@@ -40,7 +40,7 @@ module.exports = function compile(options) {
     }).then(function() {
         return hooksRunner.fire('after_compile', options);
     }, function(error) {
-        events.emit('log', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
+        events.emit('warn', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
         return Q.reject(error);
     });
 };
