@@ -87,7 +87,7 @@ describe('build command', function() {
 
             cordova.on('warn', warnSpy);
             cordova.raw.build({platforms:['android'], options:['--release', '--cdvBuildOpt=opt']}).then(function () {
-                var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt="opt"']}), verbose: false};
+                var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt=opt']}), verbose: false};
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
                 cordova.off('warn', warnSpy);

@@ -297,7 +297,7 @@ function ensurePlatformOptionsCompatible (platformOptions) {
     }).map(function (arg) {
         return opts[arg] === true ?
             '--' + arg :
-            '--' + arg + '="' + opts[arg].toString() + '"';
+            '--' + arg + '=' + opts[arg].toString();
     });
 
     return opts;
