@@ -132,10 +132,14 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            var newID = pluginMapperotn[plugin_src];
+            var splitVersion = plugin_src.split('@');
+            var newID = pluginMapperotn[splitVersion[0]];
             if(newID) {
                 events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');                
                 plugin_src = newID;
+                if (splitVersion[1]) {
+                    plugin_src += '@'+splitVersion[1];
+                }
             } 
             return registry.fetch([plugin_src])
             .fail(function (error) {
