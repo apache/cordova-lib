@@ -267,7 +267,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         promise = promiseutil.Q_chainmap(danglers, function(dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
 
-            //try to convert ID if old-id path doesn't exist. 
+            //try to convert ID if old-id path doesn't exist.
             if (!fs.existsSync(dependent_path)) {
                 var splitVersion = dangler.split('@');
                 var newId = pluginMapper[splitVersion[0]];
@@ -334,8 +334,14 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
             .removePlugin(pluginInfo.id, is_top_level)
             .save();
 
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
+        if (platform == 'android' &&
+                semver.gte(options.platformVersion, '4.0.0-dev') &&
+                // CB-10533 since 5.2.0-dev prepBuildFiles is now called internally by android platform and
+                // no more exported from build module
+                // TODO: This might be removed once we deprecate non-PlatformApi compatible platforms support
+                semver.lte(options.platformVersion, '5.2.0-dev') &&
                 pluginInfo.getFrameworks(platform).length > 0) {
+
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
             try {
