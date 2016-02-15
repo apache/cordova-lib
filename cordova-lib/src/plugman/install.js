@@ -83,7 +83,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     // Split @Version from the plugin id if it exists.
     var splitVersion = id.split('@');
     //Check if a mapping exists for the plugin id
-    //if it does, convert id to new name id 
+    //if it does, convert id to new name id
     var newId = pluginMapper[splitVersion[0]];
     if(newId) {
         events.emit('warn', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
@@ -92,7 +92,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
         } else {
             id = newId;
         }
-     }     
+     }
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
         return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -398,7 +398,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         }
     ).fail(
         function (error) {
-            
+
             if(error === 'skip') {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
@@ -430,7 +430,7 @@ function installDependencies(install, dependencies, options) {
                 // Split @Version from the plugin id if it exists.
                 var splitVersion = dep.id.split('@');
                 //Check if a mapping exists for the plugin id
-                //if it does, convert id to new name id 
+                //if it does, convert id to new name id
                 var newId = pluginMapper[splitVersion[0]];
                 if(newId) {
                     events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
@@ -613,7 +613,12 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
             .addPlugin(pluginInfo.id, filtered_variables, options.is_top_level)
             .save();
 
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
+        if (platform == 'android' &&
+                semver.gte(options.platformVersion, '4.0.0-dev') &&
+                // CB-10533 since 5.2.0-dev prepBuildFiles is now called internally by android platform and
+                // no more exported from build module
+                // TODO: This might be removed once we deprecate non-PlatformApi compatible platforms support
+                semver.lte(options.platformVersion, '5.2.0-dev') &&
                 pluginInfo.getFrameworks(platform).length > 0) {
 
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
