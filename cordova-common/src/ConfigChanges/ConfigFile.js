@@ -164,7 +164,7 @@ function resolveConfigFilePath(project_dir, platform, file) {
         } else if (platform == 'ios') {
             var iospath = getIOSProjectname(project_dir);
             filepath = path.join(project_dir,iospath, 'config.xml');
-        } else if (platform == 'android') {
+        } else if (platform == 'android'||platform == 'amazon-fireos') {
             filepath = path.join(project_dir, 'res', 'xml', 'config.xml');
         } else {
             matches = glob.sync(path.join(project_dir, '**', 'config.xml'));
