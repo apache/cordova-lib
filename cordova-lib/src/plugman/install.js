@@ -381,7 +381,8 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                         pluginInfo: pluginInfo,
                         platform: install.platform,
                         dir: install.top_plugin_dir
-                    }
+                    },
+                    nohooks: options.nohooks
                 };
 
                 var hooksRunner = new HooksRunner(projectRoot);
