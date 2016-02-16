@@ -136,14 +136,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
                             cordova_util.binname + ' platform list`.');
                     }
-
-                    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform
-                    if (platform == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
-                        var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
-                        fs.renameSync(platformPath, platformPathWindows);
-                        platform = 'windows';
-                        platformPath = platformPathWindows;
-                    }
                 }
 
                 var options = {
@@ -511,18 +503,36 @@ function list(hooksRunner, projectRoot, opts) {
             });
         }));
     }).then(function(platformsText) {
-        var results = 'Installed platforms: ' + platformsText.sort().join(', ') + '\n';
+        platformsText = addDeprecatedInformationToPlatforms(platformsText);
+        var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
             return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
         });
-        results += 'Available platforms: ' + available.sort().join(', ');
+
+        available = available.map(function (p){
+            return p.concat(' ', platforms[p].version);
+        });
+
+        available = addDeprecatedInformationToPlatforms(available);
+        results += 'Available platforms: \n  ' + available.sort().join('\n  ');
 
         events.emit('results', results);
     }).then(function() {
         return hooksRunner.fire('after_platform_ls', opts);
     });
+}
+
+function addDeprecatedInformationToPlatforms(platformsList){
+    platformsList = platformsList.map(function(p){
+        var platformKey = p.split(' ')[0]; //Remove Version Information
+        if(platforms[platformKey].deprecated){
+            p = p.concat(' ', '(deprecated)');
+        }
+        return p;
+    });
+    return platformsList;
 }
 
 // Returns a promise.
@@ -574,11 +584,6 @@ function platform(command, targets, opts) {
 
     switch (command) {
         case 'add':
-            // CB-6976 Windows Universal Apps. windows8 is now alias for windows
-            var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >=0) {
-                targets[idxWindows8] = 'windows';
-            }
             return add(hooksRunner, projectRoot, targets, opts);
         case 'rm':
         case 'remove':

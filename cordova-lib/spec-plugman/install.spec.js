@@ -50,6 +50,8 @@ var install = require('../src/plugman/install'),
         'com.adobe.vars' : path.join(plugins_dir, 'com.adobe.vars'),
         'org.test.defaultvariables' : path.join(plugins_dir, 'org.test.defaultvariables'),
         'org.test.invalid.engine.script' : path.join(plugins_dir, 'org.test.invalid.engine.script'),
+        'org.test.invalid.engine.no.platform' : path.join(plugins_dir, 'org.test.invalid.engine.no.platform'),
+        'org.test.invalid.engine.no.scriptSrc' : path.join(plugins_dir, 'org.test.invalid.engine.no.scriptSrc'),
         'A' : path.join(plugins_dir, 'dependencies', 'A'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
@@ -505,18 +507,46 @@ describe('install', function() {
             });
         });
         it('should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
-            var success = jasmine.createSpy('success');
-            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
-            install('android', project, plugins['org.test.invalid.engine.script'])
-                .then(success)
-                .fail(function(err) {
+            var success = jasmine.createSpy('success'),
+                fail = jasmine.createSpy('fail').andCallFake(function(err) {
                     // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
                     expect(err).toBeDefined();
                     expect(err.message.indexOf('security violation:')).toBe(0);
-                    done();
-                })
+                });
+
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            install('android', project, plugins['org.test.invalid.engine.script'])
+                .then(success)
+                .fail(fail)
                 .fin(function() {
                     expect(success).not.toHaveBeenCalled();
+                    expect(fail).toHaveBeenCalled();
+                    done();
+                });
+        });
+        it('should throw if a non-default cordova engine platform attribute is not defined.', function(done) {
+            var success = jasmine.createSpy('success'),
+                fail = jasmine.createSpy('fail');
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            install('android', project, plugins['org.test.invalid.engine.no.platform'])
+                .then(success)
+                .fail(fail)
+                .fin(function() {
+                    expect(success).not.toHaveBeenCalled();
+                    expect(fail).toHaveBeenCalled();
+                    done();
+                });
+        });
+        it('should throw if a non-default cordova engine scriptSrc attribute is not defined.', function(done) {
+            var success = jasmine.createSpy('success'),
+                fail = jasmine.createSpy('fail');
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            install('android', project, plugins['org.test.invalid.engine.no.scriptSrc'])
+                .then(success)
+                .fail(fail)
+                .fin(function() {
+                    expect(success).not.toHaveBeenCalled();
+                    expect(fail).toHaveBeenCalled();
                     done();
                 });
         });

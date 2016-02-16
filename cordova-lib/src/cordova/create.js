@@ -187,16 +187,16 @@ function create(dir, optionalId, optionalName, cfg) {
                 gitURL = parseArr[0];
                 branch = parseArr[1];
 
-                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' from GitHub...');
+                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using git...');
 
                 return remoteLoad.gitClone(gitURL, branch).fail(
                     function(err) {
                         events.emit('verbose', err);
-                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' from Git.');
+                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' using git.');
                     }
                 );
             } else if (isNPM) {
-                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' from NPM...');
+                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using npm...');
 
                 // Determine package name, and version
                 if (cfg.lib.www.url.indexOf('@') !== -1) {
@@ -205,13 +205,13 @@ function create(dir, optionalId, optionalName, cfg) {
                     packageVersion = parseArr[1];
                 } else {
                     packageName = cfg.lib.www.url;
-                    packageVersion = '';
+                    packageVersion = 'latest';
                 }
 
                 return remoteLoad.npmFetch(packageName, packageVersion).fail(
                     function(err) {
                         events.emit('verbose', err);
-                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' from NPM.');
+                        return Q.reject('Failed to retrieve '+ cfg.lib.www.url + ' using npm.');
                     }
                 );
             } else {

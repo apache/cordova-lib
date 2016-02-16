@@ -65,7 +65,7 @@ describe('emulate command', function() {
     describe('success', function() {
         it('should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function(done) {
             cordova.raw.emulate(['android','ios']).then(function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios']);
+                expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['android', 'ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('android');
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
                 expect(platformApi.run).toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('emulate command', function() {
         });
         it('should pass down options', function(done) {
             cordova.raw.emulate({platforms: ['ios'], options: {optionTastic: true }}).then(function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith(['ios']);
+                expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
                 expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
             })
@@ -89,7 +89,7 @@ describe('emulate command', function() {
 
             cordova.on('warn', warnSpy);
             cordova.raw.emulate({platforms:['ios'], options:['--optionTastic']}).then(function () {
-                expect(prepare_spy).toHaveBeenCalledWith(['ios']);
+                expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
                 expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({emulator: true, argv: ['--optionTastic']}));
             })

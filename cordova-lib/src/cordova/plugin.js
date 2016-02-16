@@ -188,7 +188,8 @@ module.exports = function plugin(command, targets, opts) {
                                 // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
                                 // and files from 'platform_www' merged into 'www'. Thus we need to persist these
                                 // files platform_www directory, so they'll be applied to www on each prepare.
-                                usePlatformWww: true
+                                usePlatformWww: true,
+                                nohooks: opts.nohooks
                             };
 
                             events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);

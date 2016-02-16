@@ -76,9 +76,6 @@ function Platform(platformString) {
 // Returns a promise for the path to the lazy-loaded directory.
 function based_on_config(project_root, platform, opts) {
     var custom_path = config.has_custom_path(project_root, platform);
-    if (custom_path === false && platform === 'windows') {
-        custom_path = config.has_custom_path(project_root, 'windows8');
-    }
     if (custom_path) {
         var dot_file = config.read(project_root),
             mixed_platforms = _.extend({}, platforms);
