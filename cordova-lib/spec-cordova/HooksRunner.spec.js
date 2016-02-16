@@ -450,6 +450,14 @@ describe('HooksRunner', function() {
                                 delete call.args[1].plugin.pluginInfo._et;
                             }
 
+                            if(call.args[0] == 'before_plugin_install' ||
+                                call.args[0] == 'after_plugin_install') {
+                                // before_plugin_install and after_plugin_install include cli_variables
+                                androidPluginOpts.plugin.variables = {
+                                    'PACKAGE_NAME': 'io.cordova.hellocordova'
+                                };
+                            }
+
                             if(call.args[0] == 'before_plugin_uninstall' ||
                                 call.args[0] == 'before_plugin_install' ||
                                 call.args[0] == 'after_plugin_install') {
