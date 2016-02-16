@@ -19,8 +19,6 @@
 
 var cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
-    events       = require('cordova-common').events,
-    Q            = require('q'),
     promiseUtil  = require('../util/promise-util'),
     platform_lib = require('../platforms/platforms');
 
@@ -39,8 +37,5 @@ module.exports = function compile(options) {
         });
     }).then(function() {
         return hooksRunner.fire('after_compile', options);
-    }, function(error) {
-        events.emit('log', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
-        return Q.reject(error);
     });
 };
