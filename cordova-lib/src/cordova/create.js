@@ -191,8 +191,7 @@ function create(dir, optionalId, optionalName, cfg) {
 
                 return remoteLoad.gitClone(gitURL, branch).fail(
                     function(err) {
-                        events.emit('warn', err.message);
-                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using git.'));
+                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using git: ' + err.message));
                     }
                 );
             } else if (isNPM) {
@@ -211,7 +210,7 @@ function create(dir, optionalId, optionalName, cfg) {
                 return remoteLoad.npmFetch(packageName, packageVersion).fail(
                     function(err) {
                         events.emit('warn', err.message);
-                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using npm.'));
+                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using npm: ' + err.message));
                     }
                 );
             } else {

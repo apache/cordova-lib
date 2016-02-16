@@ -27,7 +27,8 @@ function handleError(error) {
     if (error.code === 'ENOENT') {
         events.emit('warn', 'Platform does not support ' + this.script);
     } else {
-        events.emit('warn', 'An unexpected error has occured while running ' + this.script);
+        events.emit('warn', 'An unexpected error has occured while running ' + this.script +
+            ' with code ' + error.code + ': ' + error);
     }
 }
 
