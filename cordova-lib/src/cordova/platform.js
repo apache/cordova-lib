@@ -180,18 +180,21 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
 
-                return promise().then(function () {
+                return promise()
+                .then(function() {
+                    if (cmd == 'add') {
+                        return installPluginsForNewPlatform(platform, projectRoot, opts);
+                    }
+                })
+                .then(function () {
                     // Call prepare for the current platform.
                     var prepOpts = {
                         platforms :[platform],
                         searchpath :opts.searchpath
                     };
                     return require('./cordova').raw.prepare(prepOpts);
-                }).then(function() {
-                    if (cmd == 'add') {
-                        return installPluginsForNewPlatform(platform, projectRoot, opts);
-                    }
-                }).then(function() {
+                })
+                .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
