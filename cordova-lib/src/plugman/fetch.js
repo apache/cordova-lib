@@ -135,7 +135,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             var splitVersion = plugin_src.split('@');
             var newID = pluginMapperotn[splitVersion[0]];
             if(newID) {
-                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');                
+                events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
                 plugin_src = newID;
                 if (splitVersion[1]) {
                     plugin_src += '@'+splitVersion[1];
