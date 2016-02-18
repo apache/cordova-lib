@@ -26,6 +26,7 @@ var helpers = require('./helpers'),
     Q = require('q'),
     events = require('cordova-common').events,
     cordova = require('../src/cordova/cordova'),
+    plugman = require('../src/plugman/plugman'),
     rewire = require('rewire'),
     platform = rewire('../src/cordova/platform.js');
 
@@ -132,9 +133,6 @@ describe('platform end-to-end', function () {
         .then(function() {
             return cordova.raw.platform('add', [helpers.testPlatform]);
         })
-        .then(function () {
-            return cordova.raw.prepare([helpers.testPlatform]);
-        })
         .then(function() {
             // Check the platform add was successful.
             expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
@@ -145,6 +143,24 @@ describe('platform end-to-end', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
+    });
+
+    it('should call prepare after plugins were installed into platform', function(done) {
+        var order = '';
+        var fail = jasmine.createSpy(fail);
+        spyOn(plugman.raw, 'install').andCallFake(function() { order += 'I'; });
+        spyOn(cordova.raw, 'prepare').andCallFake(function() { order += 'P'; });
+
+        cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
+        .then(function() {
+            return cordova.raw.platform('add', [helpers.testPlatform]);
+        })
+        .fail(fail)
+        .fin(function() {
+            expect(order).toBe('IP'); // Install first, then prepare
+            expect(fail).not.toHaveBeenCalled();
+            done();
+        });
     });
 });
 
