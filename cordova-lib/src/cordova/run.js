@@ -43,11 +43,6 @@ module.exports = function run(options) {
             }));
         }).then(function() {
             return hooksRunner.fire('after_run', options);
-        }, function(error) {
-            events.emit('log', 'ERROR running one or more of the platforms: ' + error + '\nYou may not have the required environment or OS to run this project');
-
-            // CB-10567 bubble up `run` error, so the caller still could get rejected promise
-            return Q.reject(error);
         });
     });
 };
