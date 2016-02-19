@@ -84,7 +84,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         var parts = target.split('@');
         var platform = parts[0];
         var spec = parts[1];
-        var platDetails = "";
+        var platDetails = '';
 
         return Q.when().then(function() {
             if (!(platform in platforms)) {
@@ -118,7 +118,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             return downloadPlatform(projectRoot, platform, spec, opts);
         }).then(function(platformDetails) {
             platDetails = platformDetails;
-            console.log(JSON.stringify(opts));
             var hookOpts = {
                 platforms :[platDetails.platform],
                 nohooks :[opts.nohooks]
