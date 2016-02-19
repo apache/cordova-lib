@@ -79,148 +79,157 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     var platformsDir = path.join(projectRoot, 'platforms');
     shell.mkdir('-p', platformsDir);
 
-    return hooksRunner.fire('before_platform_' + cmd, opts)
-    .then(function() {
-        return promiseutil.Q_chainmap(targets, function(target) {
-            // For each platform, download it and call its helper script.
-            var parts = target.split('@');
-            var platform = parts[0];
-            var spec = parts[1];
+    return promiseutil.Q_chainmap(targets, function(target) {
+        // For each platform, download it and call its helper script.
+        var parts = target.split('@');
+        var platform = parts[0];
+        var spec = parts[1];
+        var platDetails = "";
 
-            return Q.when().then(function() {
-                if (!(platform in platforms)) {
-                    spec = platform;
-                    platform = null;
+        return Q.when().then(function() {
+            if (!(platform in platforms)) {
+                spec = platform;
+                platform = null;
+            }
+
+            if(platform === 'amazon-fireos') {
+                events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
+            }
+            if(platform === 'wp8') {
+                events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
+            }
+            if (platform && !spec && cmd == 'add') {
+                events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
+                spec = getVersionFromConfigFile(platform, cfg);
+            }
+
+            // If --save/autosave on && no version specified, use the pinned version
+            // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
+            if( (opts.save || autosave) && !spec ){
+                spec = platforms[platform].version;
+            }
+
+            if (spec) {
+                var maybeDir = cordova_util.fixRelativePath(spec);
+                if (cordova_util.isDirectory(maybeDir)) {
+                    return getPlatformDetailsFromDir(maybeDir, platform);
+                }
+            }
+            return downloadPlatform(projectRoot, platform, spec, opts);
+        }).then(function(platformDetails) {
+            platDetails = platformDetails;
+            console.log(JSON.stringify(opts));
+            var hookOpts = {
+                platforms :[platDetails.platform],
+                nohooks :[opts.nohooks]
+            };
+            return hooksRunner.fire('before_platform_' + cmd, hookOpts);
+        }).then(function() {
+            platform = platDetails.platform;
+            var platformPath = path.join(projectRoot, 'platforms', platform);
+            var platformAlreadyAdded = fs.existsSync(platformPath);
+
+            if (cmd == 'add') {
+                if (platformAlreadyAdded) {
+                    throw new CordovaError('Platform ' + platform + ' already added.');
                 }
 
-                if(platform === 'amazon-fireos') {
-                    events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
+                // Remove the <platform>.json file from the plugins directory, so we start clean (otherwise we
+                // can get into trouble not installing plugins if someone deletes the platform folder but
+                // <platform>.json still exists).
+                removePlatformPluginsJson(projectRoot, target);
+            } else if (cmd == 'update') {
+                if (!platformAlreadyAdded) {
+                    throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
+                        cordova_util.binname + ' platform list`.');
                 }
-                if(platform === 'wp8') {
-                    events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
-                }
-                if (platform && !spec && cmd == 'add') {
-                    events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
-                    spec = getVersionFromConfigFile(platform, cfg);
-                }
+            }
 
-                // If --save/autosave on && no version specified, use the pinned version
-                // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                if( (opts.save || autosave) && !spec ){
-                    spec = platforms[platform].version;
-                }
+            var options = {
+                // We need to pass a platformDetails into update/create
+                // since PlatformApiPoly needs to know something about
+                // platform, it is going to create.
+                platformDetails: platDetails,
+                link: opts.link
+            };
 
-                if (spec) {
-                    var maybeDir = cordova_util.fixRelativePath(spec);
-                    if (cordova_util.isDirectory(maybeDir)) {
-                        return getPlatformDetailsFromDir(maybeDir, platform);
-                    }
-                }
-                return downloadPlatform(projectRoot, platform, spec, opts);
-            }).then(function(platDetails) {
-                platform = platDetails.platform;
-                var platformPath = path.join(projectRoot, 'platforms', platform);
-                var platformAlreadyAdded = fs.existsSync(platformPath);
+            if (config_json && config_json.lib && config_json.lib[platform] &&
+                config_json.lib[platform].template) {
+                options.customTemplate = config_json.lib[platform].template;
+            }
 
+            events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
+
+            var PlatformApi;
+            try {
+                // Try to get PlatformApi class from platform
+                // Get an entry point for platform package
+                var apiEntryPoint = require.resolve(platDetails.libDir);
+                // Validate entry point filename. This is required since most of platforms
+                // defines 'main' entry in package.json pointing to bin/create which is
+                // basically a valid NodeJS script but intended to be used as a regular
+                // executable script.
+                if (path.basename(apiEntryPoint) === 'Api.js') {
+                    PlatformApi = require(apiEntryPoint);
+                    events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
+                }
+            } catch (e) {
+            } finally {
+                if (!PlatformApi) {
+                    events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                        '". Using polyfill instead.');
+                    PlatformApi = require('../platforms/PlatformApiPoly');
+                }
+            }
+
+            var destination = path.resolve(projectRoot, 'platforms', platform);
+            var promise = cmd === 'add' ?
+                PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
+                PlatformApi.updatePlatform.bind(null, destination, options, events);
+
+            return promise()
+            .then(function() {
                 if (cmd == 'add') {
-                    if (platformAlreadyAdded) {
-                        throw new CordovaError('Platform ' + platform + ' already added.');
-                    }
-
-                    // Remove the <platform>.json file from the plugins directory, so we start clean (otherwise we
-                    // can get into trouble not installing plugins if someone deletes the platform folder but
-                    // <platform>.json still exists).
-                    removePlatformPluginsJson(projectRoot, target);
-                } else if (cmd == 'update') {
-                    if (!platformAlreadyAdded) {
-                        throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
-                            cordova_util.binname + ' platform list`.');
-                    }
+                    return installPluginsForNewPlatform(platform, projectRoot, opts);
                 }
-
-                var options = {
-                    // We need to pass a platformDetails into update/create
-                    // since PlatformApiPoly needs to know something about
-                    // platform, it is going to create.
-                    platformDetails: platDetails,
-                    link: opts.link
+            })
+            .then(function () {
+                // Call prepare for the current platform.
+                var prepOpts = {
+                    platforms :[platform],
+                    searchpath :opts.searchpath
                 };
-
-                if (config_json && config_json.lib && config_json.lib[platform] &&
-                    config_json.lib[platform].template) {
-                    options.customTemplate = config_json.lib[platform].template;
-                }
-
-                events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-
-                var PlatformApi;
-                try {
-                    // Try to get PlatformApi class from platform
-                    // Get an entry point for platform package
-                    var apiEntryPoint = require.resolve(platDetails.libDir);
-                    // Validate entry point filename. This is required since most of platforms
-                    // defines 'main' entry in package.json pointing to bin/create which is
-                    // basically a valid NodeJS script but intended to be used as a regular
-                    // executable script.
-                    if (path.basename(apiEntryPoint) === 'Api.js') {
-                        PlatformApi = require(apiEntryPoint);
-                        events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-                    }
-                } catch (e) {
-                } finally {
-                    if (!PlatformApi) {
-                        events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
-                            '". Using polyfill instead.');
-                        PlatformApi = require('../platforms/PlatformApiPoly');
-                    }
-                }
-
-                var destination = path.resolve(projectRoot, 'platforms', platform);
-                var promise = cmd === 'add' ?
-                    PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
-                    PlatformApi.updatePlatform.bind(null, destination, options, events);
-
-                return promise()
-                .then(function() {
-                    if (cmd == 'add') {
-                        return installPluginsForNewPlatform(platform, projectRoot, opts);
-                    }
-                })
-                .then(function () {
-                    // Call prepare for the current platform.
-                    var prepOpts = {
-                        platforms :[platform],
-                        searchpath :opts.searchpath
-                    };
-                    return require('./cordova').raw.prepare(prepOpts);
+                return require('./cordova').raw.prepare(prepOpts);
                 })
                 .then(function() {
-                    var saveVersion = !spec || semver.validRange(spec, true);
+                var saveVersion = !spec || semver.validRange(spec, true);
 
-                    // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
-                    // source location was specified, we always save that. Otherwise we save the version that was
-                    // actually installed.
-                    var versionToSave = saveVersion ? platDetails.version : spec;
-                    events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
-                    platformMetadata.save(projectRoot, platform, versionToSave);
+                // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
+                // source location was specified, we always save that. Otherwise we save the version that was
+                // actually installed.
+                var versionToSave = saveVersion ? platDetails.version : spec;
+                events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
+                platformMetadata.save(projectRoot, platform, versionToSave);
 
-                    if(opts.save || autosave){
-                        // Similarly here, we save the source location if that was specified, otherwise the version that
-                        // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-                        spec = saveVersion ? '~' + platDetails.version : spec;
+                if(opts.save || autosave){
+                    // Similarly here, we save the source location if that was specified, otherwise the version that
+                    // was installed. However, we save it with the "~" attribute (this allows for patch updates).
+                    spec = saveVersion ? '~' + platDetails.version : spec;
 
-                        // Save target into config.xml, overriding already existing settings
-                        events.emit('log', '--save flag or autosave detected');
-                        events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
-                        cfg.removeEngine(platform);
-                        cfg.addEngine(platform, spec);
-                        cfg.write();
-                    }
-                });
+                    // Save target into config.xml, overriding already existing settings
+                    events.emit('log', '--save flag or autosave detected');
+                    events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
+                    cfg.removeEngine(platform);
+                    cfg.addEngine(platform, spec);
+                    cfg.write();
+                }
+                var hookOpts = {
+                    platforms :[platDetails.platform],
+                    nohooks :[opts.nohooks]
+                };
+                return hooksRunner.fire('after_platform_' + cmd, hookOpts);
             });
         });
-    }).then(function() {
-        return hooksRunner.fire('after_platform_' + cmd, opts);
     });
 }
 
