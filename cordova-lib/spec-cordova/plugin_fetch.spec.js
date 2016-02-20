@@ -177,13 +177,14 @@ describe('plugin fetching version selection', function(done) {
         testEngineWithProject(done, testEngine, '1.1.0');
     });
 
-    it('should account for complex versions', function(done) {
+    it('should not include pre-release versions', function(done) {
         var testEngine = {
             '0.0.0' : {},
             '2.0.0' : { 'cordova-android': '>5.0.0' }
         };
 
-        testEngineWithProject(done, testEngine, '2.0.0-rc.2');
+        // Should not return 2.0.0-rc.2
+        testEngineWithProject(done, testEngine, '1.7.1');
     });
 
     it('should not fail if there is no engine in the npm info', function(done) {
