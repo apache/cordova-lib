@@ -594,7 +594,7 @@ function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformM
                     upperBound = maxMatchingUpperBound;
                 }
             }
-        } else if(semver.valid(version) && allVersions.indexOf(version) !== -1) {
+        } else if(semver.valid(version)) {
             versions.push(version);
         }
     }

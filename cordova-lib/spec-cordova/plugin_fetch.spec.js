@@ -147,14 +147,14 @@ describe('plugin fetching version selection', function(done) {
         testEngineWithProject(done, testEngine, null);
     });
 
-    it('should ignore nonexistent versions in constraints', function(done) {
+    it('should respect unreleased versions in constraints', function(done) {
         var testEngine = {
             '1.0.0' : { 'cordova-android': '3.1.0' },
             '1.1.2' : { 'cordova-android': '6.0.0' },
             '1.3.0' : { 'cordova-android': '6.0.0' }
         };
 
-        testEngineWithProject(done, testEngine, '1.1.3');
+        testEngineWithProject(done, testEngine, '1.1.0');
     });
 
     it('should respect plugin constraints', function(done) {
