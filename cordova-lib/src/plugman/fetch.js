@@ -199,8 +199,8 @@ function loadLocalPlugins(searchpath, pluginInfoProvider) {
         if ( !underscore.isEqual(localPlugins.searchpath, searchpath) ) {
             var msg =
                 'loadLocalPlugins called twice with different search paths.' +
-                'Support for this is not implemented.';
-            throw new Error(msg);
+                'Support for this is not implemented.  Using previously cached path.';
+            events.emit('warn', msg);
         }
         return;
     }
