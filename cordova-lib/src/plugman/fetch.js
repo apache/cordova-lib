@@ -135,13 +135,32 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             var splitVersion = plugin_src.split('@');
             var newID = pluginMapperotn[splitVersion[0]];
             if(newID) {
-                events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
                 plugin_src = newID;
                 if (splitVersion[1]) {
                     plugin_src += '@'+splitVersion[1];
                 }
-            } 
-            return registry.fetch([plugin_src])
+            }
+            var P, skipCopyingPlugin;
+            plugin_dir = path.join(plugins_dir, splitVersion[0]);
+            // if the plugin has already been fetched, use it.
+            if (fs.existsSync(plugin_dir)) {
+                P = Q(plugin_dir);
+                skipCopyingPlugin = true;
+            } else {
+                // if the plugin alias has already been fetched, use it.
+                var alias = pluginMappernto[splitVersion[0]] || newID;
+                if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+                    P = Q(path.join(plugins_dir, alias));
+                    skipCopyingPlugin = true;
+                } else {
+                    if (newID) {
+                        events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
+                    }
+                    P = registry.fetch([plugin_src]);
+                    skipCopyingPlugin = false;
+                }
+            }
+            return P
             .fail(function (error) {
                 var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
                     '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
@@ -151,17 +170,23 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             })
             .then(function(dir) {
                 return {
-                        pinfo: pluginInfoProvider.get(dir),
+                    pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
                         id: plugin_src
-                    }
+                    },
+                    skipCopyingPlugin: skipCopyingPlugin
                 };
             });
         }).then(function(result) {
             options.plugin_src_dir = result.pinfo.dir;
-            return Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'))
-            .then(function(dir) {
+            var P;
+            if (result.skipCopyingPlugin) {
+                P = Q(options.plugin_src_dir);
+            } else {
+                P = Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'));
+            }
+            return P.then(function(dir) {
                 result.dest = dir;
                 return result;
             });
@@ -182,7 +207,10 @@ function checkID(expectedIdAndVersion, pinfo) {
     var expectedId = expectedIdAndVersion.split('@')[0];
     var expectedVersion = expectedIdAndVersion.split('@')[1];
     if (expectedId != pinfo.id) {
-        throw new Error('Expected plugin to have ID "' + expectedId + '" but got "' + pinfo.id + '".');
+        var alias = pluginMappernto[expectedId] || pluginMapperotn[expectedId];
+        if (alias !== pinfo.id) {
+            throw new Error('Expected plugin to have ID "' + expectedId + '" but got "' + pinfo.id + '".');
+        }
     }
     if (expectedVersion && !semver.satisfies(pinfo.version, expectedVersion)) {
         throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + expectedVersion + '" but got "' + pinfo.version + '".');

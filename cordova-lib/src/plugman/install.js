@@ -36,7 +36,7 @@ var path = require('path'),
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew,
+    pluginMapper = require('cordova-registry-mapper'),
     cordovaUtil = require('../cordova/util');
 
 var superspawn = require('cordova-common').superspawn;
@@ -79,21 +79,36 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     }
 
     var current_stack = new action_stack();
-
     // Split @Version from the plugin id if it exists.
     var splitVersion = id.split('@');
     //Check if a mapping exists for the plugin id
     //if it does, convert id to new name id
-    var newId = pluginMapper[splitVersion[0]];
+    var newId = pluginMapper.oldToNew[splitVersion[0]];
     if(newId) {
-        events.emit('warn', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
         if(splitVersion[1]) {
             id = newId +'@'+splitVersion[1];
         } else {
             id = newId;
         }
-     }
-    return possiblyFetch(id, plugins_dir, options)
+    }
+    var P;
+    var plugin_dir = path.join(plugins_dir, splitVersion[0]);
+    // if the plugin has already been fetched, use it.
+    if (fs.existsSync(plugin_dir)) {
+        P = Q(plugin_dir);
+    } else {
+        var alias = pluginMapper.newToOld[splitVersion[0]] || newId;
+        // if the plugin alias has already been fetched, use it.
+        if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+            P = Q(path.join(plugins_dir, alias));
+        } else {
+            if (newId) {
+                events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+            }
+            P = possiblyFetch(id, plugins_dir, options);
+        }
+    }
+    return P
     .then(function(plugin_dir) {
         return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
     });
@@ -105,17 +120,16 @@ function possiblyFetch(id, plugins_dir, options) {
 
     // if plugin is a relative path, check if it already exists
     var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, id);
-
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
 
+    // if plugin doesnt exist, use fetch to get it.
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
 
-    // if plugin doesnt exist, use fetch to get it.
     return plugman.raw.fetch(id, plugins_dir, opts);
 }
 
@@ -291,7 +305,6 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     var pluginInfoProvider = options.pluginInfoProvider;
     var pluginInfo   = pluginInfoProvider.get(plugin_dir);
     var filtered_variables = {};
-
     var platformJson = PlatformJson.load(plugins_dir, platform);
 
     if (platformJson.isPluginInstalled(pluginInfo.id)) {
@@ -431,7 +444,7 @@ function installDependencies(install, dependencies, options) {
                 var splitVersion = dep.id.split('@');
                 //Check if a mapping exists for the plugin id
                 //if it does, convert id to new name id
-                var newId = pluginMapper[splitVersion[0]];
+                var newId = pluginMapper.oldToNew[splitVersion[0]];
                 if(newId) {
                     events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
                     if(splitVersion[1]) {
