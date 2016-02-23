@@ -196,7 +196,7 @@ function getInstalledPlatformsWithVersions(project_dir) {
         .then(function(v) {
             result[p] = v || null;
         }, function(v) {
-            result[p] = v || 'broken';
+            result[p] = 'broken';
         });
     })).then(function() {
         return result;

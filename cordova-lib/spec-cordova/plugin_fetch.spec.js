@@ -43,6 +43,8 @@ var cordovaVersion = '3.4.2';
 var tempDir = helpers.tmpDir('plugin_fetch_spec');
 var project = path.join(tempDir, 'project');
 
+var getVersionErrorCallback;
+
 function testEngineWithProject(done, testEngine, testResult) {
     plugin.getFetchVersion(project,
         {
@@ -52,10 +54,8 @@ function testEngineWithProject(done, testEngine, testResult) {
     .then(function(toFetch) {
         expect(toFetch).toBe(testResult);
     })
-    .fail(function(err) {
-        console.log(err);
-        expect(true).toBe(false);
-    }).fin(done);
+    .fail(getVersionErrorCallback)
+    .fin(done);
 }
 
 function createTestProject() {
@@ -78,6 +78,14 @@ function removeTestProject() {
 
 describe('plugin fetching version selection', function(done) {
     createTestProject();
+
+    beforeEach(function() {
+        getVersionErrorCallback = jasmine.createSpy('unexpectedPluginFetchErrorCallback');
+    });
+
+    afterEach(function() {
+        expect(getVersionErrorCallback).not.toHaveBeenCalled();
+    });
 
     it('should properly handle a mix of upper bounds and single versions', function() {
         var testEngine = {
