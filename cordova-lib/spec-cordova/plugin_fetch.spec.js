@@ -115,12 +115,12 @@ describe('plugin fetching version selection', function(done) {
         testEngineWithProject(done, testEngine, null);
     });
 
-    it('should ignore upperbounds if no version constraints are given', function(done) {
+    it('should handle upperbounds if no single version constraints are given', function(done) {
         var testEngine = {
             '<1.0.0': { 'cordova-android': '<2.0.0' }
         };
 
-        testEngineWithProject(done, testEngine, null);
+        testEngineWithProject(done, testEngine, '2.3.0');
     });
 
     it('should apply upper bounds greater than highest version', function(done) {
