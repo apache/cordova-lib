@@ -269,7 +269,7 @@ describe('ios project handler', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'addFramework');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true, embed:true, link:undefined});
             });
 
             // TODO: Add more tests to cover the cases:
@@ -299,6 +299,21 @@ describe('ios project handler', function() {
                                                      path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin'));
                 });
             });
+
+            it('with embed="false" attribute should call into xcodeproj\'s addFramework accordingly', function() {
+                var frameworks = copyArray(valid_custom_frameworks);
+                var spy = spyOn(proj_files.xcode, 'addFramework');
+                ios['framework'].install(frameworks[1], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/NonEmbeddable.framework'), {customFramework:true, embed:false, link:undefined});
+            });
+
+            it('with link="false" attribute should call into xcodeproj\'s addFramework accordingly', function() {
+                var frameworks = copyArray(valid_custom_frameworks);
+                var spy = spyOn(proj_files.xcode, 'addFramework');
+                ios['framework'].install(frameworks[2], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Unlinkable.framework'), {customFramework:true, embed:false, link:false});
+            });
+
         });
         it('of two plugins should apply xcode file changes from both', function(){
             runs(function() {

@@ -305,6 +305,8 @@ function PluginInfo(dirname) {
                 type: el.attrib.type,
                 parent: el.attrib.parent,
                 custom: isStrTrue(el.attrib.custom),
+                embed: el.attrib.embed === undefined ? undefined : isStrTrue(el.attrib.embed),
+                link: el.attrib.link === undefined ? undefined : isStrTrue(el.attrib.link),
                 src: el.attrib.src,
                 weak: isStrTrue(el.attrib.weak),
                 versions: el.attrib.versions,
