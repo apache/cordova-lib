@@ -21,7 +21,8 @@
     "email": "dev@cordova.apache.org"
   },
   "dependencies": {
-    "cordova-common": "^1.0.0"
+    "cordova-common": "^1.0.0",
+    "dependency-ls": "^1.0.0"
   },
   "devDependencies": {
     "jshint": "^2.8.0",
