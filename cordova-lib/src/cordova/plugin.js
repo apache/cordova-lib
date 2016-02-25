@@ -308,6 +308,8 @@ function determinePluginTarget(projectRoot, cfg, target) {
             return registry.info([id])
             .then(function(pluginInfo) {
                 return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
+            }, function(error) {
+                return Q(null);
             })
             .then(function(fetchVersion) {
                 // Fallback to pinned version if available
