@@ -25,7 +25,6 @@ var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
     platforms     = require('../platforms/platforms'),
-    npmconf       = require('npmconf'),
     events        = require('cordova-common').events,
     request       = require('request'),
     config        = require('./config'),
@@ -216,15 +215,15 @@ function custom(platforms, platform) {
     }).then(function() {
         var uri = URL.parse(url);
         var d = Q.defer();
-        npmconf.load(function(err, conf) {
+        npm.load(function(err) {
             // Check if NPM proxy settings are set. If so, include them in the request() call.
             var proxy;
             if (uri.protocol == 'https:') {
-                proxy = conf.get('https-proxy');
+                proxy = npm.config.get('https-proxy');
             } else if (uri.protocol == 'http:') {
-                proxy = conf.get('proxy');
+                proxy = npm.config.get('proxy');
             }
-            var strictSSL = conf.get('strict-ssl');
+            var strictSSL = npm.config.get('strict-ssl');
 
             // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
             // fails in this case with "EXDEV, cross-device link not permitted".
