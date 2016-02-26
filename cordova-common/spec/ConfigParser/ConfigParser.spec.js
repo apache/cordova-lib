@@ -228,5 +228,54 @@ describe('config.xml parser', function () {
                 expect(navigations.length).not.toEqual(0);
             });
         });
+        describe('static resources', function() {
+            var hasPlatformPropertyDefined = function (e) { return !!e.platform; };
+            var hasSrcPropertyDefined = function (e) { return !!e.src; };
+            var hasTargetPropertyDefined = function (e) { return !!e.target; };
+            var hasDensityPropertyDefined = function (e) { return !!e.density; };
+            var hasPlatformPropertyUndefined = function (e) { return !e.platform; };
+
+            it('should fetch shared resources if platform parameter is not specified', function() {
+                expect(cfg.getStaticResources(null, 'icon').length).toBe(2);
+                expect(cfg.getStaticResources(null, 'icon').every(hasPlatformPropertyUndefined)).toBeTruthy();
+            });
+
+            it('should fetch platform-specific resources along with shared if platform parameter is specified', function() {
+                expect(cfg.getStaticResources('android', 'icon').length).toBe(5);
+                expect(cfg.getStaticResources('android', 'icon').some(hasPlatformPropertyDefined)).toBeTruthy();
+                expect(cfg.getStaticResources('android', 'icon').filter(hasPlatformPropertyDefined).length).toBe(3);
+                expect(cfg.getStaticResources('android', 'icon').some(hasPlatformPropertyUndefined)).toBeTruthy();
+            });
+
+            it('should parse resources\' attributes', function() {
+                expect(cfg.getStaticResources(null, 'icon').every(hasSrcPropertyDefined)).toBeTruthy();
+                expect(cfg.getStaticResources('windows', 'icon').filter(hasPlatformPropertyDefined).every(hasTargetPropertyDefined)).toBeTruthy();
+                expect(cfg.getStaticResources('android', 'icon').filter(hasPlatformPropertyDefined).every(hasDensityPropertyDefined)).toBeTruthy();
+                expect(cfg.getStaticResources('android', 'icon').filter(hasPlatformPropertyDefined).every(hasDensityPropertyDefined)).toBeTruthy();
+            });
+
+            it('should have defaultResource property', function() {
+                expect(cfg.getStaticResources(null, 'icon').defaultResource).toBeDefined();
+                expect(cfg.getStaticResources(null, 'icon').defaultResource.src).toBe('icon.png');
+            });
+
+            it('should have getDefault method returning defaultResource property', function() {
+                expect(cfg.getStaticResources(null, 'icon').defaultResource).toEqual(cfg.getStaticResources(null, 'icon').getDefault());
+            });
+
+            it('should have getBySize method returning resource with size specified or null', function() {
+                expect(cfg.getStaticResources('windows', 'icon').getBySize(128)).toBe(null);
+                expect(cfg.getStaticResources('windows', 'icon').getBySize(72)).toBeDefined();
+                expect(cfg.getStaticResources('windows', 'icon').getBySize(72).width).toBe(72);
+                expect(cfg.getStaticResources('windows', 'icon').getBySize(null, 48)).toBeDefined();
+                expect(cfg.getStaticResources('windows', 'icon').getBySize(null, 48).height).toBe(48);
+            });
+
+            it('should have getByDensity method returning resource with density specified or null', function() {
+                expect(cfg.getStaticResources('android', 'icon').getByDensity('hdpi')).toBe(null);
+                expect(cfg.getStaticResources('android', 'icon').getByDensity('mdpi')).toBeDefined();
+                expect(cfg.getStaticResources('android', 'icon').getByDensity('mdpi').src).toBe('logo-android.png');
+            });
+        });
     });
 });
