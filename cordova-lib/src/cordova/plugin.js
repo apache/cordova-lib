@@ -133,7 +133,7 @@ module.exports = function plugin(command, targets, opts) {
                                 is_top_level: true
                             };
 
-                            return determinePluginTarget(projectRoot, cfg, target)
+                            return determinePluginTarget(projectRoot, cfg, target, fetchOptions)
                             .then(function(resolvedTarget) {
                                 target = resolvedTarget;
                                 events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
@@ -286,7 +286,7 @@ module.exports = function plugin(command, targets, opts) {
     });
 };
 
-function determinePluginTarget(projectRoot, cfg, target) {
+function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     var parts = target.split('@');
     var id = parts[0];
     var version = parts[1];
@@ -302,16 +302,23 @@ function determinePluginTarget(projectRoot, cfg, target) {
             // If version exists in config.xml, use that
             target = id + '@' + ver;
         } else {
-            // If no version is given at all, We need to decide what version to
-            // fetch based on the current project
-            events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
-            return registry.info([id])
+            // If no version is given at all and we are fetching from npm, we
+            // can attempt to use the Cordova dependencies the plugin lists in
+            // their package.json
+            var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
+
+            if(shouldUseNpmInfo) {
+                events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
+            }
+
+            return (shouldUseNpmInfo ? registry.info([id]) : Q({}))
             .then(function(pluginInfo) {
                 return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
             }, function(error) {
-                return Q(null);
+                return Q.reject(new CordovaError(error));
             })
             .then(function(fetchVersion) {
+                // console.log("FetchVersion: " + fetchVersion);
                 // Fallback to pinned version if available
                 fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
                 return fetchVersion ? (id + '@' + fetchVersion) : target;
@@ -578,7 +585,7 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
         });
     } else {
         // If we have no engine, we want to fall back to the default behavior
-        events.emit('verbose', 'No plugin engine info found, falling back to latest or pinned version');
+        events.emit('verbose', 'No plugin engine info found or not using registry, falling back to latest or pinned version');
         return Q(null);
     }
 }
