@@ -133,10 +133,11 @@
 
         <!-- framework for testing (not actual dependency of org.test.plugins.dummyplugin -->
         <framework src="src/ios/libsqlite3.dylib" />
-        <framework src="src/ios/libsqlite3.dylib" weak="true" />
+        <framework src="src/ios/weaklibsqlite3.dylib" weak="true" />
         <framework src="src/ios/Custom.framework" custom="true" />
         <framework src="src/ios/NonEmbeddable.framework" custom="true" embed="false" />
         <framework src="src/ios/Unlinkable.framework" custom="true" embed="false" link="false" />
+        <framework src="src/ios/Signable.framework" custom="true" embed="true" sign="true" />
     </platform>
 
     <!-- wp8 -->

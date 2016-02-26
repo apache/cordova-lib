@@ -147,7 +147,8 @@ module.exports = {
             var src = obj.src,
                 custom = obj.custom,
                 embed = obj.embed === undefined || obj.embed, /*defaults to true if not specified to keep behavior from CB-9517*/
-                link = obj.link;
+                link = obj.link,
+                sign = obj.sign;
 
             if (!custom) {
                 var keepFrameworks = keep_these_frameworks;
@@ -169,7 +170,7 @@ module.exports = {
             shell.mkdir('-p', path.dirname(targetDir));
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
-            project.xcode.addFramework(project_relative, {customFramework: true, embed: embed, link: link});
+            project.xcode.addFramework(project_relative, {customFramework: true, embed: embed, link: link, sign:sign});
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
             var src = obj.src;
