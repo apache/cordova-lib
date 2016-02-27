@@ -150,6 +150,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 // if the plugin alias has already been fetched, use it.
                 var alias = pluginMappernto[splitVersion[0]] || newID;
                 if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+                    events.emit('warn', 'Found '+alias+' is already fetched. Skipped fetching '+splitVersion[0]);
                     P = Q(path.join(plugins_dir, alias));
                     skipCopyingPlugin = true;
                 } else {

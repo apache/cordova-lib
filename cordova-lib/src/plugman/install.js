@@ -79,6 +79,15 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     }
 
     var current_stack = new action_stack();
+    return possiblyFetch(id, plugins_dir, options)
+    .then(function(plugin_dir) {
+        return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
+    });
+};
+
+// possible options: subdir, cli_variables, www_dir, git_ref, is_top_level
+// Returns a promise.
+function possiblyFetch(id, plugins_dir, options) {
     // Split @Version from the plugin id if it exists.
     var splitVersion = id.split('@');
     //Check if a mapping exists for the plugin id
@@ -91,41 +100,25 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
             id = newId;
         }
     }
-    var P;
-    var plugin_dir = path.join(plugins_dir, splitVersion[0]);
-    // if the plugin has already been fetched, use it.
-    if (fs.existsSync(plugin_dir)) {
-        P = Q(plugin_dir);
-    } else {
-        var alias = pluginMapper.newToOld[splitVersion[0]] || newId;
-        // if the plugin alias has already been fetched, use it.
-        if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-            P = Q(path.join(plugins_dir, alias));
-        } else {
-            if (newId) {
-                events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-            }
-            P = possiblyFetch(id, plugins_dir, options);
-        }
-    }
-    return P
-    .then(function(plugin_dir) {
-        return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
-    });
-};
-
-// possible options: subdir, cli_variables, www_dir, git_ref, is_top_level
-// Returns a promise.
-function possiblyFetch(id, plugins_dir, options) {
-
     // if plugin is a relative path, check if it already exists
-    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, id);
+    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, splitVersion[0]);
+
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
 
+    var alias = pluginMapper.newToOld[splitVersion[0]] || newId;
+    // if the plugin alias has already been fetched, use it.
+    if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+        events.emit('warn', 'Found ' + alias + ' is already fetched, so it is installed instead of '+splitVersion[0]);
+        return Q(path.join(plugins_dir, alias));
+    }
+
     // if plugin doesnt exist, use fetch to get it.
+    if (newId) {
+        events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+    }
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
@@ -440,20 +433,6 @@ function installDependencies(install, dependencies, options) {
     return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
-                // Split @Version from the plugin id if it exists.
-                var splitVersion = dep.id.split('@');
-                //Check if a mapping exists for the plugin id
-                //if it does, convert id to new name id
-                var newId = pluginMapper.oldToNew[splitVersion[0]];
-                if(newId) {
-                    events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-                    if(splitVersion[1]) {
-                        dep.id = newId +'@'+splitVersion[1];
-                    } else {
-                        dep.id = newId;
-                    }
-                }
-
                 dep.git_ref = dep.commit;
 
                 if (dep.subdir) {
