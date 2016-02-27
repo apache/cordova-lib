@@ -303,6 +303,11 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
             }
         };
 
+        // CB-10708 This is the case when we're trying to uninstall plugin using plugman from specific
+        // platform inside of the existing CLI project. This option is usually set by cordova-lib for CLI projects
+        // but since we're running this code through plugman, we need to set it here implicitly
+        options.usePlatformWww = true;
+
         var hooksRunner = new HooksRunner(projectRoot);
 
         return promise.then(function() {

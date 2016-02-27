@@ -385,6 +385,11 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                     nohooks: options.nohooks
                 };
 
+                // CB-10708 This is the case when we're trying to install plugin using plugman to specific
+                // platform inside of the existing CLI project. In this case we need to put plugin's files
+                // into platform_www but plugman CLI doesn't allow us to do that, so we set it here
+                options.usePlatformWww = true;
+
                 var hooksRunner = new HooksRunner(projectRoot);
 
                 return hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
