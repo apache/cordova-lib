@@ -36,6 +36,9 @@ var cordova_util  = require('./util'),
     pkgJson       = require('../../package.json'),
     opener        = require('opener');
 
+// For upper bounds in cordovaDependencies
+var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
+
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
@@ -318,7 +321,6 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
                 return Q.reject(new CordovaError(error));
             })
             .then(function(fetchVersion) {
-                // console.log("FetchVersion: " + fetchVersion);
                 // Fallback to pinned version if available
                 fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
                 return fetchVersion ? (id + '@' + fetchVersion) : target;
@@ -590,69 +592,107 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
     }
 }
 
+function findVersion(versions, version) {
+    var cleanedVersion = semver.clean(version);
+    return versions.find(function(toCheck) {
+        return semver.clean(toCheck) === cleanedVersion;
+    });
+}
+
+/*
+ * The engine entry maps plugin versions to constraints like so:
+ *  {
+ *      '1.0.0' : { 'cordova': '<5.0.0' },
+ *      '<2.0.0': {
+ *          'cordova': '>=5.0.0',
+ *          'cordova-ios': '~5.0.0',
+ *          'cordova-plugin-camera': '~5.0.0'
+ *      },
+ *      '3.0.0' : { 'cordova-ios': '>5.0.0' }
+ *  }
+ *
+ * See cordova-spec/plugin_fetch.spec.js for test cases and examples
+ */
 function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformMap, cordovaVersion) {
+    // Filters out pre-release versions
+    var latest = semver.maxSatisfying(allVersions, '>=0.0.0');
+
     var versions = [];
-    var latest = allVersions[allVersions.length - 1];
     var upperBound = null;
     var upperBoundRange = null;
 
     for(var version in engine) {
-        if(version.indexOf('<') === 0 && semver.valid(version.substring(1))) {
-            // We only care about upper bounds that our project does not support
-            if(getFailedRequirements(engine[version], pluginMap, platformMap, cordovaVersion).length !== 0) {
-                var maxMatchingUpperBound = semver.maxSatisfying(allVersions, version);
-                if (maxMatchingUpperBound && (!upperBound || semver.gt(maxMatchingUpperBound, upperBound))) {
-                    upperBound = maxMatchingUpperBound;
-                    upperBoundRange = version;
-                }
-            }
-        } else if(semver.valid(version)) {
+        if(semver.valid(semver.clean(version)) && !semver.gt(version, latest)) {
             versions.push(version);
-        }
-    }
-
-    if(versions.length > 0) {
-        // Sort in descending order; we want to start at latest and work back
-        versions.sort(semver.rcompare);
-
-        for(var i = 0; i < versions.length; i++) {
-            if(upperBound && semver.lte(versions[i], upperBound)) {
-                // Because we sorted in desc. order, if the upper bound we found
-                // applies to this version (and thus the ones below) we can just
-                // quit
-                break;
-            }
-
-            var range = i? ('>=' + versions[i] + ' <' + versions[i-1]) : ('>=' + versions[i]);
-            var maxMatchingVersion = semver.maxSatisfying(allVersions, range);
-
-            // Check the version constraint
-            if (maxMatchingVersion && getFailedRequirements(engine[versions[i]], pluginMap, platformMap, cordovaVersion).length === 0) {
-                // Because we sorted in descending order, we can stop searching once
-                // we hit a satisfied constraint
-
-                if (maxMatchingVersion !== latest) {
-                    var failedReqs = getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion);
-                    listUnmetRequirements(failedReqs);
-                    events.emit('warn', 'Fetching highest version of plugin that this project supports: ' + maxMatchingVersion + ' (latest is ' + latest + ')');
+        } else {
+            // Check if this is an upperbound; validRange() handles whitespace
+            var cleanedRange = semver.validRange(version);
+            if(cleanedRange && UPPER_BOUND_REGEX.exec(cleanedRange)) {
+                // We only care about the highest upper bound that our project does not support
+                if(getFailedRequirements(engine[version], pluginMap, platformMap, cordovaVersion).length !== 0) {
+                    var maxMatchingUpperBound = cleanedRange.substring(1);
+                    if (maxMatchingUpperBound && (!upperBound || semver.gt(maxMatchingUpperBound, upperBound))) {
+                        upperBound = maxMatchingUpperBound;
+                        upperBoundRange = version;
+                    }
                 }
-                return maxMatchingVersion;
             }
-        }
-    } else if(upperBound) {
-        // We only have an upperbound to worry about. Use the maxSatisfying
-        // function because it filters out pre-release versions
-        var maybeLatest = semver.maxSatisfying(allVersions, '>=' + upperBound);
-        if(maybeLatest) {
-            return maybeLatest;
         }
     }
 
-    // Nothing is compatible. Fall back to fetching latest but print out a
-    // warning saying what failed
+    // Handle the lower end of versions by giving them a satisfied engine
+    if(!findVersion(versions, '0.0.0')) {
+        versions.push('0.0.0');
+        engine['0.0.0'] = {};
+    }
+
+    // Add an entry after the upper bound to handle the versions above the
+    // upper bound but below the next entry. For example: 0.0.0, <1.0.0, 2.0.0
+    // needs a 1.0.0 entry that has the same engine as 0.0.0
+    if(upperBound && !findVersion(versions, upperBound) && !semver.gt(upperBound, latest)) {
+        versions.push(upperBound);
+        var below = semver.maxSatisfying(versions, upperBoundRange);
+
+        // Get the original entry without trimmed whitespace
+        below = below ? findVersion(versions, below) : null;
+        engine[upperBound] = below ? engine[below] : {};
+    }
+
+    // Sort in descending order; we want to start at latest and work back
+    versions.sort(semver.rcompare);
+
+    for(var i = 0; i < versions.length; i++) {
+        if(upperBound && semver.lt(versions[i], upperBound)) {
+            // Because we sorted in desc. order, if the upper bound we found
+            // applies to this version (and thus the ones below) we can just
+            // quit
+            break;
+        }
+
+        var range = i? ('>=' + versions[i] + ' <' + versions[i-1]) : ('>=' + versions[i]);
+        var maxMatchingVersion = semver.maxSatisfying(allVersions, range);
+
+        if (maxMatchingVersion && getFailedRequirements(engine[versions[i]], pluginMap, platformMap, cordovaVersion).length === 0) {
+
+            // Because we sorted in descending order, we can stop searching once
+            // we hit a satisfied constraint
+            if (maxMatchingVersion !== latest) {
+                var failedReqs = getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion);
+
+                // Warn the user that we are not fetching latest
+                listUnmetRequirements(failedReqs);
+                events.emit('warn', 'Fetching highest version of plugin that this project supports: ' + maxMatchingVersion + ' (latest is ' + latest + ')');
+            }
+            return maxMatchingVersion;
+        }
+    }
+
+    // No version of the plugin is satisfied. In this case, we fall back to
+    // fetching latest or pinned versions, but also output a warning
     var latestFailedReqs = versions.length > 0 ? getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion) : [];
 
-    // We need to merge any failed upperbound requirements if they apply to latest
+    // If the upper bound is greater than latest, we need to combine its engine
+    // requirements with latest to print out in the warning
     if(upperBound && semver.satisfies(latest, upperBoundRange)) {
         var upperFailedReqs = getFailedRequirements(engine[upperBoundRange], pluginMap, platformMap, cordovaVersion);
         upperFailedReqs.forEach(function(failedReq) {
@@ -681,26 +721,29 @@ function getFailedRequirements(reqs, pluginMap, platformMap, cordovaVersion) {
     var failed = [];
 
     for (var req in reqs) {
-        var badInstalledVersion = null;
+        if(reqs.hasOwnProperty(req) && typeof req === 'string' && semver.validRange(reqs[req])) {
+            var badInstalledVersion = null;
+            var trimmedReq = req.trim();
 
-        if(pluginMap[req] && !semver.satisfies(pluginMap[req], reqs[req])) {
-            badInstalledVersion = pluginMap[req];
-        } else if(req === 'cordova' && !semver.satisfies(cordovaVersion, reqs[req])) {
-            badInstalledVersion = cordovaVersion;
-        } else if(req.indexOf('cordova-') === 0) {
-            // Might be a platform constraint
-            var platform = req.substring(8);
-            if(platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req])) {
-                badInstalledVersion = platformMap[platform];
+            if(pluginMap[trimmedReq] && !semver.satisfies(pluginMap[trimmedReq], reqs[req])) {
+                badInstalledVersion = pluginMap[req];
+            } else if(trimmedReq === 'cordova' && !semver.satisfies(cordovaVersion, reqs[req])) {
+                badInstalledVersion = cordovaVersion;
+            } else if(trimmedReq.indexOf('cordova-') === 0) {
+                // Might be a platform constraint
+                var platform = trimmedReq.substring(8);
+                if(platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req])) {
+                    badInstalledVersion = platformMap[platform];
+                }
             }
-        }
 
-        if(badInstalledVersion) {
-            failed.push({
-                dependency: req,
-                installed: badInstalledVersion,
-                required: reqs[req]
-            });
+            if(badInstalledVersion) {
+                failed.push({
+                    dependency: trimmedReq,
+                    installed: badInstalledVersion.trim(),
+                    required: reqs[req].trim()
+                });
+            }
         }
     }
 
