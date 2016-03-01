@@ -594,9 +594,12 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
 
 function findVersion(versions, version) {
     var cleanedVersion = semver.clean(version);
-    return versions.find(function(toCheck) {
-        return semver.clean(toCheck) === cleanedVersion;
-    });
+    for(var i = 0; i < versions.length; i++) {
+        if(semver.clean(versions[i]) === cleanedVersion) {
+            return versions[i];
+        }
+    }
+    return null;
 }
 
 /*

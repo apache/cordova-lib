@@ -79,7 +79,7 @@ function checkUnmetRequirements(requirements) {
 
     warnings.forEach(function(warning) {
         var extracted = UNMET_REQ_REGEX.exec(warning);
-        if(extracted) {
+        if (extracted) {
             reqWarnings.push({
                 dependency: extracted[1],
                 installed: extracted[2],
@@ -161,7 +161,12 @@ describe('plugin fetching version selection', function(done) {
         // Jasmine will print it out if the matcher fails
         this.addMatchers({
             toContain: function(check, expected) {
-                return this.actual.find(check);
+                for(var i = 0; i < this.actual.length; i++) {
+                    if (check(this.actual[i])) {
+                        return true;
+                    }
+                }
+                return false;
             }
         });
 
