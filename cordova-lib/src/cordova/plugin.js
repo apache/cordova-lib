@@ -295,15 +295,17 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     var version = parts[1];
 
     // If no version is specified, retrieve the version (or source) from config.xml
-    if (!version && !cordova_util.isUrl(id) && !cordova_util.isDirectory(id)) {
+    if (version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
+        return Q(target);
+    } else {
         events.emit('verbose', 'No version specified, retrieving version from config.xml');
         var ver = getVersionFromConfigFile(id, cfg);
 
         if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
-            target = ver;
+            return Q(ver);
         } else if (ver) {
             // If version exists in config.xml, use that
-            target = id + '@' + ver;
+            return Q(id + '@' + ver);
         } else {
             // If no version is given at all and we are fetching from npm, we
             // can attempt to use the Cordova dependencies the plugin lists in
@@ -317,8 +319,6 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
             return (shouldUseNpmInfo ? registry.info([id]) : Q({}))
             .then(function(pluginInfo) {
                 return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
-            }, function(error) {
-                return Q.reject(new CordovaError(error));
             })
             .then(function(fetchVersion) {
                 // Fallback to pinned version if available
@@ -327,7 +327,6 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
             });
         }
     }
-    return Q(target);
 }
 
 // Exporting for testing purposes
