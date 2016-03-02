@@ -26,11 +26,11 @@
   },
   "devDependencies": {
     "jshint": "^2.8.0",
-    "tap": "^5.4.2"
+    "tap": "^5.7"
   },
   "scripts": {
     "test": "npm run jshint && tap test/*.js",
-    "jshint": "node node_modules/jshint/bin/jshint index.js"
+    "jshint": "jshint index.js test/fetch.spec.js"
   },
   "engines": {
     "node": ">= 0.12.0",

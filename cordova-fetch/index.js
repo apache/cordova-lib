@@ -24,6 +24,7 @@ var events = require('cordova-common').events;
 var depls = require('dependency-ls');
 var path = require('path');
 var fs = require('fs');
+var CordovaError = require('cordova-common').CordovaError;
 
 /* 
  * A module that npm installs a module from npm or a git url
@@ -41,12 +42,24 @@ module.exports = function(spec, dest, opts) {
     var tree1;
 
     if(!shell.which('npm')) {
-        return Q.reject(new Error('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
+        return Q.reject(new CordovaError('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
     }
 
-    if(spec) {
+    if(dest && spec) {
+        //add spec to fetchArgs Array
         fetchArgs.push(spec);
-    }
+        
+        //append node_modules to dest if it doesn't come included
+        if (path.basename(dest) !== 'node_modules') {
+            dest = path.resolve(path.join(dest, 'node_modules'));
+        }
+        
+        //create dest if it doesn't exist
+        if(!fs.existsSync(dest)) {
+            shell.mkdir('-p', dest);         
+        } 
+
+    } else return Q.reject(new CordovaError('Need to supply a spec and destination'));
 
     //set the directory where npm install will be run
     opts.cwd = dest;
@@ -75,7 +88,7 @@ module.exports = function(spec, dest, opts) {
         return getPath(id, dest);
     }) 
     .fail(function(err){
-        return Q.reject(err);
+        return Q.reject(new CordovaError(err));
     });
 };
 
@@ -92,7 +105,7 @@ module.exports = function(spec, dest, opts) {
 function getJsonDiff(obj1, obj2) {
     var result = '';
 
-    //regex to filter out peer dependencies from result
+    //regex to filter out peer dependency warnings from result
     var re = /UNMET PEER DEPENDENCY/;
 
     for (var key in obj2) {
@@ -115,18 +128,11 @@ function getJsonDiff(obj1, obj2) {
  */
 
 function getPath(id, dest) {
-    var finalDest;
-    if (path.basename(dest) !== 'node_modules') {
-        //add node_modules to dest if it isn't already added
-        finalDest = path.resolve(path.join(dest, 'node_modules', id));
-    } else {
-        //assume path already has node_modules
-        finalDest = path.resolve(path.join(dest, id));
-    }
+    var finalDest = path.resolve(path.join(dest, id));
     
     //Sanity check it exists
     if(fs.existsSync(finalDest)){
-        return path.resolve(finalDest);
-    } else return Q.reject('failed to get absolute path to installed module');
+        return finalDest;
+    } else return Q.reject(new CordovaError('failed to get absolute path to installed module'));
 
 }
