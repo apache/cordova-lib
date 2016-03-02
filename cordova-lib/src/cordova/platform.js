@@ -654,6 +654,7 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // specify the option below in both places
                 usePlatformWww: true,
                 is_top_level: pluginMetadata.is_top_level
+                force: opts.force
             };
 
             var variables = pluginMetadata && pluginMetadata.variables;

@@ -176,7 +176,8 @@ module.exports = function plugin(command, targets, opts) {
                                     // and files from 'platform_www' merged into 'www'. Thus we need to persist these
                                     // files platform_www directory, so they'll be applied to www on each prepare.
                                     usePlatformWww: true,
-                                    nohooks: opts.nohooks
+                                    nohooks: opts.nohooks,
+                                    force: opts.force
                                 };
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
