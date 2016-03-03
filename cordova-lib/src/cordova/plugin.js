@@ -294,39 +294,41 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     var id = parts[0];
     var version = parts[1];
 
-    // If no version is specified, retrieve the version (or source) from config.xml
     if (version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
         return Q(target);
-    } else {
-        events.emit('verbose', 'No version specified, retrieving version from config.xml');
-        var ver = getVersionFromConfigFile(id, cfg);
-
-        if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
-            return Q(ver);
-        } else if (ver) {
-            // If version exists in config.xml, use that
-            return Q(id + '@' + ver);
-        } else {
-            // If no version is given at all and we are fetching from npm, we
-            // can attempt to use the Cordova dependencies the plugin lists in
-            // their package.json
-            var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
-
-            if(shouldUseNpmInfo) {
-                events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
-            }
-
-            return (shouldUseNpmInfo ? registry.info([id]) : Q({}))
-            .then(function(pluginInfo) {
-                return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
-            })
-            .then(function(fetchVersion) {
-                // Fallback to pinned version if available
-                fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
-                return fetchVersion ? (id + '@' + fetchVersion) : target;
-            });
-        }
     }
+
+    // If no version is specified, retrieve the version (or source) from config.xml
+    events.emit('verbose', 'No version specified, retrieving version from config.xml');
+    var ver = getVersionFromConfigFile(id, cfg);
+
+    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
+        return Q(ver);
+    }
+
+    // If version exists in config.xml, use that
+    if (ver) {
+        return Q(id + '@' + ver);
+    }
+
+    // If no version is given at all and we are fetching from npm, we
+    // can attempt to use the Cordova dependencies the plugin lists in
+    // their package.json
+    var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
+
+    if(shouldUseNpmInfo) {
+        events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
+    }
+
+    return (shouldUseNpmInfo ? registry.info([id]) : Q({}))
+    .then(function(pluginInfo) {
+        return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
+    })
+    .then(function(fetchVersion) {
+        // Fallback to pinned version if available
+        fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
+        return fetchVersion ? (id + '@' + fetchVersion) : target;
+    });
 }
 
 // Exporting for testing purposes
@@ -557,7 +559,7 @@ function versionString(version) {
  * can be either a single version (e.g. 3.0.0) or an upper bound (e.g. <3.0.0)
  *
  * @param {string}  projectRoot     The path to the root directory of the project
- * @param {object}  pluginInfo      The NPM info of the plugin be fetched (e.g. the
+ * @param {object}  pluginInfo      The NPM info of the plugin to be fetched (e.g. the
  *                                  result of calling `registry.info()`)
  * @param {string}  cordovaVersion  The semver version of cordova-lib
  *
@@ -578,8 +580,7 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
         return cordova_util.getInstalledPlatformsWithVersions(projectRoot)
         .then(function(platformVersions) {
             return determinePluginVersionToFetch(
-                pluginInfo.versions,
-                pluginInfo.engines.cordovaDependencies,
+                pluginInfo,
                 pluginMap,
                 platformVersions,
                 cordovaVersion);
@@ -615,7 +616,11 @@ function findVersion(versions, version) {
  *
  * See cordova-spec/plugin_fetch.spec.js for test cases and examples
  */
-function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformMap, cordovaVersion) {
+function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordovaVersion) {
+    var allVersions = pluginInfo.versions;
+    var engine = pluginInfo.engines.cordovaDependencies;
+    var name = pluginInfo.name;
+
     // Filters out pre-release versions
     var latest = semver.maxSatisfying(allVersions, '>=0.0.0');
 
@@ -638,6 +643,8 @@ function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformM
                         upperBoundRange = version;
                     }
                 }
+            } else {
+                events.emit('verbose', 'Ignoring invalid version in ' + name + ' cordovaDependencies: ' + version + ' (must be a single version <= latest or an upper bound)');
             }
         }
     }
@@ -682,8 +689,8 @@ function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformM
                 var failedReqs = getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion);
 
                 // Warn the user that we are not fetching latest
-                listUnmetRequirements(failedReqs);
-                events.emit('warn', 'Fetching highest version of plugin that this project supports: ' + maxMatchingVersion + ' (latest is ' + latest + ')');
+                listUnmetRequirements(name, failedReqs);
+                events.emit('warn', 'Fetching highest version of ' + name + ' that this project supports: ' + maxMatchingVersion + ' (latest is ' + latest + ')');
             }
             return maxMatchingVersion;
         }
@@ -701,7 +708,7 @@ function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformM
             for(var i = 0; i < latestFailedReqs.length; i++) {
                 if(latestFailedReqs[i].dependency === failedReq.dependency) {
                     // Not going to overcomplicate things and actually merge the ranges
-                    latestFailedReqs[i].required = latestFailedReqs[i].required + ' AND ' + failedReq.required;
+                    latestFailedReqs[i].required += ' AND ' + failedReq.required;
                     return;
                 }
             }
@@ -711,8 +718,8 @@ function determinePluginVersionToFetch(allVersions, engine, pluginMap, platformM
         });
     }
 
-    listUnmetRequirements(latestFailedReqs);
-    events.emit('warn', 'Current project does not satisfy the engine requirements specified by any version of this plugin. Fetching latest or pinned version of plugin anyway (may be incompatible)');
+    listUnmetRequirements(name, latestFailedReqs);
+    events.emit('warn', 'Current project does not satisfy the engine requirements specified by any version of ' + name + '. Fetching latest or pinned version of plugin anyway (may be incompatible)');
 
     // No constraints were satisfied
     return null;
@@ -746,16 +753,18 @@ function getFailedRequirements(reqs, pluginMap, platformMap, cordovaVersion) {
                     required: reqs[req].trim()
                 });
             }
+        } else {
+            events.emit('verbose', 'Ignoring invalid plugin dependency constraint ' + req + ':' + reqs[req]);
         }
     }
 
     return failed;
 }
 
-function listUnmetRequirements(failedRequirments) {
-    events.emit('warn', 'Unmet project requirements for latest version of plugin:');
+function listUnmetRequirements(name, failedRequirements) {
+    events.emit('warn', 'Unmet project requirements for latest version of ' + name + ':');
 
-    failedRequirments.forEach(function(req) {
+    failedRequirements.forEach(function(req) {
         events.emit('warn', '    ' + req.dependency + ' (' + req.installed + ' installed, ' + req.required + ' required)');
     });
 }

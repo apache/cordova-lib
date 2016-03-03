@@ -61,6 +61,8 @@ events.on('warn', function(warning) {
 function testEngineWithProject(done, testEngine, testResult) {
     plugin.getFetchVersion(project,
         {
+            'version': '2.3.0',
+            'name': 'test-plugin',
             'engines': { 'cordovaDependencies': testEngine },
             'versions': testPluginVersions
         }, cordovaVersion)
@@ -359,7 +361,11 @@ describe('plugin fetching version selection', function(done) {
     });
 
     it('should not fail if there is no engine in the npm info', function(done) {
-        plugin.getFetchVersion(project, { versions: testPluginVersions }, cordovaVersion)
+        plugin.getFetchVersion(project, {
+                version: '2.3.0',
+                name: 'test-plugin',
+                versions: testPluginVersions
+            }, cordovaVersion)
         .then(function(toFetch) {
             expect(toFetch).toBe(null);
         })
@@ -370,6 +376,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         plugin.getFetchVersion(project, {
+                version: '2.3.0',
+                name: 'test-plugin',
                 versions: testPluginVersions,
                 engines: {
                     'node': '>7.0.0',
