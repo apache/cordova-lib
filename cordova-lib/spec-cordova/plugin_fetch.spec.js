@@ -286,12 +286,12 @@ describe('plugin fetching version selection', function(done) {
         testEngineWithProject(after, testEngine, '1.0.0');
     });
 
-    it('should treat an empty cordovaDependencies as satisfied', function(done) {
+    it('should ignore an empty cordovaDependencies entry', function(done) {
         var testEngine = {};
 
         var after = getWarningCheckCallback(done, []);
 
-        testEngineWithProject(after, testEngine, '2.3.0');
+        testEngineWithProject(after, testEngine, null);
     });
 
     it('should ignore a badly formatted semver range', function(done) {

@@ -627,6 +627,7 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
     var versions = [];
     var upperBound = null;
     var upperBoundRange = null;
+    var upperBoundExists = false;
 
     for(var version in engine) {
         if(semver.valid(semver.clean(version)) && !semver.gt(version, latest)) {
@@ -635,6 +636,7 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
             // Check if this is an upperbound; validRange() handles whitespace
             var cleanedRange = semver.validRange(version);
             if(cleanedRange && UPPER_BOUND_REGEX.exec(cleanedRange)) {
+                upperBoundExists = true;
                 // We only care about the highest upper bound that our project does not support
                 if(getFailedRequirements(engine[version], pluginMap, platformMap, cordovaVersion).length !== 0) {
                     var maxMatchingUpperBound = cleanedRange.substring(1);
@@ -647,6 +649,12 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
                 events.emit('verbose', 'Ignoring invalid version in ' + name + ' cordovaDependencies: ' + version + ' (must be a single version <= latest or an upper bound)');
             }
         }
+    }
+
+    // If there were no valid requirements, we fall back to old behavior
+    if(!upperBoundExists && versions.length === 0) {
+        events.emit('verbose', 'Ignoring ' + name + ' cordovaDependencies entry because it did not contain any valid plugin version entries');
+        return null;
     }
 
     // Handle the lower end of versions by giving them a satisfied engine
