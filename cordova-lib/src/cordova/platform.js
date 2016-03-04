@@ -655,7 +655,7 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
                 // specify the option below in both places
                 usePlatformWww: true,
-                forceCopyingSrc: opts.forceCopyingSrc
+                force: opts.force
             };
 
             // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman

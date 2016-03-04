@@ -193,7 +193,7 @@ module.exports = function plugin(command, targets, opts) {
                                     // files platform_www directory, so they'll be applied to www on each prepare.
                                     usePlatformWww: true,
                                     nohooks: opts.nohooks,
-                                    forceCopyingSrc: opts.forceCopyingSrc
+                                    force: opts.force
                                 };
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
