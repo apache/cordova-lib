@@ -37,6 +37,7 @@ var config            = require('./config'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
+    fetch             = require('cordova-fetch'),
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -257,6 +258,15 @@ function getSpecString(spec) {
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
+        if (opts.fetch) {
+            //append cordova to platform
+            if(platform in platforms) {
+                target = 'cordova-'+target;
+            }
+            events.emit('log', 'Using cordova-fetch for '+ target);
+            return fetch(target,projectRoot, opts);
+        }
+
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             var parts = version.split('#');
