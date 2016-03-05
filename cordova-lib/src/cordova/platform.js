@@ -644,6 +644,9 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
             plugin = path.basename(plugin);
 
+            // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
+            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
+
             var options = {
                 searchpath: opts.searchpath,
                 // Set up platform to install asset files/js modules to <platform>/platform_www dir
@@ -654,11 +657,10 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // NOTE: there is another code path for plugin installation (see CB-10274 and the
                 // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
                 // specify the option below in both places
-                usePlatformWww: true
+                usePlatformWww: true,
+                is_top_level: pluginMetadata.is_top_level
             };
 
-            // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
-            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
             var variables = pluginMetadata && pluginMetadata.variables;
             if (variables) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');

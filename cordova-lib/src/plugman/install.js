@@ -71,7 +71,8 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
     options = options || {};
-    options.is_top_level = true;
+  if (options.hasOwnProperty('is_top_level') === false)
+        options.is_top_level = true;
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {

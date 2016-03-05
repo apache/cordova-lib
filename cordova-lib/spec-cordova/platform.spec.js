@@ -201,3 +201,50 @@ describe('add function', function () {
         });
     });
 });
+
+describe('platform add plugin rm end-to-end', function () {
+
+    var tmpDir = helpers.tmpDir('plugin_rm_test');
+    var project = path.join(tmpDir, 'hello');
+    var pluginsDir = path.join(project, 'plugins');
+    
+    beforeEach(function() {
+        process.chdir(tmpDir);
+    });
+    
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('should remove dependency when removing parent plugin', function(done) {
+        
+        cordova.raw.create('hello')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'ios');
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'cordova-plugin-media');
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.platform('add', 'android');
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.plugin('rm', 'cordova-plugin-media');
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 20000);
+});
