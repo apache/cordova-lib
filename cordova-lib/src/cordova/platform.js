@@ -653,7 +653,7 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
                 // specify the option below in both places
                 usePlatformWww: true,
-                is_top_level: pluginMetadata.is_top_level
+                is_top_level: pluginMetadata.is_top_level,
                 force: opts.force
             };
 
