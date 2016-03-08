@@ -29,8 +29,20 @@ var helpers = require('./helpers'),
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
 var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+
 var pluginId = 'org.apache.cordova.fakeplugin1';
 var org_test_defaultvariables = 'org.test.defaultvariables';
+
+// This plugin is published to npm and defines cordovaDependencies
+// in its package.json. Based on the dependencies and the version of
+// cordova-android installed in our test project, the CLI should
+// select version 1.1.2 of the plugin. We don't actually fetch from
+// npm, but we do check the npm info.
+var npmInfoTestPlugin = 'cordova-lib-test-plugin';
+var npmInfoTestPluginVersion = '1.1.2';
+
+var testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.git';
+var testGitPluginId = 'cordova-plugin-device';
 
 var results;
 
@@ -125,10 +137,10 @@ describe('plugin end-to-end', function() {
     });
 
     it('should not check npm info when using the searchpath flag', function(done) {
-        mockPluginFetch(pluginId, path.join(pluginsDir, 'fake1'));
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info');
-        addPlugin(pluginId, pluginId, {searchpath: pluginsDir}, done)
+        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
@@ -140,15 +152,40 @@ describe('plugin end-to-end', function() {
     });
 
     it('should not check npm info when using the noregistry flag', function(done) {
-        mockPluginFetch(pluginId, path.join(pluginsDir, 'fake1'));
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info');
-        addPlugin(pluginId, pluginId, {noregistry:true}, done)
+        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {noregistry:true}, done)
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
             var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
             expect(fetchOptions.noregistry).toBeTruthy();
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should not check npm info when fetching from a Git repository', function(done) {
+        spyOn(registry, 'info');
+        addPlugin(testGitPluginRepository, testGitPluginId, {}, done)
+        .then(function() {
+            expect(registry.info).not.toHaveBeenCalled();
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should select the plugin version based on npm info when fetching from npm', function(done) {
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+
+        spyOn(registry, 'info').andCallThrough();
+        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {}, done)
+        .then(function() {
+            expect(registry.info).toHaveBeenCalled();
+
+            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
         })
         .fail(errorHandler.errorCallback)
         .fin(done);
