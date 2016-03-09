@@ -1,0 +1,94 @@
+/**
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
+require ('promise-matchers');
+
+var Q = require('q');
+var path = require('path');
+var rewire = require('rewire');
+var PlatformJson = require('../src/PlatformJson');
+var PluginManager = rewire('../src/PluginManager');
+var PluginInfo = require('../src/PluginInfo/PluginInfo');
+var ConfigChanges = require('../src/ConfigChanges/ConfigChanges');
+
+var DUMMY_PLUGIN = path.join(__dirname, 'fixtures/plugins/org.test.plugins.dummyplugin');
+var FAKE_PLATFORM = 'cordova-atari';
+var FAKE_LOCATIONS = {
+    root: '/some/fake/path'
+};
+
+describe('PluginManager class', function() {
+
+    beforeEach(function () {
+        spyOn(PlatformJson, 'load');
+        spyOn(ConfigChanges, 'PlatformMunger');
+    });
+
+    it('should be constructable', function () {
+        expect(new PluginManager(FAKE_PLATFORM, FAKE_LOCATIONS)).toEqual(jasmine.any(PluginManager));
+    });
+
+    it('should return new instance for every PluginManager.get call', function () {
+        expect(PluginManager.get(FAKE_PLATFORM, FAKE_LOCATIONS)).toEqual(jasmine.any(PluginManager));
+        expect(PluginManager.get(FAKE_PLATFORM, FAKE_LOCATIONS))
+            .not.toBe(PluginManager.get(FAKE_PLATFORM, FAKE_LOCATIONS));
+    });
+
+    describe('instance', function () {
+        var actions, manager;
+        var FAKE_PROJECT;
+        var ActionStackOrig = PluginManager.__get__('ActionStack');
+
+        beforeEach(function () {
+            FAKE_PROJECT = jasmine.createSpyObj('project', ['getInstaller', 'getUninstaller', 'write']);
+            manager = new PluginManager('windows', FAKE_LOCATIONS, FAKE_PROJECT);
+            actions = jasmine.createSpyObj('actions', ['createAction', 'push', 'process']);
+            actions.process.andReturn(Q.resolve());
+            PluginManager.__set__('ActionStack', function () { return actions; });
+        });
+
+        afterEach(function () {
+            PluginManager.__set__('ActionStack', ActionStackOrig);
+        });
+
+        describe('addPlugin method', function () {
+            it('should return a promise', function () {
+                expect(Q.isPromise(manager.addPlugin(null, {}))).toBe(true);
+            });
+
+            it('should reject if "plugin" parameter is not specified or not a PluginInfo instance', function () {
+                expect(manager.addPlugin(null, {})).toHaveBeenRejected();
+                expect(manager.addPlugin({}, {})).toHaveBeenRejected();
+                expect(manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {})).not.toHaveBeenRejected();
+            });
+
+            it('should iterate through all plugin\'s files and frameworks', function () {
+                manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {})
+                .then(function () {
+                    expect(FAKE_PROJECT.getInstaller.calls.length).toBe(16);
+                    expect(FAKE_PROJECT.getUninstaller.calls.length).toBe(16);
+
+                    expect(actions.push.calls.length).toBe(16);
+                    expect(actions.process).toHaveBeenCalled();
+                    expect(FAKE_PROJECT.write).toHaveBeenCalled();
+                });
+            });
+        });
+    });
+});

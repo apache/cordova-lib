@@ -41,6 +41,7 @@
     "istanbul": "^0.3.17",
     "jasmine-node": "^1.14.5",
     "jshint": "^2.8.0",
+    "promise-matchers": "^0.9.6",
     "rewire": "^2.5.1"
   },
   "contributors": []
