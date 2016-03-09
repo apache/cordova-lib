@@ -25,18 +25,19 @@ var depls = require('dependency-ls');
 var path = require('path');
 var fs = require('fs');
 var CordovaError = require('cordova-common').CordovaError;
+var isUrl = require('is-url');
 
 /* 
  * A module that npm installs a module from npm or a git url
  *
- * @param {String} spec     the packageID or git url
+ * @param {String} target   the packageID or git url
  * @param {String} dest     destination of where to install the module
  * @param {Object} opts     [opts={save:true}] options to pass to fetch module
  *
  * @return {String||Promise}    Returns string of the absolute path to the installed module.
  *
  */
-module.exports = function(spec, dest, opts) {
+module.exports = function(target, dest, opts) {
     var fetchArgs = ['install'];
     opts = opts || {};
     var tree1;
@@ -45,9 +46,9 @@ module.exports = function(spec, dest, opts) {
         return Q.reject(new CordovaError('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
     }
 
-    if(dest && spec) {
-        //add spec to fetchArgs Array
-        fetchArgs.push(spec);
+    if(dest && target) {
+        //add target to fetchArgs Array
+        fetchArgs.push(target);
         
         //append node_modules to dest if it doesn't come included
         if (path.basename(dest) !== 'node_modules') {
@@ -59,7 +60,7 @@ module.exports = function(spec, dest, opts) {
             shell.mkdir('-p', dest);         
         } 
 
-    } else return Q.reject(new CordovaError('Need to supply a spec and destination'));
+    } else return Q.reject(new CordovaError('Need to supply a target and destination'));
 
     //set the directory where npm install will be run
     opts.cwd = dest;
@@ -74,6 +75,7 @@ module.exports = function(spec, dest, opts) {
     return depls(dest)
     .then(function(depTree) {
         tree1 = depTree;
+
         //install new module
         return superspawn.spawn('npm', fetchArgs, opts);
     })
@@ -83,7 +85,11 @@ module.exports = function(spec, dest, opts) {
     })
     .then(function(depTree2) {
         var tree2 = depTree2;
-        var id = getJsonDiff(tree1, tree2); 
+
+        //getJsonDiff will fail if the module already exists in node_modules.
+        //Need to use trimID in that case. 
+        //This could happen on a platform update.
+        var id = getJsonDiff(tree1, tree2) || trimID(target); 
 
         return getPath(id, dest);
     }) 
@@ -94,7 +100,9 @@ module.exports = function(spec, dest, opts) {
 
 
 /*
- * Takes two JSON objects and returns the key of the new property as a string
+ * Takes two JSON objects and returns the key of the new property as a string.
+ * If a module already exists in node_modules, the diff will be blank. 
+ * cordova-fetch will use trimID in that case.
  *
  * @param {Object} obj1     json object representing installed modules before latest npm install
  * @param {Object} obj2     json object representing installed modules after latest npm install
@@ -117,10 +125,41 @@ function getJsonDiff(obj1, obj2) {
     return result;
 }
 
+/*
+ * Takes the specified target and returns the moduleID
+ * If the git repoName is different than moduleID, then the 
+ * output from this function will be incorrect. This is the 
+ * backup way to get ID. getJsonDiff is the preferred way to 
+ * get the moduleID of the installed module.
+ *
+ * @param {String} target    target that was passed into cordova-fetch.
+ *                           can be moduleID, moduleID@version or gitURL
+ *
+ * @return {String} ID       moduleID without version.
+ */
+function trimID(target) {
+    var parts;
+
+    //If GITURL, set target to repo name
+    if (isUrl(target)) {
+        var re = /.*\/(.*).git/;
+        parts = target.match(re);
+        target = parts[1];
+    }
+    
+    //strip away everything after '@'
+    if(target.indexOf('@') != -1) {
+        parts = target.split('@');
+        target = parts[0];
+    }        
+    
+    return target;
+}
+
 /* 
  * Takes the moduleID and destination and returns an absolute path to the module
  *
- * @param {String} id       the packageID or git url
+ * @param {String} id       the packageID
  * @param {String} dest     destination of where to fetch the modules
  *
  * @return {String||Error}  Returns the absolute url for the module or throws a error
@@ -133,6 +172,5 @@ function getPath(id, dest) {
     //Sanity check it exists
     if(fs.existsSync(finalDest)){
         return finalDest;
-    } else return Q.reject(new CordovaError('failed to get absolute path to installed module'));
-
+    } else return Q.reject(new CordovaError('Failed to get absolute path to installed module'));
 }

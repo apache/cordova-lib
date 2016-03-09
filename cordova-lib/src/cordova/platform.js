@@ -263,6 +263,12 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             if(platform in platforms) {
                 target = 'cordova-'+target;
             }
+
+            //gitURLs don't supply a platform, it equals null
+            if(!platform) {
+                target = version;
+            }
+
             events.emit('log', 'Using cordova-fetch for '+ target);
             return fetch(target,projectRoot, opts);
         }

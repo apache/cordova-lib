@@ -27,6 +27,16 @@ t.test('npm install packageID', opt, function (t) {
     });
 });
 
+t.test('npm install packageID where module is already installed, should use trimID method', opt, function (t) {
+    return fetch('cordova-plugin-device', tempDir).then(function (result) {
+        return t.test('check result', opt, function (t) {
+            t.plan(1);
+            t.equal(fs.existsSync(result), true);
+            t.end();
+        });
+    });
+});
+
 t.test('npm install plugin via git url', opt, function (t) {
     return fetch('https://github.com/apache/cordova-plugin-camera.git', tempDir).then(function (result) {
         return t.test('check result', opt, function (t) {
@@ -49,6 +59,16 @@ t.test('npm install plugin via git url with tag', opt,  function (t) {
     });
 });
 
+t.test('npm install plugin already npm installed from git, should use trimID method', opt, function (t) {
+    return fetch('https://github.com/apache/cordova-plugin-device-motion.git#1.0.0', tempDir).then(function (result) {
+        return t.test('check result', opt, function (t) {
+            t.plan(1);
+            t.equal(fs.existsSync(result), true);
+            t.end();
+        });
+    });
+});
+
 t.test('npm install platform via git url with branchName', opt, function (t) {
     return fetch('https://github.com/apache/cordova-android.git#4.1.x', tempDir).then(function (result) {
         return t.test('check result', opt, function (t) {
@@ -61,12 +81,12 @@ t.test('npm install platform via git url with branchName', opt, function (t) {
     });
 });
 
-t.test('npm install platform via git url with commit sha', opt, function (t) {
-    return fetch('https://github.com/apache/cordova-ios.git#8f1535d9381851c17372f197830dc585b5245705', tempDir).then(function (result) {
+t.test('npm install plugin via git url with commit sha', opt, function (t) {
+    return fetch('https://github.com/apache/cordova-plugin-contacts.git#7db612115755c2be73a98dda76ff4c5fd9d8a575', tempDir).then(function (result) {
         return t.test('check result', opt, function (t) {
             t.plan(2);
-            var pkgJSON = require('./temp/node_modules/cordova-ios/package.json');
-            t.equal(pkgJSON.version, '4.1.0-dev');
+            var pkgJSON = require('./temp/node_modules/cordova-plugin-contacts/package.json');
+            t.equal(pkgJSON.version, '2.0.2-dev');
             t.equal(fs.existsSync(result), true);
             t.end();
         });

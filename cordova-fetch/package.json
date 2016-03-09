@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "cordova-common": "^1.0.0",
-    "dependency-ls": "^1.0.0"
+    "dependency-ls": "^1.0.0",
+    "is-url": "^1.2.1"
   },
   "devDependencies": {
     "jshint": "^2.8.0",
