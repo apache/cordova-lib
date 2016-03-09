@@ -372,14 +372,27 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing ' + target + ' from config.xml file ...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-        });
-    }
+            });
+        }
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
             platformMetadata.remove(projectRoot, target);
         });
+    }).then(function() {
+        //Remove from node_modules if it exists and --fetch was used
+        //todo: a better solution would be to have a cordova-remove module that
+        //ran `npm uninstall (--save)` in the cordova project. 
+        if(opts.fetch) {
+            targets.forEach(function(target) {
+                console.log(target)
+                if(target in platforms) {
+                    target = 'cordova-'+target;
+                }
+                shell.rm('-rf', path.join(projectRoot, 'node_modules', target));
+            });
+        }
     }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });

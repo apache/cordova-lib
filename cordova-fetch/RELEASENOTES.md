@@ -18,5 +18,5 @@
 # under the License.
 #
 -->
-# Cordova-serve Release Notes
+# Cordova-fetch Release Notes
 
