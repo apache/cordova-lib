@@ -326,8 +326,6 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
         return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
     })
     .then(function(fetchVersion) {
-        // Fallback to pinned version if available
-        fetchVersion = fetchVersion || pkgJson.cordovaPlugins[id];
         return fetchVersion ? (id + '@' + fetchVersion) : target;
     });
 }
@@ -588,7 +586,7 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
         });
     } else {
         // If we have no engine, we want to fall back to the default behavior
-        events.emit('verbose', 'No plugin engine info found or not using registry, falling back to latest or pinned version');
+        events.emit('verbose', 'No plugin engine info found or not using registry, falling back to latest version');
         return Q(null);
     }
 }
@@ -706,7 +704,7 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
     }
 
     // No version of the plugin is satisfied. In this case, we fall back to
-    // fetching latest or pinned versions, but also output a warning
+    // fetching the latest version, but also output a warning
     var latestFailedReqs = versions.length > 0 ? getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion) : [];
 
     // If the upper bound is greater than latest, we need to combine its engine
@@ -728,7 +726,7 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
     }
 
     listUnmetRequirements(name, latestFailedReqs);
-    events.emit('warn', 'Current project does not satisfy the engine requirements specified by any version of ' + name + '. Fetching latest or pinned version of plugin anyway (may be incompatible)');
+    events.emit('warn', 'Current project does not satisfy the engine requirements specified by any version of ' + name + '. Fetching latest version of plugin anyway (may be incompatible)');
 
     // No constraints were satisfied
     return null;
