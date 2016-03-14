@@ -220,8 +220,19 @@ function create(dir, optionalId, optionalName, cfg) {
             }
         }
     })
-    .then(function(import_from_path) {
-
+    .then(function(input_directory) {
+        var import_from_path = input_directory;
+        
+        //handle when input wants to specify sub-directory 
+        try {
+            var templatePkg = require(input_directory);
+            if (templatePkg && templatePkg.dirname){
+                import_from_path = templatePkg.dirname;
+            }
+        } catch (e) {
+            events.emit('verbose', 'Can not load template package.json using directory ' + input_directory); 
+        }
+         
         if (!fs.existsSync(import_from_path)) {
             throw new CordovaError('Could not find directory: ' +
                 import_from_path);
@@ -361,5 +372,13 @@ function create(dir, optionalId, optionalName, cfg) {
         if (cfg.id) conf.setPackageName(cfg.id);
         if (cfg.name) conf.setName(cfg.name);
         conf.write();
+        
+        //run npm install if package.json is at the root of cordova project
+        if (fs.existsSync(path.join(dir,'package.json'))){
+            shell.pushd(dir);
+            events.emit('log', 'Executing npm install...');
+            shell.exec('npm install');
+            shell.popd();
+        }
     });
 }
