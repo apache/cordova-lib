@@ -209,6 +209,9 @@ function mergeXml(src, dest, platform, clobber) {
     if (src.text && (clobber || !dest.text)) {
         dest.text = src.text;
     }
+    //Handle children
+    src.getchildren().forEach(mergeChild);
+
     //Handle platform
     if (platform) {
         src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
@@ -216,9 +219,6 @@ function mergeXml(src, dest, platform, clobber) {
         });
     }
 
-    //Handle children
-    src.getchildren().forEach(mergeChild);
-    
     //Handle duplicate preference tags (by name attribute)
     removeDuplicatePreferences(dest);
 
