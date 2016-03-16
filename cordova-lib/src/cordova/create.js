@@ -372,13 +372,5 @@ function create(dir, optionalId, optionalName, cfg) {
         if (cfg.id) conf.setPackageName(cfg.id);
         if (cfg.name) conf.setName(cfg.name);
         conf.write();
-        
-        //run npm install if package.json is at the root of cordova project
-        if (fs.existsSync(path.join(dir,'package.json'))){
-            shell.pushd(dir);
-            events.emit('log', 'Executing npm install...');
-            shell.exec('npm install');
-            shell.popd();
-        }
     });
 }
