@@ -304,9 +304,8 @@ describe('xml-helpers', function(){
             );
             xml_helpers.mergeXml(testXml, dstXml, 'ios');
             var testElements = dstXml.findall('preference[@name="Orientation"]');
-            expect(testElements.length).toEqual(2);
-            expect(testElements[0].attrib.value).toEqual('default');
-            expect(testElements[1].attrib.value).toEqual('all');
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].attrib.value).toEqual('all');
         });
     });
 });
