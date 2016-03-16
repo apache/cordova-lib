@@ -267,5 +267,26 @@ describe('xml-helpers', function(){
             expect(testElements.length).toEqual(2);
 
         });
+        
+        it('should merge preferences, with platform preferences written last', function () {
+            var testXml = et.XML(
+                '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
+                '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
+                '        id        = "io.cordova.hellocordova"\n' +
+                '        version   = "0.0.1">\n' +
+                '    <preference name="Orientation" value="default" />\n' +
+                '    <platform name="ios">\n' +
+                '        <preference name="Orientation" value="all" />\n' +
+                '    </platform>\n' +
+                '</widget>\n'
+            );
+            xml_helpers.mergeXml(testXml, dstXml, 'ios');
+            var testElements = dstXml.findall('preference[@name="Orientation"]');
+            expect(testElements.length).toEqual(2);
+            expect(testElements[0].attrib.value).toEqual('default');
+            expect(testElements[1].attrib.value).toEqual('all');
+        });
+        
     });
 });

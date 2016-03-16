@@ -209,15 +209,15 @@ function mergeXml(src, dest, platform, clobber) {
     if (src.text && (clobber || !dest.text)) {
         dest.text = src.text;
     }
+    //Handle children
+    src.getchildren().forEach(mergeChild);
+
     //Handle platform
     if (platform) {
         src.findall('platform[@name="' + platform + '"]').forEach(function (platformElement) {
             platformElement.getchildren().forEach(mergeChild);
         });
     }
-
-    //Handle children
-    src.getchildren().forEach(mergeChild);
 
     function mergeChild (srcChild) {
         var srcTag = srcChild.tag,
