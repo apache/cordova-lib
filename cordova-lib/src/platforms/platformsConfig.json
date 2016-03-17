@@ -4,7 +4,7 @@
         "parser_file": "../cordova/metadata/ios_parser",
         "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "~4.0.1",
+        "version": "~4.1.0",
         "apiCompatibleSince": "4.0.0",
         "deprecated": false
     },
@@ -13,7 +13,7 @@
         "parser_file": "../cordova/metadata/osx_parser",
         "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-osx.git",
-        "version": "~4.0.0",
+        "version": "~4.0.1",
         "apiCompatibleSince": "4.0.0",
         "deprecated": false
     },
@@ -21,7 +21,7 @@
         "parser_file": "../cordova/metadata/android_parser",
         "handler_file": "../plugman/platforms/android",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~5.1.0",
+        "version": "~5.1.1",
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
@@ -30,7 +30,7 @@
         "parser_file": "../cordova/metadata/ubuntu_parser",
         "handler_file": "../plugman/platforms/ubuntu",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "~4.3.2",
+        "version": "~4.3.3",
         "deprecated": false
     },
     "amazon-fireos": {
@@ -75,7 +75,7 @@
         "parser_file": "../cordova/metadata/windows_parser",
         "handler_file": "../plugman/platforms/windows",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "~4.3.0",
+        "version": "~4.3.1",
         "apiCompatibleSince": "4.3.0",
         "deprecated": false
     },
@@ -90,7 +90,7 @@
         "parser_file": "../cordova/metadata/browser_parser",
         "handler_file": "../plugman/platforms/browser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git",
-        "version": "~4.0.0",
+        "version": "~4.1.0",
         "deprecated": false
     }
 }
