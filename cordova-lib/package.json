@@ -19,7 +19,7 @@
   "dependencies": {
     "aliasify": "^1.7.2",
     "cordova-app-hello-world": "3.10.0",
-    "cordova-common": "1.0.x",
+    "cordova-common": "1.1.x",
     "cordova-js": "4.1.4",
     "cordova-registry-mapper": "1.x",
     "cordova-serve": "^1.0.0",
