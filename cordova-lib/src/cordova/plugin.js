@@ -194,6 +194,8 @@ module.exports = function plugin(command, targets, opts) {
                                     spec: src ? src : '~' + pluginInfo.version
                                 };
 
+                                xml = cordova_util.projectConfig(projectRoot);
+                                cfg = new ConfigParser(xml);
                                 cfg.removePlugin(pluginInfo.id);
                                 cfg.addPlugin(attributes, opts.cli_variables);
                                 cfg.write();
