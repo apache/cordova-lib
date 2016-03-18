@@ -20,6 +20,41 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.1.0 (Mar 17, 2016)
+* CB-10902 updated pinned platforms
+* CB-10808 revert npm install for templates
+* CB-10808 CLI Support templates with subdirectory
+* CB-10880 Removed plugin pinning
+* CB-10679 Improving version choosing logic test coverage
+* CB-10673 add plugin `--force` option. 
+* CB-10679 New version choosing logic for plugin add
+* CB-10328 set top-level property when adding new platforms
+* CB-10314 avoid fetching plugins when oldId is already fetched
+* CB-10708 Install/uninstall plugins correctly into CLI project using plugman
+* CB-10462 Get rid of npmconf in favor of npm.
+* CB-10662 Use project's `config.xml` as a fallback for package name
+* CB-10644 Adds deprecation message about old platforms support removal.
+* CB-10519 Wrap all sync calls inside of `cordova.raw` methods into promises
+* CB-10641 Adds tests for order of operations in platform add
+* CB-10641 Run prepare `_after_` plugins were installed
+* CB-10618 Do not call `prepBuildFiles` for `cordova-android@>=5.2.0`.
+* CB-10518 Correct log level and error messages for some cordova errors
+* CB-10550 Fix plugin id mapper not enforced when a version is specified
+* CB-10611 fix `before_plugin_install` hook not disabled with `--nohooks`
+* CB-10235 Added clearer error message for info command.
+* CB-10584 Splashscreen plugin crashes the app on windows 10 when built with browserify
+* CB-10592 Don't quote platform specific args values
+* CB-10482 Remove references to **windows8** from cordova-lib/cli
+* CB-10567 Bubble up `cordova.raw.run()` error to the caller
+* CB-10553 Fix framework tag handler for **Android**
+* CB-10461 `cordova platform ls` should list the versions of platforms pinned
+* CB-10531 Enable coverage reports for cordova-lib
+* CB-10465 Pass correct options to prepare from compile
+* CB-10459 cordova platform list should mark amazon-fireos and wp8 as deprecated
+* CB-10499 `--template` should pull the latest template from npm when version isn't specified
+* CB-10432 Adds e2e test to protect against future regressions.
+* Added node versions matrix to `.travis.yml`.
+
 ### 6.0.0 (Jan 25, 2016)
 * CB-10432 Fix plugin installation for newly added platform
 * CB-10423 allow recursive folder copy skipping whatever .. was
