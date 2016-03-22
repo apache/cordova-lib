@@ -104,6 +104,8 @@ plugman.commands =  {
         var opts = {
             subdir: '.',
             cli_variables: cli_variables,
+            fetch: cli_opts.fetch || false,
+            save: cli_opts.save || false,
             www_dir: cli_opts.www,
             searchpath: cli_opts.searchpath,
             link: cli_opts.link

@@ -133,6 +133,8 @@ module.exports = function plugin(command, targets, opts) {
                             var fetchOptions = {
                                 searchpath: searchPath,
                                 noregistry: opts.noregistry,
+                                fetch: opts.fetch || false,
+                                save: opts.save,
                                 nohooks: opts.nohooks,
                                 link: opts.link,
                                 pluginInfoProvider: pluginInfoProvider,
@@ -172,6 +174,8 @@ module.exports = function plugin(command, targets, opts) {
                                 options = {
                                     cli_variables: opts.cli_variables || {},
                                     browserify: opts.browserify || false,
+                                    fetch: opts.fetch || false,
+                                    save: opts.save,
                                     searchpath: searchPath,
                                     noregistry: opts.noregistry,
                                     link: opts.link,
