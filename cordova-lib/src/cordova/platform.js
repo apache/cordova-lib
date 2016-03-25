@@ -175,19 +175,29 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 }
 
-                var destination = path.resolve(projectRoot, 'platforms', platform);
+                var destination = path.resolve(projectRoot, 'platforms', platform);           
                 var promise = cmd === 'add' ?
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
 
                 return promise()
+                .then(function () {
+                    // Call prepare for the current platform before plugin install.
+                    // nohooks so prepare hooks only run once after all plugins are installed directly or via prepare
+                    var prepOpts = {
+                        platforms :[platform],
+                        searchpath :opts.searchpath,
+                        nohooks : ['before_prepare', 'after_prepare']
+                    };
+                    return require('./cordova').raw.prepare(prepOpts);
+                })
                 .then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
                 })
                 .then(function () {
-                    // Call prepare for the current platform.
+                    // Call prepare for the current platform after plugins installed.
                     var prepOpts = {
                         platforms :[platform],
                         searchpath :opts.searchpath

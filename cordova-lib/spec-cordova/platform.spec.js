@@ -145,7 +145,7 @@ describe('platform end-to-end', function () {
         .fin(done);
     });
 
-    it('should call prepare after plugins were installed into platform', function(done) {
+    it('should call prepare before and after plugins were installed into platform', function(done) {
         var order = '';
         var fail = jasmine.createSpy(fail);
         spyOn(plugman.raw, 'install').andCallFake(function() { order += 'I'; });
@@ -157,7 +157,7 @@ describe('platform end-to-end', function () {
         })
         .fail(fail)
         .fin(function() {
-            expect(order).toBe('IP'); // Install first, then prepare
+            expect(order).toBe('PIP'); // Install first, then prepare
             expect(fail).not.toHaveBeenCalled();
             done();
         });
