@@ -19,6 +19,7 @@
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
+    prepare           = require('./prepare'),
     cordova_util      = require('./util'),
     ConfigParser      = require('cordova-common').ConfigParser,
     fs                = require('fs'),
@@ -181,6 +182,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
 
                 return promise()
+                .then(function () {
+                    return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                })
                 .then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
