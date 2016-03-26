@@ -195,7 +195,7 @@ describe('xml-helpers', function(){
             expect(testElement.text).toEqual('testTEXT');
         });
 
-        it('should merge singelton children without clobber', function () {
+        it('should merge singleton children without clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml);
@@ -208,7 +208,17 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toContain('Apache Cordova Team');
         });
 
-        it('should clobber singelton children with clobber', function () {
+        it('should merge singleton name without clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('Hello Cordova');
+        });
+
+        it('should clobber singleton children with clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -219,6 +229,16 @@ describe('xml-helpers', function(){
             expect(testElements[0].attrib.href).toEqual('http://www.nowhere.com');
             expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
             expect(testElements[0].text).toEqual('SUPER_AUTHOR');
+        });
+
+        it('should merge singleton name with clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('SUPER_NAME');
         });
 
         it('should append non singelton children', function () {
@@ -267,7 +287,7 @@ describe('xml-helpers', function(){
             expect(testElements.length).toEqual(2);
 
         });
-        
+
         it('should remove duplicate preferences (by name attribute value)', function () {
             var testXml = et.XML(
                 '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -288,7 +308,7 @@ describe('xml-helpers', function(){
             var testElements = dstXml.findall('preference[@name="Orientation"]');
             expect(testElements.length).toEqual(1);
         });
-                
+
         it('should merge preferences, with platform preferences written last', function () {
             var testXml = et.XML(
                 '<?xml version="1.0" encoding="UTF-8"?>\n' +
