@@ -83,6 +83,7 @@ describe('(save flag)', function () {
         spyOn(util, 'isCordova').andReturn(appPath);
         spyOn(util, 'cdProjectRoot').andReturn(appPath);
         spyOn(cordova.raw, 'prepare').andReturn(Q());
+        spyOn(prepare, 'preparePlatforms').andReturn(Q());
 
         spyOn(PlatformApi, 'createPlatform').andReturn(Q());
         spyOn(PlatformApi, 'updatePlatform').andReturn(Q());
