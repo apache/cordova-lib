@@ -20,7 +20,11 @@
 -->
 # Cordova-lib Release Notes
 
-### 6.1.1 (Mar 17, 2016)
+### 6.1.1 (Mar 29, 2016)
+* CB-10961 Error no such file or directory adding ios platform when plugins present or required
+* CB-10908 Reload the config.xml before writing the saved plugin
+
+### 6.1.0 (Mar 17, 2016)
 * CB-10902 updated pinned platforms
 * CB-10808 revert npm install for templates
 * CB-10808 CLI Support templates with subdirectory
