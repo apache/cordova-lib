@@ -42,9 +42,6 @@
         "valid-identifier": "0.0.1",
         "xcode": "0.8.0"
     },
-    "bundledDependencies": [
-        "cordova-common"
-    ],
     "devDependencies": {
         "codecov": "^1.0.1",
         "istanbul": "^0.3.4",
