@@ -90,6 +90,11 @@ function installPluginsFromConfigXML(args) {
         return Q('No config.xml plugins to install');
     }
 
+
+    // Intermediate variable to store current installing plugin name
+    // to be able to create informative warning on plugin failure
+    var pluginName;
+
     // CB-9560 : Run `plugin add` serially, one plugin after another
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
@@ -106,7 +111,8 @@ function installPluginsFromConfigXML(args) {
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
         var pluginSpec = pluginEntry.spec;
-        var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginSpec;
+        pluginName = pluginEntry.name;
+        var installFrom = semver.validRange(pluginSpec, true) ? pluginName + '@' + pluginSpec : pluginSpec;
 
         // Add feature preferences as CLI variables if have any
         var options = {
@@ -114,5 +120,10 @@ function installPluginsFromConfigXML(args) {
             searchpath: args.searchpath
         };
         return plugin('add', installFrom, options);
+    }, function (error) {
+        // CB-10921 emit a warning in case of error
+        var msg = 'Failed to restore plugin ' + pluginName + ' from config.xml. ' +
+            'You might want to reinstall it again. Error: ' + error;
+        events.emit('warn', msg);
     });
 }
