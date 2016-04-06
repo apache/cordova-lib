@@ -311,7 +311,9 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
 
     var id = parsedSpec.package || target;
 
-    if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
+    // CB-10975 We need to resolve relative path to plugin dir from app's root before checking whether if it exists
+    var maybeDir = cordova_util.fixRelativePath(id);
+    if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(maybeDir)) {
         return Q(target);
     }
 

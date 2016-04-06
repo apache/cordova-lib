@@ -26,6 +26,8 @@ var helpers = require('./helpers'),
     plugman = require('../src/plugman/plugman'),
     registry = require('../src/plugman/registry/registry');
 
+var util = require('../src/cordova/util');
+
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
 var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
@@ -45,7 +47,6 @@ var testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.g
 var testGitPluginId = 'cordova-plugin-device';
 
 var results;
-
 
 // Runs: list, add, list
 function addPlugin(target, id, options) {
@@ -112,6 +113,10 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
 
+        // Reset origCwd before each spec to respect chdirs
+        util._resetOrigCwd();
+        delete process.env.PWD;
+
         spyOn(errorHandler, 'errorCallback').andCallThrough();
     });
 
@@ -123,6 +128,27 @@ describe('plugin end-to-end', function() {
 
     it('should successfully add and remove a plugin with no options', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
+        .then(function() {
+            return removePlugin(pluginId);
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should successfully add a plugin using relative path when running from subdir inside of project', function(done) {
+        // Copy plugin to subdir inside of the project. This is required since path.relative
+        // returns an absolute path when source and dest are on different drives
+        var plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
+        shell.mkdir('-p', plugindir);
+        shell.cp('-r', path.join(pluginsDir, 'fake1/*'), plugindir);
+
+        // Create a subdir, where we're going to run cordova from
+        var subdir = path.join(project, 'bin');
+        shell.mkdir('-p', subdir);
+        shell.cd(subdir);
+
+        // Add plugin using relative path
+        addPlugin(path.relative(subdir, plugindir), pluginId, {}, done)
         .then(function() {
             return removePlugin(pluginId);
         })
