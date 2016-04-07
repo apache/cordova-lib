@@ -22,6 +22,7 @@
 var uninstall = require('../src/plugman/uninstall'),
     install = require('../src/plugman/install'),
     actions = require('cordova-common').ActionStack,
+    PluginInfo = require('cordova-common').PluginInfo,
     events = require('cordova-common').events,
     plugman = require('../src/plugman/plugman'),
     common  = require('./common'),
@@ -51,6 +52,8 @@ var uninstall = require('../src/plugman/uninstall'),
     },
     promise,
     dummy_id = 'org.test.plugins.dummyplugin';
+
+var dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
 
 var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
@@ -137,6 +140,41 @@ describe('uninstallPlatform', function() {
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);
+        });
+
+        it('should return propagate value returned by PlatformApi removePlugin method', function(done) {
+            var platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
+            spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+
+            var existsSyncOrig = fs.existsSync;
+            spyOn(fs, 'existsSync').andCallFake(function (file) {
+                if (file.indexOf(dummy_id) >= 0) return true;
+                return existsSyncOrig.call(fs, file);
+            });
+
+            var fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
+            fakeProvider.get.andReturn(dummyPluginInfo);
+
+            function validateReturnedResultFor(values, expectedResult) {
+                return values.reduce(function (promise, value) {
+                    return promise.then(function () {
+                        platformApi.removePlugin.andReturn(Q(value));
+                        return uninstall.uninstallPlatform('android', project, dummy_id, null,
+                            { pluginInfoProvider: fakeProvider, platformVersion: '9.9.9' });
+                    })
+                    .then(function(result) {
+                        expect(!!result).toEqual(expectedResult);
+                    }, function(err) {
+                        expect(err).toBeUndefined();
+                    });
+                }, Q());
+            }
+
+            validateReturnedResultFor([ true, {}, [], 'foo', function(){} ], true)
+            .then(function () {
+                return validateReturnedResultFor([ false, null, undefined, '' ], false);
+            })
+            .fin(done);
         });
 
         describe('with dependencies', function() {

@@ -97,6 +97,9 @@ module.exports = function plugin(command, targets, opts) {
             }
         }
 
+        // Assume we don't need to run prepare by default
+        var shouldRunPrepare = false;
+
         switch(command) {
             case 'add':
                 if (!targets || !targets.length) {
@@ -183,7 +186,12 @@ module.exports = function plugin(command, targets, opts) {
                                 };
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
-                                return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options);
+                                return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
+                                .then(function (didPrepare) {
+                                    // If platform does not returned anything we'll need
+                                    // to trigger a prepare after all plugins installed
+                                    if (!didPrepare) shouldRunPrepare = true;
+                                });
                             })
                             .thenResolve(pluginInfo);
                         })
@@ -217,8 +225,13 @@ module.exports = function plugin(command, targets, opts) {
                                 events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
                             }
                         });
-                    }, Q()); // end Q.all
+                    }, Q());
                 }).then(function() {
+                    // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
+                    if (!shouldRunPrepare) {
+                        return Q();
+                    }
+
                     // Need to require right here instead of doing this at the beginning of file
                     // otherwise tests are failing without any real reason.
                     return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
@@ -250,7 +263,12 @@ module.exports = function plugin(command, targets, opts) {
                             return soFar.then(function() {
                                 var platformRoot = path.join(projectRoot, 'platforms', platform);
                                 events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                                return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath);
+                                return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath)
+                                .then(function (didPrepare) {
+                                    // If platform does not returned anything we'll need
+                                    // to trigger a prepare after all plugins installed
+                                    if (!didPrepare) shouldRunPrepare = true;
+                                });
                             });
                         }, Q())
                         .then(function() {
@@ -275,6 +293,11 @@ module.exports = function plugin(command, targets, opts) {
                         });
                     }, Q());
                 }).then(function () {
+                    // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
+                    if (!shouldRunPrepare) {
+                        return Q();
+                    }
+
                     return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
                 }).then(function() {
                     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };

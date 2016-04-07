@@ -234,7 +234,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
     var pluginInfoProvider = options.pluginInfoProvider;
     // If this plugin is not really installed, return (CB-7004).
     if (!fs.existsSync(plugin_dir)) {
-        return Q();
+        return Q(true);
     }
 
     var pluginInfo = pluginInfoProvider.get(plugin_dir);
@@ -332,7 +332,7 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
     options.usePlatformWww = true;
     return platform_modules.getPlatformApi(platform, project_dir)
     .removePlugin(pluginInfo, options)
-    .then(function() {
+    .then(function(result) {
         // Remove plugin from installed list. This already done in platform,
         // but need to be duplicated here to remove plugin entry from project's
         // plugin list to manage dependencies properly.
@@ -359,5 +359,8 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
                 buildModule.prepBuildFiles();
             }
         }
+
+        // CB-11022 propagate `removePlugin` result to the caller
+        return Q(result);
     });
 }
