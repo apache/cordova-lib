@@ -147,10 +147,7 @@ function cordova_npm(platform) {
 // Returns a promise that resolves to directory containing the package.
 function npm_cache_add(pkg) {
     var npm_cache_dir = path.join(util.libDirectory, 'npm_cache');
-    // 'cache-min' is the time in seconds npm considers the files fresh and
-    // does not ask the registry if it got a fresher version.
     var platformNpmConfig = {
-        'cache-min': 3600*24,
         cache: npm_cache_dir
     };
 

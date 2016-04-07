@@ -72,7 +72,6 @@ function npmCacheAdd(npmPackage) {
     cacheDir = path.join(util.libDirectory, 'npm_cache');
 
     npmConfig = {
-        'cache-min': 3600 * 24,
         'cache': cacheDir
     };
 
