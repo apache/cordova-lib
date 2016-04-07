@@ -204,6 +204,7 @@ describe('util module', function() {
             expect(res.indexOf('CVS')).toEqual(-1);
         });
     });
+
     describe('preprocessOptions method', function() {
 
         var isCordova, listPlatforms;

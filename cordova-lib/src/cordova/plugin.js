@@ -29,6 +29,7 @@ var cordova_util  = require('./util'),
     PluginInfoProvider = require('cordova-common').PluginInfoProvider,
     plugman       = require('../plugman/plugman'),
     pluginMapper  = require('cordova-registry-mapper').newToOld,
+    pluginSpec    = require('./plugin_spec_parser'),
     events        = require('cordova-common').events,
     metadata      = require('../plugman/util/metadata'),
     registry      = require('../plugman/registry/registry'),
@@ -191,9 +192,21 @@ module.exports = function plugin(command, targets, opts) {
                             if(saveToConfigXmlOn(config_json, opts)){
                                 var src = parseSource(target, opts);
                                 var attributes = {
-                                    name: pluginInfo.id,
-                                    spec: src ? src : '~' + pluginInfo.version
+                                    name: pluginInfo.id
                                 };
+
+                                if (src) {
+                                    attributes.spec = src;
+                                } else {
+                                    var ver = '~' + pluginInfo.version;
+                                    // Scoped packages need to have the package-spec along with the version
+                                    var parsedSpec = pluginSpec.parse(target);
+                                    if (parsedSpec.scope) {
+                                        attributes.spec = parsedSpec.package + '@' + ver;
+                                    } else {
+                                        attributes.spec = ver;
+                                    }
+                                }
 
                                 xml = cordova_util.projectConfig(projectRoot);
                                 cfg = new ConfigParser(xml);
@@ -294,11 +307,11 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
-    var parts = target.split('@');
-    var id = parts[0];
-    var version = parts[1];
+    var parsedSpec = pluginSpec.parse(target);
 
-    if (version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
+    var id = parsedSpec.package || target;
+
+    if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
         return Q(target);
     }
 
@@ -306,7 +319,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     events.emit('verbose', 'No version specified, retrieving version from config.xml');
     var ver = getVersionFromConfigFile(id, cfg);
 
-    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
+    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) || pluginSpec.parse(ver).scope) {
         return Q(ver);
     }
 
@@ -410,11 +423,12 @@ function getPluginVariables(variables){
 }
 
 function getVersionFromConfigFile(plugin, cfg){
-    var pluginEntry = cfg.getPlugin(plugin);
-    if (!pluginEntry) {
+    var parsedSpec = pluginSpec.parse(plugin);
+    var pluginEntry = cfg.getPlugin(parsedSpec.id);
+    if (!pluginEntry && !parsedSpec.scope) {
         // If the provided plugin id is in the new format (e.g. cordova-plugin-camera), it might be stored in config.xml
         // under the old format (e.g. org.apache.cordova.camera), so check for that.
-        var oldStylePluginId = pluginMapper[plugin];
+        var oldStylePluginId = pluginMapper[parsedSpec.id];
         if (oldStylePluginId) {
             pluginEntry = cfg.getPlugin(oldStylePluginId);
         }
@@ -506,12 +520,17 @@ function getSpec(pluginSource, projectRoot, pluginName) {
     }
 
     var version = null;
+    var scopedPackage = null;
     if (pluginSource.hasOwnProperty('id')) {
         // Note that currently version is only saved here if it was explicitly specified when the plugin was added.
-        var parts = pluginSource.id.split('@');
-        version = parts[1];
+        var parsedSpec = pluginSpec.parse(pluginSource.id);
+        version = parsedSpec.version;
         if (version) {
             version = versionString(version);
+        }
+
+        if (parsedSpec.scope) {
+            scopedPackage = parsedSpec.package;
         }
     }
 
@@ -528,6 +547,10 @@ function getSpec(pluginSource, projectRoot, pluginName) {
             }
         } catch (err) {
         }
+    }
+
+    if (scopedPackage) {
+        version = scopedPackage + '@' + version;
     }
 
     return version;
