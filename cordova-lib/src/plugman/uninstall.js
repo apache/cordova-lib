@@ -145,10 +145,9 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var deps = pluginInfo.getDependencies();
         var deps_path;
         deps.forEach(function (d) {
-            var splitVersion = d.id.split('@');
-            deps_path = path.join(plugin_dir, '..', splitVersion[0]);
+            deps_path = path.join(plugin_dir, '..', cordovaUtil.extractPluginId(d.id));
             if (!fs.existsSync(deps_path)) {
-                var newId = pluginMapper[splitVersion[0]];
+                var newId = pluginMapper[cordovaUtil.parseRegistryPluginSpec(d.id)[0] || d.id];
                 if (newId && toDelete.indexOf(newId) === -1) {
                    events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
                    toDelete.push(newId);
@@ -269,8 +268,8 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
             //try to convert ID if old-id path doesn't exist.
             if (!fs.existsSync(dependent_path)) {
-                var splitVersion = dangler.split('@');
-                var newId = pluginMapper[splitVersion[0]];
+                var oldId = cordovaUtil.parseRegistryPluginSpec(dangler)[0] || dangler;
+                var newId = pluginMapper[oldId];
                 if(newId) {
                     dependent_path = path.join(plugins_dir, newId);
                     events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');

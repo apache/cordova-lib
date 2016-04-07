@@ -72,7 +72,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
     options = options || {};
     if (!options.hasOwnProperty('is_top_level')) options.is_top_level = true;
-    
+
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
@@ -90,35 +90,37 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 // Returns a promise.
 function possiblyFetch(id, plugins_dir, options) {
     // Split @Version from the plugin id if it exists.
-    var splitVersion = id.split('@');
+    var splitVersion = cordovaUtil.parseRegistryPluginSpec(id);
+    var extractedId = splitVersion[0] || id;
     //Check if a mapping exists for the plugin id
     //if it does, convert id to new name id
-    var newId = pluginMapper.oldToNew[splitVersion[0]];
+    var newId = pluginMapper.oldToNew[extractedId];
     if(newId) {
         if(splitVersion[1]) {
-            id = newId +'@'+splitVersion[1];
+            id = newId + '@' +splitVersion[1];
         } else {
             id = newId;
         }
     }
+
     // if plugin is a relative path, check if it already exists
-    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, splitVersion[0]);
+    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, cordovaUtil.extractPluginId(id));
 
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
 
-    var alias = pluginMapper.newToOld[splitVersion[0]] || newId;
+    var alias = pluginMapper.newToOld[extractedId] || newId;
     // if the plugin alias has already been fetched, use it.
     if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-        events.emit('warn', 'Found ' + alias + ' is already fetched, so it is installed instead of '+splitVersion[0]);
+        events.emit('warn', 'Found ' + alias + ' is already fetched, so it is installed instead of ' + extractedId);
         return Q(path.join(plugins_dir, alias));
     }
 
     // if plugin doesnt exist, use fetch to get it.
     if (newId) {
-        events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+        events.emit('warn', 'Notice: ' + extractedId + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
     }
     var opts = underscore.extend({}, options, {
         client: 'plugman'

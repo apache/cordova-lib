@@ -204,6 +204,44 @@ describe('util module', function() {
             expect(res.indexOf('CVS')).toEqual(-1);
         });
     });
+
+    describe('methods for parsing scoped plugin packages', function() {
+
+        function checkPluginSpecParsing(testString, scope, package, version) {
+            expect(util.parseRegistryPluginSpec(testString)).toEqual([scope ? scope + package : package, version]);
+            expect(util.extractPluginId(testString)).toEqual(package || testString);
+            expect(util.isScopedRegistryPluginSpec(testString)).toEqual(!!(scope && package));
+        }
+
+        it('should handle package names with no scope or version', function() {
+            checkPluginSpecParsing('test-plugin', null, 'test-plugin', null);
+        });
+        it('should handle package names with a version', function() {
+            checkPluginSpecParsing('test-plugin@1.0.0', null, 'test-plugin', '1.0.0');
+            checkPluginSpecParsing('test-plugin@latest', null, 'test-plugin', 'latest');
+        });
+        it('should handle package names with a scope', function() {
+            checkPluginSpecParsing('@test/test-plugin', '@test/', 'test-plugin', null);
+        });
+        it('should handle package names with a scope and a version', function() {
+            checkPluginSpecParsing('@test/test-plugin@1.0.0', '@test/', 'test-plugin', '1.0.0');
+            checkPluginSpecParsing('@test/test-plugin@latest', '@test/', 'test-plugin', 'latest');
+        });
+        it('should handle invalid package specs', function() {
+            checkPluginSpecParsing('@nonsense', null, null, null);
+            checkPluginSpecParsing('@/nonsense', null, null, null);
+            checkPluginSpecParsing('@', null, null, null);
+            checkPluginSpecParsing('@nonsense@latest', null, null, null);
+            checkPluginSpecParsing('@/@', null, null, null);
+            checkPluginSpecParsing('/', null, null, null);
+            checkPluginSpecParsing('../../@directory', null, null, null);
+            checkPluginSpecParsing('@directory/../@directory', null, null, null);
+            checkPluginSpecParsing('./directory', null, null, null);
+            checkPluginSpecParsing('directory/directory', null, null, null);
+            checkPluginSpecParsing('http://cordova.apache.org', null, null, null);
+        });
+    });
+
     describe('preprocessOptions method', function() {
 
         var isCordova, listPlatforms;

@@ -191,9 +191,20 @@ module.exports = function plugin(command, targets, opts) {
                             if(saveToConfigXmlOn(config_json, opts)){
                                 var src = parseSource(target, opts);
                                 var attributes = {
-                                    name: pluginInfo.id,
-                                    spec: src ? src : '~' + pluginInfo.version
+                                    name: pluginInfo.id
                                 };
+
+                                if (src) {
+                                    attributes.spec = src;
+                                } else {
+                                    var ver = '~' + pluginInfo.version;
+                                    // Scoped packages need to have the package-spec along with the version
+                                    if (cordova_util.isScopedRegistryPluginSpec(target)) {
+                                        attributes.spec = cordova_util.parseRegistryPluginSpec(target)[0] + '@' + ver;
+                                    } else {
+                                        attributes.spec = ver;
+                                    }
+                                }
 
                                 xml = cordova_util.projectConfig(projectRoot);
                                 cfg = new ConfigParser(xml);
@@ -294,8 +305,9 @@ module.exports = function plugin(command, targets, opts) {
 };
 
 function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
-    var parts = target.split('@');
-    var id = parts[0];
+    var parts = cordova_util.parseRegistryPluginSpec(target);
+
+    var id = parts[0] || target;
     var version = parts[1];
 
     if (version || cordova_util.isUrl(id) || cordova_util.isDirectory(id)) {
@@ -306,7 +318,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     events.emit('verbose', 'No version specified, retrieving version from config.xml');
     var ver = getVersionFromConfigFile(id, cfg);
 
-    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver)) {
+    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) || cordova_util.isScopedRegistryPluginSpec(ver)) {
         return Q(ver);
     }
 
@@ -410,6 +422,9 @@ function getPluginVariables(variables){
 }
 
 function getVersionFromConfigFile(plugin, cfg){
+    if (cordova_util.isScopedRegistryPluginSpec(plugin)) {
+        plugin = cordova_util.extractPluginId(plugin);
+    }
     var pluginEntry = cfg.getPlugin(plugin);
     if (!pluginEntry) {
         // If the provided plugin id is in the new format (e.g. cordova-plugin-camera), it might be stored in config.xml
@@ -506,12 +521,17 @@ function getSpec(pluginSource, projectRoot, pluginName) {
     }
 
     var version = null;
+    var scopedPackage = null;
     if (pluginSource.hasOwnProperty('id')) {
         // Note that currently version is only saved here if it was explicitly specified when the plugin was added.
-        var parts = pluginSource.id.split('@');
+        var parts = cordova_util.parseRegistryPluginSpec(pluginSource.id);
         version = parts[1];
         if (version) {
             version = versionString(version);
+        }
+
+        if (cordova_util.isScopedRegistryPluginSpec(pluginSource.id)) {
+            scopedPackage = parts[0];
         }
     }
 
@@ -528,6 +548,10 @@ function getSpec(pluginSource, projectRoot, pluginName) {
             }
         } catch (err) {
         }
+    }
+
+    if (scopedPackage) {
+        version = scopedPackage + '@' + version;
     }
 
     return version;

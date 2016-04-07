@@ -27,6 +27,7 @@ describe('(save flag)', function () {
         shell       = require('shelljs'),
         util        = require('../src/cordova/util'),
         prepare     = require('../src/cordova/prepare'),
+        registry    = require('..//src/plugman/registry/registry'),
         PlatformApi = require('../src/platforms/PlatformApiPoly'),
         platform    = rewire('../src/cordova/platform');
 
@@ -47,6 +48,8 @@ describe('(save flag)', function () {
         otherPlatformSpec      = '4.0.0',
         pluginName             = 'cordova-plugin-console',
         pluginVersion          = '1.0.0',
+        pluginName2            = 'cordova-plugin-globalization',
+        pluginVersion2         = '1.0.2',
         pluginGitUrl           = 'https://github.com/apache/cordova-plugin-console.git',
         pluginOldName          = 'org.apache.cordova.console',
         pluginOldVersion       = '0.2.11',
@@ -71,6 +74,22 @@ describe('(save flag)', function () {
                 platform: platformName,
                 version: version
             });
+        });
+    }
+
+    /**
+     * For testing scoped packages. We don't have those packages published, so just
+     * redirect the registry calls to their un-scoped counterparts
+     */
+    function redirectRegistryCalls(id) {
+        var originalFetch = registry.fetch;
+        spyOn(registry, 'fetch').andCallFake(function(package) {
+            return originalFetch([id]);
+        });
+
+        var originalInfo = registry.info;
+        spyOn(registry, 'info').andCallFake(function(package) {
+            return originalInfo([id]);
         });
     }
 
@@ -110,8 +129,8 @@ describe('(save flag)', function () {
     describe('preparing fixtures', function () {
         it('cloning "old" platform', function (done) {
             shell.rm('-rf', platformLocalPathOld);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathOld + 
-            ' && cd ' + platformLocalPathOld + 
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathOld +
+            ' && cd ' + platformLocalPathOld +
             ' && git reset --hard ' + platformVersionOld, { silent: true }, function (err) {
                 expect(err).toBe(0);
                 done();
@@ -120,8 +139,8 @@ describe('(save flag)', function () {
 
         it('cloning "new" platform', function (done) {
             shell.rm('-rf', platformLocalPathNew);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNew + 
-            ' && cd ' + platformLocalPathNew + 
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNew +
+            ' && cd ' + platformLocalPathNew +
             ' && git reset --hard ' + platformVersionNew, { silent: true }, function (err) {
                 expect(err).toBe(0);
                 done();
@@ -130,8 +149,8 @@ describe('(save flag)', function () {
 
         it('cloning "newer" platform', function (done) {
             shell.rm('-rf', platformLocalPathNewer);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNewer + 
-            ' && cd ' + platformLocalPathNewer + 
+            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNewer +
+            ' && cd ' + platformLocalPathNewer +
             ' && git reset --hard ' + platformVersionNewer, { silent: true }, function (err) {
                 expect(err).toBe(0);
                 done();
@@ -337,7 +356,7 @@ describe('(save flag)', function () {
                 expect(false).toBe(true);
                 done();
             }).finally(function (err) {
-                
+
             });
         }, TIMEOUT);
     });
@@ -413,6 +432,24 @@ describe('(save flag)', function () {
                 return cordova.raw.plugin('add', localPluginPath, { 'save': true });
             }).then(function () {
                 expect(helpers.getPluginSpec(appPath, localPluginName)).toBe(localPluginPath);
+                done();
+            }).catch(function (err) {
+                expect(true).toBe(false);
+                console.log(err.message);
+                done();
+            });
+        }, TIMEOUT);
+
+        it('spec.16.1 save scoped registry packages as spec', function (done) {
+            redirectRegistryCalls(pluginName + '@' + pluginVersion);
+            var scopedPackage = '@test-scope/' + pluginName;
+
+            platform('add', platformLocalPathNewer)
+            .then(function () {
+                return cordova.raw.plugin('add', scopedPackage + '@' + pluginVersion, { 'save': true });
+            }).then(function () {
+                expect(registry.fetch).toHaveBeenCalledWith([scopedPackage + '@' + pluginVersion]);
+                expect(helpers.getPluginSpec(appPath, pluginName)).toBe(scopedPackage + '@~' + pluginVersion);
                 done();
             }).catch(function (err) {
                 expect(true).toBe(false);
@@ -519,6 +556,24 @@ describe('(save flag)', function () {
                 done();
             });
         }, TIMEOUT);
+
+        it('spec.22.1 should update config with a spec that includes the scope for scoped plugins', function (done) {
+            // Fetching globalization rather than console to avoid conflicts with earlier tests
+            redirectRegistryCalls(pluginName2 + '@' + pluginVersion2);
+            var scopedPackage = '@test-scope/' + pluginName2;
+            cordova.raw.plugin('add', scopedPackage + '@' + pluginVersion2)
+            .then(function () {
+                return cordova.raw.plugin('save');
+            }).then(function () {
+                expect(registry.fetch).toHaveBeenCalledWith([scopedPackage + '@' + pluginVersion2]);
+                expect(helpers.getPluginSpec(appPath, pluginName2)).toBe(scopedPackage + '@~' + pluginVersion2);
+                done();
+            }).catch(function (err) {
+                expect(true).toBe(false);
+                console.log(err.message);
+                done();
+            });
+        }, TIMEOUT);
     });
 
     describe('prepare', function () {
@@ -534,6 +589,23 @@ describe('(save flag)', function () {
             .then(function () {
                 expect(path.join(appPath, 'platforms', platformName)).toExist();
                 expect(path.join(appPath, 'plugins', localPluginName)).toExist();
+                done();
+            }).catch(function (err) {
+                expect(true).toBe(false);
+                console.log(err.message);
+                done();
+            });
+        }, TIMEOUT);
+
+        it('spec.23.1 should restore scoped plugins', function (done) {
+            redirectRegistryCalls(pluginName2 + '@~' + pluginVersion2);
+            var scopedPackage = '@test-scope/' + pluginName2;
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+            helpers.setPluginSpec(appPath, pluginName2, scopedPackage + '@~' + pluginVersion2);
+            prepare()
+            .then(function () {
+                expect(registry.fetch).toHaveBeenCalledWith([scopedPackage + '@~' + pluginVersion2]);
+                expect(path.join(appPath, 'plugins', pluginName2)).toExist();
                 done();
             }).catch(function (err) {
                 expect(true).toBe(false);

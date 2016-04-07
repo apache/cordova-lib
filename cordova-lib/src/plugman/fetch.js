@@ -132,8 +132,9 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            var splitVersion = plugin_src.split('@');
-            var newID = pluginMapperotn[splitVersion[0]];
+            var splitVersion = cordovaUtil.parseRegistryPluginSpec(plugin_src);
+            var oldId = splitVersion[0] || plugin_src;
+            var newID = pluginMapperotn[oldId];
             if(newID) {
                 plugin_src = newID;
                 if (splitVersion[1]) {
@@ -205,8 +206,9 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
-    var expectedId = expectedIdAndVersion.split('@')[0];
-    var expectedVersion = expectedIdAndVersion.split('@')[1];
+    var parts = cordovaUtil.parseRegistryPluginSpec(expectedIdAndVersion);
+    var expectedId = parts[0] || expectedIdAndVersion;
+    var expectedVersion = parts[1];
     if (expectedId != pinfo.id) {
         var alias = pluginMappernto[expectedId] || pluginMapperotn[expectedId];
         if (alias !== pinfo.id) {
@@ -260,8 +262,8 @@ function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
     loadLocalPlugins(searchpath, pluginInfoProvider);
     var id = plugin_src;
     var versionspec = '*';
-    if (plugin_src.indexOf('@') != -1) {
-        var parts = plugin_src.split('@');
+    var parts = cordovaUtil.parseRegistryPluginSpec(plugin_src);
+    if (parts[0] && parts[1]) {
         id = parts[0];
         versionspec = parts[1];
     }
@@ -313,7 +315,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
     shell.rm('-rf', dest);
 
     if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
-        
+
         if(/^win/.test(process.platform)) {
             /*
                 [CB-10423]
@@ -330,7 +332,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
             shell.mkdir('-p', dest);
             events.emit('verbose', 'Copying plugin "' + resolvedSrcPath + '" => "' + dest + '"');
             events.emit('verbose', 'Skipping folder "' + relativeRootFolder + '"');
-            
+
             filenames.forEach(function(elem) {
                 shell.cp('-R', path.join(resolvedSrcPath,elem) , dest);
             });
