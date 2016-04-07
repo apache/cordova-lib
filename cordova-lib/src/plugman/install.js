@@ -313,7 +313,10 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         } else {
             events.emit('log', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
-        return Q();
+
+        // CB-11022 return true always in this case since if the plugin is installed
+        // we don't need to call prepare in any way
+        return Q(true);
     }
     events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
@@ -402,8 +405,10 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
                 return hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
                     return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
-                }).then(function(){
-                    return hooksRunner.fire('after_plugin_install', hookOptions);
+                }).then(function(installResult){
+                    return hooksRunner.fire('after_plugin_install', hookOptions)
+                    // CB-11022 Propagate install result to caller to be able to avoid unnecessary prepare
+                    .thenResolve(installResult);
                 });
             } else {
                 return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
@@ -604,7 +609,8 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
 
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
-    .then (function() {
+    .then (function(result) {
+
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // Add plugin to installed list. This already done in platform,
         // but need to be duplicated here to manage dependencies properly.
@@ -638,6 +644,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         info_strings.forEach( function(info) {
             events.emit('results', interp_vars(filtered_variables, info));
         });
+
+        // Propagate value, returned by platform's addPlugin method to caller
+        return Q(result);
     });
 }
 
