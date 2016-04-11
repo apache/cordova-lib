@@ -44,7 +44,7 @@ function clone(git_url, git_ref, clone_dir){
     shell.rm('-rf', tmp_dir);
     shell.mkdir('-p', tmp_dir);
     
-    var cloneArgs = ['clone'];
+    var cloneArgs = ['clone', '--recursive'];
     if(!needsGitCheckout) {
         // only get depth of 1 if there is no branch/commit specified
         cloneArgs.push('--depth=1');
