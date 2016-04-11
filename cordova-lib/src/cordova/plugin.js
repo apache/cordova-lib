@@ -156,8 +156,8 @@ module.exports = function plugin(command, targets, opts) {
                             });
 
                             if (missingVariables.length) {
-                                shell.rm('-rf', pluginInfo.dir);
                                 events.emit('verbose', 'Removing ' + pluginInfo.dir + ' due to installation failure');
+                                shell.rm('-rf', pluginInfo.dir);
                                 var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
                                 return Q.reject(new CordovaError(msg));
                             }
