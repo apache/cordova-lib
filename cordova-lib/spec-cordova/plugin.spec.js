@@ -190,4 +190,39 @@ describe('plugin end-to-end', function() {
         .fail(errorHandler.errorCallback)
         .fin(done);
     });
+
+    it('should handle scoped npm packages', function(done) {
+        var scopedPackage = '@testscope/' + npmInfoTestPlugin;
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+
+        spyOn(registry, 'info').andReturn(Q({}));
+        addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
+        .then(function() {
+            // Check to make sure that we are at least trying to get the correct package.
+            // This package is not published to npm, so we can't truly do end-to-end tests
+
+            expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
+
+            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            expect(fetchTarget).toEqual(scopedPackage);
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should handle scoped npm packages with given version tags', function(done) {
+        var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+
+        spyOn(registry, 'info');
+        addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
+        .then(function() {
+            expect(registry.info).not.toHaveBeenCalled();
+
+            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            expect(fetchTarget).toEqual(scopedPackage);
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
 });

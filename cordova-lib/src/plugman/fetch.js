@@ -31,7 +31,8 @@ var shell   = require('shelljs'),
     Q       = require('q'),
     registry = require('./registry/registry'),
     pluginMappernto = require('cordova-registry-mapper').newToOld,
-    pluginMapperotn = require('cordova-registry-mapper').oldToNew;
+    pluginMapperotn = require('cordova-registry-mapper').oldToNew,
+    pluginSpec      = require('../cordova/plugin_spec_parser');
 var cordovaUtil = require('../cordova/util');
 
 // Cache of PluginInfo objects for plugins in search path.
@@ -132,30 +133,30 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            var splitVersion = plugin_src.split('@');
-            var newID = pluginMapperotn[splitVersion[0]];
+            var parsedSpec = pluginSpec.parse(plugin_src);
+            var newID = parsedSpec.scope ? null : pluginMapperotn[parsedSpec.id];
             if(newID) {
                 plugin_src = newID;
-                if (splitVersion[1]) {
-                    plugin_src += '@'+splitVersion[1];
+                if (parsedSpec.version) {
+                    plugin_src += '@' + parsedSpec.version;
                 }
             }
             var P, skipCopyingPlugin;
-            plugin_dir = path.join(plugins_dir, splitVersion[0]);
+            plugin_dir = path.join(plugins_dir, parsedSpec.id);
             // if the plugin has already been fetched, use it.
             if (fs.existsSync(plugin_dir)) {
                 P = Q(plugin_dir);
                 skipCopyingPlugin = true;
             } else {
                 // if the plugin alias has already been fetched, use it.
-                var alias = pluginMappernto[splitVersion[0]] || newID;
+                var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || newID;
                 if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-                    events.emit('warn', 'Found '+alias+' is already fetched. Skipped fetching '+splitVersion[0]);
+                    events.emit('warn', 'Found '+alias+' is already fetched. Skipped fetching ' + parsedSpec.id);
                     P = Q(path.join(plugins_dir, alias));
                     skipCopyingPlugin = true;
                 } else {
                     if (newID) {
-                        events.emit('warn', 'Notice: ' + splitVersion[0] + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
+                        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
                     }
                     P = registry.fetch([plugin_src]);
                     skipCopyingPlugin = false;
@@ -205,16 +206,17 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
-    var expectedId = expectedIdAndVersion.split('@')[0];
-    var expectedVersion = expectedIdAndVersion.split('@')[1];
-    if (expectedId != pinfo.id) {
-        var alias = pluginMappernto[expectedId] || pluginMapperotn[expectedId];
+
+    var parsedSpec = pluginSpec.parse(expectedIdAndVersion);
+
+    if (parsedSpec.id != pinfo.id) {
+        var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || pluginMapperotn[parsedSpec.id];
         if (alias !== pinfo.id) {
-            throw new Error('Expected plugin to have ID "' + expectedId + '" but got "' + pinfo.id + '".');
+            throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
         }
     }
-    if (expectedVersion && !semver.satisfies(pinfo.version, expectedVersion)) {
-        throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + expectedVersion + '" but got "' + pinfo.version + '".');
+    if (parsedSpec.version && !semver.satisfies(pinfo.version, parsedSpec.version)) {
+        throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + parsedSpec.version + '" but got "' + pinfo.version + '".');
     }
 }
 
@@ -258,16 +260,11 @@ function loadLocalPlugins(searchpath, pluginInfoProvider) {
 //      org.apache.cordova.file@>=1.2.0
 function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
     loadLocalPlugins(searchpath, pluginInfoProvider);
-    var id = plugin_src;
-    var versionspec = '*';
-    if (plugin_src.indexOf('@') != -1) {
-        var parts = plugin_src.split('@');
-        id = parts[0];
-        versionspec = parts[1];
-    }
+    var parsedSpec = pluginSpec.parse(plugin_src);
+    var versionspec = parsedSpec.version || '*';
 
     var latest = null;
-    var versions = localPlugins.plugins[id];
+    var versions = localPlugins.plugins[parsedSpec.id];
 
     if (!versions) return null;
 
@@ -313,7 +310,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
     shell.rm('-rf', dest);
 
     if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
-        
+
         if(/^win/.test(process.platform)) {
             /*
                 [CB-10423]
@@ -330,7 +327,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
             shell.mkdir('-p', dest);
             events.emit('verbose', 'Copying plugin "' + resolvedSrcPath + '" => "' + dest + '"');
             events.emit('verbose', 'Skipping folder "' + relativeRootFolder + '"');
-            
+
             filenames.forEach(function(elem) {
                 shell.cp('-R', path.join(resolvedSrcPath,elem) , dest);
             });

@@ -33,7 +33,8 @@ var path = require('path'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew;
+    pluginMapper = require('cordova-registry-mapper').oldToNew,
+    pluginSpec = require('../cordova/plugin_spec_parser');
 
 var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -145,10 +146,10 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var deps = pluginInfo.getDependencies();
         var deps_path;
         deps.forEach(function (d) {
-            var splitVersion = d.id.split('@');
-            deps_path = path.join(plugin_dir, '..', splitVersion[0]);
+            var parsedSpec = pluginSpec.parse(d.id);
+            deps_path = path.join(plugin_dir, '..', parsedSpec.id);
             if (!fs.existsSync(deps_path)) {
-                var newId = pluginMapper[splitVersion[0]];
+                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
                 if (newId && toDelete.indexOf(newId) === -1) {
                    events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
                    toDelete.push(newId);
@@ -269,8 +270,8 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
 
             //try to convert ID if old-id path doesn't exist.
             if (!fs.existsSync(dependent_path)) {
-                var splitVersion = dangler.split('@');
-                var newId = pluginMapper[splitVersion[0]];
+                var parsedSpec = pluginSpec.parse(dangler);
+                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
                 if(newId) {
                     dependent_path = path.join(plugins_dir, newId);
                     events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');
