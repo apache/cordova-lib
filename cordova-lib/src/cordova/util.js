@@ -30,9 +30,6 @@ var fs            = require('fs'),
     semver        = require('semver'),
     superspawn    = require('cordova-common').superspawn;
 
-// npm packages follow the pattern of (@scope/)?package(@spec)? where scope and tag are optional
-var NPM_SPEC_REGEX = /^((?:@[^\/]+\/)?)([^@\/]+)(?:@(.+))?$/;
-
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
 if (!global_config_path) {
@@ -68,9 +65,6 @@ exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
-exports.parseRegistryPluginSpec = parseRegistryPluginSpec;
-exports.extractPluginId = extractPluginId;
-exports.isScopedRegistryPluginSpec = isScopedRegistryPluginSpec;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -406,49 +400,4 @@ function getAvailableNpmVersions(module_name) {
             return result[Object.keys(result)[0]].versions;
         });
     });
-}
-
-/**
- * Extracts the name and spec from an npm style package spec that follows the
- * format of (@scope/)?package(@spec)?
- * @param {String} raw  The raw npm style package spec
- * @returns {String[]}  An array containing the package name with optional scope
- *                      followed by the plugin spec (either value may be null
- *                      if not matched)
- */
-function parseRegistryPluginSpec(raw) {
-    var split = NPM_SPEC_REGEX.exec(raw);
-    if (split) {
-        var package = split[1] ? split[1] + split[2] : split[2];
-        var version = split[3] || null;
-        return [package, version];
-    } else {
-        return [null, null];
-    }
-}
-
-/**
- * Extracts the package name from an npm style package spec of the format
- * (@scope/)?package(@spec)?. Useful for getting the id used for directories
- * created for install
- * @param {String} raw  The raw npm style package spec
- * @returns {String}    The package name without scope or version or the original
- *                      string if it isn't an npm package spec
- */
-function extractPluginId(raw) {
-    var split = NPM_SPEC_REGEX.exec(raw);
-    return split ? split[2] : raw;
-}
-
-
-/**
- * Determines if a string is a package spec of the format @scope/package(@spec)?
- * or not
- * @param {String} raw  The raw npm style package spec
- * @returns {boolean}   True if the given string follows the format of an npm style
- *                      package spec or false otherwise
- */
-function isScopedRegistryPluginSpec(raw) {
-    var split = NPM_SPEC_REGEX.exec(raw);
-    return split ? !!(split[1] && split[2]) : false;
 }
