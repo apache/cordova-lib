@@ -23,6 +23,8 @@ var helpers = require('./helpers'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
     cordova = require('../src/cordova/cordova'),
+    prepare = require('../src/cordova/prepare'),
+    platforms = require('../src/platforms/platforms'),
     plugman = require('../src/plugman/plugman'),
     registry = require('../src/plugman/registry/registry');
 
@@ -99,6 +101,22 @@ function mockPluginFetch(id, dir) {
     });
 }
 
+function setupPlatformApiSpies() {
+    var api = platforms.getPlatformApi(helpers.testPlatform, path.join(project, 'platforms', helpers.testPlatform));
+    var addPluginOrig = api.addPlugin;
+    var removePluginOrig = api.removePlugin;
+
+    spyOn(api, 'addPlugin').andCallFake(function () {
+        return addPluginOrig.apply(api, arguments)
+        .thenResolve(true);
+    });
+
+    spyOn(api, 'removePlugin').andCallFake(function () {
+        return removePluginOrig.apply(api, arguments)
+        .thenResolve(true);
+    });
+}
+
 describe('plugin end-to-end', function() {
     events.on('results', function(res) { results = res; });
 
@@ -117,6 +135,7 @@ describe('plugin end-to-end', function() {
         util._resetOrigCwd();
         delete process.env.PWD;
 
+        spyOn(prepare, 'preparePlatforms').andCallThrough();
         spyOn(errorHandler, 'errorCallback').andCallThrough();
     });
 
@@ -130,6 +149,34 @@ describe('plugin end-to-end', function() {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
         .then(function() {
             return removePlugin(pluginId);
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should run prepare after plugin installation/removal by default', function(done) {
+        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
+        .then(function() {
+            expect(prepare.preparePlatforms).toHaveBeenCalled();
+            prepare.preparePlatforms.reset();
+            return removePlugin(pluginId);
+        })
+        .then(function () {
+            expect(prepare.preparePlatforms).toHaveBeenCalled();
+        })
+        .fail(errorHandler.errorCallback)
+        .fin(done);
+    });
+
+    it('should not run prepare after plugin installation/removal if platform return non-falsy value', function(done) {
+        setupPlatformApiSpies();
+        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
+        .then(function() {
+            expect(prepare.preparePlatforms).not.toHaveBeenCalled();
+            return removePlugin(pluginId);
+        })
+        .then(function () {
+            expect(prepare.preparePlatforms).not.toHaveBeenCalled();
         })
         .fail(errorHandler.errorCallback)
         .fin(done);

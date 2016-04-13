@@ -27,6 +27,7 @@ var install = require('../src/plugman/install'),
     events = require('cordova-common').events,
     plugman = require('../src/plugman/plugman'),
     platforms = require('../src/plugman/platforms/common'),
+    knownPlatforms  = require('../src/platforms/platforms'),
     common  = require('./common'),
     fs      = require('fs'),
     os      = require('os'),
@@ -127,9 +128,20 @@ describe('start', function() {
             return origParseElementtreeSync(path);
         });
     });
+
     it('start', function() {
         shell.rm('-rf', project);
         shell.cp('-R', path.join(srcProject, '*'), project);
+
+        // Every time when addPlugin is called it will return some truthy value
+        var returnValueIndex = 0;
+        var returnValues = [true, {}, [], 'foo', function(){}];
+        var api = knownPlatforms.getPlatformApi('android', project);
+        var addPluginOrig = api.addPlugin;
+        spyOn(api, 'addPlugin').andCallFake(function () {
+            return addPluginOrig.apply(api, arguments)
+            .thenResolve(returnValues[returnValueIndex++]);
+        });
 
         done = false;
         promise = Q()
@@ -138,7 +150,8 @@ describe('start', function() {
                 return install('android', project, plugins['org.test.plugins.dummyplugin']);
             }
         ).then(
-            function(){
+            function(result){
+                expect(result).toBeTruthy();
                 results['actions_callCount'] = actions_push.callCount;
                 results['actions_create'] = ca.argsForCall[0];
                 results['config_add'] = config_queue_add.argsForCall[0];
@@ -146,22 +159,28 @@ describe('start', function() {
                 return Q();
             }
         ).then(
-            function(){ return install('android', project, plugins['com.cordova.engine']); }
-        ).then(
             function(){
+                return install('android', project, plugins['com.cordova.engine']);
+            }
+        ).then(
+            function(result){
+                expect(result).toBeTruthy();
                 emit = spyOn(events, 'emit');
                 return install('android', project, plugins['org.test.plugins.childbrowser']);
             }
         ).then(
-            function(){
+            function(result){
+                expect(result).toBeTruthy();
                 return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
             }
         ).then(
-            function(){
+            function(result){
+                expect(result).toBeTruthy();
                 return install('android', project, plugins['org.test.defaultvariables'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
             }
         ).then(
-            function(){
+            function(result){
+                expect(result).toBeTruthy();
                 done = true;
                 results['emit_results'] = [];
 
@@ -323,6 +342,7 @@ describe('install', function() {
                 .fin(done);
             });
         });
+
         it('should not check custom engine version that is not supported for platform', function() {
             var spy = spyOn(semver, 'satisfies').andReturn(true);
             runs(function() {
