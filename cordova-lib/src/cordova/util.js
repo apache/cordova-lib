@@ -58,6 +58,7 @@ exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
+exports._resetOrigCwd = _resetOrigCwd;
 exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
@@ -138,6 +139,10 @@ function cdProjectRoot() {
 
 function getOrigWorkingDirectory() {
     return origCwd || process.env.PWD || process.cwd();
+}
+
+function _resetOrigCwd() {
+    origCwd = null;
 }
 
 // Fixes up relative paths that are no longer valid due to chdir() within cdProjectRoot().
