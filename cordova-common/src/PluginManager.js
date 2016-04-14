@@ -133,9 +133,13 @@ PluginManager.prototype.doOperation = function (operation, plugin, options) {
         // Save everything (munge and plugin/modules metadata)
         self.munger.save_all();
 
-        var targetDir = options.usePlatformWww ? self.locations.platformWww : self.locations.www;
-        fs.writeFileSync(path.join(targetDir, 'cordova_plugins.js'),
-            self.munger.platformJson.generateMetadata(), 'utf-8');
+        var metadata = self.munger.platformJson.generateMetadata();
+        fs.writeFileSync(path.join(self.locations.www, 'cordova_plugins.js'), metadata, 'utf-8');
+
+        // CB-11022 save plugin metadata to both www and platform_www if options.usePlatformWww is specified
+        if (options.usePlatformWww) {
+            fs.writeFileSync(path.join(self.locations.platformWww, 'cordova_plugins.js'), metadata, 'utf-8');
+        }
     });
 };
 

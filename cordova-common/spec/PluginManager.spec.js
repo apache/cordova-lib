@@ -20,9 +20,10 @@
 require ('promise-matchers');
 
 var Q = require('q');
+var fs = require('fs');
 var path = require('path');
+var shell = require('shelljs');
 var rewire = require('rewire');
-var PlatformJson = require('../src/PlatformJson');
 var PluginManager = rewire('../src/PluginManager');
 var PluginInfo = require('../src/PluginInfo/PluginInfo');
 var ConfigChanges = require('../src/ConfigChanges/ConfigChanges');
@@ -30,14 +31,17 @@ var ConfigChanges = require('../src/ConfigChanges/ConfigChanges');
 var DUMMY_PLUGIN = path.join(__dirname, 'fixtures/plugins/org.test.plugins.dummyplugin');
 var FAKE_PLATFORM = 'cordova-atari';
 var FAKE_LOCATIONS = {
-    root: '/some/fake/path'
+    root: '/some/fake/path',
+    platformWww: '/some/fake/path/platform_www',
+    www: '/some/www/dir'
 };
 
 describe('PluginManager class', function() {
 
     beforeEach(function () {
-        spyOn(PlatformJson, 'load');
         spyOn(ConfigChanges, 'PlatformMunger');
+        spyOn(fs, 'writeFileSync');
+        spyOn(shell, 'mkdir');
     });
 
     it('should be constructable', function () {
@@ -53,6 +57,7 @@ describe('PluginManager class', function() {
     describe('instance', function () {
         var actions, manager;
         var FAKE_PROJECT;
+        var fail = jasmine.createSpy('fail');
         var ActionStackOrig = PluginManager.__get__('ActionStack');
 
         beforeEach(function () {
@@ -78,7 +83,7 @@ describe('PluginManager class', function() {
                 expect(manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {})).not.toHaveBeenRejected();
             });
 
-            it('should iterate through all plugin\'s files and frameworks', function () {
+            it('should iterate through all plugin\'s files and frameworks', function (done) {
                 manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {})
                 .then(function () {
                     expect(FAKE_PROJECT.getInstaller.calls.length).toBe(16);
@@ -87,6 +92,43 @@ describe('PluginManager class', function() {
                     expect(actions.push.calls.length).toBe(16);
                     expect(actions.process).toHaveBeenCalled();
                     expect(FAKE_PROJECT.write).toHaveBeenCalled();
+                })
+                .fail(fail)
+                .done(function () {
+                    expect(fail).not.toHaveBeenCalled();
+                    done();
+                });
+            });
+
+            it('should save plugin metadata to www directory', function (done) {
+                var metadataPath = path.join(manager.locations.www, 'cordova_plugins.js');
+                var platformWwwMetadataPath = path.join(manager.locations.platformWww, 'cordova_plugins.js');
+
+                manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {})
+                .then(function () {
+                    expect(fs.writeFileSync).toHaveBeenCalledWith(metadataPath, jasmine.any(String), 'utf-8');
+                    expect(fs.writeFileSync).not.toHaveBeenCalledWith(platformWwwMetadataPath, jasmine.any(String), 'utf-8');
+                })
+                .fail(fail)
+                .done(function () {
+                    expect(fail).not.toHaveBeenCalled();
+                    done();
+                });
+            });
+
+            it('should save plugin metadata to both www ans platform_www directories when options.usePlatformWww is specified', function (done) {
+                var metadataPath = path.join(manager.locations.www, 'cordova_plugins.js');
+                var platformWwwMetadataPath = path.join(manager.locations.platformWww, 'cordova_plugins.js');
+
+                manager.addPlugin(new PluginInfo(DUMMY_PLUGIN), {usePlatformWww: true})
+                .then(function () {
+                    expect(fs.writeFileSync).toHaveBeenCalledWith(metadataPath, jasmine.any(String), 'utf-8');
+                    expect(fs.writeFileSync).toHaveBeenCalledWith(platformWwwMetadataPath, jasmine.any(String), 'utf-8');
+                })
+                .fail(fail)
+                .done(function () {
+                    expect(fail).not.toHaveBeenCalled();
+                    done();
                 });
             });
         });
