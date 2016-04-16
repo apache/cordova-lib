@@ -27,10 +27,11 @@ exports = module.exports = {
     CordovaExternalToolErrorContext: require('./src/CordovaError/CordovaExternalToolErrorContext'),
     PlatformJson: require('./src/PlatformJson'),
     ConfigParser: require('./src/ConfigParser/ConfigParser.js'),
+    FileUpdater: require('./src/FileUpdater'),
 
     PluginInfo: require('./src/PluginInfo/PluginInfo.js'),
     PluginInfoProvider: require('./src/PluginInfo/PluginInfoProvider.js'),
-    
+
     PluginManager: require('./src/PluginManager'),
 
     ConfigChanges: require('./src/ConfigChanges/ConfigChanges.js'),
