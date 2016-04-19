@@ -614,6 +614,21 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
+        it('spec.23.2 should restore plugins without spec attribute', function (done) {
+            redirectRegistryCalls(pluginName2);
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+            helpers.setPluginSpec(appPath, pluginName2/**, do not specify spec here */);
+            prepare()
+            .then(function () {
+                expect(registry.fetch).toHaveBeenCalledWith([pluginName2]);
+                expect(path.join(appPath, 'plugins', pluginName2)).toExist();
+            }).catch(function (err) {
+                expect(true).toBe(false);
+                console.log(err.message);
+            })
+            .fin(done);
+        }, TIMEOUT);
+
         it('spec.24 should restore only specified platform', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
             helpers.setEngineSpec(appPath, otherPlatformName, otherPlatformSpec);

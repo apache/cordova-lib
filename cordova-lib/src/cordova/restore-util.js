@@ -112,7 +112,11 @@ function installPluginsFromConfigXML(args) {
         // assume it is the location to install from.
         var pluginSpec = pluginEntry.spec;
         pluginName = pluginEntry.name;
-        var installFrom = semver.validRange(pluginSpec, true) ? pluginName + '@' + pluginSpec : pluginSpec;
+
+        // CB-10761 If plugin spec is not specified, use plugin name
+        var installFrom = pluginSpec || pluginName;
+        if (pluginSpec && semver.validRange(pluginSpec, true))
+            installFrom = pluginName + '@' + pluginSpec;
 
         // Add feature preferences as CLI variables if have any
         var options = {
