@@ -26,6 +26,7 @@ describe('(save flag)', function () {
         fs          = require('fs'),
         shell       = require('shelljs'),
         util        = require('../src/cordova/util'),
+        node_util   = require('util'),
         prepare     = require('../src/cordova/prepare'),
         registry    = require('../src/plugman/registry/registry'),
         PlatformApi = require('../src/platforms/PlatformApiPoly'),
@@ -126,12 +127,16 @@ describe('(save flag)', function () {
         revertInstallPluginsForNewPlatform();
     });
 
+    function gitClone(repo, dir, ref, cb) {
+        var gitTemplate = 'git clone --branch %s --depth=1 %s %s';
+        var gitCommand = node_util.format(gitTemplate, ref, repo, dir);
+        shell.exec(gitCommand, { silent: true }, cb);
+    }
+
     describe('preparing fixtures', function () {
         it('cloning "old" platform', function (done) {
             shell.rm('-rf', platformLocalPathOld);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathOld +
-            ' && cd ' + platformLocalPathOld +
-            ' && git reset --hard ' + platformVersionOld, { silent: true }, function (err) {
+            gitClone(platformGitUrl, platformLocalPathOld, platformVersionOld, function (err) {
                 expect(err).toBe(0);
                 done();
             });
@@ -139,9 +144,7 @@ describe('(save flag)', function () {
 
         it('cloning "new" platform', function (done) {
             shell.rm('-rf', platformLocalPathNew);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNew +
-            ' && cd ' + platformLocalPathNew +
-            ' && git reset --hard ' + platformVersionNew, { silent: true }, function (err) {
+            gitClone(platformGitUrl, platformLocalPathNew, platformVersionNew, function (err) {
                 expect(err).toBe(0);
                 done();
             });
@@ -149,9 +152,7 @@ describe('(save flag)', function () {
 
         it('cloning "newer" platform', function (done) {
             shell.rm('-rf', platformLocalPathNewer);
-            shell.exec('git clone ' + platformGitUrl + ' ' + platformLocalPathNewer +
-            ' && cd ' + platformLocalPathNewer +
-            ' && git reset --hard ' + platformVersionNewer, { silent: true }, function (err) {
+            gitClone(platformGitUrl, platformLocalPathNewer, platformVersionNewer, function (err) {
                 expect(err).toBe(0);
                 done();
             });
