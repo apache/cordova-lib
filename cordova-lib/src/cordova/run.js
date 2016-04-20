@@ -20,7 +20,8 @@
 var cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
     Q            = require('q'),
-    platform_lib = require('../platforms/platforms');
+    platform_lib = require('../platforms/platforms'),
+    _ = require('underscore');
 
 
 // Returns a promise.
@@ -41,7 +42,7 @@ module.exports = function run(options) {
             return Q.all(options.platforms.map(function(platform) {
                 return platform_lib
                     .getPlatformApi(platform)
-                    .run(options.options);
+                    .run(_.clone(options.options));
             }));
         }).then(function() {
             return hooksRunner.fire('after_run', options);
