@@ -25,32 +25,41 @@ var shell = require("shelljs");
 var minimatch = require("minimatch");
 
 /**
+ * Logging callback used in the FileUpdater methods.
+ * @callback loggingCallback
+ * @param {string} message A message describing a single file update operation.
+ */
+
+/**
  * Updates a target file or directory with a source file or directory. (Directory updates are
  * not recursive.) Stats for target and source items must be passed in. This is an internal
  * helper function used by other methods in this module.
  *
- * @param {string|null} rootDir Root directory (such as a project) to which target and source
- *     path parameters are relative, or null if the paths are absolute. The rootDir is omitted
- *     from any logged paths, to make the logs easier to read.
- * @param {string} targetPath Destination file or directory to be updated. If it does not exist,
- *     it will be created.
- * @param {fs.Stats|null} targetStats An instance of fs.Stats for the target path, or null if
- *     the target does not exist.
- * @param {string|null} sourcePath Source file or directory to be used to update the
+ * @param {?string} sourcePath Source file or directory to be used to update the
  *     destination. If the source is null, then the destination is deleted if it exists.
- * @param {fs.Stats|null} sourceStats An instance of fs.Stats for the source path, or null if
+ * @param {?fs.Stats} sourceStats An instance of fs.Stats for the source path, or null if
  *     the source does not exist.
- * @param {boolean} force If target and source are both files, and the force flag is not
- *     set, then the file will not be copied unless the source is newer than the target.
- * @param {function} [log] Optional logging callback that takes a string message describing any
- *     file operations that are performed.
+ * @param {string} targetPath Required destination file or directory to be updated. If it does
+ *     not exist, it will be created.
+ * @param {?fs.Stats} targetStats An instance of fs.Stats for the target path, or null if
+ *     the target does not exist.
+ * @param {Object} [options] Optional additional parameters for the update.
+ * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
+ *     and source path parameters are relative; may be omitted if the paths are absolute. The
+ *     rootDir is always omitted from any logged paths, to make the logs easier to read.
+ * @param {boolean} [options.force] If target and source are both files, and the force flag is
+ *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {loggingCallback} [log] Optional logging callback that takes a string message
+ *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
  *     and everything was up to date
  */
-function updatePathWithStats(
-        rootDir, targetPath, targetStats, sourcePath, sourceStats, force, log) {
+function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, options, log) {
     log = log || function(message) { };
     var updated = false;
+
+    var rootDir = (options && options.rootDir) || "";
+    var force = options && options.force;
 
     var targetFullPath = path.join(rootDir || "", targetPath);
 
@@ -113,36 +122,31 @@ function updatePathWithStats(
  * Updates a target file or directory with a source file or directory. (Directory updates are
  * not recursive.)
  *
- * @param {string|null} rootDir Root directory (such as a project) to which target and source
- *     path parameters are relative, or null if the paths are absolute. The rootDir is omitted
- *     from any logged paths, to make the logs easier to read.
- * @param {string} targetPath Destination file or directory to be updated. If it does not exist,
- *     it will be created.
- * @param {string|null} sourcePath Source file or directory to be used to update the
+ * @param {?string} sourcePath Source file or directory to be used to update the
  *     destination. If the source is null, then the destination is deleted if it exists.
- * @param {boolean} force If target and source are both files, and the force flag is not
- *     set, then the file will not be copied unless the source is newer than the target.
- * @param {function} [log] Optional logging callback that takes a string message describing any
- *     file operations that are performed.
+ * @param {string} targetPath Required destination file or directory to be updated. If it does
+ *     not exist, it will be created.
+ * @param {Object} [options] Optional additional parameters for the update.
+ * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
+ *     and source path parameters are relative; may be omitted if the paths are absolute. The
+ *     rootDir is always omitted from any logged paths, to make the logs easier to read.
+ * @param {boolean} [options.force] If target and source are both files, and the force flag is
+ *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {loggingCallback} [log] Optional logging callback that takes a string message
+ *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
  *     and everything was up to date
  */
-function updatePath(rootDir, targetPath, sourcePath, force, log) {
-    rootDir = rootDir || "";
-    if (typeof(rootDir) !== "string") {
-        throw new Error("A root directory path is required.");
-    }
-
-    if (!targetPath || typeof(targetPath) !== "string") {
-        throw new Error("A target path is required.");
-    }
-
-    if (sourcePath && typeof(sourcePath) !== "string") {
+function updatePath(sourcePath, targetPath, options, log) {
+    if (sourcePath !== null && typeof sourcePath !== "string") {
         throw new Error("A source path (or null) is required.");
     }
 
-    log = log || function(message) { };
+    if (!targetPath || typeof targetPath !== "string") {
+        throw new Error("A target path is required.");
+    }
 
+    var rootDir = (options && options.rootDir) || "";
     var targetFullPath = path.join(rootDir, targetPath);
     var targetStats = fs.existsSync(targetFullPath) ? fs.statSync(targetFullPath) : null;
     var sourceStats = null;
@@ -163,36 +167,36 @@ function updatePath(rootDir, targetPath, sourcePath, force, log) {
         }
     }
 
-    return updatePathWithStats(
-        rootDir, targetPath, targetStats, sourcePath, sourceStats, force, log);
+    return updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, options, log);
 }
 
 /**
  * Updates files and directories based on a mapping from target paths to source paths. Targets
  * with null sources in the map are deleted.
  *
- * @param {string|null} rootDir Root directory (such as a project) to which target and source
- *     path parameters are relative, or null if the paths are absolute. The rootDir is omitted
- *     from any logged paths, to make the logs easier to read.
- * @param {object} pathMap A dictionary mapping from target paths to source paths.
- * @param {boolean} force If target and source are both files, and the force flag is not
- *     set, then the file will not be copied unless the source is newer than the target.
- * @param {function} [log] Optional logging callback that takes a string message describing any
- *     file operations that are performed.
+ * @param {Object} pathMap A dictionary mapping from target paths to source paths.
+ * @param {Object} [options] Optional additional parameters for the update.
+ * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
+ *     and source path parameters are relative; may be omitted if the paths are absolute. The
+ *     rootDir is always omitted from any logged paths, to make the logs easier to read.
+ * @param {boolean} [options.force] If target and source are both files, and the force flag is
+ *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {loggingCallback} [log] Optional logging callback that takes a string message
+ *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
  *     and everything was up to date
  */
-function updatePaths(rootDir, pathMap, force, log) {
-    if (!pathMap || typeof(pathMap) !== "object") {
+function updatePaths(pathMap, options, log) {
+    if (!pathMap || typeof pathMap !== "object" || Array.isArray(pathMap)) {
         throw new Error("An object mapping from target paths to source paths is required.");
     }
 
     var updated = false;
 
-    for (var targetPath in pathMap) {
+    Object.keys(pathMap).forEach(function (targetPath) {
         var sourcePath = pathMap[targetPath];
-        updated = updatePath(rootDir, targetPath, sourcePath, force, log) || updated;
-    }
+        updated = updatePath(sourcePath, targetPath, options, log) || updated;
+    });
 
     return updated;
 }
@@ -200,66 +204,56 @@ function updatePaths(rootDir, pathMap, force, log) {
 /**
  * Updates a target directory with merged files and subdirectories from source directories.
  *
- * @param {string|null} rootDir Root directory (such as a project) to which target and source
- *     path parameters are relative, or null if the paths are absolute. The rootDir is omitted
- *     from any logged paths, to make the logs easier to read.
- * @param {string} targetDir Destination directory to be updated. If it does not exist, it will be
- *     created. If it exists, newer files from source directories will be copied over, and files
- *     missing in the source directories will be deleted.
- * @param {string|string[]} sourceDirs Source directory or array of source directories to be
- *     merged into the target. The directories are listed in order of precedence; files in
+ * @param {string|string[]} sourceDirs Required source directory or array of source directories
+ *     to be merged into the target. The directories are listed in order of precedence; files in
  *     directories later in the array supersede files in directories earlier in the array
  *     (regardless of timestamps).
- * @param {string|string[]|null} include Optional glob string or array of glob strings that are
- *     tested against both target and source relative paths to determine if they are include in
- *     the merge-and-update. If null, all items are included.
- * @param {string|string[]|null} exclude Optional glob string or array of glob strings that are
- *     tested against both target and source relative paths to determine if they are excluded
- *     from the merge-and-update. Exclusions override inclusions. If null, no items are excluded.
- * @param {boolean} force If target and source are both files, and the force flag is not
- *     set, then the file will not be copied unless the source is newer than the target.
- * @param {function} [log] Optional logging callback that takes a string message describing any
- *     file operations that are performed.
+ * @param {string} targetDir Required destination directory to be updated. If it does not exist,
+ *     it will be created. If it exists, newer files from source directories will be copied over,
+ *     and files missing in the source directories will be deleted.
+ * @param {Object} [options] Optional additional parameters for the update.
+ * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
+ *     and source path parameters are relative; may be omitted if the paths are absolute. The
+ *     rootDir is always omitted from any logged paths, to make the logs easier to read.
+ * @param {boolean} [options.force] If target and source are both files, and the force flag is
+ *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {string|string[]} [options.include] Optional glob string or array of glob strings that
+ *     are tested against both target and source relative paths to determine if they are included
+ *     in the merge-and-update. If unspecified, all items are included.
+ * @param {string|string[]} [options.exclude] Optional glob string or array of glob strings that
+ *     are tested against both target and source relative paths to determine if they are excluded
+ *     from the merge-and-update. Exclusions override inclusions. If unspecified, no items are
+ *     excluded.
+ * @param {loggingCallback} [log] Optional logging callback that takes a string message
+ *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
  *     and everything was up to date
  */
-function mergeAndUpdateDir(rootDir, targetDir, sourceDirs, include, exclude, force, log) {
-    rootDir = rootDir || "";
-    if (typeof(rootDir) !== "string") {
-        throw new Error("A root directory path (or null) is required.");
-    }
-
-    if (!targetDir || typeof(targetDir) !== "string") {
-        throw new Error("A target directory path is required.");
-    }
-
-    if (typeof(sourceDirs) === "string") {
+function mergeAndUpdateDir(sourceDirs, targetDir, options, log) {
+    if (sourceDirs && typeof sourceDirs === "string") {
         sourceDirs = [ sourceDirs ];
-    } else if (!Array.isArray(sourceDirs) || sourceDirs.length === 0) {
+    } else if (!(Array.isArray(sourceDirs) && sourceDirs.length > 0)) {
         throw new Error("A source directory path or array of paths is required.");
     }
 
-    if (!include) {
-        include = [ "**" ];
-    } else if (typeof (include) === "string") {
+    if (!targetDir || typeof targetDir !== "string") {
+        throw new Error("A target directory path is required.");
+    }
+
+    var rootDir = (options && options.rootDir) || "";
+
+    var include = (options && options.include) || [ "**" ];
+    if (typeof include === "string") {
         include = [ include ];
     } else if (!Array.isArray(include)) {
         throw new Error("Include parameter must be a glob string or array of glob strings.");
     }
 
-    if (!exclude) {
-        exclude = [];
-    } else if (typeof (exclude) === "string") {
+    var exclude = (options && options.exclude) || [];
+    if (typeof exclude === "string") {
         exclude = [ exclude ];
     } else if (!Array.isArray(exclude)) {
         throw new Error("Exclude parameter must be a glob string or array of glob strings.");
-    }
-
-    // Scan the files in the target directory, if it exists.
-    var targetMap = {};
-    var targetFullPath = path.join(rootDir, targetDir);
-    if (fs.existsSync(targetFullPath)) {
-        targetMap = mapDirectory(rootDir, targetDir, include, exclude);
     }
 
     // Scan the files in each of the source directories.
@@ -272,7 +266,14 @@ function mergeAndUpdateDir(rootDir, targetDir, sourceDirs, include, exclude, for
         sourceMaps[i] = mapDirectory(rootDir, sourceDirs[i], include, exclude);
     }
 
-    var pathMap = mergePathMaps(targetDir, targetMap, sourceMaps);
+    // Scan the files in the target directory, if it exists.
+    var targetMap = {};
+    var targetFullPath = path.join(rootDir, targetDir);
+    if (fs.existsSync(targetFullPath)) {
+        targetMap = mapDirectory(rootDir, targetDir, include, exclude);
+    }
+
+    var pathMap = mergePathMaps(sourceMaps, targetMap, targetDir);
 
     var updated = false;
 
@@ -280,12 +281,11 @@ function mergeAndUpdateDir(rootDir, targetDir, sourceDirs, include, exclude, for
     Object.keys(pathMap).sort().forEach(function (subPath) {
         var entry = pathMap[subPath];
         updated = updatePathWithStats(
-            rootDir,
-            entry.targetPath,
-            entry.targetStats,
             entry.sourcePath,
             entry.sourceStats,
-            force,
+            entry.targetPath,
+            entry.targetStats,
+            options,
             log) || updated;
     });
 
@@ -317,14 +317,20 @@ function mapDirectory(rootDir, subDir, include, exclude) {
             var fullPath = path.join(rootDir, subDir, relativePath);
             var stats = fs.statSync(fullPath);
 
-            // Directories are included if either something under them is included or they
-            // match an include glob. Files are included only if they match an include glob.
-            if (stats.isDirectory() ?
-                    (mapSubdirectory(rootDir, subDir, relativePath, include, exclude, dirMap) ||
-                        matchGlobArray(relativePath, include)) :
-                    (stats.isFile() && matchGlobArray(relativePath, include))) {
-                dirMap[relativePath] = { subDir: subDir, stats: stats };
-                itemMapped = true;
+            if (stats.isDirectory()) {
+                // Directories are included if either something under them is included or they
+                // match an include glob.
+                if (mapSubdirectory(rootDir, subDir, relativePath, include, exclude, dirMap) ||
+                        matchGlobArray(relativePath, include)) {
+                    dirMap[relativePath] = { subDir: subDir, stats: stats };
+                    itemMapped = true;
+                }
+            } else if (stats.isFile()) {
+                // Files are included only if they match an include glob.
+                if (matchGlobArray(relativePath, include)) {
+                    dirMap[relativePath] = { subDir: subDir, stats: stats };
+                    itemMapped = true;
+                }
             }
         }
         return itemMapped;
@@ -344,13 +350,12 @@ function mapDirectory(rootDir, subDir, include, exclude) {
  * Merges together multiple source maps and a target map into a single mapping from
  * relative paths to objects with target and source paths and stats.
  */
-function mergePathMaps(targetDir, targetMap, sourceMaps) {
+function mergePathMaps(sourceMaps, targetMap, targetDir) {
     // Merge multiple source maps together, along with target path info.
     // Entries in later source maps override those in earlier source maps.
     // Target stats will be filled in below for targets that exist.
     var pathMap = {};
-    for (var i in sourceMaps) {
-        var sourceMap = sourceMaps[i];
+    sourceMaps.forEach(function (sourceMap) {
         for (var sourceSubPath in sourceMap) {
             var sourceEntry = sourceMap[sourceSubPath];
             pathMap[sourceSubPath] = {
@@ -360,7 +365,7 @@ function mergePathMaps(targetDir, targetMap, sourceMaps) {
                 sourceStats: sourceEntry.stats
             };
         }
-    }
+    });
 
     // Fill in target stats for targets that exist, and create entries
     // for targets that don't have any corresponding sources.
