@@ -291,7 +291,7 @@ function generate_plugin_config_munge(pluginInfo, vars) {
                 });
             }
             // 2. add into munge
-            mungeutil.deep_add(munge, change.target, change.parent, { xml: stringified, count: 1, after: change.after });
+            mungeutil.deep_add(munge, change.target, change.parent, { xml: stringified, count: 1, after: change.after, attr: change.attr });
         });
     });
     return munge;
