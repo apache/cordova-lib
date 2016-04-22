@@ -1,4 +1,5 @@
 var fetch = require('../index.js');
+var uninstall = require('../index.js').uninstall;
 var t = require('tap');
 var shell = require('shelljs');
 var path = require('path');
@@ -22,6 +23,19 @@ t.test('npm install packageID', opt, function (t) {
         return t.test('check result', opt, function (t) {
             t.plan(1);
             t.equal(fs.existsSync(result), true);
+            t.end();
+        });
+    });
+});
+
+t.test('npm uninstall packageID', opt, function (t) {
+    //confirm it exists
+    t.equal(fs.existsSync(path.join(tempDir,'node_modules','cordova-plugin-device')), true);
+    return uninstall('cordova-plugin-device', tempDir).then(function (result) {
+        return t.test('check result', opt, function (t) {
+            t.plan(1);
+            //confirm it doesn't exist anymore
+            t.equal(fs.existsSync(path.join(tempDir,'node_modules','cordova-plugin-device')), false);
             t.end();
         });
     });

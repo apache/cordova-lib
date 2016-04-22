@@ -42,10 +42,6 @@ module.exports = function(target, dest, opts) {
     opts = opts || {};
     var tree1;
 
-    if(!shell.which('npm')) {
-        return Q.reject(new CordovaError('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
-    }
-
     if(dest && target) {
         //add target to fetchArgs Array
         fetchArgs.push(target);
@@ -70,6 +66,9 @@ module.exports = function(target, dest, opts) {
         events.emit('verbose', 'saving');
         fetchArgs.push('--save'); 
     } 
+    
+    //check if npm is installed
+    isNpmInstalled();
 
     //Grab json object of installed modules before npm install
     return depls(dest)
@@ -174,3 +173,54 @@ function getPath(id, dest) {
         return finalDest;
     } else return Q.reject(new CordovaError('Failed to get absolute path to installed module'));
 }
+
+
+/*
+ * Checks to see if npm is installed on the users system
+ * @return {Boolean||Error} Returns true or a cordova error.
+ */
+
+function isNpmInstalled() {
+    if(!shell.which('npm')) {
+        return Q.reject(new CordovaError('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
+    }
+    return true;
+}
+
+
+/* 
+ * A module that runs npm uninstall 
+ *
+ * @param {String} target   the packageID
+ * @param {String} dest     destination of where to uninstall the module from
+ * @param {Object} opts     [opts={save:true}] options to pass to npm uninstall
+ *
+ * @return {String||Promise}    Returns 
+ *
+ */
+module.exports.uninstall = function(target, dest, opts) {
+    var fetchArgs = ['uninstall'];
+    opts = opts || {};
+
+    if(dest && target) {
+        //add target to fetchArgs Array
+        fetchArgs.push(target);  
+    } else return Q.reject(new CordovaError('Need to supply a target and destination'));
+
+    //set the directory where npm uninstall will be run
+    opts.cwd = dest;
+
+    //if user added --save flag, pass it to npm uninstall command
+    if(opts.save) {
+        fetchArgs.push('--save'); 
+    }
+    
+    //check if npm is installed on the system
+    isNpmInstalled();
+    
+    //run the command
+    return superspawn.spawn('npm', fetchArgs, opts)
+    .fail(function(err){
+        return Q.reject(new CordovaError(err));
+    });
+};
