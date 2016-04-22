@@ -38,6 +38,7 @@ var config            = require('./config'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
     fetch             = require('cordova-fetch'),
+    uninstall         = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -270,7 +271,7 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             }
 
             events.emit('log', 'Using cordova-fetch for '+ target);
-            return fetch(target,projectRoot, opts);
+            return fetch(target, projectRoot, opts);
         }
 
         if (cordova_util.isUrl(version)) {
@@ -382,14 +383,14 @@ function remove(hooksRunner, projectRoot, targets, opts) {
         });
     }).then(function() {
         //Remove from node_modules if it exists and --fetch was used
-        //todo: a better solution would be to have a cordova-remove module that
-        //ran `npm uninstall (--save)` in the cordova project. 
         if(opts.fetch) {
             targets.forEach(function(target) {
-                console.log(target)
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }
+                uninstall(target, projectRoot, opts);
+                //Sometimes artifacts remane after `npm uninstall`.
+                //Delete the directory to make sure it is fully gone.
                 shell.rm('-rf', path.join(projectRoot, 'node_modules', target));
             });
         }
