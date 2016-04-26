@@ -171,9 +171,10 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                     //use cordova-fetch if --fetch was passed in
                     if(options.fetch) {
                         var projectRoot = path.join(plugins_dir, '..');
-                        //plugman projects need to go up two directories
-                        //to reach project root
-                        if(options.client === 'plugman') {
+                        //plugman projects need to go up two directories to reach project root. 
+                        //plugin dependencies actually have plugman as client. So added a 
+                        //check to see if node_modules doesn't exist before going up a dir.
+                        if(options.client === 'plugman' && !fs.existsSync(path.join(projectRoot,'node_modules'))) {
                             projectRoot = path.join(projectRoot, '..');
                         }
                         P = fetch(plugin_src, projectRoot, options); 
