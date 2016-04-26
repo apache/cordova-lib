@@ -42,6 +42,9 @@ module.exports = function(target, dest, opts) {
     opts = opts || {};
     var tree1;
 
+    //check if npm is installed
+    isNpmInstalled();
+
     if(dest && target) {
         //add target to fetchArgs Array
         fetchArgs.push(target);
@@ -67,8 +70,6 @@ module.exports = function(target, dest, opts) {
         fetchArgs.push('--save'); 
     } 
     
-    //check if npm is installed
-    isNpmInstalled();
 
     //Grab json object of installed modules before npm install
     return depls(dest)
@@ -187,7 +188,6 @@ function isNpmInstalled() {
     return true;
 }
 
-
 /* 
  * A module that runs npm uninstall 
  *
@@ -195,12 +195,15 @@ function isNpmInstalled() {
  * @param {String} dest     destination of where to uninstall the module from
  * @param {Object} opts     [opts={save:true}] options to pass to npm uninstall
  *
- * @return {String||Promise}    Returns 
+ * @return {Boolean||Error}    Returns true or an error.
  *
  */
 module.exports.uninstall = function(target, dest, opts) {
     var fetchArgs = ['uninstall'];
     opts = opts || {};
+
+    //check if npm is installed on the system
+    isNpmInstalled();
 
     if(dest && target) {
         //add target to fetchArgs Array
@@ -215,12 +218,17 @@ module.exports.uninstall = function(target, dest, opts) {
         fetchArgs.push('--save'); 
     }
     
-    //check if npm is installed on the system
-    isNpmInstalled();
-    
     //run the command
     return superspawn.spawn('npm', fetchArgs, opts)
-    .fail(function(err){
+    .then(function() {
+        //Sometimes artifacts remane after `npm uninstall`.
+        //Delete the directory to make sure it is fully gone.
+        if(fs.existsSync(path.join(dest, 'node_modules', target))) {
+            shell.rm('-rf', path.join(dest, 'node_modules', target));
+        }
+        return true;
+    })
+    .fail(function(err) {
         return Q.reject(new CordovaError(err));
     });
 };
