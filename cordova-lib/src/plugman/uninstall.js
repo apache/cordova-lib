@@ -34,6 +34,7 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
     pluginMapper = require('cordova-registry-mapper').oldToNew,
+    npmUninstall = require('cordova-fetch').uninstall,
     pluginSpec = require('../cordova/plugin_spec_parser');
 
 var superspawn = require('cordova-common').superspawn;
@@ -120,6 +121,11 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         if ( !fs.existsSync(plugin_dir) ) {
             events.emit('verbose', 'Plugin "'+ id +'" already removed ('+ plugin_dir +')');
             return Q();
+        }
+
+        if(options.fetch) {
+            //run npm uninstall to remove plugin from node_modules directory
+            npmUninstall(id, options.projectRoot, options); 
         }
 
         shell.rm('-rf', plugin_dir);

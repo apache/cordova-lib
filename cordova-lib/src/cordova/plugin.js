@@ -277,7 +277,7 @@ module.exports = function plugin(command, targets, opts) {
                         }, Q())
                         .then(function() {
                             // TODO: Should only uninstallPlugin when no platforms have it.
-                            return plugman.raw.uninstall.uninstallPlugin(target, pluginPath);
+                            return plugman.raw.uninstall.uninstallPlugin(target, pluginPath, opts);
                         }).then(function(){
                             //remove plugin from config.xml
                             if(saveToConfigXmlOn(config_json, opts)){

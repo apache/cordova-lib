@@ -389,9 +389,6 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                     target = 'cordova-'+target;
                 }
                 uninstall(target, projectRoot, opts);
-                //Sometimes artifacts remane after `npm uninstall`.
-                //Delete the directory to make sure it is fully gone.
-                shell.rm('-rf', path.join(projectRoot, 'node_modules', target));
             });
         }
     }).then(function() {
