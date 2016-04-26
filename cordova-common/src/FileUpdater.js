@@ -47,8 +47,9 @@ var minimatch = require("minimatch");
  * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
- * @param {boolean} [options.force] If target and source are both files, and the force flag is
- *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
+ * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
+ *     last-modified times are copied. By default, only files with different times are copied.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -59,7 +60,8 @@ function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, o
     var updated = false;
 
     var rootDir = (options && options.rootDir) || "";
-    var force = options && options.force;
+    var copyAll = (options && options.all) || false;
+    var copyNewer = (options && options.newer) || false;
 
     var targetFullPath = path.join(rootDir || "", targetPath);
 
@@ -69,7 +71,7 @@ function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, o
         if (targetStats) {
             // The target exists. But if the directory status doesn't match the source, delete it.
             if (targetStats.isDirectory() && !sourceStats.isDirectory()) {
-                log("rmdir " + targetPath + " (source is a file)");
+                log("rmdir  " + targetPath + " (source is a file)");
                 shell.rm("-rf", targetFullPath);
                 targetStats = null;
                 updated = true;
@@ -89,27 +91,38 @@ function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, o
                 updated = true;
             } else if (sourceStats.isFile()) {
                 // The target file does not exist, so it should be copied from the source.
-                log("copy " + sourcePath + " " + targetPath +
-                    (!force ? " (new file)" : ""));
+                log("copy  " + sourcePath + " " + targetPath + (copyAll ? "" : " (new file)"));
                 shell.cp("-f", sourceFullPath, targetFullPath);
                 updated = true;
             }
-        } else if (sourceStats.isFile() && targetStats.isFile() &&
-                (force || sourceStats.mtime > targetStats.mtime)) {
-            // When the source and target paths both exist and are files, update
-            // the file if the source is newer or if doing a forced update.
-            log("copy " + sourcePath + " " + targetPath +
-                (!force ? " (updated file)" : ""));
-            shell.cp("-f", sourceFullPath, targetFullPath);
-            updated = true;
+        } else if (sourceStats.isFile() && targetStats.isFile()) {
+            // The source and target paths both exist and are files.
+            if (copyAll) {
+                // The caller specified all files should be copied.
+                log("copy  " + sourcePath + " " + targetPath);
+                shell.cp("-f", sourceFullPath, targetFullPath);
+                updated = true;
+            } else if (copyNewer && sourceStats.mtime > targetStats.mtime) {
+                // The caller specified only newer files should be copied, and the file is newer.
+                log("copy  " + sourcePath + " " + targetPath + " (newer file)");
+                shell.cp("-f", sourceFullPath, targetFullPath);
+                updated = true;
+            } else if (!copyNewer && sourceStats.mtime != targetStats.mtime) {
+                // The caller specified only different files should be copied, and
+                // the file has a different time; report either newer or older.
+                log("copy  " + sourcePath + " " + targetPath +
+                    (sourceStats.mtime > targetStats.mtime ? " (newer file)" : " (older file)"));
+                shell.cp("-f", sourceFullPath, targetFullPath);
+                updated = true;
+            }
         }
     } else if (targetStats) {
         // The target exists but the source is null, so the target should be deleted.
         if (targetStats.isDirectory()) {
-            log("rmdir " + targetPath + " (no source)");
+            log("rmdir  " + targetPath + (copyAll ? "" : " (no source)"));
             shell.rm("-rf", targetFullPath);
         } else {
-            log("delete " + targetPath + " (no source)");
+            log("delete " + targetPath + (copyAll ? "" : " (no source)"));
             shell.rm("-f", targetFullPath);
         }
         updated = true;
@@ -130,8 +143,9 @@ function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, o
  * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
- * @param {boolean} [options.force] If target and source are both files, and the force flag is
- *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
+ * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
+ *     last-modified times are copied. By default, only files with different times are copied.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -179,8 +193,9 @@ function updatePath(sourcePath, targetPath, options, log) {
  * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
- * @param {boolean} [options.force] If target and source are both files, and the force flag is
- *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
+ * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
+ *     last-modified times are copied. By default, only files with different times are copied.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -215,8 +230,9 @@ function updatePaths(pathMap, options, log) {
  * @param {string} [options.rootDir] Optional root directory (such as a project) to which target
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
- * @param {boolean} [options.force] If target and source are both files, and the force flag is
- *     not set, then the file will not be copied unless the source is newer than the target.
+ * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
+ * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
+ *     last-modified times are copied. By default, only files with different times are copied.
  * @param {string|string[]} [options.include] Optional glob string or array of glob strings that
  *     are tested against both target and source relative paths to determine if they are included
  *     in the merge-and-update. If unspecified, all items are included.
@@ -232,7 +248,7 @@ function updatePaths(pathMap, options, log) {
 function mergeAndUpdateDir(sourceDirs, targetDir, options, log) {
     if (sourceDirs && typeof sourceDirs === "string") {
         sourceDirs = [ sourceDirs ];
-    } else if (!(Array.isArray(sourceDirs) && sourceDirs.length > 0)) {
+    } else if (!Array.isArray(sourceDirs)) {
         throw new Error("A source directory path or array of paths is required.");
     }
 

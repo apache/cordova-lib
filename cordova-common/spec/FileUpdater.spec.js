@@ -158,18 +158,47 @@ describe('FileUpdater class', function() {
             expect(mockFs.cpPaths.length).toBe(0);
             expect(mockFs.rmPaths.length).toBe(0);
         });
-        it('should do nothing when a file exists at source and target and target is newer',
+        it('should copy when a file exists at source and target and target is newer',
                 function () {
             var updated = FileUpdater.updatePathWithStats(
                 testSourceFile, mockFileStats(oneHourAgo), testTargetFile, mockFileStats(now));
+            expect(updated).toBe(true);
+            expect(mockFs.cpPaths.length).toBe(1);
+            expect(mockFs.rmPaths.length).toBe(0);
+            expect(mockFs.cpPaths[0]).toEqual([testSourceFile, testTargetFile]);
+        });
+        it('should copy when a file exists at source and target and target is older',
+                function () {
+            var updated = FileUpdater.updatePathWithStats(
+                testSourceFile, mockFileStats(now), testTargetFile, mockFileStats(oneHourAgo));
+            expect(updated).toBe(true);
+            expect(mockFs.cpPaths.length).toBe(1);
+            expect(mockFs.rmPaths.length).toBe(0);
+            expect(mockFs.cpPaths[0]).toEqual([testSourceFile, testTargetFile]);
+        });
+        it('should do nothing when a file exists at source and target and target is newer',
+                function () {
+            var updated = FileUpdater.updatePathWithStats(
+                testSourceFile, mockFileStats(oneHourAgo), testTargetFile, mockFileStats(now),
+                { newer: true });
             expect(updated).toBe(false);
             expect(mockFs.cpPaths.length).toBe(0);
             expect(mockFs.rmPaths.length).toBe(0);
         });
+        it('should copy when a file exists at source and target and target is older',
+                function () {
+            var updated = FileUpdater.updatePathWithStats(
+                testSourceFile, mockFileStats(now), testTargetFile, mockFileStats(oneHourAgo),
+                { newer: true });
+            expect(updated).toBe(true);
+            expect(mockFs.cpPaths.length).toBe(1);
+            expect(mockFs.rmPaths.length).toBe(0);
+            expect(mockFs.cpPaths[0]).toEqual([testSourceFile, testTargetFile]);
+        });
         it('should copy when a file exists at source and target and forcing update', function () {
             var updated = FileUpdater.updatePathWithStats(
                 testSourceFile, mockFileStats(now), testTargetFile, mockFileStats(now),
-                { force: true });
+                { all: true });
             expect(updated).toBe(true);
             expect(mockFs.cpPaths.length).toBe(1);
             expect(mockFs.rmPaths.length).toBe(0);
@@ -179,7 +208,7 @@ describe('FileUpdater class', function() {
                 'and forcuing update', function () {
             var updated = FileUpdater.updatePathWithStats(
                 testSourceFile, mockFileStats(oneHourAgo), testTargetFile, mockFileStats(now),
-                { force: true });
+                { all: true });
             expect(updated).toBe(true);
             expect(mockFs.cpPaths.length).toBe(1);
             expect(mockFs.rmPaths.length).toBe(0);
@@ -525,7 +554,7 @@ describe('FileUpdater class', function() {
             mockFs.statMap[path.join(testRootDir, testTargetFile)] = testFileStats;
             mockFs.statMap[path.join(testRootDir, testSourceFile)] = testFileStats2;
             var updated = FileUpdater.updatePath(
-                testSourceFile, testTargetFile, { rootDir: testRootDir, force: true });
+                testSourceFile, testTargetFile, { rootDir: testRootDir, all: true });
             expect(updated).toBe(true);
             expect(FileUpdater.updatePathWithStatsCalls.length).toBe(1);
             expect(FileUpdater.updatePathWithStatsCalls[0][0]).toBe(testSourceFile);
@@ -533,7 +562,7 @@ describe('FileUpdater class', function() {
             expect(FileUpdater.updatePathWithStatsCalls[0][2]).toBe(testTargetFile);
             expect(FileUpdater.updatePathWithStatsCalls[0][3]).toEqual(testFileStats);
             expect(FileUpdater.updatePathWithStatsCalls[0][4]).toEqual(
-                {rootDir: testRootDir, force: true });
+                {rootDir: testRootDir, all: true });
         });
         it('should update a path without a separate root directory', function () {
             mockFs.statMap[testTargetFile] = testFileStats;
