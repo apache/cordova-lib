@@ -108,7 +108,8 @@ plugman.commands =  {
             save: cli_opts.save || false,
             www_dir: cli_opts.www,
             searchpath: cli_opts.searchpath,
-            link: cli_opts.link
+            link: cli_opts.link,
+            projectRoot: cli_opts.project
         };
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
@@ -130,8 +131,14 @@ plugman.commands =  {
 
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
+            var opts = {
+                www_dir: cli_opts.www,
+                save: cli_opts.save || false,
+                fetch: cli_opts.fetch || false,
+                projectRoot: cli_opts.project
+            };
             p = p.then(function () {
-                return plugman.raw.uninstall(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, { www_dir: cli_opts.www });
+                return plugman.raw.uninstall(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
             });
         });
 
