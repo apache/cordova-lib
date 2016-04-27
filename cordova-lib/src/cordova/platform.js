@@ -38,7 +38,7 @@ var config            = require('./config'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
     fetch             = require('cordova-fetch'),
-    uninstall         = require('cordova-fetch').uninstall,
+    npmUninstall         = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -388,7 +388,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }
-                uninstall(target, projectRoot, opts);
+                return npmUninstall(target, projectRoot, opts);
             });
         }
     }).then(function() {
