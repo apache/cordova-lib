@@ -28,7 +28,7 @@ var CordovaError = require('cordova-common').CordovaError;
 var isUrl = require('is-url');
 
 /* 
- * A module that npm installs a module from npm or a git url
+ * A function that npm installs a module from npm or a git url
  *
  * @param {String} target   the packageID or git url
  * @param {String} dest     destination of where to install the module
@@ -189,13 +189,13 @@ function isNpmInstalled() {
 }
 
 /* 
- * A module that runs npm uninstall 
+ * A function that deletes the target from node_modules and runs npm uninstall 
  *
  * @param {String} target   the packageID
  * @param {String} dest     destination of where to uninstall the module from
  * @param {Object} opts     [opts={save:true}] options to pass to npm uninstall
  *
- * @return {Boolean||Error}    Returns true or an error.
+ * @return {Promise||Error}    Returns a promise with the npm uninstall output or an error.
  *
  */
 module.exports.uninstall = function(target, dest, opts) {
@@ -217,17 +217,20 @@ module.exports.uninstall = function(target, dest, opts) {
     if(opts.save) {
         fetchArgs.push('--save'); 
     }
-    
-    //run the command
+
+    //Delete the directory from node_modules
+    //Need to do this before running npm uninstall due to weird
+    //npm uninstall behavior of leaving the directory
+    //TODO: run npm postuninstall script before deleting
+    var pluginDest = path.join(dest, 'node_modules', target);
+    if(fs.existsSync(pluginDest)) {
+        console.log('removing' + target);
+        shell.rm('-rf', pluginDest);
+    } 
+
+    //run npm uninstall, this will remove dependency
+    //from package.json if --save was used.
     return superspawn.spawn('npm', fetchArgs, opts)
-    .then(function() {
-        //Sometimes artifacts remane after `npm uninstall`.
-        //Delete the directory to make sure it is fully gone.
-        if(fs.existsSync(path.join(dest, 'node_modules', target))) {
-            shell.rm('-rf', path.join(dest, 'node_modules', target));
-        }
-        return true;
-    })
     .fail(function(err) {
         return Q.reject(new CordovaError(err));
     });
