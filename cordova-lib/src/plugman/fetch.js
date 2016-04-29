@@ -32,7 +32,7 @@ var shell   = require('shelljs'),
     registry = require('./registry/registry'),
     pluginMappernto = require('cordova-registry-mapper').newToOld,
     pluginMapperotn = require('cordova-registry-mapper').oldToNew,
-    pluginSpec      = require('../cordova/plugin_spec_parser');
+    pluginSpec      = require('../cordova/plugin_spec_parser'),
     fetch = require('cordova-fetch'),
     cordovaUtil = require('../cordova/util');
 

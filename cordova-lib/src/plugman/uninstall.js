@@ -122,14 +122,16 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
             events.emit('verbose', 'Plugin "'+ id +'" already removed ('+ plugin_dir +')');
             return Q();
         }
-
-        if(options.fetch) {
-            //run npm uninstall to remove plugin from node_modules directory
-            npmUninstall(id, options.projectRoot, options); 
-        }
-
+        
         shell.rm('-rf', plugin_dir);
         events.emit('verbose', 'Deleted "'+ id +'"');
+        
+        if(options.fetch) {
+            //run npm uninstall to remove plugin from node_modules directory
+            return npmUninstall(id, options.projectRoot, options); 
+        }
+
+
     };
 
     // We've now lost the metadata for the plugins that have been uninstalled, so we can't use that info.

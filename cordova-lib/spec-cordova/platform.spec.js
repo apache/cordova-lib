@@ -248,3 +248,110 @@ describe('platform add plugin rm end-to-end', function () {
         .fin(done);
     }, 20000);
 });
+
+describe('platform add and remove --fetch', function () {
+
+    var tmpDir = helpers.tmpDir('pla_add_remove_fetch_test');
+    var project = path.join(tmpDir, 'hello2');
+    var platformsDir = path.join(project, 'platforms');
+    var nodeModulesDir = path.join(project, 'node_modules');
+    
+    beforeEach(function() {
+        process.chdir(tmpDir);
+    });
+    
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('should add and remove platform from node_modules directory', function(done) {
+        
+        cordova.raw.create('hello2')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'ios', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
+            expect(path.join(platformsDir, 'ios')).toExist();
+            return cordova.raw.platform('add', 'android', {'fetch':true});
+            expect(true).toBe(true);
+        })
+        .then(function() {    
+            expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
+            expect(path.join(platformsDir, 'android')).toExist();
+            return cordova.raw.platform('rm', 'ios', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
+            expect(path.join(platformsDir, 'ios')).not.toExist();
+            return cordova.raw.platform('rm', 'android', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
+            expect(path.join(platformsDir, 'ios')).not.toExist();
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 40000);
+});
+
+describe('platform add plugin rm end-to-end --fetch', function () {
+
+    var tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
+    var project = path.join(tmpDir, 'hello3');
+    var pluginsDir = path.join(project, 'plugins');
+    
+    beforeEach(function() {
+        process.chdir(tmpDir);
+    });
+    
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('should remove dependency when removing parent plugin', function(done) {
+        
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'ios', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'cordova-plugin-media', {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-compat')).toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).toExist();
+            return cordova.raw.platform('add', 'android', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.plugin('rm', 'cordova-plugin-media', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-compat')).not.toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-media')).not.toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-file')).not.toExist();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).not.toExist();
+
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 60000);
+});

@@ -224,7 +224,6 @@ module.exports.uninstall = function(target, dest, opts) {
     //TODO: run npm postuninstall script before deleting
     var pluginDest = path.join(dest, 'node_modules', target);
     if(fs.existsSync(pluginDest)) {
-        console.log('removing' + target);
         shell.rm('-rf', pluginDest);
     } 
 
