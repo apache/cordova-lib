@@ -40,6 +40,9 @@ function getPlatformApi(platform, platformRootDir) {
         throw new Error('Current location is not a Cordova project');
     }
 
+    // CB-11174 Resolve symlinks first before working with root directory
+    platformRootDir = util.convertToRealPathSafe(platformRootDir);
+
     var cached = cachedApis[platformRootDir];
     if (cached && cached.platform == platform) return cached;
 

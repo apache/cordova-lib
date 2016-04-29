@@ -17,8 +17,11 @@
     under the License.
 */
 
+var fs = require('fs');
+var os = require('os');
 var path = require('path');
 var rewire = require('rewire');
+var shell = require('shelljs');
 
 var util = require('../../src/cordova/util');
 var platforms = rewire('../../src/platforms/platforms');
@@ -26,9 +29,12 @@ var platforms = rewire('../../src/platforms/platforms');
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
 var PLATFORM_WOUT_API = path.join(CORDOVA_ROOT, 'platforms/android');
+var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
-var MockPlatformApi = require(path.join(PLATFORM_WITH_API, 'cordova', 'Api'));
+var MockPlatformApi = require(fs.realpathSync(path.join(PLATFORM_WITH_API, 'cordova/Api.js')));
 var PlatformApiPoly = require('../../src/platforms/PlatformApiPoly');
+
+shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
 describe('getPlatformApi method', function () {
     var isCordova;
@@ -54,6 +60,16 @@ describe('getPlatformApi method', function () {
         expect(platformApi.fakeProperty).not.toBeDefined();
         platformApi.fakeProperty = 'fakeValue';
         expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty).toBe('fakeValue');
+    });
+
+    it('should resolve symlinks before creating an instance', function () {
+        var platformApi = platforms.getPlatformApi('windows', PLATFORM_SYMLINK);
+        expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API)).toBe(platformApi);
+    });
+
+    it('should return cached instance by symlink to project root', function () {
+        platforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty = 'fakeValue';
+        expect(platforms.getPlatformApi('windows', PLATFORM_SYMLINK).fakeProperty).toBe('fakeValue');
     });
 
     it('should succeed if called inside of cordova project w/out platformRoot param', function () {
