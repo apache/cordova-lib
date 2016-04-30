@@ -116,6 +116,14 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         return Q();
     }
 
+    /*
+     * Deletes plugin from plugins directory and 
+     * node_modules directory if --fetch was supplied.
+     *
+     * @param {String} id   the id of the plugin being removed
+     *
+     * @return {Promise||Error} Returns a empty promise or a promise of doing the npm uninstall
+     */
     var doDelete = function(id) {
         var plugin_dir = path.join(plugins_dir, id);
         if ( !fs.existsSync(plugin_dir) ) {
@@ -127,10 +135,11 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         events.emit('verbose', 'Deleted "'+ id +'"');
         
         if(options.fetch) {
-            //run npm uninstall to remove plugin from node_modules directory
+            //remove plugin from node_modules directory
             return npmUninstall(id, options.projectRoot, options); 
         }
-
+        
+        return Q();
 
     };
 
@@ -209,7 +218,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         });
     });
 
-    var i, plugin_id, msg;
+    var i, plugin_id, msg, delArray = [];
     for(i in toDelete) {
         plugin_id = toDelete[i];
 
@@ -229,11 +238,11 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
                 }
             }
         }
-
-        doDelete(plugin_id);
+        //create an array of promises
+        delArray.push(doDelete(plugin_id));
     }
-
-    return Q();
+    //return promise.all
+    return Q.all(delArray);
 };
 
 // possible options: cli_variables, www_dir, is_top_level

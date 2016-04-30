@@ -251,8 +251,8 @@ describe('platform add plugin rm end-to-end', function () {
 
 describe('platform add and remove --fetch', function () {
 
-    var tmpDir = helpers.tmpDir('pla_add_remove_fetch_test');
-    var project = path.join(tmpDir, 'hello2');
+    var tmpDir = helpers.tmpDir('plat_add_remove_fetch_test');
+    var project = path.join(tmpDir, 'helloFetch');
     var platformsDir = path.join(project, 'platforms');
     var nodeModulesDir = path.join(project, 'node_modules');
     
@@ -267,7 +267,7 @@ describe('platform add and remove --fetch', function () {
 
     it('should add and remove platform from node_modules directory', function(done) {
         
-        cordova.raw.create('hello2')
+        cordova.raw.create('helloFetch')
         .then(function() {
             process.chdir(project);
             return cordova.raw.platform('add', 'ios', {'fetch':true});
@@ -276,7 +276,6 @@ describe('platform add and remove --fetch', function () {
             expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
             expect(path.join(platformsDir, 'ios')).toExist();
             return cordova.raw.platform('add', 'android', {'fetch':true});
-            expect(true).toBe(true);
         })
         .then(function() {    
             expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
@@ -289,8 +288,8 @@ describe('platform add and remove --fetch', function () {
             return cordova.raw.platform('rm', 'android', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
-            expect(path.join(platformsDir, 'ios')).not.toExist();
+            expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
+            expect(path.join(platformsDir, 'android')).not.toExist();
         })
         .fail(function(err) {
             console.error(err);
@@ -300,7 +299,7 @@ describe('platform add and remove --fetch', function () {
     }, 40000);
 });
 
-describe('platform add plugin rm end-to-end --fetch', function () {
+describe('plugin add and rm end-to-end --fetch', function () {
 
     var tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
     var project = path.join(tmpDir, 'hello3');
