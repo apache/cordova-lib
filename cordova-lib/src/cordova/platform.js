@@ -209,7 +209,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
                     var versionToSave = saveVersion ? platDetails.version : spec;
-                    events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
+                    events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
 
                     if(opts.save || autosave){
@@ -356,7 +356,7 @@ function getVersionFromConfigFile(platform, cfg) {
 
 function remove(hooksRunner, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform[s] specified. Please specify platform[s] to remove. See `'+cordova_util.binname+' platform list`.'));
+        return Q.reject(new CordovaError('No platform(s) specified. Please specify platform(s) to remove. See `'+cordova_util.binname+' platform list`.'));
     }
     return hooksRunner.fire('before_platform_rm', opts)
     .then(function() {
@@ -372,7 +372,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 var platformName = target.split('@')[0];
                 var xml = cordova_util.projectConfig(projectRoot);
                 var cfg = new ConfigParser(xml);
-                events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+                events.emit('log', 'Removing platform ' + target + ' from config.xml file ...');
                 cfg.removeEngine(platformName);
                 cfg.write();
             });
@@ -380,7 +380,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
-            events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
+            events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file ...');
             platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {

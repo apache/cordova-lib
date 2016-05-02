@@ -54,7 +54,7 @@ function create(dir, optionalId, optionalName, cfg) {
         }
 
         if (!dir) {
-            throw new CordovaError('At least the dir must be provided to create new project. See `' + cordova_util.binname + ' help`.');
+            throw new CordovaError('Directory not specified. See `' + cordova_util.binname + ' help`.');
         }
 
         //read projects .cordova/config.json file for project settings
@@ -222,17 +222,17 @@ function create(dir, optionalId, optionalName, cfg) {
     })
     .then(function(input_directory) {
         var import_from_path = input_directory;
-        
-        //handle when input wants to specify sub-directory 
+
+        //handle when input wants to specify sub-directory
         try {
             var templatePkg = require(input_directory);
             if (templatePkg && templatePkg.dirname){
                 import_from_path = templatePkg.dirname;
             }
         } catch (e) {
-            events.emit('verbose', 'Can not load template package.json using directory ' + input_directory); 
+            events.emit('verbose', 'Can not load template package.json using directory ' + input_directory);
         }
-         
+
         if (!fs.existsSync(import_from_path)) {
             throw new CordovaError('Could not find directory: ' +
                 import_from_path);

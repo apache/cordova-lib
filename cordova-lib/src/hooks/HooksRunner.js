@@ -125,6 +125,9 @@ function executeEventHandlersSerially(hook, opts) {
  * Returns promise.
  */
 function runScriptsSerially (scripts, context) {
+    if (scripts.length === 0) {
+        events.emit('verbose', 'No scripts found for hook "' + context.hook + '".');
+    }
     return scripts.reduce(function(prevScriptPromise, nextScript) {
         return prevScriptPromise.then(function() {
             return runScript(nextScript, context);
@@ -141,6 +144,23 @@ function runScript(script, context) {
         // we assume we should use module loader for .js files
         script.useModuleLoader = path.extname(script.path).toLowerCase() == '.js';
     }
+
+    var source;
+    var relativePath;
+
+    if (script.plugin) {
+        source = 'plugin ' + script.plugin.id;
+        relativePath = path.join('plugins', script.plugin.id, script.path);
+    } else if (script.useModuleLoader) {
+        source = 'config.xml';
+        relativePath = path.normalize(script.path);
+    } else {
+        source = 'hooks directory';
+        relativePath = path.join('hooks', context.hook, script.path);
+    }
+
+    events.emit('verbose', 'Executing script found in ' + source + ' for hook "' + context.hook + '": ' + relativePath);
+
     if(script.useModuleLoader) {
         return runScriptViaModuleLoader(script, context);
     } else {
@@ -179,7 +199,7 @@ function runScriptViaChildProcessSpawn(script, context) {
     var args = [opts.projectRoot];
 
     if (fs.statSync(script.fullPath).isDirectory()) {
-        events.emit('verbose', 'skipped directory "' + script.fullPath + '" within hook directory');
+        events.emit('verbose', 'Skipped directory "' + script.fullPath + '" within hook directory');
         return Q();
     }
 
@@ -205,7 +225,7 @@ function runScriptViaChildProcessSpawn(script, context) {
         .catch(function(err) {
             // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
             if (!isWindows && err.code == 'EACCES') {
-                events.emit('verbose', 'skipped non-executable file: ' + script.fullPath);
+                events.emit('verbose', 'Skipped non-executable file: ' + script.fullPath);
             } else {
                 throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
             }

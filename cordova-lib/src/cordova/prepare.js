@@ -140,7 +140,7 @@ module.exports.preparePlatforms = preparePlatforms;
  *   plugins reinstalled properly.
  */
 function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
-    events.emit('verbose', 'Searching PlatformJson files for differences between project vs. platform installed plugins');
+    events.emit('verbose', 'Checking for any plugins added to the project that have not been installed in ' + platform + ' platform');
 
     // Flow:
     // 1. Compare <platform>.json file in <project>/plugins ("old") and platforms/<platform> ("new")
@@ -163,7 +163,7 @@ function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
         }, []);
 
     if (missingPlugins.length === 0) {
-        events.emit('verbose', 'No differences found between project and ' +
+        events.emit('verbose', 'No differences found between plugins added to project and installed in ' +
             platform + ' platform. Continuing...');
         return Q.resolve();
     }
@@ -176,7 +176,7 @@ function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
             pluginOptions.variables = plugin.variables;
             pluginOptions.usePlatformWww = true;
 
-            events.emit('verbose', 'Reinstalling missing plugin ' + plugin.name + ' to ' + platform + ' platform');
+            events.emit('verbose', 'Reinstalling missing plugin ' + plugin.name + ' in ' + platform + ' platform');
             var pluginInfo = provider.get(path.join(projectRoot, 'plugins', plugin.name));
             return api.removePlugin(pluginInfo, pluginOptions)
             .then(function () {

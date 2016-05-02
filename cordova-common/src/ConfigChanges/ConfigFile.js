@@ -105,13 +105,13 @@ ConfigFile.prototype.graft_child = function ConfigFile_graft_child(selector, xml
         var xml_to_graft = [modules.et.XML(xml_child.xml)];
         result = modules.xml_helpers.graftXML(self.data, xml_to_graft, selector, xml_child.after);
         if ( !result) {
-            throw new Error('grafting xml at selector "' + selector + '" from "' + filepath + '" during config install went bad :(');
+            throw new Error('Unable to graft xml at selector "' + selector + '" from "' + filepath + '" during config install');
         }
     } else {
         // plist file
         result = modules.plist_helpers.graftPLIST(self.data, xml_child.xml, selector);
         if ( !result ) {
-            throw new Error('grafting to plist "' + filepath + '" during config install went bad :(');
+            throw new Error('Unable to graft plist "' + filepath + '" during config install');
         }
     }
     self.is_changed = true;

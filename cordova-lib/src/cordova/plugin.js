@@ -162,7 +162,7 @@ module.exports = function plugin(command, targets, opts) {
                             });
 
                             if (missingVariables.length) {
-                                events.emit('verbose', 'Removing ' + pluginInfo.dir + ' due to installation failure');
+                                events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
                                 shell.rm('-rf', pluginInfo.dir);
                                 var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
                                 return Q.reject(new CordovaError(msg));
@@ -286,7 +286,7 @@ module.exports = function plugin(command, targets, opts) {
                                     var configXml = new ConfigParser(configPath);
                                     configXml.removePlugin(target);
                                     configXml.write();
-                                    events.emit('results', 'config.xml entry for ' +target+ ' is removed');
+                                    events.emit('results', 'config.xml entry for plugin ' + target + ' was removed');
                                 }
                             }
                         })
@@ -345,7 +345,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     }
 
     // If no version is specified, retrieve the version (or source) from config.xml
-    events.emit('verbose', 'No version specified, retrieving version from config.xml');
+    events.emit('verbose', 'No version specified for ' + parsedSpec.package + ', retrieving version from config.xml');
     var ver = getVersionFromConfigFile(id, cfg);
 
     if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) || pluginSpec.parse(ver).scope) {
@@ -362,14 +362,17 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     // their package.json
     var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
 
+    events.emit('verbose', 'No version for ' + parsedSpec.package + ' saved in config.xml');
     if(shouldUseNpmInfo) {
-        events.emit('verbose', 'No version given in config.xml, attempting to use plugin engine info');
+        events.emit('verbose', 'Attempting to use npm info for ' + parsedSpec.package + ' to choose a compatible release');
+    } else {
+        events.emit('verbose', 'Not checking npm info for ' + parsedSpec.package + ' because searchpath or noregistry flag was given');
     }
 
-    return (shouldUseNpmInfo ? registry.info([id]) : Q({}))
+    return (shouldUseNpmInfo ? registry.info([id])
     .then(function(pluginInfo) {
         return getFetchVersion(projectRoot, pluginInfo, pkgJson.version);
-    })
+    }) : Q(null))
     .then(function(fetchVersion) {
         return fetchVersion ? (id + '@' + fetchVersion) : target;
     });
@@ -385,7 +388,7 @@ function validatePluginId(pluginId, installedPlugins) {
 
     var oldStylePluginId = pluginMapper[pluginId];
     if (oldStylePluginId) {
-        events.emit('log', 'Plugin "' + pluginId + '" is not present in the project. Converting value to "' + oldStylePluginId + '" and trying again.');
+        events.emit('log', 'Plugin "' + pluginId + '" is not present in the project. Checking for legacy id "' + oldStylePluginId + '".');
         return installedPlugins.indexOf(oldStylePluginId) >= 0 ? oldStylePluginId : null;
     }
 
@@ -641,7 +644,7 @@ function getFetchVersion(projectRoot, pluginInfo, cordovaVersion) {
         });
     } else {
         // If we have no engine, we want to fall back to the default behavior
-        events.emit('verbose', 'No plugin engine info found or not using registry, falling back to latest version');
+        events.emit('verbose', 'npm info for ' + pluginInfo.name + ' did not contain any engine info. Fetching latest release');
         return Q(null);
     }
 }
@@ -827,6 +830,6 @@ function listUnmetRequirements(name, failedRequirements) {
     events.emit('warn', 'Unmet project requirements for latest version of ' + name + ':');
 
     failedRequirements.forEach(function(req) {
-        events.emit('warn', '    ' + req.dependency + ' (' + req.installed + ' installed, ' + req.required + ' required)');
+        events.emit('warn', '    ' + req.dependency + ' (' + req.installed + ' in project, ' + req.required + ' required)');
     });
 }

@@ -324,7 +324,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
     }
 
     if(fs.existsSync(altDest)) {
-        events.emit('log', pinfo.id + '" will not install due to "' + altDest + '" being installed.');
+        events.emit('log', pinfo.id + '" will not be added because its alternate id "' + altDest + '" is already present.');
         return altDest;
     }
 

@@ -48,7 +48,7 @@ var warnings = [];
 
 // Used to extract the constraint, the installed version, and the required
 // semver range from a warning message
-var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) installed, (.+) required\)/;
+var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) in project, (.+) required\)/;
 
 // We generate warnings when we don't fetch latest. Collect them to make sure we
 // are making the correct warnings

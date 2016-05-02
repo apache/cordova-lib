@@ -113,7 +113,7 @@ function possiblyFetch(id, plugins_dir, options) {
     var alias =  parsedSpec.scope ? null : pluginMapper.newToOld[parsedSpec.id] || newId;
     // if the plugin alias has already been fetched, use it.
     if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-        events.emit('warn', 'Found ' + alias + ' is already fetched, so it is installed instead of ' + parsedSpec.id);
+        events.emit('warn', 'Plugin with alternate id ' + alias + ' is already fetched, so installing it instead of ' + parsedSpec.id);
         return Q(path.join(plugins_dir, alias));
     }
 
@@ -263,15 +263,15 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
         // check for other engines
         } else {
             if (typeof engine.platform === 'undefined' || typeof engine.scriptSrc === 'undefined') {
-                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine \'' +
-                    theName + '\' from plugin \'' + pluginInfo.id + '\' for ' + platform);
+                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine "' +
+                    theName + '" from plugin "' + pluginInfo.id + '" for ' + platform);
             }
 
             platformIndex = engine.platform.indexOf(platform);
             // CB-7183: security check for scriptSrc path escaping outside the plugin
             var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
             if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
-                throw new Error('security violation: scriptSrc '+scriptSrcPath+' is out of plugin dir '+plugin_dir);
+                throw new Error('Security violation: scriptSrc ' + scriptSrcPath + ' is out of plugin dir ' + plugin_dir);
             }
             if (platformIndex > -1 || engine.platform === '*') {
                 uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
@@ -570,7 +570,7 @@ function installDependency(dep, install, options) {
 
     dep.install_dir = path.join(install.plugins_dir, dep.id);
     if ( fs.existsSync(dep.install_dir) ) {
-        events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
+        events.emit('verbose', 'Plugin dependency "' + dep.id + '" already fetched, using that version.');
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
@@ -579,7 +579,7 @@ function installDependency(dep, install, options) {
         return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
-        events.emit('verbose', 'Dependent plugin "' + dep.id + '" not fetched, retrieving then installing.');
+        events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
 
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
