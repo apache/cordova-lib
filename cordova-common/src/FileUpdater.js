@@ -24,9 +24,6 @@ var path = require("path");
 var shell = require("shelljs");
 var minimatch = require("minimatch");
 
-var isWindows = (process.platform === "win32");
-var child_process = (isWindows ? require("child_process") : null);
-
 /**
  * Logging callback used in the FileUpdater methods.
  * @callback loggingCallback
@@ -51,21 +48,18 @@ var child_process = (isWindows ? require("child_process") : null);
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
- *     last-modified times are copied. By default, only files with different times are copied.
+ *     Otherwise, a file is only copied if the source's last-modified time is greather than or
+ *     equal to the target's creation time.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
- * @param {Object} context Context object for tracking file operations.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
  *     and everything was up to date
  */
-function updatePathWithStats(
-        sourcePath, sourceStats, targetPath, targetStats, options, log, context) {
+function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, options, log) {
     var updated = false;
 
     var rootDir = (options && options.rootDir) || "";
     var copyAll = (options && options.all) || false;
-    var copyNewer = (options && options.newer) || false;
 
     var targetFullPath = path.join(rootDir || "", targetPath);
 
@@ -96,7 +90,7 @@ function updatePathWithStats(
             } else if (sourceStats.isFile()) {
                 // The target file does not exist, so it should be copied from the source.
                 log("copy  " + sourcePath + " " + targetPath + (copyAll ? "" : " (new file)"));
-                copyFileWithTime(context, sourceFullPath, sourceStats, targetFullPath);
+                shell.cp("-f", sourceFullPath, targetFullPath);
                 updated = true;
             }
         } else if (sourceStats.isFile() && targetStats.isFile()) {
@@ -104,24 +98,19 @@ function updatePathWithStats(
             if (copyAll) {
                 // The caller specified all files should be copied.
                 log("copy  " + sourcePath + " " + targetPath);
-                copyFileWithTime(context, sourceFullPath, sourceStats, targetFullPath);
+                shell.cp("-f", sourceFullPath, targetFullPath);
                 updated = true;
             } else {
-                // Copying should depend on comparison of the files' last-modified times.
-                var sourceTime = sourceStats.mtime.getTime();
-                var targetTime = targetStats.mtime.getTime();
-
-                if (copyNewer && sourceTime > targetTime) {
-                    // The caller specified only newer files should be copied, and the file is newer.
-                    log("copy  " + sourcePath + " " + targetPath + " (newer file)");
-                    copyFileWithTime(context, sourceFullPath, sourceStats, targetFullPath);
-                    updated = true;
-                } else if (!copyNewer && sourceTime !== targetTime) {
-                    // The caller specified only different files should be copied, and
-                    // the file has a different time; report either newer or older.
-                    log("copy  " + sourcePath + " " + targetPath +
-                        (sourceTime > targetTime ? " (newer file)" : " (older file)"));
-                    copyFileWithTime(context, sourceFullPath, sourceStats, targetFullPath);
+                // Copy if the source has been modified since it was copied to the target, or if
+                // the file sizes are different. (The latter catches most cases in which something
+                // was done to the file after copying.) Comparison is >= rather than > to allow
+                // for timestamps lacking sub-second precision in some filesystems.
+                if (sourceStats.mtime.getTime() >= targetStats.birthtime.getTime() ||
+                        sourceStats.size != targetStats.size) {
+                    // Remove the target file before copying to force updated creation time.
+                    shell.rm("-f", targetFullPath);
+                    log("copy  " + sourcePath + " " + targetPath + " (updated file)");
+                    shell.cp("-f", sourceFullPath, targetFullPath);
                     updated = true;
                 }
             }
@@ -145,7 +134,7 @@ function updatePathWithStats(
  * Helper for updatePath and updatePaths functions. Queries stats for source and target
  * and ensures target directory exists before copying a file.
  */
-function updatePathInternal(sourcePath, targetPath, options, log, context) {
+function updatePathInternal(sourcePath, targetPath, options, log) {
     var rootDir = (options && options.rootDir) || "";
     var targetFullPath = path.join(rootDir, targetPath);
     var targetStats = fs.existsSync(targetFullPath) ? fs.statSync(targetFullPath) : null;
@@ -167,8 +156,7 @@ function updatePathInternal(sourcePath, targetPath, options, log, context) {
         }
     }
 
-    return updatePathWithStats(
-        sourcePath, sourceStats, targetPath, targetStats, options, log, context);
+    return updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, options, log);
 }
 
 /**
@@ -184,8 +172,8 @@ function updatePathInternal(sourcePath, targetPath, options, log, context) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
- *     last-modified times are copied. By default, only files with different times are copied.
+ *     Otherwise, a file is only copied if the source's last-modified time is greather than or
+ *     equal to the target's creation time.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -202,10 +190,7 @@ function updatePath(sourcePath, targetPath, options, log) {
 
     log = log || function(message) { };
 
-    var context = beginFileOperations();
-    var updated = updatePathInternal(sourcePath, targetPath, options, log, context);
-    endFileOperations(context, log);
-    return updated;
+    return updatePathInternal(sourcePath, targetPath, options, log);
 }
 
 /**
@@ -218,8 +203,8 @@ function updatePath(sourcePath, targetPath, options, log) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
- *     last-modified times are copied. By default, only files with different times are copied.
+ *     Otherwise, a file is only copied if the source's last-modified time is greather than or
+ *     equal to the target's creation time.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -233,15 +218,13 @@ function updatePaths(pathMap, options, log) {
     log = log || function(message) { };
 
     var updated = false;
-    var context = beginFileOperations();
 
     // Iterate in sorted order to ensure directories are created before files under them.
     Object.keys(pathMap).sort().forEach(function (targetPath) {
         var sourcePath = pathMap[targetPath];
-        updated = updatePathInternal(sourcePath, targetPath, options, log, context) || updated;
+        updated = updatePathInternal(sourcePath, targetPath, options, log) || updated;
     });
 
-    endFileOperations(context, log);
     return updated;
 }
 
@@ -260,8 +243,8 @@ function updatePaths(pathMap, options, log) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- * @param {boolean} [options.newer] If true (and all is not specified), only files with newer
- *     last-modified times are copied. By default, only files with different times are copied.
+ *     Otherwise, a file is only copied if the source's last-modified time is greather than or
+ *     equal to the target's creation time.
  * @param {string|string[]} [options.include] Optional glob string or array of glob strings that
  *     are tested against both target and source relative paths to determine if they are included
  *     in the merge-and-update. If unspecified, all items are included.
@@ -323,7 +306,6 @@ function mergeAndUpdateDir(sourceDirs, targetDir, options, log) {
     var pathMap = mergePathMaps(sourceMaps, targetMap, targetDir);
 
     var updated = false;
-    var context = beginFileOperations();
 
     // Iterate in sorted order to ensure directories are created before files under them.
     Object.keys(pathMap).sort().forEach(function (subPath) {
@@ -334,11 +316,9 @@ function mergeAndUpdateDir(sourceDirs, targetDir, options, log) {
             entry.targetPath,
             entry.targetStats,
             options,
-            log,
-            context) || updated;
+            log) || updated;
     });
 
-    endFileOperations(context, log);
     return updated;
 }
 
@@ -434,61 +414,6 @@ function mergePathMaps(sourceMaps, targetMap, targetDir) {
     }
 
     return pathMap;
-}
-
-/**
- * Copy a file along with its last-access and last-modified times from source to target.
- */
-function copyFileWithTime(context, sourceFilePath, sourceStats, targetFilePath) {
-    if (isWindows) {
-        // Windows requires a different approach to copying file times due to a nodejs bug.
-        // The files will be copied later by a cmd script.
-        context.fileCopies.push({ source: sourceFilePath, target: targetFilePath });
-    } else {
-        shell.cp("-f", sourceFilePath, targetFilePath);
-
-        // The shelljs.cp() function doesn't copy the last-modified time.
-        fs.utimesSync(targetFilePath, sourceStats.atime, sourceStats.mtime);
-    }
-}
-
-/**
- * Called at the start of a batch of file operations.
- * @return {Object} A context object to be passed around to batch operations.
- */
-function beginFileOperations() {
-    if (isWindows) {
-        return { fileCopies: [] };
-    }
-
-    return null;
-}
-
-/**
- * Called at the end of a batch of file operations.
- * @param {Object} context The object previously returned by beginFileOperations.
- * @param {loggingCallback} log Logging callback, used to report error details.
- */
-function endFileOperations(context, log) {
-    if (isWindows && context.fileCopies.length > 0) {
-        // Nodejs (libuv) can only set file times on Windows with 1-second resolution,
-        // even though it can read times with milllisecond resolution; see
-        //  - https://github.com/nodejs/node/issues/2069
-        //  - https://github.com/libuv/libuv/issues/800
-        // The workaround here uses a cmd script to copy files on Windows.
-        // When the fix becomes available this workaround should be removed.
-
-        var cmdScript = "";
-        context.fileCopies.forEach(function (fileCopy) {
-            cmdScript += "copy /y \"" + fileCopy.source + "\" \"" + fileCopy.target + "\"\r\n";
-        });
-
-        var cmdResult = child_process.spawnSync("cmd.exe", ["/D", "/Q"], { input: cmdScript });
-        if (cmdResult.status !== 0) {
-            if (cmdResult.stderr) log(cmdResult.stderr);
-            throw new Error("Failed to copy files.");
-        }
-    }
 }
 
 module.exports = {
