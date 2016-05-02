@@ -531,7 +531,7 @@ describe('install', function() {
                 fail = jasmine.createSpy('fail').andCallFake(function(err) {
                     // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
                     expect(err).toBeDefined();
-                    expect(err.message.indexOf('security violation:')).toBe(0);
+                    expect(err.message.indexOf('Security violation:')).toBe(0);
                 });
 
             spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);

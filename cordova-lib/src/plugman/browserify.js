@@ -54,7 +54,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
     });
 
     outReleaseFileStream.on('error', function(err) {
-        events.emit('warn', 'error while generating cordova.js');
+        events.emit('warn', 'Error while generating cordova.js');
         deferred.reject(err);
     });
     return deferred.promise;
@@ -112,7 +112,7 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
         var modulesMetadata = [];
 
         var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
-        events.emit('verbose', 'Iterating over installed plugins:', plugins);
+        events.emit('verbose', 'Iterating over plugins in project:', plugins);
         plugins.forEach(function (plugin) {
             var pluginDir = path.join(project.locations.plugins, plugin);
             var pluginInfo = pluginInfoProvider.get(pluginDir);
