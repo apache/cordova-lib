@@ -31,7 +31,6 @@ describe('platform fetch/uninstall tests via npm & git', function () {
 
     beforeEach(function() {
         process.chdir(tmpDir);
-
     });
     
     afterEach(function() {
@@ -71,7 +70,7 @@ describe('platform fetch/uninstall tests via npm & git', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 40000);
+    }, 60000);
 });
 
 describe('platform fetch/uninstall test via npm & git tags with --save', function () {
@@ -147,7 +146,7 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 40000);
+    }, 60000);
 });
 
 describe('plugin fetch/uninstall test with --save', function () {
