@@ -48,8 +48,8 @@ var minimatch = require("minimatch");
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- *     Otherwise, a file is only copied if the source's last-modified time is greather than or
- *     equal to the target's creation time.
+ *     Otherwise, a file is copied if the source's last-modified time is greather than or
+ *     equal to the target's last-modified time, or if the file sizes are different.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -105,10 +105,8 @@ function updatePathWithStats(sourcePath, sourceStats, targetPath, targetStats, o
                 // the file sizes are different. (The latter catches most cases in which something
                 // was done to the file after copying.) Comparison is >= rather than > to allow
                 // for timestamps lacking sub-second precision in some filesystems.
-                if (sourceStats.mtime.getTime() >= targetStats.birthtime.getTime() ||
-                        sourceStats.size != targetStats.size) {
-                    // Remove the target file before copying to force updated creation time.
-                    shell.rm("-f", targetFullPath);
+                if (sourceStats.mtime.getTime() >= targetStats.mtime.getTime() ||
+                        sourceStats.size !== targetStats.size) {
                     log("copy  " + sourcePath + " " + targetPath + " (updated file)");
                     shell.cp("-f", sourceFullPath, targetFullPath);
                     updated = true;
@@ -172,8 +170,8 @@ function updatePathInternal(sourcePath, targetPath, options, log) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- *     Otherwise, a file is only copied if the source's last-modified time is greather than or
- *     equal to the target's creation time.
+ *     Otherwise, a file is copied if the source's last-modified time is greather than or
+ *     equal to the target's last-modified time, or if the file sizes are different.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -203,8 +201,8 @@ function updatePath(sourcePath, targetPath, options, log) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- *     Otherwise, a file is only copied if the source's last-modified time is greather than or
- *     equal to the target's creation time.
+ *     Otherwise, a file is copied if the source's last-modified time is greather than or
+ *     equal to the target's last-modified time, or if the file sizes are different.
  * @param {loggingCallback} [log] Optional logging callback that takes a string message
  *     describing any file operations that are performed.
  * @return {boolean} true if any changes were made, or false if the force flag is not set
@@ -243,8 +241,8 @@ function updatePaths(pathMap, options, log) {
  *     and source path parameters are relative; may be omitted if the paths are absolute. The
  *     rootDir is always omitted from any logged paths, to make the logs easier to read.
  * @param {boolean} [options.all] If true, all files are copied regardless of last-modified times.
- *     Otherwise, a file is only copied if the source's last-modified time is greather than or
- *     equal to the target's creation time.
+ *     Otherwise, a file is copied if the source's last-modified time is greather than or
+ *     equal to the target's last-modified time, or if the file sizes are different.
  * @param {string|string[]} [options.include] Optional glob string or array of glob strings that
  *     are tested against both target and source relative paths to determine if they are included
  *     in the merge-and-update. If unspecified, all items are included.
