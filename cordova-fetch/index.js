@@ -218,18 +218,16 @@ module.exports.uninstall = function(target, dest, opts) {
         fetchArgs.push('--save'); 
     }
 
-    //Delete the directory from node_modules
-    //Need to do this before running npm uninstall due to weird
-    //npm uninstall behavior of leaving the directory
-    //TODO: run npm postuninstall script before deleting
-    var pluginDest = path.join(dest, 'node_modules', target);
-    if(fs.existsSync(pluginDest)) {
-        shell.rm('-rf', pluginDest);
-    } 
-
     //run npm uninstall, this will remove dependency
     //from package.json if --save was used.
     return superspawn.spawn('npm', fetchArgs, opts)
+    .then(function(res) {
+        var pluginDest = path.join(dest, 'node_modules', target);
+        if(fs.existsSync(pluginDest)) {
+            shell.rm('-rf', pluginDest);
+        } 
+        return res;
+    })
     .fail(function(err) {
         return Q.reject(new CordovaError(err));
     });
