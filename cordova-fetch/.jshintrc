@@ -7,5 +7,6 @@
   "indent": 4,
   "unused": "vars",
   "latedef": "nofunc",
-  "-W030": false
+  "-W030": false,
+  "jasmine": true
 }

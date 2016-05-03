@@ -27,12 +27,13 @@
     "q": "^1.4.1"
   },
   "devDependencies": {
-    "jshint": "^2.8.0",
-    "tap": "^5.7"
+    "jasmine": "^2.4.1",
+    "jshint": "^2.8.0"
   },
   "scripts": {
-    "test": "npm run jshint && tap test/*.js",
-    "jshint": "jshint index.js test/fetch.spec.js"
+    "test": "npm run jshint && npm run jasmine",
+    "jshint": "jshint index.js spec/fetch.spec.js",
+    "jasmine": "jasmine spec"
   },
   "engines": {
     "node": ">= 0.12.0",
