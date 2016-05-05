@@ -24,11 +24,9 @@ var fs            = require('fs'),
     CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
     url           = require('url'),
-    npm           = require('npm'),
     nopt          = require('nopt'),
     Q             = require('q'),
-    semver        = require('semver'),
-    superspawn    = require('cordova-common').superspawn;
+    semver        = require('semver');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -197,6 +195,7 @@ function getInstalledPlatformsWithVersions(project_dir) {
     var platforms_on_fs = listPlatforms(project_dir);
 
     return Q.all(platforms_on_fs.map(function(p) {
+        var superspawn    = require('cordova-common').superspawn;
         return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
         .then(function(v) {
             result[p] = v || null;
@@ -397,6 +396,7 @@ function getLatestMatchingNpmVersion(module_name, version) {
  * @returns {Promise} Promise for an array of versions.
  */
 function getAvailableNpmVersions(module_name) {
+    var npm = require('npm');
     return Q.nfcall(npm.load).then(function () {
         return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
             // result is an object in the form:

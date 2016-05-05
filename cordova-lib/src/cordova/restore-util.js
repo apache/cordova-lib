@@ -22,7 +22,6 @@ var cordova_util = require('./util'),
     path         = require('path'),
     Q            = require('q'),
     fs           = require('fs'),
-    plugin       = require('./plugin'),
     events       = require('cordova-common').events,
     cordova      = require('./cordova'),
     semver      = require('semver'),
@@ -123,6 +122,7 @@ function installPluginsFromConfigXML(args) {
             cli_variables: pluginEntry.variables,
             searchpath: args.searchpath
         };
+        var plugin = require('./plugin');
         return plugin('add', installFrom, options);
     }, function (error) {
         // CB-10921 emit a warning in case of error

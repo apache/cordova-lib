@@ -18,19 +18,35 @@
 */
 
 // For now expose plugman and cordova just as they were in the old repos
+
+
+function addProperty(obj, property, modulePath) {
+    // Add properties as getter to delay load the modules on first invocation
+    Object.defineProperty(obj, property, {
+        configurable: true,
+        get: function () {
+            var module = require(modulePath);
+            // We do not need the getter any more
+            obj[property] = module;
+            return module;
+        }
+    });
+}
+
 exports = module.exports = {
     set binname(name) {
         this.cordova.binname = name;
     },
     get binname() {
-       return this.cordova.binname;
+        return this.cordova.binname;
     },
-    plugman: require('./src/plugman/plugman'),
-    cordova: require('./src/cordova/cordova'),
-    events: require('cordova-common').events,
-    configparser: require('cordova-common').ConfigParser,
-    cordova_platforms: require('./src/platforms/platforms'),
-    ////  MAIN CORDOVA TOOLS API
-    PluginInfo: require('cordova-common').PluginInfo,
-    CordovaError: require('cordova-common').CordovaError
+    get events() { return require('cordova-common').events },
+    get configparser() { return require('cordova-common').ConfigParser },
+    get PluginInfo() { return require('cordova-common').PluginInfo },
+    get CordovaError() { return require('cordova-common').CordovaError }
+
 };
+
+addProperty(module.exports, 'plugman', './src/plugman/plugman');
+addProperty(module.exports, 'cordova', './src/cordova/cordova');
+addProperty(module.exports, 'cordova_platforms', './src/platforms/platforms');

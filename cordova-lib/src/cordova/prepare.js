@@ -28,7 +28,6 @@ var cordova_util      = require('./util'),
     Q                 = require('q'),
     restore           = require('./restore-util'),
     path              = require('path'),
-    browserify = require('../plugman/browserify'),
     config            = require('./config'),
     _ = require('underscore');
 
@@ -113,8 +112,10 @@ function preparePlatforms (platformList, projectRoot, options) {
                 }
             })
             .then(function () {
-                if (options.browserify)
+                if (options.browserify) {
+                    var browserify = require('../plugman/browserify');
                     return browserify(project, platformApi);
+                }
             });
         });
     }));
