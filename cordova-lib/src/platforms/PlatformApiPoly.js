@@ -20,7 +20,6 @@
 var Q = require('q');
 var fs = require('fs');
 var path = require('path');
-var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
@@ -474,7 +473,12 @@ function getCreateArgs(destinationDir, projectConfig, options) {
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
-    args.push(platformName == 'ios' ? unorm.nfd(projectConfig.name()) : projectConfig.name());
+    var name = projectConfig.name();
+    if (platformName == 'ios') {
+        var unorm = require('unorm');
+        name = unorm.nfd(name);
+    }
+    args.push(name);
 
     if (options.customTemplate) {
         args.push(options.customTemplate);

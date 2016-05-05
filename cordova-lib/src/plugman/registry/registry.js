@@ -23,8 +23,7 @@ var npm = require('npm'),
     path = require('path'),
     Q = require('q'),
     npmhelper = require('../../util/npm-helper'),
-    events = require('cordova-common').events,
-    unpack = require('../../util/unpack');
+    events = require('cordova-common').events;
 
 module.exports = {
     settings: null,
@@ -123,6 +122,7 @@ function fetchPlugin(plugin) {
         events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
         return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
         .then(function (info) {
+            var unpack = require('../../util/unpack');
             var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
             // Unpack the plugin that was added to the cache (CB-8154)
             var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
