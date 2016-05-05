@@ -34,7 +34,7 @@ var isUrl = require('is-url');
  * @param {String} dest     destination of where to install the module
  * @param {Object} opts     [opts={save:true}] options to pass to fetch module
  *
- * @return {String||Promise}    Returns string of the absolute path to the installed module.
+ * @return {String|Promise}    Returns string of the absolute path to the installed module.
  *
  */
 module.exports = function(target, dest, opts) {
@@ -43,36 +43,37 @@ module.exports = function(target, dest, opts) {
     var tree1;
 
     //check if npm is installed
-    isNpmInstalled();
-
-    if(dest && target) {
-        //add target to fetchArgs Array
-        fetchArgs.push(target);
+    return isNpmInstalled()
+    .then(function() {
+        if(dest && target) {
+            //add target to fetchArgs Array
+            fetchArgs.push(target);
         
-        //append node_modules to dest if it doesn't come included
-        if (path.basename(dest) !== 'node_modules') {
+            //append node_modules to dest if it doesn't come included
+            if (path.basename(dest) !== 'node_modules') {
             dest = path.resolve(path.join(dest, 'node_modules'));
-        }
+            }
         
-        //create dest if it doesn't exist
-        if(!fs.existsSync(dest)) {
-            shell.mkdir('-p', dest);         
+            //create dest if it doesn't exist
+            if(!fs.existsSync(dest)) {
+                shell.mkdir('-p', dest);         
+            } 
+
+        } else return Q.reject(new CordovaError('Need to supply a target and destination'));
+
+        //set the directory where npm install will be run
+        opts.cwd = dest;
+
+        //if user added --save flag, pass it to npm install command
+        if(opts.save) {
+            events.emit('verbose', 'saving');
+            fetchArgs.push('--save'); 
         } 
-
-    } else return Q.reject(new CordovaError('Need to supply a target and destination'));
-
-    //set the directory where npm install will be run
-    opts.cwd = dest;
-
-    //if user added --save flag, pass it to npm install command
-    if(opts.save) {
-        events.emit('verbose', 'saving');
-        fetchArgs.push('--save'); 
-    } 
     
 
-    //Grab json object of installed modules before npm install
-    return depls(dest)
+        //Grab json object of installed modules before npm install
+        return depls(dest);
+    })
     .then(function(depTree) {
         tree1 = depTree;
 
@@ -162,7 +163,7 @@ function trimID(target) {
  * @param {String} id       the packageID
  * @param {String} dest     destination of where to fetch the modules
  *
- * @return {String||Error}  Returns the absolute url for the module or throws a error
+ * @return {String|Error}  Returns the absolute url for the module or throws a error
  *
  */
 
@@ -178,14 +179,14 @@ function getPath(id, dest) {
 
 /*
  * Checks to see if npm is installed on the users system
- * @return {Boolean||Error} Returns true or a cordova error.
+ * @return {Promise|Error} Returns true or a cordova error.
  */
 
 function isNpmInstalled() {
     if(!shell.which('npm')) {
         return Q.reject(new CordovaError('"npm" command line tool is not installed: make sure it is accessible on your PATH.'));
     }
-    return true;
+    return Q();
 }
 
 /* 
@@ -195,7 +196,7 @@ function isNpmInstalled() {
  * @param {String} dest     destination of where to uninstall the module from
  * @param {Object} opts     [opts={save:true}] options to pass to npm uninstall
  *
- * @return {Promise||Error}    Returns a promise with the npm uninstall output or an error.
+ * @return {Promise|Error}    Returns a promise with the npm uninstall output or an error.
  *
  */
 module.exports.uninstall = function(target, dest, opts) {
@@ -203,24 +204,25 @@ module.exports.uninstall = function(target, dest, opts) {
     opts = opts || {};
 
     //check if npm is installed on the system
-    isNpmInstalled();
+    return isNpmInstalled()
+    .then(function() {    
+        if(dest && target) {
+            //add target to fetchArgs Array
+            fetchArgs.push(target);  
+        } else return Q.reject(new CordovaError('Need to supply a target and destination'));
 
-    if(dest && target) {
-        //add target to fetchArgs Array
-        fetchArgs.push(target);  
-    } else return Q.reject(new CordovaError('Need to supply a target and destination'));
+        //set the directory where npm uninstall will be run
+        opts.cwd = dest;
 
-    //set the directory where npm uninstall will be run
-    opts.cwd = dest;
+        //if user added --save flag, pass it to npm uninstall command
+        if(opts.save) {
+            fetchArgs.push('--save'); 
+        }
 
-    //if user added --save flag, pass it to npm uninstall command
-    if(opts.save) {
-        fetchArgs.push('--save'); 
-    }
-
-    //run npm uninstall, this will remove dependency
-    //from package.json if --save was used.
-    return superspawn.spawn('npm', fetchArgs, opts)
+        //run npm uninstall, this will remove dependency
+        //from package.json if --save was used.
+        return superspawn.spawn('npm', fetchArgs, opts);
+    })
     .then(function(res) {
         var pluginDest = path.join(dest, 'node_modules', target);
         if(fs.existsSync(pluginDest)) {

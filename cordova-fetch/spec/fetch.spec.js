@@ -80,7 +80,7 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
     
     beforeEach(function() {
         //copy package.json from spec directory to tmpDir
-        shell.cp('spec/package.json', tmpDir);
+        shell.cp('spec/testpkg.json', path.join(tmpDir,'package.json'));
         process.chdir(tmpDir);
     });
     
@@ -156,7 +156,7 @@ describe('plugin fetch/uninstall test with --save', function () {
     
     beforeEach(function() {
         //copy package.json from spec directory to tmpDir
-        shell.cp('spec/package.json', tmpDir);
+        shell.cp('spec/testpkg.json', path.join(tmpDir,'package.json'));
         process.chdir(tmpDir);
     });
     
