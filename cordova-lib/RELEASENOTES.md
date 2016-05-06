@@ -20,13 +20,17 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.1.1 (Mar 29, 2016)
+* CB-10961 Error no such file or directory adding ios platform when plugins present or required
+* CB-10908 Reload the config.xml before writing the saved plugin
+
 ### 6.1.0 (Mar 17, 2016)
 * CB-10902 updated pinned platforms
 * CB-10808 revert npm install for templates
 * CB-10808 CLI Support templates with subdirectory
 * CB-10880 Removed plugin pinning
 * CB-10679 Improving version choosing logic test coverage
-* CB-10673 add plugin `--force` option. 
+* CB-10673 add plugin `--force` option.
 * CB-10679 New version choosing logic for plugin add
 * CB-10328 set top-level property when adding new platforms
 * CB-10314 avoid fetching plugins when oldId is already fetched
@@ -80,7 +84,7 @@
 * CB-10048 clobbering of `<access>` tags to `ATS` directives
 
 ### 5.4.1 (Nov 19, 2015)
-* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`. 
+* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`.
 * CB-9981 `path.parse` only available on `node 0.12+`.
 * CB-9987 Adds compatibility layer for `cordova.raw.*` methods
 * CB-9975 Fix issue with using `all" as orientation for **iOS**
@@ -96,7 +100,7 @@
 * CB-9675 OSX App Icons are not properly copied.
 * CB-9758 Mobilespec crashes adding plugins on OS X
 * CB-9782 Update create/update signatures for PlatformApi polyfill
-* CB-9815 Engine name="cordova" should check tools version, not platforms. 
+* CB-9815 Engine name="cordova" should check tools version, not platforms.
 * CB-9824 removed plugin download counter code from lib
 * CB-9821 Fix EventEmitter incorrect trace level usages
 * CB-9813 Keep module-to-plugin mapping at hand.
@@ -125,9 +129,9 @@
 * CB-9631 Save plugin to config.xml only if installation succeeds
 * CB-9601 Fix <framework>.versions support on Windows after semver update
 * CB-9617 Fixes incorrect project state after adding/removing plugins
-* CB-9560 Issue using plugin restore for plugins with common dependencies 
+* CB-9560 Issue using plugin restore for plugins with common dependencies
 * CB-8993 Plugin restore ignores search path
-* CB-9587 Check if browser platform added properly before creating parser. 
+* CB-9587 Check if browser platform added properly before creating parser.
 * CB-9604 Fix error adding browser platform with PlatformApi polyfill.
 * CB-9597 Initial Implementation of PlatformApiPoly
 * CB-9354 Fix array merging with complex items
@@ -138,7 +142,7 @@
 
 ### 5.3.1 (Aug 28, 2015)
 * pinned blackberry@3.8.0 in prepartion for its release
-* pinned browser@4.0.0 and windows@4.1.0 
+* pinned browser@4.0.0 and windows@4.1.0
 * CB-9559 Adding a plugin with caret in version results in an error
 * Update cordova-serve required version to 0.1.3.
 * CB-6506 RTC: Add support for OSX (closes #278)
@@ -368,7 +372,7 @@
 * CB-8043 CB-6462 CB-6105 Refactor orientation preference support (close #128)
 * FirefoxOS parser: allow passing in a ConfigParser object
 * Parsers: extend base parser with helper functions
-* CB-8244 android: Have `plugin add --link` create symlinks for `<source-file>`, `<framework>`, etc 
+* CB-8244 android: Have `plugin add --link` create symlinks for `<source-file>`, `<framework>`, etc
 * CB-8244 Pass options object to platform handlers in plugman (commit attempt #2)
 * CB-8226 'cordova platform add' : Look up version in config.xml if no version specified
 * Delete root .npmignore, since there's no node module there
