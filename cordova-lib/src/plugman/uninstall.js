@@ -216,7 +216,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
                 if(plugin_id == top_plugin_id) {
                     return Q.reject( new CordovaError(msg) );
                 } else {
-                    events.emit('warn', msg +' and cannot be removed (hint: use -f or --force)');
+                    events.emit('warn', msg);
                     continue;
                 }
             }
