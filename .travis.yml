@@ -6,6 +6,7 @@ node_js:
   - "0.10"
   - "0.12"
   - "4.2"
+  - "6.0"
 install:
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-lib
