@@ -24,7 +24,8 @@
     "cordova-common": "^1.0.0",
     "dependency-ls": "^1.0.0",
     "is-url": "^1.2.1",
-    "q": "^1.4.1"
+    "q": "^1.4.1",
+    "shelljs": "^0.7.0"
   },
   "devDependencies": {
     "jasmine": "^2.4.1",
