@@ -166,6 +166,49 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
 }
 
 
+// Handle config-file changes from config.xml
+PlatformMunger.prototype.add_config_changes = add_config_changes;
+function add_config_changes(config, should_increment) {
+    var self = this;
+    var platform_config = self.platformJson.root;
+
+    // get config munge
+    var config_munge = self.generate_plugin_config_munge(config, null);
+    // global munge looks at all changes to config files
+
+    // TODO: The should_increment param is only used by cordova-cli and is going away soon.
+    // If should_increment is set to false, avoid modifying the global_munge (use clone)
+    // and apply the entire config_munge because it's already a proper subset of the global_munge.
+    var munge, global_munge;
+    if (should_increment) {
+        global_munge = platform_config.config_munge;
+        munge = mungeutil.increment_munge(global_munge, config_munge);
+    } else {
+        global_munge = mungeutil.clone_munge(platform_config.config_munge);
+        munge = config_munge;
+    }
+
+    for (var file in munge.files) {
+        // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
+        if (self.platform == 'windows' && file == 'package.appxmanifest' &&
+            !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
+            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows10.appxmanifest'];
+            /* jshint loopfunc:true */
+            substs.forEach(function(subst) {
+                events.emit('verbose', 'Applying munge to ' + subst);
+                self.apply_file_munge(subst, munge.files[file]);
+            });
+            /* jshint loopfunc:false */
+        }
+
+        self.apply_file_munge(file, munge.files[file]);
+    }
+
+    // Move to installed/dependent_plugins
+    return self;
+}
+
+
 // Load the global munge from platform json and apply all of it.
 // Used by cordova prepare to re-generate some config file from platform
 // defaults and the global munge.

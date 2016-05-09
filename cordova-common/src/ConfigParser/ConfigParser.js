@@ -100,7 +100,7 @@ ConfigParser.prototype = {
         return this.doc.getroot().attrib['android-packageName'];
     },
     android_activityName: function() {
-	return this.doc.getroot().attrib['android-activityName'];
+        return this.doc.getroot().attrib['android-activityName'];
     },
     ios_CFBundleIdentifier: function() {
         return this.doc.getroot().attrib['ios-CFBundleIdentifier'];
@@ -462,6 +462,28 @@ ConfigParser.prototype = {
                 'minimum_tls_version': minimum_tls_version,
                 'requires_forward_secrecy' : requires_forward_secrecy
             };
+        });
+    },
+    /* Get all config-file tags */
+    getConfigFiles: function(platform) {
+        var platform_tag = this.doc.find('./platform[@name="' + platform + '"]');
+        var platform_config_files = platform_tag ? platform_tag.findall('config-file') : [];
+
+        var config_files = this.doc.findall('config-file').concat(platform_config_files);
+
+        return config_files.map(function(tag) {
+            var configFile =
+                {
+                    target : tag.attrib['target'],
+                    parent : tag.attrib['parent'],
+                    after : tag.attrib['after'],
+                    attr : tag.attrib['attr'],
+                    xmls : tag.getchildren(),
+                    // To support demuxing via versions
+                    versions : tag.attrib['versions'],
+                    deviceTarget: tag.attrib['device-target']
+                };
+            return configFile;
         });
     },
     write:function() {

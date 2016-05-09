@@ -85,6 +85,15 @@
         <icon cdv:density="mdpi" height="255" src="logo-android-cdv.png" width="255" />
         <preference name="android-minSdkVersion" value="10" />
         <preference name="orientation" value="landscape" />
+        <!-- add new tag -->
+        <config-file target="AndroidManifest.xml" parent="application" >
+            <activity android:name="NewActivity" />
+        </config-file>
+        <!-- add new attribute and overwrite attribute -->
+        <config-file target="AndroidManifest.xml" parent="/manifest" attr="true">
+            <application android:name="MyApplication"/>
+            <uses-sdk android:minSdkVersion="15"/>
+        </config-file>
     </platform>
     <platform name="windows">
         <icon src="res/windows/logo.scale-200.png" target="logo.png"/>

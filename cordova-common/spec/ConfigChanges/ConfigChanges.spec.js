@@ -39,11 +39,13 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     android_two_no_perms_project = path.join(__dirname, '../fixtures/projects/android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '../fixtures/projects/ios-config-xml/*'),
     windows_testapp_jsproj = path.join(__dirname, '../fixtures/projects/windows/TestApp.jsproj'),
-    plugins_dir = path.join(temp, 'cordova', 'plugins');
+    plugins_dir = path.join(temp, 'cordova', 'plugins'),
+    test_config_xml = path.join(__dirname, '../fixtures/test-config.xml');
 var mungeutil = require('../../src/ConfigChanges/munge-util');
 var PlatformJson = require('../../src/PlatformJson');
 var PluginInfoProvider = require('../../src/PluginInfo/PluginInfoProvider');
 var PluginInfo = require('../../src/PluginInfo/PluginInfo');
+var ConfigParser = require('../../src/ConfigParser/ConfigParser');
 
 // TODO: dont do fs so much
 
@@ -121,6 +123,30 @@ describe('config-changes module', function() {
             var platformJson = new PlatformJson(filepath, 'android', {foo:true});
             platformJson.save();
             expect(JSON.parse(fs.readFileSync(filepath, 'utf-8'))).toEqual(platformJson.root);
+        });
+    });
+
+    describe('add_config_changes method', function() {
+        it('should handle config-file tag from config.xml', function() {
+            shell.cp('-rf', android_two_project, temp);
+
+            var filepath = path.join(plugins_dir, 'android.json');
+            var platformJson = new PlatformJson(filepath, 'android');
+            var munger = new configChanges.PlatformMunger('android', temp, platformJson);
+            var config = new ConfigParser(test_config_xml);
+            munger.add_config_changes(config, true).save_all();
+
+            var manifest = new et.ElementTree(et.XML(fs.readFileSync(path.join(temp, 'AndroidManifest.xml'), 'utf-8')));
+            var application = manifest.find('./application');
+            var uses_sdk = manifest.find('./uses-sdk');
+            var activity = manifest.find('./application/activity[@android:name="NewActivity"]');
+
+            expect(application).not.toBe(null);
+            expect(application.attrib['android:name']).toEqual('MyApplication');
+            expect(uses_sdk).not.toBe(null);
+            expect(uses_sdk.attrib['android:minSdkVersion']).toEqual('15');
+            expect(activity).not.toBe(null);
+            expect(activity.attrib['android:name']).toEqual('NewActivity');
         });
     });
 
