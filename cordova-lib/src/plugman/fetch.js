@@ -32,8 +32,9 @@ var shell   = require('shelljs'),
     registry = require('./registry/registry'),
     pluginMappernto = require('cordova-registry-mapper').newToOld,
     pluginMapperotn = require('cordova-registry-mapper').oldToNew,
-    pluginSpec      = require('../cordova/plugin_spec_parser');
-var cordovaUtil = require('../cordova/util');
+    pluginSpec      = require('../cordova/plugin_spec_parser'),
+    fetch = require('cordova-fetch'),
+    cordovaUtil = require('../cordova/util');
 
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
@@ -44,7 +45,6 @@ module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
-
     options = options || {};
     options.subdir = options.subdir || '.';
     options.searchpath = options.searchpath || [];
@@ -67,16 +67,26 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 options.git_ref = result[1];
             if (result[2])
                 options.subdir = result[2];
+            //if --fetch was used, throw error for subdirectories
+            if (result[2] && options.fetch) {
+                return Q.reject(new CordovaError('--fetch does not support subdirectories'));
+            }
 
             // Recurse and exit with the new options and truncated URL.
             var new_dir = plugin_src.substring(0, plugin_src.indexOf('#'));
-            return fetchPlugin(new_dir, plugins_dir, options);
+
+            //skip the return if user asked for --fetch
+            //cordova-fetch doesn't need to strip out git-ref
+            if(!options.fetch) {
+                return fetchPlugin(new_dir, plugins_dir, options);
+            }
         }
     }
 
     return Q.when().then(function() {
-        // If it looks like a network URL, git clone it.
-        if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/)) {
+        // If it looks like a network URL, git clone it
+        // skip git cloning if user passed in --fetch flag
+        if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/) && !options.fetch) {
             events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
             if (options.link) {
                 events.emit('log', '--link is not supported for git URLs and will be ignored');
@@ -158,7 +168,18 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                     if (newID) {
                         events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
                     }
-                    P = registry.fetch([plugin_src]);
+                    //use cordova-fetch if --fetch was passed in
+                    if(options.fetch) {
+                        var projectRoot = path.join(plugins_dir, '..');
+                        //Plugman projects need to go up two directories to reach project root. 
+                        //Plugman projects have an options.projectRoot variable
+                        if(options.projectRoot) {
+                            projectRoot = options.projectRoot;
+                        }
+                        P = fetch(plugin_src, projectRoot, options); 
+                    } else {
+                        P = registry.fetch([plugin_src]);
+                    }
                     skipCopyingPlugin = false;
                 }
             }

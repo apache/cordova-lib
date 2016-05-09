@@ -34,6 +34,7 @@ var path = require('path'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
     pluginMapper = require('cordova-registry-mapper').oldToNew,
+    npmUninstall = require('cordova-fetch').uninstall,
     pluginSpec = require('../cordova/plugin_spec_parser');
 
 var superspawn = require('cordova-common').superspawn;
@@ -115,15 +116,31 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         return Q();
     }
 
+    /*
+     * Deletes plugin from plugins directory and 
+     * node_modules directory if --fetch was supplied.
+     *
+     * @param {String} id   the id of the plugin being removed
+     *
+     * @return {Promise||Error} Returns a empty promise or a promise of doing the npm uninstall
+     */
     var doDelete = function(id) {
         var plugin_dir = path.join(plugins_dir, id);
         if ( !fs.existsSync(plugin_dir) ) {
             events.emit('verbose', 'Plugin "'+ id +'" already removed ('+ plugin_dir +')');
             return Q();
         }
-
+        
         shell.rm('-rf', plugin_dir);
         events.emit('verbose', 'Deleted "'+ id +'"');
+        
+        if(options.fetch) {
+            //remove plugin from node_modules directory
+            return npmUninstall(id, options.projectRoot, options); 
+        }
+        
+        return Q();
+
     };
 
     // We've now lost the metadata for the plugins that have been uninstalled, so we can't use that info.
@@ -201,7 +218,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         });
     });
 
-    var i, plugin_id, msg;
+    var i, plugin_id, msg, delArray = [];
     for(i in toDelete) {
         plugin_id = toDelete[i];
 
@@ -221,11 +238,11 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
                 }
             }
         }
-
-        doDelete(plugin_id);
+        //create an array of promises
+        delArray.push(doDelete(plugin_id));
     }
-
-    return Q();
+    //return promise.all
+    return Q.all(delArray);
 };
 
 // possible options: cli_variables, www_dir, is_top_level

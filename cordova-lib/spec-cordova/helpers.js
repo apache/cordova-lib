@@ -40,6 +40,9 @@ module.exports.tmpDir = function (subdir) {
     if (subdir) {
         dir = path.join(dir, subdir);
     }
+    if(fs.existsSync(dir)) {
+        shell.rm('-rf', dir);
+    }
     shell.mkdir('-p', dir);
     return dir;
 };

@@ -37,6 +37,8 @@ var config            = require('./config'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
+    fetch             = require('cordova-fetch'),
+    npmUninstall         = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -257,6 +259,21 @@ function getSpecString(spec) {
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
+        if (opts.fetch) {
+            //append cordova to platform
+            if(platform in platforms) {
+                target = 'cordova-'+target;
+            }
+
+            //gitURLs don't supply a platform, it equals null
+            if(!platform) {
+                target = version;
+            }
+
+            events.emit('log', 'Using cordova-fetch for '+ target);
+            return fetch(target, projectRoot, opts);
+        }
+
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             var parts = version.split('#');
@@ -356,14 +373,24 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing ' + target + ' from config.xml file ...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-        });
-    }
+            });
+        }
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
             platformMetadata.remove(projectRoot, target);
         });
+    }).then(function() {
+        //Remove from node_modules if it exists and --fetch was used
+        if(opts.fetch) {
+            targets.forEach(function(target) {
+                if(target in platforms) {
+                    target = 'cordova-'+target;
+                }
+                return npmUninstall(target, projectRoot, opts);
+            });
+        }
     }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
