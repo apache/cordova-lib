@@ -136,7 +136,7 @@ describe('prepare command', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare().then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], paths:supported_platforms_paths});
+                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], save: false, fetch: false, paths:supported_platforms_paths});
                 }, function(err) {
                     expect(err).toBeUndefined();
                 }).fin(done);
