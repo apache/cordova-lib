@@ -94,39 +94,6 @@ function uninstallHelper(type, obj, project_dir, plugin_id, options, project) {
     }
 }
 
-// special handlers to add frameworks to the 'Embed Frameworks' build phase, needed for custom frameworks
-// see CB-9517. should probably be moved to node-xcode.
-var util = require('util');
-function pbxBuildPhaseObj(file) {
-    var obj = Object.create(null);
-    obj.value = file.uuid;
-    obj.comment = longComment(file);
-    return obj;
-}
-
-function longComment(file) {
-    return util.format('%s in %s', file.basename, file.group);
-}
-
-xcode.project.prototype.pbxEmbedFrameworksBuildPhaseObj = function (target) {
-    return this.buildPhaseObject('PBXCopyFilesBuildPhase', 'Embed Frameworks', target);
-};
-
-xcode.project.prototype.addToPbxEmbedFrameworksBuildPhase = function (file) {
-    var sources = this.pbxEmbedFrameworksBuildPhaseObj(file.target);
-    if (sources) {
-        sources.files.push(pbxBuildPhaseObj(file));
-    }
-};
-xcode.project.prototype.removeFromPbxEmbedFrameworksBuildPhase = function (file) {
-    var sources = this.pbxEmbedFrameworksBuildPhaseObj(file.target);
-    if (sources) {
-        sources.files = _.reject(sources.files, function(file){
-            return file.comment === longComment(file);
-        });
-    }
-};
-
 // These frameworks are required by cordova-ios by default. We should never add/remove them.
 var keep_these_frameworks = [
     'MobileCoreServices.framework',
@@ -178,7 +145,10 @@ module.exports = {
     'framework':{ // CB-5238 custom frameworks only
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
             var src = obj.src,
-                custom = obj.custom;
+                custom = obj.custom,
+                embed = obj.embed === undefined || obj.embed, /*defaults to true if not specified to keep behavior from CB-9517*/
+                link = obj.link,
+                sign = obj.sign;
 
             if (!custom) {
                 var keepFrameworks = keep_these_frameworks;
@@ -200,10 +170,7 @@ module.exports = {
             shell.mkdir('-p', path.dirname(targetDir));
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
-            var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true});
-            if (pbxFile) {
-                project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
-            }
+            project.xcode.addFramework(project_relative, {customFramework: true, embed: embed, link: link, sign:sign});
         },
         uninstall:function(obj, project_dir, plugin_id, options, project) {
             var src = obj.src;
@@ -226,11 +193,8 @@ module.exports = {
                 return;
             }
 
-            var targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src)),
-                pbxFile = project.xcode.removeFramework(targetDir, {customFramework: true});
-            if (pbxFile) {
-                project.xcode.removeFromPbxEmbedFrameworksBuildPhase(pbxFile);
-            }
+            var targetDir = path.resolve(project.plugins_dir, plugin_id, path.basename(src));
+            project.xcode.removeFramework(targetDir, {customFramework: true});
             shell.rm('-rf', targetDir);
         }
     },

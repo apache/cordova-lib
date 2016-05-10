@@ -269,7 +269,7 @@ describe('ios project handler', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'addFramework');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true, embed:true, link:undefined, sign:false});
             });
 
             // TODO: Add more tests to cover the cases:
@@ -299,6 +299,27 @@ describe('ios project handler', function() {
                                                      path.join(temp, 'SampleApp/Plugins/org.test.plugins.dummyplugin'));
                 });
             });
+
+            it('with embed="false" attribute should call into xcodeproj\'s addFramework accordingly', function() {
+                var frameworks = copyArray(valid_custom_frameworks);
+                var spy = spyOn(proj_files.xcode, 'addFramework');
+                ios['framework'].install(frameworks[1], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/NonEmbeddable.framework'), {customFramework:true, embed:false, link:undefined, sign:false});
+            });
+
+            it('with link="false" attribute should call into xcodeproj\'s addFramework accordingly', function() {
+                var frameworks = copyArray(valid_custom_frameworks);
+                var spy = spyOn(proj_files.xcode, 'addFramework');
+                ios['framework'].install(frameworks[2], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Unlinkable.framework'), {customFramework:true, embed:false, link:false, sign:false});
+            });
+
+            it('with sign="true" attribute should call into xcodeproj\'s addFramework accordingly', function() {
+                var frameworks = copyArray(valid_custom_frameworks);
+                var spy = spyOn(proj_files.xcode, 'addFramework');
+                ios['framework'].install(frameworks[3], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Signable.framework'), {customFramework:true, embed:true, link:undefined, sign:true});
+            });
         });
         it('of two plugins should apply xcode file changes from both', function(){
             runs(function() {
@@ -310,19 +331,18 @@ describe('ios project handler', function() {
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
                 var xcode = ios.parseProjectFile(temp).xcode;
-                // from org.test.plugins.dummyplugin
-                expect(xcode.hasFile(slashJoin('Resources', 'DummyPlugin.bundle'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBe(true);
-                expect(xcode.hasFile('usr/lib/src/ios/libsqlite3.dylib')).toBe(true);
-                expect(xcode.hasFile(slashJoin('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBe(true);
+                expect(xcode.hasFile(slashJoin('Resources', 'DummyPlugin.bundle'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.h'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin', 'DummyPluginCommand.m'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.h'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.dummyplugin','targetDir','TargetDirTest.m'))).toBeTruthy();
+                expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('SampleApp','Plugins','org.test.plugins.dummyplugin','Custom.framework'))).toBeTruthy();
                 // from org.test.plugins.weblessplugin
-                expect(xcode.hasFile(slashJoin('Resources', 'WeblessPluginViewController.xib'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.h'))).toBe(true);
-                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.m'))).toBe(true);
-                expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBe(true);
+                expect(xcode.hasFile(slashJoin('Resources', 'WeblessPluginViewController.xib'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.h'))).toBeTruthy();
+                expect(xcode.hasFile(slashJoin('Plugins','org.test.plugins.weblessplugin','WeblessPluginCommand.m'))).toBeTruthy();
+                expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBeTruthy();
             });
         });
     });
