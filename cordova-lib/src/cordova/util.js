@@ -24,7 +24,6 @@ var fs            = require('fs'),
     CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
     url           = require('url'),
-    npm           = require('npm'),
     nopt          = require('nopt'),
     Q             = require('q'),
     semver        = require('semver');
@@ -57,12 +56,14 @@ exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
+exports._resetOrigCwd = _resetOrigCwd;
 exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
+exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -138,6 +139,10 @@ function getOrigWorkingDirectory() {
     return origCwd || process.env.PWD || process.cwd();
 }
 
+function _resetOrigCwd() {
+    origCwd = null;
+}
+
 // Fixes up relative paths that are no longer valid due to chdir() within cdProjectRoot().
 function fixRelativePath(value, /* optional */ cwd) {
     // Don't touch absolute paths.
@@ -182,6 +187,23 @@ function listPlatforms(project_dir) {
     var subdirs = fs.readdirSync(platforms_dir);
     return subdirs.filter(function(p) {
         return Object.keys(core_platforms).indexOf(p) > -1;
+    });
+}
+
+function getInstalledPlatformsWithVersions(project_dir) {
+    var result = {};
+    var platforms_on_fs = listPlatforms(project_dir);
+
+    return Q.all(platforms_on_fs.map(function(p) {
+        var superspawn    = require('cordova-common').superspawn;
+        return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
+        .then(function(v) {
+            result[p] = v || null;
+        }, function(v) {
+            result[p] = 'broken';
+        });
+    })).then(function() {
+        return result;
     });
 }
 
@@ -374,6 +396,7 @@ function getLatestMatchingNpmVersion(module_name, version) {
  * @returns {Promise} Promise for an array of versions.
  */
 function getAvailableNpmVersions(module_name) {
+    var npm = require('npm');
     return Q.nfcall(npm.load).then(function () {
         return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
             // result is an object in the form:

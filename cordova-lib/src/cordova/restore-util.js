@@ -22,7 +22,6 @@ var cordova_util = require('./util'),
     path         = require('path'),
     Q            = require('q'),
     fs           = require('fs'),
-    plugin       = require('./plugin'),
     events       = require('cordova-common').events,
     cordova      = require('./cordova'),
     semver      = require('semver'),
@@ -90,6 +89,11 @@ function installPluginsFromConfigXML(args) {
         return Q('No config.xml plugins to install');
     }
 
+
+    // Intermediate variable to store current installing plugin name
+    // to be able to create informative warning on plugin failure
+    var pluginName;
+
     // CB-9560 : Run `plugin add` serially, one plugin after another
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
@@ -106,13 +110,24 @@ function installPluginsFromConfigXML(args) {
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
         var pluginSpec = pluginEntry.spec;
-        var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginSpec;
+        pluginName = pluginEntry.name;
+
+        // CB-10761 If plugin spec is not specified, use plugin name
+        var installFrom = pluginSpec || pluginName;
+        if (pluginSpec && semver.validRange(pluginSpec, true))
+            installFrom = pluginName + '@' + pluginSpec;
 
         // Add feature preferences as CLI variables if have any
         var options = {
             cli_variables: pluginEntry.variables,
             searchpath: args.searchpath
         };
+        var plugin = require('./plugin');
         return plugin('add', installFrom, options);
+    }, function (error) {
+        // CB-10921 emit a warning in case of error
+        var msg = 'Failed to restore plugin ' + pluginName + ' from config.xml. ' +
+            'You might want to reinstall it again. Error: ' + error;
+        events.emit('warn', msg);
     });
 }

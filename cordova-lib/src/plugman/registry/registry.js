@@ -23,8 +23,7 @@ var npm = require('npm'),
     path = require('path'),
     Q = require('q'),
     npmhelper = require('../../util/npm-helper'),
-    events = require('cordova-common').events,
-    unpack = require('../../util/unpack');
+    events = require('cordova-common').events;
 
 module.exports = {
     settings: null,
@@ -89,20 +88,18 @@ module.exports = {
      */
     info: function(plugin) {
         plugin = plugin.shift();
-        return (Q.nbind(npm.load, npm))
-        .then(function() {
-            // Set cache timout limits to 0 to force npm to call the registry
-            // even when it has a recent .cache.json file.
-            npm.config.set('cache-min', 0);
-            npm.config.set('cache-max', 0);
-            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true );
-        })
-        .then(function(info) {
-            // Plugin info should be accessed as info[version]. If a version
-            // specifier like >=x.y.z was used when calling npm view, info
-            // can contain several versions, but we take the first one here.
-            var version = Object.keys(info)[0];
-            return info[version];
+        return npmhelper.loadWithSettingsThenRestore({
+            'cache-min': 0,
+            'cache-max': 0
+        }, function() {
+            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true )
+            .then(function(info) {
+                // Plugin info should be accessed as info[version]. If a version
+                // specifier like >=x.y.z was used when calling npm view, info
+                // can contain several versions, but we take the first one here.
+                var version = Object.keys(info)[0];
+                return info[version];
+            });
         });
     }
 };
@@ -125,6 +122,7 @@ function fetchPlugin(plugin) {
         events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
         return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
         .then(function (info) {
+            var unpack = require('../../util/unpack');
             var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
             // Unpack the plugin that was added to the cache (CB-8154)
             var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');

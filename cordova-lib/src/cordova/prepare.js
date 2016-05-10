@@ -28,8 +28,8 @@ var cordova_util      = require('./util'),
     Q                 = require('q'),
     restore           = require('./restore-util'),
     path              = require('path'),
-    browserify = require('../plugman/browserify'),
-    config            = require('./config');
+    config            = require('./config'),
+    _ = require('underscore');
 
 // Returns a promise.
 exports = module.exports = prepare;
@@ -100,7 +100,7 @@ function preparePlatforms (platformList, projectRoot, options) {
             // Please note that plugins' changes, such as installed js files, assets and
             // config changes is not being reinstalled on each prepare.
             var platformApi = platforms.getPlatformApi(platform);
-            return platformApi.prepare(project, options)
+            return platformApi.prepare(project, _.clone(options))
             .then(function () {
                 if (platform === 'windows' && !(platformApi instanceof PlatformApiPoly)) {
                     // Windows Api doesn't fire 'pre_package' hook, so we fire it here
@@ -112,8 +112,10 @@ function preparePlatforms (platformList, projectRoot, options) {
                 }
             })
             .then(function () {
-                if (options.browserify)
+                if (options.browserify) {
+                    var browserify = require('../plugman/browserify');
                     return browserify(project, platformApi);
+                }
             });
         });
     }));

@@ -1,0 +1,522 @@
+/**
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
+var plugin  = require('../src/cordova/plugin'),
+    helpers = require('./helpers'),
+    path    = require('path'),
+    events = require('cordova-common').events,
+    shell   = require('shelljs');
+
+var testPluginVersions = [
+    '0.0.2',
+    '0.7.0',
+    '1.0.0',
+    '1.1.0',
+    '1.1.3',
+    '1.3.0',
+    '1.7.0',
+    '1.7.1',
+    '2.0.0-rc.1',
+    '2.0.0-rc.2',
+    '2.0.0',
+    '2.3.0'
+];
+
+var cordovaVersion = '3.4.2';
+
+var tempDir = helpers.tmpDir('plugin_fetch_spec');
+var project = path.join(tempDir, 'project');
+
+var getVersionErrorCallback;
+var warnings = [];
+
+// Used to extract the constraint, the installed version, and the required
+// semver range from a warning message
+var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) installed, (.+) required\)/;
+
+// We generate warnings when we don't fetch latest. Collect them to make sure we
+// are making the correct warnings
+events.on('warn', function(warning) {
+    warnings.push(warning);
+});
+
+// Tests a sample engine against the installed platforms/plugins in our test
+// project
+function testEngineWithProject(done, testEngine, testResult) {
+    plugin.getFetchVersion(project,
+        {
+            'version': '2.3.0',
+            'name': 'test-plugin',
+            'engines': { 'cordovaDependencies': testEngine },
+            'versions': testPluginVersions
+        }, cordovaVersion)
+    .then(function(toFetch) {
+        expect(toFetch).toBe(testResult);
+    })
+    .fail(getVersionErrorCallback)
+    .fin(done);
+}
+
+// Checks the warnings that were printed by the CLI to ensure that the code is
+// listing the correct reasons for failure. Checks against the global warnings
+// object which is reset before each test
+function checkUnmetRequirements(requirements) {
+    var reqWarnings = [];
+
+    warnings.forEach(function(warning) {
+        var extracted = UNMET_REQ_REGEX.exec(warning);
+        if (extracted) {
+            reqWarnings.push({
+                dependency: extracted[1],
+                installed: extracted[2],
+                required: extracted[3]
+            });
+        }
+    });
+
+    expect(reqWarnings.length).toEqual(requirements.length);
+
+    requirements.forEach(function(requirement) {
+        expect(reqWarnings).toContain(function(extractedWarning) {
+            return  extractedWarning.dependency === requirement.dependency.trim() &&
+                    extractedWarning.installed  === requirement.installed.trim() &&
+                    extractedWarning.required   === requirement.required.trim();
+        }, requirement);
+    });
+}
+
+// Helper functions for creating the requirements objects taken by
+// checkUnmetRequirements()
+function getPlatformRequirement(requirement) {
+    return {
+        dependency: 'cordova-android',
+        installed: '3.1.0',
+        required: requirement
+    };
+}
+
+function getCordovaRequirement(requirement) {
+    return {
+        dependency: 'cordova',
+        installed: cordovaVersion,
+        required: requirement
+    };
+}
+
+function getPluginRequirement(requirement) {
+    return {
+        dependency: 'ca.filmaj.AndroidPlugin',
+        installed: '4.2.0',
+        required: requirement
+    };
+}
+
+// Generates a callback that checks warning messages after the test is complete
+function getWarningCheckCallback(done, requirements) {
+    return function() {
+        checkUnmetRequirements(requirements);
+        expect(getVersionErrorCallback).not.toHaveBeenCalled();
+        done();
+    };
+}
+
+function createTestProject() {
+    // Get the base project
+    shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tempDir);
+    shell.mv(path.join(tempDir, 'base'), project);
+
+    // Copy a platform and a plugin to our sample project
+    shell.cp('-R',
+        path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform),
+        path.join(project, 'platforms'));
+    shell.cp('-R',
+        path.join(__dirname, 'fixtures', 'plugins', 'android'),
+        path.join(project, 'plugins'));
+}
+
+function removeTestProject() {
+    shell.rm('-rf', tempDir);
+}
+
+describe('plugin fetching version selection', function(done) {
+    createTestProject();
+
+    beforeEach(function() {
+        // Adding a matcher for checking the array of warning messages so that
+        // we can have meanigful error messages. Expected is passed because
+        // Jasmine will print it out if the matcher fails
+        this.addMatchers({
+            toContain: function(check, expected) {
+                for(var i = 0; i < this.actual.length; i++) {
+                    if (check(this.actual[i])) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        warnings = [];
+        getVersionErrorCallback = jasmine.createSpy('unexpectedPluginFetchErrorCallback');
+    });
+
+    it('should handle a mix of upper bounds and single versions', function(done) {
+        var testEngine = {
+            '0.0.0' : { 'cordova-android': '1.0.0' },
+            '0.0.2' : { 'cordova-android': '>1.0.0' },
+            '<1.0.0': { 'cordova-android': '<2.0.0' },
+            '1.0.0' : { 'cordova-android': '>2.0.0' },
+            '1.7.0' : { 'cordova-android': '>4.0.0' },
+            '<2.3.0': { 'cordova-android': '<6.0.0' },
+            '2.3.0' : { 'cordova-android': '6.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('6.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.3.0');
+    });
+
+    it('should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function(done) {
+        var testEngine = {
+            '1.0.0' : { 'cordova-android': '>2.0.0' },
+            '1.7.0' : { 'cordova-android': '>4.0.0' },
+            '<2.3.0': {
+                'cordova-android': '<6.0.0',
+                'ca.filmaj.AndroidPlugin': '<1.0.0'
+            },
+            '2.3.0' : { 'cordova-android': '6.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('6.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should apply upper bound engine constraints when there are unspecified constraints above the upper bound', function(done) {
+        var testEngine = {
+            '0.0.0' : {},
+            '2.0.0' : { 'cordova-android': '~5.0.0' },
+            '<1.0.0': { 'cordova-android': '>5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('~5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.7.1');
+    });
+
+    it('should handle the case where there are no constraints for earliest releases', function(done) {
+        var testEngine = {
+            '1.0.0' : { 'cordova-android': '~5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('~5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '0.7.0');
+    });
+
+    it('should handle the case where the lowest version is unsatisfied', function(done) {
+        var testEngine = {
+            '0.0.2' : { 'cordova-android': '~5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('~5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should handle upperbounds if no single version constraints are given', function(done) {
+        var testEngine = {
+            '<1.0.0': { 'cordova-android': '<2.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, []);
+
+        testEngineWithProject(after, testEngine, '2.3.0');
+    });
+
+    it('should apply upper bounds greater than highest version', function(done) {
+        var testEngine = {
+            '0.0.0' : {},
+            '<5.0.0': { 'cordova-android': '<2.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('<2.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should treat empty constraints as satisfied', function(done) {
+        var testEngine = {
+            '1.0.0' : {},
+            '1.1.0' : { 'cordova-android': '>5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('>5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.0.0');
+    });
+
+    it('should ignore an empty cordovaDependencies entry', function(done) {
+        var testEngine = {};
+
+        var after = getWarningCheckCallback(done, []);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should ignore a badly formatted semver range', function(done) {
+        var testEngine = {
+            '1.1.3' : { 'cordova-android': 'badSemverRange' }
+        };
+
+        var after = getWarningCheckCallback(done, []);
+
+        testEngineWithProject(after, testEngine, '2.3.0');
+    });
+
+    it('should respect unreleased versions in constraints', function(done) {
+        var testEngine = {
+            '1.0.0' : { 'cordova-android': '3.1.0' },
+            '1.1.2' : { 'cordova-android': '6.0.0' },
+            '1.3.0' : { 'cordova-android': '6.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('6.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.1.0');
+    });
+
+    it('should respect plugin constraints', function(done) {
+        var testEngine = {
+            '0.0.0' : { 'ca.filmaj.AndroidPlugin': '1.2.0' },
+            '1.1.3' : { 'ca.filmaj.AndroidPlugin': '<5.0.0 || >2.3.0' },
+            '2.3.0' : { 'ca.filmaj.AndroidPlugin': '6.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPluginRequirement('6.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '2.0.0');
+    });
+
+    it('should respect cordova constraints', function(done) {
+        var testEngine = {
+            '0.0.0' : { 'cordova': '>1.0.0' },
+            '1.1.3' : { 'cordova': '<3.0.0 || >4.0.0' },
+            '2.3.0' : { 'cordova': '6.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getCordovaRequirement('6.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.1.0');
+    });
+
+    it('should not include pre-release versions', function(done) {
+        var testEngine = {
+            '0.0.0' : {},
+            '2.0.0' : { 'cordova-android': '>5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('>5.0.0')
+        ]);
+
+        // Should not return 2.0.0-rc.2
+        testEngineWithProject(after, testEngine, '1.7.1');
+    });
+
+    it('should not fail if there is no engine in the npm info', function(done) {
+        plugin.getFetchVersion(project, {
+                version: '2.3.0',
+                name: 'test-plugin',
+                versions: testPluginVersions
+            }, cordovaVersion)
+        .then(function(toFetch) {
+            expect(toFetch).toBe(null);
+        })
+        .fail(getVersionErrorCallback).fin(done);
+    });
+
+    it('should not fail if there is no cordovaDependencies in the engines', function(done) {
+        var after = getWarningCheckCallback(done, []);
+
+        plugin.getFetchVersion(project, {
+                version: '2.3.0',
+                name: 'test-plugin',
+                versions: testPluginVersions,
+                engines: {
+                    'node': '>7.0.0',
+                    'npm': '~2.0.0'
+                }
+            }, cordovaVersion)
+        .then(function(toFetch) {
+            expect(toFetch).toBe(null);
+        })
+        .fail(getVersionErrorCallback).fin(after);
+    });
+
+    it('should handle extra whitespace', function(done) {
+        var testEngine = {
+            '  1.0.0    '   : {},
+            '2.0.0   '      : { ' cordova-android': '~5.0.0   ' },
+            ' <  1.0.0\t'   : { ' cordova-android  ': ' > 5.0.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('~5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.7.1');
+    });
+
+    it('should ignore badly typed version requirement entries', function(done) {
+        var testEngine = {
+            '1.1.0' : ['cordova', '5.0.0'],
+            '1.3.0' : undefined,
+            '1.7.0' : null
+        };
+
+        var after = getWarningCheckCallback(done, []);
+
+        testEngineWithProject(after, testEngine, '2.3.0');
+    });
+
+    it('should ignore badly typed constraint entries', function(done) {
+        var testEngine = {
+            '0.0.2' : { 'cordova': 1 },
+            '0.7.0' : { 'cordova': {}},
+            '1.0.0' : { 'cordova': undefined},
+            '1.1.3' : { 8        : '5.0.0'},
+            '1.3.0' : { 'cordova': [] },
+            '1.7.1' : { 'cordova': null }
+        };
+
+        var after = getWarningCheckCallback(done, []);
+
+        testEngineWithProject(after, testEngine, '2.3.0');
+    });
+
+    it('should ignore bad semver versions', function(done) {
+        var testEngine = {
+            '0.0.0'         : { 'cordova-android': '5.0.0' },
+            'notAVersion'   : { 'cordova-android': '3.1.0' },
+            '^1.1.2'        : { 'cordova-android': '3.1.0' },
+            '<=1.3.0'       : { 'cordova-android': '3.1.0' },
+            '1.0'           : { 'cordova-android': '3.1.0' },
+            2               : { 'cordova-android': '3.1.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('5.0.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should not fail if there are bad semver versions', function(done) {
+        var testEngine = {
+            'notAVersion'   : { 'cordova-android': '3.1.0' },
+            '^1.1.2'        : { 'cordova-android': '3.1.0' },
+            '<=1.3.0'       : { 'cordova-android': '3.1.0' },
+            '1.0.0'         : { 'cordova-android': '~3'    },   // Good semver
+            '2.0.0'         : { 'cordova-android': '5.1.0' },   // Good semver
+            '1.0'           : { 'cordova-android': '3.1.0' },
+            2               : { 'cordova-android': '3.1.0' }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('5.1.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.7.1');
+    });
+
+    it('should properly warn about multiple unmet requirements', function(done) {
+        var testEngine = {
+            '1.7.0' : {
+                'cordova-android'           : '>5.1.0',
+                'ca.filmaj.AndroidPlugin'   : '3.1.0',
+                'cordova'                   : '3.4.2'
+            }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('>5.1.0'),
+            getPluginRequirement('3.1.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.3.0');
+    });
+
+    it('should properly warn about both unmet latest and upper bound requirements', function(done) {
+        var testEngine = {
+            '1.7.0' : { 'cordova-android': '>5.1.0' },
+            '<5.0.0': {
+                'cordova-android'           : '>7.1.0',
+                'ca.filmaj.AndroidPlugin'   : '3.1.0'
+            }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('>5.1.0 AND >7.1.0'),
+            getPluginRequirement('3.1.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, null);
+    });
+
+    it('should not warn about versions past latest', function(done) {
+        var testEngine = {
+            '1.7.0' : { 'cordova-android': '>5.1.0' },
+            '7.0.0': {
+                'cordova-android'           : '>7.1.0',
+                'ca.filmaj.AndroidPlugin'   : '3.1.0'
+            }
+        };
+
+        var after = getWarningCheckCallback(done, [
+            getPlatformRequirement('>5.1.0')
+        ]);
+
+        testEngineWithProject(after, testEngine, '1.3.0');
+    });
+
+    it('clean up after plugin fetch spec', function() {
+        removeTestProject();
+    });
+});

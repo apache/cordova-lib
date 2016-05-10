@@ -12,8 +12,10 @@ install:
   - npm link ../cordova-js
   - npm link ../cordova-common
   - npm link ../cordova-serve
+  - npm link ../cordova-fetch
   - npm install
 
 script:
+  - "(cd ../cordova-common && npm test)"
   - "(cd ../cordova-common && npm test)"
   - "npm run ci"

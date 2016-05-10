@@ -24,6 +24,7 @@ var shell = require('shelljs'),
     fs = require('fs'),
     util = require('../src/cordova/util'),
     events = require('../cordova-lib').events,
+    helpers = require('./helpers'),
     temp = path.join(__dirname, '..', 'temp');
 
 var cwd = process.cwd();
@@ -143,6 +144,24 @@ describe('util module', function() {
             expect(res.indexOf('atari')).toEqual(-1);
         });
     });
+    describe('getInstalledPlatformsWithVersions method', function() {
+        afterEach(function() {
+            shell.rm('-rf', temp);
+        });
+        it('should get the supported platforms in the cordova project dir along with their reported versions', function(done) {
+            var platforms = path.join(temp, 'platforms');
+            var android = path.join(platforms, 'android');
+
+            shell.mkdir('-p', android);
+
+            shell.cp('-R',
+                path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), platforms);
+            util.getInstalledPlatformsWithVersions(temp)
+            .then(function(platformMap) {
+                expect(platformMap['android']).toBe('3.1.0');
+            }).fin(done);
+        });
+    });
     describe('findPlugins method', function() {
         afterEach(function() {
             shell.rm('-rf', temp);
@@ -185,6 +204,7 @@ describe('util module', function() {
             expect(res.indexOf('CVS')).toEqual(-1);
         });
     });
+
     describe('preprocessOptions method', function() {
 
         var isCordova, listPlatforms;

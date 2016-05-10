@@ -20,6 +20,45 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.1.1 (Mar 29, 2016)
+* CB-10961 Error no such file or directory adding ios platform when plugins present or required
+* CB-10908 Reload the config.xml before writing the saved plugin
+
+### 6.1.0 (Mar 17, 2016)
+* CB-10902 updated pinned platforms
+* CB-10808 revert npm install for templates
+* CB-10808 CLI Support templates with subdirectory
+* CB-10880 Removed plugin pinning
+* CB-10679 Improving version choosing logic test coverage
+* CB-10673 add plugin `--force` option.
+* CB-10679 New version choosing logic for plugin add
+* CB-10328 set top-level property when adding new platforms
+* CB-10314 avoid fetching plugins when oldId is already fetched
+* CB-10708 Install/uninstall plugins correctly into CLI project using plugman
+* CB-10462 Get rid of npmconf in favor of npm.
+* CB-10662 Use project's `config.xml` as a fallback for package name
+* CB-10644 Adds deprecation message about old platforms support removal.
+* CB-10519 Wrap all sync calls inside of `cordova.raw` methods into promises
+* CB-10641 Adds tests for order of operations in platform add
+* CB-10641 Run prepare `_after_` plugins were installed
+* CB-10618 Do not call `prepBuildFiles` for `cordova-android@>=5.2.0`.
+* CB-10518 Correct log level and error messages for some cordova errors
+* CB-10550 Fix plugin id mapper not enforced when a version is specified
+* CB-10611 fix `before_plugin_install` hook not disabled with `--nohooks`
+* CB-10235 Added clearer error message for info command.
+* CB-10584 Splashscreen plugin crashes the app on windows 10 when built with browserify
+* CB-10592 Don't quote platform specific args values
+* CB-10482 Remove references to **windows8** from cordova-lib/cli
+* CB-10567 Bubble up `cordova.raw.run()` error to the caller
+* CB-10553 Fix framework tag handler for **Android**
+* CB-10461 `cordova platform ls` should list the versions of platforms pinned
+* CB-10531 Enable coverage reports for cordova-lib
+* CB-10465 Pass correct options to prepare from compile
+* CB-10459 cordova platform list should mark amazon-fireos and wp8 as deprecated
+* CB-10499 `--template` should pull the latest template from npm when version isn't specified
+* CB-10432 Adds e2e test to protect against future regressions.
+* Added node versions matrix to `.travis.yml`.
+
 ### 6.0.0 (Jan 25, 2016)
 * CB-10432 Fix plugin installation for newly added platform
 * CB-10423 allow recursive folder copy skipping whatever .. was
@@ -45,7 +84,7 @@
 * CB-10048 clobbering of `<access>` tags to `ATS` directives
 
 ### 5.4.1 (Nov 19, 2015)
-* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`. 
+* CB-9976 Reinstall plugins for platform if they were installed with `cordova@<5.4.0`.
 * CB-9981 `path.parse` only available on `node 0.12+`.
 * CB-9987 Adds compatibility layer for `cordova.raw.*` methods
 * CB-9975 Fix issue with using `all" as orientation for **iOS**
@@ -61,7 +100,7 @@
 * CB-9675 OSX App Icons are not properly copied.
 * CB-9758 Mobilespec crashes adding plugins on OS X
 * CB-9782 Update create/update signatures for PlatformApi polyfill
-* CB-9815 Engine name="cordova" should check tools version, not platforms. 
+* CB-9815 Engine name="cordova" should check tools version, not platforms.
 * CB-9824 removed plugin download counter code from lib
 * CB-9821 Fix EventEmitter incorrect trace level usages
 * CB-9813 Keep module-to-plugin mapping at hand.
@@ -90,9 +129,9 @@
 * CB-9631 Save plugin to config.xml only if installation succeeds
 * CB-9601 Fix <framework>.versions support on Windows after semver update
 * CB-9617 Fixes incorrect project state after adding/removing plugins
-* CB-9560 Issue using plugin restore for plugins with common dependencies 
+* CB-9560 Issue using plugin restore for plugins with common dependencies
 * CB-8993 Plugin restore ignores search path
-* CB-9587 Check if browser platform added properly before creating parser. 
+* CB-9587 Check if browser platform added properly before creating parser.
 * CB-9604 Fix error adding browser platform with PlatformApi polyfill.
 * CB-9597 Initial Implementation of PlatformApiPoly
 * CB-9354 Fix array merging with complex items
@@ -103,7 +142,7 @@
 
 ### 5.3.1 (Aug 28, 2015)
 * pinned blackberry@3.8.0 in prepartion for its release
-* pinned browser@4.0.0 and windows@4.1.0 
+* pinned browser@4.0.0 and windows@4.1.0
 * CB-9559 Adding a plugin with caret in version results in an error
 * Update cordova-serve required version to 0.1.3.
 * CB-6506 RTC: Add support for OSX (closes #278)
@@ -333,7 +372,7 @@
 * CB-8043 CB-6462 CB-6105 Refactor orientation preference support (close #128)
 * FirefoxOS parser: allow passing in a ConfigParser object
 * Parsers: extend base parser with helper functions
-* CB-8244 android: Have `plugin add --link` create symlinks for `<source-file>`, `<framework>`, etc 
+* CB-8244 android: Have `plugin add --link` create symlinks for `<source-file>`, `<framework>`, etc
 * CB-8244 Pass options object to platform handlers in plugman (commit attempt #2)
 * CB-8226 'cordova platform add' : Look up version in config.xml if no version specified
 * Delete root .npmignore, since there's no node module there

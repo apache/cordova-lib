@@ -35,8 +35,7 @@ var configNormal = {
       lib: {
         www: {
           url: path.join(__dirname, 'fixtures', 'base', 'www'),
-          version: 'testCordovaCreate',
-          id: appName
+          version: 'testCordovaCreate'
         }
       }
     };
@@ -54,8 +53,7 @@ var configGit = {
         www: {
             url: 'https://github.com/apache/cordova-app-hello-world',
             template: true,
-            version: 'not_versioned',
-            id: appName
+            version: 'not_versioned'
         }
     }
 };
@@ -65,8 +63,7 @@ var configNPM = {
         www: {
             template: true,
             url: 'cordova-app-hello-world',
-            version: '',
-            id: appName
+            version: ''
         }
     }
 };
@@ -186,6 +183,102 @@ describe('create end-to-end', function() {
             .then(function() {
                 // Create a real project
                 return cordova.raw.create(project, appId, appName, configNPM);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+    
+    it('should successfully run with template not having a package.json at toplevel', function(done) {
+        // Call cordova create with no args, should return help.
+        var config = {
+            lib: {
+                www: {
+                    template: true,
+                    url: path.join(__dirname, 'fixtures', 'templates', 'nopackage_json'),
+                    version: ''
+                }
+            }
+        };
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, config);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+    
+    it('should successfully run with template having package.json and no sub directory', function(done) {
+        // Call cordova create with no args, should return help.
+        var config = {
+            lib: {
+                www: {
+                    template: true,
+                    url: path.join(__dirname, 'fixtures', 'templates', 'withpackage_json'),
+                    version: ''
+                }
+            }
+        };
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, config);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+    
+    it('should successfully run with template having package.json, and subdirectory, and no package.json in subdirectory', function(done) {
+        // Call cordova create with no args, should return help.
+        var config = {
+            lib: {
+                www: {
+                    template: true,
+                    url: path.join(__dirname, 'fixtures', 'templates', 'withsubdirectory'),
+                    version: ''
+                }
+            }
+        };
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, config);
+            })
+            .then(checkProject)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+    
+    it('should successfully run with template having package.json, and subdirectory, and package.json in subdirectory', function(done) {
+        // Call cordova create with no args, should return help.
+        var config = {
+            lib: {
+                www: {
+                    template: true,
+                    url: path.join(__dirname, 'fixtures', 'templates', 'withsubdirectory_package_json'),
+                    version: ''
+                }
+            }
+        };
+        Q()
+            .then(function() {
+                // Create a real project
+                return cordova.raw.create(project, appId, appName, config);
             })
             .then(checkProject)
             .fail(function(err) {

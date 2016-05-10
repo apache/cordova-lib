@@ -160,5 +160,33 @@ describe('CordovaLogger class', function() {
                 expect(logger.stderrCursor.write.calls[0].args[0]).toBe('Error: error_message');
             });
         });
+
+        describe('adjustLevel method', function () {
+            it('should properly adjust log level', function () {
+                var resetLogLevel = function() {
+                    logger.setLevel('normal');
+                };
+
+                resetLogLevel();
+                expect(logger.adjustLevel({verbose: true}).logLevel).toEqual('verbose');
+
+                resetLogLevel();
+                expect(logger.adjustLevel(['--verbose']).logLevel).toEqual('verbose');
+
+                resetLogLevel();
+                expect(logger.adjustLevel({silent: true}).logLevel).toEqual('error');
+
+                resetLogLevel();
+                expect(logger.adjustLevel(['--silent']).logLevel).toEqual('error');
+
+                resetLogLevel();
+                expect(logger.adjustLevel({verbose: true, silent: true}).logLevel).toEqual('verbose');
+
+                resetLogLevel();
+                expect(logger.adjustLevel(['--verbose', '--silent']).logLevel).toEqual('verbose');
+
+                resetLogLevel();
+            });
+        });
     });
 });

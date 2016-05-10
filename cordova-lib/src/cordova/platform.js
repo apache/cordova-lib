@@ -19,6 +19,7 @@
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
+    prepare           = require('./prepare'),
     cordova_util      = require('./util'),
     ConfigParser      = require('cordova-common').ConfigParser,
     fs                = require('fs'),
@@ -36,6 +37,8 @@ var config            = require('./config'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
+    fetch             = require('cordova-fetch'),
+    npmUninstall         = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -181,6 +184,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
 
                 return promise()
+                .then(function () {
+                    return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                })
                 .then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
@@ -253,6 +259,21 @@ function getSpecString(spec) {
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
+        if (opts.fetch) {
+            //append cordova to platform
+            if(platform in platforms) {
+                target = 'cordova-'+target;
+            }
+
+            //gitURLs don't supply a platform, it equals null
+            if(!platform) {
+                target = version;
+            }
+
+            events.emit('log', 'Using cordova-fetch for '+ target);
+            return fetch(target, projectRoot, opts);
+        }
+
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             var parts = version.split('#');
@@ -352,14 +373,24 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing ' + target + ' from config.xml file ...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-        });
-    }
+            });
+        }
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
             platformMetadata.remove(projectRoot, target);
         });
+    }).then(function() {
+        //Remove from node_modules if it exists and --fetch was used
+        if(opts.fetch) {
+            targets.forEach(function(target) {
+                if(target in platforms) {
+                    target = 'cordova-'+target;
+                }
+                return npmUninstall(target, projectRoot, opts);
+            });
+        }
     }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
@@ -492,26 +523,21 @@ function check(hooksRunner, projectRoot) {
 }
 
 function list(hooksRunner, projectRoot, opts) {
-    var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
     return hooksRunner.fire('before_platform_ls', opts)
     .then(function() {
-        // Acquire the version number of each platform we have installed, and output that too.
-        return Q.all(platforms_on_fs.map(function(p) {
-            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-            .then(function(v) {
-                if (!v) return p;
-                return p + ' ' + v;
-            }, function(v) {
-                return p + ' broken';
-            });
-        }));
-    }).then(function(platformsText) {
+        return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
+    }).then(function(platformMap) {
+        var platformsText = [];
+        for (var plat in platformMap) {
+            platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
+        }
+
         platformsText = addDeprecatedInformationToPlatforms(platformsText);
         var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
-            return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
+            return !platformMap[p]; // Only those not already installed.
         });
 
         available = available.map(function (p){
@@ -644,6 +670,9 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
             plugin = path.basename(plugin);
 
+            // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
+            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
+
             var options = {
                 searchpath: opts.searchpath,
                 // Set up platform to install asset files/js modules to <platform>/platform_www dir
@@ -654,11 +683,11 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // NOTE: there is another code path for plugin installation (see CB-10274 and the
                 // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
                 // specify the option below in both places
-                usePlatformWww: true
+                usePlatformWww: true,
+                is_top_level: pluginMetadata.is_top_level,
+                force: opts.force
             };
 
-            // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
-            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
             var variables = pluginMetadata && pluginMetadata.variables;
             if (variables) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
