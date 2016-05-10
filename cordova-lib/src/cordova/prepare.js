@@ -38,11 +38,12 @@ function prepare(options) {
         var projectRoot = cordova_util.cdProjectRoot();
         var config_json = config.read(projectRoot);
         options = options || { verbose: false, platforms: [], options: {} };
-
+        options.save = options.save || false;
+        options.fetch = options.fetch || false;
         var hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_prepare', options)
         .then(function(){
-            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath });
+            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath, fetch : options.fetch, save : options.save });
         })
         .then(function(){
             options = cordova_util.preProcessOptions(options);

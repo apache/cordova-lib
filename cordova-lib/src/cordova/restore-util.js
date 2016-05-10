@@ -120,7 +120,9 @@ function installPluginsFromConfigXML(args) {
         // Add feature preferences as CLI variables if have any
         var options = {
             cli_variables: pluginEntry.variables,
-            searchpath: args.searchpath
+            searchpath: args.searchpath,
+            fetch: args.fetch || false,
+            save: args.save || false
         };
         var plugin = require('./plugin');
         return plugin('add', installFrom, options);

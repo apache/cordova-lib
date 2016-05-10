@@ -196,7 +196,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     // Call prepare for the current platform.
                     var prepOpts = {
                         platforms :[platform],
-                        searchpath :opts.searchpath
+                        searchpath :opts.searchpath,
+                        fetch: opts.fetch || false,
+                        save: opts.save || false
                     };
                     return require('./cordova').raw.prepare(prepOpts);
                 })
@@ -685,7 +687,9 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 // specify the option below in both places
                 usePlatformWww: true,
                 is_top_level: pluginMetadata.is_top_level,
-                force: opts.force
+                force: opts.force,
+                fetch: opts.fetch || false,
+                save: opts.save || false
             };
 
             var variables = pluginMetadata && pluginMetadata.variables;
@@ -693,7 +697,6 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                 options.cli_variables = variables;
             }
-
             return plugman.raw.install(platform, output, plugin, plugins_dir, options);
         });
     }, Q());
