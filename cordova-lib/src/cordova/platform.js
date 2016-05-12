@@ -372,7 +372,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 var platformName = target.split('@')[0];
                 var xml = cordova_util.projectConfig(projectRoot);
                 var cfg = new ConfigParser(xml);
-                events.emit('log', 'Removing platform ' + target + ' from config.xml file ...');
+                events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                 cfg.removeEngine(platformName);
                 cfg.write();
             });
@@ -380,7 +380,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
-            events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file ...');
+            events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
             platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {

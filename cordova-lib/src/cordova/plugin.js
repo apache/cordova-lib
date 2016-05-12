@@ -281,12 +281,12 @@ module.exports = function plugin(command, targets, opts) {
                         }).then(function(){
                             //remove plugin from config.xml
                             if(saveToConfigXmlOn(config_json, opts)){
+                                events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
                                 var configPath = cordova_util.projectConfig(projectRoot);
                                 if(fs.existsSync(configPath)){//should not happen with real life but needed for tests
                                     var configXml = new ConfigParser(configPath);
                                     configXml.removePlugin(target);
                                     configXml.write();
-                                    events.emit('results', 'config.xml entry for plugin ' + target + ' was removed');
                                 }
                             }
                         })
