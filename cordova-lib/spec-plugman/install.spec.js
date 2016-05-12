@@ -277,7 +277,7 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
-                    expect(satisfies).toHaveBeenCalledWith('2.5.0','>=1.0.0');
+                    expect(satisfies).toHaveBeenCalledWith('2.5.0','>=1.0.0', true);
                     done();
                 });
             });
@@ -286,7 +286,7 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
-                    expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1','>=1.0.0');
+                    expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1','>=1.0.0', true);
                     done();
                 });
             });
@@ -295,23 +295,23 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
-                    expect(satisfies).toHaveBeenCalledWith('3.1.0','>=3.1.0');
+                    expect(satisfies).toHaveBeenCalledWith('3.1.0','>=3.1.0', true);
                     done();
                 });
             });
             it('should check platform sdk version if specified', function(done) {
-                var cordovaVersion = require('../package.json').version.replace('-dev', '');
+                var cordovaVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
                 exec.andCallFake(function(cmd, cb) { cb(null, '18\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
                     expect(satisfies.calls.length).toBe(3);
                     // <engine name="cordova" VERSION=">=3.0.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=3.0.0' ]);
+                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=3.0.0', true ]);
                     // <engine name="cordova-android" VERSION=">=3.1.0"/>
-                    expect(satisfies.calls[1].args).toEqual([ '18.0.0', '>=3.1.0' ]);
+                    expect(satisfies.calls[1].args).toEqual([ '18.0.0', '>=3.1.0', true ]);
                     // <engine name="android-sdk" VERSION=">=18"/>
-                    expect(satisfies.calls[2].args).toEqual([ '18.0.0','>=18' ]);
+                    expect(satisfies.calls[2].args).toEqual([ '18.0.0','>=18', true ]);
                     done();
                 });
             });
@@ -319,17 +319,17 @@ describe('install', function() {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function() {
-                    var plugmanVersion = require('../package.json').version.replace('-dev', '');
-                    var cordovaVersion = require('../package.json').version.replace('-dev', '');
+                    var plugmanVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
+                    var cordovaVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
                     expect(satisfies.calls.length).toBe(4);
                     // <engine name="cordova" version=">=2.3.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=2.3.0' ]);
+                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=2.3.0', true ]);
                     // <engine name="cordova-plugman" version=">=0.10.0" />
-                    expect(satisfies.calls[1].args).toEqual([ plugmanVersion, '>=0.10.0' ]);
+                    expect(satisfies.calls[1].args).toEqual([ plugmanVersion, '>=0.10.0', true ]);
                     // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />
-                    expect(satisfies.calls[2].args).toEqual([ null, '>=1.0.0' ]);
+                    expect(satisfies.calls[2].args).toEqual([ null, '>=1.0.0', true ]);
                     // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
-                    expect(satisfies.calls[3].args).toEqual([ null, '>=3.0.0' ]);
+                    expect(satisfies.calls[3].args).toEqual([ null, '>=3.0.0', true ]);
                     done();
                 });
             });
@@ -337,7 +337,7 @@ describe('install', function() {
                 install('blackberry10', project, plugins['com.cordova.engine'])
                 .then(fail)
                 .fail(function () {
-                    expect(satisfies).not.toHaveBeenCalledWith('','>=3.0.0');
+                    expect(satisfies).not.toHaveBeenCalledWith('','>=3.0.0', true);
                 })
                 .fin(done);
             });
