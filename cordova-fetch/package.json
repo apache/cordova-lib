@@ -1,6 +1,6 @@
 {
   "name": "cordova-fetch",
-  "version": "1.0.0-dev",
+  "version": "1.0.0",
   "description": "Apache Cordova fetch module. Fetches from git and npm.",
   "main": "index.js",
   "repository": {
@@ -21,7 +21,7 @@
     "email": "dev@cordova.apache.org"
   },
   "dependencies": {
-    "cordova-common": "^1.0.0",
+    "cordova-common": "^1.3.0",
     "dependency-ls": "^1.0.0",
     "is-url": "^1.2.1",
     "q": "^1.4.1",
