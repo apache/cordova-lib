@@ -20,6 +20,24 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.2.0 (May 12, 2016)
+* CB-11259 Improving prepare and build logging
+* Resolve npm run jshint failure due to npm/npm#10343
+* CB-11200 Bump `node-xcode` dependency and update tests to pass
+* CB-11240 added `--fetch` support to `cordova prepare`
+* CB-9858 merging initial `--fetch` work for plugin and platform fetching
+* CB-11194 Improve cordova load time
+* CB-11174 Resolve `symlinked` path before getting `PlatformApi` instance
+* CB-11036 `args.slice is not a function` when building **Windows** with other platform
+* CB-10761 Resore plugins saved without spec attribute
+* CB-10981 Remove `cordova-common` from bundled dependencies
+* CB-11042 Add cordova run option to skip prepare
+* CB-11022 Respect result returned by plugin installation and skip prepare if it is truthy
+* CB-10975 Allow plugin path to be relative to current directory
+* CB-10986 Adding support for scoped npm package plugins
+* CB-10770 Remove `cache-min` when adding platforms
+* CB-10921 Emit warning in case of plugin restoration failure
+
 ### 6.1.1 (Mar 29, 2016)
 * CB-10961 Error no such file or directory adding ios platform when plugins present or required
 * CB-10908 Reload the config.xml before writing the saved plugin
