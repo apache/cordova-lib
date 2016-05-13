@@ -21,6 +21,6 @@
 # Cordova-fetch Release Notes
 
 ### 1.0.0 (May 12, 2016)
-* CB-9858 Added jasmine tests
-* CB-9858 Added `npm uninstall` method to cordova-fetch
-* CB-9858 Initial implementation of `cordova-fetch` module
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) Added jasmine tests
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) Added `npm uninstall` method to cordova-fetch
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) Initial implementation of `cordova-fetch` module
