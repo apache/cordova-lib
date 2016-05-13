@@ -298,3 +298,33 @@ describe('fetch failure with git subdirectory', function () {
         .fin(done);
     }, 30000);
 });
+
+describe('scoped plugin fetch/uninstall tests via npm', function () {
+
+    var tmpDir = helpers.tmpDir('scoped_plug_fetch');
+    var opts = {};
+
+    beforeEach(function() {
+        process.chdir(tmpDir);
+    });
+    
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('should fetch a scoped plugin from npm', function(done) {       
+        fetch('@stevegill/cordova-plugin-device', tmpDir, opts)
+        .then(function(result) {
+            var pkgJSON = require(path.join(result,'package.json'));
+            expect(result).toBeDefined();
+            expect(fs.existsSync(result)).toBe(true);
+            expect(pkgJSON.name).toBe('@stevegill/cordova-plugin-device');
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 30000);
+});
