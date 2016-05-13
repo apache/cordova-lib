@@ -20,6 +20,12 @@
 -->
 # Cordova-common Release Notes
 
+### 1.3.0 (May 12, 2016)
+* CB-11259: Improving prepare and build logging
+* CB-11194 Improve cordova load time
+* CB-1117 Add `FileUpdater` module to `cordova-common`.
+* CB-11131 Fix `TypeError: message.toUpperCase` is not a function in `CordovaLogger`
+
 ### 1.2.0 (Apr 18, 2016)
 * CB-11022 Save modulesMetadata to both www and platform_www when necessary
 * CB-10833 Deduplicate common logic for plugin installation/uninstallation
