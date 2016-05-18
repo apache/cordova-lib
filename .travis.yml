@@ -23,5 +23,5 @@ install:
 
 script:
   - "(cd ../cordova-common && npm test)"
-  - "(cd ../cordova-common && npm test)"
+  - "(cd ../cordova-fetch && npm test)"
   - "npm run ci"
