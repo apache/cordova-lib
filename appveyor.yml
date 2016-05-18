@@ -7,6 +7,10 @@ install:
   - npm link ../cordova-js
   - npm link ../cordova-common
   - npm link ../cordova-serve
+  - cd ../cordova-fetch
+  - npm link ../cordova-common
+  - npm install
+  - cd ../cordova-lib
   - npm link ../cordova-fetch
   - npm install
 

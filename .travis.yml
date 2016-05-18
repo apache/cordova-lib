@@ -13,6 +13,7 @@ install:
   - npm link ../cordova-js
   - npm link ../cordova-common
   - npm link ../cordova-serve
+  - (cd ../cordova-fetch && npm link ../cordova-common && npm install)
   - npm link ../cordova-fetch
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
