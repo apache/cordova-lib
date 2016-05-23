@@ -41,6 +41,9 @@ function handleRoot(request, response, next) {
 
     response.writeHead(200, {'Content-Type': 'text/html'});
     var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
+    var contentNode = config.doc.find('content');
+    var contentSrc = contentNode && contentNode.attrib.src || 'index.html';
+
     response.write('<html><head><title>' + config.name() + '</title></head><body>');
     response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
     ['name', 'packageName', 'version'].forEach(function (c) {
@@ -50,7 +53,7 @@ function handleRoot(request, response, next) {
     response.write('<h3>Platforms</h3><ul>');
     Object.keys(platforms).forEach(function (platform) {
         if (installedPlatforms.indexOf(platform) >= 0) {
-            response.write('<li><a href="' + platform + '/www/">' + platform + '</a></li>\n');
+            response.write('<li><a href="' + platform + '/www/' + contentSrc + '">' + platform + '</a></li>\n');
         } else {
             response.write('<li><em>' + platform + '</em></li>\n');
         }
