@@ -93,6 +93,28 @@ function getPlatformHandler(platform, wwwDir, configXml) {
     };
 }
 
+// https://issues.apache.org/jira/browse/CB-11274
+// Use referer url to redirect absolute urls to the requested platform resources
+// so that an URL is resolved against that platform www directory.
+function getAbsolutePathHandler() {
+    return function (request, response, next) {
+        if (!request.headers.referer) {
+            next();
+            return;
+        }
+
+        var pathname = url.parse(request.headers.referer).pathname;
+        var platform = pathname.split('/')[1];
+
+        if (installedPlatforms.indexOf(platform) >= 0 &&
+            request.originalUrl.indexOf(platform) === -1) {
+            response.redirect('/' + platform + '/www' + request.originalUrl);
+        } else {
+            next();
+        }
+    };
+}
+
 function calculateMd5(fileName) {
     var md5sum,
         BUF_LENGTH = 64*1024,
@@ -133,6 +155,8 @@ module.exports = function server(port, opts) {
                 server.app.use('/' + platform + '/www', serve.static(locations.www));
                 server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
             });
+
+            server.app.get('/*', getAbsolutePathHandler());
             server.app.get('*', handleRoot);
 
             server.launchServer({port: port, events: events});
