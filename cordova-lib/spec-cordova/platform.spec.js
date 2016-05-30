@@ -207,22 +207,22 @@ describe('platform add plugin rm end-to-end', function () {
     var tmpDir = helpers.tmpDir('plugin_rm_test');
     var project = path.join(tmpDir, 'hello');
     var pluginsDir = path.join(project, 'plugins');
-    
+
     beforeEach(function() {
         process.chdir(tmpDir);
     });
-    
+
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
 
     it('should remove dependency when removing parent plugin', function(done) {
-        
+
         cordova.raw.create('hello')
         .then(function() {
             process.chdir(project);
-            return cordova.raw.platform('add', 'ios');
+            return cordova.raw.platform('add', 'ios@latest');
         })
         .then(function() {
             return cordova.raw.plugin('add', 'cordova-plugin-media');
@@ -230,7 +230,7 @@ describe('platform add plugin rm end-to-end', function () {
         .then(function() {
             expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
             expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-            return cordova.raw.platform('add', 'android');
+            return cordova.raw.platform('add', 'android@latest');
         })
         .then(function() {
             expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
@@ -255,18 +255,18 @@ describe('platform add and remove --fetch', function () {
     var project = path.join(tmpDir, 'helloFetch');
     var platformsDir = path.join(project, 'platforms');
     var nodeModulesDir = path.join(project, 'node_modules');
-    
+
     beforeEach(function() {
         process.chdir(tmpDir);
     });
-    
+
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
 
     it('should add and remove platform from node_modules directory', function(done) {
-        
+
         cordova.raw.create('helloFetch')
         .then(function() {
             process.chdir(project);
@@ -277,7 +277,7 @@ describe('platform add and remove --fetch', function () {
             expect(path.join(platformsDir, 'ios')).toExist();
             return cordova.raw.platform('add', 'android', {'fetch':true});
         })
-        .then(function() {    
+        .then(function() {
             expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
             expect(path.join(platformsDir, 'android')).toExist();
             //Tests finish before this command finishes resolving
@@ -306,18 +306,18 @@ describe('plugin add and rm end-to-end --fetch', function () {
     var tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
     var project = path.join(tmpDir, 'hello3');
     var pluginsDir = path.join(project, 'plugins');
-    
+
     beforeEach(function() {
         process.chdir(tmpDir);
     });
-    
+
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
 
     it('should remove dependency when removing parent plugin', function(done) {
-        
+
         cordova.raw.create('hello3')
         .then(function() {
             process.chdir(project);
