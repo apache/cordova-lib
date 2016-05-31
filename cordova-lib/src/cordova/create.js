@@ -27,6 +27,7 @@ var path          = require('path'),
     CordovaError  = require('cordova-common').CordovaError,
     ConfigParser  = require('cordova-common').ConfigParser,
     cordova_util  = require('./util'),
+    fetch         = require('cordova-fetch'),
     validateIdentifier = require('valid-identifier');
 
 /**
@@ -35,15 +36,15 @@ var path          = require('path'),
  * @optionalId - app id. Optional.
  * @optionalName - app name. Optional.
  * @cfg - extra config to be saved in .cordova/config.json
+ * @fetchOpt- boolean for --fetch. Optional(?)
  **/
 // Returns a promise.
 module.exports = create;
-function create(dir, optionalId, optionalName, cfg) {
+function create(dir, optionalId, optionalName, cfg, fetchOpt) {
     var argumentCount = arguments.length;
-
+    fetchOpt = fetchOpt || false;
     return Q.fcall(function() {
-        // Lets check prerequisites first
-
+        // Lets check prerequisites first; NOTE: argCount is always 5 when run with cli
         if (argumentCount == 3) {
           cfg = optionalName;
           optionalName = undefined;
@@ -178,11 +179,18 @@ function create(dir, optionalId, optionalName, cfg) {
             return cfg.lib.www.url;
         } else {
             events.emit('verbose', 'Copying assets."');
-
             isGit = cfg.lib.www.template && cordova_util.isUrl(cfg.lib.www.url);
             isNPM = cfg.lib.www.template && (cfg.lib.www.url.indexOf('@') > -1 || !fs.existsSync(path.resolve(cfg.lib.www.url)));
 
-            if (isGit) {
+            //If --fetch flag is passed, use cordova fetch to obtain the npm or git template
+            if((isGit || isNPM) && fetchOpt) {
+                //Saved to .Cordova folder (ToDo: Delete installed template after using)
+                var tempDest = cordova_util.globalConfig;
+                events.emit('log', 'Using cordova-fetch for '+ cfg.lib.www.url);
+                return fetch(cfg.lib.www.url, tempDest, {});
+            //Otherwise use remote-load to get git template
+            } else if (isGit) {
+
                 parseArr = cfg.lib.www.url.split('#');
                 gitURL = parseArr[0];
                 branch = parseArr[1];
@@ -194,6 +202,7 @@ function create(dir, optionalId, optionalName, cfg) {
                         return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using git: ' + err.message));
                     }
                 );
+            //Otherwise use remote-load to get npm template
             } else if (isNPM) {
                 events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using npm...');
 
@@ -213,24 +222,24 @@ function create(dir, optionalId, optionalName, cfg) {
                         return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using npm: ' + err.message));
                     }
                 );
+            //If assets are not online, resolve as a relative path on local computer
             } else {
                 cfg.lib.www.url = path.resolve(cfg.lib.www.url);
 
                 return Q(cfg.lib.www.url);
             }
         }
-    })
-    .then(function(input_directory) {
+    }).then(function(input_directory) {
         var import_from_path = input_directory;
-
-        //handle when input wants to specify sub-directory
+        //handle when input wants to specify sub-directory (specified in index.js); 
+        //
         try {
             var templatePkg = require(input_directory);
             if (templatePkg && templatePkg.dirname){
                 import_from_path = templatePkg.dirname;
             }
         } catch (e) {
-            events.emit('verbose', 'Can not load template package.json using directory ' + input_directory);
+            events.emit('verbose', 'index.js does not specific valid sub-directory: ' + input_directory);
         }
 
         if (!fs.existsSync(import_from_path)) {
@@ -244,7 +253,6 @@ function create(dir, optionalId, optionalName, cfg) {
         };
 
         // Keep going into child "www" folder if exists in stock app package.
-        // why?
         while (fs.existsSync(path.join(paths.www, 'www'))) {
             paths.root = paths.www;
             paths.www = path.join(paths.root, 'www');
