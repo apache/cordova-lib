@@ -11,10 +11,9 @@ install:
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-lib
   - npm link ../cordova-js
-  - npm link ../cordova-common
+  - (cd ../cordova-common && npm install && npm link)
+  - npm link cordova-common
   - npm link ../cordova-serve
-  - (cd ../cordova-fetch && npm link ../cordova-common && npm install)
-  - npm link ../cordova-fetch
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
   # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency
@@ -23,5 +22,4 @@ install:
 
 script:
   - "(cd ../cordova-common && npm test)"
-  - "(cd ../cordova-fetch && npm test)"
   - "npm run ci"

@@ -299,7 +299,7 @@ describe('fetch failure with git subdirectory', function () {
     }, 30000);
 });
 
-describe('scoped plugin fetch/uninstall tests via npm', function () {
+/*describe('scoped plugin fetch/uninstall tests via npm', function () {
 
     var tmpDir = helpers.tmpDir('scoped_plug_fetch');
     var opts = {};
@@ -327,4 +327,4 @@ describe('scoped plugin fetch/uninstall tests via npm', function () {
         })
         .fin(done);
     }, 30000);
-});
+});*/
