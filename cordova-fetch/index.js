@@ -151,7 +151,11 @@ function trimID(target) {
     //strip away everything after '@'
     if(target.indexOf('@') != -1) {
         parts = target.split('@');
-        target = parts[0];
+        if (parts.length > 2) {
+            target = '@' + parts[1];
+        } else {
+            target = parts[0];
+        }
     }        
     
     return target;
