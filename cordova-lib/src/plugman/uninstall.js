@@ -269,7 +269,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         if(options.force) {
             events.emit('warn', msg + ' but forcing removal');
         } else {
-            return Q.reject( new CordovaError(msg + ', skipping uninstallation.') );
+            return Q.reject( new CordovaError(msg + ', skipping uninstallation. (try --force if trying to update)') );
         }
     }
 
