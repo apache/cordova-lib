@@ -149,9 +149,11 @@ function trimID(target) {
     }
     
     //strip away everything after '@'
+    //also support scoped packages
     if(target.indexOf('@') != -1) {
         parts = target.split('@');
-        if (parts.length > 2) {
+        if (parts.length > 1) {
+            //scoped package
             target = '@' + parts[1];
         } else {
             target = parts[0];
@@ -179,7 +181,6 @@ function getPath(id, dest) {
         return finalDest;
     } else return Q.reject(new CordovaError('Failed to get absolute path to installed module'));
 }
-
 
 /*
  * Checks to see if npm is installed on the users system
