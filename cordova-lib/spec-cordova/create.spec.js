@@ -190,7 +190,7 @@ describe('create end-to-end', function() {
             })
             .fin(done);
     });
-
+    /*
     it('should successfully run with Git URL --fetch', function(done) {
         // Call cordova create with no args, should return help.
         Q()
@@ -219,7 +219,7 @@ describe('create end-to-end', function() {
                 expect(err).toBeUndefined();
             })
             .fin(done);
-    });
+    });*/
     
     it('should successfully run with template not having a package.json at toplevel', function(done) {
         // Call cordova create with no args, should return help.
