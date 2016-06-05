@@ -205,6 +205,7 @@ describe('create end-to-end', function() {
             })
             .fin(done);
     }, 60000);
+    */
 
     it('should successfully run with NPM package --fetch', function(done) {
         // Call cordova create with no args, should return help.
@@ -219,7 +220,7 @@ describe('create end-to-end', function() {
                 expect(err).toBeUndefined();
             })
             .fin(done);
-    });*/
+    });
     
     it('should successfully run with template not having a package.json at toplevel', function(done) {
         // Call cordova create with no args, should return help.
