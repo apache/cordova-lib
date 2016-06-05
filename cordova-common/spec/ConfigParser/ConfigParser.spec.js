@@ -83,7 +83,20 @@ describe('config.xml parser', function () {
                 cfg.setName('this.is.bat.country');
                 expect(cfg.name()).toEqual('this.is.bat.country');
             });
+
+            describe('short name', function() {
+                it('should default to the app name', function() {
+                    expect(cfg.shortName()).toEqual('Hello Cordova');
+                });
+
+                it('should allow setting the app short name', function() {
+                    cfg.setShortName('Hi CDV');
+                    expect(cfg.name()).toEqual('Hello Cordova');
+                    expect(cfg.shortName()).toEqual('Hi CDV');
+                });
+            });
         });
+
         describe('preference', function() {
             it('Test 010 : should return the value of a global preference', function() {
                 expect(cfg.getPreference('fullscreen')).toEqual('true');
