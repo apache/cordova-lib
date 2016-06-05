@@ -152,7 +152,7 @@ function trimID(target) {
     //also support scoped packages
     if(target.indexOf('@') != -1) {
         parts = target.split('@');
-        if (parts.length > 1) {
+        if (parts.length > 1 && parts[0] === '') {
             //scoped package
             target = '@' + parts[1];
         } else {
