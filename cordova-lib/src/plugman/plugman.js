@@ -109,7 +109,8 @@ plugman.commands =  {
             www_dir: cli_opts.www,
             searchpath: cli_opts.searchpath,
             link: cli_opts.link,
-            projectRoot: cli_opts.project
+            projectRoot: cli_opts.project,
+            force: cli_opts.force || false
         };
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {

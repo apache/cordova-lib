@@ -19,7 +19,10 @@
 
 /* jshint sub:true */
 
-var install = require('../src/plugman/install'),
+var helpers = require('../spec-cordova/helpers'),
+    path = require('path'),
+    cordova = require('../src/cordova/cordova'),
+    install = require('../src/plugman/install'),
     actions = require('cordova-common').ActionStack,
     xmlHelpers = require('cordova-common').xmlHelpers,
     et      = require('elementtree'),
@@ -57,7 +60,12 @@ var install = require('../src/plugman/install'),
         'B' : path.join(plugins_dir, 'dependencies', 'B'),
         'C' : path.join(plugins_dir, 'dependencies', 'C'),
         'F' : path.join(plugins_dir, 'dependencies', 'F'),
-        'G' : path.join(plugins_dir, 'dependencies', 'G')
+        'G' : path.join(plugins_dir, 'dependencies', 'G'),
+        'I' : path.join(plugins_dir, 'dependencies', 'I'),
+        'C@1.0.0' : path.join(plugins_dir, 'dependencies', 'C@1.0.0'),
+        'Test1' : path.join(plugins_dir, 'dependencies', 'Test1'),
+        'Test2' : path.join(plugins_dir, 'dependencies', 'Test2'),
+        'Test3' : path.join(plugins_dir, 'dependencies', 'Test3')
     },
     promise,
     results = {},
@@ -89,7 +97,6 @@ var fake = {
         'dependencies' : function(id, dir) {
             if(id == plugins['A'])
                 return Q(id); // full path to plugin
-
             return Q( path.join(plugins_dir, 'dependencies', id) );
         }
     }
@@ -365,6 +372,23 @@ describe('install', function() {
                 });
             });
 
+            it('should install specific version of dependency', function() {
+                // Plugin I depends on C@1.0.0
+                runs(function() {
+                    installPromise( install('android', project, plugins['I']) );
+                });
+                waitsFor(function() { return done; }, 'promise never resolved', 200);
+                runs(function() {
+                    var install = common.spy.getInstall(emit);
+                    expect(fetchSpy).toHaveBeenCalledWith('C@1.0.0', jasmine.any(String), jasmine.any(Object));
+                    expect(install).toEqual([
+                        'Install start for "C" on android.',
+                        'Install start for "I" on android.'
+                    ]);
+                });
+            });
+
+
             it('should install any dependent plugins if missing', function() {
                 runs(function() {
                     installPromise( install('android', project, plugins['A']) );
@@ -571,6 +595,116 @@ describe('install', function() {
                 });
         });
     });
+});
+
+describe('end-to-end plugin dependency tests', function() {
+    var tmpDir, project, pluginsDir;
+
+    beforeEach(function() {
+        tmpDir = helpers.tmpDir('plugin_dependency_test');
+        project = path.join(tmpDir, 'hello3');
+        pluginsDir = path.join(project, 'plugins');
+        process.chdir(tmpDir);
+    });
+
+    afterEach(function() {
+
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('should fail if dependency already installed is wrong version', function(done) {
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'android', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'cordova-plugin-file', {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.plugin('add', plugins['Test1'], {'fetch': true});
+        })
+        .fail(function(err) {
+            expect(err.message).toContain('does not satisfy dependency plugin requirement');
+        })
+        .fin(done);
+    }, 60000);
+
+    it('should pass if dependency already installed is wrong version with --force', function(done) {
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'android', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'cordova-plugin-file', {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.plugin('add', plugins['Test1'], {'fetch': true, 'force':true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'Test1')).toExist();
+        })
+        .fail(function(err) {
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 60000);
+
+
+    it('should pass if dependency already installed is same major version (if specific version is specified)', function(done) {
+        //Test1 requires cordova-plugin-file version 2.0.0 (which should automatically turn into ^2.0.0); we'll install version 2.1.0
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'android', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'cordova-plugin-file@2.1.0', {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            return cordova.raw.plugin('add', plugins['Test1'], {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'Test1')).toExist();
+        })
+        .fail(function(err) {
+            //console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 60000);
+
+    it('should handle two plugins with same dependent plugin', function(done) {
+        //Test1 and Test2 have compatible dependencies on cordova-plugin-file
+        //Test1 and Test3 have incompatible dependencies on cordova-plugin-file
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'android', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', plugins['Test1'], {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'Test1')).toExist();
+            return cordova.raw.plugin('add', plugins['Test2'], {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', plugins['Test3'], {'fetch': true});
+        })
+        .fail(function(err) {
+            expect(path.join(pluginsDir, 'Test2')).toExist();
+            expect(path.join(pluginsDir, 'Test3')).not.toExist();
+            expect(err.message).toContain('does not satisfy dependency plugin requirement');
+        })
+        .fin(done);
+    }, 60000);
 });
 
 describe('end', function() {

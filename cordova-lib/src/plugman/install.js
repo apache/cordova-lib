@@ -124,7 +124,6 @@ function possiblyFetch(id, plugins_dir, options) {
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
-
     return plugman.raw.fetch(id, plugins_dir, opts);
 }
 
@@ -420,7 +419,8 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
             if(error === 'skip') {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
-                events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\':' + error.stack);
+                events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\': ' + error.stack);
+                shell.rm('-rf', pluginInfo.dir);
                 throw error;
             }
         }
@@ -567,15 +567,33 @@ function tryFetchDependency(dep, install, options) {
 function installDependency(dep, install, options) {
 
     var opts;
-
     dep.install_dir = path.join(install.plugins_dir, dep.id);
+    events.emit('verbose', 'Requesting plugin "' + (dep.version? dep.id+'@'+dep.version : dep.id) + '".' );
     if ( fs.existsSync(dep.install_dir) ) {
-        events.emit('verbose', 'Plugin dependency "' + dep.id + '" already fetched, using that version.');
+        var pluginInfo = new PluginInfo(dep.install_dir);
+        var version_installed = pluginInfo.version;
+        var version_required = dep.version;
+
+        if (Number(dep.version.replace('.',''))) {
+            version_required = '^' + dep.version;
+        }
+        if (options.force || 
+            semver.satisfies(version_installed, version_required, /*loose=*/true) || 
+            version_required === null || 
+            version_required === undefined ) {
+            events.emit('log', 'Plugin dependency "' + (version_installed ? dep.id+'@'+version_installed : dep.id) + '" already fetched, using that version.');
+        } else {
+            var msg = 'Version of installed plugin: "' +
+                dep.id + '@'+ version_installed +
+                '" does not satisfy dependency plugin requirement "' +
+                dep.id +'@'+ version_required +
+                 '". Try --force to use installed plugin as dependency.';
+            return Q.reject(new CordovaError(msg));
+        }
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
-
         return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
@@ -589,8 +607,8 @@ function installDependency(dep, install, options) {
             expected_id: dep.id
         });
 
-        var dep_src = dep.url.length ? dep.url : dep.id;
 
+        var dep_src = dep.url.length ? dep.url : (dep.version? dep.id + '@'+dep.version: dep.id);
         return possiblyFetch(dep_src, install.plugins_dir, opts)
         .then(
             function(plugin_dir) {
