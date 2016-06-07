@@ -101,8 +101,8 @@ describe('plugman uninstall start', function() {
             done();
         }).fail(function(err){
             expect(err).toBeUndefined();
-        }, 60000);
-    });
+        });
+    }, 60000);
 });
 
 describe('uninstallPlatform', function() {
@@ -182,7 +182,7 @@ describe('uninstallPlatform', function() {
         });
     });
 
-    describe('failure', function() {
+    describe('failure ', function() {
         it('Test 004 : should throw if platform is unrecognized', function(done) {
             uninstall.uninstallPlatform('atari', project, 'SomePlugin')
             .then(function(result){
