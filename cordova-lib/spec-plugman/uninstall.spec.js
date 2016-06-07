@@ -101,8 +101,8 @@ describe('plugman uninstall start', function() {
             done();
         }).fail(function(err){
             expect(err).toBeUndefined();
-        }, 60000);
-    });
+        });
+    }, 60000);
 });
 
 describe('uninstallPlatform', function() {
