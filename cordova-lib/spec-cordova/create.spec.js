@@ -190,37 +190,6 @@ describe('create end-to-end', function() {
             })
             .fin(done);
     });
-    /*
-    it('should successfully run with Git URL --fetch', function(done) {
-        // Call cordova create with no args, should return help.
-        Q()
-            .then(function() {
-                // Create a real project
-                return cordova.raw.create(project, appId, appName, configGit, true);
-            })
-            .then(checkProject)
-            .fail(function(err) {
-                console.log(err && err.stack);
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
-    }, 60000);
-    */
-
-    it('should successfully run with NPM package --fetch', function(done) {
-        // Call cordova create with no args, should return help.
-        Q()
-            .then(function() {
-                // Create a real project
-                return cordova.raw.create(project, appId, appName, configNPM, true);
-            })
-            .then(checkProject)
-            .fail(function(err) {
-                console.log(err && err.stack);
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
-    });
     
     it('should successfully run with template not having a package.json at toplevel', function(done) {
         // Call cordova create with no args, should return help.
