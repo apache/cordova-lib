@@ -174,72 +174,69 @@ function create(dir, optionalId, optionalName, cfg, fetchOpt) {
         var isGit;
         var isNPM;
 
-        if (!!cfg.lib.www.link) {
-            events.emit('verbose', 'Symlinking assets."');
-            return cfg.lib.www.url;
-        } else {
-            events.emit('verbose', 'Copying assets."');
-            isGit = cfg.lib.www.template && cordova_util.isUrl(cfg.lib.www.url);
-            isNPM = cfg.lib.www.template && (cfg.lib.www.url.indexOf('@') > -1 || !fs.existsSync(path.resolve(cfg.lib.www.url)));
+        events.emit('verbose', 'Copying assets."');
+        isGit = cfg.lib.www.template && cordova_util.isUrl(cfg.lib.www.url);
+        isNPM = cfg.lib.www.template && (cfg.lib.www.url.indexOf('@') > -1 || !fs.existsSync(path.resolve(cfg.lib.www.url)));
 
-            //If --fetch flag is passed, use cordova fetch to obtain the npm or git template
-            if((isGit || isNPM) && fetchOpt) {
-                //Saved to .Cordova folder (ToDo: Delete installed template after using)
-                var tempDest = cordova_util.globalConfig;
-                events.emit('log', 'Using cordova-fetch for '+ cfg.lib.www.url);
-                return fetch(cfg.lib.www.url, tempDest, {});
-            //Otherwise use remote-load to get git template
-            } else if (isGit) {
+        //If --fetch flag is passed, use cordova fetch to obtain the npm or git template
+        if((isGit || isNPM) && fetchOpt) {
+            //Saved to .Cordova folder (ToDo: Delete installed template after using)
+            var tempDest = cordova_util.globalConfig;
+            events.emit('log', 'Using cordova-fetch for '+ cfg.lib.www.url);
+            return fetch(cfg.lib.www.url, tempDest, {});
+        //Otherwise use remote-load to get git template
+        } else if (isGit) {
 
-                parseArr = cfg.lib.www.url.split('#');
-                gitURL = parseArr[0];
-                branch = parseArr[1];
+            parseArr = cfg.lib.www.url.split('#');
+            gitURL = parseArr[0];
+            branch = parseArr[1];
 
-                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using git...');
+            events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using git...');
 
-                return remoteLoad.gitClone(gitURL, branch).fail(
-                    function(err) {
-                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using git: ' + err.message));
-                    }
-                );
-            //Otherwise use remote-load to get npm template
-            } else if (isNPM) {
-                events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using npm...');
-
-                // Determine package name, and version
-                if (cfg.lib.www.url.indexOf('@') !== -1) {
-                    parseArr = cfg.lib.www.url.split('@');
-                    packageName = parseArr[0];
-                    packageVersion = parseArr[1];
-                } else {
-                    packageName = cfg.lib.www.url;
-                    packageVersion = 'latest';
+            return remoteLoad.gitClone(gitURL, branch).fail(
+                function(err) {
+                    return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using git: ' + err.message));
                 }
+            );
+        //Otherwise use remote-load to get npm template
+        } else if (isNPM) {
+            events.emit('log', 'Retrieving ' + cfg.lib.www.url + ' using npm...');
 
-                return remoteLoad.npmFetch(packageName, packageVersion).fail(
-                    function(err) {
-                        events.emit('warn', err.message);
-                        return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using npm: ' + err.message));
-                    }
-                );
-            //If assets are not online, resolve as a relative path on local computer
+            // Determine package name, and version
+            if (cfg.lib.www.url.indexOf('@') !== -1) {
+                parseArr = cfg.lib.www.url.split('@');
+                packageName = parseArr[0];
+                packageVersion = parseArr[1];
             } else {
-                cfg.lib.www.url = path.resolve(cfg.lib.www.url);
-
-                return Q(cfg.lib.www.url);
+                packageName = cfg.lib.www.url;
+                packageVersion = 'latest';
             }
+
+            return remoteLoad.npmFetch(packageName, packageVersion).fail(
+                function(err) {
+                    events.emit('warn', err.message);
+                    return Q.reject(new CordovaError('Failed to retrieve '+ cfg.lib.www.url + ' using npm: ' + err.message));
+                }
+            );
+        //If assets are not online, resolve as a relative path on local computer
+        } else {
+            cfg.lib.www.url = path.resolve(cfg.lib.www.url);
+            return Q(cfg.lib.www.url);
         }
     }).then(function(input_directory) {
         var import_from_path = input_directory;
-        //handle when input wants to specify sub-directory (specified in index.js); 
-        //
+
+        //handle when input wants to specify sub-directory (specified in index.js as "dirname" export); 
+        var isSubDir = false;
         try {
             var templatePkg = require(input_directory);
             if (templatePkg && templatePkg.dirname){
                 import_from_path = templatePkg.dirname;
+                isSubDir = true;
             }
         } catch (e) {
-            events.emit('verbose', 'index.js does not specific valid sub-directory: ' + input_directory);
+            events.emit('verbose', 'index.js does not specify valid sub-directory: ' + input_directory);
+            isSubDir = false;
         }
 
         if (!fs.existsSync(import_from_path)) {
@@ -247,126 +244,53 @@ function create(dir, optionalId, optionalName, cfg, fetchOpt) {
                 import_from_path);
         }
 
-        var paths = {
-            root: import_from_path,
-            www: import_from_path
-        };
+        var paths = {};
 
-        // Keep going into child "www" folder if exists in stock app package.
-        while (fs.existsSync(path.join(paths.www, 'www'))) {
-            paths.root = paths.www;
-            paths.www = path.join(paths.root, 'www');
-        }
+        // get stock config.xml, used if template does not contain config.xml
+        paths.configXml = path.join(require('cordova-app-hello-world').dirname, 'config.xml');
 
-        // find config.xml
-        if (fs.existsSync(path.join(paths.root, 'config.xml'))) {
-            paths.configXml = path.join(paths.root, 'config.xml');
-            paths.configXmlLinkable = true;
-        } else {
-            try {
-                paths.configXml =
-                    path.join(require('cordova-app-hello-world').dirname,
-                        'config.xml');
-            } catch (e) {
-                // Falling back on npm@2 path hierarchy
-                // TODO: Remove fallback after cordova-app-hello-world release
-                paths.configXml =
-                    path.join(__dirname, '..', '..', 'node_modules',
-                        'cordova-app-hello-world', 'config.xml');
-            }
-        }
-        if (fs.existsSync(path.join(paths.root, 'merges'))) {
-            paths.merges = path.join(paths.root, 'merges');
-        } else {
-            // No merges by default
-        }
-        if (fs.existsSync(path.join(paths.root, 'hooks'))) {
-            paths.hooks = path.join(paths.root, 'hooks');
-            paths.hooksLinkable = true;
-        } else {
-            try {
-                paths.hooks =
-                    path.join(require('cordova-app-hello-world').dirname,
-                        'hooks');
-            } catch (e) {
-                // Falling back on npm@2 path hierarchy
-                // TODO: Remove fallback after cordova-app-hello-world release
-                paths.hooks =
-                    path.join(__dirname, '..', '..', 'node_modules',
-                        'cordova-app-hello-world', 'hooks');
-            }
-        }
+        // get stock www; used if template does not contain www
+        paths.www = path.join(require('cordova-app-hello-world').dirname, 'www');
+
+        // get stock hooks; used if template does not contain hooks
+        paths.hooks = path.join(require('cordova-app-hello-world').dirname, 'hooks');
+        
+        // ToDo: get stock package.json if template does not contain package.json;
 
         var dirAlreadyExisted = fs.existsSync(dir);
         if (!dirAlreadyExisted) {
             fs.mkdirSync(dir);
         }
 
-
-        var tryToLink = !!cfg.lib.www.link;
-        function copyOrLink(src, dst, linkable) {
-            if (src) {
-                if (tryToLink && linkable) {
-                    fs.symlinkSync(src, dst, 'dir');
-                } else {
-                    shell.mkdir(dst);
-                    shell.cp('-R', path.join(src, '*'), dst);
-                }
-            }
-        }
-
-        /*
-        Copies template files, and directories into a Cordova project directory.
-        Files, and directories not copied include: www, mergers,platforms,
-        plugins, hooks, and config.xml. A template directory, and platform
-        directory must be passed.
-
-        templateDir - Template directory
-        projectDir - Project directory
-         */
-        function copyTemplateFiles(templateDir, projectDir) {
-            var templateFiles;		// Current file
-
-            templateFiles = fs.readdirSync(templateDir);
-
-            // Remove directories, and files that are automatically copied
-            templateFiles = templateFiles.filter(
-                function (value) {
-                    return !(value === 'www' || value === 'mergers' ||
-                    value === 'config.xml' || value === 'hooks');
-                }
-            );
-
-            // Copy each template file
-            for (var i = 0; i < templateFiles.length; i++)
-                shell.cp('-R', path.resolve(templateDir, templateFiles[i]), projectDir);
-        }
-
         try {
-            copyOrLink(paths.www, path.join(dir, 'www'), true);
-            copyOrLink(paths.merges, path.join(dir, 'merges'), true);
-            copyOrLink(paths.hooks, path.join(dir, 'hooks'),
-                paths.hooksLinkable);
-
+            // Copy files from template to project
             if (cfg.lib.www.template)
-                copyTemplateFiles(import_from_path, dir);
+                copyTemplateFiles(import_from_path, dir, isSubDir);
 
-            if (paths.configXml) {
-                if (tryToLink && paths.configXmlLinkable) {
-                    fs.symlinkSync(paths.configXml, path.join(dir, 'config.xml'));
-                } else {
-                    shell.cp(paths.configXml, path.join(dir, 'config.xml'));
-                }
+            // If following were not copied from template, copy from stock app hello world
+            ifNotCopied(paths.www, path.join(dir, 'www'));
+            ifNotCopied(paths.hooks, path.join(dir, 'hooks'));
+            var configXmlExists = cordova_util.projectConfig(dir);
+            if (paths.configXml && !configXmlExists) {
+                shell.cp(paths.configXml, path.join(dir, 'config.xml'));
             }
         } catch (e) {
             if (!dirAlreadyExisted) {
                 shell.rm('-rf', dir);
             }
-            if (process.platform.slice(0, 3) == 'win' && e.code == 'EPERM')  {
-                throw new CordovaError('Symlinks on Windows require Administrator privileges');
-            }
             throw e;
         }
+
+        // Update package.json name and version fields.
+        if (fs.existsSync(path.join(dir, 'package.json'))) {
+            var pkgjson = require(path.resolve(dir, 'package.json'));
+            if (cfg.name) {
+                pkgjson.name = cfg.name.toLowerCase();
+            }
+            pkgjson.version = '1.0.0';
+            fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkgjson, null, 4), 'utf8');
+        }
+
         // Create basic project structure.
         if (!fs.existsSync(path.join(dir, 'platforms')))
             shell.mkdir(path.join(dir, 'platforms'));
@@ -374,11 +298,53 @@ function create(dir, optionalId, optionalName, cfg, fetchOpt) {
         if (!fs.existsSync(path.join(dir, 'plugins')))
             shell.mkdir(path.join(dir, 'plugins'));
 
-        // Write out id and name to config.xml
+        // Write out id and name to config.xml; set version to 1.0.0 (to match package.json default version)
         var configPath = cordova_util.projectConfig(dir);
         var conf = new ConfigParser(configPath);
         if (cfg.id) conf.setPackageName(cfg.id);
         if (cfg.name) conf.setName(cfg.name);
+        conf.setVersion('1.0.0');
         conf.write();
     });
+}
+
+/**
+ * Recursively copies folder to destination if folder is not found in destination.
+ * @param  {string} src for copying
+ * @param  {string} dst for copying
+ * @return No return value
+ */
+function ifNotCopied(src, dst) {
+    if (!fs.existsSync(dst) && src) {
+        shell.mkdir(dst);
+        shell.cp('-R', path.join(src, '*'), dst);
+    }
+}
+
+/**
+ * Copies template files, and directories into a Cordova project directory.
+ * If the template exists in a subdirectory everything is copied. 
+ * Otherwise package.json, RELEASENOTES.md, .git, NOTICE, LICENSE, COPYRIGHT, and .npmignore are not copied over.
+ * A template directory, and project directory must be passed.
+ * templateDir - Template directory
+ * projectDir - Project directory
+ * isSubDir - boolean is true if template has subdirectory structure (see code around line 229)
+ */
+function copyTemplateFiles(templateDir, projectDir, isSubDir) {
+    var templateFiles;      // Current file
+    templateFiles = fs.readdirSync(templateDir);
+    // Remove directories, and files that are unwanted
+    if (!isSubDir) {
+        templateFiles = templateFiles.filter(
+            function (value) {
+                return !(value === 'package.json' || value === 'RELEASENOTES.md' || value === '.git' || value === 'NOTICE'||
+                value === 'LICENSE' || value === 'COPYRIGHT' || value === '.npmignore');
+            }
+        );
+    }
+    // Copy each template file after filter
+    for (var i = 0; i < templateFiles.length; i++) {
+        var copyPath = path.resolve(templateDir, templateFiles[i]);
+        shell.cp('-R', copyPath, projectDir);
+    }
 }

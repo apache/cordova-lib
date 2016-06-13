@@ -238,7 +238,7 @@ function projectConfig(projectDir) {
     } else if (fs.existsSync(wwwPath)) {
         return wwwPath;
     }
-    return rootPath;
+    return false;
 }
 
 function preProcessOptions (inputOptions) {

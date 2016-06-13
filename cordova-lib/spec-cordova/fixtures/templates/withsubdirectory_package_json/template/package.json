@@ -6,5 +6,6 @@
     "type": "git",
     "url": "https://github.com/apache/cordova-app-hello-world.git"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-1.0",
+  "valid": "true"
 }

@@ -19,7 +19,6 @@
 
 var helpers = require('./helpers'),
     path = require('path'),
-    fs = require('fs'),
     shell = require('shelljs'),
     Q = require('q'),
     events = require('cordova-common').events,
@@ -31,22 +30,25 @@ var appName = 'TestBase';
 var appId = 'org.testing';
 var project = path.join(tmpDir, appName);
 
-var configNormal = {
-      lib: {
+var configSubDirPkgJson = {
+    lib: {
         www: {
-          url: path.join(__dirname, 'fixtures', 'base', 'www'),
-          version: 'testCordovaCreate'
+            template: true,
+            url: path.join(__dirname, 'fixtures', 'templates', 'withsubdirectory_package_json'),
+            version: ''
         }
-      }
-    };
-var configSymlink = {
-      lib: {
+    }
+};
+
+var configConfigInWww = {
+    lib: {
         www: {
-          url: path.join(__dirname, 'fixtures', 'base'), // "create" should copy or link the www child of this dir and not the dir itself.
-          link: true
+            template: true,
+            url: path.join(__dirname, 'fixtures', 'templates', 'config_in_www'),
+            version: ''
         }
-      }
-    };
+    }
+};
 
 var configGit = {
     lib: {
@@ -110,10 +112,10 @@ describe('create end-to-end', function() {
 
         expect(path.join(project, 'hooks', 'README.md')).toExist();
 
-        // Check if config files exist.
+        // Check if www files exist.
         expect(path.join(project, 'www', 'index.html')).toExist();
 
-        // Check that www/config.xml was updated.
+        // Check that config.xml was updated.
         var configXml = new ConfigParser(path.join(project, 'config.xml'));
         expect(configXml.packageName()).toEqual(appId);
 
@@ -121,47 +123,68 @@ describe('create end-to-end', function() {
         // expect(configXml.name()).toEqual('TestBase');
     }
 
+    function checkConfigXml() {
+        // Check if top level dirs exist.
+        var dirs = ['hooks', 'platforms', 'plugins', 'www'];
+        dirs.forEach(function(d) {
+            expect(path.join(project, d)).toExist();
+        });
+        expect(path.join(project, 'hooks', 'README.md')).toExist();
+        
+        //index.js and template subdir folder should not exist (inner files should be copied to the project folder)
+        expect(path.join(project, 'index.js')).not.toExist();
+        expect(path.join(project, 'template')).not.toExist();
+
+        // Check if www files exist.
+        expect(path.join(project, 'www', 'index.html')).toExist();
+        var configXml = new ConfigParser(path.join(project, 'www', 'config.xml'));
+        expect(configXml.packageName()).toEqual(appId);
+        expect(configXml.version()).toEqual('1.0.0');
+
+        // Check that config.xml does not exist outside of www
+        expect(path.join(project, 'config.xml')).not.toExist();
+
+        // Check that we got no package.json
+        expect(path.join(project, 'package.json')).not.toExist();
+
+        // Check that we got the right config.xml from the template and not stock
+        expect(configXml.description()).toEqual('this is the correct config.xml');
+    }
+
+    function checkSubDir() {
+        // Check if top level dirs exist.
+        var dirs = ['hooks', 'platforms', 'plugins', 'www'];
+        dirs.forEach(function(d) {
+            expect(path.join(project, d)).toExist();
+        });
+        expect(path.join(project, 'hooks', 'README.md')).toExist();
+        
+        //index.js and template subdir folder should not exist (inner files should be copied to the project folder)
+        expect(path.join(project, 'index.js')).not.toExist();
+        expect(path.join(project, 'template')).not.toExist();
+
+        // Check if config files exist.
+        expect(path.join(project, 'www', 'index.html')).toExist();
+
+        // Check that config.xml was updated.
+        var configXml = new ConfigParser(path.join(project, 'config.xml'));
+        expect(configXml.packageName()).toEqual(appId);
+        expect(configXml.version()).toEqual('1.0.0');
+
+
+        // Check that we got package.json (the correct one)
+        var pkjson = require(path.join(project, 'package.json'));
+        expect(pkjson.name).toEqual(appName.toLowerCase());
+        expect(pkjson.valid).toEqual('true');
+
+        // Check that we got the right config.xml
+        expect(configXml.description()).toEqual('this is the correct config.xml');
+    }
+
     var results;
     events.on('results', function(res) { results = res; });
 
-    it('should successfully run with regular config', function(done) {
-        // Call cordova create with no args, should return help.
-        Q()
-            .then(function() {
-                // Create a real project
-                return cordova.raw.create(project, appId, appName, configNormal);
-            })
-            .then(checkProject)
-            .fail(function(err) {
-                console.log(err && err.stack);
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
-    });
-
-    it('should successfully run with symlinked www', function(done) {
-        // Call cordova create with no args, should return help.
-        cordova.raw.create(project, appId, appName, configSymlink)
-            .then(checkProject)
-            .then(function() {
-                // Check that www is really a symlink
-                expect(fs.lstatSync(path.join(project, 'www')).isSymbolicLink()).toBe(true);
-            })
-            .fail(function(err) {
-                if(process.platform.slice(0, 3) == 'win') {
-                    // Allow symlink error if not in admin mode
-                    expect(err.message).toBe('Symlinks on Windows require Administrator privileges');
-                } else {
-                    if (err) {
-                        console.log(err.stack);
-                    }
-                    expect(err).toBeUndefined();
-                }
-            })
-            .fin(done);
-    });
-
-   it('should successfully run with Git URL', function(done) {
+    it('should successfully run with Git URL', function(done) {
         // Call cordova create with no args, should return help.
         Q()
             .then(function() {
@@ -208,6 +231,11 @@ describe('create end-to-end', function() {
                 return cordova.raw.create(project, appId, appName, config);
             })
             .then(checkProject)
+            .then(function(){
+                // Check that we got the right config.xml
+                var configXml = new ConfigParser(path.join(project, 'config.xml'));
+                expect(configXml.description()).toEqual('this is the very correct config.xml');
+            })
             .fail(function(err) {
                 console.log(err && err.stack);
                 expect(err).toBeUndefined();
@@ -262,24 +290,18 @@ describe('create end-to-end', function() {
             })
             .fin(done);
     });
-    
+
+
     it('should successfully run with template having package.json, and subdirectory, and package.json in subdirectory', function(done) {
         // Call cordova create with no args, should return help.
-        var config = {
-            lib: {
-                www: {
-                    template: true,
-                    url: path.join(__dirname, 'fixtures', 'templates', 'withsubdirectory_package_json'),
-                    version: ''
-                }
-            }
-        };
+        var config = configSubDirPkgJson;
         Q()
             .then(function() {
                 // Create a real project
+                project = project + '1';
                 return cordova.raw.create(project, appId, appName, config);
             })
-            .then(checkProject)
+            .then(checkSubDir)
             .fail(function(err) {
                 console.log(err && err.stack);
                 expect(err).toBeUndefined();
@@ -287,6 +309,22 @@ describe('create end-to-end', function() {
             .fin(done);
     });
 
+    it('should successfully run config.xml in the www folder', function(done) {
+        // Call cordova create with no args, should return help.
+        var config = configConfigInWww;
+        Q()
+            .then(function() {
+                // Create a real project
+                project = project + '2';
+                return cordova.raw.create(project, appId, appName, config);
+            })
+            .then(checkConfigXml)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
 
 
 });
