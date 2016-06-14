@@ -178,7 +178,7 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject, options) {
     var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
     var ownConfig = this.getPlatformInfo().locations.configXml;
 
-    var sourceCfg = cordovaProject.projectConfig.path;
+    var sourceCfg = cordovaProject.projectConfig;
     // If defaults.xml is present, overwrite platform config.xml with it.
     // Otherwise save whatever is there as defaults so it can be
     // restored or copy project config into platform if none exists.
