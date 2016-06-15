@@ -229,6 +229,7 @@ describe('test trimID method for npm and git', function () {
         .then(function(result) {
             expect(result).toBeDefined();
             expect(fs.existsSync(result)).toBe(true);
+            expect(result).toMatch('cordova-plugin-device');
 
             //refetch to trigger trimID
             return fetch('https://github.com/apache/cordova-plugin-media.git', tmpDir, opts);
@@ -236,13 +237,22 @@ describe('test trimID method for npm and git', function () {
         .then(function(result) {
             expect(result).toBeDefined();
             expect(fs.existsSync(result)).toBe(true);
+            expect(result).toMatch('cordova-plugin-media');
+
+            //refetch to trigger trimID, this time no .git
+            return fetch('https://github.com/apache/cordova-plugin-media', tmpDir, opts);
+        })
+        .then(function(result) {
+            expect(result).toBeDefined();
+            expect(fs.existsSync(result)).toBe(true);
+            expect(result).toMatch('cordova-plugin-media');
         })
         .fail(function(err) {
             console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 30000);
+    }, 40000);
 });
 
 describe('fetch failure with unknown module', function () {
