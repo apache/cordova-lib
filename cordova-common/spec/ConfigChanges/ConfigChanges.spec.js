@@ -32,6 +32,8 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     childrenplugin = path.join(__dirname, '../fixtures/plugins/org.test.multiple-children'),
     shareddepsplugin = path.join(__dirname, '../fixtures/plugins/org.test.shareddeps'),
     configplugin = path.join(__dirname, '../fixtures/plugins/org.test.configtest'),
+    editconfigplugin = path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest'),
+    editconfigplugin_two = path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest_two'),
     varplugin = path.join(__dirname, '../fixtures/plugins/com.adobe.vars'),
     plistplugin = path.join(__dirname, '../fixtures/plugins/org.apache.plist'),
     android_two_project = path.join(__dirname, '../fixtures/projects/android_two/*'),
@@ -273,6 +275,70 @@ describe('config-changes module', function() {
                     munger.process(plugins_dir);
                     expect(spy).not.toHaveBeenCalledWith(path.join(temp, 'res', 'xml', 'plugins.xml'), 'utf-8');
                 });
+                it('should call graftXMLMerge for every new config munge with mode \'merge\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+
+                    var spy = spyOn(xml_helpers, 'graftXMLMerge').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(1);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                });
+                it('should call graftXMLMerge with --force for every new config munge with mode \'merge\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {}, true, true);
+
+                    var spy = spyOn(xml_helpers, 'graftXMLMerge').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(2);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                    expect(spy.argsForCall[1][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                });
+                it('should call graftXMLOverwrite for every new config munge with mode \'overwrite\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+
+                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(1);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity');
+                });
+                it('should call graftXMLOverwrite with --force for every new config munge with mode \'overwrite\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {}, true, true);
+
+                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(2);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity');
+                    expect(spy.argsForCall[1][2]).toEqual('/manifest/application/activity[@android:name=\'ChildApp\']');
+                });
+                it('should not install plugin when there are edit-config conflicts', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {});
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    expect(function() {munger.process(plugins_dir);}).toThrow(new Error('There was a conflict trying to modify attributes with <edit-config> in plugin org.test.editconfigtest_two. The conflicting plugin, org.test.editconfigtest, already modified the same attributes. The conflict must be resolved before org.test.editconfigtest_two can be added. You may use --force to add the plugin and overwrite the conflicting attributes.'));
+                });
             });
             describe('of plist config files', function() {
                 it('should write empty string nodes with no whitespace', function() {
@@ -410,6 +476,25 @@ describe('config-changes module', function() {
 
                 expect(platformJson.root.prepare_queue.uninstalled.length).toEqual(0);
                 expect(platformJson.root.installed_plugins['com.adobe.vars']).not.toBeDefined();
+            });
+            it('should call pruneXMLRestore for every config munge with mode \'merge\' or \'overwrite\' it removes from the app', function() {
+                shell.cp('-rf', android_two_project, temp);
+                shell.cp('-rf', editconfigplugin, plugins_dir);
+
+                // Run through an "install"
+                var platformJson = PlatformJson.load(plugins_dir, 'android');
+                platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                munger.process(plugins_dir);
+
+                // Now set up an uninstall and make sure pruneXMLMerge is called properly
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.editconfigtest');
+                var spy = spyOn(xml_helpers, 'pruneXMLRestore').andReturn(true);
+                munger.process(plugins_dir);
+
+                expect(spy.calls.length).toEqual(2);
+                expect(spy.argsForCall[0][1]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                expect(spy.argsForCall[1][1]).toEqual('/manifest/application/activity');
             });
         });
     });
