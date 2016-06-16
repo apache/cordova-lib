@@ -146,6 +146,22 @@ function PluginInfo(dirname) {
         return configFile;
     }
 
+    self.getEditConfigs = getEditConfigs;
+    function getEditConfigs(platform) {
+        var editConfigs = _getTags(self._et, 'edit-config', platform, _parseEditConfigs);
+        return editConfigs;
+    }
+
+    function _parseEditConfigs(tag) {
+        var editConfig =
+        { file : tag.attrib['file']
+        , target : tag.attrib['target']
+        , mode : tag.attrib['mode']
+        , xmls : tag.getchildren()
+        };
+        return editConfig;
+    }
+
     // <info> tags, both global and within a <platform>
     // TODO (kamrik): Do we ever use <info> under <platform>? Example wanted.
     self.getInfo = getInfo;

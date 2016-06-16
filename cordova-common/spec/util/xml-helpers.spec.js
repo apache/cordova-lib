@@ -129,6 +129,59 @@ describe('xml-helpers', function(){
         });
     });
 
+    describe('pruneXMLRestore', function() {
+        var android_manifest_xml;
+
+        beforeEach(function() {
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it('should restore attributes at the specified selector', function() {
+            var xml = {
+                oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('false');
+        });
+        it('should do nothing if the old attributes cannot be found', function() {
+            var xml = {
+                notOldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('true');
+        });
+        it('should be able to handle absolute selectors', function() {
+            var xml = {
+                oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, '/manifest/application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('false');
+        });
+        it('should be able to handle absolute selectors with wildcards', function() {
+            var xml = {
+                oldAttrib: {'android:name': 'ChildApp', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, '/*/*/activity', xml);
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+        });
+        it('should be able to handle xpath selectors', function() {
+            var xml = {
+                oldAttrib: {'android:name': 'com.phonegap.DroidGap', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', xml);
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+        });
+    });
+
     describe('graftXML', function() {
         var config_xml, plugin_xml;
 
@@ -151,6 +204,88 @@ describe('xml-helpers', function(){
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, '/*');
             expect(config_xml.findall('access').length).toEqual(3);
+        });
+    });
+
+    describe('graftXMLMerge', function() {
+        var plugin_xml, android_manifest_xml;
+
+        beforeEach(function() {
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it ('should merge attributes at specified selector', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle absolute selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, '/manifest/application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle absolute selectors with wildcards', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, '/*/*/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle xpath selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+    });
+
+    describe('graftXMLOverwrite', function() {
+        var plugin_xml, android_manifest_xml;
+
+        beforeEach(function() {
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it ('should overwrite attributes at specified selector', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle absolute selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/manifest/application/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle absolute selectors with wildcards', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/*/*/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle xpath selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity[@android:name=\"ChildApp\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
         });
     });
 
