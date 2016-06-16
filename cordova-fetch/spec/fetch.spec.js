@@ -146,7 +146,7 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 60000);
+    }, 70000);
 });
 
 describe('plugin fetch/uninstall test with --save', function () {

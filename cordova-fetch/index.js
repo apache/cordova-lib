@@ -143,12 +143,13 @@ function trimID(target) {
 
     //If GITURL, set target to repo name
     if (isUrl(target)) {
+        //strip away .git and everything that follows       
+        var strippedTarget = target.split('.git');
         var re = /.*\/(.*)/;
         //Grabs everything in url after last `/`
-        parts = target.match(re);
-        //strip away .git and everything that follows
-        var strippedTarget = parts[1].split('.git');
-        target = strippedTarget[0];
+        parts = strippedTarget[0].match(re);
+        
+        target = parts[1];
     }
     
     //strip away everything after '@'
