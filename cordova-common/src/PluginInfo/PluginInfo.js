@@ -138,6 +138,7 @@ function PluginInfo(dirname) {
             { target : tag.attrib['target']
             , parent : tag.attrib['parent']
             , after : tag.attrib['after']
+            , attr : tag.attrib['attr']
             , xmls : tag.getchildren()
             // To support demuxing via versions
             , versions : tag.attrib['versions']

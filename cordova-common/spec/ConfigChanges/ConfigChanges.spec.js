@@ -33,16 +33,19 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     shareddepsplugin = path.join(__dirname, '../fixtures/plugins/org.test.shareddeps'),
     configplugin = path.join(__dirname, '../fixtures/plugins/org.test.configtest'),
     varplugin = path.join(__dirname, '../fixtures/plugins/com.adobe.vars'),
+    attributesplugin = path.join(__dirname, '../fixtures/plugins/org.test.xmlattributestest'),
     plistplugin = path.join(__dirname, '../fixtures/plugins/org.apache.plist'),
     android_two_project = path.join(__dirname, '../fixtures/projects/android_two/*'),
     android_two_no_perms_project = path.join(__dirname, '../fixtures/projects/android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '../fixtures/projects/ios-config-xml/*'),
     windows_testapp_jsproj = path.join(__dirname, '../fixtures/projects/windows/TestApp.jsproj'),
-    plugins_dir = path.join(temp, 'cordova', 'plugins');
+    plugins_dir = path.join(temp, 'cordova', 'plugins'),
+    test_config_xml = path.join(__dirname, '../fixtures/test-config.xml');
 var mungeutil = require('../../src/ConfigChanges/munge-util');
 var PlatformJson = require('../../src/PlatformJson');
 var PluginInfoProvider = require('../../src/PluginInfo/PluginInfoProvider');
 var PluginInfo = require('../../src/PluginInfo/PluginInfo');
+var ConfigParser = require('../../src/ConfigParser/ConfigParser');
 
 // TODO: dont do fs so much
 
@@ -120,6 +123,30 @@ describe('config-changes module', function() {
             var platformJson = new PlatformJson(filepath, 'android', {foo:true});
             platformJson.save();
             expect(JSON.parse(fs.readFileSync(filepath, 'utf-8'))).toEqual(platformJson.root);
+        });
+    });
+
+    describe('add_config_changes method', function() {
+        it('should handle config-file tag from config.xml', function() {
+            shell.cp('-rf', android_two_project, temp);
+
+            var filepath = path.join(plugins_dir, 'android.json');
+            var platformJson = new PlatformJson(filepath, 'android');
+            var munger = new configChanges.PlatformMunger('android', temp, platformJson);
+            var config = new ConfigParser(test_config_xml);
+            munger.add_config_changes(config, true).save_all();
+
+            var manifest = new et.ElementTree(et.XML(fs.readFileSync(path.join(temp, 'AndroidManifest.xml'), 'utf-8')));
+            var application = manifest.find('./application');
+            var uses_sdk = manifest.find('./uses-sdk');
+            var activity = manifest.find('./application/activity[@android:name="NewActivity"]');
+
+            expect(application).not.toBe(null);
+            expect(application.attrib['android:name']).toEqual('MyApplication');
+            expect(uses_sdk).not.toBe(null);
+            expect(uses_sdk.attrib['android:minSdkVersion']).toEqual('15');
+            expect(activity).not.toBe(null);
+            expect(activity.attrib['android:name']).toEqual('NewActivity');
         });
     });
 
@@ -273,6 +300,24 @@ describe('config-changes module', function() {
                     munger.process(plugins_dir);
                     expect(spy).not.toHaveBeenCalledWith(path.join(temp, 'res', 'xml', 'plugins.xml'), 'utf-8');
                 });
+                it('should call graftXMLAttr for every new config munge it introduces (every leaf in config munge that does not exist)', function() {
+                    shell.cp('-rf', attributesplugin, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.xmlattributestest', {});
+
+                    var spy = spyOn(xml_helpers, 'graftXMLAttr').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(7);
+                    expect(spy.argsForCall[0][2]).toEqual('application');
+                    expect(spy.argsForCall[1][2]).toEqual('application');
+                    expect(spy.argsForCall[2][2]).toEqual('/manifest');
+                    expect(spy.argsForCall[3][2]).toEqual('/manifest');
+                    expect(spy.argsForCall[4][2]).toEqual('/*/application');
+                    expect(spy.argsForCall[5][2]).toEqual('/*/application');
+                    expect(spy.argsForCall[6][2]).toEqual('/manifest/application');
+                });
             });
             describe('of plist config files', function() {
                 it('should write empty string nodes with no whitespace', function() {
@@ -410,6 +455,29 @@ describe('config-changes module', function() {
 
                 expect(platformJson.root.prepare_queue.uninstalled.length).toEqual(0);
                 expect(platformJson.root.installed_plugins['com.adobe.vars']).not.toBeDefined();
+            });
+            it('should call pruneXMLAttr for every config munge it completely removes from the app (every leaf that is decremented to 0)', function() {
+                shell.cp('-rf', android_two_project, temp);
+                shell.cp('-rf', attributesplugin, plugins_dir);
+
+                // Run through an "install"
+                var platformJson = PlatformJson.load(plugins_dir, 'android');
+                platformJson.addInstalledPluginToPrepareQueue('org.test.xmlattributestest', {});
+                var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                munger.process(plugins_dir);
+
+                // Now set up an uninstall and make sure pruneXMLAttr is called properly
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.xmlattributestest');
+                var spy = spyOn(xml_helpers, 'pruneXMLAttr').andReturn(true);
+                munger.process(plugins_dir);
+                expect(spy.calls.length).toEqual(7);
+                expect(spy.argsForCall[0][2]).toEqual('application');
+                expect(spy.argsForCall[1][2]).toEqual('application');
+                expect(spy.argsForCall[2][2]).toEqual('/manifest');
+                expect(spy.argsForCall[3][2]).toEqual('/manifest');
+                expect(spy.argsForCall[4][2]).toEqual('/*/application');
+                expect(spy.argsForCall[5][2]).toEqual('/*/application');
+                expect(spy.argsForCall[6][2]).toEqual('/manifest/application');
             });
         });
     });

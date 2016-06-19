@@ -128,6 +128,41 @@ describe('xml-helpers', function(){
             expect(config_xml.find('plugins').getchildren().length).toEqual(0);
         });
     });
+    describe('pruneXMLAttr', function() {
+        var android_manifest_xml;
+
+        beforeEach(function() {
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+
+        it('should remove attribute from the specified selector', function() {
+            var children = [et.XML('<activity android:configChanges="orientation|keyboardHidden" />')];
+            xml_helpers.pruneXMLAttr(android_manifest_xml, children, 'application');
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(2);
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it('should remove attribute from absolute selector', function() {
+            var children = [et.XML('<application android:debuggable="true" />')];
+            xml_helpers.pruneXMLAttr(android_manifest_xml, children, '/manifest');
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(2);
+            expect(applicationAttr['android:debuggable']).not.toBeDefined();
+        });
+        it('should remove attribute from absolute selectors with wildcards', function() {
+            var children = [et.XML('<activity android:configChanges="orientation|keyboardHidden" />')];
+            xml_helpers.pruneXMLAttr(android_manifest_xml, children, '/*/application');
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(2);
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it('should do nothing if the attribute cannot be found', function() {
+            var children = [et.XML('<application android:enabled="false" />')];
+            xml_helpers.pruneXMLAttr(android_manifest_xml, children, '/manifest');
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+        });
+    });
 
     describe('graftXML', function() {
         var config_xml, plugin_xml;
@@ -151,6 +186,44 @@ describe('xml-helpers', function(){
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, '/*');
             expect(config_xml.findall('access').length).toEqual(3);
+        });
+    });
+    describe('graftXMLAttr', function() {
+        var android_manifest_xml, plugin_xml;
+
+        beforeEach(function() {
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.xmlattributestest/plugin.xml'));
+        });
+
+        it('should add or overwrite attributes to specified selector', function() {
+            var children = plugin_xml.findall('platform/config-file')[0].getchildren();
+            xml_helpers.graftXMLAttr(android_manifest_xml, children, 'application');
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:hardwareAccelerated']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('orientation');
+        });
+        it('should add or overwrite attributes to absolute selector', function() {
+            var children = plugin_xml.findall('platform/config-file')[1].getchildren();
+            xml_helpers.graftXMLAttr(android_manifest_xml, children, '/manifest');
+            var usesSdkAttr = android_manifest_xml.find('uses-sdk').attrib;
+            expect(Object.keys(usesSdkAttr).length).toEqual(2);
+            expect(usesSdkAttr['android:targetSdkVersion']).toEqual('23');
+            expect(usesSdkAttr['android:minSdkVersion']).toEqual('14');
+        });
+        it('should add or overwrite attributes to absolute selector with wildcards', function() {
+            var children = plugin_xml.findall('platform/config-file')[2].getchildren();
+            xml_helpers.graftXMLAttr(android_manifest_xml, children, '/*/application');
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:hardwareAccelerated']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('orientation');
+        });
+        it('should do nothing if the children cannot be found', function() {
+            var children = plugin_xml.findall('platform/config-file')[3].getchildren();
+            xml_helpers.graftXMLAttr(android_manifest_xml, children, '/manifest/application');
+            expect(android_manifest_xml.find('application/poop')).toBe(null);
         });
     });
 

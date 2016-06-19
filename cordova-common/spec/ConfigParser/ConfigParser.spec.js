@@ -227,6 +227,10 @@ describe('config.xml parser', function () {
                 var navigations = cfg.getAllowNavigations();
                 expect(navigations.length).not.toEqual(0);
             });
+            it('it should read <config-file> tag entries', function(){
+                var configFile = cfg.getConfigFiles('android');
+                expect(configFile.length).not.toEqual(0);
+            });
         });
         describe('static resources', function() {
             var hasPlatformPropertyDefined = function (e) { return !!e.platform; };

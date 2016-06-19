@@ -97,6 +97,27 @@ module.exports = {
         return true;
     },
 
+    // adds attributes of each node to doc at selector
+    graftXMLAttr: function(doc, nodes, selector, after) {
+        var parent = resolveParent(doc, selector);
+        if (!parent) return false;
+
+        nodes.forEach(function (node) {
+            var currentNode = parent.find(node.tag);
+            if (currentNode) {
+                var attributes = node.attrib;
+                for (var attribute in attributes) {
+                    currentNode.attrib[attribute] = node.attrib[attribute];
+                }
+            }
+            else {
+                return false;
+            }
+        });
+
+        return true;
+    },
+
     // removes node from doc at selector
     pruneXML: function(doc, nodes, selector) {
         var parent = resolveParent(doc, selector);
@@ -108,6 +129,30 @@ module.exports = {
                 // stupid elementtree takes an index argument it doesn't use
                 // and does not conform to the python lib
                 parent.remove(matchingKid);
+            }
+        });
+
+        return true;
+    },
+
+    // removes attributes of each node from doc at selector
+    pruneXMLAttr: function(doc, nodes, selector) {
+        var parent = resolveParent(doc, selector);
+        if (!parent) return false;
+
+        nodes.forEach(function (node) {
+            var currentNode = parent.find(node.tag);
+            if (currentNode) {
+                var attributes = node.attrib;
+                for (var attribute in attributes) {
+                    if (currentNode.attrib[attribute] !== undefined &&
+                        currentNode.attrib[attribute] === node.attrib[attribute]) {
+                        delete currentNode.attrib[attribute];
+                    }
+                }
+            }
+            else {
+                return false;
             }
         });
 
@@ -257,19 +302,19 @@ function mergeXml(src, dest, platform, clobber) {
             dest.append(destChild);
         }
     }
-    
+
     function removeDuplicatePreferences(xml) {
         // reduce preference tags to a hashtable to remove dupes
         var prefHash = xml.findall('preference[@name][@value]').reduce(function(previousValue, currentValue) {
             previousValue[ currentValue.attrib.name ] = currentValue.attrib.value;
             return previousValue;
         }, {});
-        
+
         // remove all preferences
         xml.findall('preference[@name][@value]').forEach(function(pref) {
             xml.remove(pref);
         });
-        
+
         // write new preferences
         Object.keys(prefHash).forEach(function(key, index) {
             var element = et.SubElement(xml, 'preference');
