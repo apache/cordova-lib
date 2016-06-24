@@ -323,7 +323,8 @@ function ifNotCopied(src, dst) {
 
 /**
  * Copies template files, and directories into a Cordova project directory.
- * If the template exists in a subdirectory everything is copied. 
+ * If the template is a www folder, the www folder is simply copied
+ * Otherwise if the template exists in a subdirectory everything is copied
  * Otherwise package.json, RELEASENOTES.md, .git, NOTICE, LICENSE, COPYRIGHT, and .npmignore are not copied over.
  * A template directory, and project directory must be passed.
  * templateDir - Template directory
@@ -331,20 +332,26 @@ function ifNotCopied(src, dst) {
  * isSubDir - boolean is true if template has subdirectory structure (see code around line 229)
  */
 function copyTemplateFiles(templateDir, projectDir, isSubDir) {
-    var templateFiles;      // Current file
-    templateFiles = fs.readdirSync(templateDir);
-    // Remove directories, and files that are unwanted
-    if (!isSubDir) {
-        templateFiles = templateFiles.filter(
-            function (value) {
-                return !(value === 'package.json' || value === 'RELEASENOTES.md' || value === '.git' || value === 'NOTICE'||
-                value === 'LICENSE' || value === 'COPYRIGHT' || value === '.npmignore');
-            }
-        );
-    }
-    // Copy each template file after filter
-    for (var i = 0; i < templateFiles.length; i++) {
-        var copyPath = path.resolve(templateDir, templateFiles[i]);
+    var copyPath;
+    // if template is a www dir
+    if (path.basename(templateDir) === 'www') {
+        copyPath = path.resolve(templateDir);
         shell.cp('-R', copyPath, projectDir);
+    } else {
+        var templateFiles;      // Current file
+        templateFiles = fs.readdirSync(templateDir);
+        // Remove directories, and files that are unwanted
+        if (!isSubDir) {
+            var excludes = ['package.json', 'RELEASENOTES.md' , '.git', 'NOTICE', 'LICENSE', 'COPYRIGHT', '.npmignore'];
+            templateFiles = templateFiles.filter( function (value) { 
+                return excludes.indexOf(value) < 0; 
+            }); 
+        }
+        // Copy each template file after filter
+        for (var i = 0; i < templateFiles.length; i++) {
+            copyPath = path.resolve(templateDir, templateFiles[i]);
+            shell.cp('-R', copyPath, projectDir);
+        }
     }
+    
 }
