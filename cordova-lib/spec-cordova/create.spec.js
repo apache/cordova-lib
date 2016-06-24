@@ -326,5 +326,28 @@ describe('create end-to-end', function() {
             .fin(done);
     });
 
+    it('should successfully run with www folder as the template', function(done) {
+        var config = {
+            lib: {
+                www: {
+                    template: true,
+                    url: path.join(__dirname, 'fixtures', 'templates', 'config_in_www', 'www'),
+                    version: ''
+                }
+            }
+        };
+        Q()
+            .then(function() {
+                project = project + '3';
+                return cordova.raw.create(project, appId, appName, config);
+            })
+            .then(checkConfigXml)
+            .fail(function(err) {
+                console.log(err && err.stack);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    });
+
 
 });
