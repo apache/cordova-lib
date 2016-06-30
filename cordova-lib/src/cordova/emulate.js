@@ -40,9 +40,20 @@ module.exports = function emulate(options) {
         }).then(function() {
             // Deploy in parallel (output gets intermixed though...)
             return Q.all(options.platforms.map(function(platform) {
+                // This is needed as .build modifies opts
+                var optsClone = _.clone(options.options);
                 return platform_lib
                     .getPlatformApi(platform)
-                    .run(_.clone(options.options));
+                    .build(options.options)
+                    .then(function() {
+                        return hooksRunner.fire('before_deploy', options);
+                    })
+                    .then(function() {
+                        optsClone.nobuild = true;
+                        return platform_lib
+                            .getPlatformApi(platform)
+                            .run(optsClone);
+                    });
             }));
         }).then(function() {
             return hooksRunner.fire('after_emulate', options);

@@ -36,7 +36,10 @@ describe('emulate command', function() {
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
-        platformApi = { run: jasmine.createSpy('run').andReturn(Q()) };
+        platformApi = {
+            run: jasmine.createSpy('run').andReturn(Q()),
+            build: jasmine.createSpy('build').andReturn(Q())
+        };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
     });
     describe('failure', function() {
@@ -73,6 +76,7 @@ describe('emulate command', function() {
                 expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['android', 'ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('android');
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                expect(platformApi.build).toHaveBeenCalled();
                 expect(platformApi.run).toHaveBeenCalled();
             })
             .fail(fail)
@@ -82,7 +86,8 @@ describe('emulate command', function() {
             cordova.raw.emulate({platforms: ['ios'], options: {optionTastic: true }}).then(function(err) {
                 expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
-                expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
+                expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
+                expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true, nobuild: true });
             })
             .fail(fail)
             .fin(done);
@@ -102,6 +107,28 @@ describe('emulate command', function() {
             .fin(function () {
                 cordova.off('warn', warnSpy);
                 done();
+            });
+        });
+        describe('run parameters should not be altered by intermediate build command', function() {
+            var originalBuildSpy;
+            beforeEach(function() {
+                originalBuildSpy = platformApi.build;
+                platformApi.build = jasmine.createSpy('build').andCallFake(function(opts) {
+                    opts.couldBeModified = 'insideBuild';
+                    return Q();
+                });
+            });
+            afterEach(function() {
+                platformApi.build = originalBuildSpy;
+            });
+            it('should leave parameters unchanged', function(done) {
+                cordova.raw.run({platforms: ['blackberry10'], options:{password: '1q1q'}}).then(function() {
+                    expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
+                    expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q', 'couldBeModified': 'insideBuild'});
+                    expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
         });
     });
