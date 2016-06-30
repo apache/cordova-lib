@@ -35,7 +35,10 @@ describe('run command', function() {
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
-        platformApi = { run: jasmine.createSpy('run').andReturn(Q()) };
+        platformApi = {
+            run: jasmine.createSpy('run').andReturn(Q()),
+            build: jasmine.createSpy('build').andReturn(Q())
+        };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
     });
     describe('failure', function() {
@@ -71,6 +74,7 @@ describe('run command', function() {
             cordova.raw.run(['android','ios']).then(function() {
                 expect(getPlatformApi).toHaveBeenCalledWith('android');
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                expect(platformApi.build).toHaveBeenCalled();
                 expect(platformApi.run).toHaveBeenCalled();
             }, function(err) {
                 expect(err).toBeUndefined();
@@ -79,7 +83,8 @@ describe('run command', function() {
         it('should pass down parameters', function(done) {
             cordova.raw.run({platforms: ['blackberry10'], options:{password: '1q1q'}}).then(function() {
                 expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q' }, verbose: false });
-                expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q'});
+                expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q'});
+                expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);
@@ -100,6 +105,28 @@ describe('run command', function() {
             .fin(function () {
                 cordova.off('warn', warnSpy);
                 done();
+            });
+        });
+        describe('run parameters should not be altered by intermediate build command', function() {
+            var originalBuildSpy;
+            beforeEach(function() {
+                originalBuildSpy = platformApi.build;
+                platformApi.build = jasmine.createSpy('build').andCallFake(function(opts) {
+                    opts.couldBeModified = 'insideBuild';
+                    return Q();
+                });
+            });
+            afterEach(function() {
+                platformApi.build = originalBuildSpy;
+            });
+            it('should leave parameters unchanged', function(done) {
+                cordova.raw.run({platforms: ['blackberry10'], options:{password: '1q1q'}}).then(function() {
+                    expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
+                    expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q', 'couldBeModified': 'insideBuild'});
+                    expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
         });
     });
