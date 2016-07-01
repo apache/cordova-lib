@@ -9,6 +9,7 @@ spec-cordova/fixtures/projects/cordova
 .idea/*
 .gitcore
 *.jar
+.vscode
 src/plugman/defaults.json
 cordova-lib/src/plugman/defaults.json
 cordova-lib/spec-plugman/plugins/recursivePlug/demo/fetch.json
