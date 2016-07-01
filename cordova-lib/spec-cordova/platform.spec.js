@@ -356,3 +356,117 @@ describe('plugin add and rm end-to-end --fetch', function () {
         .fin(done);
     }, 60000);
 });
+
+describe('cocoapod plugin add and rm end-to-end', function () {
+
+    var tmpDir = helpers.tmpDir('cocoapod_plugin_test');
+    var project = path.join(tmpDir, 'hello4');
+
+    var samplePlugin = path.join(__dirname, 'fixtures', 'plugins', 'sample-cordova-plugin-cocoapod-dependent');
+    var overlappingDependencyPlugin = path.join(__dirname, 'fixtures', 'plugins', 'sample-cocoapod-plugin-overlapping-dependency');
+    var AFNetworking = 'AFNetworking',
+        CWStatusBarNotification = 'CWStatusBarNotification';
+    var podfile, podsJSON, workspace;
+
+    beforeEach(function() {
+        process.chdir(tmpDir);
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('installs and uninstalls plugin depending on new pod and existing pod', function(done) {
+
+        cordova.raw.create('hello4')
+        .then(function() {
+            process.chdir(project);
+            //TODO: change this to cordova-ios on npm 
+            return cordova.raw.platform('add', 'https://github.com/juliascript/cordova-ios.git#CB-9825');
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', samplePlugin);
+        })
+        .then(function() {
+            podfile = path.resolve('./platforms/ios/Podfile');
+            podsJSON = path.resolve('./platforms/ios/pods.json');
+            workspace = path.resolve('./platforms/ios/HelloCordova.xcworkspace');
+
+            //podfile should have been created
+            fs.exists(podfile, function(podfileExists){
+                expect(podfileExists);
+            });
+
+            //pods.json should have been created
+            fs.exists(podsJSON, function(podsJSONExists){
+                expect(podsJSONExists);
+            });
+
+            //workspace should have been created
+            fs.exists(workspace, function(workspaceCreated){
+                expect(workspaceCreated);
+            });
+
+            var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'});
+            expect(podfileContent.includes(AFNetworking));
+
+            var podsJSONContent = require(podsJSON);
+            expect(podsJSONContent[AFNetworking] !== null);
+
+            return cordova.raw.plugin('add', overlappingDependencyPlugin);
+        })
+        .then(function() {
+            var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
+            var numberOfTimesAFNetworkingIsInPodfile = podfileContent.match(/AFNetworking/g || []).length;
+
+            expect(podfileContent.includes(CWStatusBarNotification));
+            expect(numberOfTimesAFNetworkingIsInPodfile).toEqual(1); 
+
+            delete require.cache[require.resolve(podsJSON)];
+            var podsJSONContent = require(podsJSON);
+            var countPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].count;
+            var specPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].spec;
+
+            expect(countPropertyOfAFNetworkingInPodsJSON).toEqual(2);
+            //spec property should not be changed because of overlapping dependency
+            expect(specPropertyOfAFNetworkingInPodsJSON).toEqual('~> 3.0');
+
+            return cordova.raw.plugin('rm','sample-cocoapod-plugin-overlapping-dependency');
+        })
+        .then(function() {
+            //expect only AFNetworking
+            var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
+
+            expect(podfileContent.includes(CWStatusBarNotification)).toBe(false);
+            expect(podfileContent.includes(AFNetworking));
+  
+            delete require.cache[require.resolve(podsJSON)];
+            var podsJSONContent = require(podsJSON);
+
+            expect(podsJSONContent[AFNetworking]);
+            expect(podsJSONContent[CWStatusBarNotification] === undefined);
+
+            return cordova.raw.plugin('rm', 'sample-cordova-plugin-cocoapod-dependent');
+        })
+        .then(function() {
+            //expect no pods 
+            delete require.cache[require.resolve(podfile)];
+            var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
+
+            expect(podfileContent.includes(CWStatusBarNotification)).toBe(false);
+            expect(podfileContent.includes(AFNetworking)).toBe(false);
+
+            delete require.cache[require.resolve(podsJSON)];
+            var podsJSONContent = require(podsJSON);
+
+            expect(podsJSONContent[AFNetworking] === undefined);
+            expect(podsJSONContent[CWStatusBarNotification] === undefined);
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 60000); 
+});
