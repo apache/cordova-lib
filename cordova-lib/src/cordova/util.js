@@ -38,11 +38,22 @@ if (!global_config_path) {
 var origCwd = null;
 
 var lib_path = path.join(global_config_path, 'lib');
-shell.mkdir('-p', lib_path);
+
 
 exports.binname = 'cordova';
 exports.globalConfig = global_config_path;
-exports.libDirectory = lib_path;
+
+// defer defining libDirectory on exports so we don't create it if 
+// someone simply requires this module
+Object.defineProperty(exports,'libDirectory', {
+        configurable: true,
+        get: function () {
+            shell.mkdir('-p', lib_path);
+            exports.libDirectory = lib_path;
+        return lib_path;
+    }
+});
+
 addModuleProperty(module, 'plugin_parser', './plugin_parser');
 
 exports.isCordova = isCordova;
