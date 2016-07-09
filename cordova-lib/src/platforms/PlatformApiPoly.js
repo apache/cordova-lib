@@ -444,7 +444,7 @@ PlatformApiPoly.prototype.requirements = function() {
         return require(modulePath).check_all();
     } catch (e) {
         var errorMsg = 'Failed to check requirements for ' + this.platform + ' platform. ' +
-            'check_reqs module is missing for platfrom. Skipping it...';
+            'check_reqs module is missing for platform. Skipping it...';
         return Q.reject(errorMsg);
     }
 };
