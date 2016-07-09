@@ -398,7 +398,7 @@ function _getTags(pelem, tag, platform, transform) {
     return tags;
 }
 
-// Same as _getTags() but only looks inside a platfrom section.
+// Same as _getTags() but only looks inside a platform section.
 function _getTagsInPlatform(pelem, tag, platform, transform) {
     var platformTag = pelem.find('./platform[@name="' + platform + '"]');
     var tags = platformTag ? platformTag.findall(tag) : [];
