@@ -20,6 +20,21 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.3.0 (Jul 12, 2016)
+* [CB-11491](https://issues.apache.org/jira/browse/CB-11491) Introduce before_deploy hook
+* [CB-11412](https://issues.apache.org/jira/browse/CB-11412) template support for www folders
+* Fix config.xml path in PlatformApi.prepare
+* [CB-11412](https://issues.apache.org/jira/browse/CB-11412) improve template implementation
+* [CB-11164](https://issues.apache.org/jira/browse/CB-11164) Allow forced dependent plugin removal
+* [CB-11339](https://issues.apache.org/jira/browse/CB-11339) Add a warning about prerelease platform usage
+* [CB-11349](https://issues.apache.org/jira/browse/CB-11349) added --fetch and cordova fetch to create --template
+* [CB-11337](https://issues.apache.org/jira/browse/CB-11337) Use latest released platform version in e2e tests
+* [CB-11274](https://issues.apache.org/jira/browse/CB-11274) Platform browser: wrong path for config.xml
+* [CB-11274](https://issues.apache.org/jira/browse/CB-11274) Make serve dashboard take config.xml -> content.src entry point into account
+* [CB-11261](https://issues.apache.org/jira/browse/CB-11261) Cut out '-nightly' prerelease tag when checking plugin engines
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) added fetch tests to travis
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) fixed failing travis and appveyor tests
+
 ### 6.2.0 (May 12, 2016)
 * [CB-11259](https://issues.apache.org/jira/browse/CB-11259) Improving prepare and build logging
 * Resolve npm run jshint failure due to npm/npm#10343
