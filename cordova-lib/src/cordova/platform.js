@@ -193,22 +193,26 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
                 return promise()
                 .then(function () {
-                    return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                    if (!opts.restoring) {
+                        return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                    }
                 })
                 .then(function() {
-                    if (cmd == 'add') {
+                    if (cmd == 'add' && !opts.restoring) {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
                 })
                 .then(function () {
-                    // Call prepare for the current platform.
-                    var prepOpts = {
-                        platforms :[platform],
-                        searchpath :opts.searchpath,
-                        fetch: opts.fetch || false,
-                        save: opts.save || false
-                    };
-                    return require('./cordova').raw.prepare(prepOpts);
+                    if (!opts.restoring) {
+                        // Call prepare for the current platform if we're not restoring from config.xml
+                        var prepOpts = {
+                            platforms :[platform],
+                            searchpath :opts.searchpath,
+                            fetch: opts.fetch || false,
+                            save: opts.save || false
+                        };
+                        return require('./cordova').raw.prepare(prepOpts);
+                    }
                 })
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
