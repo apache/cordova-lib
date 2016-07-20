@@ -200,17 +200,17 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         });
 
                         if(previousInfo.version != platDetails.version) {
-                            var backupPath = destination + "@" + previousInfo.version;
+                            var backupPath = destination + '@' + previousInfo.version;
                             if(!fs.existsSync(backupPath)){
-                                events.emit('log',"backing up to " + backupPath);
-                                shell.cp('-R',path.join(destination,"/*"),backupPath);
+                                events.emit('log','backing up to ' + backupPath);
+                                shell.cp('-R',path.join(destination,'/*'),backupPath);
                             }
                             else {
-                                events.emit('log',"Skipping backup. Path exists at " + backupPath);
+                                events.emit('log','Skipping backup. Path exists at ' + backupPath);
                             }
                         }
                         else {
-                            events.emit('log',"Skipping backup. Version is the same. " + previousInfo.version);
+                            events.emit('log','Skipping backup. Version is the same. ' + previousInfo.version);
                         }
                         promise = PlatformApi.updatePlatform.bind(null, destination, options, events);
                         return promise();
