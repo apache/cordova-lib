@@ -96,7 +96,7 @@
         <header-file src="src/ios/CDVDevice.h" />
         <source-file src="src/ios/CDVDevice.m" />
         
-        <framework src="AFNetworking" spec="~> 3.0" weak="false" type="podspec"/>
+        <framework src="AFNetworking" spec="~> 2.0" weak="false" type="podspec"/>
         <framework src="CWStatusBarNotification" weak="false" type="podpsec"/>
        
     </platform>

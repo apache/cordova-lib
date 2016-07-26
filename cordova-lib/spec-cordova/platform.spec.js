@@ -437,8 +437,11 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             delete require.cache[require.resolve(podsJSON)];
             var podsJSONContent = require(podsJSON);
             var countPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].count;
+            var specPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].spec;
 
             expect(countPropertyOfAFNetworkingInPodsJSON).toEqual(2);
+            //spec property should not be changed because of overlapping dependency
+            expect(specPropertyOfAFNetworkingInPodsJSON).toEqual('~> 3.0');
 
             return cordova.raw.plugin('rm','sample-cocoapod-plugin-overlapping-dependency');
         })
