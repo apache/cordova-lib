@@ -86,6 +86,8 @@
         <icon density="mdpi" height="255" src="logo-android.png" width="255" />
         <icon gap:density="mdpi" height="255" src="logo-android-gap.png" width="255" />
         <icon cdv:density="mdpi" height="255" src="logo-android-cdv.png" width="255" />
+        <resource-file src="appconfig.json" target="appconfig.json" />
+        <resource-file src="androidconfig.json" target="androidconfig.json" />
         <preference name="android-minSdkVersion" value="10" />
         <preference name="orientation" value="landscape" />
     </platform>
@@ -93,6 +95,7 @@
         <icon src="res/windows/logo.scale-200.png" target="logo.png"/>
         <icon src="res/windows/logo-small.scale-400.png" width="72" target="logo.png"/>
         <icon src="res/windows/logo-small.scale-400_48.png" height="48" target="logo.png"/>
+        <resource-file src="windowsconfig.json" target="windowsconfig.json" arch="x86" device-target="all" />
     </platform>
     <plugin name="org.apache.cordova.pluginwithvars">
         <variable name="var" value="varvalue" />

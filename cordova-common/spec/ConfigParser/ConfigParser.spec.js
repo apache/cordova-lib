@@ -281,5 +281,21 @@ describe('config.xml parser', function () {
                 expect(cfg.getStaticResources('android', 'icon').getByDensity('mdpi').src).toBe('logo-android.png');
             });
         });
+
+        describe('file resources', function() {
+            var hasSrcPropertyDefined = function (e) { return !!e.src; };
+            var hasTargetPropertyDefined = function (e) { return !!e.target; };
+            var hasArchPropertyDefined = function (e) { return !!e.arch; };
+
+            it('should fetch platform-specific resources', function() {
+                expect(cfg.getFileResources('android').length).toBe(2);
+            });
+
+            it('should parse resources\' attributes', function() {
+                expect(cfg.getFileResources('android').every(hasSrcPropertyDefined)).toBeTruthy();
+                expect(cfg.getFileResources('android').every(hasTargetPropertyDefined)).toBeTruthy();
+                expect(cfg.getFileResources('windows').every(hasArchPropertyDefined)).toBeTruthy();
+            });
+        });
     });
 });
