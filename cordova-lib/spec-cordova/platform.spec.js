@@ -369,7 +369,6 @@ describe('cocoapod plugin add and rm end-to-end', function () {
     var podfile, podsJSON, workspace;
 
     beforeEach(function() {
-        shell.exec('pwd');
         process.chdir(tmpDir);
     });
 
@@ -409,15 +408,12 @@ describe('cocoapod plugin add and rm end-to-end', function () {
                 expect(workspaceCreated);
             });
 
-            delete require.cache[require.resolve(podfile)];
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'});
-
             expect(podfileContent.includes(AFNetworking));
 
-            delete require.cache[require.resolve(podsJSON)];
             var podsJSONContent = require(podsJSON);
-
             expect(podsJSONContent[AFNetworking] !== null);
+            
             return cordova.raw.plugin('add', overlappingDependencyPlugin);
         })
         .then(function() {

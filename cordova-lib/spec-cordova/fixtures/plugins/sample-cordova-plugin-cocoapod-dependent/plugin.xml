@@ -8,7 +8,6 @@
 
     <asset src="www/test.js" target="test.js" />
     <platform name="ios">
-        <plugins-plist key="TestPlugin" string="Test" />
         <framework src="AFNetworking" spec="~> 3.0" weak="false" type="podspec"/>
     </platform>
 </plugin>
