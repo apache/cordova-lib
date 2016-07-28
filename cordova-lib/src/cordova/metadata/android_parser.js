@@ -41,7 +41,7 @@ function android_parser(project) {
     this.path = project;
 
     //If we have a gradle file but not a manifest, this is an Android Studio project
-    if(!fs.existsSync(path.join(project, "AndroidManifest.xml"))) {
+    if(!fs.existsSync(path.join(project, 'AndroidManifest.xml'))) {
       this.path = path.join(project, 'app', 'src', 'main');
     }
 
