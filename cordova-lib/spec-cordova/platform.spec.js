@@ -362,8 +362,8 @@ describe('cocoapod plugin add and rm end-to-end', function () {
     var tmpDir = helpers.tmpDir('cocoapod_plugin_test');
     var project = path.join(tmpDir, 'hello4');
 
-    var samplePlugin = path.resolve('./spec-cordova/fixtures/plugins/sample-cordova-plugin-cocoapod-dependent');
-    var overlappingDependencyPlugin = path.resolve('./spec-cordova/fixtures/plugins/sample-cocoapod-plugin-overlapping-dependency');
+    var samplePlugin = path.join(__dirname, 'fixtures', 'plugins', 'sample-cordova-plugin-cocoapod-dependent');
+    var overlappingDependencyPlugin = path.join(__dirname, 'fixtures', 'plugins', 'sample-cocoapod-plugin-overlapping-dependency');
     var AFNetworking = 'AFNetworking',
         CWStatusBarNotification = 'CWStatusBarNotification';
     var podfile, podsJSON, workspace;
@@ -413,11 +413,10 @@ describe('cocoapod plugin add and rm end-to-end', function () {
 
             var podsJSONContent = require(podsJSON);
             expect(podsJSONContent[AFNetworking] !== null);
-            
+
             return cordova.raw.plugin('add', overlappingDependencyPlugin);
         })
         .then(function() {
-            delete require.cache[require.resolve(podfile)];
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
             var numberOfTimesAFNetworkingIsInPodfile = podfileContent.match(/AFNetworking/g || []).length;
 
@@ -437,7 +436,6 @@ describe('cocoapod plugin add and rm end-to-end', function () {
         })
         .then(function() {
             //expect only AFNetworking
-            delete require.cache[require.resolve(podfile)];
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
 
             expect(podfileContent.includes(CWStatusBarNotification)).toBe(false);
