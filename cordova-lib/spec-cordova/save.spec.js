@@ -412,6 +412,33 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
+        it('spec.14.1 should restore plugin with variables', function (done) {
+            platform('add', platformLocalPathNewer)
+            .then(function () {
+                return cordova.raw.plugin('add', variablePluginUrl, {
+                    'save': true,
+                    'cli_variables': {
+                        'APP_ID':'123456789',
+                        'APP_NAME':'myApplication'
+                    }
+                });
+            }).then(function () {
+                expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_ID')).toBe('123456789');
+                expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_NAME')).toBe('myApplication');
+                return cordova.raw.plugin('rm', variablePluginName);
+            }).then(function() {
+                expect(path.join(appPath, 'plugins', variablePluginName)).not.toExist();
+                return cordova.raw.plugin('add', variablePluginName);
+            }).then(function() {
+                expect(path.join(appPath, 'plugins', variablePluginName)).toExist();
+                done();
+            }).catch(function (err) {
+                console.log(err.message);
+                expect(true).toBe(false);
+                done();
+            });
+        }, TIMEOUT);
+
         it('spec.15 save git url as spec', function (done) {
             platform('add', platformLocalPathNewer)
             .then(function () {
