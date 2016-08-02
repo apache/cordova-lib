@@ -107,6 +107,31 @@ describe('run command', function() {
                 done();
             });
         });
+
+        it('should call platform\'s build method', function (done) {
+            cordova.raw.run({platforms: ['blackberry10']})
+            .then(function() {
+                expect(prepare_spy).toHaveBeenCalled();
+                expect(platformApi.build).toHaveBeenCalledWith({});
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+        });
+
+        it('should not call build if --nobuild option is passed', function (done) {
+            cordova.raw.run({platforms: ['blackberry10'], options: { nobuild: true }})
+            .then(function() {
+                expect(prepare_spy).toHaveBeenCalled();
+                expect(platformApi.build).not.toHaveBeenCalled();
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+        });
+
         describe('run parameters should not be altered by intermediate build command', function() {
             var originalBuildSpy;
             beforeEach(function() {
