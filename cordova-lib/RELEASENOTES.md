@@ -20,6 +20,13 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.3.1 (Aug 08, 2016)
+* [CB-11652](https://issues.apache.org/jira/browse/CB-11652) Update run and emulate to skip build
+* [CB-11194](https://issues.apache.org/jira/browse/CB-11194) Defer creating of libDir folder until something actually requests it
+* [CB-11493](https://issues.apache.org/jira/browse/CB-11493) Add cordova emulate option to skip prepare
+* [CB-11205](https://issues.apache.org/jira/browse/CB-11205) Respect saved variables when installing plugin
+* [CB-11589](https://issues.apache.org/jira/browse/CB-11589) Fix missing plugin files after restore
+
 ### 6.3.0 (Jul 12, 2016)
 * [CB-11491](https://issues.apache.org/jira/browse/CB-11491) Introduce before_deploy hook
 * [CB-11412](https://issues.apache.org/jira/browse/CB-11412) template support for www folders
