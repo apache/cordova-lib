@@ -294,6 +294,7 @@ describe('xml-helpers', function(){
         beforeEach(function() {
             dstXml = et.XML(TEST_XML);
         });
+
         it('should merge attributes and text of the root element without clobbering', function () {
             var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
             xml_helpers.mergeXml(testXml, dstXml);
@@ -308,6 +309,15 @@ describe('xml-helpers', function(){
             expect(dstXml.attrib.foo).toEqual('bar');
             expect(dstXml.attrib.id).toEqual('NOTANID');
             expect(dstXml.text).toEqual('TEXT');
+        });
+
+        it('should handle attributes values with quotes correctly', function () {
+            var testXml = et.XML('<widget><quote foo="some \'quoted\' string" bar="another &quot;quoted&quot; string" baz="&quot;mixed&quot; \'quotes\'" /></widget>');
+            xml_helpers.mergeXml(testXml, dstXml);
+            expect(dstXml.find('quote')).toBeDefined();
+            expect(dstXml.find('quote').attrib.foo).toEqual('some \'quoted\' string');
+            expect(dstXml.find('quote').attrib.bar).toEqual('another "quoted" string');
+            expect(dstXml.find('quote').attrib.baz).toEqual('"mixed" \'quotes\'');
         });
 
         it('should not merge platform tags with the wrong platform', function () {

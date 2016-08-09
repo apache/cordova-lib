@@ -3,7 +3,7 @@
   "name": "cordova-common",
   "description": "Apache Cordova tools and platforms shared routines",
   "license": "Apache-2.0",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-common.git"
