@@ -20,6 +20,13 @@
 -->
 # Cordova-common Release Notes
 
+### 1.4.1 (Aug 09, 2016)
+* Add general purpose `ConfigParser.getAttribute` API
+* [CB-11653](https://issues.apache.org/jira/browse/CB-11653) moved `findProjectRoot` from `cordova-lib` to `cordova-common`
+* [CB-11636](https://issues.apache.org/jira/browse/CB-11636) Handle attributes with quotes correctly
+* [CB-11645](https://issues.apache.org/jira/browse/CB-11645) added check to see if `getEditConfig` exists before trying to use it
+* [CB-9825](https://issues.apache.org/jira/browse/CB-9825) framework tag spec parsing
+
 ### 1.3.0 (May 12, 2016)
 * [CB-11259](https://issues.apache.org/jira/browse/CB-11259): Improving prepare and build logging
 * [CB-11194](https://issues.apache.org/jira/browse/CB-11194) Improve cordova load time
