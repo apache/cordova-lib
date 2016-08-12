@@ -676,6 +676,29 @@ describe('(save flag)', function () {
                 done();
             });
         });
+
+        it('spec.25 should install plugins already added to the project into platform when restoring it', function (done) {
+            var fail = jasmine.createSpy('fail').andCallFake(function (err) {
+                console.log(err.message);
+            });
+
+            cordova.raw.plugin('add', localPluginPath)
+            .then(function () {
+                helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+                return prepare({ platforms: [ platformName ] });
+            })
+            .then(function () {
+                expect(path.join(appPath, 'platforms', platformName)).toExist();
+                // Validate that plugin has been installed to platform by checking
+                // platformJson file for plugin entry added
+                var platformJson = require(path.join(appPath, 'platforms', platformName, platformName + '.json'));
+                expect(platformJson.installed_plugins[localPluginName]).toBeDefined();
+            })
+            .finally(function () {
+                expect(fail).not.toHaveBeenCalled();
+                done();
+            });
+        });
     });
 
     describe('(cleanup)', function () {

@@ -198,7 +198,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 })
                 .then(function() {
-                    if (cmd == 'add' && !opts.restoring) {
+                    if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
                 })
