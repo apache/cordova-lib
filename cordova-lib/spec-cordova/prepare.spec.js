@@ -77,7 +77,6 @@ describe('prepare command', function() {
         is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
 
         find_plugins = spyOn(util, 'findPlugins').andReturn([]);
         spyOn(PlatformJson, 'load').andReturn(new PlatformJson(null, null, {}));
@@ -135,15 +134,38 @@ describe('prepare command', function() {
     describe('hooks', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+                // Workaround for https://github.com/jasmine/jasmine/issues/444
+                var hooksFired = [];
+                fire = spyOn(HooksRunner.prototype, 'fire').andCallFake(function() {
+                    var hook = fire.calls[fire.calls.length - 1].args[0];
+                    var lastFireArgs = fire.calls[fire.calls.length - 1].args[1];
+
+                    hooksFired.push(hook);
+
+                    // Because of 'fire' spy argument 'options' object is a reference in Jasmine
+                    // we actually had checked after_prepare' options previously
+                    if (hook === 'before_prepare' || hook === 'after_prepare') {
+                        expect(lastFireArgs.platforms).toEqual(supported_platforms);
+                        expect(lastFireArgs.paths).toEqual(supported_platforms_paths);
+                    }
+
+                    return Q();
+                });
                 prepare().then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], save: false, fetch: false, paths:supported_platforms_paths});
+                    expect(hooksFired).toContain('before_prepare');
+                    expect(hooksFired).toContain('after_prepare');
                 }, function(err) {
                     expect(err).toBeUndefined();
                 }).fin(done);
             });
             it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare('android').then(function() {
-                    expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
+                    var lastFireArgs = fire.calls.mostRecent().args;
+                    expect(lastFireArgs[0]).toBe('after_prepare');
+                    expect(lastFireArgs[1].platforms).toBeDefined();
+                    expect(lastFireArgs[1].platforms).toEqual(['android']);
+                    expect(lastFireArgs[1].paths).toBeDefined();
+                    expect(lastFireArgs[1].paths).toEqual([path.join(project_dir, 'platforms', 'android', 'www')]);
                 }, function(err) {
                     expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err.stack);
                 }).fin(done);
@@ -153,6 +175,7 @@ describe('prepare command', function() {
         describe('with no platforms added', function() {
             beforeEach(function() {
                 list_platforms.andReturn([]);
+                fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
             });
             it('should not fire the hooker', function(done) {
                 Q().then(prepare).then(function() {

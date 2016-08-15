@@ -37,23 +37,25 @@ function prepare(options) {
     return Q().then(function() {
         var projectRoot = cordova_util.cdProjectRoot();
         var config_json = config.read(projectRoot);
-        options = options || { verbose: false, platforms: [], options: {} };
+        options = options || { verbose: false, options: {} };
+        options.platforms = options.platforms || cordova_util.listPlatforms(projectRoot);
+
         options.save = options.save || false;
         options.fetch = options.fetch || false;
+
         var hooksRunner = new HooksRunner(projectRoot);
-        return hooksRunner.fire('before_prepare', options)
-        .then(function(){
-            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath, fetch : options.fetch, restoring : true });
-        })
-        .then(function(){
+        return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath, fetch : options.fetch, restoring : true })
+        .then(function () {
             options = cordova_util.preProcessOptions(options);
             var paths = options.platforms.map(function(p) {
                 var platform_path = path.join(projectRoot, 'platforms', p);
                 return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
             });
             options.paths = paths;
+            return restore.installPluginsFromConfigXML(options);
         }).then(function() {
-            options = cordova_util.preProcessOptions(options);
+            return hooksRunner.fire('before_prepare', options);
+        }).then(function() {
             options.searchpath = options.searchpath || config_json.plugin_search_path;
             // Iterate over each added platform
             return preparePlatforms(options.platforms, projectRoot, options);
@@ -62,12 +64,9 @@ function prepare(options) {
                 return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
             });
             return hooksRunner.fire('after_prepare', options);
-        }).then(function () {
-            return restore.installPluginsFromConfigXML(options);
         });
     });
 }
-
 /**
  * Calls `platformApi.prepare` for each platform in project
  *
