@@ -382,8 +382,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
         cordova.raw.create('hello4')
         .then(function() {
             process.chdir(project);
-            //TODO: change this to cordova-ios on npm 
-            return cordova.raw.platform('add', 'https://github.com/juliascript/cordova-ios.git#CB-9825');
+            return cordova.raw.platform('add', 'https://git-wip-us.apache.org/repos/asf/cordova-ios.git');
         })
         .then(function() {
             return cordova.raw.plugin('add', samplePlugin);
@@ -409,7 +408,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             });
 
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'});
-            expect(podfileContent.includes(AFNetworking));
+            expect(podfileContent.indexOf(AFNetworking) !== -1 );
 
             var podsJSONContent = require(podsJSON);
             expect(podsJSONContent[AFNetworking] !== null);
@@ -420,7 +419,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
             var numberOfTimesAFNetworkingIsInPodfile = podfileContent.match(/AFNetworking/g || []).length;
 
-            expect(podfileContent.includes(CWStatusBarNotification));
+            expect(podfileContent.indexOf(CWStatusBarNotification) !== -1);
             expect(numberOfTimesAFNetworkingIsInPodfile).toEqual(1); 
 
             delete require.cache[require.resolve(podsJSON)];
@@ -438,8 +437,8 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             //expect only AFNetworking
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
 
-            expect(podfileContent.includes(CWStatusBarNotification)).toBe(false);
-            expect(podfileContent.includes(AFNetworking));
+            expect(podfileContent.indexOf(CWStatusBarNotification) === -1);
+            expect(podfileContent.indexOf(AFNetworking) !== -1);
   
             delete require.cache[require.resolve(podsJSON)];
             var podsJSONContent = require(podsJSON);
@@ -454,8 +453,8 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             delete require.cache[require.resolve(podfile)];
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
 
-            expect(podfileContent.includes(CWStatusBarNotification)).toBe(false);
-            expect(podfileContent.includes(AFNetworking)).toBe(false);
+            expect(podfileContent.indexOf(CWStatusBarNotification) === -1);
+            expect(podfileContent.indexOf(AFNetworking) === -1);
 
             delete require.cache[require.resolve(podsJSON)];
             var podsJSONContent = require(podsJSON);
