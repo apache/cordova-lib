@@ -330,7 +330,7 @@ function copyPlugin(pinfo, plugins_dir, link) {
 
     shell.rm('-rf', dest);
 
-    if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
+    if(!link && dest.indexOf(path.resolve(plugin_dir)+'\\') === 0) {
 
         if(/^win/.test(process.platform)) {
             /*
