@@ -30,6 +30,8 @@ var common = require('../../src/plugman/platforms/common')
   , java_dir = path.join(src, 'one', 'two', 'three')
   , java_file = path.join(java_dir, 'test.java')
   , symlink_file = path.join(java_dir, 'symlink')
+  , symlink_dir = path.join(java_dir, 'symlink_dir')
+  , symlink_dir_relative_file = path.join('one', 'two', 'file')
   , non_plugin_file = path.join(osenv.tmpdir(), 'non_plugin_file');
 
 describe('common platform handler', function() {
@@ -79,6 +81,24 @@ describe('common platform handler', function() {
             }
 
             common.copyFile(test_dir, symlink_file, project_dir, dest);
+            shell.rm('-rf', project_dir);
+        });
+
+        it('should deeply symlink directory tree when src is a directory', function(){
+            var symlink_dir_relative_subdir = path.dirname(symlink_dir_relative_file);
+
+            shell.mkdir('-p', path.join(symlink_dir, symlink_dir_relative_subdir));
+            fs.writeFileSync(path.join(symlink_dir, symlink_dir_relative_file), 'contents', 'utf-8');
+
+            // This will fail on windows if not admin - ignore the error in that case.
+            if (ignoreEPERMonWin32(java_file, symlink_file)) {
+                return;
+            }
+
+            var create_symlink = true;
+            common.copyFile(test_dir, symlink_dir, project_dir, dest, create_symlink);
+
+            expect(path.resolve(dest, symlink_dir_relative_subdir, fs.readlinkSync(path.join(dest, symlink_dir_relative_file)))).toBe(path.resolve(symlink_dir, symlink_dir_relative_file));
             shell.rm('-rf', project_dir);
         });
 
