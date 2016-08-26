@@ -378,7 +378,7 @@ function is_conflicting(editchanges, config_munge, self, force) {
                 conflictingParent = editchange.target;
             }
 
-            if (target.length !== 0) {
+            if (target && target.length !== 0) {
                 // conflict has been found, exit and throw an error
                 conflictFound = true;
                 if (!force) {
