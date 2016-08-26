@@ -53,6 +53,9 @@ function prepare(options) {
                 return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
             });
             options.paths = paths;
+        }).then(function () {
+            options = cordova_util.preProcessOptions(options);
+            return restore.installPluginsFromConfigXML(options);
         }).then(function() {
             options = cordova_util.preProcessOptions(options);
             options.searchpath = options.searchpath || config_json.plugin_search_path;
@@ -63,8 +66,6 @@ function prepare(options) {
                 return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
             });
             return hooksRunner.fire('after_prepare', options);
-        }).then(function () {
-            return restore.installPluginsFromConfigXML(options);
         });
     });
 }
