@@ -193,6 +193,11 @@ function resolveConfigFilePath(project_dir, platform, file) {
         return filepath;
     }
 
+    // FIXME android studio
+    if(platform === "android" && !fs.existsSync(filepath)) {
+      filepath = path.join(project_dir, 'app', 'src', 'main', 'res', 'xml', 'config.xml');
+    }
+
     // None of the special cases matched, returning project_dir/file.
     return filepath;
 }
