@@ -60,6 +60,8 @@ function getPlatformApi(platform, platformRootDir) {
             events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
                 ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
                 platforms[platform].apiCompatibleSince + ' or newer.');
+        } else {
+            events.emit('warn', 'Error loading cordova-'+platform);
         }
 
         PlatformApi = require('./PlatformApiPoly');
