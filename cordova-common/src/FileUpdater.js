@@ -366,7 +366,7 @@ function mapDirectory(rootDir, subDir, include, exclude) {
 
     function matchGlobArray(path, globs) {
         for (var i in globs) {
-            if (minimatch(path, globs[i])) {
+            if (minimatch(path, globs[i], {dot:true})) {
                 return true;
             }
         }
