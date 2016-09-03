@@ -30,6 +30,7 @@ describe('(save flag)', function () {
         prepare     = require('../src/cordova/prepare'),
         registry    = require('../src/plugman/registry/registry'),
         PlatformApi = require('../src/platforms/PlatformApiPoly'),
+        events      = require('cordova-common').events,
         platform    = rewire('../src/cordova/platform');
 
     var appName                = 'testApp',
@@ -38,7 +39,7 @@ describe('(save flag)', function () {
         platformName           = helpers.testPlatform,
         platformVersionOld     = '4.0.0',
         platformVersionNew     = '4.0.1',
-        platformVersionNewer   = '4.1.1',
+        platformVersionNewer   = '5.2.2',
         platformLocalPathOld   = path.join(__dirname, 'cordova-' + platformName + '-old'),
         platformLocalPathNew   = path.join(__dirname, 'cordova-' + platformName + '-new'),
         platformLocalPathNewer = path.join(__dirname, 'cordova-' + platformName + '-newer'),
@@ -56,8 +57,8 @@ describe('(save flag)', function () {
         pluginOldVersion       = '0.2.11',
         gitPluginName          = 'cordova-plugin-device',
         gitPluginUrl           = 'https://github.com/apache/cordova-plugin-device.git',
-        variablePluginName     = 'phonegap-facebook-plugin',
-        variablePluginUrl      = 'https://github.com/Wizcorp/phonegap-facebook-plugin',
+        variablePluginName     = 'cordova-plugin-facebook4',
+        variablePluginUrl      = 'https://github.com/jeduan/cordova-plugin-facebook4',
         localPluginName        = 'org.apache.cordova.fakeplugin1',
         localPluginPath        = path.join(__dirname, 'fixtures', 'plugins', 'fake1'),
         TIMEOUT                = 60 * 1000,
@@ -112,7 +113,7 @@ describe('(save flag)', function () {
         revertInstallPluginsForNewPlatform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
 
        //creating test app
-        cordova.raw.create(appPath, undefined, undefined, {}).then(function () {
+        cordova.raw.create(appPath, undefined, undefined, {}, events).then(function () {
             //removing unnecessary whitelist plugin from config
             helpers.removePlugin(appPath, 'cordova-plugin-whitelist');
             done();
@@ -658,6 +659,7 @@ describe('(save flag)', function () {
         }, TIMEOUT);
 
         it('spec.24 should restore only specified platform', function (done) {
+            
             helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
             helpers.setEngineSpec(appPath, otherPlatformName, otherPlatformSpec);
             var options = {
