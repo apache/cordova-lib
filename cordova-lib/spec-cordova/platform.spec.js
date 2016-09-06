@@ -357,7 +357,7 @@ describe('plugin add and rm end-to-end --fetch', function () {
     }, 60000);
 });
 
-describe('cocoapod plugin add and rm end-to-end', function () {
+xdescribe('cocoapod plugin add and rm end-to-end', function () {
 
     var tmpDir = helpers.tmpDir('cocoapod_plugin_test');
     var project = path.join(tmpDir, 'hello4');
