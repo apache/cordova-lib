@@ -49,8 +49,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
         cordova.raw.create('hello4')
         .then(function() {
             process.chdir(project);
-            //return cordova.raw.platform('add', 'https://git-wip-us.apache.org/repos/asf/cordova-ios.git');
-            return cordova.raw.platform('add', '/Users/shazron/Documents/git/apache/cordova-ios');
+            return cordova.raw.platform('add', 'https://git-wip-us.apache.org/repos/asf/cordova-ios.git');
         })
         .then(function() {
             return cordova.raw.plugin('add', samplePlugin);
