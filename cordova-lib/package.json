@@ -54,10 +54,12 @@
     "test": "npm run jshint && npm run jasmine",
     "test-ios": "npm run test && npm run jasmine-ios",
     "ci": "npm run jshint && npm run cover && codecov",
+    "ci-ios": "npm run jshint && npm run cover-ios && codecov",
     "jshint": "jshint src spec-cordova spec-plugman",
     "jasmine": "jasmine-node --captureExceptions --color spec-plugman spec-cordova",
     "jasmine-ios": "jasmine-node --captureExceptions --color spec-cordova/platform.spec.ios.js --matchall",
-    "cover": "istanbul cover --root src --print detail node_modules/jasmine-node/bin/jasmine-node -- spec-cordova spec-plugman"
+    "cover": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman",
+    "cover-ios": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman --matchall"
   },
   "contributors": [
     {
