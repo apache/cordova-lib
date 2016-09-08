@@ -9,6 +9,7 @@ node_js:
   - "4"
   - "6"
 before_install:
+  - gem install activesupport -v '4.2.6'
   - gem install cocoapods -v '1.0.1'
 install:
   - git clone https://github.com/apache/cordova-js --depth 10
