@@ -57,9 +57,9 @@
     "ci-ios": "npm run jshint && npm run cover-ios && codecov",
     "jshint": "jshint src spec-cordova spec-plugman",
     "jasmine": "jasmine-node --captureExceptions --color spec-plugman spec-cordova",
-    "jasmine-ios": "jasmine-node --captureExceptions --color spec-cordova/platform.spec.ios.js --matchall",
+    "jasmine-ios": "jasmine-node --captureExceptions --color spec-cordova-ios",
     "cover": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman",
-    "cover-ios": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman --matchall"
+    "cover-ios": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman spec-cordova-ios"
   },
   "contributors": [
     {
