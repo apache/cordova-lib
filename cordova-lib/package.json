@@ -55,7 +55,7 @@
     "test-ios": "npm run test && npm run jasmine-ios",
     "ci": "npm run jshint && npm run cover && codecov",
     "ci-ios": "npm run jshint && npm run cover-ios && codecov",
-    "jshint": "jshint src spec-cordova spec-plugman",
+    "jshint": "jshint src spec-cordova spec-plugman spec-cordova-ios",
     "jasmine": "jasmine-node --captureExceptions --color spec-plugman spec-cordova",
     "jasmine-ios": "jasmine-node --captureExceptions --color spec-cordova-ios",
     "cover": "istanbul cover --root src --print detail node_modules/.bin/jasmine-node -- spec-cordova spec-plugman",
