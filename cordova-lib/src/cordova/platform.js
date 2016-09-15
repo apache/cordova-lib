@@ -204,6 +204,13 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                             if(!fs.existsSync(backupPath)){
                                 events.emit('log','backing up to ' + backupPath);
                                 shell.cp('-R',path.join(destination,'/*'),backupPath);
+                                var msg = 'Existing project was backed up to ' + backupPath;
+                                events.emit('warn',msg);
+                                msg = 'If you modified the previous project outside of this command line interface ' +
+                                    'you will need to redo your changes to the new platform project.';
+
+                                events.emit('warn',msg);
+
                             }
                             else {
                                 events.emit('log','Skipping backup. Path exists at ' + backupPath);
