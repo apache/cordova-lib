@@ -31,7 +31,7 @@ var fs            = require('fs'),
 
 
 function android_parser(project) {
-    if (!fs.existsSync(path.join(project, 'build.gradle'))) {
+    if (!fs.existsSync(path.join(project, 'AndroidManifest.xml'))) {
         throw new CordovaError('The provided path "' + project + '" is not an Android project.');
     }
 
@@ -39,12 +39,6 @@ function android_parser(project) {
     Parser.call(this, 'android', project);
 
     this.path = project;
-
-    //If we have a gradle file but not a manifest, this is an Android Studio project
-    if(!fs.existsSync(path.join(project, 'AndroidManifest.xml'))) {
-      this.path = path.join(project, 'app', 'src', 'main');
-    }
-
     this.strings = path.join(this.path, 'res', 'values', 'strings.xml');
     this.manifest = path.join(this.path, 'AndroidManifest.xml');
     this.android_config = path.join(this.path, 'res', 'xml', 'config.xml');
