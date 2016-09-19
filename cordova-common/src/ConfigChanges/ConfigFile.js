@@ -193,7 +193,8 @@ function resolveConfigFilePath(project_dir, platform, file) {
         return filepath;
     }
 
-    // FIXME android studio
+    // XXX this checks for android studio projects
+    // only if none of the options above are satisfied does this get called
     if(platform === 'android' && !fs.existsSync(filepath)) {
       filepath = path.join(project_dir, 'app', 'src', 'main', 'res', 'xml', 'config.xml');
     }
