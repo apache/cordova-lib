@@ -298,9 +298,10 @@ describe('config-changes module', function() {
 
                     var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
                     munger.process(plugins_dir);
-                    expect(spy.calls.length).toEqual(2);
+                    expect(spy.calls.length).toEqual(3);
                     expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
                     expect(spy.argsForCall[1][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                    expect(spy.argsForCall[2][2]).toEqual('/manifest/uses-sdk');
                 });
                 it('should call graftXMLOverwrite for every new config munge with mode \'overwrite\' it introduces', function() {
                     shell.cp('-rf', editconfigplugin, plugins_dir);
