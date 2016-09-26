@@ -468,6 +468,25 @@ ConfigParser.prototype = {
             };
         });
     },
+    /* Get all edit-config tags */
+    getEditConfigs: function(platform) {
+        var platform_tag = this.doc.find('./platform[@name="' + platform + '"]');
+        var platform_edit_configs = platform_tag ? platform_tag.findall('edit-config') : [];
+
+        var edit_configs = this.doc.findall('edit-config').concat(platform_edit_configs);
+
+        return edit_configs.map(function(tag) {
+            var editConfig =
+                {
+                    file : tag.attrib['file'],
+                    target : tag.attrib['target'],
+                    mode : tag.attrib['mode'],
+                    id : 'config.xml',
+                    xmls : tag.getchildren()
+                };
+            return editConfig;
+        });
+    },
     write:function() {
         fs.writeFileSync(this.path, this.doc.write({indent: 4}), 'utf-8');
     }
