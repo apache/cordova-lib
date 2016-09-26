@@ -21,6 +21,7 @@ var cordova_util      = require('./util'),
     ConfigParser      = require('cordova-common').ConfigParser,
     PlatformJson      = require('cordova-common').PlatformJson,
     PluginInfoProvider = require('cordova-common').PluginInfoProvider,
+    PlatformMunger    = require('cordova-common').ConfigChanges.PlatformMunger,
     events            = require('cordova-common').events,
     platforms         = require('../platforms/platforms'),
     PlatformApiPoly = require('../platforms/PlatformApiPoly'),
@@ -117,6 +118,13 @@ function preparePlatforms (platformList, projectRoot, options) {
                     var browserify = require('../plugman/browserify');
                     return browserify(project, platformApi);
                 }
+            })
+            .then(function () {
+                // Handle edit-config in config.xml
+                var platformRoot = path.join(projectRoot, 'platforms', platform);
+                var platformJson = PlatformJson.load(platformRoot, platform);
+                var munger = new PlatformMunger(platform, platformRoot, platformJson);
+                munger.add_config_changes(project.projectConfig, /*should_increment=*/true).save_all();
             });
         });
     }));
