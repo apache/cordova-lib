@@ -44,16 +44,28 @@ function HooksRunner(projectRoot) {
  * Returns a promise.
  */
 HooksRunner.prototype.fire = function fire(hook, opts) {
+    if (isHookDisabled(opts, hook)) {
+        return Q('hook '+hook+' is disabled.');
+    }
+
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
     }
     opts = this.prepareOptions(opts);
 
+    var handlers = events.listeners(hook);
+    var scripts = scriptsFinder.getHookScripts(hook, opts);
+
+    // CB-10193 Emit warning if there is any handlers subscribed to 'pre_package'
+    if (hook === 'pre_package' && (handlers.length > 0 || scripts.length > 0)) {
+        events.emit('warn', '"pre_package" hook is deprecated and will be removed in next Windows platform versions. ' +
+            'Please use "after_prepare" if you want to manipulate files in www before app will be packaged.');
+    }
+
     // execute hook event listeners first
     return executeEventHandlersSerially(hook, opts).then(function() {
         // then execute hook script files
-        var scripts = scriptsFinder.getHookScripts(hook, opts);
         var context = new Context(hook, opts);
         return runScriptsSerially(scripts, context);
     });
@@ -73,7 +85,7 @@ HooksRunner.prototype.prepareOptions = function(opts) {
     try {
         opts.cordova.version = opts.cordova.version || require('../../package').version;
     } catch(ex) {
-        events.emit('error', 'HooksRunner could not load package.json: ' + ex.message);
+        events.emit('warn', 'HooksRunner could not load package.json: ' + ex.message);
     }
 
     return opts;
@@ -87,6 +99,10 @@ module.exports = HooksRunner;
  */
 module.exports.fire = globalFire;
 function globalFire(hook, opts) {
+    if (isHookDisabled(opts, hook)) {
+        return Q('hook '+hook+' is disabled.');
+    }
+
     opts = opts || {};
     return executeEventHandlersSerially(hook, opts);
 }
@@ -109,6 +125,9 @@ function executeEventHandlersSerially(hook, opts) {
  * Returns promise.
  */
 function runScriptsSerially (scripts, context) {
+    if (scripts.length === 0) {
+        events.emit('verbose', 'No scripts found for hook "' + context.hook + '".');
+    }
     return scripts.reduce(function(prevScriptPromise, nextScript) {
         return prevScriptPromise.then(function() {
             return runScript(nextScript, context);
@@ -125,6 +144,23 @@ function runScript(script, context) {
         // we assume we should use module loader for .js files
         script.useModuleLoader = path.extname(script.path).toLowerCase() == '.js';
     }
+
+    var source;
+    var relativePath;
+
+    if (script.plugin) {
+        source = 'plugin ' + script.plugin.id;
+        relativePath = path.join('plugins', script.plugin.id, script.path);
+    } else if (script.useModuleLoader) {
+        source = 'config.xml';
+        relativePath = path.normalize(script.path);
+    } else {
+        source = 'hooks directory';
+        relativePath = path.join('hooks', context.hook, script.path);
+    }
+
+    events.emit('verbose', 'Executing script found in ' + source + ' for hook "' + context.hook + '": ' + relativePath);
+
     if(script.useModuleLoader) {
         return runScriptViaModuleLoader(script, context);
     } else {
@@ -163,7 +199,7 @@ function runScriptViaChildProcessSpawn(script, context) {
     var args = [opts.projectRoot];
 
     if (fs.statSync(script.fullPath).isDirectory()) {
-        events.emit('verbose', 'skipped directory "' + script.fullPath + '" within hook directory');
+        events.emit('verbose', 'Skipped directory "' + script.fullPath + '" within hook directory');
         return Q();
     }
 
@@ -189,7 +225,7 @@ function runScriptViaChildProcessSpawn(script, context) {
         .catch(function(err) {
             // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
             if (!isWindows && err.code == 'EACCES') {
-                events.emit('verbose', 'skipped non-executable file: ' + script.fullPath);
+                events.emit('verbose', 'Skipped non-executable file: ' + script.fullPath);
             } else {
                 throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
             }
@@ -226,3 +262,25 @@ function extractSheBangInterpreter(fullpath) {
         hookCmd = shMatch[1];
     return hookCmd;
 }
+
+
+/**
+ * Checks if the given hook type is disabled at the command line option.
+ * @param {Object} opts - the option object that contains command line options
+ * @param {String} hook - the hook type
+ * @returns {Boolean} return true if the passed hook is disabled.
+ */
+function isHookDisabled(opts, hook) {
+    if (opts === undefined || opts.nohooks === undefined) {
+        return false;
+    }
+    var disabledHooks = opts.nohooks;
+    var length = disabledHooks.length;
+    for (var i=0; i<length; i++) {
+        if (hook.match(disabledHooks[i]) !== null) {
+            return true;
+        }
+    }
+    return false;
+}
+

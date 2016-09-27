@@ -22,7 +22,6 @@ var cordova_util = require('./util'),
     path         = require('path'),
     Q            = require('q'),
     fs           = require('fs'),
-    plugin       = require('./plugin'),
     events       = require('cordova-common').events,
     cordova      = require('./cordova'),
     semver      = require('semver'),
@@ -33,6 +32,8 @@ exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
 
 function installPlatformsFromConfigXML(platforms, opts) {
+    events.emit('verbose', 'Checking config.xml for saved platforms that haven\'t been added to the project');
+
     var projectHome = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectHome);
     var cfg = new ConfigParser(configPath);
@@ -55,7 +56,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     });
 
     if (!targets || !targets.length) {
-        return Q.all('No platforms are listed in config.xml to restore');
+        return Q('No platforms found in config.xml that haven\'t been added to the project');
     }
 
 
@@ -67,7 +68,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     // gets executed simultaneously by each platform and leads to an exception being thrown
     return promiseutil.Q_chainmap_graceful(targets, function(target) {
         if (target) {
-            events.emit('log', 'Restoring platform ' + target + ' referenced on config.xml');
+            events.emit('log', 'Discovered platform \"' + target + '\" in config.xml. Adding it to the project');
             return cordova.raw.platform('add', target, opts);
         }
         return Q();
@@ -78,6 +79,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
 //returns a Promise
 function installPluginsFromConfigXML(args) {
+    events.emit('verbose', 'Checking config.xml for saved plugins that haven\'t been added to the project');
+
     //Install plugins that are listed on config.xml
     var projectRoot = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectRoot);
@@ -87,8 +90,13 @@ function installPluginsFromConfigXML(args) {
     // Get all configured plugins
     var plugins = cfg.getPluginIdList();
     if (0 === plugins.length) {
-        return Q.all('No config.xml plugins to install');
+        return Q('No plugins found in config.xml that haven\'t been added to the project');
     }
+
+
+    // Intermediate variable to store current installing plugin name
+    // to be able to create informative warning on plugin failure
+    var pluginName;
 
     // CB-9560 : Run `plugin add` serially, one plugin after another
     // We need to wait for the plugin and its dependencies to be installed
@@ -100,19 +108,32 @@ function installPluginsFromConfigXML(args) {
             // Plugin already exists
             return Q();
         }
-        events.emit('log', 'Discovered plugin "' + featureId + '" in config.xml. Installing to the project');
+        events.emit('log', 'Discovered plugin "' + featureId + '" in config.xml. Adding it to the project');
         var pluginEntry = cfg.getPlugin(featureId);
 
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
         var pluginSpec = pluginEntry.spec;
-        var installFrom = semver.validRange(pluginSpec, true) ? pluginEntry.name + '@' + pluginSpec : pluginSpec;
+        pluginName = pluginEntry.name;
+
+        // CB-10761 If plugin spec is not specified, use plugin name
+        var installFrom = pluginSpec || pluginName;
+        if (pluginSpec && semver.validRange(pluginSpec, true))
+            installFrom = pluginName + '@' + pluginSpec;
 
         // Add feature preferences as CLI variables if have any
         var options = {
             cli_variables: pluginEntry.variables,
-            searchpath: args.searchpath
+            searchpath: args.searchpath,
+            fetch: args.fetch || false,
+            save: args.save || false
         };
+        var plugin = require('./plugin');
         return plugin('add', installFrom, options);
+    }, function (error) {
+        // CB-10921 emit a warning in case of error
+        var msg = 'Failed to restore plugin \"' + pluginName + '\" from config.xml. ' +
+            'You might need to try adding it again. Error: ' + error;
+        events.emit('warn', msg);
     });
 }

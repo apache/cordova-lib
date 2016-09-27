@@ -41,6 +41,9 @@ function handleRoot(request, response, next) {
 
     response.writeHead(200, {'Content-Type': 'text/html'});
     var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
+    var contentNode = config.doc.find('content');
+    var contentSrc = contentNode && contentNode.attrib.src || 'index.html';
+
     response.write('<html><head><title>' + config.name() + '</title></head><body>');
     response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
     ['name', 'packageName', 'version'].forEach(function (c) {
@@ -50,7 +53,7 @@ function handleRoot(request, response, next) {
     response.write('<h3>Platforms</h3><ul>');
     Object.keys(platforms).forEach(function (platform) {
         if (installedPlatforms.indexOf(platform) >= 0) {
-            response.write('<li><a href="' + platform + '/www/">' + platform + '</a></li>\n');
+            response.write('<li><a href="' + platform + '/www/' + contentSrc + '">' + platform + '</a></li>\n');
         } else {
             response.write('<li><em>' + platform + '</em></li>\n');
         }
@@ -90,6 +93,28 @@ function getPlatformHandler(platform, wwwDir, configXml) {
     };
 }
 
+// https://issues.apache.org/jira/browse/CB-11274
+// Use referer url to redirect absolute urls to the requested platform resources
+// so that an URL is resolved against that platform www directory.
+function getAbsolutePathHandler() {
+    return function (request, response, next) {
+        if (!request.headers.referer) {
+            next();
+            return;
+        }
+
+        var pathname = url.parse(request.headers.referer).pathname;
+        var platform = pathname.split('/')[1];
+
+        if (installedPlatforms.indexOf(platform) >= 0 &&
+            request.originalUrl.indexOf(platform) === -1) {
+            response.redirect('/' + platform + '/www' + request.originalUrl);
+        } else {
+            next();
+        }
+    };
+}
+
 function calculateMd5(fileName) {
     var md5sum,
         BUF_LENGTH = 64*1024,
@@ -111,30 +136,33 @@ function calculateMd5(fileName) {
     return md5sum.digest('hex');
 }
 
-module.exports = function server(port) {
-    var d = Q.defer();
-    projectRoot = cordova_util.cdProjectRoot();
+module.exports = function server(port, opts) {
     port = +port || 8000;
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    hooksRunner.fire('before_serve').then(function () {
-        // Run a prepare first!
-        return require('./cordova').raw.prepare([]);
-    }).then(function () {
-        var server = serve();
+    return Q.promise(function(resolve) {
+        projectRoot = cordova_util.cdProjectRoot();
 
-        installedPlatforms = cordova_util.listPlatforms(projectRoot);
-        installedPlatforms.forEach(function (platform) {
-            var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
-            server.app.use('/' + platform + '/www', serve.static(locations.www));
-            server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
-        });
-        server.app.get('*', handleRoot);
+        var hooksRunner = new HooksRunner(projectRoot);
+        hooksRunner.fire('before_serve', opts).then(function () {
+            // Run a prepare first!
+            return require('./cordova').raw.prepare([]);
+        }).then(function () {
+            var server = serve();
 
-        server.launchServer({port: port, events: events});
-        hooksRunner.fire('after_serve').then(function () {
-            d.resolve(server.server);
+            installedPlatforms = cordova_util.listPlatforms(projectRoot);
+            installedPlatforms.forEach(function (platform) {
+                var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
+                server.app.use('/' + platform + '/www', serve.static(locations.www));
+                server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
+            });
+
+            server.app.get('/*', getAbsolutePathHandler());
+            server.app.get('*', handleRoot);
+
+            server.launchServer({port: port, events: events});
+            hooksRunner.fire('after_serve', opts).then(function () {
+                resolve(server.server);
+            });
         });
     });
-    return d.promise;
 };

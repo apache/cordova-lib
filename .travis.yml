@@ -4,21 +4,25 @@ git:
   depth: 10
 node_js:
   - "0.10"
+  - "0.12"
+  - "4"
+  - "6"
 install:
-  - cd ..
   - git clone https://github.com/apache/cordova-js --depth 10
-  - cd cordova-js
+  - cd cordova-lib
+  - npm link ../cordova-js
+  - npm link ../cordova-common
+  - npm link ../cordova-serve
+  - (cd ../cordova-fetch && npm link ../cordova-common && npm install)
+  - npm link ../cordova-fetch
   - npm install
-  - npm link
-  - cd ../cordova-lib/cordova-common
-  - npm install
-  - npm test
-  - npm link
-  - cd ../cordova-serve
-  - npm install
-  - npm link
-  - cd ../cordova-lib
-  - npm link cordova-js
-  - npm link cordova-common
-  - npm link cordova-serve
-  - npm install
+  # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
+  # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency
+  # is moved to 'cordova-lib' and hence 'npm run jshint' on 'cordova-common' is failing
+  - "(cd ../cordova-common && npm install)"
+  - (cd ../cordova-fetch && npm install && npm link ../cordova-common)
+
+script:
+  - "(cd ../cordova-common && npm test)"
+  - "(cd ../cordova-fetch && npm test)"
+  - "npm run ci"

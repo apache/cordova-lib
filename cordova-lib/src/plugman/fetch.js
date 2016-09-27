@@ -31,8 +31,10 @@ var shell   = require('shelljs'),
     Q       = require('q'),
     registry = require('./registry/registry'),
     pluginMappernto = require('cordova-registry-mapper').newToOld,
-    pluginMapperotn = require('cordova-registry-mapper').oldToNew;
-var cordovaUtil = require('../cordova/util');
+    pluginMapperotn = require('cordova-registry-mapper').oldToNew,
+    pluginSpec      = require('../cordova/plugin_spec_parser'),
+    fetch = require('cordova-fetch'),
+    cordovaUtil = require('../cordova/util');
 
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
@@ -43,7 +45,6 @@ module.exports = fetchPlugin;
 function fetchPlugin(plugin_src, plugins_dir, options) {
     // Ensure the containing directory exists.
     shell.mkdir('-p', plugins_dir);
-
     options = options || {};
     options.subdir = options.subdir || '.';
     options.searchpath = options.searchpath || [];
@@ -66,16 +67,26 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 options.git_ref = result[1];
             if (result[2])
                 options.subdir = result[2];
+            //if --fetch was used, throw error for subdirectories
+            if (result[2] && options.fetch) {
+                return Q.reject(new CordovaError('--fetch does not support subdirectories'));
+            }
 
             // Recurse and exit with the new options and truncated URL.
             var new_dir = plugin_src.substring(0, plugin_src.indexOf('#'));
-            return fetchPlugin(new_dir, plugins_dir, options);
+
+            //skip the return if user asked for --fetch
+            //cordova-fetch doesn't need to strip out git-ref
+            if(!options.fetch) {
+                return fetchPlugin(new_dir, plugins_dir, options);
+            }
         }
     }
 
     return Q.when().then(function() {
-        // If it looks like a network URL, git clone it.
-        if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/)) {
+        // If it looks like a network URL, git clone it
+        // skip git cloning if user passed in --fetch flag
+        if ( uri.protocol && uri.protocol != 'file:' && uri.protocol[1] != ':' && !plugin_src.match(/^\w+:\\/) && !options.fetch) {
             events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
             if (options.link) {
                 events.emit('log', '--link is not supported for git URLs and will be ignored');
@@ -132,12 +143,47 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            var newID = pluginMapperotn[plugin_src];
+            var parsedSpec = pluginSpec.parse(plugin_src);
+            var newID = parsedSpec.scope ? null : pluginMapperotn[parsedSpec.id];
             if(newID) {
-                events.emit('warn', 'Notice: ' + plugin_src + ' has been automatically converted to ' + newID + ' and fetched from npm. This is due to our old plugins registry shutting down.');                
                 plugin_src = newID;
-            } 
-            return registry.fetch([plugin_src], options.client)
+                if (parsedSpec.version) {
+                    plugin_src += '@' + parsedSpec.version;
+                }
+            }
+            var P, skipCopyingPlugin;
+            plugin_dir = path.join(plugins_dir, parsedSpec.id);
+            // if the plugin has already been fetched, use it.
+            if (fs.existsSync(plugin_dir)) {
+                P = Q(plugin_dir);
+                skipCopyingPlugin = true;
+            } else {
+                // if the plugin alias has already been fetched, use it.
+                var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || newID;
+                if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+                    events.emit('warn', 'Found '+alias+' is already fetched. Skipped fetching ' + parsedSpec.id);
+                    P = Q(path.join(plugins_dir, alias));
+                    skipCopyingPlugin = true;
+                } else {
+                    if (newID) {
+                        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
+                    }
+                    //use cordova-fetch if --fetch was passed in
+                    if(options.fetch) {
+                        var projectRoot = path.join(plugins_dir, '..');
+                        //Plugman projects need to go up two directories to reach project root. 
+                        //Plugman projects have an options.projectRoot variable
+                        if(options.projectRoot) {
+                            projectRoot = options.projectRoot;
+                        }
+                        P = fetch(plugin_src, projectRoot, options); 
+                    } else {
+                        P = registry.fetch([plugin_src]);
+                    }
+                    skipCopyingPlugin = false;
+                }
+            }
+            return P
             .fail(function (error) {
                 var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
                     '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
@@ -147,17 +193,23 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             })
             .then(function(dir) {
                 return {
-                        pinfo: pluginInfoProvider.get(dir),
+                    pinfo: pluginInfoProvider.get(dir),
                     fetchJsonSource: {
                         type: 'registry',
                         id: plugin_src
-                    }
+                    },
+                    skipCopyingPlugin: skipCopyingPlugin
                 };
             });
         }).then(function(result) {
             options.plugin_src_dir = result.pinfo.dir;
-            return Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'))
-            .then(function(dir) {
+            var P;
+            if (result.skipCopyingPlugin) {
+                P = Q(options.plugin_src_dir);
+            } else {
+                P = Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type == 'local'));
+            }
+            return P.then(function(dir) {
                 result.dest = dir;
                 return result;
             });
@@ -175,13 +227,17 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
 // Helper function for checking expected plugin IDs against reality.
 function checkID(expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
-    var expectedId = expectedIdAndVersion.split('@')[0];
-    var expectedVersion = expectedIdAndVersion.split('@')[1];
-    if (expectedId != pinfo.id) {
-        throw new Error('Expected plugin to have ID "' + expectedId + '" but got "' + pinfo.id + '".');
+
+    var parsedSpec = pluginSpec.parse(expectedIdAndVersion);
+
+    if (parsedSpec.id != pinfo.id) {
+        var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || pluginMapperotn[parsedSpec.id];
+        if (alias !== pinfo.id) {
+            throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
+        }
     }
-    if (expectedVersion && !semver.satisfies(pinfo.version, expectedVersion)) {
-        throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + expectedVersion + '" but got "' + pinfo.version + '".');
+    if (parsedSpec.version && !semver.satisfies(pinfo.version, parsedSpec.version)) {
+        throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + parsedSpec.version + '" but got "' + pinfo.version + '".');
     }
 }
 
@@ -225,16 +281,11 @@ function loadLocalPlugins(searchpath, pluginInfoProvider) {
 //      org.apache.cordova.file@>=1.2.0
 function findLocalPlugin(plugin_src, searchpath, pluginInfoProvider) {
     loadLocalPlugins(searchpath, pluginInfoProvider);
-    var id = plugin_src;
-    var versionspec = '*';
-    if (plugin_src.indexOf('@') != -1) {
-        var parts = plugin_src.split('@');
-        id = parts[0];
-        versionspec = parts[1];
-    }
+    var parsedSpec = pluginSpec.parse(plugin_src);
+    var versionspec = parsedSpec.version || '*';
 
     var latest = null;
-    var versions = localPlugins.plugins[id];
+    var versions = localPlugins.plugins[parsedSpec.id];
 
     if (!versions) return null;
 
@@ -273,11 +324,42 @@ function copyPlugin(pinfo, plugins_dir, link) {
     }
 
     if(fs.existsSync(altDest)) {
-        events.emit('log', pinfo.id + '" will not install due to "' + altDest + '" being installed.');
+        events.emit('log', pinfo.id + '" will not be added because its alternate id "' + altDest + '" is already present.');
         return altDest;
     }
 
     shell.rm('-rf', dest);
+
+    if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
+
+        if(/^win/.test(process.platform)) {
+            /*
+                [CB-10423]
+                This is a special case. On windows we cannot create a symlink unless we are run as admin
+                The error that we have is because src contains dest, so we end up with a recursive folder explosion
+                This code avoids copy the one folder that will explode, and allows plugins to contain a demo project
+                and to install the plugin via `cordova plugin add ../`
+            */
+            var resolvedSrcPath = path.resolve(plugin_dir);
+            var filenames = fs.readdirSync(resolvedSrcPath);
+            var relPath = path.relative(resolvedSrcPath,dest);
+            var relativeRootFolder = relPath.split('\\')[0];
+            filenames.splice(filenames.indexOf(relativeRootFolder),1);
+            shell.mkdir('-p', dest);
+            events.emit('verbose', 'Copying plugin "' + resolvedSrcPath + '" => "' + dest + '"');
+            events.emit('verbose', 'Skipping folder "' + relativeRootFolder + '"');
+
+            filenames.forEach(function(elem) {
+                shell.cp('-R', path.join(resolvedSrcPath,elem) , dest);
+            });
+            return dest;
+        }
+        else {
+            events.emit('verbose', 'Copy plugin destination is child of src. Forcing --link mode.');
+            link = true;
+        }
+    }
+
     if (link) {
         var isRelativePath = plugin_dir.charAt(1) != ':' && plugin_dir.charAt(0) != path.sep;
         var fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;

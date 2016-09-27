@@ -32,12 +32,14 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     childrenplugin = path.join(__dirname, '../fixtures/plugins/org.test.multiple-children'),
     shareddepsplugin = path.join(__dirname, '../fixtures/plugins/org.test.shareddeps'),
     configplugin = path.join(__dirname, '../fixtures/plugins/org.test.configtest'),
+    editconfigplugin = path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest'),
+    editconfigplugin_two = path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest_two'),
     varplugin = path.join(__dirname, '../fixtures/plugins/com.adobe.vars'),
     plistplugin = path.join(__dirname, '../fixtures/plugins/org.apache.plist'),
     android_two_project = path.join(__dirname, '../fixtures/projects/android_two/*'),
     android_two_no_perms_project = path.join(__dirname, '../fixtures/projects/android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '../fixtures/projects/ios-config-xml/*'),
-    windows_testapp_jsproj = path.join(__dirname, '../fixtures/projects/windows8/TestApp.jsproj'),
+    windows_testapp_jsproj = path.join(__dirname, '../fixtures/projects/windows/TestApp.jsproj'),
     plugins_dir = path.join(temp, 'cordova', 'plugins');
 var mungeutil = require('../../src/ConfigChanges/munge-util');
 var PlatformJson = require('../../src/PlatformJson');
@@ -197,22 +199,26 @@ describe('config-changes module', function() {
 
                 var munge = munger.generate_plugin_config_munge(pluginInfoProvider.get(configplugin), {});
                 var packageAppxManifest = munge.files['package.appxmanifest'];
-                var windows80AppxManifest = munge.files['package.windows80.appxmanifest'];
                 var windows81AppxManifest = munge.files['package.windows.appxmanifest'];
                 var winphone81AppxManifest = munge.files['package.phone.appxmanifest'];
                 var windows10AppxManifest = munge.files['package.windows10.appxmanifest'];
 
                 expect(packageAppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-all-appxmanifest-target-files" />');
-                expect(windows80AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win8-only" />');
-                expect(windows80AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win8-and-win81-win-only" />');
-                expect(windows80AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win8-and-win81-both" />');
+
+                // 1 comes from versions="=8.1.0" + 1 from versions="=8.1.0" device-target="windows"
                 expect(windows81AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win81-win-and-phone" />');
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win8-and-win81-win-only" />');
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win8-and-win81-both" />');
+                expect(windows81AppxManifest.parents['/Parent/Capabilities'][0].count).toBe(2);
+                expect(windows81AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win81-win-only" />');
+                expect(windows81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
+
+                // 1 comes from versions="=8.1.0" + 1 from versions="=8.1.0" device-target="phone"
                 expect(winphone81AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win81-win-and-phone" />');
+                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][0].count).toBe(2);
                 expect(winphone81AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win81-phone-only" />');
-                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win8-and-win81-both" />');
-                expect(windows10AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-in-win10-only" />');
+                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
+
+                expect(windows10AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
+                expect(windows10AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-in-win10-only" />');
             });
         });
     });
@@ -269,6 +275,70 @@ describe('config-changes module', function() {
                     munger.process(plugins_dir);
                     expect(spy).not.toHaveBeenCalledWith(path.join(temp, 'res', 'xml', 'plugins.xml'), 'utf-8');
                 });
+                it('should call graftXMLMerge for every new config munge with mode \'merge\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+
+                    var spy = spyOn(xml_helpers, 'graftXMLMerge').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(1);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                });
+                it('should call graftXMLMerge with --force for every new config munge with mode \'merge\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {}, true, true);
+
+                    var spy = spyOn(xml_helpers, 'graftXMLMerge').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(2);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                    expect(spy.argsForCall[1][2]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                });
+                it('should call graftXMLOverwrite for every new config munge with mode \'overwrite\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+
+                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(1);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity');
+                });
+                it('should call graftXMLOverwrite with --force for every new config munge with mode \'overwrite\' it introduces', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {}, true, true);
+
+                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').andReturn(true);
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    munger.process(plugins_dir);
+                    expect(spy.calls.length).toEqual(2);
+                    expect(spy.argsForCall[0][2]).toEqual('/manifest/application/activity');
+                    expect(spy.argsForCall[1][2]).toEqual('/manifest/application/activity[@android:name=\'ChildApp\']');
+                });
+                it('should not install plugin when there are edit-config conflicts', function() {
+                    shell.cp('-rf', editconfigplugin, plugins_dir);
+                    shell.cp('-rf', editconfigplugin_two, plugins_dir);
+                    var platformJson = PlatformJson.load(plugins_dir, 'android');
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                    platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest_two', {});
+
+                    var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                    expect(function() {munger.process(plugins_dir);}).toThrow(new Error('There was a conflict trying to modify attributes with <edit-config> in plugin org.test.editconfigtest_two. The conflicting plugin, org.test.editconfigtest, already modified the same attributes. The conflict must be resolved before org.test.editconfigtest_two can be added. You may use --force to add the plugin and overwrite the conflicting attributes.'));
+                });
             });
             describe('of plist config files', function() {
                 it('should write empty string nodes with no whitespace', function() {
@@ -277,7 +347,7 @@ describe('config-changes module', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'ios');
                     platformJson.addInstalledPluginToPrepareQueue('com.adobe.vars', {});
                     configChanges.process(plugins_dir, temp, 'ios', platformJson, pluginInfoProvider);
-                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string><\/string>/m);
+                    expect(fs.readFileSync(path.join(temp, 'SampleApp', 'SampleApp-Info.plist'), 'utf-8')).toMatch(/<key>APluginNode<\/key>\n    <string\/>/m);
                 });
                 it('should merge dictionaries and arrays, removing duplicates', function() {
                     shell.cp('-rf', ios_config_xml, temp);
@@ -406,6 +476,25 @@ describe('config-changes module', function() {
 
                 expect(platformJson.root.prepare_queue.uninstalled.length).toEqual(0);
                 expect(platformJson.root.installed_plugins['com.adobe.vars']).not.toBeDefined();
+            });
+            it('should call pruneXMLRestore for every config munge with mode \'merge\' or \'overwrite\' it removes from the app', function() {
+                shell.cp('-rf', android_two_project, temp);
+                shell.cp('-rf', editconfigplugin, plugins_dir);
+
+                // Run through an "install"
+                var platformJson = PlatformJson.load(plugins_dir, 'android');
+                platformJson.addInstalledPluginToPrepareQueue('org.test.editconfigtest', {});
+                var munger = new configChanges.PlatformMunger('android', temp, platformJson, pluginInfoProvider);
+                munger.process(plugins_dir);
+
+                // Now set up an uninstall and make sure pruneXMLMerge is called properly
+                platformJson.addUninstalledPluginToPrepareQueue('org.test.editconfigtest');
+                var spy = spyOn(xml_helpers, 'pruneXMLRestore').andReturn(true);
+                munger.process(plugins_dir);
+
+                expect(spy.calls.length).toEqual(2);
+                expect(spy.argsForCall[0][1]).toEqual('/manifest/application/activity[@android:name=\'org.test.DroidGap\']');
+                expect(spy.argsForCall[1][1]).toEqual('/manifest/application/activity');
             });
         });
     });

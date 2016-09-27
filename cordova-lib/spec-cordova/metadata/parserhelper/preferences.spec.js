@@ -35,7 +35,11 @@ describe('preferences', function() {
             expect(preferences.ORIENTATION_DEFAULT).toEqual('default');
             expect(preferences.ORIENTATION_PORTRAIT).toEqual('portrait');
             expect(preferences.ORIENTATION_LANDSCAPE).toEqual('landscape');
+            expect(preferences.ORIENTATION_ALL).toEqual('all');
+            
             expect(preferences.ORIENTATION_GLOBAL_ORIENTATIONS).toEqual([ 'default', 'portrait', 'landscape' ]);
+            expect(preferences.ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS.ios).toEqual([ 'all' ]);
+            expect(preferences.ORIENTATION_SPECIFIC_TO_A_PLATFORM_ORIENTATIONS.foobar).toBeUndefined();
         });
 
     });
@@ -70,6 +74,19 @@ describe('preferences', function() {
             });
 
         });
+        
+        describe('isOrientationSpecificToAPlatform', function() {
+
+            it('should return true if an orientation is specific to a platform', function() {
+                expect(preferences.isOrientationSpecificToAPlatform('all', 'ios')).toBe(true);
+                expect(preferences.isOrientationSpecificToAPlatform('sensorLandscape', 'android')).toBe(true);
+                
+            });
+            it('should return false if an orientation is not a specific to a platform', function() {
+                expect(preferences.isOrientationSpecificToAPlatform('some-orientation', 'foobar')).toBe(false);
+            });
+
+        });
 
         describe('getOrientation', function() {
 
@@ -84,6 +101,22 @@ describe('preferences', function() {
             it('should handle platform-specific orientation', function() {
                 expect(preferences.getOrientation(cfg, 'android')).toEqual('landscape');
             });
+            it('should handle orientation specific to a platform', function() {
+                var configXml, configParser;
+                
+                configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="all" /></widget>';
+                readFile.andReturn(configXml);
+                configParser = new ConfigParser(xml);
+
+                expect(preferences.getOrientation(configParser, 'ios')).toEqual('all');
+                
+                configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="sensorLandscape" /></widget>';
+                readFile.andReturn(configXml);
+                configParser = new ConfigParser(xml);
+                
+                expect(preferences.getOrientation(configParser, 'android')).toEqual('sensorLandscape');
+            });
+            
             it('should handle no orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget></widget>';
                 readFile.andReturn(configXml);
@@ -99,6 +132,7 @@ describe('preferences', function() {
                 expect(emit).toHaveBeenCalledWith('warn', 'Unsupported global orientation: foobar');
                 expect(emit).toHaveBeenCalledWith('warn', 'Defaulting to value: default');
             });
+            
             it('should handle custom platform-specific orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><platform name="some-platform"><preference name="orientation" value="foobar" /></platform></widget>';
                 readFile.andReturn(configXml);

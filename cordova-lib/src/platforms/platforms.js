@@ -40,6 +40,9 @@ function getPlatformApi(platform, platformRootDir) {
         throw new Error('Current location is not a Cordova project');
     }
 
+    // CB-11174 Resolve symlinks first before working with root directory
+    platformRootDir = util.convertToRealPathSafe(platformRootDir);
+
     var cached = cachedApis[platformRootDir];
     if (cached && cached.platform == platform) return cached;
 
@@ -48,11 +51,19 @@ function getPlatformApi(platform, platformRootDir) {
     var PlatformApi;
     try {
         // First we need to find whether platform exposes its' API via js module
-        // If it has, then we have to require it and extend BasePlatformApi
-        // with platform's API.
+        // If it does, then we require and instantiate it.
         var platformApiModule = path.join(platformRootDir, 'cordova', 'Api.js');
         PlatformApi = require(platformApiModule);
     } catch (err) {
+        // Check if platform already compatible w/ PlatformApi and show deprecation warning
+        if (err && err.code === 'MODULE_NOT_FOUND' && platforms[platform].apiCompatibleSince) {
+            events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
+                ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
+                platforms[platform].apiCompatibleSince + ' or newer.');
+        } else {
+            events.emit('warn', 'Error loading cordova-'+platform);
+        }
+
         PlatformApi = require('./PlatformApiPoly');
     }
 

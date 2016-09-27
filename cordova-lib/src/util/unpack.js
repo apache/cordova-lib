@@ -35,17 +35,17 @@ function unpackTgz(package_tgz, unpackTarget) {
 
         fs.createReadStream(package_tgz)
         .on('error', function (err) {
-            events.emit('verbose', 'Unable to open tarball ' + package_tgz + ': ' + err);
+            events.emit('warn', 'Unable to open tarball ' + package_tgz + ': ' + err);
             reject(err);
         })
         .pipe(zlib.createUnzip())
         .on('error', function (err) {
-            events.emit('verbose', 'Error during unzip for ' + package_tgz + ': ' + err);
+            events.emit('warn', 'Error during unzip for ' + package_tgz + ': ' + err);
             reject(err);
         })
         .pipe(tar.Extract(extractOpts))
         .on('error', function(err) {
-            events.emit('verbose', 'Error during untar for ' + package_tgz + ': ' + err);
+            events.emit('warn', 'Error during untar for ' + package_tgz + ': ' + err);
             reject(err);
         })
         .on('end', resolve);

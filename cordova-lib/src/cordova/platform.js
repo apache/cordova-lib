@@ -19,6 +19,7 @@
 
 var config            = require('./config'),
     cordova           = require('./cordova'),
+    prepare           = require('./prepare'),
     cordova_util      = require('./util'),
     ConfigParser      = require('cordova-common').ConfigParser,
     fs                = require('fs'),
@@ -36,6 +37,8 @@ var config            = require('./config'),
     shell             = require('shelljs'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
+    fetch             = require('cordova-fetch'),
+    npmUninstall         = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
 // Expose the platform parsers on top of this command
@@ -67,13 +70,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         }
     }
 
-    if (opts.usegit) {
-        msg = '\nWARNING: The --usegit flag has been deprecated! \n' +
-              'Instead, please use: `cordova platform add git-url#custom-branch`. \n' +
-              'e.g: cordova platform add https://github.com/apache/cordova-android.git#2.4.0 \n';
-        events.emit('warn', msg);
-    }
-
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
@@ -100,6 +96,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                if(platform === 'amazon-fireos') {
+                    events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
+                }
+                if(platform === 'wp8') {
+                    events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
+                }
                 if (platform && !spec && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
@@ -137,14 +139,14 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
                             cordova_util.binname + ' platform list`.');
                     }
+                }
 
-                    // CB-6976 Windows Universal Apps. Special case to upgrade from windows8 to windows platform
-                    if (platform == 'windows8' && !fs.existsSync(path.join(projectRoot, 'platforms', 'windows'))) {
-                        var platformPathWindows = path.join(projectRoot, 'platforms', 'windows');
-                        fs.renameSync(platformPath, platformPathWindows);
-                        platform = 'windows';
-                        platformPath = platformPathWindows;
-                    }
+                if (/-nightly|-dev$/.exec(platDetails.version)) {
+                    msg = 'Warning: using prerelease platform ' + platform +
+                          '@' + platDetails.version +
+                          '.\nUse \'cordova platform add ' +
+                          platform + '@latest\' to add the latest published version instead.';
+                    events.emit('warn', msg);
                 }
 
                 var options = {
@@ -189,25 +191,37 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
 
-                return promise().then(function () {
-                    // Call prepare for the current platform.
-                    var prepOpts = {
-                        platforms :[platform],
-                        searchpath :opts.searchpath
-                    };
-                    return require('./cordova').raw.prepare(prepOpts);
-                }).then(function() {
+                return promise()
+                .then(function () {
+                    if (!opts.restoring) {
+                        return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                    }
+                })
+                .then(function() {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
-                }).then(function() {
+                })
+                .then(function () {
+                    if (!opts.restoring) {
+                        // Call prepare for the current platform if we're not restoring from config.xml
+                        var prepOpts = {
+                            platforms :[platform],
+                            searchpath :opts.searchpath,
+                            fetch: opts.fetch || false,
+                            save: opts.save || false
+                        };
+                        return require('./cordova').raw.prepare(prepOpts);
+                    }
+                })
+                .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
                     var versionToSave = saveVersion ? platDetails.version : spec;
-                    events.emit('verbose', 'saving ' + platform + '@' + versionToSave + ' into platforms.json');
+                    events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
 
                     if(opts.save || autosave){
@@ -259,6 +273,21 @@ function getSpecString(spec) {
 function downloadPlatform(projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function() {
+        if (opts.fetch) {
+            //append cordova to platform
+            if(platform in platforms) {
+                target = 'cordova-'+target;
+            }
+
+            //gitURLs don't supply a platform, it equals null
+            if(!platform) {
+                target = version;
+            }
+
+            events.emit('log', 'Using cordova-fetch for '+ target);
+            return fetch(target, projectRoot, opts);
+        }
+
         if (cordova_util.isUrl(version)) {
             events.emit('log', 'git cloning: ' + version);
             var parts = version.split('#');
@@ -339,7 +368,7 @@ function getVersionFromConfigFile(platform, cfg) {
 
 function remove(hooksRunner, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform[s] specified. Please specify platform[s] to remove. See `'+cordova_util.binname+' platform list`.'));
+        return Q.reject(new CordovaError('No platform(s) specified. Please specify platform(s) to remove. See `'+cordova_util.binname+' platform list`.'));
     }
     return hooksRunner.fire('before_platform_rm', opts)
     .then(function() {
@@ -355,17 +384,27 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 var platformName = target.split('@')[0];
                 var xml = cordova_util.projectConfig(projectRoot);
                 var cfg = new ConfigParser(xml);
-                events.emit('log', 'Removing ' + target + ' from config.xml file ...');
+                events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-        });
-    }
+            });
+        }
     }).then(function() {
         // Remove targets from platforms.json
         targets.forEach(function(target) {
-            events.emit('verbose', 'Removing ' + target + ' from platforms.json file ...');
+            events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
             platformMetadata.remove(projectRoot, target);
         });
+    }).then(function() {
+        //Remove from node_modules if it exists and --fetch was used
+        if(opts.fetch) {
+            targets.forEach(function(target) {
+                if(target in platforms) {
+                    target = 'cordova-'+target;
+                }
+                return npmUninstall(target, projectRoot, opts);
+            });
+        }
     }).then(function() {
         return hooksRunner.fire('after_platform_rm', opts);
     });
@@ -497,103 +536,114 @@ function check(hooksRunner, projectRoot) {
     return result.promise;
 }
 
-function list(hooksRunner, projectRoot) {
-    var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
-    return hooksRunner.fire('before_platform_ls')
+function list(hooksRunner, projectRoot, opts) {
+    return hooksRunner.fire('before_platform_ls', opts)
     .then(function() {
-        // Acquire the version number of each platform we have installed, and output that too.
-        return Q.all(platforms_on_fs.map(function(p) {
-            return superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-            .then(function(v) {
-                if (!v) return p;
-                return p + ' ' + v;
-            }, function(v) {
-                return p + ' broken';
-            });
-        }));
-    }).then(function(platformsText) {
-        var results = 'Installed platforms: ' + platformsText.sort().join(', ') + '\n';
+        return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
+    }).then(function(platformMap) {
+        var platformsText = [];
+        for (var plat in platformMap) {
+            platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
+        }
+
+        platformsText = addDeprecatedInformationToPlatforms(platformsText);
+        var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
         var available = Object.keys(platforms).filter(hostSupports);
 
         available = available.filter(function(p) {
-            return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
+            return !platformMap[p]; // Only those not already installed.
         });
-        results += 'Available platforms: ' + available.sort().join(', ');
+
+        available = available.map(function (p){
+            return p.concat(' ', platforms[p].version);
+        });
+
+        available = addDeprecatedInformationToPlatforms(available);
+        results += 'Available platforms: \n  ' + available.sort().join('\n  ');
 
         events.emit('results', results);
     }).then(function() {
-        return hooksRunner.fire('after_platform_ls');
+        return hooksRunner.fire('after_platform_ls', opts);
     });
+}
+
+function addDeprecatedInformationToPlatforms(platformsList){
+    platformsList = platformsList.map(function(p){
+        var platformKey = p.split(' ')[0]; //Remove Version Information
+        if(platforms[platformKey].deprecated){
+            p = p.concat(' ', '(deprecated)');
+        }
+        return p;
+    });
+    return platformsList;
 }
 
 // Returns a promise.
 module.exports = platform;
 function platform(command, targets, opts) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    var msg;
-    var hooksRunner = new HooksRunner(projectRoot);
+    // CB-10519 wrap function code into promise so throwing error
+    // would result in promise rejection instead of uncaught exception
+    return Q().then(function() {
+        var msg;
+        var projectRoot = cordova_util.cdProjectRoot();
+        var hooksRunner = new HooksRunner(projectRoot);
 
-    if (arguments.length === 0) command = 'ls';
+        if (arguments.length === 0) command = 'ls';
 
-    // Verify that targets look like platforms. Examples:
-    // - android
-    // - android@3.5.0
-    // - ../path/to/dir/with/platform/files
-    // - https://github.com/apache/cordova-android.git
-    if (targets) {
-        if (!(targets instanceof Array)) targets = [targets];
-        targets.forEach(function (t) {
-            // Trim the @version part if it's there.
-            var p = t.split('@')[0];
-            // OK if it's one of known platform names.
-            if (p in platforms) return;
-            // Not a known platform name, check if its a real path.
-            var pPath = path.resolve(t);
-            if (fs.existsSync(pPath)) return;
+        // Verify that targets look like platforms. Examples:
+        // - android
+        // - android@3.5.0
+        // - ../path/to/dir/with/platform/files
+        // - https://github.com/apache/cordova-android.git
+        if (targets) {
+            if (!(targets instanceof Array)) targets = [targets];
+            targets.forEach(function (t) {
+                // Trim the @version part if it's there.
+                var p = t.split('@')[0];
+                // OK if it's one of known platform names.
+                if (p in platforms) return;
+                // Not a known platform name, check if its a real path.
+                var pPath = path.resolve(t);
+                if (fs.existsSync(pPath)) return;
 
-            var msg;
-        // If target looks like a url, we will try cloning it with git
-            if (/[~:/\\.]/.test(t)) {
-                return;
-            } else {
-        // Neither path, git-url nor platform name - throw.
-                msg = 'Platform "' + t +
-                '" not recognized as a core cordova platform. See `' +
-                cordova_util.binname + ' platform list`.'
-                ;
-            }
-            throw new CordovaError(msg);
-        });
-    } else if (command == 'add' || command == 'rm') {
-        msg = 'You need to qualify `add` or `remove` with one or more platforms!';
-        return Q.reject(new CordovaError(msg));
-    }
+                var msg;
+                // If target looks like a url, we will try cloning it with git
+                if (/[~:/\\.]/.test(t)) {
+                    return;
+                } else {
+                    // Neither path, git-url nor platform name - throw.
+                    msg = 'Platform "' + t +
+                    '" not recognized as a core cordova platform. See `' +
+                    cordova_util.binname + ' platform list`.'
+                    ;
+                }
+                throw new CordovaError(msg);
+            });
+        } else if (command == 'add' || command == 'rm') {
+            msg = 'You need to qualify `add` or `remove` with one or more platforms!';
+            return Q.reject(new CordovaError(msg));
+        }
 
+        opts = opts || {};
+        opts.platforms = targets;
 
-    opts = opts || {};
-    opts.platforms = targets;
-
-    switch (command) {
-        case 'add':
-            // CB-6976 Windows Universal Apps. windows8 is now alias for windows
-            var idxWindows8 = targets.indexOf('windows8');
-            if (idxWindows8 >=0) {
-                targets[idxWindows8] = 'windows';
-            }
-            return add(hooksRunner, projectRoot, targets, opts);
-        case 'rm':
-        case 'remove':
-            return remove(hooksRunner, projectRoot, targets, opts);
-        case 'update':
-        case 'up':
-            return update(hooksRunner, projectRoot, targets, opts);
-        case 'check':
-            return check(hooksRunner, projectRoot);
-        case 'save':
-            return save(hooksRunner, projectRoot, opts);
-        default:
-            return list(hooksRunner, projectRoot);
-    }
+        switch (command) {
+            case 'add':
+                return add(hooksRunner, projectRoot, targets, opts);
+            case 'rm':
+            case 'remove':
+                return remove(hooksRunner, projectRoot, targets, opts);
+            case 'update':
+            case 'up':
+                return update(hooksRunner, projectRoot, targets, opts);
+            case 'check':
+                return check(hooksRunner, projectRoot);
+            case 'save':
+                return save(hooksRunner, projectRoot, opts);
+            default:
+                return list(hooksRunner, projectRoot, opts);
+        }
+    });
 }
 
 // Used to prevent attempts of installing platforms that are not supported on
@@ -634,18 +684,31 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
             plugin = path.basename(plugin);
 
-            var options = {
-                searchpath: opts.searchpath
-            };
-
             // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
             var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
+
+            var options = {
+                searchpath: opts.searchpath,
+                // Set up platform to install asset files/js modules to <platform>/platform_www dir
+                // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+                // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+                // files platform_www directory, so they'll be applied to www on each prepare.
+
+                // NOTE: there is another code path for plugin installation (see CB-10274 and the
+                // related PR: https://github.com/apache/cordova-lib/pull/360) so we need to
+                // specify the option below in both places
+                usePlatformWww: true,
+                is_top_level: pluginMetadata.is_top_level,
+                force: opts.force,
+                fetch: opts.fetch || false,
+                save: opts.save || false
+            };
+
             var variables = pluginMetadata && pluginMetadata.variables;
             if (variables) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                 options.cli_variables = variables;
             }
-
             return plugman.raw.install(platform, output, plugin, plugins_dir, options);
         });
     }, Q());

@@ -129,6 +129,59 @@ describe('xml-helpers', function(){
         });
     });
 
+    describe('pruneXMLRestore', function() {
+        var android_manifest_xml;
+
+        beforeEach(function() {
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it('should restore attributes at the specified selector', function() {
+            var xml = {
+                oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('false');
+        });
+        it('should do nothing if the old attributes cannot be found', function() {
+            var xml = {
+                notOldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('true');
+        });
+        it('should be able to handle absolute selectors', function() {
+            var xml = {
+                oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, '/manifest/application', xml);
+            var applicationAttr = android_manifest_xml.find('application').attrib;
+            expect(Object.keys(applicationAttr).length).toEqual(3);
+            expect(applicationAttr['android:debuggable']).toEqual('false');
+        });
+        it('should be able to handle absolute selectors with wildcards', function() {
+            var xml = {
+                oldAttrib: {'android:name': 'ChildApp', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, '/*/*/activity', xml);
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+        });
+        it('should be able to handle xpath selectors', function() {
+            var xml = {
+                oldAttrib: {'android:name': 'com.phonegap.DroidGap', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
+            };
+            xml_helpers.pruneXMLRestore(android_manifest_xml, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', xml);
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+        });
+    });
+
     describe('graftXML', function() {
         var config_xml, plugin_xml;
 
@@ -154,11 +207,94 @@ describe('xml-helpers', function(){
         });
     });
 
+    describe('graftXMLMerge', function() {
+        var plugin_xml, android_manifest_xml;
+
+        beforeEach(function() {
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it ('should merge attributes at specified selector', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle absolute selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, '/manifest/application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle absolute selectors with wildcards', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, '/*/*/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+        it ('should be able to handle xpath selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
+            xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(4);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
+        });
+    });
+
+    describe('graftXMLOverwrite', function() {
+        var plugin_xml, android_manifest_xml;
+
+        beforeEach(function() {
+            plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
+            android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
+        });
+        it ('should overwrite attributes at specified selector', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle absolute selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/manifest/application/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle absolute selectors with wildcards', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/*/*/activity', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+        it ('should be able to handle xpath selectors', function() {
+            var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
+            xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity[@android:name=\"ChildApp\"]', {});
+            var activityAttr = android_manifest_xml.find('application/activity').attrib;
+            expect(Object.keys(activityAttr).length).toEqual(3);
+            expect(activityAttr['android:enabled']).toEqual('true');
+            expect(activityAttr['android:configChanges']).not.toBeDefined();
+        });
+    });
+
     describe('mergeXml', function () {
         var dstXml;
         beforeEach(function() {
             dstXml = et.XML(TEST_XML);
         });
+
         it('should merge attributes and text of the root element without clobbering', function () {
             var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
             xml_helpers.mergeXml(testXml, dstXml);
@@ -173,6 +309,15 @@ describe('xml-helpers', function(){
             expect(dstXml.attrib.foo).toEqual('bar');
             expect(dstXml.attrib.id).toEqual('NOTANID');
             expect(dstXml.text).toEqual('TEXT');
+        });
+
+        it('should handle attributes values with quotes correctly', function () {
+            var testXml = et.XML('<widget><quote foo="some \'quoted\' string" bar="another &quot;quoted&quot; string" baz="&quot;mixed&quot; \'quotes\'" /></widget>');
+            xml_helpers.mergeXml(testXml, dstXml);
+            expect(dstXml.find('quote')).toBeDefined();
+            expect(dstXml.find('quote').attrib.foo).toEqual('some \'quoted\' string');
+            expect(dstXml.find('quote').attrib.bar).toEqual('another "quoted" string');
+            expect(dstXml.find('quote').attrib.baz).toEqual('"mixed" \'quotes\'');
         });
 
         it('should not merge platform tags with the wrong platform', function () {
@@ -195,7 +340,7 @@ describe('xml-helpers', function(){
             expect(testElement.text).toEqual('testTEXT');
         });
 
-        it('should merge singelton children without clobber', function () {
+        it('should merge singleton children without clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml);
@@ -208,7 +353,17 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toContain('Apache Cordova Team');
         });
 
-        it('should clobber singelton children with clobber', function () {
+        it('should merge singleton name without clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('Hello Cordova');
+        });
+
+        it('should clobber singleton children with clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -219,6 +374,16 @@ describe('xml-helpers', function(){
             expect(testElements[0].attrib.href).toEqual('http://www.nowhere.com');
             expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
             expect(testElements[0].text).toEqual('SUPER_AUTHOR');
+        });
+
+        it('should merge singleton name with clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('SUPER_NAME');
         });
 
         it('should append non singelton children', function () {
@@ -266,6 +431,46 @@ describe('xml-helpers', function(){
             testElements = dstXml.findall('access');
             expect(testElements.length).toEqual(2);
 
+        });
+
+        it('should remove duplicate preferences (by name attribute value)', function () {
+            var testXml = et.XML(
+                '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
+                '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
+                '        id        = "io.cordova.hellocordova"\n' +
+                '        version   = "0.0.1">\n' +
+                '    <preference name="Orientation" value="default" />\n' +
+                '    <preference name="Orientation" value="portrait" />\n' +
+                '    <preference name="Orientation" value="landscape" />\n' +
+                '    <platform name="ios">\n' +
+                '        <preference name="Orientation" value="all" />\n' +
+                '        <preference name="Orientation" value="portrait" />\n' +
+                '    </platform>\n' +
+                '</widget>\n'
+            );
+            xml_helpers.mergeXml(testXml, dstXml, 'ios');
+            var testElements = dstXml.findall('preference[@name="Orientation"]');
+            expect(testElements.length).toEqual(1);
+        });
+
+        it('should merge preferences, with platform preferences written last', function () {
+            var testXml = et.XML(
+                '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
+                '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
+                '        id        = "io.cordova.hellocordova"\n' +
+                '        version   = "0.0.1">\n' +
+                '    <preference name="Orientation" value="default" />\n' +
+                '    <platform name="ios">\n' +
+                '        <preference name="Orientation" value="all" />\n' +
+                '    </platform>\n' +
+                '</widget>\n'
+            );
+            xml_helpers.mergeXml(testXml, dstXml, 'ios');
+            var testElements = dstXml.findall('preference[@name="Orientation"]');
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].attrib.value).toEqual('all');
         });
     });
 });

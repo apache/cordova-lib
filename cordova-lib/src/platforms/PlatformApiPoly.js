@@ -20,7 +20,6 @@
 var Q = require('q');
 var fs = require('fs');
 var path = require('path');
-var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
@@ -154,7 +153,7 @@ PlatformApiPoly.prototype.getPlatformInfo = function () {
     };
     result.root = self.root;
     result.name = self.platform;
-    result.version = knownPlatforms[self.platform].version;
+    self.version = result.version = self.version || getPlatformVersion(self.root) || knownPlatforms[self.platform].version;
     result.projectConfig = self._config;
 
     return result;
@@ -174,12 +173,12 @@ PlatformApiPoly.prototype.getPlatformInfo = function () {
  * @return  {Promise}  Return a promise either fulfilled, or rejected with
  *   CordovaError instance.
  */
-PlatformApiPoly.prototype.prepare = function (cordovaProject) {
+PlatformApiPoly.prototype.prepare = function (cordovaProject, options) {
     // First cleanup current config and merge project's one into own
     var defaultConfig = path.join(this.root, 'cordova', 'defaults.xml');
     var ownConfig = this.getPlatformInfo().locations.configXml;
 
-    var sourceCfg = cordovaProject.projectConfig.path;
+    var sourceCfg = cordovaProject.projectConfig;
     // If defaults.xml is present, overwrite platform config.xml with it.
     // Otherwise save whatever is there as defaults so it can be
     // restored or copy project config into platform if none exists.
@@ -197,19 +196,13 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     this._config = new ConfigParser(ownConfig);
     xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
         this._config.doc.getroot(), this.platform, true);
-    // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
-    // we allow using windows8 tag for new windows platform
-    if (this.platform == 'windows') {
-        xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
-            this._config.doc.getroot(), 'windows8', true);
-    }
     this._config.write();
 
     // Update own www dir with project's www assets and plugins' assets and js-files
     this._parser.update_www(cordovaProject.locations.www);
 
     // update project according to config.xml changes.
-    return this._parser.update_project(this._config);
+    return this._parser.update_project(this._config, options);
 };
 
 /**
@@ -240,6 +233,9 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
 
     installOptions = installOptions || {};
     installOptions.variables = installOptions.variables || {};
+    // CB-10108 platformVersion option is required for proper plugin installation
+    installOptions.platformVersion = installOptions.platformVersion ||
+        this.getPlatformInfo().version;
 
     var self = this;
     var actions = new ActionStack();
@@ -295,6 +291,11 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
  *   CordovaError instance.
  */
 PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
+
+    uninstallOptions = uninstallOptions || {};
+    // CB-10108 platformVersion option is required for proper plugin installation
+    uninstallOptions.platformVersion = uninstallOptions.platformVersion ||
+        this.getPlatformInfo().version;
 
     var self = this;
     var actions = new ActionStack();
@@ -443,7 +444,7 @@ PlatformApiPoly.prototype.requirements = function() {
         return require(modulePath).check_all();
     } catch (e) {
         var errorMsg = 'Failed to check requirements for ' + this.platform + ' platform. ' +
-            'check_reqs module is missing for platfrom. Skipping it...';
+            'check_reqs module is missing for platform. Skipping it...';
         return Q.reject(errorMsg);
     }
 };
@@ -472,7 +473,12 @@ function getCreateArgs(destinationDir, projectConfig, options) {
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
-    args.push(platformName == 'ios' ? unorm.nfd(projectConfig.name()) : projectConfig.name());
+    var name = projectConfig.name();
+    if (platformName == 'ios') {
+        var unorm = require('unorm');
+        name = unorm.nfd(name);
+    }
+    args.push(name);
 
     if (options.customTemplate) {
         args.push(options.customTemplate);
@@ -577,6 +583,11 @@ PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
     });
 
     this._platformJson.root.modules = installedModules.concat(modulesToInstall);
+    if (!this._platformJson.root.plugin_metadata) {
+        this._platformJson.root.plugin_metadata = {};
+    }
+    this._platformJson.root.plugin_metadata[plugin.id] = plugin.version;
+
     this._writePluginModules(targetDir);
     this._platformJson.save();
 };
@@ -603,6 +614,10 @@ PlatformApiPoly.prototype._removeModulesInfo = function(plugin, targetDir) {
     });
 
     this._platformJson.root.modules = updatedModules;
+    if (this._platformJson.root.plugin_metadata) {
+        delete this._platformJson.root.plugin_metadata[plugin.id];
+    }
+
     this._writePluginModules(targetDir);
     this._platformJson.save();
 };
@@ -616,20 +631,12 @@ PlatformApiPoly.prototype._removeModulesInfo = function(plugin, targetDir) {
  *   directories.
  */
 PlatformApiPoly.prototype._writePluginModules = function (targetDir) {
-    var self = this;
     // Write out moduleObjects as JSON wrapped in a cordova module to cordova_plugins.js
     var final_contents = 'cordova.define(\'cordova/plugin_list\', function(require, exports, module) {\n';
     final_contents += 'module.exports = ' + JSON.stringify(this._platformJson.root.modules, null, '    ') + ';\n';
     final_contents += 'module.exports.metadata = \n';
     final_contents += '// TOP OF METADATA\n';
-
-    var pluginMetadata = Object.keys(this._platformJson.root.installed_plugins)
-    .reduce(function (metadata, plugin) {
-        metadata[plugin] = self._platformJson.root.installed_plugins[plugin].version;
-        return metadata;
-    }, {});
-
-    final_contents += JSON.stringify(pluginMetadata, null, '    ') + '\n';
+    final_contents += JSON.stringify(this._platformJson.root.plugin_metadata || {}, null, '    ') + '\n';
     final_contents += '// BOTTOM OF METADATA\n';
     final_contents += '});'; // Close cordova.define.
 
@@ -694,4 +701,22 @@ function copyCordovaSrc(sourceLib, platformInfo) {
     if(fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platformInfo.locations.platformWww);
     }
+}
+
+/**
+ * Gets platform version from 'version' file
+ *
+ * @param   {String}  platformRoot  Platform location
+ * @return  {String|null}           Stringified version of platform or null
+ *   if it is not possible to retrieve version
+ */
+function getPlatformVersion (platformRoot) {
+    var versionFile = path.join(platformRoot, 'cordova/version');
+
+    if (!fs.existsSync(versionFile)) {
+        return null;
+    }
+
+    var version = shell.cat(versionFile).match(/VERSION\s=\s["'](.*)["'];/m);
+    return version && version[1];
 }

@@ -36,7 +36,8 @@ var path = require('path'),
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew,
+    pluginMapper = require('cordova-registry-mapper'),
+    pluginSpec = require('../cordova/plugin_spec_parser'),
     cordovaUtil = require('../cordova/util');
 
 var superspawn = require('cordova-common').superspawn;
@@ -71,7 +72,8 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
     options = options || {};
-    options.is_top_level = true;
+    if (!options.hasOwnProperty('is_top_level')) options.is_top_level = true;
+
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
@@ -79,20 +81,6 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     }
 
     var current_stack = new action_stack();
-
-    // Split @Version from the plugin id if it exists.
-    var splitVersion = id.split('@');
-    //Check if a mapping exists for the plugin id
-    //if it does, convert id to new name id 
-    var newId = pluginMapper[splitVersion[0]];
-    if(newId) {
-        events.emit('warn', 'Notice: ' + id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-        if(splitVersion[1]) {
-            id = newId +'@'+splitVersion[1];
-        } else {
-            id = newId;
-        }
-     }     
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
         return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -102,20 +90,41 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 // possible options: subdir, cli_variables, www_dir, git_ref, is_top_level
 // Returns a promise.
 function possiblyFetch(id, plugins_dir, options) {
+    var parsedSpec = pluginSpec.parse(id);
+    //Check if a mapping exists for the plugin id
+    //if it does, convert id to new name id
+    var newId = parsedSpec.scope ? null : pluginMapper.oldToNew[parsedSpec.id];
+    if(newId) {
+        if(parsedSpec.version) {
+            id = newId + '@' + parsedSpec.version;
+        } else {
+            id = newId;
+        }
+    }
 
     // if plugin is a relative path, check if it already exists
-    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, id);
+    var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, parsedSpec.id);
 
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
 
+    var alias =  parsedSpec.scope ? null : pluginMapper.newToOld[parsedSpec.id] || newId;
+    // if the plugin alias has already been fetched, use it.
+    if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
+        events.emit('warn', 'Plugin with alternate id ' + alias + ' is already fetched, so installing it instead of ' + parsedSpec.id);
+        return Q(path.join(plugins_dir, alias));
+    }
+
+    // if plugin doesnt exist, use fetch to get it.
+    if (newId) {
+        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
+    }
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
 
-    // if plugin doesnt exist, use fetch to get it.
     return plugman.raw.fetch(id, plugins_dir, opts);
 }
 
@@ -125,15 +134,15 @@ function checkEngines(engines) {
         var engine = engines[i];
 
         // This is a hack to allow plugins with <engine> tag to be installed with
-        // engine with '-dev' suffix. It is required due to new semver range logic,
+        // engine with '-dev' or '-nightly' suffixes. It is required due to new semver range logic,
         // introduced in semver@3.x. For more details see https://github.com/npm/node-semver#prerelease-tags.
         //
         // This may lead to false-positive checks, when engine version with dropped
         // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
         // However this shouldn't be a problem, because this only should happen in dev workflow.
-        engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev$/, '');
-        if ( semver.satisfies(engine.currentVersion, engine.minVersion) || engine.currentVersion === null ) {
-            // engine ok!
+        engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev|-nightly.*$/, '');
+        if ( semver.satisfies(engine.currentVersion, engine.minVersion, /*loose=*/true) || engine.currentVersion === null ) {
+            continue; // engine ok!
         } else {
             var msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
                       engine.name + ': ' + engine.currentVersion +
@@ -182,14 +191,12 @@ function cleanVersionOutput(version, name){
 
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
-function callEngineScripts(engines) {
+function callEngineScripts(engines, project_dir) {
 
     return Q.all(
         engines.map(function(engine){
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
-
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
-
             if(scriptPath && (isWindows || fs.existsSync(engine.scriptSrc)) ) {
 
                 var d = Q.defer();
@@ -234,11 +241,11 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
     var cordovaEngineIndex, cordovaPlatformEngineIndex, theName, platformIndex, defaultPlatformIndex;
     // load in known defaults and update when necessary
 
-    engines.forEach(function(engine){
+    engines.forEach(function(engine) {
         theName = engine.name;
 
         // check to see if the engine is listed as a default engine
-        if(defaultEngines[theName]){
+        if (defaultEngines[theName]) {
             // make sure engine is for platform we are installing on
             defaultPlatformIndex = defaultEngines[theName].platform.indexOf(platform);
             if(defaultPlatformIndex > -1 || defaultEngines[theName].platform === '*'){
@@ -254,10 +261,20 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
                 uncheckedEngines.push(defaultEngines[theName]);
             }
         // check for other engines
-        }else{
+        } else {
+            if (typeof engine.platform === 'undefined' || typeof engine.scriptSrc === 'undefined') {
+                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine "' +
+                    theName + '" from plugin "' + pluginInfo.id + '" for ' + platform);
+            }
+
             platformIndex = engine.platform.indexOf(platform);
-            if(platformIndex > -1 || engine.platform === '*'){
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':path.resolve(plugin_dir, engine.scriptSrc), 'minVersion' :  engine.version});
+            // CB-7183: security check for scriptSrc path escaping outside the plugin
+            var scriptSrcPath = path.resolve(plugin_dir, engine.scriptSrc);
+            if (scriptSrcPath.indexOf(plugin_dir) !== 0) {
+                throw new Error('Security violation: scriptSrc ' + scriptSrcPath + ' is out of plugin dir ' + plugin_dir);
+            }
+            if (platformIndex > -1 || engine.platform === '*') {
+                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc':scriptSrcPath, 'minVersion' :  engine.version});
             }
         }
     });
@@ -283,7 +300,6 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     var pluginInfoProvider = options.pluginInfoProvider;
     var pluginInfo   = pluginInfoProvider.get(plugin_dir);
     var filtered_variables = {};
-
     var platformJson = PlatformJson.load(plugins_dir, platform);
 
     if (platformJson.isPluginInstalled(pluginInfo.id)) {
@@ -297,7 +313,10 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         } else {
             events.emit('log', 'Dependent plugin "' + pluginInfo.id + '" already installed on ' + platform + '.');
         }
-        return Q();
+
+        // CB-11022 return true always in this case since if the plugin is installed
+        // we don't need to call prepare in any way
+        return Q(true);
     }
     events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
@@ -319,7 +338,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function(platformVersion) {
         options.platformVersion = platformVersion;
-        return callEngineScripts(theEngines);
+        return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
     }).then(function(engines) {
         return checkEngines(engines);
     }).then(function() {
@@ -373,15 +392,23 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
                         pluginInfo: pluginInfo,
                         platform: install.platform,
                         dir: install.top_plugin_dir
-                    }
+                    },
+                    nohooks: options.nohooks
                 };
+
+                // CB-10708 This is the case when we're trying to install plugin using plugman to specific
+                // platform inside of the existing CLI project. In this case we need to put plugin's files
+                // into platform_www but plugman CLI doesn't allow us to do that, so we set it here
+                options.usePlatformWww = true;
 
                 var hooksRunner = new HooksRunner(projectRoot);
 
                 return hooksRunner.fire('before_plugin_install', hookOptions).then(function() {
                     return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
-                }).then(function(){
-                    return hooksRunner.fire('after_plugin_install', hookOptions);
+                }).then(function(installResult){
+                    return hooksRunner.fire('after_plugin_install', hookOptions)
+                    // CB-11022 Propagate install result to caller to be able to avoid unnecessary prepare
+                    .thenResolve(installResult);
                 });
             } else {
                 return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
@@ -389,7 +416,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         }
     ).fail(
         function (error) {
-            
+
             if(error === 'skip') {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
@@ -418,20 +445,6 @@ function installDependencies(install, dependencies, options) {
     return dependencies.reduce(function(soFar, dep) {
         return soFar.then(
             function() {
-                // Split @Version from the plugin id if it exists.
-                var splitVersion = dep.id.split('@');
-                //Check if a mapping exists for the plugin id
-                //if it does, convert id to new name id 
-                var newId = pluginMapper[splitVersion[0]];
-                if(newId) {
-                    events.emit('warn', 'Notice: ' + dep.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-                    if(splitVersion[1]) {
-                        dep.id = newId +'@'+splitVersion[1];
-                    } else {
-                        dep.id = newId;
-                    }
-                }
-
                 dep.git_ref = dep.commit;
 
                 if (dep.subdir) {
@@ -557,7 +570,7 @@ function installDependency(dep, install, options) {
 
     dep.install_dir = path.join(install.plugins_dir, dep.id);
     if ( fs.existsSync(dep.install_dir) ) {
-        events.emit('verbose', 'Dependent plugin "' + dep.id + '" already fetched, using that version.');
+        events.emit('verbose', 'Plugin dependency "' + dep.id + '" already fetched, using that version.');
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
@@ -566,7 +579,7 @@ function installDependency(dep, install, options) {
         return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
-        events.emit('verbose', 'Dependent plugin "' + dep.id + '" not fetched, retrieving then installing.');
+        events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
 
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
@@ -593,15 +606,11 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     options.variables = filtered_variables;
-    // Set up platform to install asset files/js modules to <platform>/platform_www dir
-    // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
-    // and files from 'platform_www' merged into 'www'. Thus we need to persist these
-    // files platform_www directory, so they'll be applied to www on each prepare.
-    options.usePlatformWww = true;
 
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
-    .then (function() {
+    .then (function(result) {
+
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // Add plugin to installed list. This already done in platform,
         // but need to be duplicated here to manage dependencies properly.
@@ -609,8 +618,13 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
             .addPlugin(pluginInfo.id, filtered_variables, options.is_top_level)
             .save();
 
-        if (platform == 'android' && semver.gte(options.platformVersion, '4.0.0-dev') &&
-                pluginInfo.getFrameworks('platform').length > 0) {
+        if (platform == 'android' &&
+                semver.gte(options.platformVersion, '4.0.0-dev') &&
+                // CB-10533 since 5.2.0-dev prepBuildFiles is now called internally by android platform and
+                // no more exported from build module
+                // TODO: This might be removed once we deprecate non-PlatformApi compatible platforms support
+                semver.lte(options.platformVersion, '5.2.0-dev') &&
+                pluginInfo.getFrameworks(platform).length > 0) {
 
             events.emit('verbose', 'Updating build files since android plugin contained <framework>');
             var buildModule;
@@ -630,6 +644,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         info_strings.forEach( function(info) {
             events.emit('results', interp_vars(filtered_variables, info));
         });
+
+        // Propagate value, returned by platform's addPlugin method to caller
+        return Q(result);
     });
 }
 

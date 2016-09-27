@@ -33,6 +33,7 @@ var androidParser = require('../../src/cordova/metadata/android_parser'),
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
+var cfg2 = new ConfigParser(path.join(__dirname, '..', 'test-config-2.xml'));
 
 var STRINGS_XML = '<resources> <string name="app_name">mobilespec</string> </resources>';
 var MANIFEST_XML = '<manifest android:versionCode="1" android:versionName="0.0.1" package="org.apache.mobilespec">\n' +
@@ -146,6 +147,11 @@ describe('android project parser', function() {
                 getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
+            });
+            it('should handle sensorLandscape orientation', function() {
+                getOrientation.andReturn(p.helper.ORIENTATION_SENSOR_LANDSCAPE);
+                p.update_from_config(cfg2);
+                expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('sensorLandscape');
             });
             it('should handle custom orientation', function() {
                 getOrientation.andReturn('some-custom-orientation');

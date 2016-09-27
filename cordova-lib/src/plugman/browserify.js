@@ -54,8 +54,8 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
     });
 
     outReleaseFileStream.on('error', function(err) {
-        events.emit('log', 'error while generating cordova.js');
-        deferred.reject();
+        events.emit('warn', 'Error while generating cordova.js');
+        deferred.reject(err);
     });
     return deferred.promise;
 }
@@ -74,8 +74,8 @@ function getPlatformVersion(cId, project_dir) {
     var versionPath = path.join(project_dir, '/cordova/version');
     childProcess.exec('"' + versionPath + '"', function(err, stdout, stderr) {
         if (err) {
-            events.emit('log', 'Error running platform version script');
-            events.emit('log', err);
+            err.message = 'Failed to get platform version (will use \'N/A\' instead).\n' + err.message;
+            events.emit('warn', err);
             deferred.resolve('N/A');
         } else {
             deferred.resolve(stdout.trim());
@@ -106,13 +106,13 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
         commitId = cId;
         return getPlatformVersion(commitId, platformApi.root);
     }).then(function(platformVersion){
-        var libraryRelease = bundle(platform, false, commitId, platformVersion);
+        var libraryRelease = bundle(platform, false, commitId, platformVersion, platformApi.getPlatformInfo().locations.platformWww);
 
         var pluginMetadata = {};
         var modulesMetadata = [];
 
         var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
-        events.emit('verbose', 'Iterating over installed plugins:', plugins);
+        events.emit('verbose', 'Iterating over plugins in project:', plugins);
         plugins.forEach(function (plugin) {
             var pluginDir = path.join(project.locations.plugins, plugin);
             var pluginInfo = pluginInfoProvider.get(pluginDir);

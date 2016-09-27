@@ -22,7 +22,39 @@ var shell = require('shelljs'),
     fs    = require('fs'),
     common;
 
+var cordovaUtil = require('../../cordova/util');
+var CordovaError = require('cordova-common').CordovaError;
+var xmlHelpers = require('cordova-common').xmlHelpers;
+
 module.exports = common = {
+    package_name: function(project_dir, www_dir) {
+
+        var configPaths = [
+            // preferred location if cordova >= 3.4
+            path.join(project_dir, 'config.xml'),
+            // older location
+            path.join(www_dir || path.join(project_dir, 'www'), 'config.xml'),
+        ];
+
+        var cordovaRoot = cordovaUtil.isCordova();
+        if (cordovaRoot) {
+            // CB-10662 If we're in cli project then add project's config as a fallback
+            configPaths.push(path.join(cordovaRoot, 'config.xml'));
+        }
+
+        for (var i = 0; i < configPaths.length; i++) {
+            var configPath = configPaths[i];
+            // If no config there try next path
+            if (!fs.existsSync(configPath)) continue;
+
+            var widget_doc = xmlHelpers.parseElementtreeSync(configPath);
+            return widget_doc._root.attrib.id;
+        }
+
+        // No configs found - fail with meaningful error message
+        throw new CordovaError('Unable to find project\'s config in any of ' +
+            'the following directories:\n\t' + configPaths.join('\n\t'));
+    },
     // helper for resolving source paths from plugin.xml
     resolveSrcPath:function(plugin_dir, relative_path) {
         var full_path = path.resolve(plugin_dir, relative_path);
@@ -128,7 +160,9 @@ module.exports = common = {
         install: function (jsModule, plugin_dir, plugin_id, www_dir) {
             // Copy the plugin's files into the www directory.
             var moduleSource = path.resolve(plugin_dir, jsModule.src);
-            var moduleName = plugin_id + '.' + (jsModule.name || path.parse(jsModule.src).name);
+            // Get module name based on existing 'name' attribute or filename
+            // Must use path.extname/path.basename instead of path.parse due to CB-9981
+            var moduleName = plugin_id + '.' + (jsModule.name || path.basename(jsModule.src, path.extname (jsModule.src)));
 
             // Read in the file, prepend the cordova.define, and write it back out.
             var scriptContent = fs.readFileSync(moduleSource, 'utf-8').replace(/^\ufeff/, ''); // Window BOM

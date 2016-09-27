@@ -19,31 +19,45 @@
 
 var cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
-    events       = require('cordova-common').events,
     Q            = require('q'),
-    platform_lib = require('../platforms/platforms');
+    platform_lib = require('../platforms/platforms'),
+    _ = require('underscore');
 
 
 // Returns a promise.
 module.exports = function run(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    options = cordova_util.preProcessOptions(options);
+    return Q().then(function() {
+        var projectRoot = cordova_util.cdProjectRoot();
+        options = cordova_util.preProcessOptions(options);
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('before_run', options)
-    .then(function() {
-        // Run a prepare first, then shell out to run
-        return require('./cordova').raw.prepare(options);
-    }).then(function() {
-        // Deploy in parallel (output gets intermixed though...)
-        return Q.all(options.platforms.map(function(platform) {
-            return platform_lib
-                .getPlatformApi(platform)
-                .run(options.options);
-        }));
-    }).then(function() {
-        return hooksRunner.fire('after_run', options);
-    }, function(error) {
-        events.emit('log', 'ERROR running one or more of the platforms: ' + error + '\nYou may not have the required environment or OS to run this project');
+        // This is needed as .build modifies opts
+        var optsClone = _.clone(options.options);
+        optsClone.nobuild = true;
+
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('before_run', options)
+        .then(function() {
+            if (!options.options.noprepare) {
+                // Run a prepare first, then shell out to run
+                return require('./cordova').raw.prepare(options);
+            }
+        }).then(function() {
+            // Deploy in parallel (output gets intermixed though...)
+            return Q.all(options.platforms.map(function(platform) {
+
+                var buildPromise = options.options.nobuild ? Q() :
+                    platform_lib.getPlatformApi(platform).build(options.options);
+
+                return buildPromise
+                .then(function() {
+                    return hooksRunner.fire('before_deploy', options);
+                })
+                .then(function() {
+                    return platform_lib.getPlatformApi(platform).run(optsClone);
+                });
+            }));
+        }).then(function() {
+            return hooksRunner.fire('after_run', options);
+        });
     });
 };

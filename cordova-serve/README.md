@@ -24,26 +24,53 @@ This module can be used to serve up a Cordova application in the browser. It has
 to be called using the following API:
 
 ``` js
-var serve = require('cordova-serve');
-serve.launchServer(opts);
-serve.servePlatform(platform, opts);
-serve.launchBrowser(ops);
+var cordovaServe = require('cordova-serve')();
+cordovaServe.launchServer(opts);
+cordovaServe.servePlatform(platform, opts);
+cordovaServe.launchBrowser(ops);
 ```
 
 ## launchServer()
 
 ``` js
-launchServer(opts);
+var cordovaServe = require('cordova-serve')();
+cordovaServe.launchServer(opts).then(function () {
+    var server = cordovaServe.server;
+    var root = cordovaServe.root;
+    var port = cordovaServe.port;
+
+    ...
+}, function (error) {
+    console.log('An error occurred: ' + error);
+});
 ```
 
 Launches a server with the specified options. Parameters:
 
 * **opts**: Options, as described below.
 
+Returns a promise that is fulfilled once the server has launched, or rejected if the server fails to launch. Once the
+promise is fulfilled, the following properties are available on the `cordovaServe` object:
+ 
+ * **cordovaServe.serve**: The Node http.Server instance.
+ * **cordovaServe.root**: The root that was specified, or cwd if none specified.
+ * **cordovaServe.port**: The port that was used (could be the requested port, the default port, or some incremented
+   value if the chosen port was in use).
+
 ## servePlatform()
 
 ``` js
-servePlatform(platform, opts);
+var cordovaServe = require('cordova-serve')();
+cordovaServe.servePlatform(platform, opts).then(function () {
+    var server = cordovaServe.server;
+    var port = cordovaServe.port;
+    var projectRoot = cordovaServe.projectRoot;
+    var platformRoot = cordovaServe.root;
+
+    ...
+}, function (error) {
+    console.log('An error occurred: ' + error);
+});
 ```
 
 Launches a server that serves up any Cordova platform (e.g. `browser`, `android` etc) from the current project.
@@ -53,10 +80,24 @@ Parameters:
   root folder, or any folder within it - `servePlatform()` will replace it with the platform's `www_dir` folder. If this
   value is not specified, the *cwd* will be used.
 
+Returns a promise that is fulfilled once the server has launched, or rejected if the server fails to launch. Once the
+promise is fulfilled, the following properties are available on the `cordovaServe` object:
+ 
+ * **cordovaServe.serve**: The Node http.Server instance.
+ * **cordovaServe.root**: The requested platform's `www` folder.
+ * **cordovaServe.projectRoot**: The root folder of the Cordova project.
+ * **cordovaServe.port**: The port that was used (could be the requested port, the default port, or some incremented
+   value if the chosen port was in use).
+
 ## launchBrowser()
 
 ``` js
-launchBrowser(opts);
+var cordovaServe = require('cordova-serve')();
+cordovaServe.launchBrowser(opts).then(function (stdout) {
+    console.log('Browser was launched successfully: ' + stdout);
+}, function (error) {
+    console.log('An error occurred: ' + error);
+});
 ```
 
 Launches a browser window pointing to the specified URL. The single parameter is an options object that supports the
@@ -64,7 +105,9 @@ following values (both optional):
 
 * **url**: The URL to open in the browser.
 * **target**: The name of the browser to launch. Can be any of the following: `chrome`, `chromium`, `firefox`, `ie`,
-  `opera`, `safari`. If no browser is specified, 
+  `opera`, `safari`. Defaults to `chrome` if no browser is specified.
+
+Returns a promise that is fulfilled once the browser has been launched, or rejected if an error occurs.
 
 ## The *opts* Options Object
 The opts object passed to `launchServer()` and `servePlatform()` supports the following values (all optional):

@@ -20,10 +20,11 @@
 /* jshint sub:true */
 var fs            = require('fs'),
     path          = require('path'),
+    events        = require('cordova-common').events,
     CordovaError  = require('cordova-common').CordovaError,
     shell         = require('shelljs'),
     url           = require('url'),
-    npm           = require('npm'),
+    nopt          = require('nopt'),
     Q             = require('q'),
     semver        = require('semver');
 
@@ -37,11 +38,22 @@ if (!global_config_path) {
 var origCwd = null;
 
 var lib_path = path.join(global_config_path, 'lib');
-shell.mkdir('-p', lib_path);
+
 
 exports.binname = 'cordova';
 exports.globalConfig = global_config_path;
-exports.libDirectory = lib_path;
+
+// defer defining libDirectory on exports so we don't create it if 
+// someone simply requires this module
+Object.defineProperty(exports,'libDirectory', {
+        configurable: true,
+        get: function () {
+            shell.mkdir('-p', lib_path);
+            exports.libDirectory = lib_path;
+        return lib_path;
+    }
+});
+
 addModuleProperty(module, 'plugin_parser', './plugin_parser');
 
 exports.isCordova = isCordova;
@@ -55,12 +67,14 @@ exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
 exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
+exports._resetOrigCwd = _resetOrigCwd;
 exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
+exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -136,6 +150,10 @@ function getOrigWorkingDirectory() {
     return origCwd || process.env.PWD || process.cwd();
 }
 
+function _resetOrigCwd() {
+    origCwd = null;
+}
+
 // Fixes up relative paths that are no longer valid due to chdir() within cdProjectRoot().
 function fixRelativePath(value, /* optional */ cwd) {
     // Don't touch absolute paths.
@@ -183,6 +201,23 @@ function listPlatforms(project_dir) {
     });
 }
 
+function getInstalledPlatformsWithVersions(project_dir) {
+    var result = {};
+    var platforms_on_fs = listPlatforms(project_dir);
+
+    return Q.all(platforms_on_fs.map(function(p) {
+        var superspawn    = require('cordova-common').superspawn;
+        return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
+        .then(function(v) {
+            result[p] = v || null;
+        }, function(v) {
+            result[p] = 'broken';
+        });
+    })).then(function() {
+        return result;
+    });
+}
+
 // list the directories in the path, ignoring any files
 function findPlugins(pluginPath) {
     var plugins = [],
@@ -214,7 +249,7 @@ function projectConfig(projectDir) {
     } else if (fs.existsSync(wwwPath)) {
         return wwwPath;
     }
-    return rootPath;
+    return false;
 }
 
 function preProcessOptions (inputOptions) {
@@ -233,7 +268,7 @@ function preProcessOptions (inputOptions) {
     }
     result.verbose = result.verbose || false;
     result.platforms = result.platforms || [];
-    result.options = result.options || {};
+    result.options = ensurePlatformOptionsCompatible(result.options);
 
     var projectRoot = this.isCordova();
 
@@ -253,6 +288,52 @@ function preProcessOptions (inputOptions) {
     }
 
     return result;
+}
+
+/**
+ * Converts options, which is passed to platformApi from old format (array of
+ *   plain strings) to new - nopt-parsed object + array of platform-specific
+ *   options. If options are already in new the format - returns them unchanged.
+ *
+ * @param   {Object|String[]}  platformOptions  A platform options (array of
+ *   strings or object) which is passed down to platform scripts/platformApi
+ *   polyfill.
+ *
+ * @return  {Object}                            Options, converted to new format
+ */
+function ensurePlatformOptionsCompatible (platformOptions) {
+    var opts = platformOptions || {};
+
+    if (!Array.isArray(opts))
+        return opts;
+
+    events.emit('warn', 'The format of cordova.raw.* methods "options" argument was changed in 5.4.0. ' +
+        '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
+        'is still supported, consider updating your cordova.raw.* method calls to use new argument format.');
+
+    var knownArgs = [
+        'debug',
+        'release',
+        'device',
+        'emulator',
+        'nobuild',
+        'list',
+        'buildConfig',
+        'target',
+        'archs'
+    ];
+
+    opts = nopt({}, {}, opts, 0);
+    opts.argv = Object.keys(opts)
+    .filter(function (arg) {
+        return arg !== 'argv' && knownArgs.indexOf(arg) === -1;
+    }).map(function (arg) {
+        return opts[arg] === true ?
+            '--' + arg :
+            '--' + arg + '=' + opts[arg].toString();
+    });
+
+    return opts;
 }
 
 function isDirectory(dir) {
@@ -326,6 +407,7 @@ function getLatestMatchingNpmVersion(module_name, version) {
  * @returns {Promise} Promise for an array of versions.
  */
 function getAvailableNpmVersions(module_name) {
+    var npm = require('npm');
     return Q.nfcall(npm.load).then(function () {
         return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
             // result is an object in the form:

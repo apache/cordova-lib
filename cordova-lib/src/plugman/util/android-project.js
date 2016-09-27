@@ -118,7 +118,11 @@ AndroidProject.prototype = {
         for (var filename in this._propertiesEditors) {
             var editor = this._propertiesEditors[filename];
             if (editor.dirty) {
-                fs.writeFileSync(filename, editor.toString());
+                // Check for parent directory existence before attempting write 
+                // (when uninstalling a plugin its subprojects' directories are deleted)
+                if (fs.existsSync(path.dirname(filename))) {
+                    fs.writeFileSync(filename, editor.toString());
+                }
                 editor.dirty = false;
             }
         }

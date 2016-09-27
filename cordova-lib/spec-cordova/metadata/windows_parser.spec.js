@@ -33,10 +33,9 @@ var windowsParser = require('../../src/cordova/metadata/windows_parser'),
     ConfigParser = require('cordova-common').ConfigParser,
     HooksRunner = require('../../src/hooks/HooksRunner');
 
-// Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
 
-describe('windows8 project parser', function() {
+describe('windows project parser', function() {
 
     var proj = '/some/path';
     var exists, exec, custom, readdir, config_read;
@@ -51,14 +50,14 @@ describe('windows8 project parser', function() {
         config_read = spyOn(config, 'read').andCallFake(function() {
             return custom() ? {
                 lib: {
-                    windows8: {
+                    windows: {
                         url: custom()
                     }
                 }
             }
             : ({});
         });
-        readdir = spyOn(fs, 'readdirSync').andReturn(['test.jsproj']);
+        readdir = spyOn(fs, 'readdirSync').andReturn(['TestApp.projitems']);
         winXml = null;
         spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
             return winXml = new et.ElementTree(et.XML('<foo><Application/><Identity/><VisualElements><a/></VisualElements><Capabilities><a/></Capabilities></foo>'));
@@ -78,17 +77,16 @@ describe('windows8 project parser', function() {
     }
 
     describe('constructions', function() {
-        it('should throw if provided directory does not contain a jsproj file', function() {
+        it('should throw if provided directory does not contain a projitems file', function() {
             readdir.andReturn([]);
             expect(function() {
                 new windowsParser(proj);
             }).toThrow();
         });
-        it('should create an instance with path, manifest properties', function() {
+        it('should create an instance with path property', function() {
             expect(function() {
                 var parser = new windowsParser(proj);
                 expect(parser.projDir).toEqual(proj);
-                expect(parser.manifestPath).toEqual(path.join(proj, 'package.appxmanifest'));
             }).not.toThrow();
         });
         it('should be an instance of Parser', function() {
@@ -97,15 +95,15 @@ describe('windows8 project parser', function() {
         it('should call super with the correct arguments', function() {
             var call = spyOn(Parser, 'call');
             var p = new windowsParser(proj);
-            expect(call).toHaveBeenCalledWith(p, 'windows8', proj);
+            expect(call).toHaveBeenCalledWith(p, 'windows', proj);
         });
     });
 
     describe('instance', function() {
         var parser, cp, rm, is_cordova, write, read, mv, mkdir;
-        var windows8_proj = path.join(proj, 'platforms', 'windows8');
+        var windows_proj = path.join(proj, 'platforms', 'windows');
         beforeEach(function() {
-            parser = new windowsParser(windows8_proj);
+            parser = new windowsParser(windows_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
@@ -116,30 +114,16 @@ describe('windows8 project parser', function() {
         });
 
         describe('update_from_config method', function() {
-            beforeEach(function() {
-                cfg.name = function() { return 'testname'; };
-                cfg.content = function() { return 'index.html'; };
-                cfg.packageName = function() { return 'testpkg'; };
-                cfg.version = function() { return 'one point oh'; };
-                readdir.andReturn(['test.sln']);
-            });
-
-            it('should write out the app name to package.appxmanifest', function() {
-                parser.update_from_config(cfg);
-                var identityNode = winXml.getroot().find('.//Identity');
-                expect(identityNode.attrib.Name).toEqual(cfg.packageName());
-            });
-
-            it('should write out the app version to package.appxmanifest', function() {
-                parser.update_from_config(cfg);
-                var identityNode = winXml.getroot().find('.//Identity');
-                expect(identityNode.attrib.Version).toEqual('one point oh');
+            it('should throw if the platform does not contain prepare script', function() {
+                expect(function() {
+                    parser.update_from_config(cfg);
+                }).toThrow();
             });
         });
 
         describe('www_dir method', function() {
             it('should return www', function() {
-                expect(parser.www_dir()).toEqual(path.join(windows8_proj, 'www'));
+                expect(parser.www_dir()).toEqual(path.join(windows_proj, 'www'));
             });
         });
         describe('update_www method', function() {

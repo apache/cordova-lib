@@ -44,7 +44,7 @@ describe('fetch', function() {
         }).fin(done);
     }
     /*
-     * Taking out the following test. Fetch has a copyPlugin method that uses existsSync to see if a plugin already exists in the plugins folder. If the plugin exists in the plugins directory for the cordova project, it won't be copied over. This test fails now due it always returning true for existsSync. 
+     * Taking out the following test. Fetch has a copyPlugin method that uses existsSync to see if a plugin already exists in the plugins folder. If the plugin exists in the plugins directory for the cordova project, it won't be copied over. This test fails now due it always returning true for existsSync.
     describe('plugin in a dir with spaces', function() {
         it('should copy locally-available plugin to plugins directory when spaces in path', function(done) {
             // XXX: added this because plugman tries to fetch from registry when plugin folder does not exist
@@ -247,6 +247,33 @@ describe('fetch', function() {
         });
     });
 
+    describe('fetch recursive error CB-8809', function(){
+
+        var srcDir = path.join(__dirname, 'plugins/recursivePlug');
+        var appDir = path.join(__dirname, 'plugins/recursivePlug/demo');
+
+        if(/^win/.test(process.platform)) {
+            it('should copy all but the /demo/ folder',function(done) {
+                var cp = spyOn(shell, 'cp');
+                wrapper(fetch(srcDir, appDir),done, function() {
+                    expect(cp).toHaveBeenCalledWith('-R',path.join(srcDir,'asset.txt'),path.join(appDir,'test-recursive'));
+                    expect(cp).not.toHaveBeenCalledWith('-R',srcDir,path.join(appDir,'test-recursive'));
+                });
+            });
+        }
+        else {
+            it('should skip copy to avoid recursive error', function(done) {
+
+                var cp = spyOn(shell, 'cp').andCallFake(function(){});
+
+                wrapper(fetch(srcDir, appDir),done, function() {
+                    expect(cp).not.toHaveBeenCalled();
+                });
+            });
+        }
+
+    });
+
     describe('registry plugins', function() {
         var pluginId = 'dummyplugin', sFetch;
         var rm, sym, save_metadata;
@@ -259,11 +286,6 @@ describe('fetch', function() {
         });
 
 
-        it('should get a plugin from registry and set the right client when argument is not a folder nor URL', function(done) {
-            wrapper(fetch(pluginId, temp, {client: 'plugman'}), done, function() {
-                expect(sFetch).toHaveBeenCalledWith([pluginId], 'plugman');
-            });
-        });
         it('should fail when the expected ID doesn\'t match', function(done) {
             fetch(pluginId, temp, { expected_id: 'wrongID' })
             .then(function() {
@@ -288,6 +310,18 @@ describe('fetch', function() {
         it('should succeed when the plugin version specified is correct', function(done) {
             wrapper(fetch(pluginId, temp, { expected_id: test_plugin_id + '@' + test_plugin_version }), done, function() {
                 expect(1).toBe(1);
+            });
+        });
+        it('should fetch plugins that are scoped packages', function(done) {
+            var scopedPackage = '@testcope/dummy-plugin';
+            wrapper(fetch(scopedPackage, temp, { expected_id: test_plugin_id }), done, function() {
+                expect(sFetch).toHaveBeenCalledWith([scopedPackage]);
+            });
+        });
+        it('should fetch plugins that are scoped packages and have versions specified', function(done) {
+            var scopedPackage = '@testcope/dummy-plugin@latest';
+            wrapper(fetch(scopedPackage, temp, { expected_id: test_plugin_id }), done, function() {
+                expect(sFetch).toHaveBeenCalledWith([scopedPackage]);
             });
         });
     });

@@ -25,9 +25,10 @@ var cordova_util = require('./util'),
 
 function handleError(error) {
     if (error.code === 'ENOENT') {
-        events.emit('log', 'Platform does not support ' + this.script);
+        events.emit('warn', 'Platform does not support ' + this.script);
     } else {
-        events.emit('log', 'An unexpected error has occured');
+        events.emit('warn', 'An unexpected error has occured while running ' + this.script +
+            ' with code ' + error.code + ': ' + error);
     }
 }
 
@@ -35,14 +36,14 @@ function displayDevices(projectRoot, platform, options) {
     var caller = { 'script': 'list-devices' };
     events.emit('log', 'Available ' + platform + ' devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
-    return superspawn.spawn(cmd, options, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
 }
 
 function displayVirtualDevices(projectRoot, platform, options) {
     var caller = { 'script': 'list-emulator-images' };
     events.emit('log', 'Available ' + platform + ' virtual devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
-    return superspawn.spawn(cmd, options, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
 }
 
 module.exports = function targets(options) {

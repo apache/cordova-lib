@@ -17,30 +17,29 @@
     under the License.
 */
 
-var cordova_util = require('./util'),
+var Q            = require('q'),
+    cordova_util = require('./util'),
     HooksRunner  = require('../hooks/HooksRunner'),
-    events       = require('cordova-common').events,
-    Q            = require('q'),
     promiseUtil  = require('../util/promise-util'),
-    platform_lib = require('../platforms/platforms');
+    platform_lib = require('../platforms/platforms'),
+    _ = require('underscore');
 
 // Returns a promise.
 module.exports = function compile(options) {
-    var projectRoot = cordova_util.cdProjectRoot();
-    options = cordova_util.preProcessOptions(options);
+    return Q().then(function() {
+        var projectRoot = cordova_util.cdProjectRoot();
+        options = cordova_util.preProcessOptions(options);
 
-    var hooksRunner = new HooksRunner(projectRoot);
-    return hooksRunner.fire('before_compile', options)
-    .then(function () {
-        return promiseUtil.Q_chainmap(options.platforms, function (platform) {
-            return platform_lib
-                .getPlatformApi(platform)
-                .build(options.options);
+        var hooksRunner = new HooksRunner(projectRoot);
+        return hooksRunner.fire('before_compile', options)
+        .then(function () {
+            return promiseUtil.Q_chainmap(options.platforms, function (platform) {
+                return platform_lib
+                    .getPlatformApi(platform)
+                    .build(_.clone(options.options));
+            });
+        }).then(function() {
+            return hooksRunner.fire('after_compile', options);
         });
-    }).then(function() {
-        return hooksRunner.fire('after_compile', options);
-    }, function(error) {
-        events.emit('log', 'ERROR building one of the platforms: ' + error + '\nYou may not have the required environment or OS to build this project');
-        return Q.reject(error);
     });
 };
