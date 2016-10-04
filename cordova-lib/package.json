@@ -19,8 +19,8 @@
   "dependencies": {
     "aliasify": "^1.7.2",
     "cordova-common": "1.4.x",
-    "cordova-fetch": "1.0.x",
-    "cordova-create": "git+https://github.com/apache/cordova-create.git",
+    "cordova-fetch": "^1.0.1",
+    "cordova-create": "^1.0.1",
     "cordova-js": "4.1.4",
     "cordova-registry-mapper": "1.x",
     "cordova-serve": "^1.0.0",
