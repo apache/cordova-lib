@@ -113,7 +113,7 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '    <preference name="webviewbounce" value="true" />\n' +
     '</widget>\n';
 
-describe('start', function() {
+describe('plugman install start', function() {
     var config_queue_add, proc, actions_push, ca, emit;
 
     beforeEach(function() {
@@ -129,7 +129,7 @@ describe('start', function() {
         });
     });
 
-    it('start', function() {
+    it('plugman install start', function() {
         shell.rm('-rf', project);
         shell.cp('-R', path.join(srcProject, '*'), project);
 

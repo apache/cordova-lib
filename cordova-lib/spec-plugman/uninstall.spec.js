@@ -75,7 +75,7 @@ function uninstallPromise(f) {
     return f.then(function() { done = true; }, function(err) { done = err; });
 }
 
-describe('start', function() {
+describe('plugman uninstall start', function() {
     beforeEach(function () {
         var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
         spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
@@ -84,7 +84,7 @@ describe('start', function() {
         });
     });
 
-    it('start', function() {
+    it('plugman uninstall start', function() {
         shell.rm('-rf', project, project2, project3);
         shell.cp('-R', path.join(srcProject, '*'), project);
         shell.cp('-R', path.join(srcProject, '*'), project2);
