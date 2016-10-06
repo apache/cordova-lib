@@ -448,10 +448,19 @@ ConfigParser.prototype = {
         return accesses.map(function(access){
             var minimum_tls_version = access.attrib['minimum-tls-version']; /* String */
             var requires_forward_secrecy = access.attrib['requires-forward-secrecy']; /* Boolean */
+            var requires_certificate_transparency = access.attrib['requires-certificate-transparency']; /* Boolean */
+            var allows_arbitrary_loads_in_web_content = access.attrib['allows-arbitrary-loads-in-web-content']; /* Boolean */
+            var allows_arbitrary_loads_in_media = access.attrib['allows-arbitrary-loads-in-media']; /* Boolean */
+            var allows_local_networking = access.attrib['allows-local-networking']; /* Boolean */
+            
             return {
                 'origin': access.attrib.origin,
                 'minimum_tls_version': minimum_tls_version,
-                'requires_forward_secrecy' : requires_forward_secrecy
+                'requires_forward_secrecy' : requires_forward_secrecy,
+                'requires_certificate_transparency' : requires_certificate_transparency,
+                'allows_arbitrary_loads_in_web_content' : allows_arbitrary_loads_in_web_content,
+                'allows_arbitrary_loads_in_media' : allows_arbitrary_loads_in_media,
+                'allows_local_networking' : allows_local_networking
             };
         });
     },
@@ -461,10 +470,13 @@ ConfigParser.prototype = {
         return allow_navigations.map(function(allow_navigation){
             var minimum_tls_version = allow_navigation.attrib['minimum-tls-version']; /* String */
             var requires_forward_secrecy = allow_navigation.attrib['requires-forward-secrecy']; /* Boolean */
+            var requires_certificate_transparency = allow_navigation.attrib['requires-certificate-transparency']; /* Boolean */
+
             return {
                 'href': allow_navigation.attrib.href,
                 'minimum_tls_version': minimum_tls_version,
-                'requires_forward_secrecy' : requires_forward_secrecy
+                'requires_forward_secrecy' : requires_forward_secrecy,
+                'requires_certificate_transparency' : requires_certificate_transparency
             };
         });
     },
