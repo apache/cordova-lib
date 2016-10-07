@@ -20,6 +20,15 @@
 -->
 # Cordova-common Release Notes
 
+### 1.5.0 (Oct 06, 2016)
+* [CB-11776](https://issues.apache.org/jira/browse/CB-11776) Add test case for different `edit-config` targets
+* [CB-11908](https://issues.apache.org/jira/browse/CB-11908) Add `edit-config` to `config.xml`
+* [CB-11936](https://issues.apache.org/jira/browse/CB-11936) Support four new **App Transport Security (ATS)** keys
+* update `config.xml` location if it is a **Android Studio** project.
+* use `array` methods and `object.keys` for iterating. avoiding `for-in` loops
+* [CB-11517](https://issues.apache.org/jira/browse/CB-11517) Allow `.folder` matches
+* [CB-11776](https://issues.apache.org/jira/browse/CB-11776) check `edit-config` target exists
+
 ### 1.4.1 (Aug 09, 2016)
 * Add general purpose `ConfigParser.getAttribute` API
 * [CB-11653](https://issues.apache.org/jira/browse/CB-11653) moved `findProjectRoot` from `cordova-lib` to `cordova-common`
