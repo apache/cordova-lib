@@ -235,6 +235,35 @@ module.exports = function plugin(command, targets, opts) {
                                 cfg.write();
 
                                 events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
+
+                                var pkgJson;
+                                var pkgJsonPath = path.join(projectRoot,'package.json');
+
+                                // If statement to see if pkgJsonPath exists in the filesystem
+                                if(fs.existsSync(pkgJsonPath)) {
+                                    // Delete any previous caches of require(package.json)
+                                    delete require.cache[require.resolve(pkgJsonPath)];
+                                    pkgJson = require(pkgJsonPath);
+                                } else {
+                                    // Create package.json in cordova@7
+                                }
+                                // If package.json exists, the plugin object and plugin name will be added to package.json 
+                                // if not already there
+                                if (pkgJson === undefined) {
+                                    return;
+                                }
+                                if (pkgJson.cordova === undefined) {
+                                    pkgJson.cordova = {};
+                                }
+                                if (pkgJson.cordova.plugins === undefined) {
+                                    pkgJson.cordova.plugins = {};
+                                }
+                                if (pkgJson.cordova.plugins !== undefined) {
+                                    pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
+                                    events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
+                                    // Write to package.json
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                }
                             }
                         });
                     }, Q());
@@ -243,7 +272,6 @@ module.exports = function plugin(command, targets, opts) {
                     if (!shouldRunPrepare) {
                         return Q();
                     }
-
                     // Need to require right here instead of doing this at the beginning of file
                     // otherwise tests are failing without any real reason.
                     return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
@@ -299,9 +327,26 @@ module.exports = function plugin(command, targets, opts) {
                                     configXml.removePlugin(target);
                                     configXml.write();
                                 }
+                                var pkgJson;
+                                var pkgJsonPath = path.join(projectRoot,'package.json');
+                                // If statement to see if pkgJsonPath exists in the filesystem
+                                if(fs.existsSync(pkgJsonPath)) {
+                                    //delete any previous caches of require(package.json)
+                                    delete require.cache[require.resolve(pkgJsonPath)];
+                                    pkgJson = require(pkgJsonPath);
+                                } else {
+                                    // Create package.json in cordova@7
+                                }
+                                // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
+                                if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
+                                    events.emit('log', 'Removing ' + target + ' from package.json');
+                                    delete pkgJson.cordova.plugins[target];
+                                    //Write out new package.json 
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                }
                             }
-                        })
-                        .then(function(){
+                            
+                        }).then(function(){
                             // Remove plugin from fetch.json
                             events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
                             metadata.remove_fetch_metadata(pluginPath, target);
@@ -311,7 +356,7 @@ module.exports = function plugin(command, targets, opts) {
                     // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
                     if (!shouldRunPrepare) {
                         return Q();
-                    }
+                    }   
 
                     return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
                 }).then(function() {
