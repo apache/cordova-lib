@@ -86,9 +86,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         
         var platformsToSave = []; 
 
-        // If statement to see if pkgJsonPath exists in the filesystem
-        
-        return promiseutil.Q_chainmap(targets, function(target) {
+	return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
             var platform = parts[0];
@@ -221,6 +219,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
+
 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was

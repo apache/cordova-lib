@@ -450,4 +450,3 @@ describe('platform end-to-end with --save', function () {
         }).fin(done);
     }, TIMEOUT);
 });
-

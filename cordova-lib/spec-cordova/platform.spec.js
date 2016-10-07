@@ -26,6 +26,8 @@ var helpers = require('./helpers'),
     cordova = require('../src/cordova/cordova'),
     plugman = require('../src/plugman/plugman'),
     rewire = require('rewire'),
+    prepare = require('../src/cordova/prepare'),
+    platforms = require('../src/platforms/platforms'),
     platform = rewire('../src/cordova/platform.js');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
@@ -90,6 +92,34 @@ describe('platform end-to-end', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
+    // Runs: list, add, list
+    function addPlugin(target, id, options) {
+        // Check there are no plugins yet.
+        return cordova.raw.plugin('list').then(function() {
+            expect(results).toMatch(/No plugins added/gi);
+        }).then(function() {
+            // Add a fake plugin from fixtures.
+            return cordova.raw.plugin('add', target, options);
+        }).then(function() {
+            expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
+        }).then(function() {
+            return cordova.raw.plugin('ls');
+        }).then(function() {
+            expect(results).toContain(id);
+        });
+    }
+    // Runs: remove, list
+    function removePlugin(id) {
+        return cordova.raw.plugin('rm', id)
+        .then(function() {
+            // The whole dir should be gone.
+            expect(path.join(project, 'plugins', id)).not.toExist();
+        }).then(function() {
+            return cordova.raw.plugin('ls');
+        }).then(function() {
+            expect(results).toMatch(/No plugins added/gi);
+        });
+    }        
 
     // The flows we want to test are add, rm, list, and upgrade.
     // They should run the appropriate hooks.
@@ -102,6 +132,7 @@ describe('platform end-to-end', function () {
             // Add the testing platform.
             return cordova.raw.platform('add', [helpers.testPlatform]);
         }).then(function() {
+            console.log("!!!");
             // Check the platform add was successful.
             expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
             expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
@@ -117,7 +148,6 @@ describe('platform end-to-end', function () {
             // And now remove it.
             return cordova.raw.platform('rm', [helpers.testPlatform]);
         }).then(function() {
-            // It should be gone.
             expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
         }).then(emptyPlatformList) // platform ls should be empty too.
         .fail(function(err) {
