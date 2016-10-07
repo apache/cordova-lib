@@ -29,6 +29,12 @@ var cachedApis = {};
 // PlatformProject classes for now.
 function getPlatformApi(platform, platformRootDir) {
 
+    if (/^v0.\d+[.\d+]*/.exec(process.version)) { // matches v0.* 
+        var msg = 'Warning: using node version ' + process.version +
+                ' which has been deprecated. Please upgrade to the latest node version available (v6.x is recommended).';
+        events.emit('warn', msg);
+    }
+
     // if platformRootDir is not specified, try to detect it first
     if (!platformRootDir) {
         var projectRootDir = util.isCordova();
