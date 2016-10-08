@@ -75,6 +75,7 @@ exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
+exports.existsSync = existsSync;
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -82,22 +83,33 @@ function isUrl(value) {
 }
 
 function isRootDir(dir) {
-    if (fs.existsSync(path.join(dir, 'www'))) {
-        if (fs.existsSync(path.join(dir, 'config.xml'))) {
+    if (exports.existsSync(path.join(dir, 'www'))) {
+        if (exports.existsSync(path.join(dir, 'config.xml'))) {
             // For sure is.
-            if (fs.existsSync(path.join(dir, 'platforms'))) {
+            if (exports.existsSync(path.join(dir, 'platforms'))) {
                 return 2;
             } else {
                 return 1;
             }
         }
         // Might be (or may be under platforms/).
-        if (fs.existsSync(path.join(dir, 'www', 'config.xml'))) {
+        if (exports.existsSync(path.join(dir, 'www', 'config.xml'))) {
             return 1;
         }
     }
     return 0;
 }
+
+function existsSync(fileSpec) {
+    // Since fs.existsSync() is deprecated
+    try {
+        fs.statSync(fileSpec);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 
 // Runs up the directory chain looking for a .cordova directory.
 // IF it is found we are in a Cordova project.
@@ -169,7 +181,7 @@ function fixRelativePath(value, /* optional */ cwd) {
 
 // Resolve any symlinks in order to avoid relative path issues. See https://issues.apache.org/jira/browse/CB-8757
 function convertToRealPathSafe(path) {
-    if (path && fs.existsSync(path)) {
+    if (path && exports.existsSync(path)) {
         return fs.realpathSync(path);
     }
 
@@ -192,7 +204,7 @@ function deleteSvnFolders(dir) {
 function listPlatforms(project_dir) {
     var core_platforms = require('../platforms/platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
-    if ( !fs.existsSync(platforms_dir)) {
+    if ( !exports.existsSync(platforms_dir)) {
         return [];
     }
     var subdirs = fs.readdirSync(platforms_dir);
@@ -223,7 +235,7 @@ function findPlugins(pluginPath) {
     var plugins = [],
         stats;
 
-    if (fs.existsSync(pluginPath)) {
+    if (exports.existsSync(pluginPath)) {
         plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
             stats = fs.statSync(path.join(pluginPath, fileName));
             return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
@@ -244,9 +256,9 @@ function projectWww(projectDir) {
 function projectConfig(projectDir) {
     var rootPath = path.join(projectDir, 'config.xml');
     var wwwPath = path.join(projectDir, 'www', 'config.xml');
-    if (fs.existsSync(rootPath)) {
+    if (exports.existsSync(rootPath)) {
         return rootPath;
-    } else if (fs.existsSync(wwwPath)) {
+    } else if (exports.existsSync(wwwPath)) {
         return wwwPath;
     }
     return false;
@@ -283,7 +295,7 @@ function preProcessOptions (inputOptions) {
         result.platforms = projectPlatforms;
     }
 
-    if (!result.options.buildConfig && fs.existsSync(path.join(projectRoot, 'build.json'))) {
+    if (!result.options.buildConfig && exports.existsSync(path.join(projectRoot, 'build.json'))) {
         result.options.buildConfig = path.join(projectRoot, 'build.json');
     }
 
@@ -383,6 +395,11 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
  * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
  */
 function getLatestMatchingNpmVersion(module_name, version) {
+    if (!version) {
+        // If no version specified, get the latest
+        return getLatestNpmVersion(module_name);
+    }
+
     var validVersion = semver.valid(version, /* loose */ true);
     if (validVersion) {
         // This method is really intended to work with ranges, so if a version rather than a range is specified, we just
@@ -414,6 +431,23 @@ function getAvailableNpmVersions(module_name) {
             //     {'<version>': {versions: ['1.2.3', '1.2.4', ...]}}
             // (where <version> is the latest version)
             return result[Object.keys(result)[0]].versions;
+        });
+    });
+}
+
+/**
+ * Returns a promise for the latest version available for the specified npm module.
+ * @param {string} module_name - npm module name.
+ * @returns {Promise} Promise for an array of versions.
+ */
+function getLatestNpmVersion(module_name) {
+    var npm = require('npm');
+    return Q.nfcall(npm.load).then(function () {
+        return Q.ninvoke(npm.commands, 'view', [module_name, 'version'], /* silent = */ true).then(function (result) {
+            // result is an object in the form:
+            //     {'<version>': {version: '<version>'}}
+            // (where <version> is the latest version)
+            return Object.keys(result)[0];
         });
     });
 }

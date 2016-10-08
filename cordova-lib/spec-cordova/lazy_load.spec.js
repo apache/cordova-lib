@@ -20,6 +20,7 @@
 /* jshint sub:true */
 
 var lazy_load = require('../src/cordova/lazy_load'),
+    npmHelper = require('../src/util/npm-helper'),
     config = require('../src/cordova/config'),
     shell = require('shelljs'),
     npm = require('npm'),
@@ -31,11 +32,11 @@ var lazy_load = require('../src/cordova/lazy_load'),
     platforms = require('../src/platforms/platforms');
 
 describe('lazy_load module', function() {
-    var custom_path, npm_cache_add, fakeLazyLoad;
+    var custom_path, cachePackage, fakeLazyLoad;
     beforeEach(function() {
         custom_path = spyOn(config, 'has_custom_path').andReturn(false);
-        npm_cache_add = spyOn(lazy_load, 'npm_cache_add').andReturn(Q(path.join('lib','dir')));
-        fakeLazyLoad = function(id, platform, version) {
+        cachePackage = spyOn(npmHelper, 'cachePackage').andReturn(Q(path.join('lib', 'dir')));
+        fakeLazyLoad = function (id, platform, version) {
             if (platform == 'wp7' || platform == 'wp8') {
                 return Q(path.join('lib', 'wp', id, version, platform));
             } else {
@@ -63,7 +64,7 @@ describe('lazy_load module', function() {
         });
         it('should invoke lazy_load.custom with appropriate url, platform, and version as specified in platforms manifest', function(done) {
             lazy_load.cordova('android').then(function(dir) {
-                expect(npm_cache_add).toHaveBeenCalled();
+                expect(cachePackage).toHaveBeenCalled();
                 expect(dir).toBeDefined();
                 done();
             });

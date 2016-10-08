@@ -20,7 +20,10 @@
 // Helper methods to help keep npm operations separated.
 
 var npm = require('npm'),
+    path = require('path'),
     Q = require('q'),
+    unpack = require('./unpack'),
+    util = require('../cordova/util'),
     cachedSettings = null,
     cachedSettingsValues = null;
 
@@ -72,4 +75,55 @@ function restoreSettings() {
     }
 }
 
+/**
+ * Fetches the latest version of a package from NPM that matches the specified version. Returns a promise that
+ * resolves to the directory the NPM package is located in.
+ * @param packageName - name of an npm package
+ * @param packageVersion - requested version or version range
+ */
+function fetchPackage(packageName, packageVersion) {
+    // Get the latest matching version from NPM if a version range is specified
+    return util.getLatestMatchingNpmVersion(packageName, packageVersion).then(
+        function (latestVersion) {
+            return cachePackage(packageName, latestVersion);
+        }
+    );
+}
+
+/**
+ * Invokes "npm cache add," and then returns a promise that resolves to a directory containing the downloaded,
+ * or cached package.
+ * @param packageName - name of an npm package
+ * @param packageVersion - requested version (not a version range)
+ */
+function cachePackage(packageName, packageVersion) {
+    return Q().then(function () {
+        var cacheDir = path.join(util.libDirectory, 'npm_cache');
+
+        // If already cached, use that rather than calling 'npm cache add' again.
+        var packageCacheDir = path.resolve(cacheDir, packageName, packageVersion);
+        var packageTGZ = path.resolve(packageCacheDir, 'package.tgz');
+        if (util.existsSync(packageTGZ)) {
+            return unpack.unpackTgz(packageTGZ, path.resolve(packageCacheDir, 'package'));
+        }
+
+        // Load with NPM configuration
+        return loadWithSettingsThenRestore({'cache': cacheDir},
+            function () {
+                // Invoke NPM Cache Add
+                return Q.ninvoke(npm.commands, 'cache', ['add', (packageName + '@' + packageVersion)]).then(
+                    function (info) {
+                        var packageDir = path.resolve(npm.cache, info.name, info.version, 'package');
+                        var packageTGZ = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
+
+                        return unpack.unpackTgz(packageTGZ, packageDir);
+                    }
+                );
+            }
+        );
+    });
+}
+
 module.exports.loadWithSettingsThenRestore = loadWithSettingsThenRestore;
+module.exports.fetchPackage = fetchPackage;
+module.exports.cachePackage = cachePackage;

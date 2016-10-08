@@ -248,7 +248,7 @@ describe('util module', function() {
         });
 
         it('should pick buildConfig if no option is provided, but buildConfig.json exists', function() {
-            spyOn(fs, 'existsSync').andReturn(true);
+            spyOn(util, 'existsSync').andReturn(true);
             // Using path.join below to normalize path separators
             expect(util.preProcessOptions())
                 .toEqual(jasmine.objectContaining({options: {buildConfig: path.join('/fake/path/build.json')}}));

@@ -20,10 +20,10 @@
 /* jshint laxcomma:true */
 
 var npm = require('npm'),
-    path = require('path'),
     Q = require('q'),
     npmhelper = require('../../util/npm-helper'),
-    events = require('cordova-common').events;
+    events = require('cordova-common').events,
+    pluginSpec = require('../../cordova/plugin_spec_parser');
 
 module.exports = {
     settings: null,
@@ -114,19 +114,12 @@ function initThenLoadSettingsWithRestore(promises) {
 }
 
 /**
-* @param {Array} with one element - the plugin id or "id@version"
+* @param {string} plugin - the plugin id or "id@version"
 * @return {Promise.<string>} Promised path to fetched package.
 */
 function fetchPlugin(plugin) {
-    return initThenLoadSettingsWithRestore(function () {
-        events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
-        return Q.ninvoke(npm.commands, 'cache', ['add', plugin])
-        .then(function (info) {
-            var unpack = require('../../util/unpack');
-            var pluginDir = path.resolve(npm.cache, info.name, info.version, 'package');
-            // Unpack the plugin that was added to the cache (CB-8154)
-            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-            return unpack.unpackTgz(package_tgz, pluginDir);
-        });
-    });
+    events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
+    var parsedSpec = pluginSpec.parse(plugin);
+    var scope = parsedSpec.scope || '';
+    return npmhelper.fetchPackage(scope + parsedSpec.id, parsedSpec.version);
 }

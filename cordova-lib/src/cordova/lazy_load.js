@@ -35,7 +35,6 @@ var path          = require('path'),
     Q             = require('q'),
     npm           = require('npm'),
     npmhelper     = require('../util/npm-helper'),
-    unpack        = require('../util/unpack'),
     util          = require('./util'),
     gitclone      = require('../gitclone'),
     stubplatform  = {
@@ -49,7 +48,6 @@ exports.cordova = cordova;
 exports.cordova_git = cordova_git;
 exports.git_clone = git_clone_platform;
 exports.cordova_npm = cordova_npm;
-exports.npm_cache_add = npm_cache_add;
 exports.custom = custom;
 exports.based_on_config = based_on_config;
 
@@ -137,28 +135,7 @@ function cordova_npm(platform) {
 
         // Note that because the version of npm we use internally doesn't support caret versions, in order to allow them
         // from the command line and in config.xml, we use the actual version returned by getLatestMatchingNpmVersion().
-        var pkg = platform.packageName + '@' + version;
-        return exports.npm_cache_add(pkg);
-    });
-}
-
-// Equivalent to a command like
-// npm cache add cordova-android@3.5.0
-// Returns a promise that resolves to directory containing the package.
-function npm_cache_add(pkg) {
-    var npm_cache_dir = path.join(util.libDirectory, 'npm_cache');
-    var platformNpmConfig = {
-        cache: npm_cache_dir
-    };
-
-    return npmhelper.loadWithSettingsThenRestore(platformNpmConfig, function () {
-        return Q.ninvoke(npm.commands, 'cache', ['add', pkg])
-        .then(function (info) {
-            var pkgDir = path.resolve(npm.cache, info.name, info.version, 'package');
-            // Unpack the package that was added to the cache (CB-8154)
-            var package_tgz = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-            return unpack.unpackTgz(package_tgz, pkgDir);
-        });
+        return npmhelper.cachePackage(platform.packageName, version);
     });
 }
 
