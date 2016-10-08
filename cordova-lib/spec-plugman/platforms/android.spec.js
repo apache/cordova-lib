@@ -27,6 +27,7 @@ var android = require('../../src/plugman/platforms/android'),
     os      = require('os'),
     temp    = path.join(os.tmpdir(), 'plugman'),
     plugins_dir = path.join(temp, 'cordova', 'plugins'),
+    androidonlyplugin = path.join(__dirname, '..', 'plugins', 'org.test.androidonly'),
     dummyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.dummyplugin'),
     faultyplugin = path.join(__dirname, '..', 'plugins', 'org.test.plugins.faultyplugin'),
     android_one_project = path.join(__dirname, '..', 'projects', 'android_one', '*'),
@@ -35,10 +36,11 @@ var android = require('../../src/plugman/platforms/android'),
 var PluginInfo = require('cordova-common').PluginInfo;
 
 var dummyPluginInfo = new PluginInfo(dummyplugin);
+var androidonlyPluginInfo = new PluginInfo(androidonlyplugin);
 var dummy_id = dummyPluginInfo.id;
 var valid_source = dummyPluginInfo.getSourceFiles('android'),
     valid_resources = dummyPluginInfo.getResourceFiles('android'),
-    valid_libs = dummyPluginInfo.getLibFiles('android');
+    valid_libs = androidonlyPluginInfo.getLibFiles('android');
 
 var faultyPluginInfo = new PluginInfo(faultyplugin);
 var invalid_source = faultyPluginInfo.getSourceFiles('android');
@@ -48,6 +50,10 @@ function copyArray(arr) {
 }
 
 describe('android project handler', function() {
+    afterEach(function() {
+        shell.rm('-rf', temp);
+        android.purgeProjectFileCache(temp);
+    });
     describe('www_dir method', function() {
         it('should return cordova-android project www location using www_dir', function() {
             expect(android.www_dir(path.sep)).toEqual(path.sep + path.join('assets', 'www'));
@@ -63,15 +69,38 @@ describe('android project handler', function() {
         beforeEach(function() {
             shell.mkdir('-p', temp);
         });
-        afterEach(function() {
-            shell.rm('-rf', temp);
-        });
         describe('of <lib-file> elements', function() {
             it('should copy jar files to project/libs', function () {
                 var s = spyOn(common, 'copyFile');
 
                 android['lib-file'].install(valid_libs[0], dummyplugin, temp);
                 expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/TestLib.jar', temp, path.join('libs', 'TestLib.jar'), false);
+            });
+        });
+        describe('of <lib-file> elements with custom=false', function() {
+            it('should copy jar files from sdk directory to project/libs', function () {
+                var s = spyOn(common, 'copyFile');
+                var localProjectPropsFile = path.resolve(temp, 'local.properties');
+                var sdkDir = path.join(temp, '..', 'SDK').replace(/\\/g, '/');
+                fs.writeFileSync(localProjectPropsFile, 'sdk.dir=' + sdkDir);
+
+                android['lib-file'].install(valid_libs[1], androidonlyplugin, temp, androidonlyPluginInfo.id);
+                expect(s).toHaveBeenCalledWith(sdkDir, 'extras/android/support/v4/android-support-v4.jar', temp, path.join('libs', 'android-support-v4.jar'), false);
+            });
+        });
+        describe('of <lib-file> elements with parent', function() {
+            it('should copy jar files to sub-project/libs', function () {
+                shell.cp('-rf', android_one_project, temp);
+                var s = spyOn(common, 'copyFile');
+                var localProjectPropsFile = path.resolve(temp, 'local.properties');
+                var sdkDir = path.join(temp, '..', 'SDK').replace(/\\/g, '/');
+                fs.writeFileSync(localProjectPropsFile, 'sdk.dir=' + sdkDir);
+
+                android['lib-file'].install(valid_libs[2], androidonlyplugin, temp, androidonlyPluginInfo.id);
+                expect(s).toHaveBeenCalledWith(
+                    sdkDir, 'extras/android/support/v4/android-support-v4.jar',
+                    path.resolve(temp, androidonlyPluginInfo.id, 'childapp-plugin-lib'),
+                    path.join('libs', 'android-support-v4.jar'), false);
             });
         });
         describe('of <resource-file> elements', function() {
@@ -117,10 +146,6 @@ describe('android project handler', function() {
     describe('<framework> elements', function() {
         beforeEach(function() {
             shell.cp('-rf', android_one_project, temp);
-        });
-        afterEach(function() {
-            shell.rm('-rf', temp);
-            android.purgeProjectFileCache(temp);
         });
         it('with custom=true', function() {
             var packageIdSuffix = 'childapp';
@@ -290,9 +315,6 @@ describe('android project handler', function() {
             shell.mkdir('-p', temp);
             shell.mkdir('-p', plugins_dir);
             shell.cp('-rf', android_two_project, temp);
-        });
-        afterEach(function() {
-            shell.rm('-rf', temp);
         });
         describe('of <lib-file> elements', function(done) {
             it('should remove jar files', function () {

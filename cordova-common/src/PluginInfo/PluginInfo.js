@@ -240,6 +240,8 @@ function PluginInfo(dirname) {
             return {
                 itemType: 'lib-file',
                 src: tag.attrib.src,
+                parent: tag.attrib.parent,
+                custom: !isStrFalse(tag.attrib.custom), // default to true if not set
                 arch: tag.attrib.arch,
                 Include: tag.attrib.Include,
                 versions: tag.attrib.versions,
@@ -411,7 +413,12 @@ function _getTagsInPlatform(pelem, tag, platform, transform) {
 
 // Check if x is a string 'true'.
 function isStrTrue(x) {
-    return String(x).toLowerCase() == 'true';
+    return String(x).toLowerCase() === 'true';
+}
+
+// Check if x is a string 'false'.
+function isStrFalse(x) {
+    return String(x).toLowerCase() === 'false';
 }
 
 module.exports = PluginInfo;

@@ -30,5 +30,11 @@
         <js-module src="www/android.js" name="Android">
             <clobbers target="android" />
         </js-module>
+
+        <framework src="plugin-lib" custom="true" />
+
+        <lib-file src="src/android/TestLib.jar" />
+        <lib-file src="extras/android/support/v4/android-support-v4.jar" custom="false" />
+        <lib-file src="extras/android/support/v4/android-support-v4.jar" custom="false" parent="plugin-lib" />
     </platform>
 </plugin>

@@ -82,6 +82,38 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
+        it('should overwrite dest', function(){
+            shell.mkdir('-p', java_dir);
+            fs.writeFileSync(dest, 'contents-old', 'utf-8');
+            fs.writeFileSync(java_file, 'contents-new', 'utf-8');
+
+            // This will fail on windows if not admin - ignore the error in that case.
+            if (ignoreEPERMonWin32(java_file, symlink_file)) {
+                return;
+            }
+
+            common.copyFile(test_dir, symlink_file, project_dir, dest);
+            expect(fs.readFileSync(dest, 'utf-8')).toBe('contents-new');
+            shell.rm('-rf', project_dir);
+        });
+
+        it('should overwrite dest when symlinking', function(){
+            shell.mkdir('-p', java_dir);
+            fs.writeFileSync(dest, 'contents-old', 'utf-8');
+            fs.writeFileSync(java_file, 'contents-new', 'utf-8');
+
+            // This will fail on windows if not admin - ignore the error in that case.
+            if (ignoreEPERMonWin32(java_file, symlink_file)) {
+                return;
+            }
+
+            var create_symlink = true;
+            common.copyFile(test_dir, symlink_file, project_dir, dest, create_symlink);
+            expect(fs.readFileSync(dest, 'utf-8')).toBe('contents-new');
+            expect(path.resolve(path.dirname(dest), fs.readlinkSync(dest))).toBe(path.resolve(symlink_file));
+            shell.rm('-rf', project_dir);
+        });
+
         it('should throw if symlink is linked to a file outside the plugin', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
