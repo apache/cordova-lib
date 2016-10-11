@@ -685,5 +685,81 @@ describe('FileUpdater class', function() {
                 testTargetDir,
                 null);
         });
+
+        it('should update files from merged source directories - with a rootDir', function () {
+            var rootDir = path.join('Users', 'me');
+            mockFs.statMap[rootDir] = testDirStats;
+            mockFs.dirMap[rootDir] = [testSourceDir, testSourceDir2, testTargetDir];
+
+            mockFs.statMap[path.join(rootDir, testTargetDir)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testTargetDir)] = [testSubDir];
+            mockFs.statMap[path.join(rootDir, testTargetDir, testSubDir)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testTargetDir, testSubDir)] = [testSourceFile];
+            mockFs.statMap[path.join(rootDir, testTargetDir, testSubDir, testSourceFile)] =
+                testFileStats;
+
+            mockFs.statMap[path.join(rootDir, testSourceDir)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testSourceDir)] = [testSubDir];
+            mockFs.statMap[path.join(rootDir, testSourceDir, testSubDir)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testSourceDir, testSubDir)] = [testSourceFile];
+            mockFs.statMap[path.join(rootDir, testSourceDir, testSubDir, testSourceFile)] =
+                testFileStats2;
+
+            mockFs.statMap[path.join(rootDir, testSourceDir2)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testSourceDir2)] = [testSubDir];
+            mockFs.statMap[path.join(rootDir, testSourceDir2, testSubDir)] = testDirStats;
+            mockFs.dirMap[path.join(rootDir, testSourceDir2, testSubDir)] = [testSourceFile2];
+            mockFs.statMap[path.join(rootDir, testSourceDir2, testSubDir, testSourceFile2)] =
+                testFileStats3;
+
+            var updated = FileUpdater.mergeAndUpdateDir(
+                [testSourceDir, testSourceDir2], testTargetDir, { rootDir: rootDir });
+            expect(updated).toBe(true);
+            expect(FileUpdater.updatePathWithStatsCalls.length).toBe(4);
+
+            function validateUpdatePathWithStatsCall(
+                    index, subPath, sourceDir, sourceStats, targetDir, targetStats) {
+                var args = FileUpdater.updatePathWithStatsCalls[index];
+                expect(args[0]).toBe(path.join(sourceDir, subPath));
+                expect(args[1]).toEqual(sourceStats);
+                expect(args[2]).toBe(path.join(targetDir, subPath));
+                expect(args[3]).toEqual(targetStats);
+                expect(args[4]).toBeDefined(); // rootDir is defined
+            }
+
+            // Update the root directory.
+            validateUpdatePathWithStatsCall(
+                0,
+                '',
+                testSourceDir2,
+                testDirStats,
+                testTargetDir,
+                testDirStats);
+            // Update the subdirectory.
+           validateUpdatePathWithStatsCall(
+                1,
+                testSubDir,
+                testSourceDir2,
+                testDirStats,
+                testTargetDir,
+                testDirStats);
+            // Update the first file, from the first source.
+            validateUpdatePathWithStatsCall(
+                2,
+                path.join(testSubDir, testSourceFile),
+                testSourceDir,
+                testFileStats2,
+                testTargetDir,
+                testFileStats);
+            // Update the second file, from the second source.
+            validateUpdatePathWithStatsCall(
+                3,
+                path.join(testSubDir, testSourceFile2),
+                testSourceDir2,
+                testFileStats3,
+                testTargetDir,
+                null);            
+        });
+
     });
 });
