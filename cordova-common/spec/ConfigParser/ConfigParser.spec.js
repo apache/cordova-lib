@@ -227,6 +227,10 @@ describe('config.xml parser', function () {
                 var navigations = cfg.getAllowNavigations();
                 expect(navigations.length).not.toEqual(0);
             });
+            it('it should read <allow-intent> tag entries', function(){
+                var intents = cfg.getAllowIntents();
+                expect(intents.length).not.toEqual(0);
+            });
         });
         describe('static resources', function() {
             var hasPlatformPropertyDefined = function (e) { return !!e.platform; };
