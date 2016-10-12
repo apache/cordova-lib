@@ -20,6 +20,7 @@
 var helpers = require('./helpers'),
     path = require('path'),
     Q = require('q'),
+    fs = require('fs'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
     cordova = require('../src/cordova/cordova'),
@@ -201,6 +202,23 @@ describe('plugin end-to-end', function() {
         })
         .fail(errorHandler.errorCallback)
         .fin(done);
+    });
+
+    it('should respect preference default values', function (done) {    
+       addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'NO', REQUIRED_ANDROID:'NO'}}, done)
+       .then(function() {
+            var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
+            var installed_plugins = JSON.parse(fs.readFileSync(platformJsonPath)).installed_plugins;
+            var defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
+            expect(defaultPluginPreferences).toBeDefined();
+            expect(defaultPluginPreferences.DEFAULT).toBe('yes');
+            expect(defaultPluginPreferences.DEFAULT_ANDROID).toBe('yes');
+            expect(defaultPluginPreferences.REQUIRED_ANDROID).toBe('NO');
+            expect(defaultPluginPreferences.REQUIRED).toBe('NO');
+            return removePlugin(org_test_defaultvariables);
+       })
+       .fail(errorHandler.errorCallback)
+       .fin(done);
     });
 
     it('should successfully add a plugin when specifying CLI variables', function(done) {
