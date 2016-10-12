@@ -155,12 +155,14 @@ module.exports = function plugin(command, targets, opts) {
                         .then(function(pluginInfo) {
                             // Validate top-level required variables
                             var pluginVariables = pluginInfo.getPreferences();
-                            opts.cli_variables = opts.cli_variables || {};                          
-                            var pluginEntry = cfg.getPlugin(pluginInfo.id);                           
-                            var pluginEntryVariables = pluginEntry ? pluginEntry.variables : {};                                                 
-                            Object.keys(pluginVariables).forEach(function(varName) {
-                                opts.cli_variables[varName] = opts.cli_variables[varName] || pluginEntryVariables[varName];
-                            });                
+                            opts.cli_variables = opts.cli_variables || {};
+                            var pluginEntry = cfg.getPlugin(pluginInfo.id);
+                            // Get variables from config.xml
+                            var configVariables = pluginEntry ? pluginEntry.variables : {};
+                            // Add config variable if it's missing in cli_variables
+                            Object.keys(configVariables).forEach(function(variable) {
+                                opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
+                            });
                             var missingVariables = Object.keys(pluginVariables)
                             .filter(function (variableName) {
                                 // discard variables with default value
