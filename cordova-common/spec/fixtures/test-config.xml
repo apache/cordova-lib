@@ -74,6 +74,9 @@
     <allow-navigation href="*://server39.com" minimum-tls-version="TLSv1.1" requires-forward-secrecy="true" />
     <allow-navigation href="*://server40.com" minimum-tls-version="TLSv1.1" requires-forward-secrecy="false" />
 
+    <allow-intent href="https://*" />
+    <allow-intent href="com.example.myapp:*" />
+
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <preference name="orientation" value="portrait" />
