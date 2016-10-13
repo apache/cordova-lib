@@ -124,7 +124,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
-
                 if (cmd == 'add') {
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
@@ -219,12 +218,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         else {
                             events.emit('log','Skipping backup. Version is the same. ' + previousInfo.version);
                         }
-                        promise = PlatformApi.updatePlatform.bind(null, destination, options, events);
-                        return promise();
+                       return PlatformApi.updatePlatform(destination, options, events);
                     });
                 }
                 else {
-                    promise = PlatformApi.createPlatform.bind(null, destination, cfg, options, events)();
+                    promise = PlatformApi.createPlatform(destination, cfg, options, events);
                 }
 
                 return promise
