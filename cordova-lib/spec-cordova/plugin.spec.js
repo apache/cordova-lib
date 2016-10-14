@@ -20,7 +20,6 @@
 var helpers = require('./helpers'),
     path = require('path'),
     Q = require('q'),
-    fs = require('fs'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
     cordova = require('../src/cordova/cordova'),
@@ -208,7 +207,7 @@ describe('plugin end-to-end', function() {
        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'NO', REQUIRED_ANDROID:'NO'}}, done)
        .then(function() {
             var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
-            var installed_plugins = JSON.parse(fs.readFileSync(platformJsonPath)).installed_plugins;
+            var installed_plugins = require(platformJsonPath).installed_plugins;
             var defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
             expect(defaultPluginPreferences).toBeDefined();
             expect(defaultPluginPreferences.DEFAULT).toBe('yes');
