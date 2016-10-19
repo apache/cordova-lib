@@ -69,7 +69,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 options.subdir = result[2];
             //if --fetch was used, throw error for subdirectories
         
-        if(option.subdir) {
+        if(options.subdir) {
             events.emit('warn', 'support for subdirectories is depreated and will be removed in Cordova@7');
         if (options.fetch) {
             return Q.reject(new CordovaError('--fetch does not support subdirectories'));
