@@ -68,13 +68,13 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             if (result[2])
                 options.subdir = result[2];
             //if --fetch was used, throw error for subdirectories
-        
-        if(options.subdir) {
-            events.emit('warn', 'support for subdirectories is depreated and will be removed in Cordova@7');
-        if (options.fetch) {
-            return Q.reject(new CordovaError('--fetch does not support subdirectories'));
-            } 
-        }
+
+            if(options.subdir) {
+                events.emit('warn', 'support for subdirectories is deprecated and will be removed in Cordova@7');
+                if (options.fetch) {
+                    return Q.reject(new CordovaError('--fetch does not support subdirectories'));
+                }
+            }
 
             // Recurse and exit with the new options and truncated URL.
             var new_dir = plugin_src.substring(0, plugin_src.indexOf('#'));
