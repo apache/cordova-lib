@@ -1,6 +1,7 @@
 {
   "author": "Apache Software Foundation",
   "name": "cordova-lib",
+  "license": "Apache-2.0",
   "description": "Apache Cordova tools core lib and API",
   "version": "6.4.0-dev",
   "repository": {
@@ -167,12 +168,6 @@
     },
     {
       "name": "Shazron Abdullah"
-    },
-    {
-      "name": "Steve Gill"
-    },
-    {
-      "name": "Jesse MacFadyen"
     }
   ]
 }
