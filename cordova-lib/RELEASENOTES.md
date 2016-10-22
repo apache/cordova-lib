@@ -20,6 +20,26 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.4.0 (Oct 21, 2016)
+* [CB-12039](https://issues.apache.org/jira/browse/CB-12039) updated pinned `Android` to 6.0.0 and `iOS` to 4.3.0
+* [CB-11979](https://issues.apache.org/jira/browse/CB-11979) added deprecation warning for installing plugins via subdirectories
+* [CB-11730](https://issues.apache.org/jira/browse/CB-11730) Modify condition of if clause to avoid similar project name with plugin name
+* [CB-11985](https://issues.apache.org/jira/browse/CB-11985) Check if cached platform/plugin exists before `npm cache`
+* [CB-11951](https://issues.apache.org/jira/browse/CB-11951) [CB-11967](https://issues.apache.org/jira/browse/CB-11967) Respect preference default values when installling plugins
+* [CB-11771](https://issues.apache.org/jira/browse/CB-11771) Deep symlink directories to target project instead of linking the directory itself
+* [CB-11908](https://issues.apache.org/jira/browse/CB-11908) Handle `edit-config` in `config.xml` on prepare
+* Add github pull request template
+* [CB-8320](https://issues.apache.org/jira/browse/CB-8320) We look for a `build.gradle` to make sure it's **Android**, not an `AndroidManifest`, because it moved
+* [CB-11811](https://issues.apache.org/jira/browse/CB-11811) Moved **iOS** platform specific tests to `platform.spec.ios.js`, added `test-ios` npm run script.
+* [CB-11811](https://issues.apache.org/jira/browse/CB-11811) disable `CocoaPods` e2e test temporarily since it is platform specific and requires cocoapods to be installed.
+* updated `save.spec.js` to use latest **android** and newer fb plugin
+* [CB-11607](https://issues.apache.org/jira/browse/CB-11607) breakout `cordova-create` from `cordova-lib`
+* [CB-9825](https://issues.apache.org/jira/browse/CB-9825) framework tag spec parsing
+* [CB-11698](https://issues.apache.org/jira/browse/CB-11698) Fix plugin installation when restoring platform
+* [CB-11679](https://issues.apache.org/jira/browse/CB-11679) Speed up save/restore tests
+* [CB-11205](https://issues.apache.org/jira/browse/CB-11205) Respect saved variables when installing plugin
+* [CB-11589](https://issues.apache.org/jira/browse/CB-11589) Fix missing plugin files after restore
+
 ### 6.3.1 (Aug 08, 2016)
 * [CB-11652](https://issues.apache.org/jira/browse/CB-11652) Update run and emulate to skip build
 * [CB-11194](https://issues.apache.org/jira/browse/CB-11194) Defer creating of libDir folder until something actually requests it

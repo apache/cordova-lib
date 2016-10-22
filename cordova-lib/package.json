@@ -3,7 +3,7 @@
   "name": "cordova-lib",
   "license": "Apache-2.0",
   "description": "Apache Cordova tools core lib and API",
-  "version": "6.4.0-dev",
+  "version": "6.4.0",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
@@ -22,7 +22,7 @@
     "cordova-common": "1.5.x",
     "cordova-fetch": "^1.0.1",
     "cordova-create": "^1.0.1",
-    "cordova-js": "4.1.4",
+    "cordova-js": "4.2.0",
     "cordova-registry-mapper": "1.x",
     "cordova-serve": "^1.0.0",
     "dep-graph": "1.1.0",
