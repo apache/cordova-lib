@@ -247,23 +247,19 @@ module.exports = function plugin(command, targets, opts) {
                                 } else {
                                     // Create package.json in cordova@7
                                 }
-                                // If package.json exists, the plugin object and plugin name will be added to package.json 
-                                // if not already there
-                                if (pkgJson === undefined) {
+                                // If package.json exists, the plugin object and plugin name 
+                                // will be added to package.json if not already there.
+                                if (!pkgJson) {
                                     return;
                                 }
-                                if (pkgJson.cordova === undefined) {
-                                    pkgJson.cordova = {};
-                                }
-                                if (pkgJson.cordova.plugins === undefined) {
-                                    pkgJson.cordova.plugins = {};
-                                }
-                                if (pkgJson.cordova.plugins !== undefined) {
-                                    pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
-                                    events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
-                                    // Write to package.json
-                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-                                }
+                                pkgJson.cordova = pkgJson.cordova || {};
+                                pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
+                                // Plugin and variables are added.
+                                pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
+
+                                events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
+                                // Write to package.json
+                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                             }
                         });
                     }, Q());
@@ -339,9 +335,10 @@ module.exports = function plugin(command, targets, opts) {
                                 }
                                 // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
                                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
-                                    events.emit('log', 'Removing ' + target + ' from package.json');
+                                    events.emit('log', 'Removing [' + target + '] from package.json');
+                                    // Remove plugin from package.json
                                     delete pkgJson.cordova.plugins[target];
-                                    //Write out new package.json 
+                                    //Write out new package.json with plugin removed correctly.
                                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                                 }
                             }

@@ -253,7 +253,7 @@ describe('platform end-to-end with --save', function () {
             // Check the platform add was successful.
             pkgJson = require(pkgJsonPath);
             expect(pkgJson.cordova.platforms).not.toBeUndefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(0);
         }).then(fullPlatformList) // Platform should still be in platform ls.
         .then(function() {
             // And now remove it with --save.
@@ -302,15 +302,18 @@ describe('platform end-to-end with --save', function () {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         expect(pkgJsonPath).toExist();
-
+        delete require.cache[require.resolve(pkgJsonPath)];
+        pkgJson = require(pkgJsonPath);
+        // Pkg.json "platforms" should be empty and helpers.testPlatform should not exist in pkg.json.
+        expect(pkgJson.cordova).toBeUndefined();
         // Add platform without --save.
         cordova.raw.platform('add',[helpers.testPlatform])
         .then(function() {
             // Check the platform add was successful, reload, skipping cache
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Cordova key should not exist in package.json
-            expect(pkgJson.cordova).toBeUndefined();
+            // Platform list should be empty and helpers.testPlatform should NOT have been added.
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
         }).then(fullPlatformList)
         .fail(function(err) {
             expect(err).toBeUndefined();
