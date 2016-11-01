@@ -39,7 +39,6 @@ var configChanges = require('../../src/ConfigChanges/ConfigChanges'),
     android_two_project = path.join(__dirname, '../fixtures/projects/android_two/*'),
     android_two_no_perms_project = path.join(__dirname, '../fixtures/projects/android_two_no_perms', '*'),
     ios_config_xml = path.join(__dirname, '../fixtures/projects/ios-config-xml/*'),
-    windows_testapp_jsproj = path.join(__dirname, '../fixtures/projects/windows/TestApp.jsproj'),
     plugins_dir = path.join(temp, 'cordova', 'plugins');
 var mungeutil = require('../../src/ConfigChanges/munge-util');
 var PlatformJson = require('../../src/PlatformJson');
@@ -187,38 +186,6 @@ describe('config-changes module', function() {
                 var munge = munger.generate_plugin_config_munge(pluginInfoProvider.get(dummyplugin), {});
                 expect(get_munge_change(munge, 'config.xml', '/*', '<access origin="build.phonegap.com" />')).toBeDefined();
                 expect(get_munge_change(munge, 'config.xml', '/*', '<access origin="s3.amazonaws.com" />')).toBeDefined();
-            });
-        });
-
-        describe('for windows project', function() {
-            beforeEach(function() {
-                shell.cp('-rf', windows_testapp_jsproj, temp);
-            });
-            it('should special case config-file elements for windows', function() {
-                var munger = new configChanges.PlatformMunger('windows', temp, 'unused', null, pluginInfoProvider);
-
-                var munge = munger.generate_plugin_config_munge(pluginInfoProvider.get(configplugin), {});
-                var packageAppxManifest = munge.files['package.appxmanifest'];
-                var windows81AppxManifest = munge.files['package.windows.appxmanifest'];
-                var winphone81AppxManifest = munge.files['package.phone.appxmanifest'];
-                var windows10AppxManifest = munge.files['package.windows10.appxmanifest'];
-
-                expect(packageAppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-all-appxmanifest-target-files" />');
-
-                // 1 comes from versions="=8.1.0" + 1 from versions="=8.1.0" device-target="windows"
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win81-win-and-phone" />');
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][0].count).toBe(2);
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win81-win-only" />');
-                expect(windows81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
-
-                // 1 comes from versions="=8.1.0" + 1 from versions="=8.1.0" device-target="phone"
-                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win81-win-and-phone" />');
-                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][0].count).toBe(2);
-                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-for-win81-phone-only" />');
-                expect(winphone81AppxManifest.parents['/Parent/Capabilities'][2].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
-
-                expect(windows10AppxManifest.parents['/Parent/Capabilities'][0].xml).toBe('<Capability Note="should-exist-for-win10-and-win81-win-and-phone" />');
-                expect(windows10AppxManifest.parents['/Parent/Capabilities'][1].xml).toBe('<Capability Note="should-exist-in-win10-only" />');
             });
         });
     });
