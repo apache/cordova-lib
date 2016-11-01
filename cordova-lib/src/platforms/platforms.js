@@ -56,10 +56,14 @@ function getPlatformApi(platform, platformRootDir) {
         PlatformApi = require(platformApiModule);
     } catch (err) {
         // Check if platform already compatible w/ PlatformApi and show deprecation warning
-        if (err && err.code === 'MODULE_NOT_FOUND' && platforms[platform].apiCompatibleSince) {
-            events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-                ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
-                platforms[platform].apiCompatibleSince + ' or newer.');
+        if (err && err.code === 'MODULE_NOT_FOUND') {
+            if (platforms[platform].apiCompatibleSince) {
+                events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
+                    ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
+                    platforms[platform].apiCompatibleSince + ' or newer.');
+            }
+            // else nothing - there is no Api.js and no deprecation information hence
+            // the platform just does not expose Api and we will use polyfill as usual
         } else {
             events.emit('warn', 'Error loading cordova-'+platform);
         }
