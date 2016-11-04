@@ -613,6 +613,233 @@ describe('update config.xml to include platforms in pkg.json', function () {
     },30000);
 });
 
+// PLUGINS START HERE
 
+// Use basePkgJson2 as pkg.json contains 2 plugins and config.xml contains 1 plugin
+describe('update config.xml to include plugins found in pkg.json', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson2'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson2'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        var cwd = process.cwd();
+        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+
+    /** Test#008 will check the platform list in package.json and config.xml. 
+    *   When packge.json has 'splashscreen and camera' and config.xml only contains 'splashscreen', run cordova prepare
+    *   and config.xml is updated to include 'camera'.
+    */
+    it('Test#008 :  if pkgJson has 2 plugins and config.xml has only one of those plugins, update config to include both', function(done) {
+        var cwd = process.cwd();
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var pkgJsonPath = path.join(cwd,'package.json');
+        delete require.cache[require.resolve(pkgJsonPath)];
+        var cfg1 = new ConfigParser(configXmlPath);
+        var plugins = cfg1.getPluginIdList();
+        var pkgJson = require(pkgJsonPath);
+        var pluginNames = plugins.map(function(elem) {
+            return elem;
+        });
+        var configPlugArray = pluginNames.slice();
+
+        // Expect that pkg.json exists with 2 plugins
+        expect(pkgJson.cordova.plugins).toBeDefined();
+        expect(pkgJson.cordova.plugins.length === 1);
+        expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-camera')).toEqual(0);
+        expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+        // Expect that config.xml exists with 1 plugin
+        expect(configPlugArray).toBeDefined();
+        expect(configPlugArray.length === 0);
+        expect(configPlugArray.indexOf('cordova-plugin-splashscreen')).toEqual(-1);
+        expect(configPlugArray.indexOf('cordova-plugin-camera')).toEqual(0);
+
+        emptyPlatformList().then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            var cfg2 = new ConfigParser(configXmlPath);
+            plugins = cfg2.getPluginIdList();
+            pluginNames = plugins.map(function(elem) {
+                return elem;
+            });
+            configPlugArray = pluginNames.slice();
+            // Expect that pkg.json exists with 2 plugins
+            expect(pkgJson.cordova.plugins).toBeDefined();
+            expect(pkgJson.cordova.plugins.length === 1);
+            // Expect that config.xml exists with 2 plugins
+            expect(configPlugArray).toBeDefined();
+            expect(configPlugArray.length === 1);
+            // Expect config to contain camera and splashscreen
+            expect(configPlugArray.indexOf('cordova-plugin-camera')).toEqual(0);
+            expect(configPlugArray.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+            // Expect pkg.json to contain camera and splashscreen
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-camera')).toEqual(0);
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+});
+
+// Use basePkgJson7 as config.xml contains 2 plugins and pkg.json contains 1 plugin
+describe('update pkg.json to include plugins found in config.xml', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson7'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson7'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        var cwd = process.cwd();
+        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+
+    /** Test#009 will check the platform list in package.json and config.xml. 
+    *   When config.xml has 'splashscreen and camera' and pkg.json only contains 'splashscreen', run cordova prepare
+    *   and pkg.json is updated to include 'camera'. After both files are identical, run cordova prepare
+    *   to double check that neither file is modified once they are the same.
+    */
+    it('Test#009 :  if config.xml has 2 plugins and pkg.json has only one of those plugins, update pkg.json to include both', function(done) {
+        var cwd = process.cwd();
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var pkgJsonPath = path.join(cwd,'package.json');
+        delete require.cache[require.resolve(pkgJsonPath)];
+        var cfg1 = new ConfigParser(configXmlPath);
+        var plugins = cfg1.getPluginIdList();
+        var pkgJson = require(pkgJsonPath);
+        var pluginNames = plugins.map(function(elem) {
+            return elem;
+        });
+        var configPlugArray = pluginNames.slice();
+
+        // Expect that pkg.json exists with 1 plugin
+        expect(pkgJson.cordova.plugins).toBeDefined();
+        expect(pkgJson.cordova.plugins.length === 0);
+        expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-camera')).toEqual(-1);
+        expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-splashscreen')).toEqual(0);
+        // Expect that config.xml exists with 2 plugins
+        expect(configPlugArray).toBeDefined();
+        expect(configPlugArray.length === 1);
+        expect(configPlugArray.indexOf('cordova-plugin-camera')).toEqual(0);
+        expect(configPlugArray.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+
+        emptyPlatformList().then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            var cfg2 = new ConfigParser(configXmlPath);
+            plugins = cfg2.getPluginIdList();
+            pluginNames = plugins.map(function(elem) {
+                return elem;
+            });
+            configPlugArray = pluginNames.slice();
+            // Expect that pkg.json exists with 2 plugins
+            expect(pkgJson.cordova.plugins).toBeDefined();
+            expect(pkgJson.cordova.plugins.length === 1);
+            // Expect that config.xml exists with 2 plugins
+            expect(configPlugArray).toBeDefined();
+            expect(configPlugArray.length === 1);
+            // Expect config to contain camera and splashscreen
+            expect(configPlugArray.indexOf('cordova-plugin-camera')).toEqual(0);
+            expect(configPlugArray.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+            // Expect pkg.json to contain camera and splashscreen
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-splashscreen')).toEqual(0);
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-camera')).toEqual(1);
+        }).then(function() {
+            // Now that files are the same, run cordova prepare again to check that neither 
+            // file gets modified again since both are identical now
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            var cfg2 = new ConfigParser(configXmlPath);
+            plugins = cfg2.getPluginIdList();
+            pluginNames = plugins.map(function(elem) {
+                return elem;
+            });
+            configPlugArray = pluginNames.slice();
+            // Expect that pkg.json exists with 2 plugins
+            expect(pkgJson.cordova.plugins).toBeDefined();
+            expect(pkgJson.cordova.plugins.length === 1);
+            // Expect that config.xml exists with 2 plugins
+            expect(configPlugArray).toBeDefined();
+            expect(configPlugArray.length === 1);
+            // Expect config to contain camera and splashscreen
+            expect(configPlugArray.indexOf('cordova-plugin-camera')).toEqual(0);
+            expect(configPlugArray.indexOf('cordova-plugin-splashscreen')).toEqual(1);
+            // Expect pkg.json to contain camera and splashscreen
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-splashscreen')).toEqual(0);
+            expect(pkgJson.cordova.plugins.indexOf('cordova-plugin-camera')).toEqual(1);
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+});
 
 

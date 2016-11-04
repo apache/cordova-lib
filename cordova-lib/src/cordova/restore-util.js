@@ -54,7 +54,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var modifiedConfigXML = false;
     var modifiedPkgJsonPlugin = false;
     var modifiedConfigXMLPlugin = false;
-
     var targetPlatformsArray = [];
 
     if(fs.existsSync(pkgJsonPath)) {
@@ -225,7 +224,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
 //returns a Promise
 function installPluginsFromConfigXML(args) {
     events.emit('verbose', 'Checking config.xml for saved plugins that haven\'t been added to the project');
-
     //Install plugins that are listed on config.xml
     var projectRoot = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectRoot);
@@ -233,14 +231,12 @@ function installPluginsFromConfigXML(args) {
     var plugins_dir = path.join(projectRoot, 'plugins');
     var pkgJsonPath = path.join(projectRoot,'package.json');
     var pkgJson;
-
     var pkgJsonArray = [];
     var comboPluginArray;
 
     // Get all configured plugins
-
-    var plugins = cfg.getPluginIdList();
-    if (0 === plugins.length) {
+    var pluginIdConfig = cfg.getPluginIdList();
+    if (0 === pluginIdConfig.length) {
         return Q('No plugins found in config.xml that haven\'t been added to the project');
     }
     // Check if path exists and require pkgJsonPath
@@ -250,78 +246,96 @@ function installPluginsFromConfigXML(args) {
     if (pkgJson.cordova === undefined) {
         pkgJson.cordova = {};
     }
-    // (In pkg.json), if there is a platforms array and not plugins array, create a new plugins array 
+    // (In pkg.json), if there is a platforms array and not plugins array, create a new pluginIdConfig array 
     // and add all plugins from config.xml to the new plugins array.
     if (cfg !== undefined && pkgJson !== undefined && pkgJson.cordova.platforms !== undefined && 
     pkgJson.cordova.plugins === undefined) {
         pkgJson.cordova.plugins = {};
-        plugins.forEach(function(foo) {
+        pluginIdConfig.forEach(function(foo) {
             pkgJson.cordova.plugins[foo] = {}
-        })
+        });
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
-    // Created, but don't think this is necessary because there has to be at least one platform
-    // added for restore to run.
     // (In pkg.json), if there is no platforms array and no plugins array, create a new plugins array
     // and add all plugins from config.xml to the new plugins array.
     if (cfg !== undefined && pkgJson !== undefined && pkgJson.cordova.platforms === undefined && 
     pkgJson.cordova.plugins === undefined) {
         pkgJson.cordova.platforms = [];
         pkgJson.cordova.plugins = {};
-        plugins.forEach(function(foo) {
+        pluginIdConfig.forEach(function(foo) {
             pkgJson.cordova.plugins[foo] = {}
-        })
+        });
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
 
     pkgJsonArray = Object.keys(pkgJson.cordova.plugins);
 
-    var pluginNames = plugins.map(function(elem) {
+    var pluginNames = pluginIdConfig.map(function(elem) {
         return elem.name;
     });
+
+    // Create a merged plugin data array (mergedPluginDataObj)
+    // and add all of the package.json plugins to mergedPluginDataObj
+    var mergedPluginDataObj = pkgJson.cordova.plugins;
+    var mergedPluginDataArray = pkgJsonArray;
+
+    // Check to see which plugins are initially the same in pkg.json and config.xml
+    // Merge identical plugins and their variables together first
+    for (var i = 0; i < mergedPluginDataArray.length; i++) {
+        if(pluginIdConfig.includes(mergedPluginDataArray[i])) {
+            var configPlugin = cfg.getPlugin(mergedPluginDataArray[i]);
+            var configPluginVariables = configPlugin.variables;
+            var pkgJsonPluginVariables = mergedPluginDataObj[mergedPluginDataArray[i]];
+            for(var key in configPluginVariables) {
+                // Handle conflicts, package.json wins
+                if(pkgJsonPluginVariables[key] === undefined) {
+                    pkgJsonPluginVariables[key] = configPluginVariables[key];
+                    mergedPluginDataObj[mergedPluginDataArray[i]][key] = configPluginVariables[key];
+                }
+            }
+        }
+    }
+    // Check to see if pkg.json plugin(id) and config plugin(id) match
+    if(mergedPluginDataArray.sort().toString() !== pluginIdConfig.sort().toString()) {
+        // If there is a config plugin that does NOT already exist in
+        // mergedPluginDataArray, add it and its variables
+        pluginIdConfig.forEach(function(item) {
+            if(mergedPluginDataArray.indexOf(item) < 0) {
+                mergedPluginDataArray.push(item);
+                var configXMLPlugin = cfg.getPlugin(item);
+                mergedPluginDataObj[item] = configXMLPlugin.variables;
+            }
+        });
+    }
+    // Write to pkg.Json
+    // TODO: toString comparision to see if they are the same and then write
+    pkgJson.cordova.plugins = mergedPluginDataObj;
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+
+    // Write config.xml
+    mergedPluginDataArray.forEach(function(plugID) {
+        cfg.removePlugin(plugID);
+        cfg.addPlugin({name:plugID}, mergedPluginDataObj[plugID]); 
+    });
+    cfg.write();
 
     // If config.xml and pkg.json exist and both already contain plugins, run cordova prepare
     // to check if these plugins are identical.
     if(cfg !== undefined && pkgJson.cordova.plugins !== undefined) {
-        if(pkgJsonArray.toString() === plugins.toString() && pkgJsonArray.length === plugins.length) {
+        if(pkgJsonArray.toString() === pluginIdConfig.toString() && pkgJsonArray.length === pluginIdConfig.length) {
             events.emit('warn', 'Config.xml and pkgJson plugins are the same. No pkg.json or config.xml modification.');
         }
 
-        if(pkgJsonArray.toString() !== plugins.toString() || pkgJsonArray.length !== plugins.length) {
+        if(pkgJsonArray.toString() !== pluginIdConfig.toString() || pkgJsonArray.length !== pluginIdConfig.length) {
            events.emit('warn', 'Config.xml and pkgJson plugins are different.');
             // Combining arrays and checking duplicates
 
             comboPluginArray = pkgJsonArray.slice();
-            plugins.forEach(function(item) {
+            pluginIdConfig.forEach(function(item) {
                 if(comboPluginArray.indexOf(item) < 0) {
                     comboPluginArray.push(item);
                 }
             });
-
-            // Update pkg.json if it's missing any plugins based on plugin.id 
-            if(comboPluginArray.sort().toString() !== pkgJsonArray.sort().toString() && pkgJsonArray.length > 0) {
-                events.emit('warn', 'Config.xml and package.json plugins are not the same. Updating package.json with most current list of plugins.');
-                comboPluginArray.forEach(function(item) {
-                    if(pkgJsonArray.indexOf(item) < 0) {
-                        pkgJsonArray.push(item);
-                        var pluginVar = cfg.getPlugin(item);
-                        var variables = pluginVar.variables;
-                        pkgJson.cordova.plugins[item] = variables;
-                    }
-                });
-                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-            }
-            // Update pkg.json if it's missing any plugins based on plugin.id 
-            if(comboPluginArray.toString() !== plugins.toString()) {
-                events.emit('warn', 'Config.xml and package.json plugins are not the same. Updating config.xml with most current list of plugins.');
-                comboPluginArray.forEach(function(item) {
-                    if(plugins.indexOf(item) < 0) {
-                        plugins.push(item); 
-                        cfg.addPlugin({name:item}, pkgJson.cordova.plugins[item]);
-                        cfg.write();
-                    }
-                });
-            }
         }
     }
     // Intermediate variable to store current installing plugin name
@@ -332,7 +346,7 @@ function installPluginsFromConfigXML(args) {
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
     // plugin dependencies installed twice which throws a nasty error.
-    return promiseutil.Q_chainmap_graceful(plugins, function(featureId) {
+    return promiseutil.Q_chainmap_graceful(pluginIdConfig, function(featureId) {
         var pluginPath = path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists

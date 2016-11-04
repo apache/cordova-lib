@@ -83,16 +83,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
-        var modifiedPkgJson = false;
-        var pkgJson;
-        var pkgJsonPath = path.join(projectRoot, 'package.json');
-        // If statement to see if pkgJsonPath exists in the filesystem
-        if(fs.existsSync(pkgJsonPath)) {
-            pkgJson = require(pkgJsonPath);
-        } else {
-            // Create package.json in cordova@7
-        }
+        
+        var platformsToSave = []; 
 
+        // If statement to see if pkgJsonPath exists in the filesystem
+        
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
@@ -130,6 +125,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
+                delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
@@ -226,7 +222,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
 
-
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
@@ -245,30 +240,44 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
-
-                        // If package.json exists, cordova key and platforms will be added to package.json if not
-                        // already there 
-                        if (pkgJson === undefined) {
-                            return;
-                        }
-                        if (pkgJson.cordova === undefined) {
-                            pkgJson.cordova = {};
-                        }
-                        if (pkgJson.cordova.platforms === undefined){
-                            pkgJson.cordova.platforms = [];
-                        }
-                        if (pkgJson.cordova.platforms.indexOf(platform) === -1) {
-                            events.emit('log','adding '+platform+' to cordova.platforms array in package.json');
-                            pkgJson.cordova.platforms.push(platform);
-                            modifiedPkgJson = true;
-                        } else {
-                            events.emit('verbose', platform + ' already added to platforms key');
-                        }
+                        
+                        //save to add to pacakge.json's cordova.platforms array in the next then
+                        platformsToSave.push(platform);
                     }
                 });
             });
-        }).then(function(){
+        }).then(function() {
+            var pkgJson;
+            var pkgJsonPath = path.join(projectRoot, 'package.json');
+            var modifiedPkgJson = false;
+
+            if(fs.existsSync(pkgJsonPath)) {
+                delete require.cache[require.resolve(pkgJsonPath)]; 
+                pkgJson = require(pkgJsonPath);
+            } else {
+                // Create package.json in cordova@7
+            }
+            if (pkgJson === undefined) {
+                return;
+            }
+            if (pkgJson.cordova === undefined) {
+                pkgJson.cordova = {};
+            }
+            if (pkgJson.cordova.platforms === undefined && platformsToSave.length) {
+                pkgJson.cordova.platforms = platformsToSave;
+                modifiedPkgJson = true;
+            } else {
+                platformsToSave.forEach(function(plat){
+                    if(pkgJson.cordova.platforms.indexOf(plat) === -1) {
+                        events.emit('verbose','adding '+plat+' to cordova.platforms array in package.json');
+                        pkgJson.cordova.platforms.push(plat);
+                        modifiedPkgJson = true;
+                    } 
+                });
+            }
+            //save to package.json
             if (modifiedPkgJson === true) {
+                pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
         });
@@ -417,6 +426,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
         var pkgJsonPath = path.join(projectRoot,'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
         if(fs.existsSync(pkgJsonPath)) {
+            delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
         }
         if(opts.save || autosave){
@@ -452,7 +462,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         //Remove from node_modules if it exists and --fetch was used
         if(opts.fetch) {
-            targets.forEach(function(target) {
+            return promiseutil.Q_chainmap(targets, function(target) {
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }

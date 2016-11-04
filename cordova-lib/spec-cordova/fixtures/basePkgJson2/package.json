@@ -10,17 +10,15 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "audrey",
+    "author": "",
     "license": "ISC",
     "cordova": {
         "platforms": [
-            "android"
+            "ios"
         ],
-        "plugins": {
-            "cordova-plugin-camera": {
-                "CAMERA_USAGE_DESCRIPTION": " ",
-                "PHOTOLIBRARY_USAGE_DESCRIPTION": " "
-            }
-        }
+        "plugins": [
+            "cordova-plugin-camera",
+            "cordova-plugin-splashscreen"
+        ]
     }
 }

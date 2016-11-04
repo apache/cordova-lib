@@ -313,7 +313,7 @@ describe('platform end-to-end with --save', function () {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Platform list should be empty and helpers.testPlatform should NOT have been added.
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
+            expect(pkgJson.cordova).toBeUndefined();
         }).then(fullPlatformList)
         .fail(function(err) {
             expect(err).toBeUndefined();
@@ -347,5 +347,41 @@ describe('platform end-to-end with --save', function () {
         })
         .fin(done);
     });
+    it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
+        var pkgJsonPath = path.join(process.cwd(),'package.json');
+        expect(pkgJsonPath).toExist();
+        var pkgJson;
+
+        // Check there are no platforms yet.
+        emptyPlatformList().then(function() {
+            // Add the testing platform with --save.
+            return cordova.raw.platform('add', ['android', 'ios'], {'save':true, 'fetch':true});
+        }).then(function() {
+            // Check the platform add was successful.
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms).toBeDefined();
+            expect(pkgJson.cordova.platforms.indexOf('android')).toEqual(0);
+            expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(1);
+            expect(pkgJson.dependencies['cordova-android']).toBeDefined();
+            expect(pkgJson.dependencies['cordova-ios']).toBeDefined();
+        }).then(fullPlatformList) // Platform should still be in platform ls.
+        .then(function() {
+            // And now remove it with --save.
+            return cordova.raw.platform('rm', ['android', 'ios'], {'save':true, 'fetch':true});
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Checking that the platform removed is in not in the platforms key
+            expect(pkgJson.cordova.platforms.indexOf('android')).toEqual(-1);
+            expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(-1);
+            expect(pkgJson.dependencies['cordova-android']).toBeUndefined();
+            expect(pkgJson.dependencies['cordova-ios']).toBeUndefined();
+        }).then(emptyPlatformList) // platform ls should be empty too.
+        .fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    }, 30000);
 });
 
