@@ -1,0 +1,23 @@
+{
+  "name": "testbase",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "cordova": {
+        "platforms": [
+            "ios"
+        ],
+        "plugins": {
+            "cordova-plugin-splashscreen": {}
+        }
+    },
+    "dependencies": {
+        "cordova-ios": "^4.2.1",
+        "cordova-plugin-splashscreen": "~3.2.2"
+    }
+}

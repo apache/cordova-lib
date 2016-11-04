@@ -36,6 +36,8 @@ var shell   = require('shelljs'),
     fetch = require('cordova-fetch'),
     cordovaUtil = require('../cordova/util');
 
+var projectRoot;
+
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
 
@@ -69,7 +71,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 options.subdir = result[2];
             //if --fetch was used, throw error for subdirectories
 
-            if (options.subdir && options.subdir !== '.') {
+            if(options.subdir) {
                 events.emit('warn', 'support for subdirectories is deprecated and will be removed in Cordova@7');
                 if (options.fetch) {
                     return Q.reject(new CordovaError('--fetch does not support subdirectories'));
@@ -86,7 +88,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             }
         }
     }
-
     return Q.when().then(function() {
         // If it looks like a network URL, git clone it
         // skip git cloning if user passed in --fetch flag
@@ -115,19 +116,40 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 };
             });
         }
-        // If it's not a network URL, it's either a local path or a plugin ID.
+            // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
-
         return Q.when().then(function() {
+
             if (fs.existsSync(plugin_dir)) {
-                return {
-                    pinfo: pluginInfoProvider.get(plugin_dir),
-                    fetchJsonSource: {
-                        type: 'local',
-                        path: plugin_dir
+
+                if (options.fetch) {
+                    projectRoot = path.join(plugins_dir, '..');
+                    //Plugman projects need to go up two directories to reach project root. 
+                    //Plugman projects have an options.projectRoot variable
+                    if(options.projectRoot) {
+                        projectRoot = options.projectRoot;
                     }
-                };
+                    return fetch(path.resolve(plugin_dir), projectRoot, options)
+                    .then(function(directory) {
+                        return {
+                            pinfo: pluginInfoProvider.get(directory),
+                            fetchJsonSource: {
+                                type: 'local',
+                                path: directory
+                            }
+                        };
+                    });
+                } else {
+                    return {
+                        pinfo: pluginInfoProvider.get(plugin_dir),
+                        fetchJsonSource: {
+                            type: 'local',
+                            path: plugin_dir
+                        }
+                    };
+                }
             }
+
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
@@ -174,7 +196,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                     }
                     //use cordova-fetch if --fetch was passed in
                     if(options.fetch) {
-                        var projectRoot = path.join(plugins_dir, '..');
+                        projectRoot = path.join(plugins_dir, '..');
                         //Plugman projects need to go up two directories to reach project root. 
                         //Plugman projects have an options.projectRoot variable
                         if(options.projectRoot) {

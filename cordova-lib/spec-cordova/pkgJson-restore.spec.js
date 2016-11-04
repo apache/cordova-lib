@@ -742,7 +742,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
-
+    
     // Factoring out some repeated checks.
     function emptyPlatformList() {
         return cordova.raw.platform('list').then(function() {

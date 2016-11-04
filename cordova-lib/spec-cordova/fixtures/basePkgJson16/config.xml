@@ -11,6 +11,6 @@
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
-    <engine name="ios"/>
-    <plugin name="cordova-plugin-camera"/>
+    <plugin name="cordova-plugin-splashscreen" spec="~3.2.2" />
+    <engine name="ios" spec="~4.2.1"/>
 </widget>

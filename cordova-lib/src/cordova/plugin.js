@@ -19,7 +19,6 @@
 
 var cordova_util  = require('./util'),
     path          = require('path'),
-    semver        = require('semver'),
     config        = require('./config'),
     Q             = require('q'),
     CordovaError  = require('cordova-common').CordovaError,
@@ -35,11 +34,11 @@ var cordova_util  = require('./util'),
     registry      = require('../plugman/registry/registry'),
     chainMap      = require('../util/promise-util').Q_chainmap,
     pkgJson       = require('../../package.json'),
+    semver        = require('semver'),
     opener        = require('opener');
 
 // For upper bounds in cordovaDependencies
 var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
-
 // Returns a promise.
 module.exports = function plugin(command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
@@ -96,7 +95,6 @@ module.exports = function plugin(command, targets, opts) {
                 opts.plugins.push(targets[i]);
             }
         }
-
         // Assume we don't need to run prepare by default
         var shouldRunPrepare = false;
 
@@ -227,7 +225,6 @@ module.exports = function plugin(command, targets, opts) {
                                         attributes.spec = ver;
                                     }
                                 }
-
                                 xml = cordova_util.projectConfig(projectRoot);
                                 cfg = new ConfigParser(xml);
                                 cfg.removePlugin(pluginInfo.id);
@@ -256,7 +253,6 @@ module.exports = function plugin(command, targets, opts) {
                                 pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
                                 // Plugin and variables are added.
                                 pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
-
                                 events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
                                 // Write to package.json
                                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
@@ -335,7 +331,7 @@ module.exports = function plugin(command, targets, opts) {
                                 }
                                 // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
                                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
-                                    events.emit('log', 'Removing [' + target + '] from package.json');
+                                    events.emit('log', 'Removing '  + target +  ' from package.json');
                                     // Remove plugin from package.json
                                     delete pkgJson.cordova.plugins[target];
                                     //Write out new package.json with plugin removed correctly.
@@ -388,26 +384,54 @@ module.exports = function plugin(command, targets, opts) {
 
 function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     var parsedSpec = pluginSpec.parse(target);
-
     var id = parsedSpec.package || target;
-
     // CB-10975 We need to resolve relative path to plugin dir from app's root before checking whether if it exists
     var maybeDir = cordova_util.fixRelativePath(id);
     if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(maybeDir)) {
         return Q(target);
     }
-
-    // If no version is specified, retrieve the version (or source) from config.xml
-    events.emit('verbose', 'No version specified for ' + parsedSpec.package + ', retrieving version from config.xml');
-    var ver = getVersionFromConfigFile(id, cfg);
-
-    if (cordova_util.isUrl(ver) || cordova_util.isDirectory(ver) || pluginSpec.parse(ver).scope) {
-        return Q(ver);
+    // Require project pkgJson.
+    var pkgJsonPath = path.join(projectRoot, 'package.json');
+    if(fs.existsSync(pkgJsonPath)) {
+        delete require.cache[require.resolve(pkgJsonPath)]; 
+        pkgJson = require(pkgJsonPath);
     }
 
-    // If version exists in config.xml, use that
-    if (ver) {
-        return Q(id + '@' + ver);
+    // If no parsedSpec.version, use the one from pkg.json or config.xml.
+    if (!parsedSpec.version) {
+        // Retrieve from pkg.json.
+        if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[id]) {
+            events.emit('verbose', 'No version specified for ' + id + ', retrieving version from package.json');
+            parsedSpec.version = pkgJson.dependencies[id];
+        } else {
+            // If no version is specified, retrieve the version (or source) from config.xml.
+            events.emit('verbose', 'No version specified for ' + id + ', retrieving version from config.xml');
+            parsedSpec.version = getVersionFromConfigFile(id, cfg);
+        }
+    }
+
+    // If parsedSpec.version satisfies pkgJson version, no writing to pkg.json. Only write when
+    // it does not satisfy.
+    if(parsedSpec.version) {
+        if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[parsedSpec.package]) {
+            var noSymbolVersion;
+            if (parsedSpec.version.charAt(0) === '^' || parsedSpec.version.charAt(0) === '~') {
+                noSymbolVersion = parsedSpec.version.slice(1);
+            }
+            if (!semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
+                pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
+                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            }
+        }
+    }
+
+    if (cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version) || pluginSpec.parse(parsedSpec.version).scope) {
+        return Q(parsedSpec.version);
+    }
+
+    // If version exists in pkg.json or config.xml, use that.
+    if (parsedSpec.version) {
+        return Q(id + '@' + parsedSpec.version);
     }
 
     // If no version is given at all and we are fetching from npm, we
