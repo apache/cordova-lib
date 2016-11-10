@@ -21,7 +21,7 @@
         "parser_file": "../cordova/metadata/android_parser",
         "handler_file": "../plugman/platforms/android",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~6.0.0",
+        "version": "~6.1.0",
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
