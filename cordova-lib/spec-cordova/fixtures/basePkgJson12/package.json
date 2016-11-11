@@ -16,9 +16,10 @@
         "platforms": [
             "ios"
         ],
-        "plugins": [
-            "cordova-plugin-camera",
-            "cordova-plugin-splashscreen"
-        ]
+        "plugins": {
+            "cordova-plugin-camera": {
+                "variable_1": "value_1"
+            }
+        }
     }
 }

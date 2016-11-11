@@ -11,5 +11,10 @@
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
-    <engine name="android" spec="2.1.0"/>
+    <engine name="ios"/>
+    <plugin name="cordova-plugin-camera" spec="~2.2.0">
+        <variable name="variable_1" value="value_1" />
+        <variable name="variable_2" value="value_2" />
+    </plugin>
+    <plugin name="cordova-plugin-device" spec="~1.0.0" />
 </widget>

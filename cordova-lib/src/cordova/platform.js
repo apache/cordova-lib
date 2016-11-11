@@ -125,7 +125,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
-                delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                if(fs.existsSync(path.join(projectRoot, 'package.json'))) {
+                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                }
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
@@ -168,7 +170,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-
                 var PlatformApi;
                 try {
                     // Try to get PlatformApi class from platform
@@ -190,12 +191,10 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         PlatformApi = require('../platforms/PlatformApiPoly');
                     }
                 }
-
                 var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
                     PlatformApi.updatePlatform.bind(null, destination, options, events);
-
                 return promise()
                 .then(function () {
                     if (!opts.restoring) {
@@ -250,13 +249,13 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
-
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
             } else {
-                // Create package.json in cordova@7
+                // TODO: Create package.json in cordova@7
             }
+
             if (pkgJson === undefined) {
                 return;
             }

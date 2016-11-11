@@ -11,6 +11,6 @@
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
-    <engine name="android"/>
-    <engine name="ios"/>
+    <engine name="android" spec="6.0.0"/>
+    <engine name="ios" spec="^4.3.0"/>
 </widget>

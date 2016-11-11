@@ -12,5 +12,4 @@
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <engine name="ios"/>
-    <plugin name="cordova-plugin-camera"/>
 </widget>
