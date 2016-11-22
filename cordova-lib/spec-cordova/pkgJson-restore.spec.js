@@ -30,7 +30,7 @@ var helpers = require('./helpers'),
 
 // Use basePkgJson
 describe('tests platform/spec restore with --save', function () {
-    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson2');
     var project = path.join(tmpDir, 'project');
     var results;
 
@@ -343,14 +343,14 @@ describe('tests platform/spec restore with --save', function () {
         var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
         var platformsJson;
         var configXmlPath = path.join(cwd, 'config.xml');
-        var androidPlatform = 'android';
+        var bPlatform = 'browser';
         var engines;
         var engNames;
         var engSpec;
 
         emptyPlatformList().then(function() {
             // Add platform with save and fetch
-            return cordova.raw.platform('add', 'https://github.com/apache/cordova-android', {'save':true, 'fetch':true});
+            return cordova.raw.platform('add', 'https://github.com/apache/cordova-browser', {'save':true, 'fetch':true});
         }).then(function() {
             // Check that platform was added to config.xml successfully.
             var cfg = new ConfigParser(configXmlPath);
@@ -361,30 +361,30 @@ describe('tests platform/spec restore with --save', function () {
             engSpec = engines.map(function(elem) {
                 return elem.spec;
             });
-            expect(engNames).toEqual([ androidPlatform]);
-            expect(engSpec).toEqual([ 'https://github.com/apache/cordova-android' ]);
+            expect(engNames).toEqual([bPlatform]);
+            expect(engSpec).toEqual([ 'https://github.com/apache/cordova-browser' ]);
             // Check that platform was added to pkg.json successfully.
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
-            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Check that platform was added to platforms list successfully.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
-            expect(platformsJson[androidPlatform]).toBeDefined();
+            expect(platformsJson[bPlatform]).toBeDefined();
         }).then(function() {
             // Remove platform without --save.
-            return cordova.raw.platform('rm', androidPlatform, {'fetch':true});
+            return cordova.raw.platform('rm', bPlatform, {'fetch':true});
         }).then(function() {
             // Platform in pkg.json should still be there.
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
-            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Platform in platforms.json should not be there.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
-            expect(platformsJson[androidPlatform]).toBeUndefined();
+            expect(platformsJson[bPlatform]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare
             return cordova.raw.prepare({'fetch':true});
@@ -398,17 +398,17 @@ describe('tests platform/spec restore with --save', function () {
             engSpec = engines.map(function(elem) {
                 return elem.spec;
             });
-            expect(engNames).toEqual([ 'android' ]);
-            expect(engSpec).toEqual([ 'git+https://github.com/apache/cordova-android.git' ]);
+            expect(engNames).toEqual([ 'browser' ]);
+            expect(engSpec).toEqual([ 'git+https://github.com/apache/cordova-browser.git' ]);
             // No change to pkg.json.
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
-            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Check that platform was restored to platform.json list successfully.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
-            expect(platformsJson[androidPlatform]).toBeDefined();
+            expect(platformsJson[bPlatform]).toBeDefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);

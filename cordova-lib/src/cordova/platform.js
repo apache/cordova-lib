@@ -180,6 +180,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     // basically a valid NodeJS script but intended to be used as a regular
                     // executable script.
                     if (path.basename(apiEntryPoint) === 'Api.js') {
+                        delete require.cache[apiEntryPoint];
                         PlatformApi = require(apiEntryPoint);
                         events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
                     }
@@ -324,7 +325,6 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             if(!platform) {
                 target = version;
             }
-
             events.emit('log', 'Using cordova-fetch for '+ target);
             return fetch(target, projectRoot, opts);
         }
@@ -369,7 +369,10 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
     var version;
 
     try {
-        var pkg = require(path.join(libDir, 'package'));
+        var pkgPath = path.join(libDir, 'package.json');
+        delete require.cache[pkgPath];
+        var pkg = require(pkgPath);
+
         platform = platformFromName(pkg.name);
         version = pkg.version;
     } catch(e) {
