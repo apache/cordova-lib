@@ -22,6 +22,7 @@ var rewire  = require('rewire'),
     os      = require('os'),
     path    = require('path'),
     shell   = require('shelljs'),
+    superspawn = require('cordova-common').superspawn,
     realrm  = shell.rm,
     TIMEOUT = 60 * 1000,
     //xml_helpers = require('../src/util/xml-helpers'),
@@ -237,29 +238,69 @@ describe('fetch', function() {
     });
 
     describe('github plugins', function() {
+
         // these tests actually pull a plugin from github
         beforeEach(function(){
             realrm('-rf',temp);
         });
 
-        // this commit uses the new id
-        it('Test 017 : should fetch from a commit-sha', function(done) {
+        it('Test 017 : should fetch from master by default without ls-remote', function(done) {
+            var spawn=spyOn(superspawn, 'spawn').and.callThrough();
+            wrapper(fetch('http://github.com/apache/cordova-plugin-device.git', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
+                expect(spawn).toHaveBeenCalledWith('git', [ 'clone', '--depth=1', '-b', 'master', 'http://github.com/apache/cordova-plugin-device.git', jasmine.any(String)]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'rev-parse', '--short', 'HEAD' ], Object({ cwd: jasmine.any(String) }));
+                expect(spawn.calls.count()).toBe(2);
+                done();
+            });
+        }, TIMEOUT);
+
+        it('Test 018 : should fetch from a commit-sha with checkout', function(done) {
+            var spawn=spyOn(superspawn, 'spawn').and.callThrough();
             wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#ad5f1e7bfd05ef98c01df549a0fa98036a5625db', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
-                expect(1).toBe(1);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'ls-remote', '--tags', '--heads', '--exit-code', 'http://github.com/apache/cordova-plugin-device.git', 'ad5f1e7bfd05ef98c01df549a0fa98036a5625db' ]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'clone', 'http://github.com/apache/cordova-plugin-device.git', jasmine.any(String)]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'checkout', 'ad5f1e7bfd05ef98c01df549a0fa98036a5625db' ], Object({ cwd: jasmine.any(String)}));
+                expect(spawn).toHaveBeenCalledWith('git', [ 'rev-parse', '--short', 'HEAD' ], Object({ cwd: jasmine.any(String) }));
+                expect(spawn.calls.count()).toBe(4);
                 done();
             });
         }, TIMEOUT);
-        // this branch uses the old id
-        it('Test 018 : should fetch from a branch', function(done) {
+
+        it('Test 019 : should shallow fetch from a branch', function(done) {
+            var spawn=spyOn(superspawn, 'spawn').and.callThrough();
             wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#cdvtest', temp, { expected_id: 'org.apache.cordova.device' }), done, function() {
-                expect(1).toBe(1);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'ls-remote', '--tags', '--heads', '--exit-code', 'http://github.com/apache/cordova-plugin-device.git', 'cdvtest' ]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'clone', '--depth=1', '-b', 'cdvtest', 'http://github.com/apache/cordova-plugin-device.git', jasmine.any(String)]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'rev-parse', '--short', 'HEAD' ], Object({ cwd: jasmine.any(String) }));
+                expect(spawn.calls.count()).toBe(3);
                 done();
             });
         }, TIMEOUT);
-        // this tag uses the new id
-        it('Test 019 : should fetch from a tag', function(done) {
+
+        it('Test 020 : should shallow fetch from a tag', function(done) {
+            var spawn=spyOn(superspawn, 'spawn').and.callThrough();
             wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#r1.0.0', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
-                expect(1).toBe(1);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'ls-remote', '--tags', '--heads', '--exit-code', 'http://github.com/apache/cordova-plugin-device.git', 'r1.0.0' ]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'clone', '--depth=1', '-b', 'r1.0.0', 'http://github.com/apache/cordova-plugin-device.git', jasmine.any(String)]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'rev-parse', '--short', 'HEAD' ], Object({ cwd: jasmine.any(String) }));
+                expect(spawn.calls.count()).toBe(3);
+                done();
+            });
+        }, TIMEOUT);
+
+        it('Test 021 : should just clone and checkout if ls-remote fails', function(done) {
+            var old_spawn = superspawn.spawn;
+            var spawn=spyOn(superspawn, 'spawn').and.callFake(function() {
+                if (arguments[1][0] == 'ls-remote') 
+                    arguments[1][1] = '--bad-argument';
+                return old_spawn.apply(this, arguments);
+            });
+            wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#r1.0.0', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
+                expect(spawn).toHaveBeenCalledWith('git', [ 'ls-remote', '--bad-argument', '--heads', '--exit-code', 'http://github.com/apache/cordova-plugin-device.git', 'r1.0.0' ]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'clone', 'http://github.com/apache/cordova-plugin-device.git', jasmine.any(String)]);
+                expect(spawn).toHaveBeenCalledWith('git', [ 'checkout', 'r1.0.0' ], Object({ cwd: jasmine.any(String)}));
+                expect(spawn).toHaveBeenCalledWith('git', [ 'rev-parse', '--short', 'HEAD' ], Object({ cwd: jasmine.any(String) }));
+                expect(spawn.calls.count()).toBe(4);
                 done();
             });
         }, TIMEOUT);
@@ -271,7 +312,7 @@ describe('fetch', function() {
         var appDir = path.join(__dirname, 'plugins/recursivePlug/demo');
 
         if(/^win/.test(process.platform)) {
-            it('Test 020 : should copy all but the /demo/ folder',function(done) {
+            it('Test 022 : should copy all but the /demo/ folder',function(done) {
                 var cp = spyOn(shell, 'cp');
                 wrapper(fetch(srcDir, appDir),done, function() {
                     expect(cp).toHaveBeenCalledWith('-R',path.join(srcDir,'asset.txt'),path.join(appDir,'test-recursive'));
@@ -280,7 +321,7 @@ describe('fetch', function() {
             });
         }
         else {
-            it('Test 021 : should skip copy to avoid recursive error', function(done) {
+            it('Test 023 : should skip copy to avoid recursive error', function(done) {
 
                 var cp = spyOn(shell, 'cp').and.callFake(function(){});
 
@@ -303,7 +344,7 @@ describe('fetch', function() {
             realrm('-rf', temp);
         });
 
-        it('Test 022 : should fail when the expected ID with version specified doesn\'t match', function(done) {
+        it('Test 024 : should fail when the expected ID with version specified doesn\'t match', function(done) {
             //fetch(pluginId, temp, { expected_id: test_plugin_id + '@wrongVersion' })
             fetch(pluginId, temp, { expected_id: 'wrongID' })
             .then(function() {
@@ -313,23 +354,23 @@ describe('fetch', function() {
             }).fin(done);
         });
         
-        it('Test 023 : should succeed when the expected ID is correct', function(done) {
+        it('Test 025 : should succeed when the expected ID is correct', function(done) {
             wrapper(fetch(pluginId, temp, { expected_id: test_plugin_id }), done, function() {
                 expect(1).toBe(1);
             });
         });
-        it('Test 024 : should succeed when the plugin version specified is correct', function(done) {
+        it('Test 026 : should succeed when the plugin version specified is correct', function(done) {
             wrapper(fetch(pluginId, temp, { expected_id: test_plugin_id + '@' + test_plugin_version }), done, function() {
                 expect(1).toBe(1);
             });
         });
-        it('Test 025 : should fetch plugins that are scoped packages', function(done) {
+        it('Test 027 : should fetch plugins that are scoped packages', function(done) {
             var scopedPackage = '@testcope/dummy-plugin';
             wrapper(fetch(scopedPackage, temp, { expected_id: test_plugin_id }), done, function() {
                 expect(sFetch).toHaveBeenCalledWith([scopedPackage]);
             });
         });
-        it('Test 026 : should fetch plugins that are scoped packages and have versions specified', function(done) {
+        it('Test 028 : should fetch plugins that are scoped packages and have versions specified', function(done) {
             var scopedPackage = '@testcope/dummy-plugin@latest';
             wrapper(fetch(scopedPackage, temp, { expected_id: test_plugin_id }), done, function() {
                 expect(sFetch).toHaveBeenCalledWith([scopedPackage]);
