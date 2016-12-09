@@ -111,7 +111,7 @@ ConfigFile.prototype.graft_child = function ConfigFile_graft_child(selector, xml
                 result = modules.xml_helpers.graftXMLOverwrite(self.data, xml_to_graft, selector, xml_child);
                 break;
             case 'remove':
-                result= true;
+                result = modules.xml_helpers.pruneXMLRemove(self.data, selector, xml_to_graft);
                 break;
             default:
                 result = modules.xml_helpers.graftXML(self.data, xml_to_graft, selector, xml_child.after);
@@ -141,7 +141,7 @@ ConfigFile.prototype.prune_child = function ConfigFile_prune_child(selector, xml
                 result = modules.xml_helpers.pruneXMLRestore(self.data, selector, xml_child);
                 break;
             case 'remove':
-                result = modules.xml_helpers.prunXMLRemove(self.data, selector, xml_to_graft);
+                result = modules.xml_helpers.pruneXMLRemove(self.data, selector, xml_to_graft);
                 break;
             default:
                 result = modules.xml_helpers.pruneXML(self.data, xml_to_graft, selector);

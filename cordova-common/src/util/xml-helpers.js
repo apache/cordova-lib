@@ -160,7 +160,7 @@ module.exports = {
         return true;
     },
 
-    prunXMLRemove: function(doc, selector, nodes) {
+    pruneXMLRemove: function(doc, selector, nodes) {
         var target = module.exports.resolveParent(doc, selector);
         if (!target) return false;
 
