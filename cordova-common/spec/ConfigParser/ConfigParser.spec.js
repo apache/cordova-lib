@@ -244,6 +244,10 @@ describe('config.xml parser', function () {
                 var intents = cfg.getAllowIntents();
                 expect(intents.length).not.toEqual(0);
             });
+            it('it should read <edit-config> tag entries', function(){
+                var editConfigs = cfg.getEditConfigs('android');
+                expect(editConfigs.length).not.toEqual(0);
+            });
         });
         describe('static resources', function() {
             var hasPlatformPropertyDefined = function (e) { return !!e.platform; };
