@@ -225,7 +225,8 @@ function PluginInfo(dirname) {
                 target: tag.attrib.target,
                 versions: tag.attrib.versions,
                 deviceTarget: tag.attrib['device-target'],
-                arch: tag.attrib.arch
+                arch: tag.attrib.arch,
+                reference: tag.attrib.reference
             };
         });
         return resourceFiles;
