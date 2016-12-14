@@ -34,8 +34,8 @@ var lazy_load = require('../src/cordova/lazy_load'),
 describe('lazy_load module', function() {
     var custom_path, cachePackage, fakeLazyLoad;
     beforeEach(function() {
-        custom_path = spyOn(config, 'has_custom_path').andReturn(false);
-        cachePackage = spyOn(npmHelper, 'cachePackage').andReturn(Q(path.join('lib', 'dir')));
+        custom_path = spyOn(config, 'has_custom_path').and.returnValue(false);
+        cachePackage = spyOn(npmHelper, 'cachePackage').and.returnValue(Q(path.join('lib', 'dir')));
         fakeLazyLoad = function (id, platform, version) {
             if (platform == 'wp7' || platform == 'wp8') {
                 return Q(path.join('lib', 'wp', id, version, platform));
@@ -48,7 +48,7 @@ describe('lazy_load module', function() {
         var custom,
             version;
         beforeEach(function() {
-            custom = spyOn(lazy_load, 'custom').andReturn(Q(path.join('lib','dir')));
+            custom = spyOn(lazy_load, 'custom').and.returnValue(Q(path.join('lib','dir')));
             version = platforms.android.version;
             platforms.android.version = '3.14.15.9265';
         });
@@ -77,13 +77,13 @@ describe('lazy_load module', function() {
             spyOn(shell, 'mkdir');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
-            exists = spyOn(fs, 'existsSync').andReturn(false);
-            readdir = spyOn(fs, 'readdirSync').andReturn(['somefile.txt']);
-            fire = spyOn(HooksRunner, 'fire').andReturn(Q());
+            exists = spyOn(fs, 'existsSync').and.returnValue(false);
+            readdir = spyOn(fs, 'readdirSync').and.returnValue(['somefile.txt']);
+            fire = spyOn(HooksRunner, 'fire').and.returnValue(Q());
         });
 
         it('should callback with no errors and not fire event hooks if library already exists', function(done) {
-            exists.andReturn(true);
+            exists.and.returnValue(true);
             var mock_platforms = {
                 'platform X': {
                     id: 'some id',
@@ -98,7 +98,7 @@ describe('lazy_load module', function() {
             }).fin(done);
         });
         it('should callback with no errors and fire event hooks even if library already exists if the lib url is a local dir', function(done) {
-            exists.andReturn(true);
+            exists.and.returnValue(true);
             var mock_platforms = {
                 'platform X': {
                     id: 'some id',
@@ -117,25 +117,25 @@ describe('lazy_load module', function() {
             var req,
                 events = {},
                 fakeRequest = {
-                    on: jasmine.createSpy().andCallFake(function(event, cb) {
+                    on: jasmine.createSpy().and.callFake(function(event, cb) {
                         events[event] = cb;
                         return fakeRequest;
                     }),
-                    pipe: jasmine.createSpy().andCallFake(function() { return fakeRequest; })
+                    pipe: jasmine.createSpy().and.callFake(function() { return fakeRequest; })
                 };
             beforeEach(function() {
                 events = {};
                 fakeRequest.on.reset();
                 fakeRequest.pipe.reset();
-                req = spyOn(request, 'get').andCallFake(function() {
+                req = spyOn(request, 'get').and.callFake(function() {
                     // Fire the 'end' event shortly.
                     setTimeout(function() {
                         events['end']();
                     }, 10);
                     return fakeRequest;
                 });
-                spyOn(npm, 'load').andCallFake(function(cb) { cb(); });
-                spyOn(npm.config, 'get').andReturn(null);
+                spyOn(npm, 'load').and.callFake(function(cb) { cb(); });
+                spyOn(npm.config, 'get').and.returnValue(null);
             });
 
             it('should call request with appropriate url params', function(done) {
@@ -157,7 +157,7 @@ describe('lazy_load module', function() {
             });
             it('should take into account https-proxy npm configuration var if exists for https:// calls', function(done) {
                 var proxy = 'https://somelocalproxy.com';
-                npm.config.get.andReturn(proxy);
+                npm.config.get.and.returnValue(proxy);
                 var url = 'https://github.com/apache/someplugin';
                 var with_android_platform = {
                     'android': {
@@ -177,7 +177,7 @@ describe('lazy_load module', function() {
             });
             it('should take into account proxy npm config var if exists for http:// calls', function(done) {
                 var proxy = 'http://somelocalproxy.com';
-                npm.config.get.andReturn(proxy);
+                npm.config.get.and.returnValue(proxy);
                 var url = 'http://github.com/apache/someplugin';
                 var with_android_platform = {
                     'android': {
@@ -232,11 +232,11 @@ describe('lazy_load module', function() {
     describe('based_on_config method', function() {
         var cordova, custom, read;
         beforeEach(function() {
-            cordova = spyOn(lazy_load, 'cordova').andReturn(Q());
-            custom = spyOn(lazy_load, 'custom').andReturn(Q());
+            cordova = spyOn(lazy_load, 'cordova').and.returnValue(Q());
+            custom = spyOn(lazy_load, 'custom').and.returnValue(Q());
         });
         it('should invoke custom if a custom lib is specified', function(done) {
-            read = spyOn(config, 'read').andReturn({
+            read = spyOn(config, 'read').and.returnValue({
                 lib:{
                     maybe:{
                         url:'you or eye?',
@@ -246,8 +246,8 @@ describe('lazy_load module', function() {
                 }
             });
             var p = '/some/random/custom/path';
-            custom_path.andReturn(p);
-            custom.andCallFake(function (platforms, platform) {
+            custom_path.and.returnValue(p);
+            custom.and.callFake(function (platforms, platform) {
                 expect(platform).toEqual('maybe');
                 expect(platforms[platform].url).toEqual('you or eye?');
                 expect(platforms[platform].id).toEqual('eye dee');

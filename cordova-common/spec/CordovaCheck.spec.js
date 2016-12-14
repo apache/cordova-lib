@@ -30,11 +30,12 @@ describe('findProjectRoot method', function() {
         process.env.PWD = origPWD;
         process.chdir(cwd);
     });
+function removeDir(someDirectory) {
+    shell.rm('-rf', someDirectory);
+}
     it('should return false if it hits the home directory', function() {
         var somedir = path.join(home, 'somedir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir(somedir);
         expect(CordovaCheck.findProjectRoot(somedir)).toEqual(false);
     });
@@ -45,9 +46,7 @@ describe('findProjectRoot method', function() {
     it('should return the first directory it finds with a .cordova folder in it', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir('-p', anotherdir);
         shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
         expect(CordovaCheck.findProjectRoot(somedir)).toEqual(somedir);
@@ -56,9 +55,7 @@ describe('findProjectRoot method', function() {
         delete process.env.PWD;
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir('-p', anotherdir);
         shell.mkdir('-p', path.join(somedir, 'www'));
         shell.mkdir('-p', path.join(somedir, 'config.xml'));
@@ -68,9 +65,7 @@ describe('findProjectRoot method', function() {
     it('should use PWD when available', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir('-p', anotherdir);
         shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
         process.env.PWD = anotherdir;
@@ -80,9 +75,7 @@ describe('findProjectRoot method', function() {
     it('should use cwd as a fallback when PWD is not a cordova dir', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir('-p', anotherdir);
         shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
         process.env.PWD = path.sep;
@@ -92,9 +85,7 @@ describe('findProjectRoot method', function() {
     it('should ignore platform www/config.xml', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
-        this.after(function() {
-            shell.rm('-rf', somedir);
-        });
+        removeDir(somedir);
         shell.mkdir('-p', anotherdir);
         shell.mkdir('-p', path.join(anotherdir, 'www', 'config.xml'));
         shell.mkdir('-p', path.join(somedir, 'www'));

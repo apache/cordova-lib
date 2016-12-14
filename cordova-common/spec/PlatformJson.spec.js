@@ -43,7 +43,7 @@ describe('PlatformJson class', function() {
             fakePlugin = jasmine.createSpyObj('fakePlugin', ['getJsModules']);
             fakePlugin.id = 'fakeId';
             fakePlugin.version = '1.0.0';
-            fakePlugin.getJsModules.andReturn([FAKE_MODULE]);
+            fakePlugin.getJsModules.and.returnValue([FAKE_MODULE]);
         });
         
         describe('addPluginMetadata method', function () {

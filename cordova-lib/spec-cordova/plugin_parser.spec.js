@@ -26,7 +26,7 @@ var xml_contents = fs.readFileSync(xml, 'utf-8');
 describe('plugin.xml parser', function () {
     var readfile;
     beforeEach(function() {
-        readfile = spyOn(fs, 'readFileSync').andReturn(xml_contents);
+        readfile = spyOn(fs, 'readFileSync').and.returnValue(xml_contents);
     });
 
     it('should read a proper plugin.xml file', function() {
@@ -43,4 +43,3 @@ describe('plugin.xml parser', function () {
         expect(cfg.platforms.indexOf('ios') > -1).toBe(true);
     });
 });
-

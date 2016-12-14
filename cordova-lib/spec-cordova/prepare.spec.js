@@ -64,37 +64,37 @@ describe('prepare command', function() {
         load, platformApi, getPlatformApi;
 
     beforeEach(function () {
-        getPlatformApi = spyOn(platforms, 'getPlatformApi').andCallFake(function (platform, rootDir) {
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').and.callFake(function (platform, rootDir) {
             return {
-                prepare: jasmine.createSpy('prepare').andReturn(Q()),
-                getPlatformInfo: jasmine.createSpy('getPlatformInfo').andReturn({
+                prepare: jasmine.createSpy('prepare').and.returnValue(Q()),
+                getPlatformInfo: jasmine.createSpy('getPlatformInfo').and.returnValue({
                     locations: {
                         www: path.join(project_dir, 'platforms', platform, 'www')
                     }
                 }),
             };
         });
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
 
-        find_plugins = spyOn(util, 'findPlugins').andReturn([]);
-        spyOn(PlatformJson, 'load').andReturn(new PlatformJson(null, null, {}));
+        find_plugins = spyOn(util, 'findPlugins').and.returnValue([]);
+        spyOn(PlatformJson, 'load').and.returnValue(new PlatformJson(null, null, {}));
         spyOn(PlatformJson.prototype, 'save');
-        load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
-        cp = spyOn(shell, 'cp').andReturn(true);
+        load = spyOn(lazy_load, 'based_on_config').and.returnValue(Q());
+        cp = spyOn(shell, 'cp').and.returnValue(true);
         mkdir = spyOn(shell, 'mkdir');
         spyOn(ConfigParser.prototype, 'write');
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function() {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function() {
             return new et.ElementTree(et.XML(TEST_XML));
         });
     });
 
     describe('failure', function() {
         it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
-            is_cordova.andReturn(false);
-            cd_project_root.andCallThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
+            is_cordova.and.returnValue(false);
+            cd_project_root.and.callThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
             prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -102,7 +102,7 @@ describe('prepare command', function() {
             }).fin(done);
         });
         it('should not run inside a cordova-based project with no platforms', function(done) {
-            list_platforms.andReturn([]);
+            list_platforms.and.returnValue([]);
             prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -152,7 +152,7 @@ describe('prepare command', function() {
 
         describe('with no platforms added', function() {
             beforeEach(function() {
-                list_platforms.andReturn([]);
+                list_platforms.and.returnValue([]);
             });
             it('should not fire the hooker', function(done) {
                 Q().then(prepare).then(function() {

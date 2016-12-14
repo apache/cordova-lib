@@ -118,12 +118,12 @@ describe('plugman install start', function() {
 
     beforeEach(function() {
         config_queue_add = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
-        proc = spyOn(actions.prototype, 'process').andReturn( Q(true) );
+        proc = spyOn(actions.prototype, 'process').and.returnValue( Q(true) );
         actions_push = spyOn(actions.prototype, 'push');
         ca = spyOn(actions.prototype, 'createAction');
 
         var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function(path) {
             if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
             return origParseElementtreeSync(path);
         });
@@ -138,7 +138,7 @@ describe('plugman install start', function() {
         var returnValues = [true, {}, [], 'foo', function(){}];
         var api = knownPlatforms.getPlatformApi('android', project);
         var addPluginOrig = api.addPlugin;
-        spyOn(api, 'addPlugin').andCallFake(function () {
+        spyOn(api, 'addPlugin').and.callFake(function () {
             return addPluginOrig.apply(api, arguments)
             .thenResolve(returnValues[returnValueIndex++]);
         });
@@ -206,19 +206,19 @@ describe('install', function() {
 
     beforeEach(function() {
 
-        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, cb) {
+        exec = spyOn(child_process, 'exec').and.callFake(function(cmd, cb) {
             cb(false, '', '');
         });
-        spawnSpy = spyOn(superspawn, 'spawn').andReturn(Q('3.1.0'));
-        spyOn(fs, 'mkdirSync').andReturn(true);
-        spyOn(shell, 'mkdir').andReturn(true);
-        spyOn(platforms, 'copyFile').andReturn(true);
+        spawnSpy = spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
+        spyOn(fs, 'mkdirSync').and.returnValue(true);
+        spyOn(shell, 'mkdir').and.returnValue(true);
+        spyOn(platforms, 'copyFile').and.returnValue(true);
 
-        fetchSpy = spyOn(plugman.raw, 'fetch').andReturn( Q( plugins['com.cordova.engine'] ) );
-        chmod = spyOn(fs, 'chmodSync').andReturn(true);
-        spyOn(fs, 'writeFileSync').andReturn(true);
-        cp = spyOn(shell, 'cp').andReturn(true);
-        rm = spyOn(shell, 'rm').andReturn(true);
+        fetchSpy = spyOn(plugman.raw, 'fetch').and.returnValue( Q( plugins['com.cordova.engine'] ) );
+        chmod = spyOn(fs, 'chmodSync').and.returnValue(true);
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        cp = spyOn(shell, 'cp').and.returnValue(true);
+        rm = spyOn(shell, 'rm').and.returnValue(true);
         add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
         done = false;
     });
@@ -237,8 +237,8 @@ describe('install', function() {
             expect(results['emit_results'][2]).toBe('Remember that your api key is batman!');
         });
         it('should call fetch if provided plugin cannot be resolved locally', function() {
-            fetchSpy.andReturn( Q( plugins['org.test.plugins.dummyplugin'] ) );
-            spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
+            fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
+            spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
 
             runs(function() {
                 installPromise(install('android', project, 'CLEANYOURSHORTS' ));
@@ -250,8 +250,8 @@ describe('install', function() {
             });
         });
         it('should call fetch and convert oldID to newID', function() {
-            fetchSpy.andReturn( Q( plugins['org.test.plugins.dummyplugin'] ) );
-            spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
+            fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
+            spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             var emit = spyOn(events, 'emit');
             runs(function() {
                 installPromise(install('android', project, 'org.apache.cordova.device' ));
@@ -268,12 +268,12 @@ describe('install', function() {
             var fail, satisfies;
             beforeEach(function () {
                 fail = jasmine.createSpy('fail');
-                satisfies = spyOn(semver, 'satisfies').andReturn(true);
-                spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+                satisfies = spyOn(semver, 'satisfies').and.returnValue(true);
+                spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             });
 
             it('should check version if plugin has engine tag', function(done){
-                exec.andCallFake(function(cmd, cb) { cb(null, '2.5.0\n'); });
+                exec.and.callFake(function(cmd, cb) { cb(null, '2.5.0\n'); });
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
@@ -282,7 +282,7 @@ describe('install', function() {
                 });
             });
             it('should check version and munge it a little if it has "rc" in it so it plays nice with semver (introduce a dash in it)', function(done) {
-                exec.andCallFake(function(cmd, cb) { cb(null, '3.0.0rc1\n'); });
+                exec.and.callFake(function(cmd, cb) { cb(null, '3.0.0rc1\n'); });
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function () {
@@ -291,7 +291,7 @@ describe('install', function() {
                 });
             });
             it('should check specific platform version over cordova version if specified', function(done) {
-                exec.andCallFake(function(cmd, cb) { cb(null, '3.1.0\n'); });
+                exec.and.callFake(function(cmd, cb) { cb(null, '3.1.0\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
@@ -301,7 +301,7 @@ describe('install', function() {
             });
             it('should check platform sdk version if specified', function(done) {
                 var cordovaVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
-                exec.andCallFake(function(cmd, cb) { cb(null, '18\n'); });
+                exec.and.callFake(function(cmd, cb) { cb(null, '18\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
@@ -344,7 +344,7 @@ describe('install', function() {
         });
 
         it('should not check custom engine version that is not supported for platform', function() {
-            var spy = spyOn(semver, 'satisfies').andReturn(true);
+            var spy = spyOn(semver, 'satisfies').and.returnValue(true);
             runs(function() {
                 installPromise( install('blackberry10', project, plugins['com.cordova.engine']) );
             });
@@ -357,10 +357,10 @@ describe('install', function() {
         describe('with dependencies', function() {
             var emit;
             beforeEach(function() {
-                spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
-                fetchSpy.andCallFake( fake['fetch']['dependencies'] );
+                spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
+                fetchSpy.and.callFake( fake['fetch']['dependencies'] );
                 emit = spyOn(events, 'emit');
-                exec.andCallFake(function(cmd, cb) {
+                exec.and.callFake(function(cmd, cb) {
                     cb(null, '9.0.0\n');
                 });
             });
@@ -450,7 +450,7 @@ describe('install', function() {
             it('install uses meta data (if available) of top level plugin source', function() {
                 // Fake metadata so plugin 'B' appears from 'meta/B'
                 var meta = require('../src/plugman/util/metadata');
-                spyOn(meta, 'get_fetch_metadata').andCallFake(function(){
+                spyOn(meta, 'get_fetch_metadata').and.callFake(function(){
                     return {
                         source: {type: 'dir', url: path.join(plugins['B'], '..', 'meta')}
                     };
@@ -490,7 +490,7 @@ describe('install', function() {
         });
         it('should throw if variables are missing', function(done) {
             var success = jasmine.createSpy('success');
-            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             install('android', project, plugins['com.adobe.vars'])
             .then(success)
             .fail(function (err) {
@@ -502,9 +502,9 @@ describe('install', function() {
             });
         });
         it('should throw if git is not found on the path and a remote url is requested', function() {
-            spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
-            fetchSpy.andCallThrough();
-            spyOn(shell, 'which').andReturn(null);
+            spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
+            fetchSpy.and.callThrough();
+            spyOn(shell, 'which').and.returnValue(null);
             runs(function() {
                 installPromise( install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git') );
             });
@@ -514,8 +514,8 @@ describe('install', function() {
             });
         });
         it('should not fail when trying to install plugin less than minimum version. Skip instead  ', function(){
-            spyOn(semver, 'satisfies').andReturn(false);
-            exec.andCallFake(function(cmd, cb) {
+            spyOn(semver, 'satisfies').and.returnValue(false);
+            exec.and.callFake(function(cmd, cb) {
                 cb(null, '0.0.1\n');
             });
             runs(function() {
@@ -528,13 +528,13 @@ describe('install', function() {
         });
         it('should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
             var success = jasmine.createSpy('success'),
-                fail = jasmine.createSpy('fail').andCallFake(function(err) {
+                fail = jasmine.createSpy('fail').and.callFake(function(err) {
                     // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
                     expect(err).toBeDefined();
                     expect(err.message.indexOf('Security violation:')).toBe(0);
                 });
 
-            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             install('android', project, plugins['org.test.invalid.engine.script'])
                 .then(success)
                 .fail(fail)
@@ -547,7 +547,7 @@ describe('install', function() {
         it('should throw if a non-default cordova engine platform attribute is not defined.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail');
-            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             install('android', project, plugins['org.test.invalid.engine.no.platform'])
                 .then(success)
                 .fail(fail)
@@ -560,7 +560,7 @@ describe('install', function() {
         it('should throw if a non-default cordova engine scriptSrc attribute is not defined.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail');
-            spyOn(PlatformJson.prototype, 'isPluginInstalled').andReturn(false);
+            spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             install('android', project, plugins['org.test.invalid.engine.no.scriptSrc'])
                 .then(success)
                 .fail(fail)

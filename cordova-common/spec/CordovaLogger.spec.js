@@ -99,7 +99,7 @@ describe('CordovaLogger class', function() {
                 };
 
                 var listenerSpy = jasmine.createSpy('listenerSpy')
-                .andCallFake(function (eventName) {
+                .and.callFake(function (eventName) {
                     eventName = eventNamesExclusions[eventName] || eventName;
                     expect(logger.levels[eventName]).toBeDefined();
                 });
@@ -116,7 +116,7 @@ describe('CordovaLogger class', function() {
                 var spy = jasmine.createSpyObj(name, cursorMethods);
 
                 // Make spy methods chainable, as original Cursor acts
-                cursorMethods.forEach(function (method) { spy[method].andReturn(spy); });
+                cursorMethods.forEach(function (method) { spy[method].and.returnValue(spy); });
 
                 return spy;
             }
@@ -153,7 +153,7 @@ describe('CordovaLogger class', function() {
 
             it('should handle CordovaError instances separately from Error ones', function () {
                 var errorMock = new CordovaError();
-                spyOn(errorMock, 'toString').andReturn('error_message');
+                spyOn(errorMock, 'toString').and.returnValue('error_message');
 
                 logger.setLevel('verbose').log('verbose', errorMock);
                 expect(errorMock.toString).toHaveBeenCalled();

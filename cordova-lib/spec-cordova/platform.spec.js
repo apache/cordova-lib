@@ -57,7 +57,7 @@ describe('platform end-to-end', function () {
 
         // The config.json in the fixture project points at fake "local" paths.
         // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
+        spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
@@ -148,8 +148,8 @@ describe('platform end-to-end', function () {
     it('should call prepare after plugins were installed into platform', function(done) {
         var order = '';
         var fail = jasmine.createSpy(fail);
-        spyOn(plugman.raw, 'install').andCallFake(function() { order += 'I'; });
-        spyOn(cordova.raw, 'prepare').andCallFake(function() { order += 'P'; });
+        spyOn(plugman.raw, 'install').and.callFake(function() { order += 'I'; });
+        spyOn(cordova.raw, 'prepare').and.callFake(function() { order += 'P'; });
 
         cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
         .then(function() {

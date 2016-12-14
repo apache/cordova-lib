@@ -78,7 +78,7 @@ function uninstallPromise(f) {
 describe('plugman uninstall start', function() {
     beforeEach(function () {
         var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function(path) {
             if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
             return origParseElementtreeSync(path);
         });
@@ -121,17 +121,17 @@ describe('uninstallPlatform', function() {
     var fsWrite;
 
     beforeEach(function() {
-        proc = spyOn(actions.prototype, 'process').andReturn(Q());
-        fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
-        rm = spyOn(shell, 'rm').andReturn(true);
-        spyOn(shell, 'cp').andReturn(true);
+        proc = spyOn(actions.prototype, 'process').and.returnValue(Q());
+        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
+        rm = spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(shell, 'cp').and.returnValue(true);
         done = false;
     });
     describe('success', function() {
 
         it('should get PlatformApi instance for platform and invoke its\' removePlugin method', function(done) {
-            var platformApi = { removePlugin: jasmine.createSpy('removePlugin').andReturn(Q()) };
-            var getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+            var platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
+            var getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
 
             uninstall.uninstallPlatform('android', project, dummy_id)
             .then(function() {
@@ -144,21 +144,21 @@ describe('uninstallPlatform', function() {
 
         it('should return propagate value returned by PlatformApi removePlugin method', function(done) {
             var platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
-            spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+            spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
 
             var existsSyncOrig = fs.existsSync;
-            spyOn(fs, 'existsSync').andCallFake(function (file) {
+            spyOn(fs, 'existsSync').and.callFake(function (file) {
                 if (file.indexOf(dummy_id) >= 0) return true;
                 return existsSyncOrig.call(fs, file);
             });
 
             var fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
-            fakeProvider.get.andReturn(dummyPluginInfo);
+            fakeProvider.get.and.returnValue(dummyPluginInfo);
 
             function validateReturnedResultFor(values, expectedResult) {
                 return values.reduce(function (promise, value) {
                     return promise.then(function () {
-                        platformApi.removePlugin.andReturn(Q(value));
+                        platformApi.removePlugin.and.returnValue(Q(value));
                         return uninstall.uninstallPlatform('android', project, dummy_id, null,
                             { pluginInfoProvider: fakeProvider, platformVersion: '9.9.9' });
                     })
@@ -220,8 +220,8 @@ describe('uninstallPlugin', function() {
     var rm, fsWrite, rmstack = [], emit;
 
     beforeEach(function() {
-        fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
-        rm = spyOn(shell, 'rm').andCallFake(function(f,p) { rmstack.push(p); return true; });
+        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
+        rm = spyOn(shell, 'rm').and.callFake(function(f,p) { rmstack.push(p); return true; });
         rmstack = [];
         emit = spyOn(events, 'emit');
         done = false;
@@ -302,8 +302,8 @@ describe('uninstall', function() {
     var fsWrite, rm;
 
     beforeEach(function() {
-        fsWrite = spyOn(fs, 'writeFileSync').andReturn(true);
-        rm = spyOn(shell, 'rm').andReturn(true);
+        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
+        rm = spyOn(shell, 'rm').and.returnValue(true);
         done = false;
     });
 

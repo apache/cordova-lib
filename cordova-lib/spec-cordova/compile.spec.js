@@ -30,17 +30,17 @@ describe('compile command', function() {
     var project_dir = '/some/path';
 
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        platformApi = { build: jasmine.createSpy('build').andReturn(Q()) };
-        getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms= spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        platformApi = { build: jasmine.createSpy('build').and.returnValue(Q())};
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
     });
     describe('failure', function() {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
-            list_platforms.andReturn([]);
+            list_platforms.and.returnValue([]);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
             .then(success, function(result) {
@@ -53,7 +53,7 @@ describe('compile command', function() {
             });
         });
         it('should not run outside of a Cordova-based project', function(done) {
-            is_cordova.andReturn(false);
+            is_cordova.and.returnValue(false);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
             .then(success, function(result) {
@@ -126,7 +126,7 @@ describe('compile command', function() {
 
         describe('with no platforms added', function() {
             it('should not fire the hooker', function(done) {
-                list_platforms.andReturn([]);
+                list_platforms.and.returnValue([]);
                 Q().then(cordova.raw.compile).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {

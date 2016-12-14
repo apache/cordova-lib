@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
-    "jasmine-node": "^1.14.5",
+    "jasmine": "^2.5.2",
     "jshint": "^2.8.0",
     "promise-matchers": "^0.9.6",
     "rewire": "^2.5.1"

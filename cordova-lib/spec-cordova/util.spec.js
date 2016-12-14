@@ -37,11 +37,12 @@ describe('util module', function() {
             process.env['PWD'] = origPWD;
             process.chdir(cwd);
         });
+        function removeDir(directory) {
+            shell.rm('-rf', directory);            
+        }
         it('should return false if it hits the home directory', function() {
             var somedir = path.join(home, 'somedir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir(somedir);
             expect(util.isCordova(somedir)).toEqual(false);
         });
@@ -52,9 +53,7 @@ describe('util module', function() {
         it('should return the first directory it finds with a .cordova folder in it', function() {
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir('-p', anotherdir);
             shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
             expect(util.isCordova(somedir)).toEqual(somedir);
@@ -63,9 +62,7 @@ describe('util module', function() {
             delete process.env['PWD'];
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir('-p', anotherdir);
             shell.mkdir('-p', path.join(somedir, 'www'));
             shell.mkdir('-p', path.join(somedir, 'config.xml'));
@@ -75,9 +72,7 @@ describe('util module', function() {
         it('should use PWD when available', function() {
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir('-p', anotherdir);
             shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = anotherdir;
@@ -87,9 +82,7 @@ describe('util module', function() {
         it('should use cwd as a fallback when PWD is not a cordova dir', function() {
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir('-p', anotherdir);
             shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = path.sep;
@@ -99,9 +92,7 @@ describe('util module', function() {
         it('should ignore platform www/config.xml', function() {
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
-            this.after(function() {
-                shell.rm('-rf', somedir);
-            });
+            removeDir(somedir);
             shell.mkdir('-p', anotherdir);
             shell.mkdir('-p', path.join(anotherdir, 'www', 'config.xml'));
             shell.mkdir('-p', path.join(somedir, 'www'));
@@ -216,17 +207,17 @@ describe('util module', function() {
         };
 
         beforeEach(function() {
-            isCordova = spyOn(util, 'isCordova').andReturn('/fake/path');
-            listPlatforms = spyOn(util, 'listPlatforms').andReturn(['android']);
+            isCordova = spyOn(util, 'isCordova').and.returnValue('/fake/path');
+            listPlatforms = spyOn(util, 'listPlatforms').and.returnValue(['android']);
         });
 
         it('should throw if called outside of cordova project', function() {
-            isCordova.andReturn(false);
+            isCordova.and.returnValue(false);
             expect(function() { util.preProcessOptions(); }).toThrow();
         });
 
         it('should throw when no platforms added to project', function() {
-            listPlatforms.andReturn([]);
+            listPlatforms.and.returnValue([]);
             expect(function () { util.preProcessOptions(); }).toThrow();
         });
 
@@ -248,7 +239,7 @@ describe('util module', function() {
         });
 
         it('should pick buildConfig if no option is provided, but buildConfig.json exists', function() {
-            spyOn(util, 'existsSync').andReturn(true);
+            spyOn(util, 'existsSync').and.returnValue(true);
             // Using path.join below to normalize path separators
             expect(util.preProcessOptions())
                 .toEqual(jasmine.objectContaining({options: {buildConfig: path.join('/fake/path/build.json')}}));

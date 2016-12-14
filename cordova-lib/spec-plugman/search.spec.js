@@ -22,7 +22,7 @@ var search = require('../src/plugman/search'),
 
 describe('search', function() {
     it('should search a plugin', function() {
-        var sSearch = spyOn(registry, 'search').andReturn(Q());
+        var sSearch = spyOn(registry, 'search').and.returnValue(Q());
         search(new Array('myplugin', 'keyword'));
         expect(sSearch).toHaveBeenCalledWith(['myplugin', 'keyword']);
     });

@@ -85,12 +85,12 @@ describe('(save flag)', function () {
      */
     function redirectRegistryCalls(id) {
         var originalFetch = registry.fetch;
-        spyOn(registry, 'fetch').andCallFake(function(package) {
+        spyOn(registry, 'fetch').and.callFake(function(package) {
             return originalFetch([id]);
         });
 
         var originalInfo = registry.info;
-        spyOn(registry, 'info').andCallFake(function(package) {
+        spyOn(registry, 'info').and.callFake(function(package) {
             return originalInfo([id]);
         });
     }
@@ -101,13 +101,13 @@ describe('(save flag)', function () {
         shell.mkdir(tempPath);
 
         //jasmine mocks
-        spyOn(util, 'isCordova').andReturn(appPath);
-        spyOn(util, 'cdProjectRoot').andReturn(appPath);
-        spyOn(cordova.raw, 'prepare').andReturn(Q());
-        spyOn(prepare, 'preparePlatforms').andReturn(Q());
+        spyOn(util, 'isCordova').and.returnValue(appPath);
+        spyOn(util, 'cdProjectRoot').and.returnValue(appPath);
+        spyOn(cordova.raw, 'prepare').and.returnValue(Q());
+        spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
 
-        spyOn(PlatformApi, 'createPlatform').andReturn(Q());
-        spyOn(PlatformApi, 'updatePlatform').andReturn(Q());
+        spyOn(PlatformApi, 'createPlatform').and.returnValue(Q());
+        spyOn(PlatformApi, 'updatePlatform').and.returnValue(Q());
 
         //rewire mocks
         revertInstallPluginsForNewPlatform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
@@ -314,7 +314,7 @@ describe('(save flag)', function () {
             platform('add', platformName + '@' + platformVersionNew)
             .then(function () {
                 var fsExistsSync = fs.existsSync.bind(fs);
-                spyOn(fs, 'existsSync').andCallFake(function (somePath) {
+                spyOn(fs, 'existsSync').and.callFake(function (somePath) {
                     return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
                 });
 
@@ -342,7 +342,7 @@ describe('(save flag)', function () {
             .then(function () {
                 revertDownloadPlatform();
                 var fsExistsSync = fs.existsSync.bind(fs);
-                spyOn(fs, 'existsSync').andCallFake(function (somePath) {
+                spyOn(fs, 'existsSync').and.callFake(function (somePath) {
                     return (somePath === path.join(appPath, 'platforms', platformName)) || fsExistsSync(somePath);
                 });
                 mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
@@ -680,7 +680,7 @@ describe('(save flag)', function () {
         });
 
         it('spec.25 should install plugins already added to the project into platform when restoring it', function (done) {
-            var fail = jasmine.createSpy('fail').andCallFake(function (err) {
+            var fail = jasmine.createSpy('fail').and.callFake(function (err) {
                 console.log(err.message);
             });
 

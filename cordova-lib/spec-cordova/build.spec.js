@@ -30,16 +30,16 @@ describe('build command', function() {
     var prepare_spy, compile_spy;
 
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
-        compile_spy = spyOn(cordova.raw, 'compile').andReturn(Q());
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        prepare_spy = spyOn(cordova.raw, 'prepare').and.returnValue(Q());
+        compile_spy = spyOn(cordova.raw, 'compile').and.returnValue(Q());
     });
     describe('failure', function() {
         it('should not run inside a project with no platforms', function(done) {
-            list_platforms.andReturn([]);
+            list_platforms.and.returnValue([]);
             cordova.raw.build()
             .then(function() {
                 expect('this call').toBe('fail');
@@ -51,7 +51,7 @@ describe('build command', function() {
         });
 
         it('should not run outside of a Cordova-based project', function(done) {
-            is_cordova.andReturn(false);
+            is_cordova.and.returnValue(false);
 
             cordova.raw.build()
             .then(function() {
@@ -67,7 +67,7 @@ describe('build command', function() {
     describe('success', function() {
         it('should run inside a Cordova-based project with at least one added platform and call both prepare and compile', function(done) {
             cordova.raw.build(['android','ios']).then(function() {
-                var opts = {verbose: false, platforms: ['android', 'ios'], options: []};
+                var opts = Object({ platforms: [ 'android', 'ios' ], verbose: false, options: Object({  }) })
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
                 done();
@@ -116,7 +116,7 @@ describe('build command', function() {
 
         describe('with no platforms added', function() {
             it('should not fire the hooker', function(done) {
-                list_platforms.andReturn([]);
+                list_platforms.and.returnValue([]);
                 Q().then(cordova.raw.build).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {

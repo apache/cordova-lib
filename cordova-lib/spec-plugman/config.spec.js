@@ -22,7 +22,7 @@ var config = require('../src/plugman/config'),
 
 describe('config', function() {
     it('should run config', function() {
-        var sConfig = spyOn(registry, 'config').andReturn(Q());
+        var sConfig = spyOn(registry, 'config').and.returnValue(Q());
         var params = ['set', 'registry', 'http://registry.cordova.io'];
         config(params);
         expect(sConfig).toHaveBeenCalledWith(params);

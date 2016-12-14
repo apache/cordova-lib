@@ -34,13 +34,13 @@ describe('callback wrapper', function() {
             });
 
             it('should work with no callback and success', function() {
-                raw.andReturn(Q());
+                raw.and.returnValue(Q());
                 cordova[call]();
                 expect(raw).toHaveBeenCalled();
             });
 
             it('should call the callback on success', function(done) {
-                raw.andReturn(Q());
+                raw.and.returnValue(Q());
                 cordova[call](function(err) {
                     expect(err).toBeUndefined();
                     done();
@@ -49,7 +49,7 @@ describe('callback wrapper', function() {
 
             it('should call the callback with the error on failure', function(done) {
                 var err = new Error('junk');
-                raw.andReturn(Q.reject(err));
+                raw.and.returnValue(Q.reject(err));
                 cordova[call](function(e) {
                     expect(e).toEqual(err);
                     done();
@@ -58,4 +58,3 @@ describe('callback wrapper', function() {
         });
     }
 });
-

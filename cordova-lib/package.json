@@ -20,8 +20,8 @@
   "dependencies": {
     "aliasify": "^1.7.2",
     "cordova-common": "1.5.x",
-    "cordova-fetch": "^1.0.1",
     "cordova-create": "^1.0.1",
+    "cordova-fetch": "^1.0.1",
     "cordova-js": "4.2.0",
     "cordova-registry-mapper": "1.x",
     "cordova-serve": "^1.0.0",
@@ -47,7 +47,7 @@
   "devDependencies": {
     "codecov": "^1.0.1",
     "istanbul": "^0.3.4",
-    "jasmine-node": "1.14.5",
+    "jasmine": "^2.5.2",
     "jshint": "2.5.8",
     "rewire": "2.1.3"
   },

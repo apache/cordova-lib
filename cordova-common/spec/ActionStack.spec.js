@@ -48,7 +48,7 @@ describe('action-stack', function() {
             var first_reverter = jasmine.createSpy();
             var first_reverter_args = [true];
             var process_err = new Error('process_err');
-            var second_spy = jasmine.createSpy().andCallFake(function() {
+            var second_spy = jasmine.createSpy().and.callFake(function() {
                 throw process_err;
             });
             var second_args = [2];

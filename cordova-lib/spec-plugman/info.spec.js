@@ -22,7 +22,7 @@ var search = require('../src/plugman/info'),
 
 describe('info', function() {
     it('should show plugin info', function() {
-        var sSearch = spyOn(registry, 'info').andReturn(Q({
+        var sSearch = spyOn(registry, 'info').and.returnValue(Q({
             name: 'fakePlugin',
             version: '1.0.0',
             engines: [{ name: 'plugman', version: '>=0.11' }]

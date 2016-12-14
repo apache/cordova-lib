@@ -154,14 +154,14 @@ function removeTestProject() {
     shell.rm('-rf', tempDir);
 }
 
-describe('plugin fetching version selection', function(done) {
+describe('plugin fetching version selection', function() {
     createTestProject();
 
     beforeEach(function() {
         // Adding a matcher for checking the array of warning messages so that
         // we can have meanigful error messages. Expected is passed because
         // Jasmine will print it out if the matcher fails
-        this.addMatchers({
+        jasmine.addMatchers({
             toContain: function(check, expected) {
                 for(var i = 0; i < this.actual.length; i++) {
                     if (check(this.actual[i])) {
@@ -190,8 +190,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('6.0.0')
         ]);
-
         testEngineWithProject(after, testEngine, '1.3.0');
+        done();
     });
 
     it('should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function(done) {
@@ -208,8 +208,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('6.0.0')
         ]);
-
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should apply upper bound engine constraints when there are unspecified constraints above the upper bound', function(done) {
@@ -222,8 +222,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('~5.0.0')
         ]);
-
         testEngineWithProject(after, testEngine, '1.7.1');
+        done();
     });
 
     it('should handle the case where there are no constraints for earliest releases', function(done) {
@@ -234,8 +234,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('~5.0.0')
         ]);
-
         testEngineWithProject(after, testEngine, '0.7.0');
+        done();
     });
 
     it('should handle the case where the lowest version is unsatisfied', function(done) {
@@ -246,8 +246,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('~5.0.0')
         ]);
-
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should handle upperbounds if no single version constraints are given', function(done) {
@@ -258,6 +258,7 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         testEngineWithProject(after, testEngine, '2.3.0');
+        done();
     });
 
     it('should apply upper bounds greater than highest version', function(done) {
@@ -271,6 +272,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should treat empty constraints as satisfied', function(done) {
@@ -284,6 +286,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '1.0.0');
+        done();
     });
 
     it('should ignore an empty cordovaDependencies entry', function(done) {
@@ -292,6 +295,7 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should ignore a badly formatted semver range', function(done) {
@@ -302,6 +306,7 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         testEngineWithProject(after, testEngine, '2.3.0');
+        done();
     });
 
     it('should respect unreleased versions in constraints', function(done) {
@@ -316,6 +321,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '1.1.0');
+        done();
     });
 
     it('should respect plugin constraints', function(done) {
@@ -330,6 +336,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '2.0.0');
+        done();
     });
 
     it('should respect cordova constraints', function(done) {
@@ -344,6 +351,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '1.1.0');
+        done();
     });
 
     it('should not include pre-release versions', function(done) {
@@ -358,6 +366,7 @@ describe('plugin fetching version selection', function(done) {
 
         // Should not return 2.0.0-rc.2
         testEngineWithProject(after, testEngine, '1.7.1');
+        done();
     });
 
     it('should not fail if there is no engine in the npm info', function(done) {
@@ -388,6 +397,7 @@ describe('plugin fetching version selection', function(done) {
             expect(toFetch).toBe(null);
         })
         .fail(getVersionErrorCallback).fin(after);
+        done();
     });
 
     it('should handle extra whitespace', function(done) {
@@ -402,6 +412,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '1.7.1');
+        done();
     });
 
     it('should ignore badly typed version requirement entries', function(done) {
@@ -414,6 +425,7 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         testEngineWithProject(after, testEngine, '2.3.0');
+        done();
     });
 
     it('should ignore badly typed constraint entries', function(done) {
@@ -429,6 +441,7 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         testEngineWithProject(after, testEngine, '2.3.0');
+        done();
     });
 
     it('should ignore bad semver versions', function(done) {
@@ -446,6 +459,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should not fail if there are bad semver versions', function(done) {
@@ -464,6 +478,7 @@ describe('plugin fetching version selection', function(done) {
         ]);
 
         testEngineWithProject(after, testEngine, '1.7.1');
+        done();
     });
 
     it('should properly warn about multiple unmet requirements', function(done) {
@@ -479,8 +494,8 @@ describe('plugin fetching version selection', function(done) {
             getPlatformRequirement('>5.1.0'),
             getPluginRequirement('3.1.0')
         ]);
-
         testEngineWithProject(after, testEngine, '1.3.0');
+        done();
     });
 
     it('should properly warn about both unmet latest and upper bound requirements', function(done) {
@@ -496,8 +511,8 @@ describe('plugin fetching version selection', function(done) {
             getPlatformRequirement('>5.1.0 AND >7.1.0'),
             getPluginRequirement('3.1.0')
         ]);
-
         testEngineWithProject(after, testEngine, null);
+        done();
     });
 
     it('should not warn about versions past latest', function(done) {
@@ -512,8 +527,8 @@ describe('plugin fetching version selection', function(done) {
         var after = getWarningCheckCallback(done, [
             getPlatformRequirement('>5.1.0')
         ]);
-
         testEngineWithProject(after, testEngine, '1.3.0');
+        done();
     });
 
     it('clean up after plugin fetch spec', function() {

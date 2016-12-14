@@ -148,7 +148,7 @@ module.exports.writeConfigContent = function (appPath, configContent) {
 
 // Add the toExist matcher.
 beforeEach(function () {
-    this.addMatchers({
+    jasmine.addMatchers({
         'toExist': function () {
             var notText = this.isNot ? ' not' : '';
             var self = this;
@@ -161,4 +161,3 @@ beforeEach(function () {
         }
     });
 });
-

@@ -104,7 +104,7 @@ describe('HooksRunner', function() {
 
         // The config.json in the fixture project points at fake "local" paths.
         // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
+        spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
@@ -160,7 +160,7 @@ describe('HooksRunner', function() {
             var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
             removeFileIfExists(hooksOrderFile);
 
-            fire = spyOn(HooksRunner.prototype, 'fire').andCallThrough();
+            fire = spyOn(HooksRunner.prototype, 'fire').and.callThrough();
         });
 
         // helper methods
@@ -522,7 +522,7 @@ describe('HooksRunner', function() {
         });
 
         describe('module-level hooks (event handlers)', function() {
-            var handler = jasmine.createSpy().andReturn(Q());
+            var handler = jasmine.createSpy().and.returnValue(Q());
             var test_event = 'before_build';
 
             afterEach(function () {

@@ -30,20 +30,20 @@ describe('run command', function() {
     var prepare_spy;
 
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        prepare_spy = spyOn(cordova.raw, 'prepare').and.returnValue(Q());
         platformApi = {
-            run: jasmine.createSpy('run').andReturn(Q()),
-            build: jasmine.createSpy('build').andReturn(Q())
+            run: jasmine.createSpy('run').and.returnValue(Q()),
+            build: jasmine.createSpy('build').and.returnValue(Q())
         };
-        getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function() {
         it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
-            list_platforms.andReturn([]);
+            list_platforms.and.returnValue([]);
             Q().then(cordova.raw.run).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -52,8 +52,8 @@ describe('run command', function() {
         });
         it('should not run outside of a Cordova-based project', function(done) {
             var msg = 'Dummy message about not being in a cordova dir.';
-            cd_project_root.andThrow(new Error(msg));
-            is_cordova.andReturn(false);
+            cd_project_root.and.throwError(new Error(msg));
+            is_cordova.and.returnValue(false);
             Q().then(cordova.raw.run).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -136,7 +136,7 @@ describe('run command', function() {
             var originalBuildSpy;
             beforeEach(function() {
                 originalBuildSpy = platformApi.build;
-                platformApi.build = jasmine.createSpy('build').andCallFake(function(opts) {
+                platformApi.build = jasmine.createSpy('build').and.callFake(function(opts) {
                     opts.couldBeModified = 'insideBuild';
                     return Q();
                 });
@@ -176,7 +176,7 @@ describe('run command', function() {
 
         describe('with no platforms added', function() {
             it('should not fire the hooker', function(done) {
-                list_platforms.andReturn([]);
+                list_platforms.and.returnValue([]);
                 Q().then(cordova.raw.run).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {
