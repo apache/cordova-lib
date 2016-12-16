@@ -444,7 +444,7 @@ describe('HooksRunner', function() {
                         // Delete unique ids to allow comparing PluginInfo
                         delete androidPluginOpts.plugin.pluginInfo._et;
 
-                        fire.calls.forEach(function(call) {
+                        fire.calls.all().forEach(function(call) {
                             if(call.args[1] && call.args[1].plugin) {
                                 // Delete unique ids to allow comparing PluginInfo
                                 delete call.args[1].plugin.pluginInfo._et;

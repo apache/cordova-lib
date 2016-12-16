@@ -239,7 +239,6 @@ describe('install', function() {
         it('should call fetch if provided plugin cannot be resolved locally', function() {
             fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
-
             runs(function() {
                 installPromise(install('android', project, 'CLEANYOURSHORTS' ));
             });
@@ -249,7 +248,8 @@ describe('install', function() {
                 expect(fetchSpy).toHaveBeenCalled();
             });
         });
-        it('should call fetch and convert oldID to newID', function() {
+
+        it('should call fetch and convert oldID to newID', function(done) {
             fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             var emit = spyOn(events, 'emit');
@@ -263,7 +263,6 @@ describe('install', function() {
                 expect(fetchSpy).toHaveBeenCalled();
             });
         });
-
         describe('engine versions', function () {
             var fail, satisfies;
             beforeEach(function () {
@@ -345,13 +344,14 @@ describe('install', function() {
 
         it('should not check custom engine version that is not supported for platform', function() {
             var spy = spyOn(semver, 'satisfies').and.returnValue(true);
-            runs(function() {
-                installPromise( install('blackberry10', project, plugins['com.cordova.engine']) );
-            });
-            waitsFor(function() { return done; }, 'install promise never resolved', 200);
-            runs(function() {
+            install('blackberry10', project, plugins['com.cordova.engine']).then(function(done) {
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
                 expect(spy).not.toHaveBeenCalledWith('','>=3.0.0');
-            });
+                done();
+            }, 6000);
         });
 
         describe('with dependencies', function() {
@@ -479,14 +479,15 @@ describe('install', function() {
     });
 
     describe('failure', function() {
-        it('should throw if platform is unrecognized', function() {
-            runs(function() {
-                installPromise( install('atari', project, 'SomePlugin') );
-            });
-            waitsFor(function() { return done; }, 'install promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('atari not supported.');
-            });
+        it('should throw if platform is unrecognized', function(done) {
+            install('atari', project, 'SomePlugin').then(function() {
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toContain('atari not supported.');
+                done();
+            }, 6000);
         });
         it('should throw if variables are missing', function(done) {
             var success = jasmine.createSpy('success');
@@ -494,38 +495,40 @@ describe('install', function() {
             install('android', project, plugins['com.adobe.vars'])
             .then(success)
             .fail(function (err) {
-                expect(err).toContain('Variable(s) missing: API_KEY');
+                expect(err.toString()).toContain('Variable(s) missing: API_KEY');
             })
             .fin(function () {
                 expect(success).not.toHaveBeenCalled();
                 done();
             });
         });
-        it('should throw if git is not found on the path and a remote url is requested', function() {
+        it('should throw if git is not found on the path and a remote url is requested', function(done) {
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             fetchSpy.and.callThrough();
             spyOn(shell, 'which').and.returnValue(null);
-            runs(function() {
-                installPromise( install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git') );
+            install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git').then(function(result) {
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toContain('"git" command line tool is not installed: make sure it is accessible on your PATH.');
+                done();
             });
-            waitsFor(function(){ return done; }, 'install promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('"git" command line tool is not installed: make sure it is accessible on your PATH.');
-            });
-        });
+        }, 6000);
+
         it('should not fail when trying to install plugin less than minimum version. Skip instead  ', function(){
             spyOn(semver, 'satisfies').and.returnValue(false);
             exec.and.callFake(function(cmd, cb) {
                 cb(null, '0.0.1\n');
             });
-            runs(function() {
-                installPromise( install('android', project, plugins['com.cordova.engine']) );
+            install('android', project, plugins['com.cordova.engine']).then(function(result) {
+                expect(false).toBe(true);
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toMatch(true);
             });
-            waitsFor(function(){ return done; }, 'install promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toMatch(true);
-            });
-        });
+        }, 6000);
+
         it('should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail').and.callFake(function(err) {

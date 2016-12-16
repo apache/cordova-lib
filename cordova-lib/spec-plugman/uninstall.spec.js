@@ -177,12 +177,12 @@ describe('uninstallPlatform', function() {
             .fin(done);
         });
 
-        describe('with dependencies', function() {
+    describe('with dependencies', function() {
             var emit;
             beforeEach(function() {
                 emit = spyOn(events, 'emit');
             });
-            it('should uninstall "dangling" dependencies', function() {
+            it('should uninstall "dangling" dependencies', function(done) {
                 runs(function() {
                     uninstallPromise(uninstall.uninstallPlatform('android', project, 'A'));
                 });
@@ -195,24 +195,27 @@ describe('uninstallPlatform', function() {
     });
 
     describe('failure', function() {
-        it('should throw if platform is unrecognized', function() {
-            runs(function() {
-                uninstallPromise( uninstall.uninstallPlatform('atari', project, 'SomePlugin') );
+        it('should throw if platform is unrecognized', function(done) {
+            uninstall.uninstallPlatform('atari', project, 'SomePlugin').then(function(result){
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toContain('atari not supported.');
+                done();
             });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('atari not supported.');
+        }, 6000);
+
+        it('should throw if plugin is missing', function(done) {
+            uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist').then(function(result){
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
+                done();
             });
-        });
-        it('should throw if plugin is missing', function() {
-            runs(function() {
-                uninstallPromise( uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist') );
-            });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-            });
-        });
+        }, 6000);
     });
 });
 
@@ -244,7 +247,7 @@ describe('uninstallPlugin', function() {
             });
         });
 
-        it('should fail if plugin is a required dependency', function() {
+        it('should fail if plugin is a required dependency', function(done) {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('C', plugins_install_dir) );
             });
@@ -281,7 +284,7 @@ describe('uninstallPlugin', function() {
             });
         });
 
-        it('should not remove dependent plugin if it was installed after as top-level', function() {
+        it('should not remove dependent plugin if it was installed after as top-level', function(done) {
             runs(function() {
                 uninstallPromise( uninstall.uninstallPlugin('A', plugins_install_dir3) );
             });
@@ -308,31 +311,34 @@ describe('uninstall', function() {
     });
 
     describe('failure', function() {
-        it('should throw if platform is unrecognized', function() {
-            runs(function() {
-                uninstallPromise(uninstall('atari', project, 'SomePlugin'));
+        it('should throw if platform is unrecognized', function(done) {
+            uninstall('atari', project, 'SomePlugin').then(function(result){
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, undefined);
+                expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('atari not supported.');
+        }, 6000);
+
+        it('should throw if plugin is missing', function(done) {
+            uninstall('android', project, 'SomePluginThatDoesntExist').then(function(result){
+                expect(false).toBe(true);
+                done();
+            },
+            function err(errMsg) {
+                expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
+                done();
             });
-        });
-        it('should throw if plugin is missing', function() {
-            runs(function() {
-                uninstallPromise(uninstall('android', project, 'SomePluginThatDoesntExist'));
-            });
-            waitsFor(function() { return done; }, 'promise never resolved', 200);
-            runs(function() {
-                expect(''+done).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-            });
-        });
+        }, 6000);
     });
 });
 
 describe('end', function() {
     it('end', function() {
         done = false;
-
         promise.then(function(){
             return uninstall('android', project, plugins['org.test.plugins.dummyplugin']);
         }).then(function(){
@@ -350,7 +356,6 @@ describe('end', function() {
             shell.rm('-rf', project, project2, project3);
             done = true;
         });
-
         waitsFor(function() { return done; }, 'promise never resolved', 500);
     });
 });
