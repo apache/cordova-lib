@@ -176,7 +176,7 @@ describe('plugin fetching version selection', function() {
         getVersionErrorCallback = jasmine.createSpy('unexpectedPluginFetchErrorCallback');
     });
 
-    it('should handle a mix of upper bounds and single versions', function(done) {
+    it('Test 001 : should handle a mix of upper bounds and single versions', function(done) {
         var testEngine = {
             '0.0.0' : { 'cordova-android': '1.0.0' },
             '0.0.2' : { 'cordova-android': '>1.0.0' },
@@ -194,7 +194,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function(done) {
+    it('Test 002 : should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function(done) {
         var testEngine = {
             '1.0.0' : { 'cordova-android': '>2.0.0' },
             '1.7.0' : { 'cordova-android': '>4.0.0' },
@@ -212,7 +212,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should apply upper bound engine constraints when there are unspecified constraints above the upper bound', function(done) {
+    it('Test 003 : should apply upper bound engine constraints when there are unspecified constraints above the upper bound', function(done) {
         var testEngine = {
             '0.0.0' : {},
             '2.0.0' : { 'cordova-android': '~5.0.0' },
@@ -226,7 +226,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should handle the case where there are no constraints for earliest releases', function(done) {
+    it('Test 004 : should handle the case where there are no constraints for earliest releases', function(done) {
         var testEngine = {
             '1.0.0' : { 'cordova-android': '~5.0.0' }
         };
@@ -238,7 +238,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should handle the case where the lowest version is unsatisfied', function(done) {
+    it('Test 005 : should handle the case where the lowest version is unsatisfied', function(done) {
         var testEngine = {
             '0.0.2' : { 'cordova-android': '~5.0.0' }
         };
@@ -250,7 +250,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should handle upperbounds if no single version constraints are given', function(done) {
+    it('Test 006 : should handle upperbounds if no single version constraints are given', function(done) {
         var testEngine = {
             '<1.0.0': { 'cordova-android': '<2.0.0' }
         };
@@ -261,7 +261,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should apply upper bounds greater than highest version', function(done) {
+    it('Test 007 : should apply upper bounds greater than highest version', function(done) {
         var testEngine = {
             '0.0.0' : {},
             '<5.0.0': { 'cordova-android': '<2.0.0' }
@@ -275,7 +275,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should treat empty constraints as satisfied', function(done) {
+    it('Test 008 : should treat empty constraints as satisfied', function(done) {
         var testEngine = {
             '1.0.0' : {},
             '1.1.0' : { 'cordova-android': '>5.0.0' }
@@ -289,7 +289,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should ignore an empty cordovaDependencies entry', function(done) {
+    it('Test 009 : should ignore an empty cordovaDependencies entry', function(done) {
         var testEngine = {};
 
         var after = getWarningCheckCallback(done, []);
@@ -298,7 +298,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should ignore a badly formatted semver range', function(done) {
+    it('Test 010 : should ignore a badly formatted semver range', function(done) {
         var testEngine = {
             '1.1.3' : { 'cordova-android': 'badSemverRange' }
         };
@@ -309,7 +309,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should respect unreleased versions in constraints', function(done) {
+    it('Test 011 : should respect unreleased versions in constraints', function(done) {
         var testEngine = {
             '1.0.0' : { 'cordova-android': '3.1.0' },
             '1.1.2' : { 'cordova-android': '6.0.0' },
@@ -324,7 +324,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should respect plugin constraints', function(done) {
+    it('Test 012 : should respect plugin constraints', function(done) {
         var testEngine = {
             '0.0.0' : { 'ca.filmaj.AndroidPlugin': '1.2.0' },
             '1.1.3' : { 'ca.filmaj.AndroidPlugin': '<5.0.0 || >2.3.0' },
@@ -339,7 +339,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should respect cordova constraints', function(done) {
+    it('Test 013 : should respect cordova constraints', function(done) {
         var testEngine = {
             '0.0.0' : { 'cordova': '>1.0.0' },
             '1.1.3' : { 'cordova': '<3.0.0 || >4.0.0' },
@@ -354,7 +354,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should not include pre-release versions', function(done) {
+    it('Test 014 : should not include pre-release versions', function(done) {
         var testEngine = {
             '0.0.0' : {},
             '2.0.0' : { 'cordova-android': '>5.0.0' }
@@ -369,7 +369,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should not fail if there is no engine in the npm info', function(done) {
+    it('Test 015 : should not fail if there is no engine in the npm info', function(done) {
         plugin.getFetchVersion(project, {
                 version: '2.3.0',
                 name: 'test-plugin',
@@ -381,7 +381,7 @@ describe('plugin fetching version selection', function() {
         .fail(getVersionErrorCallback).fin(done);
     });
 
-    it('should not fail if there is no cordovaDependencies in the engines', function(done) {
+    it('Test 016 : should not fail if there is no cordovaDependencies in the engines', function(done) {
         var after = getWarningCheckCallback(done, []);
 
         plugin.getFetchVersion(project, {
@@ -400,7 +400,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should handle extra whitespace', function(done) {
+    it('Test 017 : should handle extra whitespace', function(done) {
         var testEngine = {
             '  1.0.0    '   : {},
             '2.0.0   '      : { ' cordova-android': '~5.0.0   ' },
@@ -415,7 +415,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should ignore badly typed version requirement entries', function(done) {
+    it('Test 018 : should ignore badly typed version requirement entries', function(done) {
         var testEngine = {
             '1.1.0' : ['cordova', '5.0.0'],
             '1.3.0' : undefined,
@@ -428,7 +428,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should ignore badly typed constraint entries', function(done) {
+    it('Test 019 : should ignore badly typed constraint entries', function(done) {
         var testEngine = {
             '0.0.2' : { 'cordova': 1 },
             '0.7.0' : { 'cordova': {}},
@@ -444,7 +444,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should ignore bad semver versions', function(done) {
+    it('Test 020 : should ignore bad semver versions', function(done) {
         var testEngine = {
             '0.0.0'         : { 'cordova-android': '5.0.0' },
             'notAVersion'   : { 'cordova-android': '3.1.0' },
@@ -462,7 +462,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should not fail if there are bad semver versions', function(done) {
+    it('Test 021 : should not fail if there are bad semver versions', function(done) {
         var testEngine = {
             'notAVersion'   : { 'cordova-android': '3.1.0' },
             '^1.1.2'        : { 'cordova-android': '3.1.0' },
@@ -481,7 +481,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should properly warn about multiple unmet requirements', function(done) {
+    it('Test 022 : should properly warn about multiple unmet requirements', function(done) {
         var testEngine = {
             '1.7.0' : {
                 'cordova-android'           : '>5.1.0',
@@ -498,7 +498,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should properly warn about both unmet latest and upper bound requirements', function(done) {
+    it('Test 023 : should properly warn about both unmet latest and upper bound requirements', function(done) {
         var testEngine = {
             '1.7.0' : { 'cordova-android': '>5.1.0' },
             '<5.0.0': {
@@ -515,7 +515,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('should not warn about versions past latest', function(done) {
+    it('Test 024 : should not warn about versions past latest', function(done) {
         var testEngine = {
             '1.7.0' : { 'cordova-android': '>5.1.0' },
             '7.0.0': {
@@ -531,7 +531,7 @@ describe('plugin fetching version selection', function() {
         done();
     });
 
-    it('clean up after plugin fetch spec', function() {
+    it('Test 025 : clean up after plugin fetch spec', function() {
         removeTestProject();
     });
 });

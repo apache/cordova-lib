@@ -52,8 +52,8 @@ describe('android project parser', function() {
     var android_proj = path.join(proj, 'platforms', 'android');
     var exists;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        spyOn(config, 'has_custom_path').andReturn(false);
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        spyOn(config, 'has_custom_path').and.returnValue(false);
     });
 
     function errorWrapper(p, done, post) {
@@ -64,7 +64,7 @@ describe('android project parser', function() {
 
     describe('constructions', function() {
         it('should throw if provided directory does not contain an AndroidManifest.xml', function() {
-            exists.andReturn(false);
+            exists.and.returnValue(false);
             expect(function() {
                 new androidParser(android_proj);
             }).toThrow();
@@ -98,11 +98,11 @@ describe('android project parser', function() {
             p = new androidParser(android_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
-            is_cordova = spyOn(util, 'isCordova').andReturn(android_proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(android_proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync');
             mkdir = spyOn(shell, 'mkdir');
-            spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
+            spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function(path) {
                 if (/strings/.exec(path)) {
                     return stringsRoot = new et.ElementTree(et.XML(STRINGS_XML));
                 } else if (/AndroidManifest/.exec(path)) {
@@ -116,45 +116,45 @@ describe('android project parser', function() {
 
         describe('update_from_config method', function() {
             beforeEach(function() {
-                spyOn(fs, 'readdirSync').andReturn([ path.join(android_proj, 'src', 'android_pkg', 'MyApp.java') ]);
+                spyOn(fs, 'readdirSync').and.returnValue([ path.join(android_proj, 'src', 'android_pkg', 'MyApp.java') ]);
                 cfg.name = function() { return 'testname'; };
                 cfg.packageName = function() { return 'testpkg'; };
                 cfg.version = function() { return 'one point oh'; };
-                read.andReturn('package org.cordova.somepackage; public class MyApp extends CordovaActivity { }');
+                read.and.returnValue('package org.cordova.somepackage; public class MyApp extends CordovaActivity { }');
             });
 
             it('should write out the orientation preference value', function() {
-                getOrientation.andCallThrough();
+                getOrientation.and.callThrough();
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
             });
             it('should handle no orientation', function() {
-                getOrientation.andReturn('');
+                getOrientation.and.returnValue('');
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toBeUndefined();
             });
             it('should handle default orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_DEFAULT);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toBeUndefined();
             });
             it('should handle portrait orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_PORTRAIT);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('portrait');
             });
             it('should handle landscape orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('landscape');
             });
             it('should handle sensorLandscape orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_SENSOR_LANDSCAPE);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_SENSOR_LANDSCAPE);
                 p.update_from_config(cfg2);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('sensorLandscape');
             });
             it('should handle custom orientation', function() {
-                getOrientation.andReturn('some-custom-orientation');
+                getOrientation.and.returnValue('some-custom-orientation');
                 p.update_from_config(cfg);
                 expect(manifestRoot.getroot().find('./application/activity').attrib['android:screenOrientation']).toEqual('some-custom-orientation');
             });
@@ -196,7 +196,7 @@ describe('android project parser', function() {
         });
         describe('update_overrides method', function() {
             it('should do nothing if merges directory does not exist', function() {
-                exists.andReturn(false);
+                exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
@@ -219,7 +219,7 @@ describe('android project parser', function() {
             });
             it('should throw if update_from_config throws', function(done) {
                 var err = new Error('uh oh!');
-                config.andCallFake(function() { throw err; });
+                config.and.callFake(function() { throw err; });
                 errorWrapper(p.update_project({}), done, function(err) {
                     expect(err).toEqual(err);
                 });

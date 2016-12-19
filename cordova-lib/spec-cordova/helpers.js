@@ -157,14 +157,14 @@ beforeEach(function () {
                     result.pass = fs.existsSync(actual);
 
                     if(result.pass) {
-                        result.message = "expected " + actual + " to not exist";
+                        result.message = 'expected ' + actual + ' to not exist';
                     } else {
-                        result.message = "expected " + actual + " to exist";
+                        result.message = 'expected ' + actual + ' to exist';
                     }
 
                     return result;
                 }
-            }
+            };
         }
     });
 });

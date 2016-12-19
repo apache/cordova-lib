@@ -23,13 +23,13 @@ describe('forwardEventsTo method', function () {
     afterEach(function() {
         events.forwardEventsTo(null);
     });
-    it('should not go to infinite loop when trying to forward to self', function () {
+    it('Test 001 : should not go to infinite loop when trying to forward to self', function () {
         expect(function() {
             events.forwardEventsTo(events);
             events.emit('log', 'test message');
         }).not.toThrow();
     });
-    it('should reset forwarding after trying to forward to self', function () {
+    it('Test 002 : should reset forwarding after trying to forward to self', function () {
         var EventEmitter = require('events').EventEmitter;
         var anotherEventEmitter = new EventEmitter();
         var logSpy = jasmine.createSpy('logSpy');
@@ -39,7 +39,7 @@ describe('forwardEventsTo method', function () {
         events.emit('log', 'test message #1');
         expect(logSpy).toHaveBeenCalled();
 
-        logSpy.reset();
+        logSpy.calls.reset();
 
         events.forwardEventsTo(events);
         events.emit('log', 'test message #2');

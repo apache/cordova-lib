@@ -57,12 +57,12 @@ describe('wp8 project parser', function() {
     var exists, exec, custom, readdir, config_read;
     var manifestXml, projXml, mainPageXamlXml;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        exec = spyOn(child_process, 'exec').and.callFake(function(cmd, opts, cb) {
             (cb || opts)(0, '', '');
         });
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
-        config_read = spyOn(config, 'read').andCallFake(function() {
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
+        config_read = spyOn(config, 'read').and.callFake(function() {
             return custom() ? {
                 lib: {
                     wp8: {
@@ -72,9 +72,9 @@ describe('wp8 project parser', function() {
             }
             : ({});
         });
-        readdir = spyOn(fs, 'readdirSync').andReturn(['test.csproj']);
+        readdir = spyOn(fs, 'readdirSync').and.returnValue(['test.csproj']);
         projXml = manifestXml = mainPageXamlXml = null;
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function(path) {
             if (/WMAppManifest.xml$/.exec(path)) {
                 return manifestXml = new et.ElementTree(et.XML(MANIFEST_XML));
             } else if (/csproj$/.exec(path)) {
@@ -103,7 +103,7 @@ describe('wp8 project parser', function() {
 
     describe('constructions', function() {
         it('should throw if provided directory does not contain a csproj file', function() {
-            readdir.andReturn([]);
+            readdir.and.returnValue([]);
             expect(function() {
                 new wp8Parser(proj);
             }).toThrow();
@@ -134,9 +134,9 @@ describe('wp8 project parser', function() {
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
             mkdir = spyOn(shell, 'mkdir');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             write = spyOn(fs, 'writeFileSync');
-            read = spyOn(fs, 'readFileSync').andReturn('');
+            read = spyOn(fs, 'readFileSync').and.returnValue('');
             getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
@@ -146,7 +146,7 @@ describe('wp8 project parser', function() {
                 cfg.content = function() { return 'index.html'; };
                 cfg.packageName = function() { return 'testpkg'; };
                 cfg.version = function() { return 'one point oh'; };
-                readdir.andReturn(['test.sln']);
+                readdir.and.returnValue(['test.sln']);
             });
 
             it('should write out the app name to wmappmanifest.xml', function() {
@@ -165,37 +165,37 @@ describe('wp8 project parser', function() {
                 expect(appEl.attrib.Version).toEqual('one point oh');
             });
             it('should write out the orientation preference value', function() {
-                getOrientation.andCallThrough();
+                getOrientation.and.callThrough();
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
             });
             it('should handle no orientation', function() {
-                getOrientation.andReturn('');
+                getOrientation.and.returnValue('');
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toBeUndefined();
             });
             it('should handle default orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_DEFAULT);
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toBeUndefined();
             });
             it('should handle portrait orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_PORTRAIT);
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('portrait');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('portrait');
             });
             it('should handle landscape orientation', function() {
-                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toEqual('landscape');
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('landscape');
             });
             it('should handle custom orientation', function() {
-                getOrientation.andReturn('some-custom-orientation');
+                getOrientation.and.returnValue('some-custom-orientation');
                 p.update_from_config(cfg);
                 expect(mainPageXamlXml.getroot().attrib['SupportedOrientations']).toBeUndefined();
                 expect(mainPageXamlXml.getroot().attrib['Orientation']).toEqual('some-custom-orientation');
@@ -228,8 +228,8 @@ describe('wp8 project parser', function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 svn = spyOn(util, 'deleteSvnFolders');
-                exists.andReturn(false);
-                fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
+                exists.and.returnValue(false);
+                fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
             });
             it('should call update_from_config', function(done) {
                 wrapper(p.update_project(), done, function() {
@@ -238,7 +238,7 @@ describe('wp8 project parser', function() {
             });
             it('should throw if update_from_config throws', function(done) {
                 var err = new Error('uh oh!');
-                config.andCallFake(function() { throw err; });
+                config.and.callFake(function() { throw err; });
                 errorWrapper(p.update_project({}), done, function(e) {
                     expect(e).toEqual(err);
                 });

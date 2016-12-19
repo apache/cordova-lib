@@ -33,13 +33,13 @@ describe('callback wrapper', function() {
                 raw = spyOn(cordova.raw, call);
             });
 
-            it('should work with no callback and success', function() {
+            it('Test 001 : should work with no callback and success', function() {
                 raw.and.returnValue(Q());
                 cordova[call]();
                 expect(raw).toHaveBeenCalled();
             });
 
-            it('should call the callback on success', function(done) {
+            it('Test 002 : should call the callback on success', function(done) {
                 raw.and.returnValue(Q());
                 cordova[call](function(err) {
                     expect(err).toBeUndefined();
@@ -47,7 +47,7 @@ describe('callback wrapper', function() {
                 });
             });
 
-            it('should call the callback with the error on failure', function(done) {
+            it('Test 003 : should call the callback with the error on failure', function(done) {
                 var err = new Error('junk');
                 raw.and.returnValue(Q.reject(err));
                 cordova[call](function(e) {

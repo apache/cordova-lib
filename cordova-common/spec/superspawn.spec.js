@@ -30,12 +30,12 @@ describe('spawn method', function() {
         failSpy = jasmine.createSpy('fail');
     });
 
-    it('should return a promise', function () {
+    it('Test 001 : should return a promise', function () {
         expect(Q.isPromise(superspawn.spawn(LS))).toBe(true);
         expect(Q.isPromise(superspawn.spawn('invalid_command'))).toBe(true);
     });
 
-    it('should notify about stdout "data" events', function (done) {
+    it('Test 002 : should notify about stdout "data" events', function (done) {
         superspawn.spawn(LS, [], {stdio: 'pipe'})
         .progress(progressSpy)
         .fin(function () {
@@ -44,7 +44,7 @@ describe('spawn method', function() {
         });
     });
 
-    it('should notify about stderr "data" events', function (done) {
+    it('Test 003 : should notify about stderr "data" events', function (done) {
         superspawn.spawn(LS, ['doesnt-exist'], {stdio: 'pipe'})
         .progress(progressSpy)
         .fin(function () {

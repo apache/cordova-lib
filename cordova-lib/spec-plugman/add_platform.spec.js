@@ -21,7 +21,7 @@ var platform = require('../src/plugman/platform'),
     fs = require('fs');
 
 describe( 'platform add/remove', function() {
-    it( 'should call platform add', function() {
+    it( 'Test 001 : should call platform add', function() {
         var sPlatformA = spyOn( platform, 'add' ).and.returnValue(Q()),
             sPlatformR = spyOn( platform, 'remove' ).and.returnValue(Q());
         platform.add();
@@ -35,14 +35,12 @@ describe( 'platform add/remove', function() {
 describe( 'platform add', function() {
     var done = false,
         existsSync;
-    function platformPromise( f ) {
-        f.then( function() { done = true; }, function(err) { done = err; } );
-    }
+
     beforeEach( function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
-    it( 'should error on non existing plugin.xml', function(done) {
+    it( 'Test 002 : should error on non existing plugin.xml', function(done) {
         platform.add().then(function(result){
             expect(false).toBe(true);
             done();
@@ -58,14 +56,12 @@ describe( 'platform add', function() {
 describe( 'platform remove', function() {
     var done = false,
         existsSync;
-    function platformPromise( f ) {
-        f.then( function() { done = true; }, function(err) { done = err; } );
-    }
+        
     beforeEach( function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
-    it( 'should error on non existing plugin.xml', function(done) {
+    it( 'Test 003 : should error on non existing plugin.xml', function(done) {
         platform.remove().then(function(result) {
             expect(false).toBe(true);
             done();

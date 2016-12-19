@@ -97,7 +97,7 @@ describe('platform end-to-end', function () {
     // They should run the appropriate hooks.
     // They should fail when not inside a Cordova project.
     // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('should successfully run', function(done) {
+    it('Test 001 : should successfully run', function(done) {
 
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {
@@ -127,7 +127,7 @@ describe('platform end-to-end', function () {
         }).fin(done);
     });
 
-    it('should install plugins correctly while adding platform', function(done) {
+    it('Test 002 : should install plugins correctly while adding platform', function(done) {
 
         cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
         .then(function() {
@@ -145,7 +145,7 @@ describe('platform end-to-end', function () {
         .fin(done);
     });
 
-    it('should call prepare after plugins were installed into platform', function(done) {
+    it('Test 003 : should call prepare after plugins were installed into platform', function(done) {
         var order = '';
         var fail = jasmine.createSpy(fail);
         spyOn(plugman.raw, 'install').and.callFake(function() { order += 'I'; });
@@ -177,7 +177,7 @@ describe('add function', function () {
         };
     });
 
-    it('throws if the target list is empty', function (done) {
+    it('Test 004 : throws if the target list is empty', function (done) {
         var targets = [];
         platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
             expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
@@ -185,7 +185,7 @@ describe('add function', function () {
         });
     });
 
-    it('throws if the target list is undefined or null', function (done) {
+    it('Test 005 : throws if the target list is undefined or null', function (done) {
 
         // case 1 : target list undefined
         var targets; // = undefined;
@@ -217,7 +217,7 @@ describe('platform add plugin rm end-to-end', function () {
         shell.rm('-rf', tmpDir);
     });
 
-    it('should remove dependency when removing parent plugin', function(done) {
+    it('Test 006 : should remove dependency when removing parent plugin', function(done) {
 
         cordova.raw.create('hello')
         .then(function() {
@@ -230,7 +230,7 @@ describe('platform add plugin rm end-to-end', function () {
         .then(function() {
             expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
             expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-            return cordova.raw.platform('add', 'android@latest');
+            return cordova.raw.platform('add', 'android');
         })
         .then(function() {
             expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
@@ -246,7 +246,7 @@ describe('platform add plugin rm end-to-end', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 20000);
+    }, 100000);
 });
 
 describe('platform add and remove --fetch', function () {
@@ -265,7 +265,7 @@ describe('platform add and remove --fetch', function () {
         shell.rm('-rf', tmpDir);
     });
 
-    it('should add and remove platform from node_modules directory', function(done) {
+    it('Test 007 : should add and remove platform from node_modules directory', function(done) {
 
         cordova.raw.create('helloFetch')
         .then(function() {
@@ -298,7 +298,7 @@ describe('platform add and remove --fetch', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 40000);
+    }, 100000);
 });
 
 describe('plugin add and rm end-to-end --fetch', function () {
@@ -316,7 +316,7 @@ describe('plugin add and rm end-to-end --fetch', function () {
         shell.rm('-rf', tmpDir);
     });
 
-    it('should remove dependency when removing parent plugin', function(done) {
+    it('Test 008 : should remove dependency when removing parent plugin', function(done) {
 
         cordova.raw.create('hello3')
         .then(function() {
@@ -354,5 +354,5 @@ describe('plugin add and rm end-to-end --fetch', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 60000);
+    }, 100000);
 });

@@ -26,7 +26,7 @@ describe('action-stack', function() {
         stack = new action_stack();
     });
     describe('processing of actions', function() {
-        it('should process actions one at a time until all are done', function() {
+        it('Test 001 : should process actions one at a time until all are done', function() {
             var first_spy = jasmine.createSpy();
             var first_args = [1];
             var second_spy = jasmine.createSpy();
@@ -41,7 +41,7 @@ describe('action-stack', function() {
             expect(second_spy).toHaveBeenCalledWith(second_args[0]);
             expect(third_spy).toHaveBeenCalledWith(third_args[0]);
         });
-        it('should revert processed actions if an exception occurs', function() {
+        it('Test 002 : should revert processed actions if an exception occurs', function(done) {
             spyOn(console, 'log');
             var first_spy = jasmine.createSpy();
             var first_args = [1];
@@ -59,11 +59,11 @@ describe('action-stack', function() {
             stack.push(stack.createAction(third_spy, third_args, function(){}, []));
             // process should throw
             var error;
-            runs(function() {
-                stack.process('android', android_one_project).fail(function(err) { error = err; });
-            });
-            waitsFor(function(){ return error; }, 'process promise never resolved', 500);
-            runs(function() {
+            stack.process('android', android_one_project)
+            .then(function(something){
+                expect(false).toBe(true);
+            }).fail(function(err){
+                error = err;
                 expect(error).toEqual(process_err);
                 // first two actions should have been called, but not the third
                 expect(first_spy).toHaveBeenCalledWith(first_args[0]);
@@ -71,7 +71,7 @@ describe('action-stack', function() {
                 expect(third_spy).not.toHaveBeenCalledWith(third_args[0]);
                 // first reverter should have been called after second action exploded
                 expect(first_reverter).toHaveBeenCalledWith(first_reverter_args[0]);
-            });
+            }).fin(done);
         });
     });
 });

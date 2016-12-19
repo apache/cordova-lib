@@ -33,17 +33,17 @@ describe('findProjectRoot method', function() {
 function removeDir(someDirectory) {
     shell.rm('-rf', someDirectory);
 }
-    it('should return false if it hits the home directory', function() {
+    it('Test 001 : should return false if it hits the home directory', function() {
         var somedir = path.join(home, 'somedir');
         removeDir(somedir);
         shell.mkdir(somedir);
         expect(CordovaCheck.findProjectRoot(somedir)).toEqual(false);
     });
-    it('should return false if it cannot find a .cordova directory up the directory tree', function() {
+    it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function() {
         var somedir = path.join(home, '..');
         expect(CordovaCheck.findProjectRoot(somedir)).toEqual(false);
     });
-    it('should return the first directory it finds with a .cordova folder in it', function() {
+    it('Test 003 : should return the first directory it finds with a .cordova folder in it', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
         removeDir(somedir);
@@ -51,7 +51,7 @@ function removeDir(someDirectory) {
         shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
         expect(CordovaCheck.findProjectRoot(somedir)).toEqual(somedir);
     });
-    it('should ignore PWD when its undefined', function() {
+    it('Test 004 : should ignore PWD when its undefined', function() {
         delete process.env.PWD;
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
@@ -62,7 +62,7 @@ function removeDir(someDirectory) {
         process.chdir(anotherdir);
         expect(CordovaCheck.findProjectRoot()).toEqual(somedir);
     });
-    it('should use PWD when available', function() {
+    it('Test 005 : should use PWD when available', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
         removeDir(somedir);
@@ -72,7 +72,7 @@ function removeDir(someDirectory) {
         process.chdir(path.sep);
         expect(CordovaCheck.findProjectRoot()).toEqual(somedir);
     });
-    it('should use cwd as a fallback when PWD is not a cordova dir', function() {
+    it('Test 006 : should use cwd as a fallback when PWD is not a cordova dir', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
         removeDir(somedir);
@@ -82,7 +82,7 @@ function removeDir(someDirectory) {
         process.chdir(anotherdir);
         expect(CordovaCheck.findProjectRoot()).toEqual(somedir);
     });
-    it('should ignore platform www/config.xml', function() {
+    it('Test 007 : should ignore platform www/config.xml', function() {
         var somedir = path.join(home,'somedir');
         var anotherdir = path.join(somedir, 'anotherdir');
         removeDir(somedir);

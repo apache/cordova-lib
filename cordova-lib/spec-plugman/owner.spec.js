@@ -21,7 +21,7 @@ var owner = require('../src/plugman/owner'),
     registry = require('../src/plugman/registry/registry');
 
 describe('owner', function() {
-    it('should run owner', function() {
+    it('Test 001 : should run owner', function() {
         var sOwner = spyOn(registry, 'owner').and.returnValue(Q());
         var params = ['add', 'anis', 'org.test.plugins.dummyplugin'];
         owner(params);

@@ -39,7 +39,7 @@ var configBasic = {
 };
 
 describe('cordova create checks for valid-identifier', function() {
-    it('should reject reserved words from start of id', function(done) {
+    it('Test 001 : should reject reserved words from start of id', function(done) {
         cordova.raw.create('projectPath', 'int.bob', 'appName', {}, events)
         .fail(function(err) {
             expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
@@ -47,7 +47,7 @@ describe('cordova create checks for valid-identifier', function() {
         .fin(done);
     });
     
-    it('should reject reserved words from end of id', function(done) {
+    it('Test 002 : should reject reserved words from end of id', function(done) {
         cordova.raw.create('projectPath', 'bob.class', 'appName', {}, events)
         .fail(function(err) {
             expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
@@ -94,7 +94,7 @@ describe('create basic test (see more in cordova-create)', function() {
     var results;
     events.on('results', function(res) { results = res; });
 
-    it('should successfully run', function(done) {
+    it('Test 003 : should successfully run', function(done) {
         // Call cordova create with no args, should return help.
         Q()
             .then(function() {

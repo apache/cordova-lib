@@ -43,11 +43,11 @@ describe('firefoxos project parser', function() {
     var proj = path.join('some', 'path');
     var exists, exec, custom;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        exec = spyOn(shell, 'exec').and.callFake(function(cmd, opts, cb) {
             cb(0, '');
         });
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
     });
 
     describe('constructions', function() {
@@ -77,11 +77,11 @@ describe('firefoxos project parser', function() {
             p = new firefoxosParser(ff_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync');
 
-            spyOn(JSON, 'parse').andCallFake(function (path) {
+            spyOn(JSON, 'parse').and.callFake(function (path) {
                 if (/manifest.webapp$/.exec(path)) {
                     return manifestJson = _.extend({}, MANIFEST_JSON);
                 } else {
@@ -96,39 +96,39 @@ describe('firefoxos project parser', function() {
                 cfg.name = function() { return 'testname'; };
                 cfg.packageName = function() { return 'testpkg'; };
                 cfg.version = function() { return '1.0'; };
-                read.andReturn(p.manifest_path);
+                read.and.returnValue(p.manifest_path);
             });
             it('should write manifest.webapp', function() {
                 p.update_from_config(cfg);
-                expect(write.mostRecentCall.args[0]).toEqual(p.manifest_path);
+                expect(write.calls.mostRecent().args[0]).toEqual(p.manifest_path);
             });
             it('should write out the orientation preference value', function() {
-                getOrientation.andCallThrough();
+                getOrientation.and.callThrough();
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toEqual([ 'portrait' ]);
             });
             it('should handle no orientation', function () {
-                getOrientation.andReturn('');
+                getOrientation.and.returnValue('');
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toBeUndefined();
             });
             it('should handle default orientation', function () {
-                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_DEFAULT);
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toBeUndefined();
             });
             it('should handle portrait orientation', function () {
-                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_PORTRAIT);
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toEqual([ 'portrait' ]);
             });
             it('should handle landscape orientation', function () {
-                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_LANDSCAPE);
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toEqual([ 'landscape' ]);
             });
             it('should handle custom orientation', function () {
-                getOrientation.andReturn('some-custom-orientation');
+                getOrientation.and.returnValue('some-custom-orientation');
                 p.update_from_config(cfg);
                 expect(manifestJson.orientation).toEqual([ 'some-custom-orientation' ]);
             });

@@ -71,7 +71,7 @@ describe('PlatformApi polyfill', function () {
 
     beforeEach(function () {
         var originalParseElementtreeSync = xmlHelpers.parseElementtreeSync;
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function (configPath) {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (configPath) {
             return /config\.xml$/.test(configPath) ? new et.ElementTree(et.XML(TEST_XML)) :
                 originalParseElementtreeSync(configPath);
         });
@@ -117,7 +117,7 @@ describe('PlatformApi polyfill', function () {
         var FAKE_PROJECT, FAKE_CONFIG, OPTIONS, getPlatformApi, fail, success;
 
         beforeEach(function () {
-            getPlatformApi = spyOn(knownPlatforms, 'getPlatformApi').andReturn(platformApi);
+            getPlatformApi = spyOn(knownPlatforms, 'getPlatformApi').and.returnValue(platformApi);
 
             spyOn(shell, 'cp');
             spyOn(shell, 'rm');
@@ -136,7 +136,7 @@ describe('PlatformApi polyfill', function () {
             var spawn;
 
             beforeEach(function () {
-                spawn = spyOn(superspawn, 'spawn').andReturn(Q());
+                spawn = spyOn(superspawn, 'spawn').and.returnValue(Q());
             });
 
             it('should create/update platform through running platforms\' scripts', function (done) {
@@ -144,7 +144,7 @@ describe('PlatformApi polyfill', function () {
                        PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
-                    expect(spawn.calls.length).toBe(2);
+                    expect(spawn.calls.count()).toBe(2);
                 }).fail(function (err) {
                     expect(err).not.toBeDefined();
                 }).fin(done);
@@ -155,11 +155,11 @@ describe('PlatformApi polyfill', function () {
                        PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
-                    expect(spawn.calls.length).toBe(2);
-                    expect(spawn.calls[0].args[0]).toBe(path.join(PLATFORM_LIB, 'bin/create'));
-                    expect(spawn.calls[0].args[1]).toContain(PLATFORM_ROOT);
-                    expect(spawn.calls[1].args[0]).toBe(path.join(PLATFORM_LIB, 'bin/update'));
-                    expect(spawn.calls[1].args[1]).toContain(PLATFORM_ROOT);
+                    expect(spawn.calls.count()).toBe(2);
+                    expect(spawn.calls.argsFor(0)[0]).toBe(path.join(PLATFORM_LIB, 'bin/create'));
+                    expect(spawn.calls.argsFor(0)[1]).toContain(PLATFORM_ROOT);
+                    expect(spawn.calls.argsFor(1)[0]).toBe(path.join(PLATFORM_LIB, 'bin/update'));
+                    expect(spawn.calls.argsFor(1)[1]).toContain(PLATFORM_ROOT);
                 }).fail(function (err) {
                     expect(err).not.toBeDefined();
                 }).fin(done);
@@ -170,7 +170,7 @@ describe('PlatformApi polyfill', function () {
                        PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(shell.cp).toHaveBeenCalled();
-                    expect(shell.cp.calls.length).toBe(2);
+                    expect(shell.cp.calls.count()).toBe(2);
                 }).fail(fail)
                 .fin(function () {
                     expect(fail).not.toHaveBeenCalled();
@@ -195,7 +195,7 @@ describe('PlatformApi polyfill', function () {
         describe('prepare method', function () {
             beforeEach(function () {
                 spyOn(platformApi._parser, 'update_www');
-                spyOn(platformApi._parser, 'update_project').andReturn(Q());
+                spyOn(platformApi._parser, 'update_project').and.returnValue(Q());
             });
 
             it('should return promise', function (done) {
@@ -225,7 +225,7 @@ describe('PlatformApi polyfill', function () {
 
             beforeEach(function () {
                 plugin = new PluginInfo(DUMMY_PLUGIN);
-                actionsProcess = spyOn(ActionStack.prototype, 'process').andCallThrough();
+                actionsProcess = spyOn(ActionStack.prototype, 'process').and.callThrough();
             });
 
             it('should return promise', function (done) {
@@ -289,7 +289,7 @@ describe('PlatformApi polyfill', function () {
                 Q.all(ops)
                 .then(function () {
                     expect(spawnSpy).toHaveBeenCalled();
-                    expect(spawnSpy.calls.length).toEqual(3);
+                    expect(spawnSpy.calls.count()).toEqual(3);
                 }).fin(done);
             });
 
@@ -302,7 +302,7 @@ describe('PlatformApi polyfill', function () {
                     archs: ['arm', 'x86'],
                     buildConfig: '/some/path'
                 };
-                spawnSpy.andReturn(Q());
+                spawnSpy.and.returnValue(Q());
                 platformApi.build(options)
                 .then(function () {
                     ['--release', '--nobuild', '--device', '--target=' + options.target, '--archs=arm,x86', '--buildConfig='  +options.buildConfig]

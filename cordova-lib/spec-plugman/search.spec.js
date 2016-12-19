@@ -21,7 +21,7 @@ var search = require('../src/plugman/search'),
     registry = require('../src/plugman/registry/registry');
 
 describe('search', function() {
-    it('should search a plugin', function() {
+    it('Test 001 : should search a plugin', function() {
         var sSearch = spyOn(registry, 'search').and.returnValue(Q());
         search(new Array('myplugin', 'keyword'));
         expect(sSearch).toHaveBeenCalledWith(['myplugin', 'keyword']);

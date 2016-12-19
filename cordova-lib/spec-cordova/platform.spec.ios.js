@@ -44,7 +44,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
         shell.rm('-rf', tmpDir);
     });
 
-    it('installs and uninstalls plugin depending on new pod and existing pod', function(done) {
+    it('Test 001 : installs and uninstalls plugin depending on new pod and existing pod', function(done) {
 
         cordova.raw.create('hello4')
         .then(function() {

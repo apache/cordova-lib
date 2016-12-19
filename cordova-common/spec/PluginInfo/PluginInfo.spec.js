@@ -23,7 +23,7 @@ var PluginInfo = require('../../src/PluginInfo/PluginInfo'),
 var pluginsDir = path.join(__dirname, '../fixtures/plugins');
 
 describe('PluginInfo', function () {
-    it('should read a plugin.xml file', function () {
+    it('Test 001 : should read a plugin.xml file', function () {
         var p, prefs, assets, deps, configFiles, infos, srcFiles;
         var headerFiles, libFiles, resourceFiles;
         expect(function () {
@@ -42,7 +42,7 @@ describe('PluginInfo', function () {
         expect(p.name).toEqual('Child Browser');
         // TODO: Add some expectations for results of getSomething.
     });
-    it('should throw when there is no plugin.xml file', function () {
+    it('Test 002 : should throw when there is no plugin.xml file', function () {
         expect(function () {
             new PluginInfo('/non/existent/dir');
         }).toThrow();

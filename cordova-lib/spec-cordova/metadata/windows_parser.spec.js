@@ -41,13 +41,13 @@ describe('windows project parser', function() {
     var exists, exec, custom, readdir, config_read;
     var winXml;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        exec = spyOn(child_process, 'exec').and.callFake(function(cmd, opts, cb) {
             if (!cb) cb = opts;
             cb(null, '', '');
         });
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
-        config_read = spyOn(config, 'read').andCallFake(function() {
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
+        config_read = spyOn(config, 'read').and.callFake(function() {
             return custom() ? {
                 lib: {
                     windows: {
@@ -57,9 +57,9 @@ describe('windows project parser', function() {
             }
             : ({});
         });
-        readdir = spyOn(fs, 'readdirSync').andReturn(['TestApp.projitems']);
+        readdir = spyOn(fs, 'readdirSync').and.returnValue(['TestApp.projitems']);
         winXml = null;
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function(path) {
             return winXml = new et.ElementTree(et.XML('<foo><Application/><Identity/><VisualElements><a/></VisualElements><Capabilities><a/></Capabilities></foo>'));
         });
     });
@@ -78,7 +78,7 @@ describe('windows project parser', function() {
 
     describe('constructions', function() {
         it('should throw if provided directory does not contain a projitems file', function() {
-            readdir.andReturn([]);
+            readdir.and.returnValue([]);
             expect(function() {
                 new windowsParser(proj);
             }).toThrow();
@@ -108,9 +108,9 @@ describe('windows project parser', function() {
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
             mkdir = spyOn(shell, 'mkdir');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             write = spyOn(fs, 'writeFileSync');
-            read = spyOn(fs, 'readFileSync').andReturn('');
+            read = spyOn(fs, 'readFileSync').and.returnValue('');
         });
 
         describe('update_from_config method', function() {
@@ -142,10 +142,10 @@ describe('windows project parser', function() {
             beforeEach(function() {
                 config = spyOn(parser, 'update_from_config');
                 www = spyOn(parser, 'update_www');
-                shellls = spyOn(shell, 'ls').andReturn([]);
+                shellls = spyOn(shell, 'ls').and.returnValue([]);
                 svn = spyOn(util, 'deleteSvnFolders');
-                exists.andReturn(false);
-                fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
+                exists.and.returnValue(false);
+                fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
             });
             it('should call update_from_config', function() {
                 parser.update_project();
@@ -153,7 +153,7 @@ describe('windows project parser', function() {
             });
             it('should throw if update_from_config throws', function(done) {
                 var err = new Error('uh oh!');
-                config.andCallFake(function() { throw err; });
+                config.and.callFake(function() { throw err; });
                 errorWrapper(parser.update_project({}), done, function(err) {
                     expect(err).toEqual(err);
                 });

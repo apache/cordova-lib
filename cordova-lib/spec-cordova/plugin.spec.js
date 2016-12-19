@@ -146,7 +146,7 @@ describe('plugin end-to-end', function() {
         expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
-    it('should successfully add and remove a plugin with no options', function(done) {
+    it('Test 001 : should successfully add and remove a plugin with no options', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
         .then(function() {
             return removePlugin(pluginId);
@@ -158,11 +158,11 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should run prepare after plugin installation/removal by default', function(done) {
+    it('Test 002 : should run prepare after plugin installation/removal by default', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
         .then(function() {
             expect(prepare.preparePlatforms).toHaveBeenCalled();
-            prepare.preparePlatforms.reset();
+            prepare.preparePlatforms.calls.reset();
             return removePlugin(pluginId);
         })
         .then(function () {
@@ -175,7 +175,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should not run prepare after plugin installation/removal if platform return non-falsy value', function(done) {
+    it('Test 003 : should not run prepare after plugin installation/removal if platform return non-falsy value', function(done) {
         setupPlatformApiSpies();
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
         .then(function() {
@@ -192,7 +192,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should successfully add a plugin using relative path when running from subdir inside of project', function(done) {
+    it('Test 004 : should successfully add a plugin using relative path when running from subdir inside of project', function(done) {
         // Copy plugin to subdir inside of the project. This is required since path.relative
         // returns an absolute path when source and dest are on different drives
         var plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
@@ -216,7 +216,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should respect preference default values', function (done) {    
+    it('Test 005 : should respect preference default values', function (done) {    
        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'NO', REQUIRED_ANDROID:'NO'}}, done)
        .then(function() {
             var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
@@ -236,7 +236,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should successfully add a plugin when specifying CLI variables', function(done) {
+    it('Test 006 : should successfully add a plugin when specifying CLI variables', function(done) {
         addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'yes', REQUIRED_ANDROID:'yes'}}, done)
         .fail(function(err) {
             console.error(err);
@@ -245,15 +245,14 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should not check npm info when using the searchpath flag', function(done) {
+    it('Test 007 : should not check npm info when using the searchpath flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
         spyOn(registry, 'info');
-        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
+        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
-
-            var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
-            expect(fetchOptions.searchpath).toExist();
+            var fetchOptions = plugman.raw.fetch.calls.mostRecent().args[2];
+            expect(fetchOptions.searchpath[0]).toExist();
         })
         .fail(function(err) {
             console.error(err);
@@ -262,7 +261,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should not check npm info when using the noregistry flag', function(done) {
+    it('Test 008 : should not check npm info when using the noregistry flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info');
@@ -270,7 +269,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
+            var fetchOptions = plugman.raw.fetch.calls.mostRecent().args[2];
             expect(fetchOptions.noregistry).toBeTruthy();
         })
         .fail(function(err) {
@@ -280,7 +279,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should not check npm info when fetching from a Git repository', function(done) {
+    it('Test 009 : should not check npm info when fetching from a Git repository', function(done) {
         spyOn(registry, 'info');
         addPlugin(testGitPluginRepository, testGitPluginId, {}, done)
         .then(function() {
@@ -293,7 +292,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should select the plugin version based on npm info when fetching from npm', function(done) {
+    it('Test 010 : should select the plugin version based on npm info when fetching from npm', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info').and.callThrough();
@@ -301,7 +300,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).toHaveBeenCalled();
 
-            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
         })
         .fail(function(err) {
@@ -311,7 +310,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should handle scoped npm packages', function(done) {
+    it('Test 011 : should handle scoped npm packages', function(done) {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin;
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
@@ -323,7 +322,7 @@ describe('plugin end-to-end', function() {
 
             expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
 
-            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {
@@ -333,7 +332,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('should handle scoped npm packages with given version tags', function(done) {
+    it('Test 012 : should handle scoped npm packages with given version tags', function(done) {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
@@ -342,7 +341,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
+            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {

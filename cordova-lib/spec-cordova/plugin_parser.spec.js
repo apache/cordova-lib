@@ -29,7 +29,7 @@ describe('plugin.xml parser', function () {
         readfile = spyOn(fs, 'readFileSync').and.returnValue(xml_contents);
     });
 
-    it('should read a proper plugin.xml file', function() {
+    it('Test 001 : should read a proper plugin.xml file', function() {
         var cfg;
         expect(function () {
             cfg = new plugin_parser(xml);
@@ -37,7 +37,7 @@ describe('plugin.xml parser', function () {
         expect(cfg).toBeDefined();
         expect(cfg.doc).toBeDefined();
     });
-    it('should be able to figure out which platforms the plugin supports', function() {
+    it('Test 002 : should be able to figure out which platforms the plugin supports', function() {
         var cfg = new plugin_parser(xml);
         expect(cfg.platforms.length).toBe(1);
         expect(cfg.platforms.indexOf('ios') > -1).toBe(true);

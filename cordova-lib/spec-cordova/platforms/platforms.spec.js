@@ -42,7 +42,7 @@ describe('getPlatformApi method', function () {
     beforeEach(function () {
         // reset api cache after each spec
         platforms.__set__('cachedApis', {});
-        isCordova = spyOn(util, 'isCordova').andReturn(CORDOVA_ROOT);
+        isCordova = spyOn(util, 'isCordova').and.returnValue(CORDOVA_ROOT);
     });
 
     it('should return PlatformApi class defined by platform', function () {
@@ -78,7 +78,7 @@ describe('getPlatformApi method', function () {
     });
 
     it('should throw if called outside of cordova project w/out platformRoot param', function () {
-        isCordova.andReturn(false);
+        isCordova.and.returnValue(false);
         expect(function () { platforms.getPlatformApi('windows'); }).toThrow();
     });
 

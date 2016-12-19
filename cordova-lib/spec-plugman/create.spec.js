@@ -23,7 +23,7 @@ var create = require('../src/plugman/create'),
     plugman = require('../src/plugman/plugman');
 
 describe( 'create', function() {
-    it( 'should call create', function() {
+    it( 'Test 001 : should call create', function() {
         var sCreate = spyOn( plugman, 'create' ).and.returnValue(Q());
         plugman.create();
         expect(sCreate).toHaveBeenCalled();
@@ -35,9 +35,7 @@ describe( 'create plugin', function() {
         existsSync,
         mkdir,
         writeFileSync;
-    function createPromise( f ) {
-        f.then( function() { done = true; }, function(err) { done = err; } );
-    }
+
     beforeEach( function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         mkdir = spyOn( shell, 'mkdir' ).and.returnValue( true );
@@ -45,35 +43,32 @@ describe( 'create plugin', function() {
         done = false;
     });
 
-    it( 'should be successful', function(done) {
-        runs(function() {
-            createPromise( create( 'name', 'org.plugin.id', '0.0.0', '.', [] ) );
+    it( 'Test 002 : should be successful', function(done) {
+        create('name', 'org.plugin.id', '0.0.0', '.', [])
+        .then(function(result) {
+            expect( writeFileSync.calls.count() ).toEqual( 2 );
+            done();
+        }).fail(function err(errMsg) {
+            done();
         });
-        waitsFor(function() { return done; }, 'create promise never resolved', 500);
-        runs(function() {
-            expect( done ).toBe( true );
-            expect( writeFileSync.calls.length ).toEqual( 2 );
-        });
-    });
+    }, 6000);
 });
 
 describe( 'create plugin in existing plugin', function() {
     var done = false,
         existsSync;
-    function createPromise( f ) {
-        f.then( function() { done = true; }, function(err) { done = err; } );
-    }
+
     beforeEach( function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( true );
         done = false;
     });
 
-    it( 'should fail due to an existing plugin.xml', function(done) {
-        create().then(function(result) {
+    it( 'Test 003 : should fail due to an existing plugin.xml', function(done) {
+        create()
+        .then(function(result) {
             expect(false).toBe(true);
             done();
-        },
-        function err(errMsg) {
+        }).fail(function err(errMsg) {
             expect(errMsg.toString()).toContain( 'plugin.xml already exists. Are you already in a plugin?'  );
             done();
         });

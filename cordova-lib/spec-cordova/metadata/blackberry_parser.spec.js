@@ -52,10 +52,10 @@ describe('blackberry10 project parser', function() {
     var proj = '/some/path';
     var exists, custom;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
         spyOn(ConfigParser.prototype, 'write');
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function() {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function() {
             return new et.ElementTree(et.XML(TEST_XML));
         });
     });
@@ -74,7 +74,7 @@ describe('blackberry10 project parser', function() {
 
     describe('constructions', function() {
         it('should throw an exception with a path that is not a native blackberry project', function() {
-            exists.andReturn(false);
+            exists.and.returnValue(false);
             expect(function() {
                 new blackberryParser(proj);
             }).toThrow();
@@ -104,7 +104,7 @@ describe('blackberry10 project parser', function() {
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mkdir = spyOn(shell, 'mkdir');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync');
         });
@@ -165,7 +165,7 @@ describe('blackberry10 project parser', function() {
         });
         describe('update_overrides method', function() {
             it('should do nothing if merges directory does not exist', function() {
-                exists.andReturn(false);
+                exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
@@ -181,7 +181,7 @@ describe('blackberry10 project parser', function() {
                 www = spyOn(p, 'update_www');
                 overrides = spyOn(p, 'update_overrides');
                 svn = spyOn(util, 'deleteSvnFolders');
-                parse = spyOn(JSON, 'parse').andReturn({blackberry:{qnx:{}}});
+                parse = spyOn(JSON, 'parse').and.returnValue({blackberry:{qnx:{}}});
             });
             it('should call update_from_config', function(done) {
                 wrapper(p.update_project(), done, function() {
@@ -190,7 +190,7 @@ describe('blackberry10 project parser', function() {
             });
             it('should throw if update_from_config throws', function(done) {
                 var err = new Error('uh oh!');
-                config.andCallFake(function() { throw err; });
+                config.and.callFake(function() { throw err; });
                 errorWrapper(p.update_project({}), done, function(e) {
                     expect(e).toEqual(err);
                 });

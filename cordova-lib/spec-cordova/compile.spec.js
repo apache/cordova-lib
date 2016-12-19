@@ -39,7 +39,7 @@ describe('compile command', function() {
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
+        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.and.returnValue([]);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
@@ -52,7 +52,7 @@ describe('compile command', function() {
                 done();
             });
         });
-        it('should not run outside of a Cordova-based project', function(done) {
+        it('Test 002 : should not run outside of a Cordova-based project', function(done) {
             is_cordova.and.returnValue(false);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
@@ -67,7 +67,7 @@ describe('compile command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project with at least one added platform and shell out to build', function(done) {
+        it('Test 003 : should run inside a Cordova-based project with at least one added platform and shell out to build', function(done) {
             cordova.raw.compile(['android','ios']).then(function() {
                 expect(getPlatformApi).toHaveBeenCalledWith('android');
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
@@ -77,7 +77,7 @@ describe('compile command', function() {
             .fin(done);
         });
 
-        it('should pass down optional parameters', function (done) {
+        it('Test 004 : should pass down optional parameters', function (done) {
             cordova.raw.compile({platforms:['blackberry10'], options:{release: true}}).then(function () {
                 expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
                 expect(platformApi.build).toHaveBeenCalledWith({release: true});
@@ -86,7 +86,7 @@ describe('compile command', function() {
             .fin(done);
         });
 
-        it('should convert options from old format and warn user about this', function (done) {
+        it('Test 005 : should convert options from old format and warn user about this', function (done) {
             function warnSpy(message) {
                 expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
             }
@@ -106,18 +106,18 @@ describe('compile command', function() {
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module', function(done) {
+            it('Test 006 : should fire before hooks through the hooker module', function(done) {
                 cordova.raw.compile(['android', 'ios']).then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_compile', {verbose: false, platforms:['android', 'ios'], options: []});
+                    expect(fire.calls.argsFor(0)).toEqual(['before_compile', {verbose: false, platforms:['android', 'ios'] , options: {}}]);
                     done();
                 })
                 .fail(fail)
                 .fin(done);
             });
-            it('should fire after hooks through the hooker module', function(done) {
+            it('Test 007 : should fire after hooks through the hooker module', function(done) {
                 cordova.raw.compile('android').then(function() {
-                     expect(fire).toHaveBeenCalledWith('after_compile', {verbose: false, platforms:['android'], options: []});
-                     done();
+                    expect(fire.calls.argsFor(1)).toEqual(['after_compile', {verbose: false, platforms:['android'] , options: {}}]);
+                    done();
                 })
                 .fail(fail)
                 .fin(done);
@@ -125,7 +125,7 @@ describe('compile command', function() {
         });
 
         describe('with no platforms added', function() {
-            it('should not fire the hooker', function(done) {
+            it('Test 008 : should not fire the hooker', function(done) {
                 list_platforms.and.returnValue([]);
                 Q().then(cordova.raw.compile).then(function() {
                     expect('this call').toBe('fail');

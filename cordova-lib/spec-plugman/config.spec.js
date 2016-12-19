@@ -21,7 +21,7 @@ var config = require('../src/plugman/config'),
     registry = require('../src/plugman/registry/registry');
 
 describe('config', function() {
-    it('should run config', function() {
+    it('Test 001 : should run config', function() {
         var sConfig = spyOn(registry, 'config').and.returnValue(Q());
         var params = ['set', 'registry', 'http://registry.cordova.io'];
         config(params);

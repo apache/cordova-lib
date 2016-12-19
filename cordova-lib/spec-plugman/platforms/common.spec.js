@@ -36,7 +36,7 @@ var common = require('../../src/plugman/platforms/common')
 
 describe('common platform handler', function() {
     describe('resolveSrcPath', function() {
-        it('should not throw if path exists', function(){
+        it('Test 001 : should not throw if path exists', function(){
             shell.mkdir('-p', test_dir);
             var target = path.join(test_dir, 'somefile');
             fs.writeFileSync(target, '80085', 'utf-8');
@@ -46,24 +46,24 @@ describe('common platform handler', function() {
     });
 
     describe('resolveTargetPath', function() {
-        it('should throw if path exists', function(){
+        it('Test 002 : should throw if path exists', function(){
             shell.mkdir('-p', test_dir);
             expect(function(){common.resolveTargetPath(test_dir);}).toThrow();
             shell.rm('-rf', test_dir);
         });
 
-        it('should not throw if path cannot be resolved', function(){
+        it('Test 003 : should not throw if path cannot be resolved', function(){
             expect(function(){common.resolveTargetPath(test_dir, 'somefile');}).not.toThrow();
         });
     });
 
     describe('copyFile', function() {
-        it('should throw if source path not found', function(){
+        it('Test 004 : should throw if source path not found', function(){
             expect(function(){common.copyFile(test_dir, src, project_dir, dest);}).
                 toThrow(new Error('"' + src + '" not found!'));
         });
 
-        it('should throw if src not in plugin directory', function(){
+        it('Test 005 : should throw if src not in plugin directory', function(){
             shell.mkdir('-p', project_dir);
             fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
             expect(function(){common.copyFile(test_dir, '../non_plugin_file', project_dir, dest);}).
@@ -71,7 +71,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', test_dir);
         });
 
-        it('should allow symlink src, if inside plugin', function(){
+        it('Test 006 : should allow symlink src, if inside plugin', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 
@@ -84,7 +84,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
-        it('should deeply symlink directory tree when src is a directory', function(){
+        it('Test 007 : should deeply symlink directory tree when src is a directory', function(){
             var symlink_dir_relative_subdir = path.dirname(symlink_dir_relative_file);
 
             shell.mkdir('-p', path.join(symlink_dir, symlink_dir_relative_subdir));
@@ -102,7 +102,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
-        it('should throw if symlink is linked to a file outside the plugin', function(){
+        it('Test 008 : should throw if symlink is linked to a file outside the plugin', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(non_plugin_file, 'contents', 'utf-8');
 
@@ -116,7 +116,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
-        it('should throw if dest is outside the project directory', function(){
+        it('Test 009 : should throw if dest is outside the project directory', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
             expect(function(){common.copyFile(test_dir, java_file, project_dir, non_plugin_file);}).
@@ -124,11 +124,11 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
-        it('should call mkdir -p on target path', function(){
+        it('Test 010 : should call mkdir -p on target path', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 
-            var s = spyOn(shell, 'mkdir').andCallThrough();
+            var s = spyOn(shell, 'mkdir').and.callThrough();
             var resolvedDest = common.resolveTargetPath(project_dir, dest);
 
             common.copyFile(test_dir, java_file, project_dir, dest);
@@ -138,11 +138,11 @@ describe('common platform handler', function() {
             shell.rm('-rf', project_dir);
         });
 
-        it('should call cp source/dest paths', function(){
+        it('Test 011 : should call cp source/dest paths', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 
-            var s = spyOn(shell, 'cp').andCallThrough();
+            var s = spyOn(shell, 'cp').and.callThrough();
             var resolvedDest = common.resolveTargetPath(project_dir, dest);
 
             common.copyFile(test_dir, java_file, project_dir, dest);
@@ -156,7 +156,7 @@ describe('common platform handler', function() {
     });
 
     describe('copyNewFile', function () {
-        it('should throw if target path exists', function(){
+        it('Test 012 : should throw if target path exists', function(){
             shell.mkdir('-p', dest);
             expect(function(){common.copyNewFile(test_dir, src, project_dir, dest);}).
                 toThrow(new Error('"' + dest + '" already exists!'));
@@ -166,11 +166,11 @@ describe('common platform handler', function() {
     });
 
     describe('deleteJava', function() {
-        it('should call fs.unlinkSync on the provided paths', function(){
+        it('Test 013 : should call fs.unlinkSync on the provided paths', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 
-            var s = spyOn(fs, 'unlinkSync').andCallThrough();
+            var s = spyOn(fs, 'unlinkSync').and.callThrough();
             common.deleteJava(project_dir, java_file);
             expect(s).toHaveBeenCalled();
             expect(s).toHaveBeenCalledWith(path.resolve(project_dir, java_file));
@@ -178,7 +178,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', java_dir);
         });
 
-        it('should delete empty directories after removing source code in a java src path hierarchy', function(){
+        it('Test 014 : should delete empty directories after removing source code in a java src path hierarchy', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 
@@ -190,7 +190,7 @@ describe('common platform handler', function() {
             shell.rm('-rf', java_dir);
         });
 
-        it('should never delete the top-level src directory, even if all plugins added were removed', function(){
+        it('Test 015 : should never delete the top-level src directory, even if all plugins added were removed', function(){
             shell.mkdir('-p', java_dir);
             fs.writeFileSync(java_file, 'contents', 'utf-8');
 

@@ -81,19 +81,19 @@ describe('HooksRunner', function() {
         process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
     });
 
-    it('should throw if provided directory is not a cordova project', function() {
+    it('Test 001 : should throw if provided directory is not a cordova project', function() {
         expect(function() {
             new HooksRunner(tmpDir);
         }).toThrow();
     });
 
-    it('should not throw if provided directory is a cordova project', function() {
+    it('Test 002 : should not throw if provided directory is a cordova project', function() {
         expect(function () {
             new HooksRunner(project);
         }).not.toThrow();
     });
 
-    it('should init test fixtures', function(done) {
+    it('Test 003 : should init test fixtures', function(done) {
         hooksRunner = new HooksRunner(project);
 
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
@@ -243,7 +243,7 @@ describe('HooksRunner', function() {
         }
 
         describe('application hooks', function() {
-            it('should execute hook scripts serially', function (done) {
+            it('Test 004 : should execute hook scripts serially', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -259,7 +259,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should execute hook scripts serially from .cordova/hooks/hook_type and hooks/hook_type directories', function (done) {
+            it('Test 005 : should execute hook scripts serially from .cordova/hooks/hook_type and hooks/hook_type directories', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -278,7 +278,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should execute hook scripts serially from config.xml', function (done) {
+            it('Test 006 : should execute hook scripts serially from config.xml', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -297,7 +297,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should execute hook scripts serially from config.xml including platform scripts', function (done) {
+            it('Test 007 : should execute hook scripts serially from config.xml including platform scripts', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -316,7 +316,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should filter hook scripts from config.xml by platform', function (done) {
+            it('Test 008 : should filter hook scripts from config.xml by platform', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -345,7 +345,7 @@ describe('HooksRunner', function() {
         });
 
         describe('plugin hooks', function() {
-            it('should execute hook scripts serially from plugin.xml', function (done) {
+            it('Test 009 : should execute hook scripts serially from plugin.xml', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -364,7 +364,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should execute hook scripts serially from plugin.xml including platform scripts', function (done) {
+            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -383,7 +383,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should filter hook scripts from plugin.xml by platform', function (done) {
+            it('Test 011 : should filter hook scripts from plugin.xml by platform', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -410,7 +410,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should run before_plugin_uninstall, before_plugin_install, after_plugin_install hooks for a plugin being installed with correct opts.plugin context', function (done) {
+            it('Test 012 : should run before_plugin_uninstall, before_plugin_install, after_plugin_install hooks for a plugin being installed with correct opts.plugin context', function (done) {
                 var projectRoot = cordovaUtil.isCordova();
 
                 // remove plugin
@@ -467,7 +467,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should not execute the designated hook when --nohooks option specifies the exact hook name', function (done) {
+            it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function (done) {
                 var test_event = 'before_build';
                 hookOptions.nohooks = ['before_build'];
 
@@ -481,7 +481,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should not execute a set of matched hooks when --nohooks option specifies the hook pattern.', function (done) {
+            it('Test 014 : should not execute a set of matched hooks when --nohooks option specifies the hook pattern.', function (done) {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['before*'];
 
@@ -502,7 +502,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should not execute all hooks when --nohooks option specifies .', function (done) {
+            it('Test 015 : should not execute all hooks when --nohooks option specifies .', function (done) {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['.'];
 
@@ -527,10 +527,10 @@ describe('HooksRunner', function() {
 
             afterEach(function () {
                 cordova.removeAllListeners(test_event);
-                handler.reset();
+                handler.calls.reset();
             });
 
-            it('should fire handlers using cordova.on', function(done) {
+            it('Test 016 : should fire handlers using cordova.on', function(done) {
                 cordova.on(test_event, handler);
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(handler).toHaveBeenCalled();
@@ -539,7 +539,7 @@ describe('HooksRunner', function() {
                 }).fin(done);
             });
 
-            it('should pass the project root folder as parameter into the module-level handlers', function (done) {
+            it('Test 017 : should pass the project root folder as parameter into the module-level handlers', function (done) {
                 cordova.on(test_event, handler);
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(handler).toHaveBeenCalledWith(hookOptions);
@@ -549,7 +549,7 @@ describe('HooksRunner', function() {
                 }).fin(done);
             });
 
-            it('should be able to stop listening to events using cordova.off', function(done) {
+            it('Test 018 : should be able to stop listening to events using cordova.off', function(done) {
                 cordova.on(test_event, handler);
                 cordova.off(test_event, handler);
                 hooksRunner.fire(test_event, hookOptions).then(function () {
@@ -560,7 +560,7 @@ describe('HooksRunner', function() {
                 }).fin(done);
             });
 
-            it('should execute event listeners serially', function(done) {
+            it('Test 019 : should execute event listeners serially', function(done) {
                 var h1_fired = false;
                 var h1 = function() {
                     expect(h2_fired).toBe(false);
@@ -592,7 +592,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function(done) {
+            it('Test 020 : should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function(done) {
                 var h1_fired = false;
                 var h1 = function () {
                     h1_fired = true;
@@ -615,7 +615,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should pass data object that fire calls into async handlers', function(done) {
+            it('Test 021 : should pass data object that fire calls into async handlers', function(done) {
                 var async = function (opts) {
                     expect(opts).toEqual(hookOptions);
                     return Q();
@@ -626,7 +626,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('should pass data object that fire calls into sync handlers', function(done) {
+            it('Test 022 : should pass data object that fire calls into sync handlers', function(done) {
                 var async = function (opts) {
                     expect(opts).toEqual(hookOptions);
                 };
@@ -634,7 +634,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire(test_event, hookOptions).fin(done);
             });
 
-            it('should error if any script exits with non-zero code', function(done) {
+            it('Test 023 : should error if any script exits with non-zero code', function(done) {
                 hooksRunner.fire('fail', hookOptions).then(function () {
                     expect('the call').toBe('a failure');
                 }, function (err) {
@@ -643,7 +643,7 @@ describe('HooksRunner', function() {
             });
         });
 
-        it('should not error if the hook is unrecognized', function(done) {
+        it('Test 024 :should not error if the hook is unrecognized', function(done) {
             hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions).fail(function (err) {
                 expect('Call with unrecognized hook ').toBe('successful.\n' + err);
             }).fin(done);
@@ -651,7 +651,7 @@ describe('HooksRunner', function() {
     });
 
     // Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
-    it('should not fail during cleanup', function () {
+    it('Test 025 : should not fail during cleanup', function () {
         process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
         if (ext == 'sh') {
             shell.rm('-rf', tmpDir);

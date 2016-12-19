@@ -59,17 +59,12 @@ var install = require('../src/plugman/install'),
         'F' : path.join(plugins_dir, 'dependencies', 'F'),
         'G' : path.join(plugins_dir, 'dependencies', 'G')
     },
-    promise,
     results = {},
     superspawn = require('cordova-common').superspawn;
 
 
 // Pre-crete the temp dir, without it the test fails.
 shell.mkdir('-p', temp_dir);
-
-function installPromise(f) {
-  f.then(function(res) { done = true; }, function(err) { done = err; });
-}
 
 var existsSync = fs.existsSync;
 
@@ -129,7 +124,7 @@ describe('plugman install start', function() {
         });
     });
 
-    it('plugman install start', function() {
+    it('Test 001 : plugman install start', function(done) {
         shell.rm('-rf', project);
         shell.cp('-R', path.join(srcProject, '*'), project);
 
@@ -143,60 +138,37 @@ describe('plugman install start', function() {
             .thenResolve(returnValues[returnValueIndex++]);
         });
 
-        done = false;
-        promise = Q()
-         .then(
-            function(){
-                return install('android', project, plugins['org.test.plugins.dummyplugin']);
-            }
-        ).then(
-            function(result){
-                expect(result).toBeTruthy();
-                results['actions_callCount'] = actions_push.callCount;
-                results['actions_create'] = ca.argsForCall[0];
-                results['config_add'] = config_queue_add.argsForCall[0];
-
-                return Q();
-            }
-        ).then(
-            function(){
-                return install('android', project, plugins['com.cordova.engine']);
-            }
-        ).then(
-            function(result){
-                expect(result).toBeTruthy();
-                emit = spyOn(events, 'emit');
-                return install('android', project, plugins['org.test.plugins.childbrowser']);
-            }
-        ).then(
-            function(result){
-                expect(result).toBeTruthy();
-                return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
-            }
-        ).then(
-            function(result){
-                expect(result).toBeTruthy();
-                return install('android', project, plugins['org.test.defaultvariables'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
-            }
-        ).then(
-            function(result){
-                expect(result).toBeTruthy();
-                done = true;
-                results['emit_results'] = [];
-
-                for(var i in emit.calls) {
-                    if(emit.calls[i].args[0] === 'results')
-                        results['emit_results'].push(emit.calls[i].args[1]);
-                }
-
-                events.emit('verbose', '***** DONE START *****');
-            }
-        ).fail(
-            function(error) {
-                expect(error).toBeUndefined();
-            }
-        );
-        waitsFor(function() { return done; }, 'promise never resolved', 2000);
+        return install('android', project, plugins['org.test.plugins.dummyplugin'])
+        .then(function(result) {
+            expect(result).toBeTruthy();
+            results['actions_callCount'] = actions_push.calls.count();
+            results['actions_create'] = ca.calls.argsFor[0];
+            results['config_add'] = config_queue_add.calls.argsFor[0];
+            return result;
+        }).then(function(){
+            return install('android', project, plugins['com.cordova.engine']);
+        }).then(function(result) {
+            expect(result).toBeTruthy();
+            emit = spyOn(events, 'emit');
+            return install('android', project, plugins['org.test.plugins.childbrowser']);
+        }).then(function(result) {
+            expect(result).toBeTruthy();
+            return install('android', project, plugins['com.adobe.vars'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
+        }).then(function(result){
+            expect(result).toBeTruthy();
+            return install('android', project, plugins['org.test.defaultvariables'], plugins_install_dir, { cli_variables:{API_KEY:'batman'} });
+        }).then(function(result){
+            expect(result).toBeTruthy();
+            results['emit_results'] = [];
+            emit.calls.all().forEach(function(val, i){
+                if(emit.calls.argsFor(i)[0] === 'results')
+                    results['emit_results'].push(emit.calls.argsFor(i)[1]);
+            });
+            events.emit('verbose', '***** DONE START *****');
+            done();
+        }).fail(function(error) {
+            expect(error).toBeUndefined();
+        });
     });
 });
 
@@ -224,43 +196,46 @@ describe('install', function() {
     });
 
     describe('success', function() {
-        it('should emit a results event with platform-agnostic <info>', function() {
+        it('Test 002 : should emit a results event with platform-agnostic <info>', function() {
             // org.test.plugins.childbrowser
             expect(results['emit_results'][0]).toBe('No matter what platform you are installing to, this notice is very important.');
         });
-        it('should emit a results event with platform-specific <info>', function() {
+        it('Test 003 : should emit a results event with platform-specific <info>', function() {
             // org.test.plugins.childbrowser
             expect(results['emit_results'][1]).toBe('Please make sure you read this because it is very important to complete the installation of your plugin.');
         });
-        it('should interpolate variables into <info> tags', function() {
+        it('Test 004 : should interpolate variables into <info> tags', function() {
             // VariableBrowser
             expect(results['emit_results'][2]).toBe('Remember that your api key is batman!');
         });
-        it('should call fetch if provided plugin cannot be resolved locally', function() {
+        it('Test 005 : should call fetch if provided plugin cannot be resolved locally', function(done) {
             fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
-            runs(function() {
-                installPromise(install('android', project, 'CLEANYOURSHORTS' ));
-            });
-            waitsFor(function() { return done; }, 'install promise never resolved', 200);
-            runs(function() {
-                expect(done).toBe(true);
+            install('android', project, 'CLEANYOURSHORTS')
+            .fail(function(err){
+                console.log(err);
+            })
+            .fin(function () {
                 expect(fetchSpy).toHaveBeenCalled();
+                done();
             });
         });
 
-        it('should call fetch and convert oldID to newID', function(done) {
+        it('Test 006 : should call fetch and convert oldID to newID', function(done) {
             fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             var emit = spyOn(events, 'emit');
-            runs(function() {
-                installPromise(install('android', project, 'org.apache.cordova.device' ));
-            });
-            waitsFor(function() { return done; }, 'install promise never resolved', 200);
-            runs(function() {
-                expect(emit.calls[0].args[1]).toBe('Notice: org.apache.cordova.device has been automatically converted to cordova-plugin-device and fetched from npm. This is due to our old plugins registry shutting down.');
-                expect(done).toBe(true);
+            install('android', project, 'org.apache.cordova.device' )
+            .then(function(res) {
+                return true;
+            })
+            .fail(function(err){
+                console.log(err);
+            })
+            .fin(function () {
+                expect(emit.calls.argsFor(0)[1]).toBe('Notice: org.apache.cordova.device has been automatically converted to cordova-plugin-device and fetched from npm. This is due to our old plugins registry shutting down.');
                 expect(fetchSpy).toHaveBeenCalled();
+                done();
             });
         });
         describe('engine versions', function () {
@@ -271,7 +246,7 @@ describe('install', function() {
                 spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             });
 
-            it('should check version if plugin has engine tag', function(done){
+            it('Test 007 : should check version if plugin has engine tag', function(done){
                 exec.and.callFake(function(cmd, cb) { cb(null, '2.5.0\n'); });
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
@@ -280,7 +255,7 @@ describe('install', function() {
                     done();
                 });
             });
-            it('should check version and munge it a little if it has "rc" in it so it plays nice with semver (introduce a dash in it)', function(done) {
+            it('Test 008 : should check version and munge it a little if it has "rc" in it so it plays nice with semver (introduce a dash in it)', function(done) {
                 exec.and.callFake(function(cmd, cb) { cb(null, '3.0.0rc1\n'); });
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
@@ -289,7 +264,7 @@ describe('install', function() {
                     done();
                 });
             });
-            it('should check specific platform version over cordova version if specified', function(done) {
+            it('Test 009 : should check specific platform version over cordova version if specified', function(done) {
                 exec.and.callFake(function(cmd, cb) { cb(null, '3.1.0\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
@@ -298,41 +273,41 @@ describe('install', function() {
                     done();
                 });
             });
-            it('should check platform sdk version if specified', function(done) {
+            it('Test 010 : should check platform sdk version if specified', function(done) {
                 var cordovaVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
                 exec.and.callFake(function(cmd, cb) { cb(null, '18\n'); });
                 install('android', project, plugins['com.cordova.engine-android'])
                 .fail(fail)
                 .fin(function() {
-                    expect(satisfies.calls.length).toBe(3);
+                    expect(satisfies.calls.count()).toBe(3);
                     // <engine name="cordova" VERSION=">=3.0.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=3.0.0', true ]);
+                    expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=3.0.0', true ]);
                     // <engine name="cordova-android" VERSION=">=3.1.0"/>
-                    expect(satisfies.calls[1].args).toEqual([ '18.0.0', '>=3.1.0', true ]);
+                    expect(satisfies.calls.argsFor(1)).toEqual([ '18.0.0', '>=3.1.0', true ]);
                     // <engine name="android-sdk" VERSION=">=18"/>
-                    expect(satisfies.calls[2].args).toEqual([ '18.0.0','>=18', true ]);
+                    expect(satisfies.calls.argsFor(2)).toEqual([ '18.0.0','>=18', true ]);
                     done();
                 });
             });
-            it('should check engine versions', function(done) {
+            it('Test 011 : should check engine versions', function(done) {
                 install('android', project, plugins['com.cordova.engine'])
                 .fail(fail)
                 .fin(function() {
                     var plugmanVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
                     var cordovaVersion = require('../package.json').version.replace(/-dev|-nightly.*$/, '');
-                    expect(satisfies.calls.length).toBe(4);
+                    expect(satisfies.calls.count()).toBe(4);
                     // <engine name="cordova" version=">=2.3.0"/>
-                    expect(satisfies.calls[0].args).toEqual([ cordovaVersion, '>=2.3.0', true ]);
+                    expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=2.3.0', true ]);
                     // <engine name="cordova-plugman" version=">=0.10.0" />
-                    expect(satisfies.calls[1].args).toEqual([ plugmanVersion, '>=0.10.0', true ]);
+                    expect(satisfies.calls.argsFor(1)).toEqual([ plugmanVersion, '>=0.10.0', true ]);
                     // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />
-                    expect(satisfies.calls[2].args).toEqual([ null, '>=1.0.0', true ]);
+                    expect(satisfies.calls.argsFor(2)).toEqual([ null, '>=1.0.0', true ]);
                     // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
-                    expect(satisfies.calls[3].args).toEqual([ null, '>=3.0.0', true ]);
+                    expect(satisfies.calls.argsFor(3)).toEqual([ null, '>=3.0.0', true ]);
                     done();
                 });
             });
-            it('should not check custom engine version that is not supported for platform', function(done) {
+            it('Test 012 : should not check custom engine version that is not supported for platform', function(done) {
                 install('blackberry10', project, plugins['com.cordova.engine'])
                 .then(fail)
                 .fail(function () {
@@ -342,13 +317,12 @@ describe('install', function() {
             });
         });
 
-        it('should not check custom engine version that is not supported for platform', function() {
+        it('Test 014 : should not check custom engine version that is not supported for platform', function(done) {
             var spy = spyOn(semver, 'satisfies').and.returnValue(true);
-            install('blackberry10', project, plugins['com.cordova.engine']).then(function(done) {
+            install('blackberry10', project, plugins['com.cordova.engine']).then(function() {
                 expect(false).toBe(true);
                 done();
-            },
-            function err(errMsg) {
+            }).fail(function err () {
                 expect(spy).not.toHaveBeenCalledWith('','>=3.0.0');
                 done();
             }, 6000);
@@ -365,50 +339,42 @@ describe('install', function() {
                 });
             });
 
-            it('should install any dependent plugins if missing', function() {
-                runs(function() {
-                    installPromise( install('android', project, plugins['A']) );
-                });
-                waitsFor(function() { return done; }, 'install promise never resolved', 200);
-                runs(function() {
-                    // Look for 'Installing plugin ...' in events
+            it('Test 015 : should install any dependent plugins if missing', function(done) {
+                emit.calls.reset();
+                return install('android', project, plugins['A'])
+                .then(function() {
                     var install = common.spy.getInstall(emit);
-
                     expect(install).toEqual([
-                        'Install start for "C" on android.',
-                        'Install start for "D" on android.',
-                        'Install start for "A" on android.'
+                    'Install start for "C" on android.',
+                    'Install start for "D" on android.',
+                    'Install start for "A" on android.'
                     ]);
+                    done();
                 });
+                
             });
 
-            it('should install any dependent plugins from registry when url is not defined', function() {
-                // Plugin A depends on C & D
-                runs(function() {
-                    installPromise( install('android', project, plugins['A']) );
-                });
-                waitsFor(function() { return done; }, 'promise never resolved', 200);
-                runs(function() {
-                    // TODO: this is same test as above? Need test other dependency with url=?
+            it('Test 016 : should install any dependent plugins from registry when url is not defined', function(done) {
+                emit.calls.reset();
+                return install('android', project, plugins['A'])
+                .then(function() {
                     var install = common.spy.getInstall(emit);
-
                     expect(install).toEqual([
-                        'Install start for "C" on android.',
-                        'Install start for "D" on android.',
-                        'Install start for "A" on android.'
+                    'Install start for "C" on android.',
+                    'Install start for "D" on android.',
+                    'Install start for "A" on android.'
                     ]);
+                    done();
                 });
+                
             });
 
-            it('should process all dependent plugins with alternate routes to the same plugin', function() {
+            it('Test 017 : should process all dependent plugins with alternate routes to the same plugin', function(done) {
                 // Plugin F depends on A, C, D and E
-                runs(function () {
-                    installPromise(install('android', project, plugins['F']));
-                });
-                waitsFor(function () { return done; }, 'install promise never resolved', 200);
-                runs(function () {
+                emit.calls.reset();
+                return install('android', project, plugins['F'])
+                .then(function() {
                     var install = common.spy.getInstall(emit);
-
                     expect(install).toEqual([
                         'Install start for "C" on android.',
                         'Install start for "D" on android.',
@@ -416,38 +382,33 @@ describe('install', function() {
                         'Install start for "D" on android.',
                         'Install start for "F" on android.'
                     ]);
+                    done();
                 });
             });
 
-            it('should throw if there is a cyclic dependency', function() {
-                runs(function () {
-                    installPromise( install('android', project, plugins['G']) );
-                });
-                waitsFor(function () { return done; }, 'install promise never resolved', 200);
-                runs(function () {
+            it('Test 018 : should throw if there is a cyclic dependency', function(done) {
+                return install('android', project, plugins['G'])
+                .then(function() {
                     common.spy.getInstall(emit);
-
-                    expect(done.message).toEqual('Cyclic dependency from G to H');
-                });
+                }).fail(function err (errMsg) {
+                    expect(errMsg.toString()).toContain('Cyclic dependency from G to H');
+                }).fin(done);
             });
 
-            it('install subdir relative to top level plugin if no fetch meta', function() {
-                runs(function () {
-                    installPromise(install('android', project, plugins['B']));
-                });
-                waitsFor(function () { return done; }, 'install promise never resolved', 200);
-                runs(function () {
+            it('Test 019 : install subdir relative to top level plugin if no fetch meta', function(done) {
+                return install('android', project, plugins['B'])
+                .then(function() {
                     var install = common.spy.getInstall(emit);
-
                     expect(install).toEqual([
                         'Install start for "D" on android.',
                         'Install start for "E" on android.',
                         'Install start for "B" on android.'
                     ]);
+                    done();
                 });
             });
 
-            it('install uses meta data (if available) of top level plugin source', function() {
+            it('Test 020 : install uses meta data (if available) of top level plugin source', function(done) {
                 // Fake metadata so plugin 'B' appears from 'meta/B'
                 var meta = require('../src/plugman/util/metadata');
                 spyOn(meta, 'get_fetch_metadata').and.callFake(function(){
@@ -456,13 +417,9 @@ describe('install', function() {
                     };
                 });
 
-                runs(function () {
-                    installPromise(install('android', project, plugins['B']));
-                });
-                waitsFor(function () { return done; }, 'install promise never resolved', 200);
-                runs(function () {
+                return install('android', project, plugins['B'])
+                .then(function() {
                     var install = common.spy.getInstall(emit);
-
                     expect(install).toEqual([
                         'Install start for "D" on android.',
                         'Install start for "E" on android.',
@@ -473,23 +430,24 @@ describe('install', function() {
                     expect(copy.length).toBe(3);
                     expect(copy[0].indexOf(path.normalize('meta/D')) > 0).toBe(true);
                     expect(copy[1].indexOf(path.normalize('meta/subdir/E')) > 0).toBe(true);
+                    done();
                 });
             });
         });
     });
 
     describe('failure', function() {
-        it('should throw if platform is unrecognized', function(done) {
-            install('atari', project, 'SomePlugin').then(function() {
+        it('Test 021 : should throw if platform is unrecognized', function(done) {
+            install('atari', project, 'SomePlugin')
+            .then(function() {
                 expect(false).toBe(true);
                 done();
-            },
-            function err(errMsg) {
+            }).fail(function err (errMsg) {
                 expect(errMsg.toString()).toContain('atari not supported.');
                 done();
             }, 6000);
         });
-        it('should throw if variables are missing', function(done) {
+        it('Test 022 : should throw if variables are missing', function(done) {
             var success = jasmine.createSpy('success');
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             install('android', project, plugins['com.adobe.vars'])
@@ -502,34 +460,37 @@ describe('install', function() {
                 done();
             });
         });
-        it('should throw if git is not found on the path and a remote url is requested', function(done) {
+
+        it('Test 023 : should throw if git is not found on the path and a remote url is requested', function(done) {
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             fetchSpy.and.callThrough();
             spyOn(shell, 'which').and.returnValue(null);
-            install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git').then(function(result) {
+            install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git')
+            .then(function(result) {
                 expect(false).toBe(true);
                 done();
-            },
-            function err(errMsg) {
+            }).fail(function err(errMsg) {
                 expect(errMsg.toString()).toContain('"git" command line tool is not installed: make sure it is accessible on your PATH.');
                 done();
             });
         }, 6000);
 
-        it('should not fail when trying to install plugin less than minimum version. Skip instead  ', function(){
+        it('Test 024 :should not fail when trying to install plugin less than minimum version. Skip instead  ', function(done){
             spyOn(semver, 'satisfies').and.returnValue(false);
             exec.and.callFake(function(cmd, cb) {
                 cb(null, '0.0.1\n');
             });
-            install('android', project, plugins['com.cordova.engine']).then(function(result) {
-                expect(false).toBe(true);
-            },
-            function err(errMsg) {
-                expect(errMsg.toString()).toMatch(true);
+            install('android', project, plugins['com.cordova.engine'])
+            .then(function(result) {
+                expect(result).toBe(true);
+                done();
+            })
+            .fail(function (error) {
+                expect(error).toBeUndefined();
             });
         }, 6000);
 
-        it('should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
+        it('Test 025 : should throw if the engine scriptSrc escapes out of the plugin dir.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail').and.callFake(function(err) {
                     // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
@@ -547,7 +508,7 @@ describe('install', function() {
                     done();
                 });
         });
-        it('should throw if a non-default cordova engine platform attribute is not defined.', function(done) {
+        it('Test 026 : should throw if a non-default cordova engine platform attribute is not defined.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail');
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
@@ -560,7 +521,7 @@ describe('install', function() {
                     done();
                 });
         });
-        it('should throw if a non-default cordova engine scriptSrc attribute is not defined.', function(done) {
+        it('Test 027 : should throw if a non-default cordova engine scriptSrc attribute is not defined.', function(done) {
             var success = jasmine.createSpy('success'),
                 fail = jasmine.createSpy('fail');
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
@@ -578,17 +539,7 @@ describe('install', function() {
 
 describe('end', function() {
 
-    it('end', function() {
-        done = false;
-
-        promise.fin(function(err){
-            if(err)
-                events.emit('error', err);
-
-            shell.rm('-rf', temp_dir);
-            done = true;
-        });
-
-        waitsFor(function() { return done; }, 'promise never resolved', 500);
+    it('Test 028 : end', function() {
+        shell.rm('-rf', temp_dir);
     });
 });

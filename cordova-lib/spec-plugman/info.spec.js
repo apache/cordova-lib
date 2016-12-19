@@ -21,7 +21,7 @@ var search = require('../src/plugman/info'),
     registry = require('../src/plugman/registry/registry');
 
 describe('info', function() {
-    it('should show plugin info', function() {
+    it('Test 001 : should show plugin info', function() {
         var sSearch = spyOn(registry, 'info').and.returnValue(Q({
             name: 'fakePlugin',
             version: '1.0.0',

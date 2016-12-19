@@ -49,12 +49,12 @@ function copyArray(arr) {
 
 describe('android project handler', function() {
     describe('www_dir method', function() {
-        it('should return cordova-android project www location using www_dir', function() {
+        it('Test 001 : should return cordova-android project www location using www_dir', function() {
             expect(android.www_dir(path.sep)).toEqual(path.sep + path.join('assets', 'www'));
         });
     });
     describe('package_name method', function() {
-        it('should return an android project\'s proper package name', function() {
+        it('Test 002 : should return an android project\'s proper package name', function() {
             expect(android.package_name(path.join(android_one_project, '..'))).toEqual('com.alunny.childapp');
         });
     });
@@ -67,7 +67,7 @@ describe('android project handler', function() {
             shell.rm('-rf', temp);
         });
         describe('of <lib-file> elements', function() {
-            it('should copy jar files to project/libs', function () {
+            it('Test 003 : should copy jar files to project/libs', function () {
                 var s = spyOn(common, 'copyFile');
 
                 android['lib-file'].install(valid_libs[0], dummyplugin, temp);
@@ -75,7 +75,7 @@ describe('android project handler', function() {
             });
         });
         describe('of <resource-file> elements', function() {
-            it('should copy files', function () {
+            it('Test 004 : should copy files', function () {
                 var s = spyOn(common, 'copyFile');
 
                 android['resource-file'].install(valid_resources[0], dummyplugin, temp);
@@ -87,19 +87,20 @@ describe('android project handler', function() {
                 shell.cp('-rf', android_one_project, temp);
             });
 
-            it('should copy stuff from one location to another by calling common.copyFile', function() {
+            it('Test 005 : should copy stuff from one location to another by calling common.copyFile', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
                 android['source-file'].install(source[0], dummyplugin, temp);
                 expect(s).toHaveBeenCalledWith(dummyplugin, 'src/android/DummyPlugin.java', temp, path.join('src', 'com', 'phonegap', 'plugins', 'dummyplugin', 'DummyPlugin.java'), false);
             });
-            it('should throw if source file cannot be found', function() {
+            it('Test 006 : should throw if source file cannot be found', function() {
                 var source = copyArray(invalid_source);
                 expect(function() {
                     android['source-file'].install(source[0], faultyplugin, temp);
-                }).toThrow('"' + path.resolve(faultyplugin, 'src/android/NotHere.java') + '" not found!');
+                    //expect(parser.parse(raw)).toThrow(new Error("Parsing is not possible"));
+                }).toThrow(new Error('"' + path.resolve(faultyplugin, 'src/android/NotHere.java') + '" not found!'));
             });
-            it('should throw if target file already exists', function() {
+            it('Test 007 : should throw if target file already exists', function() {
                 // write out a file
                 var target = path.resolve(temp, 'src/com/phonegap/plugins/dummyplugin');
                 shell.mkdir('-p', target);
@@ -109,7 +110,7 @@ describe('android project handler', function() {
                 var source = copyArray(valid_source);
                 expect(function() {
                     android['source-file'].install(source[0], dummyplugin, temp);
-                }).toThrow('"' + target + '" already exists!');
+                }).toThrow(new Error('"' + target + '" already exists!'));
             });
         });
     });
@@ -122,7 +123,7 @@ describe('android project handler', function() {
             shell.rm('-rf', temp);
             android.purgeProjectFileCache(temp);
         });
-        it('with custom=true', function() {
+        it('Test 008 : with custom=true', function() {
             var packageIdSuffix = 'childapp';
             var frameworkElement = { src: 'plugin-lib', custom: true };
             var mainProjectPropsFile = path.resolve(temp, 'project.properties');
@@ -149,7 +150,7 @@ describe('android project handler', function() {
             expect(finalProjectProperties).not.toMatch('\nandroid.library.reference.3='+dummy_id+'/'+packageIdSuffix+'-plugin-lib', 'Reference to library not added');
             expect(fs.existsSync(subDir)).toBe(false, 'Should delete subdir');
         });
-        it('with custom=true type=gradleReference', function() {
+        it('Test 009 : with custom=true type=gradleReference', function() {
             var packageIdSuffix = 'childapp';
             var frameworkElement = { src: 'extra.gradle', custom: true, type: 'gradleReference'};
             var mainProjectPropsFile = path.resolve(temp, 'project.properties');
@@ -170,7 +171,7 @@ describe('android project handler', function() {
             expect(finalProjectProperties).not.toMatch('\ncordova.gradle.include.1='+dummy_id+'/'+packageIdSuffix+'-extra.gradle', 'Reference to gradle not added');
             expect(fs.existsSync(subDir)).toBe(false, 'Should delete subdir');
         });
-        it('with custom=false pre 4.0', function() {
+        it('Test 010 : with custom=false pre 4.0', function() {
             var packageIdSuffix = 'childapp';
             var frameworkElement = { src: 'extras/android/support/v4', custom: false};
             var mainProjectPropsFile = path.resolve(temp, 'project.properties');
@@ -193,7 +194,7 @@ describe('android project handler', function() {
             finalProjectProperties = fs.readFileSync(mainProjectPropsFile, 'utf8');
             expect(finalProjectProperties).not.toMatch('\ncordova.gradle.include.1='+dummy_id+'/'+packageIdSuffix+'-extra.gradle', 'Reference to gradle not added');
         });
-        it('with custom=false post 4.0', function() {
+        it('Test 011 : with custom=false post 4.0', function() {
             var frameworkElement = { src: 'extras/android/support/v4', custom: false};
             var mainProjectPropsFile = path.resolve(temp, 'project.properties');
             fs.writeFileSync(path.join(temp, 'local.properties'), 'sdk.dir=' + path.join(temp, '..', 'SDK'));
@@ -213,7 +214,7 @@ describe('android project handler', function() {
             finalProjectProperties = fs.readFileSync(mainProjectPropsFile, 'utf8');
             expect(finalProjectProperties).not.toMatch('\ncordova.system.library.1=' + 'extras/android/support/v4', 'Sublibrary not added');
         });
-        it('with custom=true and parent', function () {
+        it('Test 012 : with custom=true and parent', function () {
             var packageIdSuffix = 'childapp';
             var frameworkElement = { src: 'plugin-lib', custom: true };
             var frameworkElementChild = { src: 'plugin-lib2', custom: true, parent: 'plugin-lib' };
@@ -247,7 +248,7 @@ describe('android project handler', function() {
 
             expect(fs.existsSync(subDir)).toBe(false, 'Should delete subdir');
         });
-        it('with custom=false and parent', function () {
+        it('Test 013 : with custom=false and parent', function () {
             var packageIdSuffix = 'childapp';
             var frameworkElement = { src: 'plugin-lib', custom: true };
             var frameworkElementChild = { src: 'extras/android/support/v4', custom: false, parent: 'plugin-lib' };
@@ -263,7 +264,7 @@ describe('android project handler', function() {
             android.parseProjectFile(temp).write();
             android.parseProjectFile(parentDir).write();
 
-            exec.reset();
+            exec.calls.reset();
 
             var finalProjectProperties = fs.readFileSync(parentProjectPropsFile, 'utf8');
             var libReference = '\nandroid.library.reference.1=' + path.join('..', '..', sdkLibRelativeDir).replace(/\\/g, '/');
@@ -294,16 +295,16 @@ describe('android project handler', function() {
         afterEach(function() {
             shell.rm('-rf', temp);
         });
-        describe('of <lib-file> elements', function(done) {
-            it('should remove jar files', function () {
+        describe('of <lib-file> elements', function() {
+            it('Test 014 : should remove jar files', function () {
                 var s = spyOn(common, 'removeFile');
                 android['lib-file'].install(valid_libs[0], dummyplugin, temp);
                 android['lib-file'].uninstall(valid_libs[0], temp, dummy_id);
                 expect(s).toHaveBeenCalledWith(temp, path.join('libs', 'TestLib.jar'));
             });
         });
-        describe('of <resource-file> elements', function(done) {
-            it('should remove files', function () {
+        describe('of <resource-file> elements', function() {
+            it('Test 015 : should remove files', function () {
                 var s = spyOn(common, 'removeFile');
                 android['resource-file'].install(valid_resources[0], dummyplugin, temp);
                 android['resource-file'].uninstall(valid_resources[0], temp, dummy_id);
@@ -311,7 +312,7 @@ describe('android project handler', function() {
             });
         });
         describe('of <source-file> elements', function() {
-            it('should remove stuff by calling common.deleteJava', function() {
+            it('Test 016 : should remove stuff by calling common.deleteJava', function() {
                 var s = spyOn(common, 'deleteJava');
                 android['source-file'].install(valid_source[0], dummyplugin, temp, dummy_id);
                 var source = copyArray(valid_source);

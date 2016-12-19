@@ -32,7 +32,6 @@ var shell = require('shelljs'),
 
 var project_dir = '/some/path';
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
-var supported_platforms_paths = supported_platforms.map(function(p) { return path.join(project_dir, 'platforms', p, 'www'); });
 
 var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
@@ -92,7 +91,7 @@ describe('prepare command', function() {
     });
 
     describe('failure', function() {
-        it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
+        it('Test 001 : should not run outside of a cordova-based project by calling util.isCordova', function(done) {
             is_cordova.and.returnValue(false);
             cd_project_root.and.callThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
             prepare().then(function() {
@@ -101,7 +100,7 @@ describe('prepare command', function() {
                 expect('' + err).toContain('Current working directory is not a Cordova-based project.');
             }).fin(done);
         });
-        it('should not run inside a cordova-based project with no platforms', function(done) {
+        it('Test 002 : should not run inside a cordova-based project with no platforms', function(done) {
             list_platforms.and.returnValue([]);
             prepare().then(function() {
                 expect('this call').toBe('fail');
@@ -112,14 +111,14 @@ describe('prepare command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isCordova', function(done) {
+        it('Test 003 : should run inside a Cordova-based project by calling util.isCordova', function(done) {
             prepare().then(function() {
                 expect(is_cordova).toHaveBeenCalled();
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
-        it('should get PlatformApi instance for each platform and invoke its\' run method', function(done) {
+        it('Test 004 : should get PlatformApi instance for each platform and invoke its\' run method', function(done) {
             prepare().then(function() {
                 supported_platforms.forEach(function(p) {
                     expect(parsers[p]).toHaveBeenCalled();
@@ -134,16 +133,46 @@ describe('prepare command', function() {
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+            it('Test 005 : should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare().then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], save: false, fetch: false, paths:supported_platforms_paths});
+                    expect(fire.calls.argsFor(0)).toEqual(
+                    [ 'before_prepare',
+                    { verbose: false,
+                        platforms:
+                         [ 'ios',
+                           'osx',
+                           'android',
+                           'ubuntu',
+                           'amazon-fireos',
+                           'wp8',
+                           'blackberry10',
+                           'firefoxos',
+                           'windows',
+                           'webos',
+                           'browser' ],
+                        options: {},
+                        save: false,
+                        fetch: false,
+                        paths:
+                         [ '/some/path/platforms/ios/www',
+                           '/some/path/platforms/osx/www',
+                           '/some/path/platforms/android/www',
+                           '/some/path/platforms/ubuntu/www',
+                           '/some/path/platforms/amazon-fireos/www',
+                           '/some/path/platforms/wp8/www',
+                           '/some/path/platforms/blackberry10/www',
+                           '/some/path/platforms/firefoxos/www',
+                           '/some/path/platforms/windows/www',
+                           '/some/path/platforms/webos/www',
+                           '/some/path/platforms/browser/www' ],
+                        searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined();
                 }).fin(done);
             });
-            it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+            it('Test 006 : should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare('android').then(function() {
-                    expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
+                    expect(fire.calls.argsFor(1)).toEqual([ 'after_prepare',{ platforms: [ 'android' ],verbose: false,options: {},paths: [ '/some/path/platforms/android/www' ],searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err.stack);
                 }).fin(done);
@@ -154,7 +183,7 @@ describe('prepare command', function() {
             beforeEach(function() {
                 list_platforms.and.returnValue([]);
             });
-            it('should not fire the hooker', function(done) {
+            it('Test 007 : should not fire the hooker', function(done) {
                 Q().then(prepare).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {

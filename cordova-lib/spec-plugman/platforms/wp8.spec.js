@@ -60,21 +60,21 @@ describe('wp8 project handler', function() {
     });
 
     describe('www_dir method', function() {
-        it('should return cordova-wp8 project www location using www_dir', function() {
+        it('Test 001 : should return cordova-wp8 project www location using www_dir', function() {
             expect(wp8.www_dir(path.sep)).toEqual(path.sep + 'www');
         });
     });
     describe('package_name method', function() {
-        it('should return a wp8 project\'s proper package name', function() {
+        it('Test 002 : should return a wp8 project\'s proper package name', function() {
             expect(wp8.package_name(wp8_project)).toEqual('{F3A8197B-6B16-456D-B5F4-DD4F04AC0BEC}');
         });
     });
 
     describe('parseProjectFile method', function() {
-        it('should throw if project is not an wp8 project', function() {
+        it('Test 003 : should throw if project is not an wp8 project', function() {
             expect(function() {
                 wp8.parseProjectFile(temp);
-            }).toThrow('does not appear to be a Windows Phone project (no .csproj file)');
+            }).toThrow(new Error ('does not appear to be a Windows Phone project (no .csproj file)'));
         });
     });
 
@@ -94,41 +94,40 @@ describe('wp8 project handler', function() {
             beforeEach(function() {
                 shell.cp('-rf', path.join(wp8_project, '*'), temp);
             });
-            it('should copy stuff from one location to another by calling common.copyFile', function() {
+            it('Test 004 : should copy stuff from one location to another by calling common.copyFile', function() {
                 var source = copyArray(valid_source);
                 var s = spyOn(common, 'copyFile');
                 wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
                 expect(s).toHaveBeenCalledWith(dummyplugin, 'src/wp8/DummyPlugin.cs', temp, path.join('Plugins', 'org.test.plugins.dummyplugin', 'DummyPlugin.cs'), false);
             });
-            it('should throw if source-file src cannot be found', function() {
+            it('Test 005 : should throw if source-file src cannot be found', function() {
                 var source = copyArray(invalid_source);
                 expect(function() {
                     wp8['source-file'].install(source[1], faultyplugin, temp, faulty_id, null, proj_files);
-                }).toThrow('"' + path.resolve(faultyplugin, 'src/wp8/NotHere.cs') + '" not found!');
+                }).toThrow(new Error('"' + path.resolve(faultyplugin, 'src/wp8/NotHere.cs') + '" not found!'));
             });
-            it('should throw if source-file target already exists', function() {
+            it('Test 006 : should throw if source-file target already exists', function() {
                 var source = copyArray(valid_source);
                 var target = path.join(temp, 'Plugins', dummy_id, 'DummyPlugin.cs');
                 shell.mkdir('-p', path.dirname(target));
                 fs.writeFileSync(target, 'some bs', 'utf-8');
                 expect(function() {
                     wp8['source-file'].install(source[0], dummyplugin, temp, dummy_id, null, proj_files);
-                }).toThrow('"' + target + '" already exists!');
+                }).toThrow(new Error ('"' + target + '" already exists!'));
             });
         });
         describe('of <config-changes> elements', function() {
             beforeEach(function() {
                 shell.cp('-rf', path.join(wp8_project, '*'), temp);
             });
-            it('should process and pass the after parameter to graftXML', function () {
-                var graftXML = spyOn(xml_helpers, 'graftXML').andCallThrough();
-
-                runs(function () { installPromise(install('wp8', temp, dummyplugin, plugins_dir, {})); });
-                waitsFor(function () { return done; }, 'install promise never resolved', 500);
-                runs(function () {
+            it('Test 007 : should process and pass the after parameter to graftXML', function (done) {
+                var graftXML = spyOn(xml_helpers, 'graftXML').and.callThrough();
+                return install('wp8', temp, dummyplugin, plugins_dir, {})
+                .then(function() {
                     expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App', 'Tokens');
                     expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'Extension');
                     expect(graftXML).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Array), '/Deployment/App/Extensions', 'FileTypeAssociation;Extension');
+                    done();
                 });
             });
         });
@@ -144,7 +143,7 @@ describe('wp8 project handler', function() {
             shell.rm('-rf', temp);
         });
         describe('of <source-file> elements', function() {
-            it('should remove stuff by calling common.removeFile', function(done) {
+            it('Test 009 : should remove stuff by calling common.removeFile', function(done) {
                 var s = spyOn(common, 'removeFile');
                 install('wp8', temp, dummyplugin, plugins_dir, {})
                 .then(function() {

@@ -24,7 +24,7 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 describe('dependency module', function() {
     describe('generateDependencyInfo method', function() {
-        it('should return a list of top-level plugins based on what is inside a platform.json file', function() {
+        it('Test 001 : should return a list of top-level plugins based on what is inside a platform.json file', function() {
             var tlps = {
                 'hello':'',
                 'isitme':'',
@@ -38,11 +38,11 @@ describe('dependency module', function() {
             Object.keys(tlps).forEach(function(k) {
                 pluginInfoProvider.put({id:k, dir: path.join('plugins_dir', k), getDependencies: function() {return[];}});
             });
-            spyOn(xml_helpers, 'parseElementtreeSync').andReturn({findall:function(){}});
+            spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue({findall:function(){}});
             var obj = dependencies.generateDependencyInfo(platformJson, 'plugins_dir', pluginInfoProvider);
             expect(obj.top_level_plugins).toEqual(Object.keys(tlps));
         });
-        it('should return a dependency graph for the plugins', function() {
+        it('Test 002 : should return a dependency graph for the plugins', function() {
             var tlps = {
                 'A':'',
                 'B':''
