@@ -323,7 +323,8 @@ function PluginInfo(dirname) {
                 versions: el.attrib.versions,
                 targetDir: el.attrib['target-dir'],
                 deviceTarget: el.attrib['device-target'] || el.attrib.target,
-                arch: el.attrib.arch
+                arch: el.attrib.arch,
+                implementation: el.attrib.implementation
             };
             return ret;
         });
