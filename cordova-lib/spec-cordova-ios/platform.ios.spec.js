@@ -17,7 +17,7 @@
     under the License.
 */
 
-var helpers = require('./helpers'),
+var helpers = require('../spec-cordova/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
@@ -45,7 +45,6 @@ describe('cocoapod plugin add and rm end-to-end', function () {
     });
 
     it('installs and uninstalls plugin depending on new pod and existing pod', function(done) {
-
         cordova.raw.create('hello4')
         .then(function() {
             process.chdir(project);
@@ -55,6 +54,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             return cordova.raw.plugin('add', samplePlugin);
         })
         .then(function() {
+
             podfile = path.resolve('./platforms/ios/Podfile');
             podsJSON = path.resolve('./platforms/ios/pods.json');
             workspace = path.resolve('./platforms/ios/HelloCordova.xcworkspace');
@@ -83,6 +83,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             return cordova.raw.plugin('add', overlappingDependencyPlugin);
         })
         .then(function() {
+
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'});
             var numberOfTimesAFNetworkingIsInPodfile = podfileContent.match(/AFNetworking/g || []).length;
 
@@ -102,6 +103,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             return cordova.raw.plugin('rm','sample-cocoapod-plugin-overlapping-dependency');
         })
         .then(function() {
+
             //expect only AFNetworking
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
 
@@ -117,6 +119,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             return cordova.raw.plugin('rm', 'sample-cordova-plugin-cocoapod-dependent');
         })
         .then(function() {
+            
             //expect no pods 
             delete require.cache[require.resolve(podfile)];
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 

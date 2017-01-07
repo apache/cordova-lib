@@ -1,12 +1,18 @@
-language: node_js
+language: objective-c
+cache: cocoapods
 sudo: false
+osx_image: xcode7.3
+rvm: 2.2.0
 git:
   depth: 10
-node_js:
-  - "0.10"
-  - "0.12"
-  - "4"
-  - "6"
+before_install:
+    - npm cache clean -f
+    - npm install -g n
+    - n stable
+    - node --version  
+    - gem install activesupport -v '4.2.6'
+    - gem install cocoapods -v '1.0.1'
+    - pod setup
 install:
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-lib
@@ -25,4 +31,4 @@ install:
 script:
   - "(cd ../cordova-common && npm test)"
   - "(cd ../cordova-fetch && npm test)"
-  - "npm run ci"
+  - "npm run ci-ios"
