@@ -246,7 +246,7 @@ describe('platform add plugin rm end-to-end', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 20000);
+    }, 120000);
 });
 
 describe('platform add and remove --fetch', function () {
@@ -298,7 +298,7 @@ describe('platform add and remove --fetch', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 40000);
+    }, 120000);
 });
 
 describe('plugin add and rm end-to-end --fetch', function () {
@@ -354,5 +354,5 @@ describe('plugin add and rm end-to-end --fetch', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 60000);
+    }, 240000);
 });
