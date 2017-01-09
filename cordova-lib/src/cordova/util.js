@@ -135,7 +135,7 @@ function isCordova(dir) {
 
 // Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
 function cdProjectRoot() {
-    var projectRoot = this.isCordova();
+    var projectRoot = convertToRealPathSafe(this.isCordova());
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
     }
