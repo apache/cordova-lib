@@ -154,17 +154,17 @@ describe('prepare command', function() {
                         save: false,
                         fetch: false,
                         paths:
-                         [ '/some/path/platforms/ios/www',
-                           '/some/path/platforms/osx/www',
-                           '/some/path/platforms/android/www',
-                           '/some/path/platforms/ubuntu/www',
-                           '/some/path/platforms/amazon-fireos/www',
-                           '/some/path/platforms/wp8/www',
-                           '/some/path/platforms/blackberry10/www',
-                           '/some/path/platforms/firefoxos/www',
-                           '/some/path/platforms/windows/www',
-                           '/some/path/platforms/webos/www',
-                           '/some/path/platforms/browser/www' ],
+                         [ path.join('/','some','path','platforms','ios','www'),
+                           path.join('/','some','path','platforms','osx','www'),
+                           path.join('/','some','path','platforms','android','www'),
+                           path.join('/','some','path','platforms','ubuntu','www'),
+                           path.join('/','some','path','platforms','amazon-fireos','www'),
+                           path.join('/','some','path','platforms','wp8','www'),
+                           path.join('/','some','path','platforms','blackberry10','www'),
+                           path.join('/','some','path','platforms','firefoxos','www'),
+                           path.join('/','some','path','platforms','windows','www'),
+                           path.join('/','some','path','platforms','webos','www'),
+                           path.join('/','some','path','platforms','browser','www') ],
                         searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined();
@@ -172,7 +172,7 @@ describe('prepare command', function() {
             });
             it('Test 006 : should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare('android').then(function() {
-                    expect(fire.calls.argsFor(1)).toEqual([ 'after_prepare',{ platforms: [ 'android' ],verbose: false,options: {},paths: [ '/some/path/platforms/android/www' ],searchpath: undefined } ]);
+                    expect(fire.calls.argsFor(1)).toEqual([ 'after_prepare',{ platforms: [ 'android' ],verbose: false,options: {},paths: [ path.join( '/','some','path', 'platforms', 'android', 'www' ) ],searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err.stack);
                 }).fin(done);

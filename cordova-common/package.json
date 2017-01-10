@@ -18,9 +18,9 @@
   },
   "scripts": {
     "test": "npm run jshint && npm run jasmine",
-    "jshint": "node node_modules/jshint/bin/jshint src && node node_modules/jshint/bin/jshint spec",
-    "jasmine": "node node_modules/jasmine-node/bin/jasmine-node --captureExceptions --color spec",
-    "cover": "node node_modules/istanbul/lib/cli.js cover --root src --print detail node_modules/jasmine-node/bin/jasmine-node -- spec"
+    "jshint": "jshint src && jshint spec",
+    "jasmine": "jasmine --captureExceptions --color",
+    "cover": "istanbul cover --root src --print detail jasmine"
   },
   "dependencies": {
     "ansi": "^0.3.1",

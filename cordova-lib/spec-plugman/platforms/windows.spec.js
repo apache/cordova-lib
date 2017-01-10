@@ -65,7 +65,7 @@ beforeEach(function () {
                     }
                     return result;
                 }
-            }
+            };
         }
     }); 
 });
@@ -487,7 +487,6 @@ beforeEach(function () {
                             var incText = resourcefiles[0].target;
                             var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x86'};
                             validateUninstalledProjects('resource-file', resourcefiles[0], path, incText, targetConditions, ['all']);
-
                             done();
                         });
                 });
@@ -497,11 +496,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Content';
-
-                            incText = resourcefiles[1].target;
-                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
+                            var incText = resourcefiles[1].target;
+                            var targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('resource-file', resourcefiles[1], path, incText, targetConditions, ['windows', 'phone', 'windows10']);
-
                             done();
                         });
                 });
@@ -511,11 +508,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Content';
-
-                            incText = resourcefiles[2].target;
-                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
+                            var incText = resourcefiles[2].target;
+                            var targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
                             validateUninstalledProjects('resource-file', resourcefiles[2], path, incText, targetConditions, ['phone']);
-
                             done();
                         });
                 });
@@ -525,10 +520,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Content';
-                            incText = resourcefiles[3].target;
-                            targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x64'};
+                            var incText = resourcefiles[3].target;
+                            var targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x64'};
                             validateUninstalledProjects('resource-file', resourcefiles[3], path, incText, targetConditions, ['windows8']);
-
                             done();
                         });
                 });
@@ -556,8 +550,8 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/SDKReference';
-                            incText = 'TestSDK2, Version=1.0';
-                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
+                            var incText = 'TestSDK2, Version=1.0';
+                            var targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('lib-file', libfiles[1], path, incText, targetConditions, ['windows', 'phone', 'windows10']);
                             done();
                         });
@@ -569,10 +563,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/SDKReference';
-                            incText = 'TestSDK3, Version=1.0';
-                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
+                            var incText = 'TestSDK3, Version=1.0';
+                            var targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
                             validateUninstalledProjects('lib-file', libfiles[2], path, incText, targetConditions, ['phone']);
-
                             done();
                         });
                 });
@@ -583,10 +576,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/SDKReference';
-                            incText = 'TestSDK4, Version=1.0';
-                            targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x86'};
+                            var incText = 'TestSDK4, Version=1.0';
+                            var targetConditions = {versions: '8.0', deviceTarget: 'windows', arch: 'x86'};
                             validateUninstalledProjects('lib-file', libfiles[3], path, incText, targetConditions, ['windows8']);
-
                             done();
                         });
                 });
@@ -604,7 +596,6 @@ beforeEach(function () {
                             var incText = 'dummy1';
                             var targetConditions = {versions: undefined, deviceTarget: undefined, arch: 'x64'};
                             validateUninstalledProjects('framework', frameworks[0], path, incText, targetConditions, ['all']);
-
                             done();
                         });
                 }, 6000);
@@ -615,10 +606,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Reference';
-                            incText = 'dummy2';
-                            targetConditions = {versions: '>=8.0', deviceTarget: undefined, arch: undefined};
+                            var incText = 'dummy2';
+                            var targetConditions = {versions: '>=8.0', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[1], path, incText, targetConditions, ['all']);
-
                             done();
                         });
                 }, 6000);
@@ -629,10 +619,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Reference';
-                            incText = 'dummy3';
-                            targetConditions = {versions: undefined, deviceTarget: 'windows', arch: undefined};
+                            var incText = 'dummy3';
+                            var targetConditions = {versions: undefined, deviceTarget: 'windows', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[2], path, incText, targetConditions, ['windows', 'windows8', 'windows10']);
-
                             done();
                         });
                 }, 6000);
@@ -643,10 +632,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Reference';
-                            incText = 'dummy4';
-                            targetConditions = {versions: '8.1', deviceTarget: 'phone', arch: 'ARM'};
+                            var incText = 'dummy4';
+                            var targetConditions = {versions: '8.1', deviceTarget: 'phone', arch: 'ARM'};
                             validateUninstalledProjects('framework', frameworks[3], path, incText, targetConditions, ['phone']);
-
                             done();
                         });
                 }, 6000);
@@ -657,10 +645,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Reference';
-                            incText = 'dummy5';
-                            targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
+                            var incText = 'dummy5';
+                            var targetConditions = {versions: undefined, deviceTarget: 'phone', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[4], path, incText, targetConditions, ['phone']);
-
                             done();
                         });
                 }, 6000);
@@ -671,10 +658,9 @@ beforeEach(function () {
                     install('windows', cordovaProjectWindowsPlatformDir, dummyplugin, cordovaProjectPluginsDir, {})
                         .then(function () {
                             var path = 'ItemGroup/Reference';
-                            incText = 'dummy6';
-                            targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
+                            var incText = 'dummy6';
+                            var targetConditions = {versions: '>=8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[5], path, incText, targetConditions, ['windows', 'windows10', 'phone']);
-
                             done();
                         });
                 }, 6000);
@@ -703,7 +689,7 @@ beforeEach(function () {
                         .then(function () {
                             var xmlPath = 'ItemGroup/ProjectReference';
                             var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy2.vcxproj');
-                            targetConditions = {versions: '<8.1', deviceTarget: undefined, arch: undefined};
+                            var targetConditions = {versions: '<8.1', deviceTarget: undefined, arch: undefined};
                             validateUninstalledProjects('framework', frameworks[7], xmlPath, incText, targetConditions, ['windows8']);
                             done();
                         });
@@ -716,9 +702,8 @@ beforeEach(function () {
                         .then(function () {
                             var xmlPath = 'ItemGroup/ProjectReference';
                             var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy3.vcxproj');
-                            targetConditions = {versions: undefined, deviceTarget: 'win', arch: undefined};
+                            var targetConditions = {versions: undefined, deviceTarget: 'win', arch: undefined};
                             validateUninstalledProjects('framework', frameworks[8], xmlPath, incText, targetConditions, ['windows', 'windows8', 'windows10']);
-
                             done();
                         });
                 }, 60000);
@@ -730,7 +715,7 @@ beforeEach(function () {
                         .then(function () {
                             var xmlPath = 'ItemGroup/ProjectReference';
                             var incText = windowsJoin(cordovaProjectPluginsDir , dummy_id, 'src', 'windows', 'dummy4.vcxproj');
-                            targetConditions = {versions: '8.1', deviceTarget: 'all', arch: 'x86'};
+                            var targetConditions = {versions: '8.1', deviceTarget: 'all', arch: 'x86'};
                             validateUninstalledProjects('framework', frameworks[9], xmlPath, incText, targetConditions, ['windows', 'phone']);
                             done();
                         });

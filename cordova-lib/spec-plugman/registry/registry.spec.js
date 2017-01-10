@@ -71,7 +71,7 @@ describe('registry', function() {
             return registryPromise(false, manifest.generatePackageJsonFromPluginXml(tmp_plugin))
             .then(function(){
                 done();
-            })
+            });
         });
         // Expect the package.json to NOT exist
         it('Test 003 : should generate a package.json if name uses org.apache.cordova.* for a whitelisted plugin', function(done) {
@@ -89,7 +89,7 @@ describe('registry', function() {
             return registryPromise(false, manifest.generatePackageJsonFromPluginXml(tmp_plugin))
             .then(function(){
                 done();
-            })
+            });
         }, 6000);
     });
     describe('actions', function() {

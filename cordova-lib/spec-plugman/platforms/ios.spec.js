@@ -61,10 +61,6 @@ function copyArray(arr) {
     return Array.prototype.slice.call(arr, 0);
 }
 
-function installPromise(f) {
-    f.then(function(res) { done = true; }, function(err) { done = err; });
-}
-
 function slashJoin() {
     // In some places we need to use forward slash instead of path.join().
     // See CB-7311.
@@ -311,7 +307,7 @@ describe('ios project handler', function() {
                 expect(xcode.hasFile('usr/lib/libsqlite3.dylib')).toBeTruthy();
                 done();
             }).then(function () {
-                return install('ios', temp, dummyplugin)
+                return install('ios', temp, dummyplugin);
             }).then(function () {
                 var xcode = ios.parseProjectFile(temp).xcode;
                 // from org.test.plugins.dummyplugin

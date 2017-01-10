@@ -79,11 +79,6 @@ describe('wp8 project handler', function() {
     });
 
     describe('installation', function() {
-        var done;
-        function installPromise(f) {
-            done = false;
-            f.then(function() { done = true; }, function(err) { done = err; });
-        }
         beforeEach(function() {
             shell.mkdir('-p', temp);
         });
