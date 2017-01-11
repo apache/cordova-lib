@@ -213,7 +213,7 @@ describe('install', function() {
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             install('android', project, 'CLEANYOURSHORTS')
             .fail(function(err){
-                console.log(err);
+                expect(err).toBeUndefined();
             })
             .fin(function () {
                 expect(fetchSpy).toHaveBeenCalled();
@@ -230,7 +230,7 @@ describe('install', function() {
                 return true;
             })
             .fail(function(err){
-                console.log(err);
+                expect(err).toBeUndefined();
             })
             .fin(function () {
                 expect(emit.calls.argsFor(0)[1]).toBe('Notice: org.apache.cordova.device has been automatically converted to cordova-plugin-device and fetched from npm. This is due to our old plugins registry shutting down.');

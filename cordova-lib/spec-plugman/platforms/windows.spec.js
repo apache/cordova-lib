@@ -131,8 +131,6 @@ beforeEach(function () {
             });
 
             function validateInstalledProjects(tag, elementToInstall, xpath, supportedPlatforms) {
-                //jasmine.getEnv().currentSpec.removeAllSpies();
-                
 
                 var projects = copyArray(proj_files.projects);
                 if (platform === 'windows') {
@@ -203,12 +201,10 @@ beforeEach(function () {
 
                 projectsAddedToSpies.forEach(function (spy) {
                     expect(spy).toHaveBeenCalled();
-                    spy.calls.reset();
                 });
 
                 projectsNotAddedToSpies.forEach(function (spy) {
                     expect(spy).not.toHaveBeenCalled();
-                    spy.calls.reset();
                 });
             }
 
@@ -452,12 +448,10 @@ beforeEach(function () {
 
                 projectsAddedToSpies.forEach(function (spy) {
                     expect(spy).toHaveBeenCalledWith(xmlPath, incText, targetConditions);
-                    spy.calls.reset();
                 });
 
                 projectsNotAddedToSpies.forEach(function (spy) {
                     expect(spy).not.toHaveBeenCalled();
-                    spy.calls.reset();
                 });
             }
 

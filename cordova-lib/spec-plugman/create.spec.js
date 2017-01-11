@@ -49,6 +49,7 @@ describe( 'create plugin', function() {
             expect( writeFileSync.calls.count() ).toEqual( 2 );
             done();
         }).fail(function err(errMsg) {
+            expect(errMsg).toBeUndefined();
             done();
         });
     }, 6000);
