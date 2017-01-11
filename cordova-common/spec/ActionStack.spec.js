@@ -60,7 +60,7 @@ describe('action-stack', function() {
             // process should throw
             var error;
             stack.process('android', android_one_project)
-            .then(function(something){
+            .then(function(){
                 expect(false).toBe(true);
             }).fail(function(err){
                 error = err;

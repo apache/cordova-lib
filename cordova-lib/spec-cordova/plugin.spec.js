@@ -83,7 +83,6 @@ function removePlugin(id) {
 var errorHandler = {
     errorCallback: function(error) {
         // We want the error to be printed by jasmine
-        console.log(error);
         expect(error).toBeUndefined();
     }
 };
@@ -152,7 +151,6 @@ describe('plugin end-to-end', function() {
             return removePlugin(pluginId);
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -169,7 +167,6 @@ describe('plugin end-to-end', function() {
             expect(prepare.preparePlatforms).toHaveBeenCalled();
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -186,7 +183,6 @@ describe('plugin end-to-end', function() {
             expect(prepare.preparePlatforms).not.toHaveBeenCalled();
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -210,7 +206,6 @@ describe('plugin end-to-end', function() {
             return removePlugin(pluginId);
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -230,7 +225,6 @@ describe('plugin end-to-end', function() {
             return removePlugin(org_test_defaultvariables);
        })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -239,7 +233,6 @@ describe('plugin end-to-end', function() {
     it('Test 006 : should successfully add a plugin when specifying CLI variables', function(done) {
         addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'yes', REQUIRED_ANDROID:'yes'}}, done)
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -255,7 +248,6 @@ describe('plugin end-to-end', function() {
             expect(fetchOptions.searchpath[0]).toExist();
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -273,7 +265,6 @@ describe('plugin end-to-end', function() {
             expect(fetchOptions.noregistry).toBeTruthy();
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -286,7 +277,6 @@ describe('plugin end-to-end', function() {
             expect(registry.info).not.toHaveBeenCalled();
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -304,7 +294,6 @@ describe('plugin end-to-end', function() {
             expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -326,7 +315,6 @@ describe('plugin end-to-end', function() {
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -345,7 +333,6 @@ describe('plugin end-to-end', function() {
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {
-            console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);

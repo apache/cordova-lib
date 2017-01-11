@@ -30,9 +30,9 @@ describe('findProjectRoot method', function() {
         process.env.PWD = origPWD;
         process.chdir(cwd);
     });
-function removeDir(someDirectory) {
-    shell.rm('-rf', someDirectory);
-}
+    function removeDir(someDirectory) {
+        shell.rm('-rf', someDirectory);
+    }
     it('Test 001 : should return false if it hits the home directory', function() {
         var somedir = path.join(home, 'somedir');
         removeDir(somedir);
