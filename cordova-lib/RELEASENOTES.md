@@ -20,6 +20,13 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.5.0 (Jan 17, 2017)
+* [CB-12018](https://issues.apache.org/jira/browse/CB-12018): updated `jshint` and updated `jasmine` tests to work with `jasmine` instead of `jasmine-node`
+* [CB-12314](https://issues.apache.org/jira/browse/CB-12314) updated pinned android to 6.1.1
+* [CB-12261](https://issues.apache.org/jira/browse/CB-12261) fix subdirectories deprecated warning always shows and stop fetch caused by [CB-11979](https://issues.apache.org/jira/browse/CB-11979)
+* [CB-12284](https://issues.apache.org/jira/browse/CB-12284) Include project root as additional root for static router
+* [CB-12088](https://issues.apache.org/jira/browse/CB-12088) Fix misleading warning when adding platform without `Api.js`
+
 ### 6.4.0 (Oct 21, 2016)
 * [CB-12039](https://issues.apache.org/jira/browse/CB-12039) updated pinned `Android` to 6.0.0 and `iOS` to 4.3.0
 * [CB-11979](https://issues.apache.org/jira/browse/CB-11979) added deprecation warning for installing plugins via subdirectories
