@@ -393,7 +393,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.raw.platform('add', ['android@6.1.0', 'ios'], {'save':true, 'fetch':true});
+            return cordova.raw.platform('add', ['android@6.1.0', 'ios@4.3.0'], {'save':true, 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];

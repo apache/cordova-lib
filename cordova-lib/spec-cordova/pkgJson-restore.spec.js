@@ -58,15 +58,6 @@ describe('tests platform/spec restore with --save', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#000 will check that when a platform is added with a spec, it will 
     *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
     *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
@@ -132,199 +123,6 @@ describe('tests platform/spec restore with --save', function () {
             expect(firstCharConfig === '^');
             expect(engNames).toEqual([ 'ios' ]);
             expect(engines.length === 1);
-        }).fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    // Cordova prepare needs extra wait time to complete.
-    },30000);
-
-    /** Test#001 will add a platform to package.json with the 'save' flag.
-    *   It will remove it from platforms.json without the save flag.
-    *   After running cordova prepare, that platform should be restored in the
-    *   installed platform list in platforms.json.
-    */
-    it('Test#001 : should restore platform that has been removed from project', function(done) {
-        var cwd = process.cwd();
-        var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
-        var pkgJson;
-        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
-        var platformsJson;
-
-        emptyPlatformList().then(function() {
-            // Add the testing platform with --save.
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Require platformsFolderPath
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Check the platform add was successful in package.json.
-            expect(pkgJson.cordova.platforms).toBeDefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-            // Expect that "helpers.testPlatform" in the installed platform list in platforms.json
-            expect(platformsJson).toBeDefined();
-            expect(platformsJson[helpers.testPlatform]).toBeDefined();
-        }).then(fullPlatformList) // Platform should still be in platform ls.
-          .then(function() {
-            // And now remove helpers.testPlatform without --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform]);
-        }).then(function() {
-            // Delete any previous caches of require(package.json) and (platforms.json)
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Check that the platform removed without --save is still in platforms key.
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-            // Check that the platform was removed from the platforms.json
-            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
-        }).then(function() {
-            // Run cordova prepare.
-            return cordova.raw.prepare();
-        }).then(function() {
-            // Delete any previous caches of platforms.json.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json.
-            expect(platformsJson[helpers.testPlatform]).toBeDefined();
-        }).fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    // Cordova prepare needs extra wait time to complete.
-    },30000);
-
-    /** Test#002 will add two platforms to package.json with the 'save' flag.
-    *   It will remove one platform from pkg.json without the 'save' flag and remove
-    *   the other platform with the 'save' flag. After running cordova prepare, 
-    *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
-    */
-    it('Test#002 : should NOT restore platform that was removed with --save', function(done) {
-        var cwd = process.cwd();
-        var pkgJsonPath = path.join(cwd,'package.json');
-        var pkgJson;
-        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
-        var platformsJson;
-        var secondPlatformAdded = 'ios';
-    
-        emptyPlatformList().then(function() {
-            // Add the testing platform with --save.
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Add the 'ios' platform with --save
-            return cordova.raw.platform('add',secondPlatformAdded, {'save':true});
-        }).then(function() {
-            // Delete any previous caches of require(package.json) and (platforms.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Check the platform add of both platforms (to pkg.Json) was successful.
-            expect(pkgJson.cordova.platforms).toBeDefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(0);
-            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(1);
-            // Expect that "helpers.testPlatform" in the installed platform list in platforms.json.
-            expect(platformsJson).toBeDefined();
-            expect(platformsJson[helpers.testPlatform]).toBeDefined();
-            expect(platformsJson[secondPlatformAdded]).toBeDefined();
-        }).then(fullPlatformList) // Platform should still be in platform ls.
-          .then(function() {
-            // Remove helpers.testPlatform with --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Remove secondPlatformAdded without --save.
-            return cordova.raw.platform('rm', secondPlatformAdded);
-        }).then(function() {
-            // Delete any previous caches of require(package.json) and (platformsJson).
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
-            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(0);
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
-            // Check that both platforms were removed from the platforms.json list.
-            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
-            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
-        }).then(function() {
-            // Run cordova prepare.
-            return cordova.raw.prepare();
-        }).then(function() {
-            // Delete any previous caches of platformsJson.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json
-            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
-            // Expect 'ios' not to be in platforms.json and has not been restored.
-            expect(platformsJson[secondPlatformAdded]).toBeDefined();
-        }).fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    // Cordova prepare needs extra wait time to complete.
-    },30000);
-
-    /** Test#003 will add two platforms to package.json - one with the 'save' flag and one
-    *   without the 'save' flag. It will remove both platforms without a 'save' flag.
-    *   After running cordova prepare, only the platform added with the 'save' flag is restored
-    *   in platforms.json.
-    */
-    it('Test#003 : should NOT restore platform that was not saved and removed', function(done) {
-        var cwd = process.cwd();
-        var pkgJsonPath = path.join(cwd,'package.json');
-        var pkgJson;
-        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
-        var secondPlatformAdded = 'ios';
-        var platformsJson;
-
-        emptyPlatformList().then(function() {
-            // Add 'ios' platform to project without --save
-            return cordova.raw.platform('add', secondPlatformAdded);
-        }).then(function() {
-            // Add helpers.testPlatform to project with --save
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Delete any previous caches of require(package.json) and (platformsJson)
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Check the platform add of only helpers.testPlatform was successful in package.json.
-            expect(pkgJson.cordova.platforms).toBeDefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(-1);
-            // Expect both platforms to be installed platform list in platforms.json
-            expect(platformsJson[helpers.testPlatform]).toBeDefined();
-            expect(platformsJson[secondPlatformAdded]).toBeDefined();
-        }).then(fullPlatformList) // Platforms should still be in platform ls.
-          .then(function() {
-            // Remove helpers.testPlatform without --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform]);
-        }).then(function() {
-            // Remove secondPlatformAdded without --save.
-            return cordova.raw.platform('rm', secondPlatformAdded);
-        }).then(function() {
-            // Delete any previous caches of require(pkgJson) and (platformsJson)
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Check that the platform that was added with --save is still in package.json.
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-            // Check that both platforms were removed from the platforms.json.
-            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
-            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
-        }).then(function() {
-            // Run cordova prepare
-            return cordova.raw.prepare();
-        }).then(function() {
-            // Delete any previous caches of platformsJson
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            // Expect "helpers.testPlatform" to be in the installed platforms list.
-            expect(platformsJson[helpers.testPlatform]).toBeDefined();
-            // Expect that 'ios' will not be in platforms.json and has not been restored.
-            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -483,6 +281,112 @@ describe('tests platform/spec restore with --save', function () {
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             // Plugin was restored and added to installed plugin list successfully.
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).toExist();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+});
+
+// Use basePkgJson
+describe('tests platform/spec restore with --save', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson2');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+    /** Test#003 will add two platforms to package.json - one with the 'save' flag and one
+    *   without the 'save' flag. It will remove both platforms without a 'save' flag.
+    *   After running cordova prepare, only the platform added with the 'save' flag is restored
+    *   in platforms.json.
+    */
+    it('Test#003 : should NOT restore platform that was not saved and removed', function(done) {
+        var cwd = process.cwd();
+        var pkgJsonPath = path.join(cwd,'package.json');
+        var pkgJson;
+        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
+        var secondPlatformAdded = 'ios';
+        var platformsJson;
+
+        emptyPlatformList().then(function() {
+            // Add 'ios' platform to project without --save
+            return cordova.raw.platform('add', secondPlatformAdded);
+        }).then(function() {
+            // Add helpers.testPlatform to project with --save
+            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
+        }).then(function() {
+            // Delete any previous caches of require(package.json) and (platformsJson)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Check the platform add of only helpers.testPlatform was successful in package.json.
+            expect(pkgJson.cordova.platforms).toBeDefined();
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(-1);
+            // Expect both platforms to be installed platform list in platforms.json
+            expect(platformsJson[helpers.testPlatform]).toBeDefined();
+            expect(platformsJson[secondPlatformAdded]).toBeDefined();
+        }).then(fullPlatformList) // Platforms should still be in platform ls.
+          .then(function() {
+            // Remove helpers.testPlatform without --save.
+            return cordova.raw.platform('rm', [helpers.testPlatform]);
+        }).then(function() {
+            // Remove secondPlatformAdded without --save.
+            return cordova.raw.platform('rm', secondPlatformAdded);
+        }).then(function() {
+            // Delete any previous caches of require(pkgJson) and (platformsJson)
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Check that the platform that was added with --save is still in package.json.
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            // Check that both platforms were removed from the platforms.json.
+            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
+            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
+        }).then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of platformsJson
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Expect "helpers.testPlatform" to be in the installed platforms list.
+            expect(platformsJson[helpers.testPlatform]).toBeDefined();
+            // Expect that 'ios' will not be in platforms.json and has not been restored.
+            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -693,7 +597,7 @@ describe('update empty package.json to match config.xml', function () {
             return elem.name;
         });
         var configEngArray = engNames.slice();
-    
+
         // Expect that pkg.json exists without a cordova key.
         expect(pkgJson).toBeDefined();
         expect(pkgJson.cordova).toBeUndefined();
@@ -1496,3 +1400,168 @@ describe('platforms and plugins should be restored with config.xml even without 
 });
 
 
+// Use basePkgJson
+describe('tests platform/spec restore with --save', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson2');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+
+    /** Test#001 will add a platform to package.json with the 'save' flag.
+    *   It will remove it from platforms.json without the save flag.
+    *   After running cordova prepare, that platform should be restored in the
+    *   installed platform list in platforms.json.
+    */
+    it('Test#001 : should restore platform that has been removed from project', function(done) {
+        var cwd = process.cwd();
+        var pkgJsonPath = path.join(cwd,'package.json');
+        delete require.cache[require.resolve(pkgJsonPath)];
+        var pkgJson;
+        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
+        var platformsJson;
+
+        emptyPlatformList().then(function() {
+            // Add the testing platform with --save.
+            return cordova.raw.platform('add', 'android', {'save':true});
+        }).then(function() {
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Require platformsFolderPath
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Check the platform add was successful in package.json.
+            expect(pkgJson.cordova.platforms).toBeDefined();
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            // Expect that "helpers.testPlatform" in the installed platform list in platforms.json
+            expect(platformsJson).toBeDefined();
+            expect(platformsJson[helpers.testPlatform]).toBeDefined();
+        }).then(fullPlatformList) // Platform should still be in platform ls.
+          .then(function() {
+            // And now remove helpers.testPlatform without --save.
+            return cordova.raw.platform('rm', [helpers.testPlatform]);
+        }).then(function() {
+            // Delete any previous caches of require(package.json) and (platforms.json)
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Check that the platform removed without --save is still in platforms key.
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            // Check that the platform was removed from the platforms.json
+            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
+        }).then(function() {
+            // Run cordova prepare.
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of platforms.json.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json.
+            expect(platformsJson[helpers.testPlatform]).toBeDefined();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+
+    /** Test#002 will add two platforms to package.json with the 'save' flag.
+    *   It will remove one platform from pkg.json without the 'save' flag and remove
+    *   the other platform with the 'save' flag. After running cordova prepare, 
+    *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
+    */
+    it('Test#002 : should NOT restore platform that was removed with --save', function(done) {
+        var cwd = process.cwd();
+        var pkgJsonPath = path.join(cwd,'package.json');
+        var pkgJson;
+        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
+        var platformsJson;
+        var secondPlatformAdded = 'ios';
+    
+        emptyPlatformList().then(function() {
+            // Add the testing platform with --save.
+            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
+        }).then(function() {
+            // Add the 'ios' platform with --save
+            return cordova.raw.platform('add',secondPlatformAdded, {'save':true});
+        }).then(function() {
+            // Delete any previous caches of require(package.json) and (platforms.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Check the platform add of both platforms (to pkg.Json) was successful.
+            expect(pkgJson.cordova.platforms).toBeDefined();
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(0);
+            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(1);
+            // Expect that "helpers.testPlatform" in the installed platform list in platforms.json.
+            expect(platformsJson).toBeDefined();
+            expect(platformsJson[helpers.testPlatform]).toBeDefined();
+            expect(platformsJson[secondPlatformAdded]).toBeDefined();
+        }).then(fullPlatformList) // Platform should still be in platform ls.
+          .then(function() {
+            // Remove helpers.testPlatform with --save.
+            return cordova.raw.platform('rm', [helpers.testPlatform], {'save':true});
+        }).then(function() {
+            // Remove secondPlatformAdded without --save.
+            return cordova.raw.platform('rm', secondPlatformAdded);
+        }).then(function() {
+            // Delete any previous caches of require(package.json) and (platformsJson).
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
+            expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(0);
+            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
+            // Check that both platforms were removed from the platforms.json list.
+            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
+            expect(platformsJson[secondPlatformAdded]).toBeUndefined();
+        }).then(function() {
+            // Run cordova prepare.
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of platformsJson.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json
+            expect(platformsJson[helpers.testPlatform]).toBeUndefined();
+            // Expect 'ios' not to be in platforms.json and has not been restored.
+            expect(platformsJson[secondPlatformAdded]).toBeDefined();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+});
