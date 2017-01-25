@@ -35,12 +35,13 @@ describe('tests platform/spec restore with --save', function () {
     var results;
 
     beforeEach(function() {
-        shell.rm('-rf', tmpDir);
+        shell.rm('-rf', project);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         process.chdir(project);
+        delete process.env.PWD;
         events.on('results', function(res) { results = res; });
     });
 
@@ -67,7 +68,7 @@ describe('tests platform/spec restore with --save', function () {
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
         var pkgJson;
-        var iosPlatform = 'ios';
+        var androidPlatform = 'android';
         var configXmlPath = path.join(cwd, 'config.xml');
         var firstCharConfig;
         var engines;
@@ -75,16 +76,16 @@ describe('tests platform/spec restore with --save', function () {
         var engSpec;
 
         emptyPlatformList().then(function() {
-            // Add the ios platform with save, fetch
-            return cordova.raw.platform('add', iosPlatform, {'save':true , 'fetch':true});
+            // Add platform with save, fetch
+            return cordova.raw.platform('add', androidPlatform, {'save':true , 'fetch':true});
         }).then(function() {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Added to ios properly to pkg.json
+            // Added platform properly to pkg.json
             expect(pkgJson.cordova.platforms).toBeDefined();
-            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
             // When spec is added to pkg.json, first char is '^'.
-            expect(pkgJson.dependencies['cordova-'+iosPlatform].charAt(0)).toEqual('^');
+            expect(pkgJson.dependencies['cordova-'+androidPlatform].charAt(0)).toEqual('^');
 
             var cfg = new ConfigParser(configXmlPath);
             engines = cfg.getEngines();
@@ -94,8 +95,8 @@ describe('tests platform/spec restore with --save', function () {
             engSpec = engines.map(function(elem) {
                 return elem.spec;
             });
-            // Only ios platform added to config.xml
-            expect(engNames).toEqual([ 'ios' ]);
+            // Only android platform added to config.xml
+            expect(engNames).toEqual([ androidPlatform ]);
             expect(engines.length === 1);
             // When spec is added to config.xml, first char is '~'.
             firstCharConfig = engSpec[0].charAt(0);
@@ -106,9 +107,9 @@ describe('tests platform/spec restore with --save', function () {
         }).then(function() {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // No changes to pkg.json spec for ios.
-            expect(pkgJson.dependencies['cordova-'+iosPlatform].charAt(0)).toEqual('^');
-            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            // No changes to pkg.json spec for android.
+            expect(pkgJson.dependencies['cordova-'+androidPlatform].charAt(0)).toEqual('^');
+            expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
             // Config.xml spec (first char) should change from '~' to '^'.
             var cfg1 = new ConfigParser(configXmlPath);
             engines = cfg1.getEngines();
@@ -121,13 +122,13 @@ describe('tests platform/spec restore with --save', function () {
             firstCharConfig = engSpec[0].charAt(0);
             // When spec is added to config.xml, first char is '~'.
             expect(firstCharConfig === '^');
-            expect(engNames).toEqual([ 'ios' ]);
+            expect(engNames).toEqual([ androidPlatform ]);
             expect(engines.length === 1);
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    },30000);
+    },300000);
 
     /** Test#017
     *   When platform is added with url and fetch and restored with fetch, 
@@ -263,7 +264,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function() {
             // Add platform (so that prepare can run).
-            return cordova.raw.platform('add', 'ios', {'save':true});
+            return cordova.raw.platform('add', 'browser', {'save':true});
         }).then(function() {
             // Run cordova prepare with fetch.
             return cordova.raw.prepare({'fetch':true});
@@ -336,11 +337,11 @@ describe('tests platform/spec restore with --save', function () {
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
         var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
-        var secondPlatformAdded = 'ios';
+        var secondPlatformAdded = 'browser';
         var platformsJson;
 
         emptyPlatformList().then(function() {
-            // Add 'ios' platform to project without --save
+            // Add 'browser' platform to project without --save
             return cordova.raw.platform('add', secondPlatformAdded);
         }).then(function() {
             // Add helpers.testPlatform to project with --save
@@ -385,7 +386,7 @@ describe('tests platform/spec restore with --save', function () {
             platformsJson = require(platformsFolderPath);
             // Expect "helpers.testPlatform" to be in the installed platforms list.
             expect(platformsJson[helpers.testPlatform]).toBeDefined();
-            // Expect that 'ios' will not be in platforms.json and has not been restored.
+            // Expect that 'browser' will not be in platforms.json and has not been restored.
             expect(platformsJson[secondPlatformAdded]).toBeUndefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
@@ -466,7 +467,7 @@ describe('files should not be modified if their platforms are identical', functi
     },30000);
 });
 
-// Use a new basePkgJson5 as config.xml contains android/ios and pkg.json contains android
+// Use a new basePkgJson5 as config.xml contains android/browser and pkg.json contains android
 describe('update pkg.json to include platforms in config.xml', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
@@ -497,12 +498,12 @@ describe('update pkg.json to include platforms in config.xml', function () {
         });
     }
     /** Test#005 will check the platform list in package.json and config.xml. 
-    *   When config.xml has 'android and ios' and pkg.json only contains 'android', run cordova
-    *   and pkg.json is updated to include 'ios'. This test will also check that pkg.json
+    *   When config.xml has 'android and browser' and pkg.json only contains 'android', run cordova
+    *   and pkg.json is updated to include 'browser'. This test will also check that pkg.json
     *   is updated with the correct spec/dependencies when restored. Checks that specs are
     *   added properly, too.
     */
-    it('Test#005 : if config.xml has android & ios platforms and pkg.json has android, update pkg.json to also include ios with spec', function(done) {
+    it('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function(done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -515,24 +516,24 @@ describe('update pkg.json to include platforms in config.xml', function () {
         });
         var configEngArray = engNames.slice();
         var androidPlatform = 'android';
-        var iosPlatform = 'ios';
+        var browserPlatform = 'browser';
        
-        // Config.xml contains(android & ios) and pkg.json contains android (basePkgJson5).
+        // Config.xml contains(android & browser) and pkg.json contains android (basePkgJson5).
         expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
-        expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
-        // pkg.json should not contain 'ios' platform before cordova prepare.
-        expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toEqual(-1);
+        expect(configEngArray.indexOf(browserPlatform)).toBeGreaterThan(-1);
+        // pkg.json should not contain 'browser' platform before cordova prepare.
+        expect(pkgJson.cordova.platforms.indexOf(browserPlatform)).toEqual(-1);
         expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
-        // pkg.json ios/android specs should be undefined.
-        expect(pkgJson.dependencies[iosPlatform]).toBeUndefined();
+        // pkg.json browser/android specs should be undefined.
+        expect(pkgJson.dependencies[browserPlatform]).toBeUndefined();
         expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
         emptyPlatformList().then(function() {
             return cordova.raw.prepare();
         }).then(function() {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Expect 'ios' to be added to pkg.json.
-            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            // Expect 'browser' to be added to pkg.json.
+            expect(pkgJson.cordova.platforms.indexOf(browserPlatform)).toBeGreaterThan(-1);
             // Expect 'android' to still be there in pkg.json.
             expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
             // Expect both pkg.json and config.xml to each have both platforms in their arrays.
@@ -540,9 +541,9 @@ describe('update pkg.json to include platforms in config.xml', function () {
             expect(pkgJson.cordova.platforms.length === 2);
             // No changes to config.xml.
             expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
-            expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            expect(configEngArray.indexOf(browserPlatform)).toBeGreaterThan(-1);
             // Platform specs from config.xml have been added to pkg.json.
-            expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.3.0');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
             expect(pkgJson.dependencies['cordova-android']).toEqual('6.0.0');
         }).fail(function(err) {
             expect(err).toBeUndefined();
@@ -630,7 +631,7 @@ describe('update empty package.json to match config.xml', function () {
     },30000);
 });
 
-// Use a new basePkgJson4 as pkg.json contains android/ios and config.xml contains android.
+// Use a new basePkgJson4 as pkg.json contains android/browser and config.xml contains android.
 describe('update config.xml to include platforms in pkg.json', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
@@ -661,11 +662,11 @@ describe('update config.xml to include platforms in pkg.json', function () {
         });
     }
     /** Test#007 will check the platform list in package.json and config.xml. 
-    *   When package.json has 'android and ios' and config.xml only contains 'android', run cordova
-    *   and config.xml is updated to include 'ios'. Also, if there is a specified spec in pkg.json,
+    *   When package.json has 'android and browser' and config.xml only contains 'android', run cordova
+    *   and config.xml is updated to include 'browser'. Also, if there is a specified spec in pkg.json,
     *   it should be added to config.xml during restore.
     */
-    it('Test#007 : if pkgJson has android & ios platforms and config.xml has android, update config to also include ios and spec', function(done) {
+    it('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function(done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg1 = new ConfigParser(configXmlPath);
@@ -680,10 +681,10 @@ describe('update config.xml to include platforms in pkg.json', function () {
 
         // Expect that config.xml contains only android at this point (basePjgJson4)
         expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
-        expect(configEngArray.indexOf('ios')).toEqual(-1);
+        expect(configEngArray.indexOf('browser')).toEqual(-1);
         expect(configEngArray.length === 1);
-        // Pkg.json has cordova-ios in its dependencies.
-        expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-ios' : '^4.3.0' });
+        // Pkg.json has cordova-browser in its dependencies.
+        expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-browser' : '^4.1.0' });
         emptyPlatformList().then(function() {
             // Run cordova prepare.
             return cordova.raw.prepare();
@@ -697,18 +698,18 @@ describe('update config.xml to include platforms in pkg.json', function () {
                 return elem.name;
             });
             configEngArray = engNames.slice();
-            // Expect 'ios' to be added to config.xml.
-            expect(configEngArray.indexOf('ios')).toBeGreaterThan(-1);
+            // Expect 'browser' to be added to config.xml.
+            expect(configEngArray.indexOf('browser')).toBeGreaterThan(-1);
             // Expect 'android' to still be in config.xml.
             expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
             // Expect config.xml array to have 2 elements (platforms).
             expect(configEngArray.length === 2);
-            // Check to make sure that 'ios' spec was added properly.
-            expect(engines).toEqual([ { name: 'android', spec: '^3.1.0' },{ name: 'ios', spec: '^4.3.0' } ]);
+            // Check to make sure that 'browser' spec was added properly.
+            expect(engines).toEqual([ { name: 'android', spec: '^3.1.0' },{ name: 'browser', spec: '^4.1.0' } ]);
             // No change to pkg.json dependencies.
-            expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-ios' : '^4.3.0' });
+            expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-browser' : '^4.1.0' });
             expect(pkgJson.dependencies['cordova-android']).toEqual('^3.1.0');
-            expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.3.0');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -1302,20 +1303,20 @@ describe('platforms and plugins should be restored with config.xml even without 
         var pluginsFolderPath16 = path.join(cwd,'plugins');
         var platformsJson;
         var androidPlatform = 'android';
-        var iosPlatform = 'ios';
+        var browserPlatform = 'browser';
 
         // Pkg.json does not exist.
         expect(path.join(cwd,'package.json')).not.toExist();
-        // Config.xml contains only contains 'ios' at this point (basePkgJson13).
+        // Config.xml contains only contains 'android' at this point (basePkgJson13).
         expect(configEngArray.length === 1);
         // Config.xml contains only 1 plugin at this point.
         expect(Object.keys(configPlugins).length === 1);
 
         emptyPlatformList().then(function() {
         // Run cordova prepare.
-        return cordova.raw.platform('add', iosPlatform, {'save':true});
+        return cordova.raw.platform('add', browserPlatform, {'save':true});
         }).then(function () {
-        // Android and ios are in config.xml.
+        // Android and browser are in config.xml.
         var cfg3 = new ConfigParser(configXmlPath);
         engines = cfg3.getEngines();
         engNames = engines.map(function(elem) {
@@ -1326,18 +1327,18 @@ describe('platforms and plugins should be restored with config.xml even without 
         // Delete previouc caches of (pkg.json).
         delete require.cache[require.resolve(platformsFolderPath1)];
         platformsJson = require(platformsFolderPath1);
-        // Android and ios should be installed
+        // Android and browser should be installed
         expect(platformsJson).toBeDefined();
         expect(platformsJson[androidPlatform]).toBeDefined();
-        expect(platformsJson[iosPlatform]).toBeDefined();
+        expect(platformsJson[browserPlatform]).toBeDefined();
         // Remove android without --save.
-        return cordova.raw.platform('rm', [iosPlatform]);
+        return cordova.raw.platform('rm', [browserPlatform]);
         }).then(function () {
-        // Android should not be in the installed list (only ios).
+        // Android should not be in the installed list (only browser).
         delete require.cache[require.resolve(platformsFolderPath1)];
         platformsJson = require(platformsFolderPath1);
         expect(platformsJson).toBeDefined();
-        expect(platformsJson[iosPlatform]).toBeUndefined();
+        expect(platformsJson[browserPlatform]).toBeUndefined();
         expect(platformsJson[androidPlatform]).toBeDefined();
         }).then(function () {
         // Run cordova prepare.
@@ -1349,15 +1350,15 @@ describe('platforms and plugins should be restored with config.xml even without 
             return elem.name;
         });
         configEngArray = engNames.slice();
-        // Config.xml should have android and ios.
+        // Config.xml should have android and browser.
         expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
-        expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
+        expect(configEngArray.indexOf(browserPlatform)).toBeGreaterThan(-1);
         expect(configEngArray.length === 2);
-        // Expect that android and ios were restored.
+        // Expect that android and browser were restored.
         delete require.cache[require.resolve(platformsFolderPath1)];
         platformsJson = require(platformsFolderPath1);
         expect(platformsJson[androidPlatform]).toBeDefined();
-        expect(platformsJson[iosPlatform]).toBeDefined();
+        expect(platformsJson[browserPlatform]).toBeDefined();
         }).then(function () {
             //Check plugins.
             var cfg5 = new ConfigParser(configXmlPath);
@@ -1507,13 +1508,13 @@ describe('tests platform/spec restore with --save', function () {
         var pkgJson;
         var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
         var platformsJson;
-        var secondPlatformAdded = 'ios';
+        var secondPlatformAdded = 'browser';
     
         emptyPlatformList().then(function() {
             // Add the testing platform with --save.
             return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
         }).then(function() {
-            // Add the 'ios' platform with --save
+            // Add the 'browser' platform with --save
             return cordova.raw.platform('add',secondPlatformAdded, {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platforms.json).
@@ -1557,7 +1558,7 @@ describe('tests platform/spec restore with --save', function () {
             platformsJson = require(platformsFolderPath);
             // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json
             expect(platformsJson[helpers.testPlatform]).toBeUndefined();
-            // Expect 'ios' not to be in platforms.json and has not been restored.
+            // Expect 'browser' not to be in platforms.json and has not been restored.
             expect(platformsJson[secondPlatformAdded]).toBeDefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();

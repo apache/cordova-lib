@@ -5,7 +5,7 @@
     "main": "index.js",
     "dependencies": {
         "cordova-android": "^3.1.0",
-        "cordova-ios": "^4.3.0"
+        "cordova-browser": "^4.1.0"
     },
     "devDependencies": {},
     "scripts": {
@@ -16,7 +16,7 @@
     "cordova": {
         "platforms": [
             "android",
-            "ios"
+            "browser"
         ]
     }
 }
