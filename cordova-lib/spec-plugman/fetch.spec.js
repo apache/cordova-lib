@@ -22,7 +22,8 @@ var rewire  = require('rewire'),
     os      = require('os'),
     path    = require('path'),
     shell   = require('shelljs'),
-    realrm = shell.rm,
+    realrm  = shell.rm,
+    TIMEOUT = 60 * 1000,
     //xml_helpers = require('../src/util/xml-helpers'),
     metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
@@ -216,21 +217,21 @@ describe('fetch', function() {
                 expect(1).toBe(1);
                 done();
             });
-        }, 20000);
+        }, TIMEOUT);
         // this branch uses the old id
         it('Test 018 : should fetch from a branch', function(done) {
             wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#cdvtest', temp, { expected_id: 'org.apache.cordova.device' }), done, function() {
                 expect(1).toBe(1);
                 done();
             });
-        }, 20000);
+        }, TIMEOUT);
         // this tag uses the new id
         it('Test 019 : should fetch from a tag', function(done) {
             wrapper(fetch('http://github.com/apache/cordova-plugin-device.git#r1.0.0', temp, { expected_id: 'cordova-plugin-device' }), done, function() {
                 expect(1).toBe(1);
                 done();
             });
-        }, 20000);
+        }, TIMEOUT);
     });
 
     describe('fetch recursive error CB-8809', function(){

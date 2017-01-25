@@ -186,12 +186,12 @@ describe('plugin fetching version selection', function() {
             '<1.0.0': { 'cordova-android': '<2.0.0' },
             '1.0.0' : { 'cordova-android': '>2.0.0' },
             '1.7.0' : { 'cordova-android': '>4.0.0' },
-            '<2.3.0': { 'cordova-android': '<6.0.0' },
-            '2.3.0' : { 'cordova-android': '6.0.0' }
+            '<2.3.0': { 'cordova-android': '<6.1.1' },
+            '2.3.0' : { 'cordova-android': '6.1.1' }
         };
 
         var after = getWarningCheckCallback(done, [
-            getPlatformRequirement('6.0.0')
+            getPlatformRequirement('6.1.1')
         ]);
         testEngineWithProject(after, testEngine, '1.3.0');
     }, 6000);
@@ -201,14 +201,14 @@ describe('plugin fetching version selection', function() {
             '1.0.0' : { 'cordova-android': '>2.0.0' },
             '1.7.0' : { 'cordova-android': '>4.0.0' },
             '<2.3.0': {
-                'cordova-android': '<6.0.0',
+                'cordova-android': '<6.1.1',
                 'ca.filmaj.AndroidPlugin': '<1.0.0'
             },
-            '2.3.0' : { 'cordova-android': '6.0.0' }
+            '2.3.0' : { 'cordova-android': '6.1.1' }
         };
 
         var after = getWarningCheckCallback(done, [
-            getPlatformRequirement('6.0.0')
+            getPlatformRequirement('6.1.1')
         ]);
         testEngineWithProject(after, testEngine, null);
     });
@@ -313,12 +313,12 @@ describe('plugin fetching version selection', function() {
     it('Test 011 : should respect unreleased versions in constraints', function(done) {
         var testEngine = {
             '1.0.0' : { 'cordova-android': '3.1.0' },
-            '1.1.2' : { 'cordova-android': '6.0.0' },
-            '1.3.0' : { 'cordova-android': '6.0.0' }
+            '1.1.2' : { 'cordova-android': '6.1.1' },
+            '1.3.0' : { 'cordova-android': '6.1.1' }
         };
 
         var after = getWarningCheckCallback(done, [
-            getPlatformRequirement('6.0.0')
+            getPlatformRequirement('6.1.1')
         ]);
 
         testEngineWithProject(after, testEngine, '1.1.0');
@@ -329,11 +329,11 @@ describe('plugin fetching version selection', function() {
         var testEngine = {
             '0.0.0' : { 'ca.filmaj.AndroidPlugin': '1.2.0' },
             '1.1.3' : { 'ca.filmaj.AndroidPlugin': '<5.0.0 || >2.3.0' },
-            '2.3.0' : { 'ca.filmaj.AndroidPlugin': '6.0.0' }
+            '2.3.0' : { 'ca.filmaj.AndroidPlugin': '6.1.1' }
         };
 
         var after = getWarningCheckCallback(done, [
-            getPluginRequirement('6.0.0')
+            getPluginRequirement('6.1.1')
         ]);
 
         testEngineWithProject(after, testEngine, '2.0.0');
@@ -344,11 +344,11 @@ describe('plugin fetching version selection', function() {
         var testEngine = {
             '0.0.0' : { 'cordova': '>1.0.0' },
             '1.1.3' : { 'cordova': '<3.0.0 || >4.0.0' },
-            '2.3.0' : { 'cordova': '6.0.0' }
+            '2.3.0' : { 'cordova': '6.1.1' }
         };
 
         var after = getWarningCheckCallback(done, [
-            getCordovaRequirement('6.0.0')
+            getCordovaRequirement('6.1.1')
         ]);
 
         testEngineWithProject(after, testEngine, '1.1.0');

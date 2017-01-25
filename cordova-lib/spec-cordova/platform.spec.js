@@ -220,7 +220,7 @@ describe('platform add plugin rm end-to-end', function () {
         cordova.raw.create('hello')
         .then(function() {
             process.chdir(project);
-            return cordova.raw.platform('add', 'ios@latest');
+            return cordova.raw.platform('add', 'browser@latest');
         })
         .then(function() {
             return cordova.raw.plugin('add', 'cordova-plugin-media');
@@ -268,15 +268,15 @@ describe('platform add and remove --fetch', function () {
         cordova.raw.create('helloFetch')
         .then(function() {
             process.chdir(project);
-            return cordova.raw.platform('add', 'ios', {'fetch':true});
+            return cordova.raw.platform('add', 'browser', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
-            expect(path.join(platformsDir, 'ios')).toExist();
+            expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
+            expect(path.join(platformsDir, 'browser')).toExist();
             return cordova.raw.platform('add', 'android', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
+            expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
             expect(path.join(platformsDir, 'android')).toExist();
             //Tests finish before this command finishes resolving
             //return cordova.raw.platform('rm', 'ios', {'fetch':true});
@@ -319,7 +319,7 @@ describe('plugin add and rm end-to-end --fetch', function () {
         cordova.raw.create('hello3')
         .then(function() {
             process.chdir(project);
-            return cordova.raw.platform('add', 'ios', {'fetch': true});
+            return cordova.raw.platform('add', 'browser', {'fetch': true});
         })
         .then(function() {
             return cordova.raw.plugin('add', 'cordova-plugin-media', {'fetch': true});

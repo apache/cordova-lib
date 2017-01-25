@@ -47,6 +47,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var modifiedConfigXML = false;
     var mergedPlatformSpecs = {};
     var key;
+    var installAllPlatforms = !platforms || platforms.length === 0;
 
     // Check if path exists and require pkgJsonPath.
     if(fs.existsSync(pkgJsonPath)) {
@@ -62,7 +63,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // Combining arrays and checking duplicates.
             comboArray = pkgJsonPlatforms.slice();
         }
-
         engines = cfg.getEngines(projectHome);
         configPlatforms = engines.map(function(Engine) {
             var configPlatName = Engine.name;
@@ -88,7 +88,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
         // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
-           return Q('No platforms found in config.xml or package.json. Nothing to restore');
+            return Q('No platforms found in config.xml or package.json. Nothing to restore');
         }
 
         // If no package.json, don't continue.
@@ -182,17 +182,19 @@ function installPlatformsFromConfigXML(platforms, opts) {
     // CB-9278 : Run `platform add` serially, one platform after another
     // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
     // gets executed simultaneously by each platform and leads to an exception being thrown
+
     return promiseutil.Q_chainmap_graceful(comboArray, function(target) {
         var cwd = process.cwd();
         var platformsFolderPath = path.join(cwd,'platforms');
         var platformsInstalled = path.join(platformsFolderPath, target);
         if (target) {
+            var platformName = target;
             // Add the spec to the target
             if(mergedPlatformSpecs[target]) {
                 target = target + '@' + mergedPlatformSpecs[target];
             }
             // If the platform is already installed, no need to re-install it.
-            if (!fs.existsSync(platformsInstalled)) {
+            if (!fs.existsSync(platformsInstalled) && (installAllPlatforms || platforms.indexOf(platformName) > -1)) {
                 events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
                 return cordova.raw.platform('add', target, opts);
             }
@@ -255,7 +257,18 @@ function installPluginsFromConfigXML(args) {
         // Check to see which plugins are initially the same in pkg.json and config.xml.
         // Add missing plugin variables in package.json from config.xml.
         comboPluginIdArray.forEach(function(item) {
-            if(pluginIdConfig.includes(item)) {
+
+            function includeFunc(container, value) {
+                var returnValue = false;
+                var pos = container.indexOf(value);
+                if (pos >= 0) {
+                    returnValue = true;
+                }
+                return returnValue;
+            }
+            var result = includeFunc(pluginIdConfig, item);
+
+            if (result === true) {
                 configPlugin = cfg.getPlugin(item);
                 configPluginVariables = configPlugin.variables;
                 pkgJsonPluginVariables = comboObject[item];
