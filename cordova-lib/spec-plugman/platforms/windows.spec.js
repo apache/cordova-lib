@@ -435,8 +435,6 @@ beforeEach(function () {
 
                 projects.forEach(function (project) {
                     var spy = spyOn(project, 'removeItemGroupElement');
-                    
-
                     if (projectsAddedTo.indexOf(path.basename(project.location)) > -1) {
                         projectsAddedToSpies.push(spy);
                     } else {

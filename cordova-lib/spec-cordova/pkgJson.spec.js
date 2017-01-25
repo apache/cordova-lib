@@ -21,7 +21,8 @@ var helpers = require('./helpers'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
-    cordova = require('../src/cordova/cordova');
+    cordova = require('../src/cordova/cordova'),
+    TIMEOUT = 30 * 1000;
 
 // This group of tests checks if plugins are added and removed as expected from package.json.
 describe('plugin end-to-end', function() {
@@ -95,7 +96,7 @@ describe('plugin end-to-end', function() {
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#002 : should NOT add a plugin to package.json if --save is not used', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
@@ -120,7 +121,7 @@ describe('plugin end-to-end', function() {
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#003 : should NOT remove plugin from package.json if there is no --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
@@ -150,7 +151,7 @@ describe('plugin end-to-end', function() {
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#004 : should successfully add and remove a plugin with variables and save to package.json', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
@@ -182,8 +183,10 @@ describe('plugin end-to-end', function() {
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
-    it('Test#005 : should successfully add and remove multiple plugins with save & fetch', function(done) {
+    }, TIMEOUT);
+
+    // CB-12170 : Test is commented out because not promisified correctly in cordova-create script
+    xit('Test#005 : should successfully add and remove multiple plugins with save & fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         // Delete any previous caches of require(package.json).
@@ -220,7 +223,7 @@ describe('plugin end-to-end', function() {
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
@@ -291,7 +294,7 @@ describe('platform end-to-end with --save', function () {
         .fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#007 : should not remove platforms from package.json when removing without --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
@@ -319,7 +322,7 @@ describe('platform end-to-end with --save', function () {
         .fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#008 : should not add platform to package.json when adding without --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
@@ -343,12 +346,12 @@ describe('platform end-to-end with --save', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    });
+    }, TIMEOUT);
 
     it('Test#009 : should only add the platform to package.json with --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
-        var platformNotToAdd = 'ios';
+        var platformNotToAdd = 'browser';
         expect(pkgJsonPath).toExist();
 
         // Add a platform without --save.
@@ -370,7 +373,7 @@ describe('platform end-to-end with --save', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 30000);
+    }, TIMEOUT);
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();
@@ -393,7 +396,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.raw.platform('add', ['android@6.1.0', 'ios@4.3.0'], {'save':true, 'fetch':true});
+            return cordova.raw.platform('add', ['android@6.1.0', 'browser@4.1.0'], {'save':true, 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
@@ -401,10 +404,10 @@ describe('platform end-to-end with --save', function () {
             // Check the platform add was successful in platforms list and in dependencies.
             expect(pkgJson.cordova.platforms).toBeDefined();
             expect(pkgJson.cordova.platforms.indexOf('android')).toEqual(0);
-            expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(1);
+            expect(pkgJson.cordova.platforms.indexOf('browser')).toEqual(1);
             expect(pkgJson.dependencies).toBeDefined();
             expect(pkgJson.dependencies['cordova-android']).toBeDefined();
-            expect(pkgJson.dependencies['cordova-ios']).toBeDefined();
+            expect(pkgJson.dependencies['cordova-browser']).toBeDefined();
             // Android platform should have specific version from add.
             expect(pkgJson.dependencies['cordova-android']).toEqual('^6.1.0');
 
@@ -414,24 +417,24 @@ describe('platform end-to-end with --save', function () {
                 return elem.name;
             });
             configEngArray = engNames.slice();
-            // Check that android and ios were added to config.xml with the correct spec.
+            // Check that android and browser were added to config.xml with the correct spec.
             expect(configEngArray.length === 2);
-            expect(engines).toEqual([ { name: 'android', spec: '~6.1.0' }, { name: 'ios', spec: '~4.3.0' } ]);
+            expect(engines).toEqual([ { name: 'android', spec: '~6.1.0' }, { name: 'browser', spec: '~4.1.0' } ]);
 
         }).then(fullPlatformList) // Platform should still be in platform ls.
         .then(function() {
             // And now remove it with --save.
-            return cordova.raw.platform('rm', ['android', 'ios'], {'save':true, 'fetch':true});
+            return cordova.raw.platform('rm', ['android', 'browser'], {'save':true, 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Checking that the platform removed is in not in the platforms key.
             expect(pkgJson.cordova.platforms.indexOf('android')).toEqual(-1);
-            expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(-1);
+            expect(pkgJson.cordova.platforms.indexOf('browser')).toEqual(-1);
             // Dependencies are removed.
             expect(pkgJson.dependencies['cordova-android']).toBeUndefined();
-            expect(pkgJson.dependencies['cordova-ios']).toBeUndefined();
+            expect(pkgJson.dependencies['cordova-browser']).toBeUndefined();
             // Platforms are removed from config.xml.
             var cfg4 = new ConfigParser(configXmlPath);
             engines = cfg4.getEngines();
@@ -445,6 +448,6 @@ describe('platform end-to-end with --save', function () {
         .fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
-    }, 30000);
+    }, TIMEOUT);
 });
 

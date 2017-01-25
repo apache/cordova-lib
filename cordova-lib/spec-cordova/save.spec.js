@@ -237,7 +237,7 @@ describe('(save flag)', function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe(null);
                 done();
             });
-        });
+        }, TIMEOUT);
 
         it('Test 009 : spec.6 should save local path as spec if added using only local path', function (done) {
             helpers.removeEngine(appPath, platformName);
@@ -412,7 +412,7 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, TIMEOUT);
+        }, BIG_TIMEOUT);
 
         it('Test 018 : spec.14.1 should restore plugin with variables', function (done) {
             platform('add', platformLocalPathNewer)
@@ -439,7 +439,7 @@ describe('(save flag)', function () {
                 expect(true).toBe(false);
                 done();
             });
-        }, TIMEOUT);
+        }, BIG_TIMEOUT);
 
         it('Test 019 : spec.15 save git url as spec', function (done) {
             platform('add', platformLocalPathNewer)
@@ -677,7 +677,7 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        });
+        }, BIG_TIMEOUT);
 
         it('Test 033 : spec.25 should install plugins already added to the project into platform when restoring it', function (done) {
             var fail = jasmine.createSpy('fail').and.callFake(function (err) {
@@ -700,7 +700,7 @@ describe('(save flag)', function () {
                 expect(fail).not.toHaveBeenCalled();
                 done();
             });
-        });
+        }, BIG_TIMEOUT);
     });
 
     describe('(cleanup)', function () {

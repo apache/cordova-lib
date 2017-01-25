@@ -11,7 +11,7 @@
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
-    <engine name="ios"/>
+    <engine name="browser"/>
     <plugin name="cordova-plugin-camera" spec="~2.2.0">
         <variable name="variable_1" value="value_1" />
         <variable name="variable_2" value="value_2" />
