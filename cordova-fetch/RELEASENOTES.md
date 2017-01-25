@@ -21,7 +21,7 @@
 # Cordova-fetch Release Notes
 
 ### 1.0.2 (Jan 17, 2017)
-* [CB-12358](https://issues.apache.org/jira/browse/CB-12358) updated cordova-common dep for cordova-fetch to 2.0.0
+* [CB-12358](https://issues.apache.org/jira/browse/cb-12358) updated cordova-common dep for cordova-fetch to 2.0.0
 
 ### 1.0.0 (May 12, 2016)
 * [CB-9858](https://issues.apache.org/jira/browse/CB-9858) Added jasmine tests
