@@ -18,7 +18,7 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "aliasify": "^1.7.2",
+    "aliasify": "^2.1.0",
     "cordova-common": "2.0.0",
     "cordova-create": "^1.0.1",
     "cordova-fetch": "1.0.2",
@@ -39,14 +39,14 @@
     "semver": "^4.3.x",
     "shelljs": "0.3.0",
     "tar": "2.2.1",
-    "underscore": "1.7.0",
-    "unorm": "1.3.3",
+    "underscore": "1.8.3",
+    "unorm": "1.4.1",
     "valid-identifier": "0.0.1",
     "xcode": "^0.9.0"
   },
   "devDependencies": {
     "codecov": "^1.0.1",
-    "istanbul": "^0.3.0",
+    "istanbul": "^0.4.5",
     "jasmine": "^2.5.2",
     "jshint": "2.5.8",
     "rewire": "2.1.3"
