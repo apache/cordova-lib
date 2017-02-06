@@ -562,6 +562,7 @@ describe('HooksRunner', function() {
 
             it('Test 019 : should execute event listeners serially', function(done) {
                 var h1_fired = false;
+                var h2_fired;
                 var h1 = function() {
                     expect(h2_fired).toBe(false);
                     // Delay 100 ms here to check that h2 is not executed until after
@@ -571,7 +572,7 @@ describe('HooksRunner', function() {
                     });
                     return q;
                 };
-                var h2_fired = false;
+                h2_fired = false;
                 var h2 = function() {
                     h2_fired = true;
                     expect(h1_fired).toBe(true);
@@ -594,12 +595,13 @@ describe('HooksRunner', function() {
 
             it('Test 020 : should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function(done) {
                 var h1_fired = false;
+                var h2_fired;
                 var h1 = function () {
                     h1_fired = true;
                     expect(h2_fired).toBe(false);
                     return Q();
                 };
-                var h2_fired = false;
+                h2_fired = false;
                 var h2 = function () {
                     h2_fired = true;
                     expect(h1_fired).toBe(true);
