@@ -18,7 +18,7 @@
 */
 
 // The URL:true below prevents jshint error "Redefinition or 'URL'."
-/* globals URL:true */
+// globals URL:true 
 
 var path          = require('path'),
     _             = require('underscore'),
