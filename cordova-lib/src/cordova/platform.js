@@ -203,7 +203,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 })
                 .then(function() {
-                    if (cmd == 'add') {
+                    if (cmd == 'add' && !opts.restoring) {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
                 })
