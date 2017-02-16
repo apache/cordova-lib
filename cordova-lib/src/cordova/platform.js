@@ -229,7 +229,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function () {
                     if (!opts.restoring) {
-                        // Call prepare for the current platform if we're not restoring from config.xml
+                        // Call prepare for the current platform if we're not restoring from config.xml.
                         var prepOpts = {
                             platforms :[platform],
                             searchpath :opts.searchpath,
@@ -256,14 +256,14 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
                         spec = saveVersion ? '~' + platDetails.version : spec;
 
-                        // Save target into config.xml, overriding already existing settings
+                        // Save target into config.xml, overriding already existing settings.
                         events.emit('log', '--save flag or autosave detected');
                         events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
                         
-                        //save to add to pacakge.json's cordova.platforms array in the next then
+                        // Save to add to pacakge.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
                     }
                 });

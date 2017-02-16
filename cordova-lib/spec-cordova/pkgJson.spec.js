@@ -25,6 +25,14 @@ var helpers = require('./helpers'),
     TIMEOUT = 30 * 1000,
     semver  = require('semver');
 
+function includeFunc(container, value) {
+   var returnValue = false;
+   var pos = container.indexOf(value);
+   if (pos >= 0) {
+       returnValue = true;
+   }
+   return returnValue;
+}
 // This group of tests checks if plugins are added and removed as expected from package.json.
 describe('plugin end-to-end', function() {
     var pluginId = 'cordova-plugin-device';
@@ -335,7 +343,8 @@ describe('plugin end-to-end', function() {
             });
             engSpec = engines.map(function(elem) {  
                 if (elem.name === 'browser') {
-                    expect(elem.spec.includes(platformPath)).toEqual(true);
+                    var result = includeFunc(elem.spec , platformPath);
+                    expect(result).toEqual(true);
                 }
             });
         }).then(function() {
@@ -359,7 +368,8 @@ describe('plugin end-to-end', function() {
             });
             engSpec = engines.map(function(elem) {  
                 if (elem.name === 'browser') {
-                    expect(elem.spec.includes(platformPath)).toEqual(true);
+                    var result = includeFunc(elem.spec , platformPath);
+                    expect(result).toEqual(true);
                 }
             });
         }).fail(function(err) {
@@ -966,7 +976,8 @@ describe('local path is added to config.xml without pkg.json', function () {
             });
             engSpec = engines.map(function(elem) {  
                 if (elem.name === 'browser') {
-                    expect(elem.spec.includes(platformPath)).toEqual(true);
+                    var result = includeFunc(elem.spec , platformPath);
+                    expect(result).toEqual(true);
                 }
             });
         }).fail(function(err) {
@@ -992,7 +1003,8 @@ describe('local path is added to config.xml without pkg.json', function () {
             // Plugin is added.
             expect(configPlugin.name).toEqual('cordova-lib-test-plugin');
             // Spec for geolocation plugin is added.
-            expect(configPlugin.spec.includes(pluginPath)).toEqual(true);
+            var result = includeFunc(configPlugin.spec , pluginPath);
+            expect(result).toEqual(true);
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
