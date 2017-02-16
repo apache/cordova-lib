@@ -308,18 +308,36 @@ describe('plugin end-to-end', function() {
         var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
-        delete require.cache[require.resolve(pkgJsonPath)];
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var cfg = new ConfigParser(configXmlPath);
+        var engines = cfg.getEngines();
+        var engNames;
+        var engSpec;
 
+        delete require.cache[require.resolve(pkgJsonPath)];
         // Run cordova platform add local path --save --fetch.
         return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
         .then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Pkg.json has ios.
+            // Pkg.json has browser.
             expect(pkgJson.cordova.platforms).toEqual(['browser']);
-            // Pkg.json has platform local path spec.
-            expect(pkgJson.dependencies['cordova-browser'].includes(platformPath)).toEqual(true);
+
+            // Check that the value here exists
+            expect(pkgJson.dependencies['cordova-browser']).toBeDefined();
+
+            var cfg2 = new ConfigParser(configXmlPath);
+            engines = cfg2.getEngines();
+            // browser platform and spec have been added to config.xml.
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {  
+                if (elem.name === 'browser') {
+                    expect(elem.spec.includes(platformPath)).toEqual(true);
+                }
+            });
         }).then(function() {
             // Run cordova plugin add local path --save --fetch.
             return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true});
@@ -329,8 +347,21 @@ describe('plugin end-to-end', function() {
             pkgJson = require(pkgJsonPath);
             // Pkg.json has geolocation plugin.
             expect(pkgJson.cordova.plugins['cordova-lib-test-plugin']).toBeDefined();
-            // Pkg.json has plugin local path spec.
-            expect(pkgJson.dependencies['cordova-lib-test-plugin'].includes(pluginPath)).toEqual(true);
+
+            // Check that the value here EXISTS
+            expect(pkgJson.dependencies['cordova-lib-test-plugin']).toBeDefined();
+
+            var cfg3 = new ConfigParser(configXmlPath);
+            engines = cfg3.getEngines();
+            // Check that browser and spec have been added to config.xml
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {  
+                if (elem.name === 'browser') {
+                    expect(elem.spec.includes(platformPath)).toEqual(true);
+                }
+            });
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -487,7 +518,7 @@ describe('platform end-to-end with --save', function () {
         .fin(done);
     }, TIMEOUT);
 
-it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
+    it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();
         var pkgJson;
@@ -915,7 +946,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     });
 
     // Test#026: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-    it('Test#026 : if you add a platform with local path, pkg.json gets updated', function (done) {
+    it('Test#026 : if you add a platform with local path, config.xml gets updated', function (done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -944,7 +975,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     },60000);
 
     // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-    it('Test#027 : if you add a plugin with local path, pkg.json gets updated', function (done) {
+    it('Test#027 : if you add a plugin with local path, config.xml gets updated', function (done) {
         var cwd = process.cwd();
         var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
         var configXmlPath = path.join(cwd, 'config.xml');

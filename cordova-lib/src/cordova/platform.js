@@ -81,28 +81,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
-        
         var platformsToSave = []; 
-        // If statement to see if pkgJsonPath exists in the filesystem
-        var pkgJson;
-        var pkgJsonPath = path.join(projectRoot, 'package.json');
-        // If statement to see if pkgJsonPath exists in the filesystem
-        if(fs.existsSync(pkgJsonPath)) {
-            pkgJson = require(pkgJsonPath);
-        } else {
-            // Create package.json in cordova@7
-        }
-        
+
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
             var platform = parts[0];
             var spec = parts[1];
             var pkgJson;
-            var pkgJsonPath = path.join(projectRoot, 'package.json');
             
             return Q.when().then(function() {
-                var prefixCordovaPlatform = 'cordova-'+platform;
                 if (!(platform in platforms)) {
                     spec = platform;
                     platform = null;
@@ -115,28 +103,21 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
 
-                if(spec && pkgJson && pkgJson.dependencies && (pkgJson.dependencies[prefixCordovaPlatform] || pkgJson.dependencies[platform])) {
-                    if ((semver.satisfies(spec, pkgJson.dependencies[prefixCordovaPlatform])) || (semver.satisfies(spec, pkgJson.dependencies[platform]))) {
-                    } else {
-                        if (pkgJson.dependencies[prefixCordovaPlatform]) {
-                            pkgJson.dependencies[prefixCordovaPlatform] = '^'+spec;
-                        } else if (pkgJson.dependencies[platform]) {
-                            pkgJson.dependencies[platform] = '^'+spec;
-                        }
-                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-                    }
+                if(fs.existsSync(path.join(projectRoot,'package.json'))) {
+                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                    pkgJson = require(path.join(projectRoot,'package.json'));
                 }
-
-                // If there is no spec specified during add, use the one from pkg.json.
-                if (spec === undefined && pkgJson && pkgJson.dependencies) {
-                    if (pkgJson.dependencies[prefixCordovaPlatform]) {
-                        spec = pkgJson.dependencies[prefixCordovaPlatform];
+                
+                // If there is no spec specified, try to get spec from package.json
+                // else, if there is no spec specified, try to get spec from config.xml
+                if (spec === undefined && pkgJson && pkgJson.dependencies && cmd === 'add') {
+                    if (pkgJson.dependencies['cordova-'+platform]) {
+                        spec = pkgJson.dependencies['cordova-'+platform];
                     } else if (pkgJson.dependencies[platform]) {
                         spec = pkgJson.dependencies[platform];
                     }
-                }
-
-                if (platform && !spec && cmd == 'add') {
+                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                } else if (platform && spec === undefined && cmd === 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
                 }
@@ -164,6 +145,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             }).then(function(platDetails) {
                 if(fs.existsSync(path.join(projectRoot, 'package.json'))) {
                     delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                    var pkgJson;
+                    pkgJson = require(path.join(projectRoot, 'package.json'));
                 }
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
@@ -257,6 +240,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 })
                 .then(function() {
+
                     var saveVersion = !spec || semver.validRange(spec, true);
 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
@@ -269,9 +253,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-                        if (spec.charAt(0) !== '~' && spec.charAt(0) !== '^') {
-                            spec = saveVersion ? '~' + platDetails.version : spec;
-                        }
+
                         spec = saveVersion ? '~' + platDetails.version : spec;
 
                         // Save target into config.xml, overriding already existing settings
@@ -293,6 +275,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
+
             } else {
                 // TODO: Create package.json in cordova@7
             }
@@ -415,6 +398,7 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
 
         platform = platformFromName(pkg.name);
         version = pkg.version;
+        delete require.cache[pkgPath];
     } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
