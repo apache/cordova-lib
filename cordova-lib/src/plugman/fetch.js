@@ -71,7 +71,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 options.subdir = result[2];
             //if --fetch was used, throw error for subdirectories
 
-            if(options.subdir) {
+            if (options.subdir && options.subdir !== '.') {
                 events.emit('warn', 'support for subdirectories is deprecated and will be removed in Cordova@7');
                 if (options.fetch) {
                     return Q.reject(new CordovaError('--fetch does not support subdirectories'));
@@ -116,7 +116,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 };
             });
         }
-            // If it's not a network URL, it's either a local path or a plugin ID.
+        // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Q.when().then(function() {
 
