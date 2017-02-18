@@ -213,7 +213,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 
     /** Test#018
     *   When plugin is added with url and fetch and restored with fetch, 
@@ -287,7 +287,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson
@@ -393,7 +393,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson6 because pkg.json and config.xml contain only android
@@ -465,7 +465,7 @@ describe('files should not be modified if their platforms are identical', functi
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use a new basePkgJson5 as config.xml contains android/browser and pkg.json contains android
@@ -550,7 +550,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson3 as it has 'android' in config.xml and pkg.json (no cordova key).
@@ -629,7 +629,7 @@ describe('update empty package.json to match config.xml', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
  });
 
 // Use a new basePkgJson4 as pkg.json contains android/browser and config.xml contains android.
@@ -715,7 +715,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Plugin testing begins here.
@@ -742,7 +742,6 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
-    
     // Factoring out some repeated checks.
     function emptyPlatformList() {
         return cordova.raw.platform('list').then(function() {
@@ -802,7 +801,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson9 as config contains 1 plugin and 1 variable and pkg.json contains 1 plugin 0 var
@@ -888,7 +887,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson10 as pkg.json contains (camera plugin: var 1/var 2, splashscreen plugin). 
@@ -1011,7 +1010,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson11 as pkg.json contains(splashscreen plugin, camera plugin: var1, value1, var2, value2) and
@@ -1154,7 +1153,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson12 as config.xml has 0 plugins and pkg.json has 1.
@@ -1254,7 +1253,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson13 - does NOT have a package.json
@@ -1398,7 +1397,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         expect(err).toBeUndefined();
     }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 
@@ -1496,7 +1495,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 
     /** Test#002 will add two platforms to package.json with the 'save' flag.
     *   It will remove one platform from pkg.json without the 'save' flag and remove
@@ -1565,5 +1564,5 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });

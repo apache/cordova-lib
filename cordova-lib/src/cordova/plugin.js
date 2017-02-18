@@ -412,15 +412,26 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
 
     // If parsedSpec.version satisfies pkgJson version, no writing to pkg.json. Only write when
     // it does not satisfy.
+    
     if(parsedSpec.version) {
         if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[parsedSpec.package]) {
-            var noSymbolVersion;
+            var noSymbolVersion = parsedSpec.version;
             if (parsedSpec.version.charAt(0) === '^' || parsedSpec.version.charAt(0) === '~') {
                 noSymbolVersion = parsedSpec.version.slice(1);
             }
-            if (!semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
+
+            if(cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version)) {
+                if (pkgJson.dependencies[parsedSpec.package] !== parsedSpec.version) {
+                    pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
+                }
+                if(fetchOptions.save === true) {
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                }
+            } else if (!semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
                 pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
-                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                if (fetchOptions.save === true) {
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                }
             }
         }
     }

@@ -145,8 +145,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             }).then(function(platDetails) {
                 if(fs.existsSync(path.join(projectRoot, 'package.json'))) {
                     delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
-                    var pkgJson;
-                    pkgJson = require(path.join(projectRoot, 'package.json'));
                 }
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
@@ -275,7 +273,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
-
             } else {
                 // TODO: Create package.json in cordova@7
             }

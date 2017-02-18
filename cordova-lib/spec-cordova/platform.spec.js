@@ -354,4 +354,3 @@ describe('plugin add and rm end-to-end --fetch', function () {
         .fin(done);
     }, 60000);
 });
-
