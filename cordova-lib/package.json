@@ -14,7 +14,7 @@
   },
   "main": "cordova-lib.js",
   "engines": {
-    "node": ">=0.9.9"
+    "node": ">=4.0.0"
   },
   "engineStrict": true,
   "dependencies": {
