@@ -134,7 +134,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 if( (opts.save || autosave) && !spec && platforms[platform]) {
                     spec = platforms[platform].version;
                 }
-                
+
                 // Handle local paths
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
@@ -274,10 +274,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
+            
             if(fs.existsSync(pkgJsonPath)) {
                 pkgJson = cordova_util.requireNoCache(path.join(pkgJsonPath)); 
-            } else {
-                // TODO: Create package.json in cordova@7
             }
 
             if (pkgJson === undefined) {

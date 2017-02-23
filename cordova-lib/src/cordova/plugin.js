@@ -239,9 +239,8 @@ module.exports = function plugin(command, targets, opts) {
                                 if(fs.existsSync(pkgJsonPath)) {
                                     // Delete any previous caches of require(package.json)
                                     pkgJson = cordova_util.requireNoCache(pkgJsonPath);
-                                } else {
-                                    // Create package.json in cordova@7
                                 }
+
                                 // If package.json exists, the plugin object and plugin name 
                                 // will be added to package.json if not already there.
                                 if (!pkgJson) {
