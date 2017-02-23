@@ -626,7 +626,22 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
-        it('Test 030 : spec.23.1 should restore scoped plugins', function (done) {
+        it('Test 030 : spec.23.2 should restore plugins without spec attribute', function (done) {
+            redirectRegistryCalls(pluginName2);
+            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
+            helpers.setPluginSpec(appPath, pluginName2/**, do not specify spec here */);
+            prepare()
+            .then(function () {
+                expect(registry.fetch).toHaveBeenCalledWith([pluginName2]);
+                expect(path.join(appPath, 'plugins', pluginName2)).toExist();
+            }).catch(function (err) {
+                expect(true).toBe(false);
+                console.log(err.message);
+            })
+            .fin(done);
+        }, TIMEOUT);
+
+        it('Test 031 : spec.23.1 should restore scoped plugins', function (done) {
             redirectRegistryCalls(pluginName2 + '@~' + pluginVersion2);
             var scopedPackage = '@test-scope/' + pluginName2;
             helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
@@ -641,21 +656,6 @@ describe('(save flag)', function () {
                 console.log(err.message);
                 done();
             });
-        }, TIMEOUT);
-
-        it('Test 031 : spec.23.2 should restore plugins without spec attribute', function (done) {
-            redirectRegistryCalls(pluginName2);
-            helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
-            helpers.setPluginSpec(appPath, pluginName2/**, do not specify spec here */);
-            prepare()
-            .then(function () {
-                expect(registry.fetch).toHaveBeenCalledWith([pluginName2]);
-                expect(path.join(appPath, 'plugins', pluginName2)).toExist();
-            }).catch(function (err) {
-                expect(true).toBe(false);
-                console.log(err.message);
-            })
-            .fin(done);
         }, TIMEOUT);
 
         it('Test 032 : spec.24 should restore only specified platform', function (done) {

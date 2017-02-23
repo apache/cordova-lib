@@ -128,7 +128,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},300000);
+    },300000);
 
     /** Test#017
     *   When platform is added with url and fetch and restored with fetch, 
@@ -1289,7 +1289,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         expect(Object.keys(configPlugins).length === 1);
 
         emptyPlatformList().then(function() {
-            // Run cordova prepare.
+            // Run platform add.
             return cordova.raw.platform('add', browserPlatform, {'save':true});
         }).then(function () {
             // Android and browser are in config.xml.
@@ -1306,6 +1306,16 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(platformsJson).toBeDefined();
             expect(platformsJson[androidPlatform]).not.toBeDefined();
             expect(platformsJson[browserPlatform]).toBeDefined();
+            // Package.json should be auto-created.
+            expect(path.join(cwd,'package.json')).toExist();
+            var pkgJsonPath = path.join(cwd,'package.json');
+            delete require.cache[require.resolve(pkgJsonPath)];
+            var pkgJson = require(pkgJsonPath);
+            // Expect that pkgJson name, version, and displayName should use
+            // config.xml's id, version, and name.
+            expect(pkgJson.name).toEqual(cfg3.packageName().toLowerCase());
+            expect(pkgJson.version).toEqual(cfg3.version());
+            expect(pkgJson.displayName).toEqual(cfg3.name());
             // Remove android without --save.
             return cordova.raw.platform('rm', [browserPlatform]);
         }).then(function () {
@@ -1372,7 +1382,6 @@ describe('platforms and plugins should be restored with config.xml even without 
     // Cordova prepare needs extra wait time to complete.
     },TIMEOUT);
 });
-
 
 // Use basePkgJson
 describe('tests platform/spec restore with --save', function () {

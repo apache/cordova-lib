@@ -53,6 +53,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
     }
+
     if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
         pkgJsonPlatforms = pkgJson.cordova.platforms;
     } 
@@ -63,7 +64,25 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // Combining arrays and checking duplicates.
             comboArray = pkgJsonPlatforms.slice();
         }
+
         engines = cfg.getEngines(projectHome);
+
+        // TODO: CB-12592: Eventually refactor out to pacakge manager module.
+        // If package.json doesn't exist, auto-create one.
+        if (engines.length > 0 && pkgJson === undefined) {
+            pkgJson = {};
+            if(cfg.packageName()){
+                pkgJson.name = cfg.packageName().toLowerCase();
+            }
+            if(cfg.version()) {
+                pkgJson.version = cfg.version();
+            }
+            if(cfg.name()) {
+                pkgJson.displayName = cfg.name();
+            }
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+        }
+
         configPlatforms = engines.map(function(Engine) {
             var configPlatName = Engine.name;
             // Add specs from config into mergedPlatformSpecs.
@@ -85,14 +104,14 @@ function installPlatformsFromConfigXML(platforms, opts) {
         },[]);
         comboArray = uniq;
         comboArray = comboArray.sort();
-
+ 
         // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
             return Q('No platforms found in config.xml or package.json. Nothing to restore');
         }
 
         // If no package.json, don't continue.
-        if (pkgJson !== undefined) { 
+        if (pkgJson !== undefined) {
             // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
             if (pkgJson.cordova === undefined) {
                 pkgJson.cordova = {};
@@ -114,10 +133,11 @@ function installPlatformsFromConfigXML(platforms, opts) {
             events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
             comboArray.forEach(function(item) {
                 var prefixItem = ('cordova-'+item);
+
                 // Modify package.json if any of these cases are true:
-                if((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length)||
-                    (pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) ||
-                    (pkgJson.dependencies[prefixItem] === undefined && mergedPlatformSpecs[prefixItem])) {
+                if((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length) ||
+                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) || 
+                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[prefixItem] === undefined && mergedPlatformSpecs[prefixItem])) {
                     modifiedPkgJson = true;
                 }
 
@@ -136,7 +156,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     }
                     mergedPlatformSpecs[item] = pkgJson.dependencies[item];
                 }
-
                 // First remove the engine and then add missing engine and elements to config.xml.
                 // Remove to avoid duplicate engines.
                 if(mergedPlatformSpecs[item]) {
