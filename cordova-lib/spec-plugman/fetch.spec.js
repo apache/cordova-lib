@@ -81,11 +81,12 @@ describe('fetch', function() {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
-        it('Tet 003 : should create a symlink if used with `link` param', function(done) {
+        it('Test 003 : should create a symlink if used with `link` param', function(done) {
             wrapper(fetch(test_plugin, temp, { link: true }), done, function() {
                 expect(sym).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), 'dir');
             });
         });
+
         it('Test 004 : should fail when the expected ID doesn\'t match', function(done) {
             fetch(test_plugin, temp, { expected_id: 'wrongID' })
             .then(function() {
@@ -94,6 +95,7 @@ describe('fetch', function() {
                 expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
+
         it('Test 005 : should succeed when the expected ID is correct', function(done) {
             wrapper(fetch(test_plugin, temp, { expected_id: test_plugin_id }), done, function() {
                 expect(1).toBe(1);
@@ -190,6 +192,7 @@ describe('fetch', function() {
                 expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
+
         it('Test 015 : should fail when the expected ID with version specified doesn\'t match', function(done) {
             fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: 'id@wrongVersion' })
             .then(function() {
@@ -198,6 +201,7 @@ describe('fetch', function() {
                 expect(''+err).toContain('Expected plugin to have ID "id" but got');
             }).fin(done);
         });
+
         it('Test 016 : should succeed when the expected ID is correct', function(done) {
             wrapper(fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: test_plugin_id }), done, function() {
                 expect(1).toBe(1);
@@ -272,8 +276,8 @@ describe('fetch', function() {
             realrm('-rf', temp);
         });
 
-
-        it('Test 022 : should fail when the expected ID doesn\'t match', function(done) {
+        it('Test 022 : should fail when the expected ID with version specified doesn\'t match', function(done) {
+            //fetch(pluginId, temp, { expected_id: test_plugin_id + '@wrongVersion' })
             fetch(pluginId, temp, { expected_id: 'wrongID' })
             .then(function() {
                 expect('this call').toBe('fail');
@@ -281,14 +285,7 @@ describe('fetch', function() {
                 expect(''+err).toContain('Expected plugin to have ID "wrongID" but got');
             }).fin(done);
         });
-        it('Test 022 : should fail when the expected ID with version specified doesn\'t match', function(done) {
-            fetch(pluginId, temp, { expected_id: test_plugin_id + '@wrongVersion' })
-            .then(function() {
-                expect('this call').toBe('fail');
-            }, function(err) {
-                expect(''+err).toContain('to satisfy version "wrongVersion" but got');
-            }).fin(done);
-        });
+        
         it('Test 023 : should succeed when the expected ID is correct', function(done) {
             wrapper(fetch(pluginId, temp, { expected_id: test_plugin_id }), done, function() {
                 expect(1).toBe(1);

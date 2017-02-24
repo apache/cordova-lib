@@ -1,3 +1,4 @@
+
     /**
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -33,9 +34,7 @@ var path = require('path'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew,
-    npmUninstall = require('cordova-fetch').uninstall,
-    pluginSpec = require('../cordova/plugin_spec_parser');
+    npmUninstall = require('cordova-fetch').uninstall;
 
 var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -161,18 +160,8 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var pluginInfo = pluginInfoProvider.get(depPluginDir);
         // TODO: Should remove dependencies in a separate step, since dependencies depend on platform.
         var deps = pluginInfo.getDependencies();
-        var deps_path;
         deps.forEach(function (d) {
-            var parsedSpec = pluginSpec.parse(d.id);
-            deps_path = path.join(plugin_dir, '..', parsedSpec.id);
-            if (!fs.existsSync(deps_path)) {
-                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
-                if (newId && toDelete.indexOf(newId) === -1) {
-                   events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
-                   toDelete.push(newId);
-                   findDependencies(newId);
-                }
-            } else if (toDelete.indexOf(d.id) === -1) {
+            if (toDelete.indexOf(d.id) === -1) {
                 toDelete.push(d.id);
                 findDependencies(d.id);
             }
@@ -284,17 +273,6 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function(dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
-
-            //try to convert ID if old-id path doesn't exist.
-            if (!fs.existsSync(dependent_path)) {
-                var parsedSpec = pluginSpec.parse(dangler);
-                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
-                if(newId) {
-                    dependent_path = path.join(plugins_dir, newId);
-                    events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');
-                }
-            }
-
             var opts = underscore.extend({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
                 depsInfo: depsInfo

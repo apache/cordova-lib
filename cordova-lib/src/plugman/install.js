@@ -36,7 +36,6 @@ var path = require('path'),
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
-    pluginMapper = require('cordova-registry-mapper'),
     pluginSpec = require('../cordova/plugin_spec_parser'),
     cordovaUtil = require('../cordova/util');
 
@@ -87,16 +86,6 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 // Returns a promise.
 function possiblyFetch(id, plugins_dir, options) {
     var parsedSpec = pluginSpec.parse(id);
-    //Check if a mapping exists for the plugin id
-    //if it does, convert id to new name id
-    var newId = parsedSpec.scope ? null : pluginMapper.oldToNew[parsedSpec.id];
-    if(newId) {
-        if(parsedSpec.version) {
-            id = newId + '@' + parsedSpec.version;
-        } else {
-            id = newId;
-        }
-    }
 
     // if plugin is a relative path, check if it already exists
     var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, parsedSpec.id);
@@ -105,18 +94,7 @@ function possiblyFetch(id, plugins_dir, options) {
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
-
-    var alias =  parsedSpec.scope ? null : pluginMapper.newToOld[parsedSpec.id] || newId;
-    // if the plugin alias has already been fetched, use it.
-    if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-        events.emit('warn', 'Plugin with alternate id ' + alias + ' is already fetched, so installing it instead of ' + parsedSpec.id);
-        return Q(path.join(plugins_dir, alias));
-    }
-
-    // if plugin doesnt exist, use fetch to get it.
-    if (newId) {
-        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-    }
+    
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
