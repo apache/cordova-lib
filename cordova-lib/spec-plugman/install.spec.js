@@ -227,25 +227,8 @@ describe('install', function() {
                 expect(fetchSpy).toHaveBeenCalled();
                 done();
             });
-        }, TIMEOUT);
-
-        xit('Test 006 : should call fetch and convert oldID to newID', function(done) {
-            fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
-            spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
-            var emit = spyOn(events, 'emit');
-            install('android', project, 'org.apache.cordova.device' )
-            .then(function(res) {
-                return true;
-            })
-            .fail(function(err){
-                expect(err).toBeUndefined();
-            })
-            .fin(function () {
-                expect(emit.calls.argsFor(0)[1]).toBe('Notice: org.apache.cordova.device has been automatically converted to cordova-plugin-device and fetched from npm. This is due to our old plugins registry shutting down.');
-                expect(fetchSpy).toHaveBeenCalled();
-                done();
-            });
-        }, TIMEOUT);
+        });
+        
         describe('engine versions', function () {
             var fail, satisfies;
             beforeEach(function () {

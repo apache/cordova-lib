@@ -34,8 +34,7 @@ var path = require('path'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
-    npmUninstall = require('cordova-fetch').uninstall,
-    pluginSpec = require('../cordova/plugin_spec_parser');
+    npmUninstall = require('cordova-fetch').uninstall;
 
 var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -161,10 +160,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         var pluginInfo = pluginInfoProvider.get(depPluginDir);
         // TODO: Should remove dependencies in a separate step, since dependencies depend on platform.
         var deps = pluginInfo.getDependencies();
-        var deps_path;
         deps.forEach(function (d) {
-            var parsedSpec = pluginSpec.parse(d.id);
-            deps_path = path.join(plugin_dir, '..', parsedSpec.id);
             if (toDelete.indexOf(d.id) === -1) {
                 toDelete.push(d.id);
                 findDependencies(d.id);
