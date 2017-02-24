@@ -229,7 +229,7 @@ describe('install', function() {
             });
         }, TIMEOUT);
 
-        it('Test 006 : should call fetch and convert oldID to newID', function(done) {
+        xit('Test 006 : should call fetch and convert oldID to newID', function(done) {
             fetchSpy.and.returnValue( Q( plugins['org.test.plugins.dummyplugin'] ) );
             spyOn(fs, 'existsSync').and.callFake( fake['existsSync']['noPlugins'] );
             var emit = spyOn(events, 'emit');
