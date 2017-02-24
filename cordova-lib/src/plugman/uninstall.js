@@ -34,7 +34,6 @@ var path = require('path'),
     promiseutil = require('../util/promise-util'),
     HooksRunner = require('../hooks/HooksRunner'),
     cordovaUtil = require('../cordova/util'),
-    pluginMapper = require('cordova-registry-mapper').oldToNew,
     npmUninstall = require('cordova-fetch').uninstall,
     pluginSpec = require('../cordova/plugin_spec_parser');
 
@@ -166,14 +165,7 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
         deps.forEach(function (d) {
             var parsedSpec = pluginSpec.parse(d.id);
             deps_path = path.join(plugin_dir, '..', parsedSpec.id);
-            if (!fs.existsSync(deps_path)) {
-                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
-                if (newId && toDelete.indexOf(newId) === -1) {
-                   events.emit('verbose', 'Automatically converted ' + d.id + ' to ' + newId + 'for uninstallation.');
-                   toDelete.push(newId);
-                   findDependencies(newId);
-                }
-            } else if (toDelete.indexOf(d.id) === -1) {
+            if (toDelete.indexOf(d.id) === -1) {
                 toDelete.push(d.id);
                 findDependencies(d.id);
             }

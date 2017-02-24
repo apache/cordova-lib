@@ -27,7 +27,6 @@ var cordova_util  = require('./util'),
     shell         = require('shelljs'),
     PluginInfoProvider = require('cordova-common').PluginInfoProvider,
     plugman       = require('../plugman/plugman'),
-    pluginMapper  = require('cordova-registry-mapper').newToOld,
     pluginSpec    = require('./plugin_spec_parser'),
     events        = require('cordova-common').events,
     metadata      = require('../plugman/util/metadata'),
@@ -474,12 +473,6 @@ function validatePluginId(pluginId, installedPlugins) {
         return pluginId;
     }
 
-    var oldStylePluginId = pluginMapper[pluginId];
-    if (oldStylePluginId) {
-        events.emit('log', 'Plugin "' + pluginId + '" is not present in the project. Checking for legacy id "' + oldStylePluginId + '".');
-        return installedPlugins.indexOf(oldStylePluginId) >= 0 ? oldStylePluginId : null;
-    }
-
     if (pluginId.indexOf('cordova-plugin-') < 0) {
         return validatePluginId('cordova-plugin-' + pluginId, installedPlugins);
     }
@@ -545,14 +538,7 @@ function getPluginVariables(variables){
 function getVersionFromConfigFile(plugin, cfg){
     var parsedSpec = pluginSpec.parse(plugin);
     var pluginEntry = cfg.getPlugin(parsedSpec.id);
-    if (!pluginEntry && !parsedSpec.scope) {
-        // If the provided plugin id is in the new format (e.g. cordova-plugin-camera), it might be stored in config.xml
-        // under the old format (e.g. org.apache.cordova.camera), so check for that.
-        var oldStylePluginId = pluginMapper[parsedSpec.id];
-        if (oldStylePluginId) {
-            pluginEntry = cfg.getPlugin(oldStylePluginId);
-        }
-    }
+
     return pluginEntry && pluginEntry.spec;
 }
 
