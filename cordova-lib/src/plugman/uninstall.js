@@ -1,3 +1,4 @@
+
     /**
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -284,17 +285,6 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function(dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
-
-            //try to convert ID if old-id path doesn't exist.
-            if (!fs.existsSync(dependent_path)) {
-                var parsedSpec = pluginSpec.parse(dangler);
-                var newId = parsedSpec.scope ? null : pluginMapper[parsedSpec.id];
-                if(newId) {
-                    dependent_path = path.join(plugins_dir, newId);
-                    events.emit('verbose', 'Automatically converted ' + dangler + ' to ' + newId + 'for uninstallation.');
-                }
-            }
-
             var opts = underscore.extend({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
                 depsInfo: depsInfo
