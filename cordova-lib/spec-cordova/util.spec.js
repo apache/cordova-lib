@@ -38,7 +38,7 @@ describe('util module', function() {
             process.chdir(cwd);
         });
         function removeDir(directory) {
-            shell.rm('-rf', directory);            
+            shell.rm('-rf', directory);
         }
         it('Test 001 : should return false if it hits the home directory', function() {
             var somedir = path.join(home, 'somedir');
@@ -122,17 +122,17 @@ describe('util module', function() {
         });
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function() {
             var platforms = path.join(temp, 'platforms');
-            var android = path.join(platforms, 'android');
-            var ios = path.join(platforms, 'ios');
-            var wp8_dir = path.join(platforms, 'wp8');
-            var atari = path.join(platforms, 'atari');
-            shell.mkdir('-p', android);
-            shell.mkdir('-p', ios);
-            shell.mkdir('-p', wp8_dir);
-            shell.mkdir('-p', atari);
+
+            shell.mkdir('-p', path.join(platforms, 'android'));
+            shell.mkdir('-p', path.join(platforms, 'ios'));
+            shell.mkdir('-p', path.join(platforms, 'wp8'));
+            shell.mkdir('-p', path.join(platforms, 'atari'));
+
+            // create a typical platforms.json file, it should not be returned as a platform
+            shell.exec('touch ' + path.join(platforms,'platforms.json'));
+
             var res = util.listPlatforms(temp);
-            expect(res.length).toEqual(3);
-            expect(res.indexOf('atari')).toEqual(-1);
+            expect(res.length).toEqual(4);
         });
     });
     describe('getInstalledPlatformsWithVersions method', function() {
