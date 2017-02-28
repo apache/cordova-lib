@@ -43,36 +43,39 @@ function getPlatformApi(platform, platformRootDir) {
     // CB-11174 Resolve symlinks first before working with root directory
     platformRootDir = util.convertToRealPathSafe(platformRootDir);
 
+    var platformApi;
     var cached = cachedApis[platformRootDir];
-    if (cached && cached.platform == platform) return cached;
+    if (cached && cached.platform == platform) {
+        platformApi = cached;
+    }
+    else {
 
-    if (!platforms[platform]) throw new Error('Unknown platform ' + platform);
-
-    var PlatformApi;
-    try {
-        // First we need to find whether platform exposes its' API via js module
-        // If it does, then we require and instantiate it.
-        var platformApiModule = path.join(platformRootDir, 'cordova', 'Api.js');
-        PlatformApi = require(platformApiModule);
-    } catch (err) {
-        // Check if platform already compatible w/ PlatformApi and show deprecation warning
-        if (err && err.code === 'MODULE_NOT_FOUND') {
-            if (platforms[platform].apiCompatibleSince) {
-                events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-                    ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
-                    platforms[platform].apiCompatibleSince + ' or newer.');
+        var PlatformApi;
+        try {
+            // First we need to find whether platform exposes its' API via js module
+            // If it does, then we require and instantiate it.
+            var platformApiModule = path.join(platformRootDir, 'cordova', 'Api.js');
+            PlatformApi = require(platformApiModule);
+        } catch (err) {
+            // Check if platform already compatible w/ PlatformApi and show deprecation warning
+            if (err && err.code === 'MODULE_NOT_FOUND') {
+                if (platforms[platform].apiCompatibleSince) {
+                    events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
+                        ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
+                        platforms[platform].apiCompatibleSince + ' or newer.');
+                }
+                // else nothing - there is no Api.js and no deprecation information hence
+                // the platform just does not expose Api and we will use polyfill as usual
+            } else {
+                events.emit('warn', 'Error loading cordova-'+platform);
             }
-            // else nothing - there is no Api.js and no deprecation information hence
-            // the platform just does not expose Api and we will use polyfill as usual
-        } else {
-            events.emit('warn', 'Error loading cordova-'+platform);
+
+            PlatformApi = require('./PlatformApiPoly');
         }
 
-        PlatformApi = require('./PlatformApiPoly');
+        platformApi = new PlatformApi(platform, platformRootDir, events);
+        cachedApis[platformRootDir] = platformApi;
     }
-
-    var platformApi = new PlatformApi(platform, platformRootDir, events);
-    cachedApis[platformRootDir] = platformApi;
     return platformApi;
 }
 
