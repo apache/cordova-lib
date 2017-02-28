@@ -235,13 +235,7 @@ function checkID(expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
 
     var parsedSpec = pluginSpec.parse(expectedIdAndVersion);
-
-    if (parsedSpec.id != pinfo.id) {
-        var alias = null;
-        if (alias !== pinfo.id) {
-            throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
-        }
-    }
+    
     if (parsedSpec.version && !semver.satisfies(pinfo.version, parsedSpec.version)) {
         throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + parsedSpec.version + '" but got "' + pinfo.version + '".');
     }
