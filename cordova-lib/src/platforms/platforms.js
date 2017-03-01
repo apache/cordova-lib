@@ -18,6 +18,7 @@
 */
 
 var path = require('path');
+var fs = require('fs');
 var util = require('../cordova/util');
 var platforms = require('./platformsConfig.json');
 var events = require('cordova-common').events;
@@ -42,6 +43,12 @@ function getPlatformApi(platform, platformRootDir) {
 
     // CB-11174 Resolve symlinks first before working with root directory
     platformRootDir = util.convertToRealPathSafe(platformRootDir);
+
+    // Make sure the platforms/platform folder exists
+    if(!fs.existsSync(platformRootDir)) {
+        throw new Error('The platform "' + platform + '" does not appear to have been added to this project.');
+    }
+
 
     var platformApi;
     var cached = cachedApis[platformRootDir];
