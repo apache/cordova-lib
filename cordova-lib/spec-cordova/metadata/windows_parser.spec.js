@@ -19,6 +19,7 @@
 
 /* jshint boss:true */
 
+/**
 var windowsParser = require('../../src/cordova/metadata/windows_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -166,3 +167,5 @@ describe('windows project parser', function() {
         });
     });
 });
+
+*/

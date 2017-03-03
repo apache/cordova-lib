@@ -51,7 +51,7 @@ describe('getPlatformApi method', function () {
     });
 
     it('should return PlatformApi polyfill if PlatformApi is not defined by platform', function () {
-        var platformApi = platforms.getPlatformApi('android', PLATFORM_WOUT_API);
+        var platformApi = platforms.getPlatformApi('browser', PLATFORM_WOUT_API);
         expect(platformApi).toEqual(jasmine.any(PlatformApiPoly));
     });
 

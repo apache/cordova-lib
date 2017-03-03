@@ -81,15 +81,19 @@ function getPlatformApi(platform, platformRootDir) {
                 events.emit('warn', 'Error loading cordova-'+platform);
             }
 
-            PlatformApi = require('./PlatformApiPoly');
+            if (!PlatformApi && (platform !== 'ios' && platform !== 'windows' && platform !== 'android')) {
+                events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                    '". Using polyfill instead.');
+                PlatformApi = require('../platforms/PlatformApiPoly');
+            } else if (!PlatformApi) {
+                events.emit('warn', 'Your ' + platform + ' platform does not have Api.js');
+            }
         }
-
         platformApi = new PlatformApi(platform, platformRootDir, events);
         cachedApis[platformRootDir] = platformApi;
+        return platformApi;
     }
-    return platformApi;
 }
-
 module.exports = platforms;
 
 // We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the

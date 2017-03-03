@@ -51,7 +51,7 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'cordova-browser'), path.join(project, 'platforms'));
         process.chdir(project);
         delete process.env.PWD;
     });

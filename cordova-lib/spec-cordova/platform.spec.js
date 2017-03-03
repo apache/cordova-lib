@@ -96,7 +96,7 @@ describe('platform end-to-end', function () {
     // They should run the appropriate hooks.
     // They should fail when not inside a Cordova project.
     // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('Test 001 : should successfully run', function(done) {
+    xit('Test 001 : should successfully run', function(done) {
 
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {
@@ -130,7 +130,7 @@ describe('platform end-to-end', function () {
 
         cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
         .then(function() {
-            return cordova.raw.platform('add', [helpers.testPlatform]);
+            return cordova.raw.platform('add', 'android@5.0.0');
         })
         .then(function() {
             // Check the platform add was successful.
@@ -152,7 +152,7 @@ describe('platform end-to-end', function () {
 
         cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
         .then(function() {
-            return cordova.raw.platform('add', [helpers.testPlatform]);
+            return cordova.raw.platform('add', 'android@5.0.0');
         })
         .fail(fail)
         .fin(function() {

@@ -1,8 +1,6 @@
 {
     "ios": {
         "hostos": ["darwin"],
-        "parser_file": "../cordova/metadata/ios_parser",
-        "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
         "version": "~4.3.0",
         "apiCompatibleSince": "4.0.0",
@@ -11,15 +9,12 @@
     "osx": {
         "hostos": ["darwin"],
         "parser_file": "../cordova/metadata/osx_parser",
-        "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-osx.git",
         "version": "~4.0.1",
         "apiCompatibleSince": "4.0.0",
         "deprecated": false
     },
     "android": {
-        "parser_file": "../cordova/metadata/android_parser",
-        "handler_file": "../plugman/platforms/android",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
         "version": "~6.1.1",
         "apiCompatibleSince": "5.0.0",
@@ -72,8 +67,6 @@
     },
     "windows": {
         "hostos": ["win32"],
-        "parser_file": "../cordova/metadata/windows_parser",
-        "handler_file": "../plugman/platforms/windows",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
         "version": "~5.0.0",
         "apiCompatibleSince": "4.3.0",

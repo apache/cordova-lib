@@ -16,8 +16,10 @@
  specific language governing permissions and limitations
  under the License.
  */
-var iosParser = require('../../src/cordova/metadata/ios_parser'),
-    util = require('../../src/cordova/util'),
+
+ /**
+// var iosParser = require('../../src/cordova/metadata/ios_parser');
+    var util = require('../../src/cordova/util'),
     path = require('path'),
     shell = require('shelljs'),
     plist = require('plist'),
@@ -498,3 +500,4 @@ describe('ios project parser', function () {
         });
     });
 });
+*/
