@@ -21,6 +21,7 @@
 
 var npm = require('npm'),
     path = require('path'),
+    fs = require('fs'),
     Q = require('q'),
     unpack = require('./unpack'),
     util = require('../cordova/util'),
@@ -103,7 +104,7 @@ function cachePackage(packageName, packageVersion) {
         // If already cached, use that rather than calling 'npm cache add' again.
         var packageCacheDir = path.resolve(cacheDir, packageName, packageVersion);
         var packageTGZ = path.resolve(packageCacheDir, 'package.tgz');
-        if (util.existsSync(packageTGZ)) {
+        if (fs.existsSync(packageTGZ)) {
             return unpack.unpackTgz(packageTGZ, path.resolve(packageCacheDir, 'package'));
         }
 

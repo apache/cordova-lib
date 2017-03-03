@@ -38,7 +38,7 @@ describe('util module', function() {
             process.chdir(cwd);
         });
         function removeDir(directory) {
-            shell.rm('-rf', directory);            
+            shell.rm('-rf', directory);
         }
         it('Test 001 : should return false if it hits the home directory', function() {
             var somedir = path.join(home, 'somedir');
@@ -239,7 +239,7 @@ describe('util module', function() {
         });
 
         it('Test 020 : should pick buildConfig if no option is provided, but buildConfig.json exists', function() {
-            spyOn(util, 'existsSync').and.returnValue(true);
+            spyOn(fs, 'existsSync').and.returnValue(true);
             // Using path.join below to normalize path separators
             expect(util.preProcessOptions())
                 .toEqual(jasmine.objectContaining({options: {buildConfig: path.join('/fake/path/build.json')}}));

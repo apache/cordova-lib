@@ -43,7 +43,7 @@ var lib_path = path.join(global_config_path, 'lib');
 exports.binname = 'cordova';
 exports.globalConfig = global_config_path;
 
-// defer defining libDirectory on exports so we don't create it if 
+// defer defining libDirectory on exports so we don't create it if
 // someone simply requires this module
 Object.defineProperty(exports,'libDirectory', {
         configurable: true,
@@ -75,7 +75,7 @@ exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
-exports.existsSync = existsSync;
+
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -83,33 +83,22 @@ function isUrl(value) {
 }
 
 function isRootDir(dir) {
-    if (exports.existsSync(path.join(dir, 'www'))) {
-        if (exports.existsSync(path.join(dir, 'config.xml'))) {
+    if (fs.existsSync(path.join(dir, 'www'))) {
+        if (fs.existsSync(path.join(dir, 'config.xml'))) {
             // For sure is.
-            if (exports.existsSync(path.join(dir, 'platforms'))) {
+            if (fs.existsSync(path.join(dir, 'platforms'))) {
                 return 2;
             } else {
                 return 1;
             }
         }
         // Might be (or may be under platforms/).
-        if (exports.existsSync(path.join(dir, 'www', 'config.xml'))) {
+        if (fs.existsSync(path.join(dir, 'www', 'config.xml'))) {
             return 1;
         }
     }
     return 0;
 }
-
-function existsSync(fileSpec) {
-    // Since fs.existsSync() is deprecated
-    try {
-        fs.statSync(fileSpec);
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
 
 // Runs up the directory chain looking for a .cordova directory.
 // IF it is found we are in a Cordova project.
@@ -181,7 +170,7 @@ function fixRelativePath(value, /* optional */ cwd) {
 
 // Resolve any symlinks in order to avoid relative path issues. See https://issues.apache.org/jira/browse/CB-8757
 function convertToRealPathSafe(path) {
-    if (path && exports.existsSync(path)) {
+    if (path && fs.existsSync(path)) {
         return fs.realpathSync(path);
     }
 
@@ -204,7 +193,7 @@ function deleteSvnFolders(dir) {
 function listPlatforms(project_dir) {
     var core_platforms = require('../platforms/platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
-    if ( !exports.existsSync(platforms_dir)) {
+    if ( !fs.existsSync(platforms_dir)) {
         return [];
     }
     var subdirs = fs.readdirSync(platforms_dir);
@@ -235,7 +224,7 @@ function findPlugins(pluginPath) {
     var plugins = [],
         stats;
 
-    if (exports.existsSync(pluginPath)) {
+    if (fs.existsSync(pluginPath)) {
         plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
             stats = fs.statSync(path.join(pluginPath, fileName));
             return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
@@ -256,9 +245,9 @@ function projectWww(projectDir) {
 function projectConfig(projectDir) {
     var rootPath = path.join(projectDir, 'config.xml');
     var wwwPath = path.join(projectDir, 'www', 'config.xml');
-    if (exports.existsSync(rootPath)) {
+    if (fs.existsSync(rootPath)) {
         return rootPath;
-    } else if (exports.existsSync(wwwPath)) {
+    } else if (fs.existsSync(wwwPath)) {
         return wwwPath;
     }
     return false;
@@ -295,7 +284,7 @@ function preProcessOptions (inputOptions) {
         result.platforms = projectPlatforms;
     }
 
-    if (!result.options.buildConfig && exports.existsSync(path.join(projectRoot, 'build.json'))) {
+    if (!result.options.buildConfig && fs.existsSync(path.join(projectRoot, 'build.json'))) {
         result.options.buildConfig = path.join(projectRoot, 'build.json');
     }
 
