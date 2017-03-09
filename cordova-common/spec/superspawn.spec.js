@@ -53,4 +53,39 @@ describe('spawn method', function() {
         });
     });
 
+    it('Test 004 : reject handler should pass in Error object with stdout and stderr properties', function(done) {
+        var cp = require('child_process');
+        spyOn(cp, 'spawn').and.callFake(function(cmd, args, opts) {
+            return {
+                stdout:{
+                    setEncoding: function(){},
+                    on: function(evt, handler) {
+                        // some sample stdout output
+                        handler('business as usual');
+                    }
+                },
+                stderr:{
+                    setEncoding: function(){},
+                    on: function(evt, handler) {
+                        // some sample stderr output
+                        handler('mayday mayday');
+                    }
+                },
+                on: function(evt, handler) {
+                    // What's passed to handler here is the exit code, so we can control
+                    // resolve/reject flow via this argument.
+                    handler(1); // this will trigger error flow
+                },
+                removeListener: function() {}
+            };
+        });
+        superspawn.spawn('this aggression', ['will', 'not', 'stand', 'man'], {})
+        .catch(function(err) {
+            expect(err).toBeDefined();
+            expect(err.stdout).toContain('usual');
+            expect(err.stderr).toContain('mayday');
+            done();
+        });
+    });
+
 });
