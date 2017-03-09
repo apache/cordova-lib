@@ -20,6 +20,9 @@
 -->
 # Cordova-common Release Notes
 
+### 2.0.1 (Mar 09, 2017)
+* [CB-12557](https://issues.apache.org/jira/browse/CB-12557) add both stdout and stderr properties to the error object passed to superspawn reject handler.
+
 ### 2.0.0 (Jan 17, 2017)
 * [CB-8978](https://issues.apache.org/jira/browse/CB-8978) Add `resource-file` parsing to `config.xml`
 * [CB-12018](https://issues.apache.org/jira/browse/CB-12018): updated `jshint` and updated tests to work with `jasmine@2` instead of `jasmine-node`
