@@ -51,11 +51,10 @@ var cordova = require('cordova'),
         // For the ONLINE_EVENT to be viable, it would need to intercept all event
         // listeners (both through addEventListener and window.ononline) as well
         // as set the navigator property itself.
-        ONLINE_EVENT: 2,
-        EVAL_BRIDGE: 3
+        ONLINE_EVENT: 2
     },
     jsToNativeBridgeMode,  // Set lazily.
-    nativeToJsBridgeMode = nativeToJsModes.EVAL_BRIDGE,
+    nativeToJsBridgeMode = nativeToJsModes.ONLINE_EVENT,
     pollEnabled = false,
     bridgeSecret = -1;
 
@@ -78,9 +77,6 @@ function androidExec(success, fail, service, action, args) {
         androidExec.setJsToNativeBridgeMode(jsToNativeModes.JS_OBJECT);
     }
 
-    // If args is not provided, default to an empty array
-    args = args || [];
-
     // Process any ArrayBuffers in the args into a string.
     for (var i = 0; i < args.length; i++) {
         if (utils.typeName(args[i]) == 'ArrayBuffer') {
@@ -90,6 +86,7 @@ function androidExec(success, fail, service, action, args) {
 
     var callbackId = service + cordova.callbackId++,
         argsJson = JSON.stringify(args);
+
     if (success || fail) {
         cordova.callbacks[callbackId] = {success:success, fail:fail};
     }
@@ -109,17 +106,6 @@ function androidExec(success, fail, service, action, args) {
 }
 
 androidExec.init = function() {
-    //CB-11828
-    //This failsafe checks the version of Android and if it's Jellybean, it switches it to
-    //using the Online Event bridge for communicating from Native to JS
-    //
-    //It's ugly, but it's necessary.
-    var check = navigator.userAgent.toLowerCase().match(/android\s[0-9].[0-9]/);
-    var version_code = check && check[0].match(/4.[0-3].*/);
-    if (version_code != null && nativeToJsBridgeMode == nativeToJsModes.EVAL_BRIDGE) {
-      nativeToJsBridgeMode = nativeToJsModes.ONLINE_EVENT;
-    }
-
     bridgeSecret = +prompt('', 'gap_init:' + nativeToJsBridgeMode);
     channel.onNativeReady.fire();
 };

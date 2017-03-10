@@ -9,6 +9,7 @@
     "osx": {
         "hostos": ["darwin"],
         "parser_file": "../cordova/metadata/osx_parser",
+        "handler_file": "../plugman/platforms/ios",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-osx.git",
         "version": "~4.0.1",
         "apiCompatibleSince": "4.0.0",

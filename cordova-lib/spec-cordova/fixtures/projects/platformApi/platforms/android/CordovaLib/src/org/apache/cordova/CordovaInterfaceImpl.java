@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
 
 import org.json.JSONException;
@@ -146,13 +147,13 @@ public class CordovaInterfaceImpl implements CordovaInterface {
         activityResultCallback = null;
 
         if (callback != null) {
-            LOG.d(TAG, "Sending activity result to plugin");
+            Log.d(TAG, "Sending activity result to plugin");
             initCallbackService = null;
             savedResult = null;
             callback.onActivityResult(requestCode, resultCode, intent);
             return true;
         }
-        LOG.w(TAG, "Got an activity result, but no plugin was registered to receive it" + (savedResult != null ? " yet!" : "."));
+        Log.w(TAG, "Got an activity result, but no plugin was registered to receive it" + (savedResult != null ? " yet!" : "."));
         return false;
     }
 
