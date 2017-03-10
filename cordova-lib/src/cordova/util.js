@@ -191,15 +191,16 @@ function deleteSvnFolders(dir) {
 }
 
 function listPlatforms(project_dir) {
-    var core_platforms = require('../platforms/platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
     if ( !fs.existsSync(platforms_dir)) {
         return [];
     }
-    var subdirs = fs.readdirSync(platforms_dir);
-    return subdirs.filter(function(p) {
-        return Object.keys(core_platforms).indexOf(p) > -1;
+    // get subdirs (that are actually dirs, and not files)
+    var subdirs = fs.readdirSync(platforms_dir)
+    .filter(function(file) {
+        return fs.statSync(path.join(platforms_dir, file)).isDirectory();
     });
+    return subdirs;
 }
 
 function getInstalledPlatformsWithVersions(project_dir) {
