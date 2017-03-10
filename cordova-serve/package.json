@@ -32,7 +32,8 @@
     "jshint": "node node_modules/jshint/bin/jshint src"
   },
   "engines": {
-    "node": ">= 0.12.0",
+    "node": ">=4.0.0",
     "npm": ">= 2.5.1"
-  }
+  },
+  "engineStrict": true
 }
