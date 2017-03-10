@@ -92,7 +92,6 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
     it('should fetch and uninstall a cordova platform via npm & git tags/branches', function(done) {
         fetch('cordova-android@5.1.1', tmpDir, opts)
         .then(function(result) {
-            console.log(1);
             var pkgJSON = require(path.join(result,'package.json'));
             expect(result).toBeDefined();
             expect(fs.existsSync(result)).toBe(true);
@@ -105,7 +104,6 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             return uninstall('cordova-android', tmpDir, opts);
         })
         .then(function() {
-            console.log(2);
             var rootPJ = JSON.parse(fs.readFileSync(path.join(tmpDir,'package.json'), 'utf8'));
             expect(Object.keys(rootPJ.dependencies).length).toBe(0);
             expect(fs.existsSync(path.join(tmpDir,'node_modules', 'cordova-android'))).toBe(false);
@@ -113,7 +111,6 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             return fetch('https://github.com/apache/cordova-ios.git#rel/4.1.1', tmpDir, opts);       
         })
         .then(function(result) {
-            console.log(3);
             var pkgJSON = require(path.join(result,'package.json'));
             expect(result).toBeDefined();
             expect(fs.existsSync(result)).toBe(true);
@@ -126,7 +123,6 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             return uninstall('cordova-ios', tmpDir, opts);
         })
         .then(function() {
-            console.log(4);
             var rootPJ = JSON.parse(fs.readFileSync(path.join(tmpDir,'package.json'), 'utf8'));
             expect(Object.keys(rootPJ.dependencies).length).toBe(0);
             expect(fs.existsSync(path.join(tmpDir,'node_modules', 'cordova-ios'))).toBe(false);
@@ -134,7 +130,6 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             return fetch('https://github.com/apache/cordova-android.git#4.1.x', tmpDir, opts);
         })
         .then(function(result) {
-            console.log(5);
             var pkgJSON = JSON.parse(fs.readFileSync(path.join(result,'package.json'), 'utf8'));
             expect(result).toBeDefined();
             expect(fs.existsSync(result)).toBe(true);
@@ -147,12 +142,11 @@ describe('platform fetch/uninstall test via npm & git tags with --save', functio
             return uninstall('cordova-android', tmpDir, opts);
         })
         .fail(function(err) {
-            console.log(10);
             console.error(err);
             expect(err).toBeUndefined();
         })
         .fin(done);
-    }, 80000);
+    }, 100000);
 });
 
 describe('plugin fetch/uninstall test with --save', function () {
