@@ -76,10 +76,6 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
-    if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError(platform + ' not supported.'));
-    }
-
     var current_stack = new action_stack();
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {

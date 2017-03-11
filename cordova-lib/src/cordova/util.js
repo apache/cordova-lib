@@ -182,7 +182,7 @@ function deleteSvnFolders(dir) {
     var contents = fs.readdirSync(dir);
     contents.forEach(function(entry) {
         var fullpath = path.join(dir, entry);
-        if (fs.statSync(fullpath).isDirectory()) {
+        if (isDirectory(fullpath)) {
             if (entry == '.svn') {
                 shell.rm('-rf', fullpath);
             } else module.exports.deleteSvnFolders(fullpath);
@@ -198,7 +198,7 @@ function listPlatforms(project_dir) {
     // get subdirs (that are actually dirs, and not files)
     var subdirs = fs.readdirSync(platforms_dir)
     .filter(function(file) {
-        return fs.statSync(path.join(platforms_dir, file)).isDirectory();
+        return isDirectory(path.join(platforms_dir, file));
     });
     return subdirs;
 }
@@ -222,13 +222,11 @@ function getInstalledPlatformsWithVersions(project_dir) {
 
 // list the directories in the path, ignoring any files
 function findPlugins(pluginPath) {
-    var plugins = [],
-        stats;
+    var plugins = [];
 
     if (fs.existsSync(pluginPath)) {
         plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
-            stats = fs.statSync(path.join(pluginPath, fileName));
-            return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
+            return fileName != '.svn' && fileName != 'CVS' && isDirectory(path.join(pluginPath, fileName));
         });
     }
 
@@ -338,6 +336,12 @@ function ensurePlatformOptionsCompatible (platformOptions) {
     return opts;
 }
 
+/**
+ * Checks to see if the argument is a directory
+ * 
+ * @param {string} dir - string representing path of directory
+ * @return {boolean}
+ */
 function isDirectory(dir) {
     try {
         return fs.lstatSync(dir).isDirectory();

@@ -85,17 +85,26 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
-            var parts = target.split('@');
-            var platform = parts[0];
-            var spec = parts[1];
             var pkgJson;
-
+            var platform;
+            var spec;
+            var parts = target.split('@');
+            if (parts.length > 1 && parts[0] === '') {
+                //scoped package
+                platform = '@' + parts[1];
+                spec = parts[2];
+            } else {
+                platform = parts[0];
+                spec = parts[1];
+            }
             return Q.when().then(function() {
-                if (!(platform in platforms)) {
+                // if platform is a local path or url, it should be assigned
+                // to spec
+                if (cordova_util.isDirectory(path.resolve(platform)) || 
+                    cordova_util.isUrl(platform)) {
                     spec = platform;
                     platform = null;
                 }
-
                 if(platform === 'amazon-fireos') {
                     events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
                 }
@@ -124,10 +133,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
                 // If --save/autosave on && no version specified, use the pinned version
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                if( (opts.save || autosave) && !spec ){
+                if( (opts.save || autosave) && !spec && platforms[platform]) {
                     spec = platforms[platform].version;
                 }
-
+                
+                // Handle local paths
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
                     if (cordova_util.isDirectory(maybeDir)) {
@@ -376,9 +386,19 @@ function downloadPlatform(projectRoot, platform, version, opts) {
     });
 }
 
+/**
+ * Removes the cordova- prefix from the platform's name for known platforms.
+ * @param {string} name - platform name
+ * @returns {string} 
+ */
 function platformFromName(name) {
+    var platName = name;
     var platMatch = /^cordova-([a-z0-9-]+)$/.exec(name);
-    return platMatch && platMatch[1];
+    if(platMatch && (platMatch[1] in platforms)) {
+        platName = platMatch[1];
+        events.emit('verbose', 'Removing "cordova-" prefix from ' + name);
+    }
+    return platName; 
 }
 
 // Returns a Promise
@@ -392,20 +412,19 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
         var pkgPath = path.join(libDir, 'package.json');
         delete require.cache[pkgPath];
         var pkg = require(pkgPath);
-
         platform = platformFromName(pkg.name);
         version = pkg.version;
         delete require.cache[pkgPath];
     } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
-        var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') :
+        var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') : 
                       fs.existsSync(path.join(libDir, 'CordovaLib', 'VERSION')) ? path.join(libDir, 'CordovaLib', 'VERSION') : null;
         if (verFile) {
             version = fs.readFileSync(verFile, 'UTF-8').trim();
         }
     }
-
+    
     // platform does NOT have to exist in 'platforms', but it should have a name, and a version
     if (!version || !platform) {
         return Q.reject(new CordovaError('The provided path does not seem to contain a ' +
@@ -420,10 +439,6 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
 }
 
 function getVersionFromConfigFile(platform, cfg) {
-    if(!platform || ( !(platform in platforms) )){
-        throw new CordovaError('Invalid platform: ' + platform);
-    }
-
     // Get appropriate version from config.xml
     var engine = _.find(cfg.getEngines(), function(eng){
         return eng.name.toLowerCase() === platform.toLowerCase();
@@ -668,7 +683,14 @@ function addDeprecatedInformationToPlatforms(platformsList){
     return platformsList;
 }
 
-// Returns a promise.
+/**
+ * Handles all cordova platform commands. 
+
+ * @param {string} command - Command to execute (add, rm, ls, update, save)
+ * @param {Object[]} targets - Array containing platforms to execute commands on
+ * @param {Object} opts
+ * @returns {Promise} 
+ */
 module.exports = platform;
 function platform(command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
@@ -680,36 +702,9 @@ function platform(command, targets, opts) {
 
         if (arguments.length === 0) command = 'ls';
 
-        // Verify that targets look like platforms. Examples:
-        // - android
-        // - android@3.5.0
-        // - ../path/to/dir/with/platform/files
-        // - https://github.com/apache/cordova-android.git
-        if (targets) {
-            if (!(targets instanceof Array)) targets = [targets];
-            targets.forEach(function (t) {
-                // Trim the @version part if it's there.
-                var p = t.split('@')[0];
-                // OK if it's one of known platform names.
-                if (p in platforms) return;
-                // Not a known platform name, check if its a real path.
-                var pPath = path.resolve(t);
-                if (fs.existsSync(pPath)) return;
+        if (targets && !(targets instanceof Array)) targets = [targets];
 
-                var msg;
-                // If target looks like a url, we will try cloning it with git
-                if (/[~:/\\.]/.test(t)) {
-                    return;
-                } else {
-                    // Neither path, git-url nor platform name - throw.
-                    msg = 'Platform "' + t +
-                    '" not recognized as a core cordova platform. See `' +
-                    cordova_util.binname + ' platform list`.'
-                    ;
-                }
-                throw new CordovaError(msg);
-            });
-        } else if (command == 'add' || command == 'rm') {
+        if (!targets && (command == 'add' || command == 'rm')) {
             msg = 'You need to qualify `add` or `remove` with one or more platforms!';
             return Q.reject(new CordovaError(msg));
         }

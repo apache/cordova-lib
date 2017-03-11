@@ -55,6 +55,9 @@ function PlatformApiPoly(platform, platformRootDir, events) {
     this.platform = platform;
     this.events = events || require('cordova-common').events;
 
+    if (!(platform in knownPlatforms))
+        throw new CordovaError('Unknown platform ' + platform);
+
     var ParserConstructor = require(knownPlatforms[platform].parser_file);
     this._parser = new ParserConstructor(this.root);
     this._handler = require(knownPlatforms[platform].handler_file);
