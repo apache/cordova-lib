@@ -437,13 +437,13 @@ describe('install', function() {
     });
 
     describe('failure', function() {
-        it('Test 021 : should throw if platform is unrecognized', function(done) {
+        it('Test 021 : should throw if platform is unrecognized & is missing api.js', function(done) {
             install('atari', project, 'SomePlugin')
             .then(function() {
                 expect(false).toBe(true);
                 done();
             }).fail(function err (errMsg) {
-                expect(errMsg.toString()).toContain('atari not supported.');
+                expect(errMsg.toString()).toContain('It is missing API.js');
                 done();
             }, 6000);
         });

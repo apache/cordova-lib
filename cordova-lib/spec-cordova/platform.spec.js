@@ -30,6 +30,7 @@ var helpers = require('./helpers'),
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
 var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+var platDir = path.join(__dirname, 'fixtures', 'platforms');
 
 describe('platform end-to-end', function () {
 
@@ -353,4 +354,65 @@ describe('plugin add and rm end-to-end --fetch', function () {
         })
         .fin(done);
     }, 60000);
+});
+
+
+describe('non-core platform add and rm end-to-end --fetch', function () {
+
+    var tmpDir = helpers.tmpDir('non-core-platform-test');
+    var project = path.join(tmpDir, 'hello');
+    var results;
+
+    beforeEach(function() {
+        process.chdir(tmpDir);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    it('Test 009 : should add and remove 3rd party platforms', function(done) {
+
+        var installed;
+        cordova.raw.create('hello')
+        .then(function() {
+            process.chdir(project);
+            //add cordova-android instead of android
+            return cordova.raw.platform('add', 'cordova-android', {'fetch': true});
+        })
+        .then(function() {
+            //local 3rd party platform
+            return cordova.raw.platform('add', path.join(platDir, 'atari'), {'fetch': true});
+        })
+        .then(function() {
+            //3rd party platform from npm
+            return cordova.raw.platform('add', 'cordova-platform-test', {'fetch': true});
+        })
+
+        .then(function() {
+            expect(path.join(project, 'platforms', 'android')).toExist();
+            expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();
+            expect(path.join(project, 'platforms', 'atari')).toExist();
+            return cordova.raw.platform('ls');
+        })
+        .then(function() {
+            //use regex to grab installed platforms
+            installed = results.match(/Installed platforms:\n  (.*)\n  (.*)\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf('android')).toBeGreaterThan(-1);
+            expect(installed[3].indexOf('cordova-platform-test')).toBeGreaterThan(-1);
+            expect(installed[2].indexOf('atari')).toBeGreaterThan(-1);
+            return cordova.raw.platform('rm', 'atari', {'fetch':true});
+        })
+        .then(function() {
+            expect(path.join(project, 'platforms', 'atari')).not.toExist();
+        })
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 90000);
 });
