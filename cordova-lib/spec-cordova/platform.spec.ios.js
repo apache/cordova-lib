@@ -21,6 +21,7 @@ var helpers = require('./helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
+    cordova_util = ('../src/cordova/util'),
     cordova = require('../src/cordova/cordova');
 
 
@@ -89,8 +90,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             expect(podfileContent.indexOf(CWStatusBarNotification) !== -1);
             expect(numberOfTimesAFNetworkingIsInPodfile).toEqual(1); 
 
-            delete require.cache[require.resolve(podsJSON)];
-            var podsJSONContent = require(podsJSON);
+            var podsJSONContent = cordova_util.requireNoCache(podsJSON);
 
             var countPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].count;
             var specPropertyOfAFNetworkingInPodsJSON = podsJSONContent[AFNetworking].spec;
@@ -108,8 +108,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             expect(podfileContent.indexOf(CWStatusBarNotification) === -1);
             expect(podfileContent.indexOf(AFNetworking) !== -1);
   
-            delete require.cache[require.resolve(podsJSON)];
-            var podsJSONContent = require(podsJSON);
+            var podsJSONContent = cordova_util.requireNoCache(podsJSON);
 
             expect(podsJSONContent[AFNetworking]);
             expect(podsJSONContent[CWStatusBarNotification] === undefined);
@@ -118,14 +117,13 @@ describe('cocoapod plugin add and rm end-to-end', function () {
         })
         .then(function() {
             //expect no pods 
-            delete require.cache[require.resolve(podfile)];
+            cordova_util.requireNoCache(podfile);
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'}); 
 
             expect(podfileContent.indexOf(CWStatusBarNotification) === -1);
             expect(podfileContent.indexOf(AFNetworking) === -1);
 
-            delete require.cache[require.resolve(podsJSON)];
-            var podsJSONContent = require(podsJSON);
+            var podsJSONContent = cordova_util.requireNoCache(podsJSON);
 
             expect(podsJSONContent[AFNetworking] === undefined);
             expect(podsJSONContent[CWStatusBarNotification] === undefined);

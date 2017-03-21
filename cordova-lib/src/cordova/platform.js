@@ -113,8 +113,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 if(fs.existsSync(path.join(projectRoot,'package.json'))) {
-                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
-                    pkgJson = require(path.join(projectRoot,'package.json'));
+                    pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
                 }
 
                 // If there is no spec specified, try to get spec from package.json
@@ -125,7 +124,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     } else if (pkgJson.dependencies[platform]) {
                         spec = pkgJson.dependencies[platform];
                     }
-                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
                 } else if (platform && spec === undefined && cmd === 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
@@ -153,9 +151,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
-                if(fs.existsSync(path.join(projectRoot, 'package.json'))) {
-                    delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
-                }
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
@@ -208,8 +203,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     // basically a valid NodeJS script but intended to be used as a regular
                     // executable script.
                     if (path.basename(apiEntryPoint) === 'Api.js') {
-                        delete require.cache[apiEntryPoint];
-                        PlatformApi = require(apiEntryPoint);
+                        PlatformApi = cordova_util.requireNoCache(apiEntryPoint);
                         events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
                     }
                 } catch (e) {
@@ -281,8 +275,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
             if(fs.existsSync(pkgJsonPath)) {
-                delete require.cache[require.resolve(pkgJsonPath)];
-                pkgJson = require(pkgJsonPath);
+                pkgJson = cordova_util.requireNoCache(path.join(pkgJsonPath)); 
             } else {
                 // TODO: Create package.json in cordova@7
             }
@@ -410,11 +403,9 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
 
     try {
         var pkgPath = path.join(libDir, 'package.json');
-        delete require.cache[pkgPath];
-        var pkg = require(pkgPath);
+        var pkg = cordova_util.requireNoCache(pkgPath);
         platform = platformFromName(pkg.name);
         version = pkg.version;
-        delete require.cache[pkgPath];
     } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
@@ -465,8 +456,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
         var pkgJsonPath = path.join(projectRoot,'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
         if(fs.existsSync(pkgJsonPath)) {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
         }
         if(opts.save || autosave){
             targets.forEach(function(target) {

@@ -75,7 +75,14 @@ exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
+exports.requireNoCache = requireNoCache;
 
+function requireNoCache(pkgJsonPath) {
+    delete require.cache[require.resolve(pkgJsonPath)];
+    var returnVal = require(pkgJsonPath);
+    delete require.cache[require.resolve(pkgJsonPath)];
+    return returnVal;
+}
 
 function isUrl(value) {
     var u = value && url.parse(value);
