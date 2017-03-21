@@ -238,8 +238,7 @@ module.exports = function plugin(command, targets, opts) {
                                 // If statement to see if pkgJsonPath exists in the filesystem
                                 if(fs.existsSync(pkgJsonPath)) {
                                     // Delete any previous caches of require(package.json)
-                                    delete require.cache[require.resolve(pkgJsonPath)];
-                                    pkgJson = require(pkgJsonPath);
+                                    pkgJson = cordova_util.requireNoCache(pkgJsonPath);
                                 } else {
                                     // Create package.json in cordova@7
                                 }
@@ -323,8 +322,7 @@ module.exports = function plugin(command, targets, opts) {
                                 // If statement to see if pkgJsonPath exists in the filesystem
                                 if(fs.existsSync(pkgJsonPath)) {
                                     //delete any previous caches of require(package.json)
-                                    delete require.cache[require.resolve(pkgJsonPath)];
-                                    pkgJson = require(pkgJsonPath);
+                                    pkgJson = cordova_util.requireNoCache(pkgJsonPath);
                                 } else {
                                     // Create package.json in cordova@7
                                 }
@@ -392,8 +390,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     // Require project pkgJson.
     var pkgJsonPath = path.join(projectRoot, 'package.json');
     if(fs.existsSync(pkgJsonPath)) {
-        delete require.cache[require.resolve(pkgJsonPath)]; 
-        pkgJson = require(pkgJsonPath);
+        pkgJson = cordova_util.requireNoCache(pkgJsonPath); 
     }
 
     // If no parsedSpec.version, use the one from pkg.json or config.xml.

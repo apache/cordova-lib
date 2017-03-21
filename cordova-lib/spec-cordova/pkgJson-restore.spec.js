@@ -22,6 +22,7 @@
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
     cordova = require('../src/cordova/cordova'),
+    cordova_util = require('../src/cordova/util'),
     TIMEOUT = 60 * 1000;
 
 /** Testing will check if "cordova prepare" is restoring platforms and plugins as expected.
@@ -47,7 +48,7 @@ describe('tests platform/spec restore with --save', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -67,7 +68,7 @@ describe('tests platform/spec restore with --save', function () {
     it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function(done) {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var pkgJson;
         var androidPlatform = 'android';
         var configXmlPath = path.join(cwd, 'config.xml');
@@ -80,8 +81,7 @@ describe('tests platform/spec restore with --save', function () {
             // Add platform with save, fetch
             return cordova.raw.platform('add', androidPlatform, {'save':true , 'fetch':true});
         }).then(function() {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Added platform properly to pkg.json
             expect(pkgJson.cordova.platforms).toBeDefined();
             expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
@@ -106,8 +106,7 @@ describe('tests platform/spec restore with --save', function () {
             // Run cordova prepare
             return cordova.raw.prepare();
         }).then(function() {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // No changes to pkg.json spec for android.
             expect(pkgJson.dependencies['cordova-'+androidPlatform].charAt(0)).toEqual('^');
             expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
@@ -164,26 +163,22 @@ describe('tests platform/spec restore with --save', function () {
             expect(engNames).toEqual([bPlatform]);
             expect(engSpec).toEqual([ 'https://github.com/apache/cordova-browser' ]);
             // Check that platform was added to pkg.json successfully.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Check that platform was added to platforms list successfully.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             expect(platformsJson[bPlatform]).toBeDefined();
         }).then(function() {
             // Remove platform without --save.
             return cordova.raw.platform('rm', bPlatform, {'fetch':true});
         }).then(function() {
             // Platform in pkg.json should still be there.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Platform in platforms.json should not be there.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             expect(platformsJson[bPlatform]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare
@@ -201,13 +196,11 @@ describe('tests platform/spec restore with --save', function () {
             expect(engNames).toEqual([ 'browser' ]);
             expect(engSpec).toEqual([ 'git+https://github.com/apache/cordova-browser.git' ]);
             // No change to pkg.json.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Check that platform was restored to platform.json list successfully.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             expect(platformsJson[bPlatform]).toBeDefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
@@ -239,9 +232,8 @@ describe('tests platform/spec restore with --save', function () {
             configPlugin = cfg.getPlugin(configPlugins);
             expect(configPlugin.spec).toEqual('https://github.com/apache/cordova-plugin-splashscreen');
             expect(configPlugin.name).toEqual('cordova-plugin-splashscreen');
-            // Plugin was added to pkg.json successfully in plugin list and dependencies.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            // Plugin was added to pkg.json successfully in plugin list and dependencies.   
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen': 'git+https://github.com/apache/cordova-plugin-splashscreen.git' });
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             // Plugin was added to installed plugin list successfully.
@@ -257,8 +249,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(configPlugin.spec).toEqual('https://github.com/apache/cordova-plugin-splashscreen');
             expect(configPlugin.name).toEqual('cordova-plugin-splashscreen');
             // Plugin still in pkg.json plugin list and dependencies.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen': 'git+https://github.com/apache/cordova-plugin-splashscreen.git' });
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             // Plugin was removed from the installed plugin list successfully.
@@ -277,8 +268,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(configPlugin.spec).toEqual('git+https://github.com/apache/cordova-plugin-splashscreen.git');
             expect(configPlugin.name).toEqual('cordova-plugin-splashscreen');
             // Pkg.json splashscreen dependency has no changes.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect (pkgJson.dependencies['cordova-plugin-splashscreen']).toEqual('git+https://github.com/apache/cordova-plugin-splashscreen.git');
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             // Plugin was restored and added to installed plugin list successfully.
@@ -307,7 +297,7 @@ describe('tests platform/spec restore with --save', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -349,10 +339,8 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platformsJson)
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Check the platform add of only helpers.testPlatform was successful in package.json.
             expect(pkgJson.cordova.platforms).toBeDefined();
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -369,10 +357,8 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.platform('rm', secondPlatformAdded);
         }).then(function() {
             // Delete any previous caches of require(pkgJson) and (platformsJson)
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Check that the platform that was added with --save is still in package.json.
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
             // Check that both platforms were removed from the platforms.json.
@@ -383,8 +369,7 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of platformsJson
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Expect "helpers.testPlatform" to be in the installed platforms list.
             expect(platformsJson[helpers.testPlatform]).toBeDefined();
             // Expect that 'browser' will not be in platforms.json and has not been restored.
@@ -414,7 +399,7 @@ describe('files should not be modified if their platforms are identical', functi
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -453,8 +438,7 @@ describe('files should not be modified if their platforms are identical', functi
                 return elem.name;
             });
             configEngArray = engNames.slice();
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect android to be in both pkg.json and config.xml.
             expect(pkgJson.cordova.platforms.indexOf('android')).toBeGreaterThan(-1);
             expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
@@ -485,7 +469,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -510,7 +494,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         var cfg = new ConfigParser(configXmlPath);
         var engines = cfg.getEngines();
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var pkgJson = require(pkgJsonPath);
         var engNames = engines.map(function(elem) {
             return elem.name;
@@ -531,8 +515,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         emptyPlatformList().then(function() {
             return cordova.raw.prepare();
         }).then(function() {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect 'browser' to be added to pkg.json.
             expect(pkgJson.cordova.platforms.indexOf(browserPlatform)).toBeGreaterThan(-1);
             // Expect 'android' to still be there in pkg.json.
@@ -570,7 +553,7 @@ describe('update empty package.json to match config.xml', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -591,7 +574,7 @@ describe('update empty package.json to match config.xml', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg1 = new ConfigParser(configXmlPath);
         var engines = cfg1.getEngines();
         var pkgJson = require(pkgJsonPath);
@@ -616,8 +599,7 @@ describe('update empty package.json to match config.xml', function () {
             });
             configEngArray = engNames.slice();
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect no change to config.xml.
             expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
             // Expect cordova key and 'android' platform to be added to pkg.json.
@@ -649,7 +631,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -673,7 +655,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         var cfg1 = new ConfigParser(configXmlPath);
         var engines = cfg1.getEngines();
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var pkgJson = require(pkgJsonPath);
         var engNames = engines.map(function(elem) {
             return elem.name;
@@ -691,8 +673,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
             engNames = engines.map(function(elem) {
@@ -738,7 +719,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -758,7 +739,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg1 = new ConfigParser(configXmlPath);
         var configPlugins = cfg1.getPluginIdList();
         var configPlugin = cfg1.getPlugin(configPlugins);
@@ -781,8 +762,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
             configPlugin = cfg2.getPlugin(configPlugins);
@@ -821,7 +801,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -843,7 +823,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         // Delete any previous caches of require(package.json).
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg1 = new ConfigParser(configXmlPath);
         var configPlugins = cfg1.getPluginIdList();
         var configPlugin = cfg1.getPlugin(configPlugins);
@@ -867,8 +847,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
             configPlugin = cfg2.getPlugin(configPlugins);
@@ -908,7 +887,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -930,7 +909,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg1 = new ConfigParser(configXmlPath);
         var configPlugins = cfg1.getPluginIdList();
         var pkgJson = require(pkgJsonPath);
@@ -970,8 +949,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
             // Check to make sure that variables were added as expected.
@@ -1031,7 +1009,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -1053,7 +1031,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg1 = new ConfigParser(configXmlPath);
         var configPlugins = cfg1.getPluginIdList();
         var pkgJson = require(pkgJsonPath);
@@ -1100,8 +1078,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json)
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
 
@@ -1173,7 +1150,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -1194,7 +1171,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var cfg = new ConfigParser(configXmlPath);
         var configPlugins = cfg.getPluginIdList();
         var configPluginSpecs = cfg.getPlugin(configPlugins);
@@ -1219,8 +1196,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
             configPluginSpecs = cfg2.getPlugin(configPlugins);
@@ -1325,8 +1301,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             configEngArray = engNames.slice();
             expect(configEngArray.length === 2);
             // Delete previouc caches of (pkg.json).
-            delete require.cache[require.resolve(platformsFolderPath1)];
-            platformsJson = require(platformsFolderPath1);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath1);
             // Browser should be installed
             expect(platformsJson).toBeDefined();
             expect(platformsJson[androidPlatform]).not.toBeDefined();
@@ -1335,8 +1310,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             return cordova.raw.platform('rm', [browserPlatform]);
         }).then(function () {
             // Android should not be in the installed list (only browser).
-            delete require.cache[require.resolve(platformsFolderPath1)];
-            platformsJson = require(platformsFolderPath1);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath1);
             expect(platformsJson).toBeDefined();
             expect(platformsJson[browserPlatform]).toBeUndefined();
             expect(platformsJson[androidPlatform]).not.toBeDefined();
@@ -1355,8 +1329,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(configEngArray.indexOf(browserPlatform)).toBeGreaterThan(-1);
             expect(configEngArray.length === 2);
             // Expect that android and browser were restored.
-            delete require.cache[require.resolve(platformsFolderPath1)];
-            platformsJson = require(platformsFolderPath1);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath1);
             expect(platformsJson[androidPlatform]).toBeDefined();
             expect(platformsJson[browserPlatform]).toBeDefined();
         }).then(function () {
@@ -1418,7 +1391,7 @@ describe('tests platform/spec restore with --save', function () {
     });
 
     afterEach(function() {
-        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        cordova_util.requireNoCache(path.join(process.cwd(),'package.json'));
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
@@ -1448,7 +1421,7 @@ describe('tests platform/spec restore with --save', function () {
     it('Test#001 : should restore platform that has been removed from project', function(done) {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd,'package.json');
-        delete require.cache[require.resolve(pkgJsonPath)];
+        cordova_util.requireNoCache(pkgJsonPath);
         var pkgJson;
         var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
         var platformsJson;
@@ -1457,11 +1430,9 @@ describe('tests platform/spec restore with --save', function () {
             // Add the testing platform with --save.
             return cordova.raw.platform('add', 'android', {'save':true});
         }).then(function() {
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Require platformsFolderPath
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Check the platform add was successful in package.json.
             expect(pkgJson.cordova.platforms).toBeDefined();
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -1474,10 +1445,8 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.platform('rm', [helpers.testPlatform]);
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platforms.json)
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Check that the platform removed without --save is still in platforms key.
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
             // Check that the platform was removed from the platforms.json
@@ -1487,8 +1456,7 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of platforms.json.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json.
             expect(platformsJson[helpers.testPlatform]).toBeDefined();
         }).fail(function(err) {
@@ -1518,10 +1486,8 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.platform('add',secondPlatformAdded, {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platforms.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Check the platform add of both platforms (to pkg.Json) was successful.
             expect(pkgJson.cordova.platforms).toBeDefined();
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(0);
@@ -1539,10 +1505,8 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.platform('rm', secondPlatformAdded);
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platformsJson).
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
+            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
             expect(pkgJson.cordova.platforms.indexOf(secondPlatformAdded)).toEqual(0);
             expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
@@ -1554,8 +1518,7 @@ describe('tests platform/spec restore with --save', function () {
             return cordova.raw.prepare();
         }).then(function() {
             // Delete any previous caches of platformsJson.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
+            platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Expect "helpers.testPlatform" to be in the installed platforms list in platforms.json
             expect(platformsJson[helpers.testPlatform]).toBeUndefined();
             // Expect 'browser' not to be in platforms.json and has not been restored.
