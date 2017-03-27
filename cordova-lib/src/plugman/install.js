@@ -558,7 +558,8 @@ function installDependency(dep, install, options) {
         if (options.force || 
             semver.satisfies(version_installed, version_required, /*loose=*/true) || 
             version_required === null || 
-            version_required === undefined ) {
+            version_required === undefined ||
+            version_required === '' ) {
             events.emit('log', 'Plugin dependency "' + (version_installed ? dep.id+'@'+version_installed : dep.id) + '" already fetched, using that version.');
         } else {
             var msg = 'Version of installed plugin: "' +

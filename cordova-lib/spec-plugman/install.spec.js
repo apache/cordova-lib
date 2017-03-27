@@ -18,6 +18,7 @@
 */
 
 /* jshint sub:true */
+/* globals fail*/
 
 var helpers = require('../spec-cordova/helpers'),
     path = require('path'),
@@ -65,10 +66,11 @@ var helpers = require('../spec-cordova/helpers'),
         'C@1.0.0' : path.join(plugins_dir, 'dependencies', 'C@1.0.0'),
         'Test1' : path.join(plugins_dir, 'dependencies', 'Test1'),
         'Test2' : path.join(plugins_dir, 'dependencies', 'Test2'),
-        'Test3' : path.join(plugins_dir, 'dependencies', 'Test3')
+        'Test3' : path.join(plugins_dir, 'dependencies', 'Test3'),
+        'Test4' : path.join(plugins_dir, 'dependencies', 'Test4')
     },
     results = {},
-    TIMEOUT = 60000,
+    TIMEOUT = 90000,
     superspawn = require('cordova-common').superspawn;
 
 
@@ -649,11 +651,34 @@ describe('end-to-end plugin dependency tests', function() {
         }, TIMEOUT)
         .fin(done);
     }, TIMEOUT);
+
+    it('Test 033 : should use a dev version of a dependent plugin if it is already installed', function(done) {
+        //Test4 has this dependency in its plugin.xml:
+        //<dependency id="cordova-plugin-file" url="https://github.com/apache/cordova-plugin-file" />
+        cordova.raw.create('hello3')
+        .then(function() {
+            process.chdir(project);
+            return cordova.raw.platform('add', 'android', {'fetch': true});
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', 'https://github.com/apache/cordova-plugin-file');
+        })
+        .then(function() {
+            return cordova.raw.plugin('add', plugins['Test4'], {'fetch': true});
+        })
+        .then(function() {
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'Test4')).toExist();
+        }, function (error) {
+            fail(error);
+        })
+        .fin(done);
+    }, TIMEOUT);
 });
 
 describe('end', function() {
 
-    it('Test 033 : end', function() {
+    it('Test 034 : end', function() {
         shell.rm('-rf', temp_dir);
     }, TIMEOUT);
 });
