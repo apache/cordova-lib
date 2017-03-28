@@ -105,13 +105,10 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     spec = platform;
                     platform = null;
                 }
-                if(platform === 'amazon-fireos') {
-                    events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
-                }
+
                 if(platform === 'wp8') {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
-
                 if(fs.existsSync(path.join(projectRoot,'package.json'))) {
                     pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
                 }
