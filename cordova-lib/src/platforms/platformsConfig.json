@@ -33,13 +33,6 @@
         "version": "~4.3.4",
         "deprecated": false
     },
-    "amazon-fireos": {
-        "parser_file": "../cordova/metadata/amazon_fireos_parser",
-        "handler_file": "../plugman/platforms/amazon-fireos",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git",
-        "version": "~3.6.3",
-        "deprecated": true
-    },
     "wp8": {
         "hostos": ["win32"],
         "parser_file": "../cordova/metadata/wp8_parser",
