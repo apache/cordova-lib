@@ -84,7 +84,7 @@ function nodeEqual(node1, node2) {
     if (typeof node1 != typeof node2)
         return false;
     else if (typeof node1 == 'string') {
-        node2 = escapeRE(node2).replace(new RegExp('\\$[a-zA-Z0-9-_]+','gm'),'(.*?)');
+        node2 = escapeRE(node2).replace(/\\\$\S+/gm,'(.*?)');
         return new RegExp('^' + node2 + '$').test(node1);
     }
     else {
@@ -97,5 +97,5 @@ function nodeEqual(node1, node2) {
 
 // escape string for use in regex
 function escapeRE(str) {
-    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '$&');
+    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
 }
