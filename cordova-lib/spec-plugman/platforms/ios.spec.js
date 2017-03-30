@@ -275,7 +275,7 @@ describe('ios project handler', function() {
 
                 frameworks = copyArray(valid_weak_frameworks);
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.join('src','ios','libsqlite3.dylib'), { customFramework: false, embed: false, link: true, weak: true });
+                expect(spy).toHaveBeenCalledWith('src/ios/libsqlite3.dylib', { customFramework: false, embed: false, link: true, weak: true });
 
             });
 
