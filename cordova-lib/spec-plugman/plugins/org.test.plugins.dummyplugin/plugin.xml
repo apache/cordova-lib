@@ -50,10 +50,10 @@
             </activity>
         </config-file>
 
-        <framework src="plugin-lib" custom="true" />
-        <framework src="plugin-lib2" custom="true" parent="plugin-lib" />
+        <!--framework src="plugin-lib" custom="true" />
+        <framework src="plugin-lib2" custom="true" parent="plugin-lib" / >
         <framework src="extras/android/support/v7/appcompat" />
-        <framework src="extra.gradle" type="gradleReference" />
+        <framework src="extra.gradle" type="gradleReference" / -->
         <resource-file src="android-resource.xml" target="res/xml/dummy.xml" />
 
         <!-- CDV < 2.0 -->
@@ -63,10 +63,10 @@
         </config-file>
 
         <!-- CDV 2.0+ (for now) -->
-        <config-file target="res/xml/config.xml" parent="/cordova/plugins">
+        <!--config-file target="res/xml/config.xml" parent="/cordova/plugins">
             <plugin name="org.test.plugins.dummyplugin"
                 value="DummyPlugin.org.test.plugins.dummyplugin"/>
-        </config-file>
+        </config-file -->
 
         <source-file src="src/android/DummyPlugin.java"
                 target-dir="src/com/phonegap/plugins/dummyplugin" />

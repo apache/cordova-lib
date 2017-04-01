@@ -39,7 +39,6 @@ describe('plugin end-to-end', function() {
     var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
-    var testRunRoot = process.cwd();
 
     events.on('results', function(res) { results = res; });
 
@@ -51,7 +50,7 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'browser'), path.join(project, 'platforms'));
         process.chdir(project);
         delete process.env.PWD;
     });
@@ -306,75 +305,6 @@ describe('plugin end-to-end', function() {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    },60000);
-    
-    // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
-    it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
-
-        var cwd = process.cwd();
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
-        var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
-        var pkgJsonPath = path.join(cwd,'package.json');
-        var pkgJson;
-        var configXmlPath = path.join(cwd, 'config.xml');
-        var cfg = new ConfigParser(configXmlPath);
-        var engines = cfg.getEngines();
-        var engNames;
-        var engSpec;
-
-        delete require.cache[require.resolve(pkgJsonPath)];
-        // Run cordova platform add local path --save --fetch.
-        return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
-        .then(function() {
-            // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Pkg.json has browser.
-            expect(pkgJson.cordova.platforms).toEqual(['browser']);
-
-            // Check that the value here exists
-            expect(pkgJson.dependencies['cordova-browser']).toBeDefined();
-
-            var cfg2 = new ConfigParser(configXmlPath);
-            engines = cfg2.getEngines();
-            // browser platform and spec have been added to config.xml.
-            engNames = engines.map(function(elem) {
-                return elem.name;
-            });
-            engSpec = engines.map(function(elem) {  
-                if (elem.name === 'browser') {
-                    var result = includeFunc(elem.spec , platformPath);
-                    expect(result).toEqual(true);
-                }
-            });
-        }).then(function() {
-            // Run cordova plugin add local path --save --fetch.
-            return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true});
-        }).then(function() {
-            // Delete any previous caches of require(package.json).
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Pkg.json has geolocation plugin.
-            expect(pkgJson.cordova.plugins['cordova-lib-test-plugin']).toBeDefined();
-
-            // Check that the value here EXISTS
-            expect(pkgJson.dependencies['cordova-lib-test-plugin']).toBeDefined();
-
-            var cfg3 = new ConfigParser(configXmlPath);
-            engines = cfg3.getEngines();
-            // Check that browser and spec have been added to config.xml
-            engNames = engines.map(function(elem) {
-                return elem.name;
-            });
-            engSpec = engines.map(function(elem) {  
-                if (elem.name === 'browser') {
-                    var result = includeFunc(elem.spec , platformPath);
-                    expect(result).toEqual(true);
-                }
-            });
-        }).fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
     },60000);
 });
 
@@ -963,7 +893,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
+        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/browser');
 
         // Run cordova platform add local path --save --fetch.
         return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
@@ -1005,6 +935,101 @@ describe('local path is added to config.xml without pkg.json', function () {
             // Spec for geolocation plugin is added.
             var result = includeFunc(configPlugin.spec , pluginPath);
             expect(result).toEqual(true);
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    },60000);
+});
+
+describe('plugin end-to-end', function() {
+    var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
+    var project = path.join(tmpDir, 'project');
+    var results;
+    var testRunRoot = process.cwd();
+
+    events.on('results', function(res) { results = res; });
+
+    beforeEach(function() {
+        shell.rm('-rf', project);
+
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson'), project);
+        // Copy some platform to avoid working on a project with no platforms.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        process.chdir(project);
+        delete process.env.PWD;
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+    // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
+    it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
+
+        var cwd = process.cwd();
+        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/browser');
+        var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
+        var pkgJsonPath = path.join(cwd,'package.json');
+        var pkgJson;
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var cfg = new ConfigParser(configXmlPath);
+        var engines = cfg.getEngines();
+        var engNames;
+        var engSpec;
+
+        delete require.cache[require.resolve(pkgJsonPath)];
+        // Run cordova platform add local path --save --fetch.
+        return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
+        .then(function() {
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Pkg.json has browser.
+            expect(pkgJson.cordova.platforms).toEqual(['browser']);
+
+            // Check that the value here exists
+            expect(pkgJson.dependencies['cordova-browser']).toBeDefined();
+
+            var cfg2 = new ConfigParser(configXmlPath);
+            engines = cfg2.getEngines();
+            // browser platform and spec have been added to config.xml.
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {  
+                if (elem.name === 'browser') {
+                    var result = includeFunc(elem.spec , platformPath);
+                    expect(result).toEqual(true);
+                }
+            });
+        }).then(function() {
+            // Run cordova plugin add local path --save --fetch.
+            return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true});
+        }).then(function() {
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Pkg.json has geolocation plugin.
+            expect(pkgJson.cordova.plugins['cordova-lib-test-plugin']).toBeDefined();
+
+            // Check that the value here EXISTS
+            expect(pkgJson.dependencies['cordova-lib-test-plugin']).toBeDefined();
+
+            var cfg3 = new ConfigParser(configXmlPath);
+            engines = cfg3.getEngines();
+            // Check that browser and spec have been added to config.xml
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {  
+                if (elem.name === 'browser') {
+                    var result = includeFunc(elem.spec , platformPath);
+                    expect(result).toEqual(true);
+                }
+            });
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);

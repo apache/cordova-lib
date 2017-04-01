@@ -28,7 +28,7 @@ var platforms = rewire('../../src/platforms/platforms');
 
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
-var PLATFORM_WOUT_API = path.join(CORDOVA_ROOT, 'platforms/android');
+var PLATFORM_WOUT_API = path.join(CORDOVA_ROOT, 'platforms/browser');
 var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
 var MockPlatformApi = require(fs.realpathSync(path.join(PLATFORM_WITH_API, 'cordova/Api.js')));
@@ -51,7 +51,7 @@ describe('getPlatformApi method', function () {
     });
 
     it('should return PlatformApi polyfill if PlatformApi is not defined by platform', function () {
-        var platformApi = platforms.getPlatformApi('android', PLATFORM_WOUT_API);
+        var platformApi = platforms.getPlatformApi('browser', PLATFORM_WOUT_API);
         expect(platformApi).toEqual(jasmine.any(PlatformApiPoly));
     });
 

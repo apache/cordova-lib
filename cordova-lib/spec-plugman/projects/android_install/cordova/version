@@ -19,5 +19,11 @@
        under the License.
 */
 
-console.log('9.0.0');
+// Coho updates this line:
+var VERSION = "6.2.0-dev";
 
+module.exports.version = VERSION;
+
+if (!module.parent) {
+    console.log(VERSION);
+}

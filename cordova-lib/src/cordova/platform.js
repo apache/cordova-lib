@@ -214,10 +214,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 } catch (e) {
                 } finally {
-                    if (!PlatformApi) {
+                    if (!PlatformApi && (platform !== 'ios' && platform !== 'windows' && platform !== 'android')) {
                         events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
                             '". Using polyfill instead.');
                         PlatformApi = require('../platforms/PlatformApiPoly');
+                    } else if (!PlatformApi) {
+                        throw new CordovaError ('Your ' + platform + ' platform does not have Api.js');
                     }
                 }
                 var destination = path.resolve(projectRoot, 'platforms', platform);

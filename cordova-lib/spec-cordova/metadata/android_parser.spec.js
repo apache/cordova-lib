@@ -19,6 +19,7 @@
 
 /* jshint boss:true */
 
+/**
 var androidParser = require('../../src/cordova/metadata/android_parser'),
     util = require('../../src/cordova/util'),
     path = require('path'),
@@ -239,3 +240,4 @@ describe('android project parser', function() {
         });
     });
 });
+*/

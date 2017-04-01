@@ -134,7 +134,6 @@ describe('plugin end-to-end', function() {
         // Reset origCwd before each spec to respect chdirs
         util._resetOrigCwd();
         delete process.env.PWD;
-
         spyOn(prepare, 'preparePlatforms').and.callThrough();
         spyOn(errorHandler, 'errorCallback').and.callThrough();
     });
@@ -156,7 +155,8 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('Test 002 : should run prepare after plugin installation/removal by default', function(done) {
+    // Api.js platforms do not call prepare anymore.
+    xit('Test 002 : should run prepare after plugin installation/removal by default', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
         .then(function() {
             expect(prepare.preparePlatforms).toHaveBeenCalled();
