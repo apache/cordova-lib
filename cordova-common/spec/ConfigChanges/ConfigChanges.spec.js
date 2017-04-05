@@ -314,24 +314,24 @@ describe('config-changes module', function() {
                 it('should call graftXMLMerge for every new config.xml config munge with mode \'merge\' it introduces', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
 
-                    var spy = spyOn(xml_helpers, 'graftXMLMerge').andReturn(true);
+                    var spy = spyOn(xml_helpers, 'graftXMLMerge').and.returnValue(true);
 
                     var munger = new configChanges.PlatformMunger('android', temp, platformJson);
                     munger.add_config_changes(cfg, true);
 
-                    expect(spy.calls.length).toEqual(1);
-                    expect(spy.argsForCall[0][2]).toEqual('/manifest/uses-sdk');
+                    expect(spy.calls.count()).toEqual(1);
+                    expect(spy.calls.argsFor(0)[2]).toEqual('/manifest/uses-sdk');
                 });
                 it('should call graftXMLOverwrite for every new config.xml config munge with mode \'overwrite\' it introduces', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
 
-                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').andReturn(true);
+                    var spy = spyOn(xml_helpers, 'graftXMLOverwrite').and.returnValue(true);
 
                     var munger = new configChanges.PlatformMunger('android', temp, platformJson);
                     munger.add_config_changes(cfg, true);
 
-                    expect(spy.calls.length).toEqual(1);
-                    expect(spy.argsForCall[0][2]).toEqual('/manifest/uses-sdk');
+                    expect(spy.calls.count()).toEqual(1);
+                    expect(spy.calls.argsFor(0)[2]).toEqual('/manifest/uses-sdk');
                 });
                 it('should call pruneXMLRemove for every new config.xml config munge with mode \'remove\' it introduces', function() {
                     var platformJson = PlatformJson.load(plugins_dir, 'android');
