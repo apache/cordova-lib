@@ -106,9 +106,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
-                if(platform === 'wp8') {
-                    events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
-                }
                 if(fs.existsSync(path.join(projectRoot,'package.json'))) {
                     pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
                 }
@@ -356,7 +353,6 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             return lazy_load.git_clone(git_url, branchToCheckout).fail(function(err) {
                 // If it looks like a url, but cannot be cloned, try handling it differently.
                 // it's because it's a tarball of the form:
-                //     - wp8@https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git;a=snapshot;h=3.7.0;sf=tgz
                 //     - https://api.github.com/repos/msopenTech/cordova-browser/tarball/my-branch
                 events.emit('verbose', err.message);
                 events.emit('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
