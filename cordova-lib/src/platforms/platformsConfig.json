@@ -33,15 +33,6 @@
         "version": "~4.3.4",
         "deprecated": false
     },
-    "wp8": {
-        "hostos": ["win32"],
-        "parser_file": "../cordova/metadata/wp8_parser",
-        "handler_file": "../plugman/platforms/wp8",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git",
-        "version": "~3.8.2",
-        "altplatform": "wp",
-        "deprecated": true
-    },
     "blackberry10": {
         "parser_file": "../cordova/metadata/blackberry10_parser",
         "handler_file": "../plugman/platforms/blackberry10",
