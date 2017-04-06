@@ -100,7 +100,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             return Q.when().then(function() {
                 // if platform is a local path or url, it should be assigned
                 // to spec
-                if (cordova_util.isDirectory(path.resolve(platform)) || 
+                if (cordova_util.isDirectory(path.resolve(platform)) ||
                     cordova_util.isUrl(platform)) {
                     spec = platform;
                     platform = null;
@@ -204,7 +204,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         PlatformApi = cordova_util.requireNoCache(apiEntryPoint);
                         events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
                     }
-                } catch (e) {
+                } catch (err) {
+                    events.emit('verbose', 'Error: PlatformApi not loaded for platform.' + err);
                 } finally {
                     if (!PlatformApi) {
                         events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
@@ -378,7 +379,7 @@ function downloadPlatform(projectRoot, platform, version, opts) {
 /**
  * Removes the cordova- prefix from the platform's name for known platforms.
  * @param {string} name - platform name
- * @returns {string} 
+ * @returns {string}
  */
 function platformFromName(name) {
     var platName = name;
@@ -387,7 +388,7 @@ function platformFromName(name) {
         platName = platMatch[1];
         events.emit('verbose', 'Removing "cordova-" prefix from ' + name);
     }
-    return platName; 
+    return platName;
 }
 
 // Returns a Promise
@@ -397,6 +398,8 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
     var platform;
     var version;
 
+    // console.log("getPlatformDetailsFromDir : ", dir, platformIfKnown, libDir);
+
     try {
         var pkgPath = path.join(libDir, 'package.json');
         var pkg = cordova_util.requireNoCache(pkgPath);
@@ -405,13 +408,13 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
     } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
-        var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') : 
+        var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') :
                       fs.existsSync(path.join(libDir, 'CordovaLib', 'VERSION')) ? path.join(libDir, 'CordovaLib', 'VERSION') : null;
         if (verFile) {
             version = fs.readFileSync(verFile, 'UTF-8').trim();
         }
     }
-    
+
     // platform does NOT have to exist in 'platforms', but it should have a name, and a version
     if (!version || !platform) {
         return Q.reject(new CordovaError('The provided path does not seem to contain a ' +
@@ -670,12 +673,12 @@ function addDeprecatedInformationToPlatforms(platformsList){
 }
 
 /**
- * Handles all cordova platform commands. 
+ * Handles all cordova platform commands.
 
  * @param {string} command - Command to execute (add, rm, ls, update, save)
  * @param {Object[]} targets - Array containing platforms to execute commands on
  * @param {Object} opts
- * @returns {Promise} 
+ * @returns {Promise}
  */
 module.exports = platform;
 function platform(command, targets, opts) {
