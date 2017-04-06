@@ -18,7 +18,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- 
+
 var fs = require('fs'),
     shjs = require('shelljs'),
     Q = require ('q'),
@@ -28,9 +28,9 @@ var fs = require('fs'),
     check_reqs = require('./check_reqs');
 
 module.exports.createProject = function(project_path,package_name,project_name){
-    
+
     var VERSION = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf-8');
-    
+
     // Set default values for path, package and name
     project_path = typeof project_path !== 'undefined' ? project_path : "CordovaExample";
 
@@ -39,14 +39,14 @@ module.exports.createProject = function(project_path,package_name,project_name){
         console.error('Project already exists! Delete and recreate');
         process.exit(2);
     }
-    
+
     // Check that requirements are met and proper targets are installed
     if (!check_reqs.run()) {
         console.error('Please make sure you meet the software requirements in order to build a browser cordova project');
         process.exit(2);
     }
 
-    console.log('Creating Browser project. Path: ' + path.relative(process.cwd(),project_path));
+    // console.log('Creating Browser project. Path: ' + path.relative(process.cwd(),project_path));
 
     //copy template directory
     shjs.cp('-r', path.join(ROOT, 'bin', 'templates', 'project', 'www'), project_path);
@@ -61,7 +61,7 @@ module.exports.createProject = function(project_path,package_name,project_name){
 
     //copy check_reqs file
     shjs.cp( path.join(ROOT, 'bin', 'lib', 'check_reqs.js'), path.join(project_path,'cordova', 'lib'));
-    
+
     //copy cordova js file
     shjs.cp('-r', path.join(ROOT, 'cordova-lib', 'cordova.js'), path.join(project_path,'www'));
 
@@ -69,13 +69,13 @@ module.exports.createProject = function(project_path,package_name,project_name){
     shjs.cp('-rf', path.join(ROOT, 'cordova-js-src'), path.join(project_path, 'platform_www'));
 
     //copy cordova directory
-    shjs.cp('-r', path.join(ROOT, 'bin', 'templates', 'project', 'cordova'), project_path); 
+    shjs.cp('-r', path.join(ROOT, 'bin', 'templates', 'project', 'cordova'), project_path);
     [
         'run',
         'build',
         'clean',
         'version',
-    ].forEach(function(f) { 
+    ].forEach(function(f) {
          shjs.chmod(755, path.join(project_path, 'cordova', f));
     });
 
