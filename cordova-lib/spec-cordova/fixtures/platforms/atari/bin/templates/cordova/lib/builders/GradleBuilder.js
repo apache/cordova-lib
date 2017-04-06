@@ -131,7 +131,6 @@ GradleBuilder.prototype.prepBuildFiles = function() {
           }
     };
     subProjects.forEach(function(p) {
-        console.log('Subproject Path: ' + p);
         var libName=p.replace(/[/\\]/g, ':').replace(name+'-','');
         depsList += '    debugCompile(project(path: "' + libName + '", configuration: "debug"))';
         insertExclude(p);
