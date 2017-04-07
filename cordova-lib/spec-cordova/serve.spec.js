@@ -26,7 +26,6 @@ var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     fs = require('fs'),
     Q = require('q'),
-    util = require('../src/cordova/util'),
     tempDir,
     http = require('http');
 
@@ -164,27 +163,6 @@ xdescribe('serve command', function() {
             };
         }
 
-        it('Test 002 : should serve from top-level www if the file exists there', function() {
-            var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/basictest.html', payload, {
-                setup: function (){
-                    fs.writeFileSync(path.join(util.projectWww(tempDir), 'basictest.html'), payload);
-                }
-            })();
-        });
-
-        it('Test 003 : should honour a custom port setting', function() {
-            var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/basictest.html', payload, {
-                port: 9001,
-                setup: function (){
-                    fs.writeFileSync(path.join(util.projectWww(tempDir), 'basictest.html'), payload);
-                }
-            })();
-        });
-
         itifapps([
             'android',
             'ant',
@@ -208,11 +186,6 @@ xdescribe('serve command', function() {
         ])('should fall back to www on iOS', function() {
             payloads.ios = 'This is the iOS test file.';
             test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
-        });
-
-        it('Test 004 : should fall back to www on firefoxos', function() {
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/test.html', payloads.firefoxos)();
         });
     });
 });
