@@ -56,13 +56,6 @@
         "version": "~3.10.0",
         "deprecated": false
     },
-    "firefoxos": {
-        "parser_file": "../cordova/metadata/firefoxos_parser",
-        "handler_file": "../plugman/platforms/firefoxos",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git",
-        "version": "~3.6.3",
-        "deprecated": false
-    },
     "windows": {
         "hostos": ["win32"],
         "parser_file": "../cordova/metadata/windows_parser",
