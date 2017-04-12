@@ -41,7 +41,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var pkgJsonPath = path.join(projectHome,'package.json');
     var pkgJson;
     var pkgJsonPlatforms;
-    var comboArray = []; 
+    var comboArray = [];
     var configPlatforms = [];
     var modifiedPkgJson = false;
     var modifiedConfigXML = false;
@@ -56,8 +56,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
     if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
         pkgJsonPlatforms = pkgJson.cordova.platforms;
-    } 
-    
+    }
+
     if(cfg !== undefined) {
 
         if (pkgJsonPlatforms !== undefined) {
@@ -104,7 +104,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
         },[]);
         comboArray = uniq;
         comboArray = comboArray.sort();
- 
+
         // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
             return Q('No platforms found in config.xml or package.json. Nothing to restore');
@@ -136,7 +136,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
                 // Modify package.json if any of these cases are true:
                 if((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length) ||
-                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) || 
+                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) ||
                 (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[prefixItem] === undefined && mergedPlatformSpecs[prefixItem])) {
                     modifiedPkgJson = true;
                 }
@@ -167,7 +167,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     cfg.removeEngine(item);
                     cfg.addEngine(item);
                     modifiedConfigXML = true;
-                } 
+                }
             });
         }
 
@@ -348,19 +348,19 @@ function installPluginsFromConfigXML(args) {
         }
         cfg.removePlugin(plugID);
         if (mergedPluginSpecs[plugID]) {
-            cfg.addPlugin({name:plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]); 
+            cfg.addPlugin({name:plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]);
             modifiedConfigXML = true;
         // If no spec, just add the plugin.
         } else {
-            cfg.addPlugin({name:plugID}, comboObject[plugID]); 
+            cfg.addPlugin({name:plugID}, comboObject[plugID]);
             modifiedConfigXML = true;
         }
     });
 
     if (modifiedConfigXML === true) {
-        cfg.write();    
+        cfg.write();
     }
-    
+
     // Intermediate variable to store current installing plugin name
     // to be able to create informative warning on plugin failure
     var pluginName;
@@ -403,6 +403,7 @@ function installPluginsFromConfigXML(args) {
         // CB-10921 emit a warning in case of error
         var msg = 'Failed to restore plugin \"' + pluginName + '\" from config.xml. ' +
             'You might need to try adding it again. Error: ' + error;
+        process.exitCode = 1;
         events.emit('warn', msg);
     });
 }
