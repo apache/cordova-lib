@@ -247,6 +247,12 @@ android_parser.prototype.update_from_config = function(config) {
         delete act.attrib["android:launchMode"]; // use Android default value (standard)
     }
 
+    // last part of pkg name will be the apk name
+    var apkNameMatch = pkg.match(/\.(\w+)$/);
+    if (apkNameMatch) {
+        act.attrib["android:name"] = apkNameMatch[1];
+    }
+
     // Set min/max/target SDK version
     //<uses-sdk android:minSdkVersion="10" android:targetSdkVersion="19" ... />
     var usesSdk = manifest.getroot().find('./uses-sdk');
