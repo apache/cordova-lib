@@ -16,7 +16,6 @@
   "engines": {
     "node": ">=4.0.0"
   },
-  "engineStrict": true,
   "dependencies": {
     "aliasify": "^2.1.0",
     "cordova-common": "2.0.2",
