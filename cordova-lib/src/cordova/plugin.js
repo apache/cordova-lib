@@ -863,6 +863,11 @@ function determinePluginVersionToFetch(pluginInfo, pluginMap, platformMap, cordo
 
 function getFailedRequirements(reqs, pluginMap, platformMap, cordovaVersion) {
     var failed = [];
+    var version = cordovaVersion;
+    if (semver.prerelease(version)) {
+        //  semver.inc with 'patch' type removes prereleased tag from version
+        version = semver.inc(version, 'patch');
+    }
 
     for (var req in reqs) {
         if(reqs.hasOwnProperty(req) && typeof req === 'string' && semver.validRange(reqs[req])) {
@@ -871,7 +876,7 @@ function getFailedRequirements(reqs, pluginMap, platformMap, cordovaVersion) {
 
             if(pluginMap[trimmedReq] && !semver.satisfies(pluginMap[trimmedReq], reqs[req])) {
                 badInstalledVersion = pluginMap[req];
-            } else if(trimmedReq === 'cordova' && !semver.satisfies(cordovaVersion, reqs[req])) {
+            } else if(trimmedReq === 'cordova' && !semver.satisfies(version, reqs[req])) {
                 badInstalledVersion = cordovaVersion;
             } else if(trimmedReq.indexOf('cordova-') === 0) {
                 // Might be a platform constraint
