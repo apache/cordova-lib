@@ -92,9 +92,11 @@ describe('android project parser', function() {
         var p, cp, rm, mkdir, is_cordova, write, read, getOrientation;
         var stringsRoot;
         var manifestRoot;
+        var manifestXMLString = MANIFEST_XML;
         beforeEach(function() {
             stringsRoot = null;
             manifestRoot = null;
+           
             p = new androidParser(android_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
@@ -106,12 +108,43 @@ describe('android project parser', function() {
                 if (/strings/.exec(path)) {
                     return stringsRoot = new et.ElementTree(et.XML(STRINGS_XML));
                 } else if (/AndroidManifest/.exec(path)) {
-                    return manifestRoot = new et.ElementTree(et.XML(MANIFEST_XML));
+                    return manifestRoot = new et.ElementTree(et.XML(manifestXMLString));
                 } else {
                     throw new CordovaError('Unexpected parseElementtreeSync: ' + path);
                 }
             });
             getOrientation = spyOn(p.helper, 'getOrientation');
+        });
+
+
+        describe('activity path', function() {
+   
+            var activityName = 'MyActivity' ;
+            var activityFile = activityName+'.java' ;
+            var activityPath;
+            
+            beforeEach(function() {
+                spyOn(fs,'readdirSync').andReturn( [ activityFile] );
+                read.andCallFake(function(_path) {
+                    activityPath = _path;
+                     return 'package org.cordova.somepackage; public class MyApp extends CordovaActivity { }';
+                 });
+            });
+
+            it('should find the proper path for the activity', function() {
+                var p =  new androidParser(android_proj);
+                p.update_from_config(cfg);
+                expect(activityPath).toEqual(path.join(android_proj,'src','org','apache','mobilespec',activityFile));
+            });
+
+            it('should find the proper activty path when activiy name contains a full package', function() {
+                // CB-9747
+                manifestXMLString = MANIFEST_XML.replace('android:name="mobilespec"','android:name="com.del7a.washere.'+activityName+'"');
+                var p =  new androidParser(android_proj);
+                p.update_from_config(cfg);
+                expect(activityPath).toEqual(path.join(android_proj,'src','com','del7a','washere',activityFile));
+            });
+
         });
 
         describe('update_from_config method', function() {
