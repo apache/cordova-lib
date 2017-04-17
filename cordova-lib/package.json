@@ -19,7 +19,7 @@
   "engineStrict": true,
   "dependencies": {
     "aliasify": "^2.1.0",
-    "cordova-common": "2.0.0",
+    "cordova-common": "2.0.2",
     "cordova-create": "^1.0.1",
     "cordova-fetch": "1.0.2",
     "cordova-js": "4.2.1",
