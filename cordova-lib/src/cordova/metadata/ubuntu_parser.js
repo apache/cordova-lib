@@ -134,10 +134,16 @@ ubuntu_parser.prototype.www_dir = function() {
 
 ubuntu_parser.prototype.update_www = function() {
     var projectRoot = util.isCordova(this.path);
-    var www = util.projectWww(projectRoot);
-
+    var app_www = util.projectWww(projectRoot);
+    var platform_www = path.join(this.path, 'platform_www');
+ 
+    // Clear the www dir
     shell.rm('-rf', this.www_dir());
-    shell.cp('-rf', www, this.path);
+    shell.mkdir(this.www_dir());
+    // Copy over all app www assets
+    shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
+    // Copy over stock platform www assets (cordova.js)
+    shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
 };
 
 ubuntu_parser.prototype.update_overrides = function() {
