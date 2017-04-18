@@ -352,6 +352,16 @@ describe('xml-helpers', function(){
             expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
             expect(testElements[0].text).toContain('Apache Cordova Team');
         });
+        
+        it('should merge singelton name without clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('Hello Cordova');
+        });
 
         it('Test 035 : should merge singleton name without clobber', function () {
             var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
@@ -374,6 +384,16 @@ describe('xml-helpers', function(){
             expect(testElements[0].attrib.href).toEqual('http://www.nowhere.com');
             expect(testElements[0].attrib.email).toEqual('dev@cordova.apache.org');
             expect(testElements[0].text).toEqual('SUPER_AUTHOR');
+        });
+        
+        it('should merge singelton name with clobber', function () {
+            var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
+
+            xml_helpers.mergeXml(testXml, dstXml, '', true);
+            var testElements = dstXml.findall('name');
+            expect(testElements).toBeDefined();
+            expect(testElements.length).toEqual(1);
+            expect(testElements[0].text).toContain('SUPER_NAME');
         });
 
         it('Test 037 : should merge singleton name with clobber', function () {
