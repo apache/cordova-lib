@@ -225,6 +225,20 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (cmd == 'add') {
                         return installPluginsForNewPlatform(platform, projectRoot, opts);
                     }
+                    
+                    // CB-10775
+                    // Note: when handling the `cordova platform update ios@4.1.0`,  
+                    // ... cordova-ios deletes the folder project_path/platform/ios/project_name/Plugins, 
+                    // ... thereby erroneously removing all plugins installed on the platform.
+                    // ... Here, we reinstall those plugins.
+                    return Q().then(function() {
+                        return installPluginsForNewPlatform(platform, projectRoot, opts);
+                    }).finally(function() {
+                        // We don't care if an exception was thrown
+                        // ... or if the promise was rejected
+                        // ... because it certainly might be because the platform already has all the plugins installed.
+                        return Q();
+                    });
                 })
                 .then(function () {
                     if (!opts.restoring) {
