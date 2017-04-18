@@ -39,7 +39,7 @@ ConfigKeeper.prototype.get = function ConfigKeeper_get(project_dir, platform, fi
 
     // This fixes a bug with older plugins - when specifying config xml instead of res/xml/config.xml
     // https://issues.apache.org/jira/browse/CB-6414
-    if(file == 'config.xml' && platform == 'android'){
+    if(file == 'config.xml' && (platform == 'android'||platform == 'amazon-fireos')){
         file = 'res/xml/config.xml';
     }
     var fake_path = path.join(project_dir, platform, file);
