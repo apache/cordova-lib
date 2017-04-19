@@ -106,6 +106,10 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                if(platform === 'ubuntu' || platform === 'blackberry10') {
+                    events.emit(platform + ' has been deprecated and will be removed in the next major release of cordova.');
+                }
+
                 if(fs.existsSync(path.join(projectRoot,'package.json'))) {
                     pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
                 }

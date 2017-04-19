@@ -31,14 +31,14 @@
         "handler_file": "../plugman/platforms/ubuntu",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
         "version": "~4.3.4",
-        "deprecated": false
+        "deprecated": true
     },
     "blackberry10": {
         "parser_file": "../cordova/metadata/blackberry10_parser",
         "handler_file": "../plugman/platforms/blackberry10",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git",
         "version": "~3.8.0",
-        "deprecated": false
+        "deprecated": true
     },
     "www": {
         "hostos": [],
