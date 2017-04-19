@@ -90,6 +90,15 @@
         <resource-file src="androidconfig.json" target="androidconfig.json" />
         <preference name="android-minSdkVersion" value="10" />
         <preference name="orientation" value="landscape" />
+        <edit-config file="AndroidManifest.xml" target="/manifest/uses-sdk" mode="merge">
+            <uses-sdk android:targetSdkVersion="24" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" target="/manifest/uses-sdk" mode="overwrite">
+            <uses-sdk android:minSdkVersion="14" android:maxSdkVersion="24" android:targetSdkVersion="24" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" target="/manifest/uses-sdk" mode="remove">
+            <uses-sdk android:maxSdkVersion="24" />
+        </edit-config>
     </platform>
     <platform name="windows">
         <icon src="res/windows/logo.scale-200.png" target="logo.png"/>
