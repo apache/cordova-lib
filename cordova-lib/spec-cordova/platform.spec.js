@@ -96,7 +96,10 @@ describe('platform end-to-end', function () {
     // They should run the appropriate hooks.
     // They should fail when not inside a Cordova project.
     // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('Test 001 : should successfully run', function(done) {
+    //
+    // This test was designed to use a older version of android before API.js
+    // It is not valid anymore.
+    xit('Test 001 : should successfully run', function(done) {
 
         // Check there are no platforms yet.
         emptyPlatformList().then(function() {

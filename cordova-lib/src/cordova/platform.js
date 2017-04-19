@@ -127,9 +127,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     spec = getVersionFromConfigFile(platform, cfg);
                 }
 
-                // If --save/autosave on && no version specified, use the pinned version
-                // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                if( (opts.save || autosave) && !spec && platforms[platform]) {
+                // If spec still doesn't exist, try to use pinned version                
+                if(!spec && platforms[platform]) {
                     spec = platforms[platform].version;
                 }
 
@@ -140,10 +139,10 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         if (opts.fetch) {
                             return fetch(path.resolve(maybeDir), projectRoot, opts)
                             .then(function (directory) {
-                                return getPlatformDetailsFromDir(directory, platform);
+                                return module.exports.getPlatformDetailsFromDir(directory, platform);
                             });
                         } else {
-                            return getPlatformDetailsFromDir(maybeDir, platform);
+                            return module.exports.getPlatformDetailsFromDir(maybeDir, platform);
                         }
                     }
                 }
@@ -191,28 +190,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-                var PlatformApi;
-                try {
-                    // Try to get PlatformApi class from platform
-                    // Get an entry point for platform package
-                    var apiEntryPoint = require.resolve(platDetails.libDir);
-                    // Validate entry point filename. This is required since most of platforms
-                    // defines 'main' entry in package.json pointing to bin/create which is
-                    // basically a valid NodeJS script but intended to be used as a regular
-                    // executable script.
-                    if (path.basename(apiEntryPoint) === 'Api.js') {
-                        PlatformApi = cordova_util.requireNoCache(apiEntryPoint);
-                        events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-                    }
-                } catch (err) {
-                    events.emit('verbose', 'Error: PlatformApi not loaded for platform.' + err);
-                } finally {
-                    if (!PlatformApi) {
-                        events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
-                            '". Using polyfill instead.');
-                        PlatformApi = require('../platforms/PlatformApiPoly');
-                    }
-                }
+                var PlatformApi = module.exports.getPlatformApi(platDetails.libDir, platform);
                 var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
@@ -241,9 +219,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 })
                 .then(function() {
-
                     var saveVersion = !spec || semver.validRange(spec, true);
-
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
@@ -254,7 +230,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-
                         spec = saveVersion ? '~' + platDetails.version : spec;
 
                         // Save target into config.xml, overriding already existing settings.
@@ -270,6 +245,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 });
             });
         }).then(function() {
+            //save installed platforms to cordova.platforms array in package.json
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
@@ -284,18 +260,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             if (pkgJson.cordova === undefined) {
                 pkgJson.cordova = {};
             }
-            if (pkgJson.cordova.platforms === undefined && platformsToSave.length) {
-                pkgJson.cordova.platforms = platformsToSave;
-                modifiedPkgJson = true;
-            } else {
-                platformsToSave.forEach(function(plat){
-                    if(pkgJson.cordova.platforms.indexOf(plat) === -1) {
-                        events.emit('verbose','adding '+plat+' to cordova.platforms array in package.json');
-                        pkgJson.cordova.platforms.push(plat);
-                        modifiedPkgJson = true;
-                    }
-                });
+            if (pkgJson.cordova.platforms === undefined) {
+                pkgJson.cordova.platforms = [];
             }
+            platformsToSave.forEach(function(plat){
+                if(pkgJson.cordova.platforms.indexOf(plat) === -1) {
+                    events.emit('verbose','adding '+plat+' to cordova.platforms array in package.json');
+                    pkgJson.cordova.platforms.push(plat);
+                    modifiedPkgJson = true;
+                }
+            });
             // Save to package.json.
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
@@ -372,7 +346,7 @@ function downloadPlatform(projectRoot, platform, version, opts) {
             '\n' + error;
         return Q.reject(new CordovaError(message));
     }).then(function(libDir) {
-        return getPlatformDetailsFromDir(libDir, platform);
+        return module.exports.getPlatformDetailsFromDir(libDir, platform);
     });
 }
 
@@ -673,8 +647,38 @@ function addDeprecatedInformationToPlatforms(platformsList){
 }
 
 /**
- * Handles all cordova platform commands.
+ * Tries to require PlatformApi from the platform. Uses PlatformApiPolyfill if PlatformApi doesn't exist.
+ * @param {string} libDir - Command to execute (add, rm, ls, update, save)
+ * @param {string} platform - Array containing platforms to execute commands on
+ * @returns a module definition
+ */
+function getPlatformApi(libDir, platform) {
+    var PlatformApi;
+    try {
+        // Try to get PlatformApi class from platform
+        // Get an entry point for platform package
+        var apiEntryPoint = require.resolve(libDir);
+        // Validate entry point filename. This is required since most of platforms
+        // defines 'main' entry in package.json pointing to bin/create which is
+        // basically a valid NodeJS script but intended to be used as a regular
+        // executable script.
+        if (path.basename(apiEntryPoint) === 'Api.js') {
+            PlatformApi = cordova_util.requireNoCache(apiEntryPoint);
+            events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
+        }
+    } catch (e) {
+    } finally {
+        if (!PlatformApi) {
+            events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+            '". Using polyfill instead.');
+            PlatformApi = require('../platforms/PlatformApiPoly');
+        }
+    return PlatformApi;
+    }
+}
 
+/**
+ * Handles all cordova platform commands. 
  * @param {string} command - Command to execute (add, rm, ls, update, save)
  * @param {Object[]} targets - Array containing platforms to execute commands on
  * @param {Object} opts
@@ -700,22 +704,21 @@ function platform(command, targets, opts) {
 
         opts = opts || {};
         opts.platforms = targets;
-
         switch (command) {
             case 'add':
-                return add(hooksRunner, projectRoot, targets, opts);
+                return module.exports.add(hooksRunner, projectRoot, targets, opts);
             case 'rm':
             case 'remove':
-                return remove(hooksRunner, projectRoot, targets, opts);
+                return module.exports.remove(hooksRunner, projectRoot, targets, opts);
             case 'update':
             case 'up':
-                return update(hooksRunner, projectRoot, targets, opts);
+                return module.exports.update(hooksRunner, projectRoot, targets, opts);
             case 'check':
-                return check(hooksRunner, projectRoot);
+                return module.exports.check(hooksRunner, projectRoot);
             case 'save':
-                return save(hooksRunner, projectRoot, opts);
+                return module.exports.save(hooksRunner, projectRoot, opts);
             default:
-                return list(hooksRunner, projectRoot, opts);
+                return module.exports.list(hooksRunner, projectRoot, opts);
         }
     });
 }
@@ -799,3 +802,6 @@ module.exports.remove = remove;
 module.exports.update = update;
 module.exports.check = check;
 module.exports.list = list;
+module.exports.save = save;
+module.exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
+module.exports.getPlatformApi = getPlatformApi;

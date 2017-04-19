@@ -35,4 +35,4 @@ test_script:
   - npm --version
   - "cd ../cordova-common && npm test"
   - "cd ../cordova-fetch && npm test"
-  - "cd ../cordova-lib && npm test"
+  - "cd ../cordova-lib && npm test && npm run e2e-tests"
