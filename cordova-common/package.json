@@ -16,7 +16,6 @@
   "engines": {
     "node": ">=4.0.0"
   },
-  "engineStrict": true,
   "scripts": {
     "test": "npm run jshint && npm run jasmine",
     "jshint": "jshint src && jshint spec",

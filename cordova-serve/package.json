@@ -34,6 +34,5 @@
   "engines": {
     "node": ">=4.0.0",
     "npm": ">= 2.5.1"
-  },
-  "engineStrict": true
+  }
 }
