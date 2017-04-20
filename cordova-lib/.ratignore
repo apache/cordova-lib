@@ -4,3 +4,5 @@ fixtures
 platformsConfig.json
 defaults.json
 help.txt
+jasmine.json
+coverage

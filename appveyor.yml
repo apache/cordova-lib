@@ -1,7 +1,13 @@
 # appveyor file
 # http://www.appveyor.com/docs/appveyor-yml
 
+environment:
+  matrix:
+  - nodejs_version: "4"
+  - nodejs_version: "6"
+  
 install:
+  - ps: Install-Product node $env:nodejs_version
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-lib
   - npm link ../cordova-js
@@ -13,6 +19,14 @@ install:
   - cd ../cordova-lib
   - npm link ../cordova-fetch
   - npm install
+  # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
+  # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency
+  # is moved to 'cordova-lib' and hence 'npm run jshint' on 'cordova-common' is failing
+  - cd ../cordova-common
+  - npm install
+  - cd ../cordova-fetch
+  - npm install
+  - npm link ../cordova-common
 
 build: off
 

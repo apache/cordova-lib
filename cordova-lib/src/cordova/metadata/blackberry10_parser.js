@@ -65,7 +65,7 @@ blackberry_parser.prototype.update_from_config = function(config) {
         }
     };
 
-    if (!config instanceof ConfigParser) {
+    if (!(config instanceof ConfigParser)) {
         throw new Error('update_from_config requires a ConfigParser object');
     }
 

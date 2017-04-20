@@ -51,14 +51,12 @@ module.exports = function(target, dest, opts) {
         
             //append node_modules to dest if it doesn't come included
             if (path.basename(dest) !== 'node_modules') {
-            dest = path.resolve(path.join(dest, 'node_modules'));
+                dest = path.resolve(path.join(dest, 'node_modules'));
             }
-        
             //create dest if it doesn't exist
             if(!fs.existsSync(dest)) {
                 shell.mkdir('-p', dest);         
             } 
-
         } else return Q.reject(new CordovaError('Need to supply a target and destination'));
 
         //set the directory where npm install will be run
@@ -70,7 +68,6 @@ module.exports = function(target, dest, opts) {
             fetchArgs.push('--save'); 
         } 
     
-
         //Grab json object of installed modules before npm install
         return depls(dest);
     })
@@ -140,7 +137,6 @@ function getJsonDiff(obj1, obj2) {
  */
 function trimID(target) {
     var parts;
-
     //If GITURL, set target to repo name
     if (isUrl(target)) {
         //strip away .git and everything that follows       
@@ -150,6 +146,11 @@ function trimID(target) {
         parts = strippedTarget[0].match(re);
         
         target = parts[1];
+    }
+
+    //If local path exists, set target to final directory
+    if (fs.existsSync(target)) {
+        target = path.basename(target);
     }
     
     //strip away everything after '@'

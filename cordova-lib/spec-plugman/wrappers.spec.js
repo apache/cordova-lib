@@ -33,23 +33,23 @@ describe('callback wrapper', function() {
                 raw = spyOn(plugman.raw, call);
             });
 
-            it('should work with no callback and success', function() {
-                raw.andReturn(Q());
+            it('Test 001 : should work with no callback and success', function() {
+                raw.and.returnValue(Q());
                 plugman[call]();
                 expect(raw).toHaveBeenCalled();
             });
 
-            it('should call the callback on success', function(done) {
-                raw.andReturn(Q(1));
+            it('Test 002 : should call the callback on success', function(done) {
+                raw.and.returnValue(Q(1));
                 plugman[call](function(err) {
                     expect(err).toBeUndefined();
                     done();
                 });
             });
 
-            it('should call the callback with the error on failure', function(done) {
+            it('Test 003 : should call the callback with the error on failure', function(done) {
                 var err = new Error('junk');
-                raw.andCallFake(function() { return Q.reject(err); });
+                raw.and.callFake(function() { return Q.reject(err); });
                 plugman[call](function(err) {
                     expect(err).toEqual(err);
                     done();

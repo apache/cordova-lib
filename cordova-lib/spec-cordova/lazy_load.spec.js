@@ -20,6 +20,7 @@
 /* jshint sub:true */
 
 var lazy_load = require('../src/cordova/lazy_load'),
+    npmHelper = require('../src/util/npm-helper'),
     config = require('../src/cordova/config'),
     shell = require('shelljs'),
     npm = require('npm'),
@@ -31,11 +32,11 @@ var lazy_load = require('../src/cordova/lazy_load'),
     platforms = require('../src/platforms/platforms');
 
 describe('lazy_load module', function() {
-    var custom_path, npm_cache_add, fakeLazyLoad;
+    var custom_path, cachePackage, fakeLazyLoad;
     beforeEach(function() {
-        custom_path = spyOn(config, 'has_custom_path').andReturn(false);
-        npm_cache_add = spyOn(lazy_load, 'npm_cache_add').andReturn(Q(path.join('lib','dir')));
-        fakeLazyLoad = function(id, platform, version) {
+        custom_path = spyOn(config, 'has_custom_path').and.returnValue(false);
+        cachePackage = spyOn(npmHelper, 'cachePackage').and.returnValue(Q(path.join('lib', 'dir')));
+        fakeLazyLoad = function (id, platform, version) {
             if (platform == 'wp7' || platform == 'wp8') {
                 return Q(path.join('lib', 'wp', id, version, platform));
             } else {
@@ -47,23 +48,23 @@ describe('lazy_load module', function() {
         var custom,
             version;
         beforeEach(function() {
-            custom = spyOn(lazy_load, 'custom').andReturn(Q(path.join('lib','dir')));
+            custom = spyOn(lazy_load, 'custom').and.returnValue(Q(path.join('lib','dir')));
             version = platforms.android.version;
             platforms.android.version = '3.14.15.9265';
         });
         afterEach(function () {
             platforms.android.version = version;
         });
-        it('should throw if platform is not a stock cordova platform', function(done) {
+        it('Test 001: should throw if platform is not a stock cordova platform', function(done) {
             lazy_load.cordova('atari').then(function() {
                 expect('this call').toEqual('to fail');
             }, function(err) {
                 expect('' + err).toContain('Cordova library "atari" not recognized.');
             }).fin(done);
         });
-        it('should invoke lazy_load.custom with appropriate url, platform, and version as specified in platforms manifest', function(done) {
+        it('Test 002 : should invoke lazy_load.custom with appropriate url, platform, and version as specified in platforms manifest', function(done) {
             lazy_load.cordova('android').then(function(dir) {
-                expect(npm_cache_add).toHaveBeenCalled();
+                expect(cachePackage).toHaveBeenCalled();
                 expect(dir).toBeDefined();
                 done();
             });
@@ -76,13 +77,13 @@ describe('lazy_load module', function() {
             spyOn(shell, 'mkdir');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
-            exists = spyOn(fs, 'existsSync').andReturn(false);
-            readdir = spyOn(fs, 'readdirSync').andReturn(['somefile.txt']);
-            fire = spyOn(HooksRunner, 'fire').andReturn(Q());
+            exists = spyOn(fs, 'existsSync').and.returnValue(false);
+            readdir = spyOn(fs, 'readdirSync').and.returnValue(['somefile.txt']);
+            fire = spyOn(HooksRunner, 'fire').and.returnValue(Q());
         });
 
-        it('should callback with no errors and not fire event hooks if library already exists', function(done) {
-            exists.andReturn(true);
+        it('Test 003 : should callback with no errors and not fire event hooks if library already exists', function(done) {
+            exists.and.returnValue(true);
             var mock_platforms = {
                 'platform X': {
                     id: 'some id',
@@ -96,8 +97,8 @@ describe('lazy_load module', function() {
                 expect(err).not.toBeDefined();
             }).fin(done);
         });
-        it('should callback with no errors and fire event hooks even if library already exists if the lib url is a local dir', function(done) {
-            exists.andReturn(true);
+        it('Test 004 : should callback with no errors and fire event hooks even if library already exists if the lib url is a local dir', function(done) {
+            exists.and.returnValue(true);
             var mock_platforms = {
                 'platform X': {
                     id: 'some id',
@@ -116,28 +117,28 @@ describe('lazy_load module', function() {
             var req,
                 events = {},
                 fakeRequest = {
-                    on: jasmine.createSpy().andCallFake(function(event, cb) {
+                    on: jasmine.createSpy().and.callFake(function(event, cb) {
                         events[event] = cb;
                         return fakeRequest;
                     }),
-                    pipe: jasmine.createSpy().andCallFake(function() { return fakeRequest; })
+                    pipe: jasmine.createSpy().and.callFake(function() { return fakeRequest; })
                 };
             beforeEach(function() {
                 events = {};
-                fakeRequest.on.reset();
-                fakeRequest.pipe.reset();
-                req = spyOn(request, 'get').andCallFake(function() {
+                fakeRequest.on.calls.reset();
+                fakeRequest.pipe.calls.reset();
+                req = spyOn(request, 'get').and.callFake(function() {
                     // Fire the 'end' event shortly.
                     setTimeout(function() {
                         events['end']();
                     }, 10);
                     return fakeRequest;
                 });
-                spyOn(npm, 'load').andCallFake(function(cb) { cb(); });
-                spyOn(npm.config, 'get').andReturn(null);
+                spyOn(npm, 'load').and.callFake(function(cb) { cb(); });
+                spyOn(npm.config, 'get').and.returnValue(null);
             });
 
-            it('should call request with appropriate url params', function(done) {
+            it('Test 005 : should call request with appropriate url params', function(done) {
                 var url = 'https://github.com/apache/someplugin';
                 var with_android_platform = {
                     'android': {
@@ -154,9 +155,9 @@ describe('lazy_load module', function() {
                     expect(err).not.toBeDefined();
                 }).fin(done);
             });
-            it('should take into account https-proxy npm configuration var if exists for https:// calls', function(done) {
+            it('Test 006 : should take into account https-proxy npm configuration var if exists for https:// calls', function(done) {
                 var proxy = 'https://somelocalproxy.com';
-                npm.config.get.andReturn(proxy);
+                npm.config.get.and.returnValue(proxy);
                 var url = 'https://github.com/apache/someplugin';
                 var with_android_platform = {
                     'android': {
@@ -174,9 +175,9 @@ describe('lazy_load module', function() {
                     expect(err).not.toBeDefined();
                 }).fin(done);
             });
-            it('should take into account proxy npm config var if exists for http:// calls', function(done) {
+            it('Test 007 : should take into account proxy npm config var if exists for http:// calls', function(done) {
                 var proxy = 'http://somelocalproxy.com';
-                npm.config.get.andReturn(proxy);
+                npm.config.get.and.returnValue(proxy);
                 var url = 'http://github.com/apache/someplugin';
                 var with_android_platform = {
                     'android': {
@@ -197,7 +198,7 @@ describe('lazy_load module', function() {
         });
 
         describe('local paths for libraries', function() {
-            it('should return the local path, no symlink', function(done) {
+            it('Test 009 : should return the local path, no symlink', function(done) {
                 var mock_platforms = {
                     'X': {
                         id: 'id',
@@ -211,7 +212,7 @@ describe('lazy_load module', function() {
                     expect(err).toBeUndefined();
                 }).fin(done);
             });
-            it('should not file download hook', function(done) {
+            it('Test 010 : should not file download hook', function(done) {
                 var mock_platforms = {
                     'X': {
                         id: 'id',
@@ -231,11 +232,11 @@ describe('lazy_load module', function() {
     describe('based_on_config method', function() {
         var cordova, custom, read;
         beforeEach(function() {
-            cordova = spyOn(lazy_load, 'cordova').andReturn(Q());
-            custom = spyOn(lazy_load, 'custom').andReturn(Q());
+            cordova = spyOn(lazy_load, 'cordova').and.returnValue(Q());
+            custom = spyOn(lazy_load, 'custom').and.returnValue(Q());
         });
-        it('should invoke custom if a custom lib is specified', function(done) {
-            read = spyOn(config, 'read').andReturn({
+        it('Test 011 : should invoke custom if a custom lib is specified', function(done) {
+            read = spyOn(config, 'read').and.returnValue({
                 lib:{
                     maybe:{
                         url:'you or eye?',
@@ -245,8 +246,8 @@ describe('lazy_load module', function() {
                 }
             });
             var p = '/some/random/custom/path';
-            custom_path.andReturn(p);
-            custom.andCallFake(function (platforms, platform) {
+            custom_path.and.returnValue(p);
+            custom.and.callFake(function (platforms, platform) {
                 expect(platform).toEqual('maybe');
                 expect(platforms[platform].url).toEqual('you or eye?');
                 expect(platforms[platform].id).toEqual('eye dee');
@@ -259,7 +260,7 @@ describe('lazy_load module', function() {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
-        it('should invoke cordova if no custom lib is specified', function(done) {
+        it('Test 012 : should invoke cordova if no custom lib is specified', function(done) {
             lazy_load.based_on_config('yup', 'ios').then(function() {
                 expect(cordova).toHaveBeenCalled();
             }, function(err) {

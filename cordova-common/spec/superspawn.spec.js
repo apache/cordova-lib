@@ -30,12 +30,12 @@ describe('spawn method', function() {
         failSpy = jasmine.createSpy('fail');
     });
 
-    it('should return a promise', function () {
+    it('Test 001 : should return a promise', function () {
         expect(Q.isPromise(superspawn.spawn(LS))).toBe(true);
         expect(Q.isPromise(superspawn.spawn('invalid_command'))).toBe(true);
     });
 
-    it('should notify about stdout "data" events', function (done) {
+    it('Test 002 : should notify about stdout "data" events', function (done) {
         superspawn.spawn(LS, [], {stdio: 'pipe'})
         .progress(progressSpy)
         .fin(function () {
@@ -44,11 +44,46 @@ describe('spawn method', function() {
         });
     });
 
-    it('should notify about stderr "data" events', function (done) {
+    it('Test 003 : should notify about stderr "data" events', function (done) {
         superspawn.spawn(LS, ['doesnt-exist'], {stdio: 'pipe'})
         .progress(progressSpy)
         .fin(function () {
             expect(progressSpy).toHaveBeenCalledWith({'stderr': jasmine.any(String)});
+            done();
+        });
+    });
+
+    it('Test 004 : reject handler should pass in Error object with stdout and stderr properties', function(done) {
+        var cp = require('child_process');
+        spyOn(cp, 'spawn').and.callFake(function(cmd, args, opts) {
+            return {
+                stdout:{
+                    setEncoding: function(){},
+                    on: function(evt, handler) {
+                        // some sample stdout output
+                        handler('business as usual');
+                    }
+                },
+                stderr:{
+                    setEncoding: function(){},
+                    on: function(evt, handler) {
+                        // some sample stderr output
+                        handler('mayday mayday');
+                    }
+                },
+                on: function(evt, handler) {
+                    // What's passed to handler here is the exit code, so we can control
+                    // resolve/reject flow via this argument.
+                    handler(1); // this will trigger error flow
+                },
+                removeListener: function() {}
+            };
+        });
+        superspawn.spawn('this aggression', ['will', 'not', 'stand', 'man'], {})
+        .catch(function(err) {
+            expect(err).toBeDefined();
+            expect(err.stdout).toContain('usual');
+            expect(err.stderr).toContain('mayday');
             done();
         });
     });

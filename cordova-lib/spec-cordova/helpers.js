@@ -148,17 +148,23 @@ module.exports.writeConfigContent = function (appPath, configContent) {
 
 // Add the toExist matcher.
 beforeEach(function () {
-    this.addMatchers({
+    jasmine.addMatchers({
         'toExist': function () {
-            var notText = this.isNot ? ' not' : '';
-            var self = this;
+            return {
+                compare: function(actual, expected) {
+                    var result = {};
 
-            this.message = function () {
-                return 'Expected file ' + self.actual + notText + ' to exist.';
+                    result.pass = fs.existsSync(actual);
+
+                    if(result.pass) {
+                        result.message = 'expected ' + actual + ' to not exist';
+                    } else {
+                        result.message = 'expected ' + actual + ' to exist';
+                    }
+
+                    return result;
+                }
             };
-
-            return fs.existsSync(this.actual);
         }
     });
 });
-

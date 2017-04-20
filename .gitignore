@@ -6,7 +6,7 @@ temp
 .DS_Store
 spec-cordova/fixtures/projects/native
 spec-cordova/fixtures/projects/cordova
-.idea/*
+.idea
 .gitcore
 *.jar
 .vscode

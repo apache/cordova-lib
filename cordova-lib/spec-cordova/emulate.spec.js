@@ -30,21 +30,22 @@ describe('emulate command', function() {
     var prepare_spy, platformApi, getPlatformApi;
 
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
-        prepare_spy = spyOn(cordova.raw, 'prepare').andReturn(Q());
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        prepare_spy = spyOn(cordova.raw, 'prepare').and.returnValue(Q());
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
         platformApi = {
-            run: jasmine.createSpy('run').andReturn(Q()),
-            build: jasmine.createSpy('build').andReturn(Q())
+            run: jasmine.createSpy('run').and.returnValue(Q()),
+            build: jasmine.createSpy('build').and.returnValue(Q())
         };
-        getPlatformApi = spyOn(platforms, 'getPlatformApi').andReturn(platformApi);
+        
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
-            list_platforms.andReturn([]);
+        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
+            list_platforms.and.returnValue([]);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
             .then(success, function(result) {
@@ -56,8 +57,8 @@ describe('emulate command', function() {
                 done();
             });
         });
-        it('should not run outside of a Cordova-based project', function(done) {
-            is_cordova.andReturn(false);
+        it('Test 002 : should not run outside of a Cordova-based project', function(done) {
+            is_cordova.and.returnValue(false);
             var success = jasmine.createSpy('success');
             cordova.raw.compile()
             .then(success, function(result) {
@@ -71,7 +72,7 @@ describe('emulate command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function(done) {
+        it('Test 003 : should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function(done) {
             cordova.raw.emulate(['android','ios']).then(function(err) {
                 expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['android', 'ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('android');
@@ -82,7 +83,7 @@ describe('emulate command', function() {
             .fail(fail)
             .fin(done);
         });
-        it('should pass down options', function(done) {
+        it('Test 004 : should pass down options', function(done) {
             cordova.raw.emulate({platforms: ['ios'], options: {optionTastic: true }}).then(function(err) {
                 expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                 expect(getPlatformApi).toHaveBeenCalledWith('ios');
@@ -92,7 +93,7 @@ describe('emulate command', function() {
             .fail(fail)
             .fin(done);
         });
-        it('should convert options from old format and warn user about this', function (done) {
+        it('Test 005 : should convert options from old format and warn user about this', function (done) {
             function warnSpy(message) {
                 expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
             }
@@ -113,7 +114,7 @@ describe('emulate command', function() {
             var originalBuildSpy;
             beforeEach(function() {
                 originalBuildSpy = platformApi.build;
-                platformApi.build = jasmine.createSpy('build').andCallFake(function(opts) {
+                platformApi.build = jasmine.createSpy('build').and.callFake(function(opts) {
                     opts.couldBeModified = 'insideBuild';
                     return Q();
                 });
@@ -121,7 +122,7 @@ describe('emulate command', function() {
             afterEach(function() {
                 platformApi.build = originalBuildSpy;
             });
-            it('should leave parameters unchanged', function(done) {
+            it('Test 006 : should leave parameters unchanged', function(done) {
                 cordova.raw.run({platforms: ['blackberry10'], options:{password: '1q1q'}}).then(function() {
                     expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
                     expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q', 'couldBeModified': 'insideBuild'});
@@ -131,11 +132,35 @@ describe('emulate command', function() {
                 }).fin(done);
             });
         });
+
+        it('Test 007 : should call platform\'s build method', function (done) {
+            cordova.raw.emulate({platforms: ['blackberry10']})
+            .then(function() {
+                expect(prepare_spy).toHaveBeenCalled();
+                expect(platformApi.build).toHaveBeenCalledWith({device: false, emulator: true});
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+        });
+
+        it('Test 008 : should not call build if --nobuild option is passed', function (done) {
+            cordova.raw.emulate({platforms: ['blackberry10'], options: { nobuild: true }})
+            .then(function() {
+                expect(prepare_spy).toHaveBeenCalled();
+                expect(platformApi.build).not.toHaveBeenCalled();
+                expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+        });
     });
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module', function(done) {
+            it('Test 009 : should fire before hooks through the hooker module', function(done) {
                 cordova.raw.emulate(['android', 'ios']).then(function() {
                     expect(fire).toHaveBeenCalledWith('before_emulate',
                         jasmine.objectContaining({verbose: false, platforms:['android', 'ios'], options: jasmine.any(Object)}));
@@ -143,7 +168,7 @@ describe('emulate command', function() {
                 .fail(fail)
                 .fin(done);
             });
-            it('should fire after hooks through the hooker module', function(done) {
+            it('Test 010 : should fire after hooks through the hooker module', function(done) {
                 cordova.raw.emulate('android').then(function() {
                      expect(fire).toHaveBeenCalledWith('after_emulate',
                         jasmine.objectContaining({verbose: false, platforms:['android'], options: jasmine.any(Object)}));
@@ -154,8 +179,8 @@ describe('emulate command', function() {
         });
 
         describe('with no platforms added', function() {
-            it('should not fire the hooker', function(done) {
-                list_platforms.andReturn([]);
+            it('Test 011 : should not fire the hooker', function(done) {
+                list_platforms.and.returnValue([]);
                 Q().then(cordova.raw.emulate).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {

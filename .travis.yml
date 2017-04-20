@@ -3,10 +3,8 @@ sudo: false
 git:
   depth: 10
 node_js:
-  - "0.10"
-  - "0.12"
-  - "4.2"
-  - "6.0"
+  - "4"
+  - "6"
 install:
   - git clone https://github.com/apache/cordova-js --depth 10
   - cd cordova-lib

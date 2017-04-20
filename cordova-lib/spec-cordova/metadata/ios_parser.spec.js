@@ -41,7 +41,7 @@ var cfg2 = new ConfigParser(path.join(__dirname, '..', 'test-config-2.xml'));
 describe('ios project parser', function () {
     var custom;
     beforeEach(function() {
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
         shell.mkdir('-p', ios_proj);
         shell.cp('-rf', iosProjectFixture + '/*', ios_proj);
     });
@@ -90,7 +90,7 @@ describe('ios project parser', function () {
         var p, is_cordova, getOrientation;
         beforeEach(function() {
             p = new iosParser(ios_proj);
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             getOrientation = spyOn(p.helper, 'getOrientation');
         });
 
@@ -101,13 +101,13 @@ describe('ios project parser', function () {
             var xcOrig = xcode.project;
             beforeEach(function() {
                 mv = spyOn(shell, 'mv');
-                plist_parse = spyOn(plist, 'parse').andReturn({
+                plist_parse = spyOn(plist, 'parse').and.returnValue({
                 });
-                plist_build = spyOn(plist, 'build').andReturn('');
+                plist_build = spyOn(plist, 'build').and.returnValue('');
                 xc = spyOn(xcode, 'project')
-                .andCallFake(function (pbxproj) {
+                .and.callFake(function (pbxproj) {
                     var xc = new xcOrig(pbxproj);
-                    update_name = spyOn(xc, 'updateProductName').andCallThrough();
+                    update_name = spyOn(xc, 'updateProductName').and.callThrough();
                     return xc;
                 });
                 cfg.name = function() { return 'testname'; };
@@ -144,7 +144,7 @@ describe('ios project parser', function () {
                 });
             });
             it('should write out the orientation preference value', function(done) {
-                getOrientation.andCallThrough();
+                getOrientation.and.callThrough();
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
                     expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
@@ -152,7 +152,7 @@ describe('ios project parser', function () {
                 });
             });
             it('should handle no orientation', function(done) {
-                getOrientation.andReturn('');
+                getOrientation.and.returnValue('');
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toBeUndefined();
@@ -160,7 +160,7 @@ describe('ios project parser', function () {
                 });
             });
             it('should handle default orientation', function(done) {
-                getOrientation.andReturn(p.helper.ORIENTATION_DEFAULT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_DEFAULT);
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0]['UISupportedInterfaceOrientations~ipad']).toBeUndefined();
@@ -168,28 +168,28 @@ describe('ios project parser', function () {
                 });
             });
             it('should handle portrait orientation', function(done) {
-                getOrientation.andReturn(p.helper.ORIENTATION_PORTRAIT);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_PORTRAIT);
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
                 });
             });
             it('should handle landscape orientation', function(done) {
-                getOrientation.andReturn(p.helper.ORIENTATION_LANDSCAPE);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_LANDSCAPE);
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationLandscapeLeft' ]);
                 });
             });
             it('should handle all orientation on ios', function(done) {
-                getOrientation.andReturn(p.helper.ORIENTATION_ALL);
+                getOrientation.and.returnValue(p.helper.ORIENTATION_ALL);
                 wrapper(p.update_from_config(cfg2), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toEqual([ 'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationPortraitUpsideDown', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight' ]);
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'UIInterfaceOrientationPortrait' ]);
                 });
             });
             it('should handle custom orientation', function(done) {
-                getOrientation.andReturn('some-custom-orientation');
+                getOrientation.and.returnValue('some-custom-orientation');
                 wrapper(p.update_from_config(cfg), done, function() {
                     expect(plist_build.mostRecentCall.args[0].UISupportedInterfaceOrientations).toBeUndefined();
                     expect(plist_build.mostRecentCall.args[0].UIInterfaceOrientation).toEqual([ 'some-custom-orientation' ]);
@@ -429,8 +429,8 @@ describe('ios project parser', function () {
             var cp, rm;
 
             beforeEach(function () {
-                rm = spyOn(shell, 'rm').andCallThrough();
-                cp = spyOn(shell, 'cp').andCallThrough();
+                rm = spyOn(shell, 'rm').and.callThrough();
+                cp = spyOn(shell, 'cp').and.callThrough();
             });
 
             it('should rm project-level www and cp in platform agnostic www', function() {
@@ -442,20 +442,20 @@ describe('ios project parser', function () {
         describe('update_overrides method', function() {
             var exists, rm, cp;
             beforeEach(function() {
-                exists = spyOn(fs, 'existsSync').andCallThrough();
-                rm = spyOn(shell, 'rm').andCallThrough();
-                cp = spyOn(shell, 'cp').andCallThrough();
+                exists = spyOn(fs, 'existsSync').and.callThrough();
+                rm = spyOn(shell, 'rm').and.callThrough();
+                cp = spyOn(shell, 'cp').and.callThrough();
             });
             it('should do nothing if merges directory does not exist', function() {
-                cp.reset();
-                exists.andReturn(false);
+                cp.calls.reset();
+                exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
             it('should copy merges path into www', function() {
-                cp.andCallFake(function(){});
-                cp.reset();
-                exists.andReturn(true);
+                cp.and.callFake(function(){});
+                cp.calls.reset();
+                exists.and.returnValue(true);
                 p.update_overrides();
                 expect(cp).toHaveBeenCalled();
             });
@@ -463,7 +463,7 @@ describe('ios project parser', function () {
         describe('update_project method', function() {
             var config, www, overrides, svn;
             beforeEach(function() {
-                config = spyOn(p, 'update_from_config').andReturn(Q());
+                config = spyOn(p, 'update_from_config').and.returnValue(Q());
                 www = spyOn(p, 'update_www');
                 overrides = spyOn(p, 'update_overrides');
                 svn = spyOn(util, 'deleteSvnFolders');
@@ -475,7 +475,7 @@ describe('ios project parser', function () {
             });
             it('should throw if update_from_config errors', function(done) {
                 var e = new Error('uh oh!');
-                config.andReturn(Q.reject(e));
+                config.and.returnValue(Q.reject(e));
                 errorWrapper(p.update_project({}), done, function(err) {
                     expect(err).toEqual(e);
                 });

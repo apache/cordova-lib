@@ -1,21 +1,21 @@
-/*
- *
- * Copyright 2013 Anis Kadri
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
-*/
+/**
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/ 
 
 /*
  * This module deals with shared configuration / dependency "stuff". That is:
@@ -31,11 +31,8 @@
 
 /* jshint sub:true */
 
-var fs   = require('fs'),
-    path = require('path'),
+var path = require('path'),
     et   = require('elementtree'),
-    semver = require('semver'),
-    events = require('../events'),
     ConfigKeeper = require('./ConfigKeeper'),
     CordovaLogger = require('../CordovaLogger');
 
@@ -97,7 +94,10 @@ function remove_plugin_changes(pluginInfo, is_top_level) {
     var plugin_vars = is_top_level ?
         platform_config.installed_plugins[pluginInfo.id] :
         platform_config.dependent_plugins[pluginInfo.id];
-    var edit_config_changes = pluginInfo.getEditConfigs(self.platform);
+    var edit_config_changes = null;
+    if(pluginInfo.getEditConfigs) {
+        edit_config_changes = pluginInfo.getEditConfigs(self.platform);
+    }
 
     // get config munge, aka how did this plugin change various config files
     var config_munge = self.generate_plugin_config_munge(pluginInfo, plugin_vars, edit_config_changes);
@@ -106,18 +106,6 @@ function remove_plugin_changes(pluginInfo, is_top_level) {
     var munge = mungeutil.decrement_munge(global_munge, config_munge);
 
     for (var file in munge.files) {
-        // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
-        if (self.platform == 'windows' && file == 'package.appxmanifest' &&
-            !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            // New windows template separate manifest files for Windows10, Windows8.1 and WP8.1
-            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows10.appxmanifest'];
-            /* jshint loopfunc:true */
-            substs.forEach(function(subst) {
-                events.emit('verbose', 'Applying munge to ' + subst);
-                self.apply_file_munge(subst, munge.files[file], true);
-            });
-            /* jshint loopfunc:false */
-        }
         self.apply_file_munge(file, munge.files[file], /* remove = */ true);
     }
 
@@ -131,7 +119,12 @@ PlatformMunger.prototype.add_plugin_changes = add_plugin_changes;
 function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increment, plugin_force) {
     var self = this;
     var platform_config = self.platformJson.root;
-    var edit_config_changes = pluginInfo.getEditConfigs(self.platform);
+
+    var edit_config_changes = null;
+    if(pluginInfo.getEditConfigs) {
+        edit_config_changes = pluginInfo.getEditConfigs(self.platform);
+    }
+
     var config_munge;
 
     if (!edit_config_changes || edit_config_changes.length === 0) {
@@ -140,6 +133,11 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
     }
     else {
         var isConflictingInfo = is_conflicting(edit_config_changes, platform_config.config_munge, self, plugin_force);
+
+        if (isConflictingInfo.conflictWithConfigxml) {
+            throw new Error(pluginInfo.id +
+                ' cannot be added. <edit-config> changes in this plugin conflicts with <edit-config> changes in config.xml. Conflicts must be resolved before plugin can be added.');
+        }
         if (plugin_force) {
             CordovaLogger.get().log(CordovaLogger.WARN, '--force is used. edit-config will overwrite conflicts if any. Conflicting plugins may not work as expected.');
 
@@ -162,7 +160,67 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
             config_munge = self.generate_plugin_config_munge(pluginInfo, plugin_vars, edit_config_changes);
         }
     }
-    // global munge looks at all plugins' changes to config files
+
+    self = munge_helper(should_increment, self, platform_config, config_munge);
+
+    // Move to installed/dependent_plugins
+    self.platformJson.addPlugin(pluginInfo.id, plugin_vars || {}, is_top_level);
+    return self;
+}
+
+
+// Handle edit-config changes from config.xml
+PlatformMunger.prototype.add_config_changes = add_config_changes;
+function add_config_changes(config, should_increment) {
+    var self = this;
+    var platform_config = self.platformJson.root;
+
+    var config_munge;
+    var edit_config_changes = null;
+    if(config.getEditConfigs) {
+        edit_config_changes = config.getEditConfigs(self.platform);
+    }
+
+    if (!edit_config_changes || edit_config_changes.length === 0) {
+        // There are no edit-config changes to add, return here
+        return self;
+    }
+    else {
+        var isConflictingInfo = is_conflicting(edit_config_changes, platform_config.config_munge, self, true /*always force overwrite other edit-config*/);
+
+        if(isConflictingInfo.conflictFound) {
+            var conflict_munge;
+            var conflict_file;
+
+            if (Object.keys(isConflictingInfo.configxmlMunge.files).length !== 0) {
+                // silently remove conflicting config.xml munges so new munges can be added
+                conflict_munge = mungeutil.decrement_munge(platform_config.config_munge, isConflictingInfo.configxmlMunge);
+                for (conflict_file in conflict_munge.files) {
+                    self.apply_file_munge(conflict_file, conflict_munge.files[conflict_file], /* remove = */ true);
+                }
+            }
+            if (Object.keys(isConflictingInfo.conflictingMunge.files).length !== 0) {
+                CordovaLogger.get().log(CordovaLogger.WARN, 'Conflict found, edit-config changes from config.xml will overwrite plugin.xml changes');
+
+                // remove conflicting plugin.xml munges
+                conflict_munge = mungeutil.decrement_munge(platform_config.config_munge, isConflictingInfo.conflictingMunge);
+                for (conflict_file in conflict_munge.files) {
+                    self.apply_file_munge(conflict_file, conflict_munge.files[conflict_file], /* remove = */ true);
+                }
+            }
+        }
+        // Add config.xml edit-config munges
+        config_munge = self.generate_config_xml_munge(config, edit_config_changes, 'config.xml');
+    }
+
+    self = munge_helper(should_increment, self, platform_config, config_munge);
+
+    // Move to installed/dependent_plugins
+    return self;
+}
+
+function munge_helper(should_increment, self, platform_config, config_munge) {
+    // global munge looks at all changes to config files
 
     // TODO: The should_increment param is only used by cordova-cli and is going away soon.
     // If should_increment is set to false, avoid modifying the global_munge (use clone)
@@ -177,22 +235,9 @@ function add_plugin_changes(pluginInfo, plugin_vars, is_top_level, should_increm
     }
 
     for (var file in munge.files) {
-        // CB-6976 Windows Universal Apps. Compatibility fix for existing plugins.
-        if (self.platform == 'windows' && file == 'package.appxmanifest' &&
-            !fs.existsSync(path.join(self.project_dir, 'package.appxmanifest'))) {
-            var substs = ['package.phone.appxmanifest', 'package.windows.appxmanifest', 'package.windows10.appxmanifest'];
-            /* jshint loopfunc:true */
-            substs.forEach(function(subst) {
-                events.emit('verbose', 'Applying munge to ' + subst);
-                self.apply_file_munge(subst, munge.files[file]);
-            });
-            /* jshint loopfunc:false */
-        }
         self.apply_file_munge(file, munge.files[file]);
     }
 
-    // Move to installed/dependent_plugins
-    self.platformJson.addPlugin(pluginInfo.id, plugin_vars || {}, is_top_level);
     return self;
 }
 
@@ -213,6 +258,39 @@ function reapply_global_munge () {
     return self;
 }
 
+// generate_plugin_config_munge
+// Generate the munge object from config.xml
+PlatformMunger.prototype.generate_config_xml_munge = generate_config_xml_munge;
+function generate_config_xml_munge(config, edit_config_changes, type) {
+
+    var munge = { files: {} };
+    var changes = edit_config_changes;
+    var id;
+
+    if(!changes) {
+        return munge;
+    }
+
+    if (type === 'config.xml') {
+        id = type;
+    }
+    else {
+        id = config.id;
+    }
+
+    changes.forEach(function(change) {
+        change.xmls.forEach(function(xml) {
+            // 1. stringify each xml
+            var stringified = (new et.ElementTree(xml)).write({xml_declaration:false});
+            // 2. add into munge
+            if (change.mode) {
+                mungeutil.deep_add(munge, change.file, change.target, { xml: stringified, count: 1, mode: change.mode, id: id });
+            }
+        });
+    });
+    return munge;
+}
+
 
 // generate_plugin_config_munge
 // Generate the munge object from plugin.xml + vars
@@ -228,92 +306,6 @@ function generate_plugin_config_munge(pluginInfo, vars, edit_config_changes) {
         Array.prototype.push.apply(changes, edit_config_changes);
     }
 
-    // Demux 'package.appxmanifest' into relevant platform-specific appx manifests.
-    // Only spend the cycles if there are version-specific plugin settings
-    if (self.platform === 'windows' &&
-            changes.some(function(change) {
-                return ((typeof change.versions !== 'undefined') ||
-                    (typeof change.deviceTarget !== 'undefined'));
-            }))
-    {
-        var manifests = {
-            'windows': {
-                '8.1.0': 'package.windows.appxmanifest',
-                '10.0.0': 'package.windows10.appxmanifest'
-            },
-            'phone': {
-                '8.1.0': 'package.phone.appxmanifest',
-                '10.0.0': 'package.windows10.appxmanifest'
-            },
-            'all': {
-                '8.1.0': ['package.windows.appxmanifest', 'package.phone.appxmanifest'],
-                '10.0.0': 'package.windows10.appxmanifest'
-            }
-        };
-
-        var oldChanges = changes;
-        changes = [];
-
-        oldChanges.forEach(function(change, changeIndex) {
-            // Only support semver/device-target demux for package.appxmanifest
-            // Pass through in case something downstream wants to use it
-            if (change.target !== 'package.appxmanifest') {
-                changes.push(change);
-                return;
-            }
-
-            var hasVersion = (typeof change.versions !== 'undefined');
-            var hasTargets = (typeof change.deviceTarget !== 'undefined');
-
-            // No semver/device-target for this config-file, pass it through
-            if (!(hasVersion || hasTargets)) {
-                changes.push(change);
-                return;
-            }
-
-            var targetDeviceSet = hasTargets ? change.deviceTarget : 'all';
-            if (['windows', 'phone', 'all'].indexOf(targetDeviceSet) === -1) {
-                // target-device couldn't be resolved, fix it up here to a valid value
-                targetDeviceSet = 'all';
-            }
-            var knownWindowsVersionsForTargetDeviceSet = Object.keys(manifests[targetDeviceSet]);
-
-            // at this point, 'change' targets package.appxmanifest and has a version attribute
-            knownWindowsVersionsForTargetDeviceSet.forEach(function(winver) {
-                // This is a local function that creates the new replacement representing the
-                // mutation.  Used to save code further down.
-                var createReplacement = function(manifestFile, originalChange) {
-                    var replacement = {
-                        target:         manifestFile,
-                        parent:         originalChange.parent,
-                        after:          originalChange.after,
-                        xmls:           originalChange.xmls,
-                        versions:       originalChange.versions,
-                        deviceTarget:   originalChange.deviceTarget
-                    };
-                    return replacement;
-                };
-
-                // version doesn't satisfy, so skip
-                if (hasVersion && !semver.satisfies(winver, change.versions)) {
-                    return;
-                }
-
-                var versionSpecificManifests = manifests[targetDeviceSet][winver];
-                if (versionSpecificManifests.constructor === Array) {
-                    // e.g. all['8.1.0'] === ['pkg.windows.appxmanifest', 'pkg.phone.appxmanifest']
-                    versionSpecificManifests.forEach(function(manifestFile) {
-                        changes.push(createReplacement(manifestFile, change));
-                    });
-                }
-                else {
-                    // versionSpecificManifests is actually a single string
-                    changes.push(createReplacement(versionSpecificManifests, change));
-                }
-            });
-        });
-    }
-
     changes.forEach(function(change) {
         change.xmls.forEach(function(xml) {
             // 1. stringify each xml
@@ -327,7 +319,9 @@ function generate_plugin_config_munge(pluginInfo, vars, edit_config_changes) {
             }
             // 2. add into munge
             if (change.mode) {
-                mungeutil.deep_add(munge, change.file, change.target, { xml: stringified, count: 1, mode: change.mode, plugin: pluginInfo.id });
+                if (change.mode !== 'remove') {
+                    mungeutil.deep_add(munge, change.file, change.target, { xml: stringified, count: 1, mode: change.mode, plugin: pluginInfo.id });
+                }
             }
             else {
                 mungeutil.deep_add(munge, change.target, change.parent, { xml: stringified, count: 1, after: change.after });
@@ -340,7 +334,9 @@ function generate_plugin_config_munge(pluginInfo, vars, edit_config_changes) {
 function is_conflicting(editchanges, config_munge, self, force) {
     var files = config_munge.files;
     var conflictFound = false;
+    var conflictWithConfigxml = false;
     var conflictingMunge = { files: {} };
+    var configxmlMunge = { files: {} };
     var conflictingParent;
     var conflictingPlugin;
 
@@ -370,23 +366,43 @@ function is_conflicting(editchanges, config_munge, self, force) {
                 conflictingParent = editchange.target;
             }
 
-            if (target.length !== 0) {
-                // conflict has been found, exit and throw an error
+            if (target && target.length !== 0) {
+                // conflict has been found
                 conflictFound = true;
-                if (!force) {
-                    // since there has been modifications to the attributes at this target,
-                    // the current plugin should not modify the attributes
-                    conflictingPlugin = target[0].plugin;
-                    return;
-                }
 
-                // need to find all conflicts when --force is used, track conflicting munges
-                mungeutil.deep_add(conflictingMunge, editchange.file, conflictingParent, target[0]);
+                if (editchange.id === 'config.xml') {
+                    if (target[0].id === 'config.xml') {
+                        // Keep track of config.xml/config.xml edit-config conflicts
+                        mungeutil.deep_add(configxmlMunge, editchange.file, conflictingParent, target[0]);
+                    }
+                    else {
+                        // Keep track of config.xml x plugin.xml edit-config conflicts
+                        mungeutil.deep_add(conflictingMunge, editchange.file, conflictingParent, target[0]);
+                    }
+                }
+                else {
+                    if (target[0].id === 'config.xml') {
+                        // plugin.xml cannot overwrite config.xml changes even if --force is used
+                        conflictWithConfigxml = true;
+                        return;
+                    }
+
+                    if (force) {
+                        // Need to find all conflicts when --force is used, track conflicting munges
+                        mungeutil.deep_add(conflictingMunge, editchange.file, conflictingParent, target[0]);
+                    }
+                    else {
+                        // plugin cannot overwrite other plugin changes without --force
+                        conflictingPlugin = target[0].plugin;
+                        return;
+                    }
+                }
             }
         }
     });
 
-    return {conflictFound: conflictFound, conflictingPlugin: conflictingPlugin, conflictingMunge: conflictingMunge};
+    return {conflictFound: conflictFound, conflictingPlugin: conflictingPlugin, conflictingMunge: conflictingMunge,
+        configxmlMunge: configxmlMunge, conflictWithConfigxml:conflictWithConfigxml};
 }
 
 // Go over the prepare queue and apply the config munges for each plugin

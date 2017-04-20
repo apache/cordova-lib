@@ -105,13 +105,13 @@ describe('preferences', function() {
                 var configXml, configParser;
                 
                 configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="all" /></widget>';
-                readFile.andReturn(configXml);
+                readFile.and.returnValue(configXml);
                 configParser = new ConfigParser(xml);
 
                 expect(preferences.getOrientation(configParser, 'ios')).toEqual('all');
                 
                 configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="sensorLandscape" /></widget>';
-                readFile.andReturn(configXml);
+                readFile.and.returnValue(configXml);
                 configParser = new ConfigParser(xml);
                 
                 expect(preferences.getOrientation(configParser, 'android')).toEqual('sensorLandscape');
@@ -119,14 +119,14 @@ describe('preferences', function() {
             
             it('should handle no orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget></widget>';
-                readFile.andReturn(configXml);
+                readFile.and.returnValue(configXml);
                 var configParser = new ConfigParser(xml);
                 expect(preferences.getOrientation(configParser)).toEqual('');
                 expect(emit).not.toHaveBeenCalled();
             });
             it('should handle invalid global orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><preference name="orientation" value="foobar" /></widget>';
-                readFile.andReturn(configXml);
+                readFile.and.returnValue(configXml);
                 var configParser = new ConfigParser(xml);
                 expect(preferences.getOrientation(configParser)).toEqual('default');
                 expect(emit).toHaveBeenCalledWith('warn', 'Unsupported global orientation: foobar');
@@ -135,7 +135,7 @@ describe('preferences', function() {
             
             it('should handle custom platform-specific orientation', function() {
                 var configXml = '<?xml version="1.0" encoding="UTF-8"?><widget><platform name="some-platform"><preference name="orientation" value="foobar" /></platform></widget>';
-                readFile.andReturn(configXml);
+                readFile.and.returnValue(configXml);
                 var configParser = new ConfigParser(xml);
                 expect(preferences.getOrientation(configParser, 'some-platform')).toEqual('foobar');
             });

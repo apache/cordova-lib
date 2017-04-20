@@ -59,21 +59,21 @@ module.exports = common = {
 
         startsWith: function(emitSpy, string)
         {
-            var match = [], i;
-            for(i in emitSpy.argsForCall) {
-                if(emitSpy.argsForCall[i][1].substr(0, string.length) === string)
-                    match.push(emitSpy.argsForCall[i][1]);
-            }
+            var match = [];
+            emitSpy.calls.all().forEach(function(val, i) {
+                if(emitSpy.calls.argsFor(i)[1].substr(0, string.length) === string)
+                    match.push(emitSpy.calls.argsFor(i)[1]);
+            });
             return match;
         },
 
         contains: function(emitSpy, string)
         {
-            var match = [], i;
-            for(i in emitSpy.argsForCall) {
-                if(emitSpy.argsForCall[i][1].indexOf(string) >= 0)
-                    match.push(emitSpy.argsForCall[i][1]);
-            }
+            var match = [];
+            emitSpy.calls.all().forEach(function(val, i) {
+                if(emitSpy.calls.argsFor(i)[1].indexOf(string) >= 0)
+                    match.push(emitSpy.calls.argsFor(i)[1]);
+            });
             return match;
         }
     }

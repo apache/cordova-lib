@@ -30,7 +30,7 @@ describe('browser project parser', function() {
     var exists, origDirExists;
 
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
         origDirExists = browserParser.__get__('dirExists');
         browserParser.__set__('dirExists', function () {
             return true;
@@ -67,7 +67,7 @@ describe('browser project parser', function() {
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mkdir = spyOn(shell, 'mkdir');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
         });
 
         describe('www_dir method', function() {
@@ -92,7 +92,7 @@ describe('browser project parser', function() {
 
         describe('update_overrides method', function() {
             it('should do nothing if merges directory does not exist', function() {
-                exists.andReturn(false);
+                exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });

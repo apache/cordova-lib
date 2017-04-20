@@ -1,0 +1,51 @@
+{
+    "name": "cordova-browser",
+    "version": "4.2.0-dev",
+    "description": "cordova-browser release",
+    "main": "bin/create",
+    "repository": {
+        "type": "git",
+        "url": "https://git-wip-us.apache.org/repos/asf/cordova-browser.git"
+    },
+    "keywords": [
+        "cordova",
+        "browser",
+        "apache"
+    ],
+    "scripts": {
+        "test": "npm run jshint && npm run test-unit",
+        "test-unit": "node node_modules/jasmine-node/lib/jasmine-node/cli.js --captureExceptions tests/spec/",
+        "jshint": "node node_modules/jshint/bin/jshint bin && node node_modules/jshint/bin/jshint tests"
+    },
+    "dependencies": {
+        "adm-zip": "^0.4.7",
+        "cordova-serve": "^1.0.0",
+        "nopt": "^3.0.6",
+        "q": "^1.4.1",
+        "shelljs": "^0.6.0"
+    },
+    "devDependencies": {
+        "jasmine-node": "~1",
+        "jshint": "^2.6.0",
+        "tmp": "^0.0.26"
+    },
+    "bundledDependencies": [
+        "adm-zip",
+        "cordova-serve",
+        "nopt",
+        "q",
+        "shelljs"
+    ],
+    "author": "Apache Software Foundation",
+    "contributors": [
+        {
+            "name": "Steve Gill",
+            "email": "steveng@adobe.com"
+        },
+        {
+            "name": "Suraj Pindoria",
+            "email": "spindori@adobe.com"
+        }
+    ],
+    "license": "Apache-2.0"
+}

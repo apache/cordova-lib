@@ -157,8 +157,8 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
         // instead of generating intermediate file on FS
         var cordova_plugins = new Readable();
         cordova_plugins.push(
-            'module.exports.metadata = ' + JSON.stringify(pluginMetadata, null, 4) + ';\n' +
-            'module.exports = ' + JSON.stringify(modulesMetadata, null, 4) + ';\n', 'utf8');
+            'module.exports = ' + JSON.stringify(modulesMetadata, null, 4) + ';\n' +
+            'module.exports.metadata = ' + JSON.stringify(pluginMetadata, null, 4) + ';\n', 'utf8');
         cordova_plugins.push(null);
 
         var bootstrap = new Readable();

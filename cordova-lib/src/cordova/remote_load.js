@@ -20,9 +20,7 @@
 var path = require('path');
 var shell = require('shelljs');
 var Q = require('q');
-var npm = require('npm');
 var npmHelper = require('../util/npm-helper');
-var unpack = require('../util/unpack');
 var util = require('./util');
 var git = require('../gitclone');
 
@@ -34,72 +32,7 @@ passed containing a packageName, name, and version.
 options - Package options
  */
 function npmFetch(packageName, packageVersion) {
-    var versionCallback;        // Resultant callback
-    var downloadDir;            // Download directory
-    var npmPackage;             // NPM package information
-
-    // Get the latest matching version from NPM if a version range is specified
-    versionCallback = util.getLatestMatchingNpmVersion(packageName, packageVersion).then(
-        function (latestVersion) {
-            downloadDir = path.join(util.libDirectory, packageName, 'cordova', latestVersion);
-            npmPackage = packageName + '@' + latestVersion;
-
-            return exports.npmCacheAdd(npmPackage);
-        },
-        function (err) {
-            return Q.reject(err);
-        }
-    );
-
-    return versionCallback;
-}
-
-/*
-Invokes "npm cache add," and then returns a promise that resolves to a
-directory containing the downloaded, or cached package. NPM package information
-must be passed in the form of package@version.
-
-npmPackage - NPM package details
- */
-function npmCacheAdd(npmPackage) {
-    var loadCallback;           // Resultant callback
-    var cacheAddCallback;       // Callback for cache
-    var cacheDir;               // Cache directory
-    var npmConfig;              // NPM Configuration
-    var packageDir;             // Downloaded package directory
-    var packageTGZ;             // Downloaded TGZ directory
-
-    cacheDir = path.join(util.libDirectory, 'npm_cache');
-
-    npmConfig = {
-        'cache': cacheDir
-    };
-
-    // Load with NPM configuration
-    loadCallback = npmHelper.loadWithSettingsThenRestore(npmConfig,
-        function () {
-
-            // Invoke NPM Cache Add
-            cacheAddCallback = Q.ninvoke(npm.commands, 'cache', ['add', npmPackage]).then(
-                function (info) {
-                    packageDir = path.resolve(npm.cache, info.name, info.version, 'package');
-                    packageTGZ = path.resolve(npm.cache, info.name, info.version, 'package.tgz');
-
-                    return unpack.unpackTgz(packageTGZ, packageDir);
-                },
-                function (err) {
-                    return Q.reject(err);
-                }
-            );
-
-            return cacheAddCallback;
-        },
-        function (err) {
-            return Q.reject(err);
-        }
-    );
-
-    return loadCallback;
+    return npmHelper.fetchPackage(packageName, packageVersion);
 }
 
 /*
@@ -143,4 +76,3 @@ function gitClone(gitURL, branch) {
 
 exports.gitClone = gitClone;
 exports.npmFetch = npmFetch;
-exports.npmCacheAdd = npmCacheAdd;

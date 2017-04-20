@@ -20,6 +20,55 @@
 -->
 # Cordova-lib Release Notes
 
+### 6.5.0 (Jan 17, 2017)
+* [CB-12018](https://issues.apache.org/jira/browse/CB-12018): updated `jshint` and updated `jasmine` tests to work with `jasmine` instead of `jasmine-node`
+* [CB-12314](https://issues.apache.org/jira/browse/CB-12314) updated pinned android to 6.1.1
+* [CB-12261](https://issues.apache.org/jira/browse/CB-12261) fix subdirectories deprecated warning always shows and stop fetch caused by [CB-11979](https://issues.apache.org/jira/browse/CB-11979)
+* [CB-12284](https://issues.apache.org/jira/browse/CB-12284) Include project root as additional root for static router
+* [CB-12088](https://issues.apache.org/jira/browse/CB-12088) Fix misleading warning when adding platform without `Api.js`
+
+### 6.4.0 (Oct 21, 2016)
+* [CB-12039](https://issues.apache.org/jira/browse/CB-12039) updated pinned `Android` to 6.0.0 and `iOS` to 4.3.0
+* [CB-11979](https://issues.apache.org/jira/browse/CB-11979) added deprecation warning for installing plugins via subdirectories
+* [CB-11730](https://issues.apache.org/jira/browse/CB-11730) Modify condition of if clause to avoid similar project name with plugin name
+* [CB-11985](https://issues.apache.org/jira/browse/CB-11985) Check if cached platform/plugin exists before `npm cache`
+* [CB-11951](https://issues.apache.org/jira/browse/CB-11951) [CB-11967](https://issues.apache.org/jira/browse/CB-11967) Respect preference default values when installling plugins
+* [CB-11771](https://issues.apache.org/jira/browse/CB-11771) Deep symlink directories to target project instead of linking the directory itself
+* [CB-11908](https://issues.apache.org/jira/browse/CB-11908) Handle `edit-config` in `config.xml` on prepare
+* Add github pull request template
+* [CB-8320](https://issues.apache.org/jira/browse/CB-8320) We look for a `build.gradle` to make sure it's **Android**, not an `AndroidManifest`, because it moved
+* [CB-11811](https://issues.apache.org/jira/browse/CB-11811) Moved **iOS** platform specific tests to `platform.spec.ios.js`, added `test-ios` npm run script.
+* [CB-11811](https://issues.apache.org/jira/browse/CB-11811) disable `CocoaPods` e2e test temporarily since it is platform specific and requires cocoapods to be installed.
+* updated `save.spec.js` to use latest **android** and newer fb plugin
+* [CB-11607](https://issues.apache.org/jira/browse/CB-11607) breakout `cordova-create` from `cordova-lib`
+* [CB-9825](https://issues.apache.org/jira/browse/CB-9825) framework tag spec parsing
+* [CB-11698](https://issues.apache.org/jira/browse/CB-11698) Fix plugin installation when restoring platform
+* [CB-11679](https://issues.apache.org/jira/browse/CB-11679) Speed up save/restore tests
+* [CB-11205](https://issues.apache.org/jira/browse/CB-11205) Respect saved variables when installing plugin
+* [CB-11589](https://issues.apache.org/jira/browse/CB-11589) Fix missing plugin files after restore
+
+### 6.3.1 (Aug 08, 2016)
+* [CB-11652](https://issues.apache.org/jira/browse/CB-11652) Update run and emulate to skip build
+* [CB-11194](https://issues.apache.org/jira/browse/CB-11194) Defer creating of libDir folder until something actually requests it
+* [CB-11493](https://issues.apache.org/jira/browse/CB-11493) Add cordova emulate option to skip prepare
+* [CB-11205](https://issues.apache.org/jira/browse/CB-11205) Respect saved variables when installing plugin
+* [CB-11589](https://issues.apache.org/jira/browse/CB-11589) Fix missing plugin files after restore
+
+### 6.3.0 (Jul 12, 2016)
+* [CB-11491](https://issues.apache.org/jira/browse/CB-11491) Introduce before_deploy hook
+* [CB-11412](https://issues.apache.org/jira/browse/CB-11412) template support for www folders
+* Fix config.xml path in PlatformApi.prepare
+* [CB-11412](https://issues.apache.org/jira/browse/CB-11412) improve template implementation
+* [CB-11164](https://issues.apache.org/jira/browse/CB-11164) Allow forced dependent plugin removal
+* [CB-11339](https://issues.apache.org/jira/browse/CB-11339) Add a warning about prerelease platform usage
+* [CB-11349](https://issues.apache.org/jira/browse/CB-11349) added --fetch and cordova fetch to create --template
+* [CB-11337](https://issues.apache.org/jira/browse/CB-11337) Use latest released platform version in e2e tests
+* [CB-11274](https://issues.apache.org/jira/browse/CB-11274) Platform browser: wrong path for config.xml
+* [CB-11274](https://issues.apache.org/jira/browse/CB-11274) Make serve dashboard take config.xml -> content.src entry point into account
+* [CB-11261](https://issues.apache.org/jira/browse/CB-11261) Cut out '-nightly' prerelease tag when checking plugin engines
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) added fetch tests to travis
+* [CB-9858](https://issues.apache.org/jira/browse/CB-9858) fixed failing travis and appveyor tests
+
 ### 6.2.0 (May 12, 2016)
 * [CB-11259](https://issues.apache.org/jira/browse/CB-11259) Improving prepare and build logging
 * Resolve npm run jshint failure due to npm/npm#10343

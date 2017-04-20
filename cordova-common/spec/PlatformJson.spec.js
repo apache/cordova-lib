@@ -30,7 +30,7 @@ var FAKE_MODULE = {
 };
 
 describe('PlatformJson class', function() {
-    it('should be constructable', function () {
+    it('Test 001 : should be constructable', function () {
         expect(new PlatformJson()).toEqual(jasmine.any(PlatformJson));
     });
 
@@ -43,23 +43,23 @@ describe('PlatformJson class', function() {
             fakePlugin = jasmine.createSpyObj('fakePlugin', ['getJsModules']);
             fakePlugin.id = 'fakeId';
             fakePlugin.version = '1.0.0';
-            fakePlugin.getJsModules.andReturn([FAKE_MODULE]);
+            fakePlugin.getJsModules.and.returnValue([FAKE_MODULE]);
         });
         
         describe('addPluginMetadata method', function () {
-            it('should not throw if root "modules" property is missing', function () {
+            it('Test 002 : should not throw if root "modules" property is missing', function () {
                 expect(function () {
                     platformJson.addPluginMetadata(fakePlugin);
                 }).not.toThrow();
             });
     
-            it('should add each module to "root.modules" array', function () {
+            it('Test 003 : should add each module to "root.modules" array', function () {
                 platformJson.addPluginMetadata(fakePlugin);
                 expect(platformJson.root.modules.length).toBe(1);
                 expect(platformJson.root.modules[0]).toEqual(jasmine.any(ModuleMetadata));
             });
             
-            it('shouldn\'t add module if there is already module with the same file added', function () {
+            it('Test 004 : shouldn\'t add module if there is already module with the same file added', function () {
                 platformJson.root.modules = [{
                     name: 'fakePlugin2',
                     file: 'plugins/fakeId/www/fakeModule.js'
@@ -70,20 +70,20 @@ describe('PlatformJson class', function() {
                 expect(platformJson.root.modules[0].name).toBe('fakePlugin2');
             });
             
-            it('should add entry to plugin_metadata with corresponding version', function () {
+            it('Test 005 : should add entry to plugin_metadata with corresponding version', function () {
                 platformJson.addPluginMetadata(fakePlugin);
                 expect(platformJson.root.plugin_metadata[fakePlugin.id]).toBe(fakePlugin.version);
             });
         });
         
         describe('removePluginMetadata method', function () {
-            it('should not throw if root "modules" property is missing', function () {
+            it('Test 006 : should not throw if root "modules" property is missing', function () {
                 expect(function () {
                     platformJson.removePluginMetadata(fakePlugin);
                 }).not.toThrow();
             });
     
-            it('should remove plugin modules from "root.modules" array based on file path', function () {
+            it('Test 007 : should remove plugin modules from "root.modules" array based on file path', function () {
                 
                 var pluginPaths = [
                     'plugins/fakeId/www/fakeModule.js',
@@ -100,7 +100,7 @@ describe('PlatformJson class', function() {
                 expect(resultantPaths.length).toBe(0);
             });
             
-            it('should remove entry from plugin_metadata with corresponding version', function () {
+            it('Test 008 : should remove entry from plugin_metadata with corresponding version', function () {
                 platformJson.root.plugin_metadata = {};
                 platformJson.root.plugin_metadata[fakePlugin.id] = fakePlugin.version;
                 platformJson.removePluginMetadata(fakePlugin);
@@ -109,7 +109,7 @@ describe('PlatformJson class', function() {
         });
         
         describe('generateMetadata method', function () {
-            it('should generate text metadata containing list of installed modules', function () {
+            it('Test 009 : should generate text metadata containing list of installed modules', function () {
                 var meta = platformJson.addPluginMetadata(fakePlugin).generateMetadata();
                 expect(typeof meta).toBe('string');
                 expect(meta.indexOf(JSON.stringify(platformJson.root.modules, null, 4))).toBeGreaterThan(0);
@@ -121,7 +121,7 @@ describe('PlatformJson class', function() {
 });
 
 describe('ModuleMetadata class', function () {
-    it('should be constructable', function () {
+    it('Test 010 : should be constructable', function () {
         var meta;
         expect(function name(params) {
             meta = new ModuleMetadata('fakePlugin', {src: 'www/fakeModule.js'});
@@ -129,31 +129,31 @@ describe('ModuleMetadata class', function () {
         expect(meta instanceof ModuleMetadata).toBeTruthy();
     });
     
-    it('should throw if either pluginId or jsModule argument isn\'t specified', function () {
+    it('Test 011 : should throw if either pluginId or jsModule argument isn\'t specified', function () {
         expect(ModuleMetadata).toThrow();
         expect(function () { new ModuleMetadata('fakePlugin', {}); }).toThrow();
     });
     
-    it('should guess module id either from name property of from module src', function () {
+    it('Test 012 : should guess module id either from name property of from module src', function () {
         expect(new ModuleMetadata('fakePlugin', {name: 'fakeModule'}).id).toMatch(/fakeModule$/);
         expect(new ModuleMetadata('fakePlugin', {src: 'www/fakeModule.js'}).id).toMatch(/fakeModule$/);
     });
     
-    it('should read "clobbers" property from module', function () {
+    it('Test 013 : should read "clobbers" property from module', function () {
         expect(new ModuleMetadata('fakePlugin', {name: 'fakeModule'}).clobbers).not.toBeDefined();
         var metadata = new ModuleMetadata('fakePlugin', FAKE_MODULE);
         expect(metadata.clobbers).toEqual(jasmine.any(Array));
         expect(metadata.clobbers[0]).toBe(FAKE_MODULE.clobbers[0].target);
     });
     
-    it('should read "merges" property from module', function () {
+    it('Test 014 : should read "merges" property from module', function () {
         expect(new ModuleMetadata('fakePlugin', {name: 'fakeModule'}).merges).not.toBeDefined();
         var metadata = new ModuleMetadata('fakePlugin', FAKE_MODULE);
         expect(metadata.merges).toEqual(jasmine.any(Array));
         expect(metadata.merges[0]).toBe(FAKE_MODULE.merges[0].target);
     });
     
-    it('should read "runs" property from module', function () {
+    it('Test 015 : should read "runs" property from module', function () {
         expect(new ModuleMetadata('fakePlugin', {name: 'fakeModule'}).runs).not.toBeDefined();
         expect(new ModuleMetadata('fakePlugin', FAKE_MODULE).runs).toBe(true);
     });

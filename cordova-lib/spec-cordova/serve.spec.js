@@ -26,12 +26,12 @@ var cordova = require('../src/cordova/cordova'),
     shell = require('shelljs'),
     fs = require('fs'),
     Q = require('q'),
-    util = require('../src/cordova/util'),
     tempDir,
     http = require('http');
 
 var cwd = process.cwd();
 
+//skipped because of CB-7078
 xdescribe('serve command', function() {
     var payloads = {},
         consoleSpy;
@@ -47,7 +47,7 @@ xdescribe('serve command', function() {
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
     });
-    it('should not run outside of a Cordova-based project', function() {
+    it('Test 001 : should not run outside of a Cordova-based project', function() {
         process.chdir(tempDir);
 
         expect(function() {
@@ -163,27 +163,6 @@ xdescribe('serve command', function() {
             };
         }
 
-        it('should serve from top-level www if the file exists there', function() {
-            var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/basictest.html', payload, {
-                setup: function (){
-                    fs.writeFileSync(path.join(util.projectWww(tempDir), 'basictest.html'), payload);
-                }
-            })();
-        });
-
-        it('should honour a custom port setting', function() {
-            var payload = 'This is test file.';
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/basictest.html', payload, {
-                port: 9001,
-                setup: function (){
-                    fs.writeFileSync(path.join(util.projectWww(tempDir), 'basictest.html'), payload);
-                }
-            })();
-        });
-
         itifapps([
             'android',
             'ant',
@@ -207,11 +186,6 @@ xdescribe('serve command', function() {
         ])('should fall back to www on iOS', function() {
             payloads.ios = 'This is the iOS test file.';
             test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
-        });
-
-        it('should fall back to www on firefoxos', function() {
-            payloads.firefoxos = 'This is the firefoxos test file.';
-            test_serve('firefoxos', '/test.html', payloads.firefoxos)();
         });
     });
 });

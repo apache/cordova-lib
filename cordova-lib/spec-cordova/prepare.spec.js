@@ -32,7 +32,6 @@ var shell = require('shelljs'),
 
 var project_dir = '/some/path';
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
-var supported_platforms_paths = supported_platforms.map(function(p) { return path.join(project_dir, 'platforms', p, 'www'); });
 
 var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
@@ -64,45 +63,45 @@ describe('prepare command', function() {
         load, platformApi, getPlatformApi;
 
     beforeEach(function () {
-        getPlatformApi = spyOn(platforms, 'getPlatformApi').andCallFake(function (platform, rootDir) {
+        getPlatformApi = spyOn(platforms, 'getPlatformApi').and.callFake(function (platform, rootDir) {
             return {
-                prepare: jasmine.createSpy('prepare').andReturn(Q()),
-                getPlatformInfo: jasmine.createSpy('getPlatformInfo').andReturn({
+                prepare: jasmine.createSpy('prepare').and.returnValue(Q()),
+                getPlatformInfo: jasmine.createSpy('getPlatformInfo').and.returnValue({
                     locations: {
                         www: path.join(project_dir, 'platforms', platform, 'www')
                     }
                 }),
             };
         });
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').andReturn(Q());
+        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
 
-        find_plugins = spyOn(util, 'findPlugins').andReturn([]);
-        spyOn(PlatformJson, 'load').andReturn(new PlatformJson(null, null, {}));
+        find_plugins = spyOn(util, 'findPlugins').and.returnValue([]);
+        spyOn(PlatformJson, 'load').and.returnValue(new PlatformJson(null, null, {}));
         spyOn(PlatformJson.prototype, 'save');
-        load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
-        cp = spyOn(shell, 'cp').andReturn(true);
+        load = spyOn(lazy_load, 'based_on_config').and.returnValue(Q());
+        cp = spyOn(shell, 'cp').and.returnValue(true);
         mkdir = spyOn(shell, 'mkdir');
         spyOn(ConfigParser.prototype, 'write');
-        spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function() {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function() {
             return new et.ElementTree(et.XML(TEST_XML));
         });
     });
 
     describe('failure', function() {
-        it('should not run outside of a cordova-based project by calling util.isCordova', function(done) {
-            is_cordova.andReturn(false);
-            cd_project_root.andCallThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
+        it('Test 001 : should not run outside of a cordova-based project by calling util.isCordova', function(done) {
+            is_cordova.and.returnValue(false);
+            cd_project_root.and.callThrough();  // undo spy here because prepare depends on cdprojectRoot for isCordova check
             prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect('' + err).toContain('Current working directory is not a Cordova-based project.');
             }).fin(done);
         });
-        it('should not run inside a cordova-based project with no platforms', function(done) {
-            list_platforms.andReturn([]);
+        it('Test 002 : should not run inside a cordova-based project with no platforms', function(done) {
+            list_platforms.and.returnValue([]);
             prepare().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -112,14 +111,14 @@ describe('prepare command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isCordova', function(done) {
+        it('Test 003 : should run inside a Cordova-based project by calling util.isCordova', function(done) {
             prepare().then(function() {
                 expect(is_cordova).toHaveBeenCalled();
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);
         });
-        it('should get PlatformApi instance for each platform and invoke its\' run method', function(done) {
+        it('Test 004 : should get PlatformApi instance for each platform and invoke its\' run method', function(done) {
             prepare().then(function() {
                 supported_platforms.forEach(function(p) {
                     expect(parsers[p]).toHaveBeenCalled();
@@ -134,16 +133,40 @@ describe('prepare command', function() {
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+            it('Test 005 : should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare().then(function() {
-                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], save: false, fetch: false, paths:supported_platforms_paths});
+                    expect(fire.calls.argsFor(0)).toEqual(
+                    [ 'before_prepare',
+                    { verbose: false,
+                        platforms:
+                         [ 'ios',
+                           'osx',
+                           'android',
+                           'ubuntu',
+                           'blackberry10',
+                           'windows',
+                           'webos',
+                           'browser' ],
+                        options: {},
+                        save: false,
+                        fetch: false,
+                        paths:
+                         [ path.join('/','some','path','platforms','ios','www'),
+                           path.join('/','some','path','platforms','osx','www'),
+                           path.join('/','some','path','platforms','android','www'),
+                           path.join('/','some','path','platforms','ubuntu','www'),
+                           path.join('/','some','path','platforms','blackberry10','www'),
+                           path.join('/','some','path','platforms','windows','www'),
+                           path.join('/','some','path','platforms','webos','www'),
+                           path.join('/','some','path','platforms','browser','www') ],
+                        searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined();
                 }).fin(done);
             });
-            it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+            it('Test 006 : should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 prepare('android').then(function() {
-                    expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
+                    expect(fire.calls.argsFor(1)).toEqual([ 'after_prepare',{ platforms: [ 'android' ],verbose: false,options: {},paths: [ path.join( '/','some','path', 'platforms', 'android', 'www' ) ],searchpath: undefined } ]);
                 }, function(err) {
                     expect(err).toBeUndefined('Exception while running `prepare android`:\n' + err.stack);
                 }).fin(done);
@@ -152,9 +175,9 @@ describe('prepare command', function() {
 
         describe('with no platforms added', function() {
             beforeEach(function() {
-                list_platforms.andReturn([]);
+                list_platforms.and.returnValue([]);
             });
-            it('should not fire the hooker', function(done) {
+            it('Test 007 : should not fire the hooker', function(done) {
                 Q().then(prepare).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {

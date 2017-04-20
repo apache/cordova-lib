@@ -36,7 +36,6 @@ var path = require('path'),
     plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
-    pluginMapper = require('cordova-registry-mapper'),
     pluginSpec = require('../cordova/plugin_spec_parser'),
     cordovaUtil = require('../cordova/util');
 
@@ -76,10 +75,6 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
-    if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError(platform + ' not supported.'));
-    }
-
     var current_stack = new action_stack();
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
@@ -91,16 +86,6 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 // Returns a promise.
 function possiblyFetch(id, plugins_dir, options) {
     var parsedSpec = pluginSpec.parse(id);
-    //Check if a mapping exists for the plugin id
-    //if it does, convert id to new name id
-    var newId = parsedSpec.scope ? null : pluginMapper.oldToNew[parsedSpec.id];
-    if(newId) {
-        if(parsedSpec.version) {
-            id = newId + '@' + parsedSpec.version;
-        } else {
-            id = newId;
-        }
-    }
 
     // if plugin is a relative path, check if it already exists
     var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, parsedSpec.id);
@@ -109,22 +94,10 @@ function possiblyFetch(id, plugins_dir, options) {
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
     }
-
-    var alias =  parsedSpec.scope ? null : pluginMapper.newToOld[parsedSpec.id] || newId;
-    // if the plugin alias has already been fetched, use it.
-    if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-        events.emit('warn', 'Plugin with alternate id ' + alias + ' is already fetched, so installing it instead of ' + parsedSpec.id);
-        return Q(path.join(plugins_dir, alias));
-    }
-
-    // if plugin doesnt exist, use fetch to get it.
-    if (newId) {
-        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newId + ' and fetched from npm. This is due to our old plugins registry shutting down.');
-    }
+    
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
-
     return plugman.raw.fetch(id, plugins_dir, opts);
 }
 
@@ -420,7 +393,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
             if(error === 'skip') {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
-                events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\':' + error.stack);
+                events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\': ' + error.stack);
                 throw error;
             }
         }
@@ -567,15 +540,46 @@ function tryFetchDependency(dep, install, options) {
 function installDependency(dep, install, options) {
 
     var opts;
-
     dep.install_dir = path.join(install.plugins_dir, dep.id);
-    if ( fs.existsSync(dep.install_dir) ) {
-        events.emit('verbose', 'Plugin dependency "' + dep.id + '" already fetched, using that version.');
+
+    events.emit('verbose', 'Requesting plugin "' + (dep.version? dep.id+'@'+dep.version : dep.id) + '".' );
+
+    if (fs.existsSync(dep.install_dir) ) {
+        var pluginInfo = new PluginInfo(dep.install_dir);
+        var version_installed = pluginInfo.version;
+        var version_required = dep.version;
+
+        if(dep.version) {
+            if (Number(dep.version.replace('.',''))) {
+                version_required = '^' + dep.version;
+            }
+        }
+
+        if (options.force || 
+            semver.satisfies(version_installed, version_required, /*loose=*/true) || 
+            version_required === null || 
+            version_required === undefined ||
+            version_required === '' ) {
+            events.emit('log', 'Plugin dependency "' + (version_installed ? dep.id+'@'+version_installed : dep.id) + '" already fetched, using that version.');
+        } else {
+            var msg = 'Version of installed plugin: "' +
+                dep.id + '@'+ version_installed +
+                '" does not satisfy dependency plugin requirement "' +
+                dep.id +'@'+ version_required +
+                 '". Try --force to use installed plugin as dependency.';
+            return Q()
+            .then(function() {
+                // Remove plugin
+                return shell.rm('-rf', path.join(install.plugins_dir, install.top_plugin_id));
+            }).then(function() {
+                // Return promise chain and finally reject
+                return Q.reject(new CordovaError(msg));
+            });
+        }
         opts = underscore.extend({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
-
         return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
@@ -589,8 +593,8 @@ function installDependency(dep, install, options) {
             expected_id: dep.id
         });
 
-        var dep_src = dep.url.length ? dep.url : dep.id;
 
+        var dep_src = dep.url.length ? dep.url : (dep.version? dep.id + '@'+dep.version: dep.id);
         return possiblyFetch(dep_src, install.plugins_dir, opts)
         .then(
             function(plugin_dir) {

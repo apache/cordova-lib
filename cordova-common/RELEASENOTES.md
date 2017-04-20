@@ -20,6 +20,39 @@
 -->
 # Cordova-common Release Notes
 
+### 2.0.1 (Mar 09, 2017)
+* [CB-12557](https://issues.apache.org/jira/browse/CB-12557) add both stdout and stderr properties to the error object passed to superspawn reject handler.
+
+### 2.0.0 (Jan 17, 2017)
+* [CB-8978](https://issues.apache.org/jira/browse/CB-8978) Add `resource-file` parsing to `config.xml`
+* [CB-12018](https://issues.apache.org/jira/browse/CB-12018): updated `jshint` and updated tests to work with `jasmine@2` instead of `jasmine-node`
+* [CB-12163](https://issues.apache.org/jira/browse/CB-12163) Add reference attrib to `resource-file` for **Windows**
+* Move windows-specific logic to `cordova-windows`
+* [CB-12189](https://issues.apache.org/jira/browse/CB-12189) Add implementation attribute to framework
+
+### 1.5.1 (Oct 12, 2016)
+* [CB-12002](https://issues.apache.org/jira/browse/CB-12002) Add `getAllowIntents()` to `ConfigParser`
+* [CB-11998](https://issues.apache.org/jira/browse/CB-11998) `cordova platform add` error with `cordova-common@1.5.0`
+
+### 1.5.0 (Oct 06, 2016)
+* [CB-11776](https://issues.apache.org/jira/browse/CB-11776) Add test case for different `edit-config` targets
+* [CB-11908](https://issues.apache.org/jira/browse/CB-11908) Add `edit-config` to `config.xml`
+* [CB-11936](https://issues.apache.org/jira/browse/CB-11936) Support four new **App Transport Security (ATS)** keys
+* update `config.xml` location if it is a **Android Studio** project.
+* use `array` methods and `object.keys` for iterating. avoiding `for-in` loops
+* [CB-11517](https://issues.apache.org/jira/browse/CB-11517) Allow `.folder` matches
+* [CB-11776](https://issues.apache.org/jira/browse/CB-11776) check `edit-config` target exists
+
+### 1.4.1 (Aug 09, 2016)
+* Add general purpose `ConfigParser.getAttribute` API
+* [CB-11653](https://issues.apache.org/jira/browse/CB-11653) moved `findProjectRoot` from `cordova-lib` to `cordova-common`
+* [CB-11636](https://issues.apache.org/jira/browse/CB-11636) Handle attributes with quotes correctly
+* [CB-11645](https://issues.apache.org/jira/browse/CB-11645) added check to see if `getEditConfig` exists before trying to use it
+* [CB-9825](https://issues.apache.org/jira/browse/CB-9825) framework tag spec parsing
+
+### 1.4.0 (Jul 12, 2016)
+* [CB-11023](https://issues.apache.org/jira/browse/CB-11023) Add edit-config functionality
+
 ### 1.3.0 (May 12, 2016)
 * [CB-11259](https://issues.apache.org/jira/browse/CB-11259): Improving prepare and build logging
 * [CB-11194](https://issues.apache.org/jira/browse/CB-11194) Improve cordova load time

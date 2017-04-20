@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
- Copyright 2013 Anis Kadri
+    http://www.apache.org/licenses/LICENSE-2.0
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
-
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
 -->
 
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
@@ -72,33 +72,7 @@
                 target-dir="src/com/phonegap/plugins/dummyplugin" />
         <lib-file src="src/android/TestLib.jar" />
     </platform>
-
-    <!-- amazon fireos -->
-    <platform name="amazon-fireos">
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="DummyPlugin.org.test.plugins.dummyplugin"
-                      android:label="@string/app_name">
-                <intent-filter>
-                </intent-filter>
-            </activity>
-        </config-file>
-
-        <!-- CDV < 2.0 -->
-        <config-file target="res/xml/plugins.xml" parent="/plugins">
-            <plugin name="org.test.plugins.dummyplugin"
-                value="DummyPlugin.org.test.plugins.dummyplugin"/>
-        </config-file>
-
-        <!-- CDV 2.0+ (for now) -->
-        <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-            <plugin name="org.test.plugins.dummyplugin"
-                value="DummyPlugin.org.test.plugins.dummyplugin"/>
-        </config-file>
-
-        <source-file src="src/android/DummyPlugin.java"
-                target-dir="src/com/phonegap/plugins/dummyplugin" />
-        <lib-file src="src/android/TestLib.jar" />
-    </platform>
+    
 
     <!-- blackberry10 -->
     <platform name="blackberry10">
@@ -135,40 +109,6 @@
         <framework src="src/ios/libsqlite3.dylib" />
         <framework src="src/ios/libsqlite3.dylib" weak="true" />
         <framework src="src/ios/Custom.framework" custom="true" />
-    </platform>
-
-    <!-- wp8 -->
-    <platform name="wp8">
-        <config-file target="config.xml" parent="/*">
-            <feature id="dummyPlugin" required="true" version="1.0.0.0"/>
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App" after="Tokens">
-            <Extensions />
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Extensions" after="Extension">
-            <Extension ExtensionName="DummyExtension1" ConsumerID="{5B04B775-356B-4AA0-AAF8-6491FFEA5661}" TaskID="_default" ExtraFile="Extensions\\Extras.xml" />
-            <Extension ExtensionName="DummyExtension2" ConsumerID="{5B04B775-356B-4AA0-AAF8-6491FFEA5661}" TaskID="_default" ExtraFile="Extensions\\Extras.xml" />
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Extensions" after="FileTypeAssociation;Extension">
-            <FileTypeAssociation TaskID="_default" Name="DummyFileType1" NavUriFragment="fileToken=%s">
-                <SupportedFileTypes>
-                    <FileType ContentType="application/dummy1">.dummy1</FileType>
-                </SupportedFileTypes>
-            </FileTypeAssociation>
-            <FileTypeAssociation TaskID="_default" Name="DummyFileType2" NavUriFragment="fileToken=%s">
-                <SupportedFileTypes>
-                    <FileType ContentType="application/dummy2">.dummy2</FileType>
-                </SupportedFileTypes>
-            </FileTypeAssociation>
-        </config-file>
-
-        <source-file src="src/wp8/DummyPlugin.cs"/>
-        <js-module src="www/dummyplugin.js" name="Dummy">
-            <clobbers target="dummy" />
-        </js-module>
     </platform>
 
     <!-- tizen -->

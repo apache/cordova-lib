@@ -21,6 +21,7 @@ var cordova_util      = require('./util'),
     ConfigParser      = require('cordova-common').ConfigParser,
     PlatformJson      = require('cordova-common').PlatformJson,
     PluginInfoProvider = require('cordova-common').PluginInfoProvider,
+    PlatformMunger    = require('cordova-common').ConfigChanges.PlatformMunger,
     events            = require('cordova-common').events,
     platforms         = require('../platforms/platforms'),
     PlatformApiPoly = require('../platforms/PlatformApiPoly'),
@@ -52,6 +53,9 @@ function prepare(options) {
                 return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
             });
             options.paths = paths;
+        }).then(function () {
+            options = cordova_util.preProcessOptions(options);
+            return restore.installPluginsFromConfigXML(options);
         }).then(function() {
             options = cordova_util.preProcessOptions(options);
             options.searchpath = options.searchpath || config_json.plugin_search_path;
@@ -62,8 +66,6 @@ function prepare(options) {
                 return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
             });
             return hooksRunner.fire('after_prepare', options);
-        }).then(function () {
-            return restore.installPluginsFromConfigXML(options);
         });
     });
 }
@@ -117,6 +119,13 @@ function preparePlatforms (platformList, projectRoot, options) {
                     var browserify = require('../plugman/browserify');
                     return browserify(project, platformApi);
                 }
+            })
+            .then(function () {
+                // Handle edit-config in config.xml
+                var platformRoot = path.join(projectRoot, 'platforms', platform);
+                var platformJson = PlatformJson.load(platformRoot, platform);
+                var munger = new PlatformMunger(platform, platformRoot, platformJson);
+                munger.add_config_changes(project.projectConfig, /*should_increment=*/true).save_all();
             });
         });
     }));

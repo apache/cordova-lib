@@ -54,7 +54,7 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
 
 describe('xml-helpers', function(){
     describe('parseElementtreeSync', function() {
-        it('should parse xml with a byte order mark', function() {
+        it('Test 001 : should parse xml with a byte order mark', function() {
             var xml_path = path.join(__dirname, '../fixtures/projects/windows/bom_test.xml');
             expect(function() {
                 xml_helpers.parseElementtreeSync(xml_path);
@@ -62,35 +62,35 @@ describe('xml-helpers', function(){
         });
     });
     describe('equalNodes', function() {
-        it('should return false for different tags', function(){
+        it('Test 002 : should return false for different tags', function(){
             expect(xml_helpers.equalNodes(usesNetworkOne, title)).toBe(false);
         });
 
-        it('should return true for identical tags', function(){
+        it('Test 003 : should return true for identical tags', function(){
             expect(xml_helpers.equalNodes(usesNetworkOne, usesNetworkTwo)).toBe(true);
         });
 
-        it('should return false for different attributes', function(){
+        it('Test 004 : should return false for different attributes', function(){
             expect(xml_helpers.equalNodes(usesNetworkOne, usesReceive)).toBe(false);
         });
 
-        it('should distinguish between text', function(){
+        it('Test 005 : should distinguish between text', function(){
             expect(xml_helpers.equalNodes(helloTagOne, goodbyeTag)).toBe(false);
         });
 
-        it('should ignore whitespace in text', function(){
+        it('Test 006 : should ignore whitespace in text', function(){
             expect(xml_helpers.equalNodes(helloTagOne, helloTagTwo)).toBe(true);
         });
 
         describe('should compare children', function(){
-            it('by child quantity', function(){
+            it('Test 007: by child quantity', function(){
                 var one = et.XML('<i><b>o</b></i>'),
                     two = et.XML('<i><b>o</b><u></u></i>');
 
                 expect(xml_helpers.equalNodes(one, two)).toBe(false);
             });
 
-            it('by child equality', function(){
+            it('Test 008 : by child equality', function(){
                 var one = et.XML('<i><b>o</b></i>'),
                     two = et.XML('<i><u></u></i>'),
                     uno = et.XML('<i>\n<b>o</b>\n</i>');
@@ -107,22 +107,22 @@ describe('xml-helpers', function(){
             config_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/res/xml/config.xml'));
         });
 
-        it('should remove any children that match the specified selector', function() {
+        it('Test 009 : should remove any children that match the specified selector', function() {
             var children = config_xml.findall('plugins/plugin');
             xml_helpers.pruneXML(config_xml, children, 'plugins');
             expect(config_xml.find('plugins').getchildren().length).toEqual(0);
         });
-        it('should do nothing if the children cannot be found', function() {
+        it('Test 010 : should do nothing if the children cannot be found', function() {
             var children = [title];
             xml_helpers.pruneXML(config_xml, children, 'plugins');
             expect(config_xml.find('plugins').getchildren().length).toEqual(17);
         });
-        it('should be able to handle absolute selectors', function() {
+        it('Test 011 : should be able to handle absolute selectors', function() {
             var children = config_xml.findall('plugins/plugin');
             xml_helpers.pruneXML(config_xml, children, '/cordova/plugins');
             expect(config_xml.find('plugins').getchildren().length).toEqual(0);
         });
-        it('should be able to handle absolute selectors with wildcards', function() {
+        it('Test 012 : should be able to handle absolute selectors with wildcards', function() {
             var children = config_xml.findall('plugins/plugin');
             xml_helpers.pruneXML(config_xml, children, '/*/plugins');
             expect(config_xml.find('plugins').getchildren().length).toEqual(0);
@@ -135,7 +135,7 @@ describe('xml-helpers', function(){
         beforeEach(function() {
             android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
         });
-        it('should restore attributes at the specified selector', function() {
+        it('Test 013 : should restore attributes at the specified selector', function() {
             var xml = {
                 oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
             };
@@ -144,7 +144,7 @@ describe('xml-helpers', function(){
             expect(Object.keys(applicationAttr).length).toEqual(3);
             expect(applicationAttr['android:debuggable']).toEqual('false');
         });
-        it('should do nothing if the old attributes cannot be found', function() {
+        it('Test 014 : should do nothing if the old attributes cannot be found', function() {
             var xml = {
                 notOldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
             };
@@ -153,7 +153,7 @@ describe('xml-helpers', function(){
             expect(Object.keys(applicationAttr).length).toEqual(3);
             expect(applicationAttr['android:debuggable']).toEqual('true');
         });
-        it('should be able to handle absolute selectors', function() {
+        it('Test 015 : should be able to handle absolute selectors', function() {
             var xml = {
                 oldAttrib: {'android:icon': '@drawable/icon', 'android:label': '@string/app_name', 'android:debuggable': 'false'}
             };
@@ -162,7 +162,7 @@ describe('xml-helpers', function(){
             expect(Object.keys(applicationAttr).length).toEqual(3);
             expect(applicationAttr['android:debuggable']).toEqual('false');
         });
-        it('should be able to handle absolute selectors with wildcards', function() {
+        it('Test 016 : should be able to handle absolute selectors with wildcards', function() {
             var xml = {
                 oldAttrib: {'android:name': 'ChildApp', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
             };
@@ -171,7 +171,7 @@ describe('xml-helpers', function(){
             expect(Object.keys(activityAttr).length).toEqual(4);
             expect(activityAttr['android:enabled']).toEqual('true');
         });
-        it('should be able to handle xpath selectors', function() {
+        it('Test 017 : should be able to handle xpath selectors', function() {
             var xml = {
                 oldAttrib: {'android:name': 'com.phonegap.DroidGap', 'android:label': '@string/app_name', 'android:configChanges': 'orientation|keyboardHidden', 'android:enabled': 'true'}
             };
@@ -190,17 +190,17 @@ describe('xml-helpers', function(){
             plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/ChildBrowser/plugin.xml'));
         });
 
-        it('should add children to the specified selector', function() {
+        it('Test 018 : should add children to the specified selector', function() {
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, 'plugins');
             expect(config_xml.find('plugins').getchildren().length).toEqual(19);
         });
-        it('should be able to handle absolute selectors', function() {
+        it('Test 019 : should be able to handle absolute selectors', function() {
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, '/cordova');
             expect(config_xml.findall('access').length).toEqual(3);
         });
-        it('should be able to handle absolute selectors with wildcards', function() {
+        it('Test 020 : should be able to handle absolute selectors with wildcards', function() {
             var children = plugin_xml.find('config-file').getchildren();
             xml_helpers.graftXML(config_xml, children, '/*');
             expect(config_xml.findall('access').length).toEqual(3);
@@ -214,7 +214,7 @@ describe('xml-helpers', function(){
             plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
             android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
         });
-        it ('should merge attributes at specified selector', function() {
+        it ('Test 021 : should merge attributes at specified selector', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
             xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
             var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
@@ -222,7 +222,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
         });
-        it ('should be able to handle absolute selectors', function() {
+        it ('Test 022 : should be able to handle absolute selectors', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
             xml_helpers.graftXMLMerge(android_manifest_xml, children, '/manifest/application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
             var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
@@ -230,7 +230,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
         });
-        it ('should be able to handle absolute selectors with wildcards', function() {
+        it ('Test 023 : should be able to handle absolute selectors with wildcards', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
             xml_helpers.graftXMLMerge(android_manifest_xml, children, '/*/*/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
             var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
@@ -238,7 +238,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).toEqual('keyboardHidden');
         });
-        it ('should be able to handle xpath selectors', function() {
+        it ('Test 024 : should be able to handle xpath selectors', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"merge\"]').getchildren();
             xml_helpers.graftXMLMerge(android_manifest_xml, children, 'application/activity[@android:name=\"com.phonegap.DroidGap\"]', {});
             var activityAttr = android_manifest_xml.find('application/activity[@android:name=\"com.phonegap.DroidGap\"]').attrib;
@@ -255,7 +255,7 @@ describe('xml-helpers', function(){
             plugin_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/plugins/org.test.editconfigtest/plugin.xml'));
             android_manifest_xml = xml_helpers.parseElementtreeSync(path.join(__dirname, '../fixtures/projects/android/AndroidManifest.xml'));
         });
-        it ('should overwrite attributes at specified selector', function() {
+        it ('Test 025 : should overwrite attributes at specified selector', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
             xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity', {});
             var activityAttr = android_manifest_xml.find('application/activity').attrib;
@@ -263,7 +263,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).not.toBeDefined();
         });
-        it ('should be able to handle absolute selectors', function() {
+        it ('Test 026 : should be able to handle absolute selectors', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
             xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/manifest/application/activity', {});
             var activityAttr = android_manifest_xml.find('application/activity').attrib;
@@ -271,7 +271,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).not.toBeDefined();
         });
-        it ('should be able to handle absolute selectors with wildcards', function() {
+        it ('Test 027 : should be able to handle absolute selectors with wildcards', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
             xml_helpers.graftXMLOverwrite(android_manifest_xml, children, '/*/*/activity', {});
             var activityAttr = android_manifest_xml.find('application/activity').attrib;
@@ -279,7 +279,7 @@ describe('xml-helpers', function(){
             expect(activityAttr['android:enabled']).toEqual('true');
             expect(activityAttr['android:configChanges']).not.toBeDefined();
         });
-        it ('should be able to handle xpath selectors', function() {
+        it ('Test 028 : should be able to handle xpath selectors', function() {
             var children = plugin_xml.find('platform/edit-config[@mode=\"overwrite\"]').getchildren();
             xml_helpers.graftXMLOverwrite(android_manifest_xml, children, 'application/activity[@android:name=\"ChildApp\"]', {});
             var activityAttr = android_manifest_xml.find('application/activity').attrib;
@@ -294,7 +294,8 @@ describe('xml-helpers', function(){
         beforeEach(function() {
             dstXml = et.XML(TEST_XML);
         });
-        it('should merge attributes and text of the root element without clobbering', function () {
+
+        it('Test 029 : should merge attributes and text of the root element without clobbering', function () {
             var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
             xml_helpers.mergeXml(testXml, dstXml);
             expect(dstXml.attrib.foo).toEqual('bar');
@@ -302,7 +303,7 @@ describe('xml-helpers', function(){
             expect(dstXml.text).not.toEqual('TEXT');
         });
 
-        it('should merge attributes and text of the root element with clobbering', function () {
+        it('Test 030 : should merge attributes and text of the root element with clobbering', function () {
             var testXml = et.XML('<widget foo="bar" id="NOTANID">TEXT</widget>');
             xml_helpers.mergeXml(testXml, dstXml, 'foo', true);
             expect(dstXml.attrib.foo).toEqual('bar');
@@ -310,7 +311,16 @@ describe('xml-helpers', function(){
             expect(dstXml.text).toEqual('TEXT');
         });
 
-        it('should not merge platform tags with the wrong platform', function () {
+        it('Test 031 : should handle attributes values with quotes correctly', function () {
+            var testXml = et.XML('<widget><quote foo="some \'quoted\' string" bar="another &quot;quoted&quot; string" baz="&quot;mixed&quot; \'quotes\'" /></widget>');
+            xml_helpers.mergeXml(testXml, dstXml);
+            expect(dstXml.find('quote')).toBeDefined();
+            expect(dstXml.find('quote').attrib.foo).toEqual('some \'quoted\' string');
+            expect(dstXml.find('quote').attrib.bar).toEqual('another "quoted" string');
+            expect(dstXml.find('quote').attrib.baz).toEqual('"mixed" \'quotes\'');
+        });
+
+        it('Test 032 : should not merge platform tags with the wrong platform', function () {
             var testXml = et.XML('<widget><platform name="bar"><testElement testAttrib="value">testTEXT</testElement></platform></widget>'),
                 origCfg = et.tostring(dstXml);
 
@@ -318,7 +328,7 @@ describe('xml-helpers', function(){
             expect(et.tostring(dstXml)).toEqual(origCfg);
         });
 
-        it('should merge platform tags with the correct platform', function () {
+        it('Test 033 : should merge platform tags with the correct platform', function () {
             var testXml = et.XML('<widget><platform name="bar"><testElement testAttrib="value">testTEXT</testElement></platform></widget>'),
                 origCfg = et.tostring(dstXml);
 
@@ -330,7 +340,7 @@ describe('xml-helpers', function(){
             expect(testElement.text).toEqual('testTEXT');
         });
 
-        it('should merge singleton children without clobber', function () {
+        it('Test 034 : should merge singleton children without clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml);
@@ -343,7 +353,7 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toContain('Apache Cordova Team');
         });
 
-        it('should merge singleton name without clobber', function () {
+        it('Test 035 : should merge singleton name without clobber', function () {
             var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml);
@@ -353,7 +363,7 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toContain('Hello Cordova');
         });
 
-        it('should clobber singleton children with clobber', function () {
+        it('Test 036 : should clobber singleton children with clobber', function () {
             var testXml = et.XML('<widget><author testAttrib="value" href="http://www.nowhere.com">SUPER_AUTHOR</author></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -366,7 +376,7 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toEqual('SUPER_AUTHOR');
         });
 
-        it('should merge singleton name with clobber', function () {
+        it('Test 037 : should merge singleton name with clobber', function () {
             var testXml = et.XML('<widget><name>SUPER_NAME</name></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -376,7 +386,7 @@ describe('xml-helpers', function(){
             expect(testElements[0].text).toContain('SUPER_NAME');
         });
 
-        it('should append non singelton children', function () {
+        it('Test 038 : should append non singelton children', function () {
             var testXml = et.XML('<widget><preference num="1"/> <preference num="2"/></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -384,7 +394,7 @@ describe('xml-helpers', function(){
             expect(testElements.length).toEqual(4);
         });
 
-        it('should handle namespaced elements', function () {
+        it('Test 039 : should handle namespaced elements', function () {
             var testXml = et.XML('<widget><foo:bar testAttrib="value">testText</foo:bar></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, 'foo', true);
@@ -394,7 +404,7 @@ describe('xml-helpers', function(){
             expect(testElement.text).toEqual('testText');
         });
 
-        it('should not append duplicate non singelton children', function () {
+        it('Test 040 : should not append duplicate non singelton children', function () {
             var testXml = et.XML('<widget><preference name="fullscreen" value="true"/></widget>');
 
             xml_helpers.mergeXml(testXml, dstXml, '', true);
@@ -402,7 +412,7 @@ describe('xml-helpers', function(){
             expect(testElements.length).toEqual(2);
         });
 
-        it('should not skip partial duplicate non singelton children', function () {
+        it('Test 041 : should not skip partial duplicate non singelton children', function () {
             //remove access tags from dstXML
             var testElements = dstXml.findall('access');
             for(var i = 0; i < testElements.length; i++) {
@@ -423,7 +433,7 @@ describe('xml-helpers', function(){
 
         });
 
-        it('should remove duplicate preferences (by name attribute value)', function () {
+        it('Test 042 : should remove duplicate preferences (by name attribute value)', function () {
             var testXml = et.XML(
                 '<?xml version="1.0" encoding="UTF-8"?>\n' +
                 '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
@@ -444,7 +454,7 @@ describe('xml-helpers', function(){
             expect(testElements.length).toEqual(1);
         });
 
-        it('should merge preferences, with platform preferences written last', function () {
+        it('Test 043 : should merge preferences, with platform preferences written last', function () {
             var testXml = et.XML(
                 '<?xml version="1.0" encoding="UTF-8"?>\n' +
                 '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +

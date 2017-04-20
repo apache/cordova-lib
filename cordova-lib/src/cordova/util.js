@@ -38,11 +38,22 @@ if (!global_config_path) {
 var origCwd = null;
 
 var lib_path = path.join(global_config_path, 'lib');
-shell.mkdir('-p', lib_path);
+
 
 exports.binname = 'cordova';
 exports.globalConfig = global_config_path;
-exports.libDirectory = lib_path;
+
+// defer defining libDirectory on exports so we don't create it if
+// someone simply requires this module
+Object.defineProperty(exports,'libDirectory', {
+        configurable: true,
+        get: function () {
+            shell.mkdir('-p', lib_path);
+            exports.libDirectory = lib_path;
+        return lib_path;
+    }
+});
+
 addModuleProperty(module, 'plugin_parser', './plugin_parser');
 
 exports.isCordova = isCordova;
@@ -64,6 +75,14 @@ exports.isUrl = isUrl;
 exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
+exports.requireNoCache = requireNoCache;
+
+function requireNoCache(pkgJsonPath) {
+    delete require.cache[require.resolve(pkgJsonPath)];
+    var returnVal = require(pkgJsonPath);
+    delete require.cache[require.resolve(pkgJsonPath)];
+    return returnVal;
+}
 
 function isUrl(value) {
     var u = value && url.parse(value);
@@ -123,7 +142,7 @@ function isCordova(dir) {
 
 // Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
 function cdProjectRoot() {
-    var projectRoot = this.isCordova();
+    var projectRoot = convertToRealPathSafe(this.isCordova());
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
     }
@@ -170,7 +189,7 @@ function deleteSvnFolders(dir) {
     var contents = fs.readdirSync(dir);
     contents.forEach(function(entry) {
         var fullpath = path.join(dir, entry);
-        if (fs.statSync(fullpath).isDirectory()) {
+        if (isDirectory(fullpath)) {
             if (entry == '.svn') {
                 shell.rm('-rf', fullpath);
             } else module.exports.deleteSvnFolders(fullpath);
@@ -179,15 +198,16 @@ function deleteSvnFolders(dir) {
 }
 
 function listPlatforms(project_dir) {
-    var core_platforms = require('../platforms/platforms');
     var platforms_dir = path.join(project_dir, 'platforms');
     if ( !fs.existsSync(platforms_dir)) {
         return [];
     }
-    var subdirs = fs.readdirSync(platforms_dir);
-    return subdirs.filter(function(p) {
-        return Object.keys(core_platforms).indexOf(p) > -1;
+    // get subdirs (that are actually dirs, and not files)
+    var subdirs = fs.readdirSync(platforms_dir)
+    .filter(function(file) {
+        return isDirectory(path.join(platforms_dir, file));
     });
+    return subdirs;
 }
 
 function getInstalledPlatformsWithVersions(project_dir) {
@@ -209,13 +229,11 @@ function getInstalledPlatformsWithVersions(project_dir) {
 
 // list the directories in the path, ignoring any files
 function findPlugins(pluginPath) {
-    var plugins = [],
-        stats;
+    var plugins = [];
 
     if (fs.existsSync(pluginPath)) {
         plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
-            stats = fs.statSync(path.join(pluginPath, fileName));
-            return fileName != '.svn' && fileName != 'CVS' && stats.isDirectory();
+            return fileName != '.svn' && fileName != 'CVS' && isDirectory(path.join(pluginPath, fileName));
         });
     }
 
@@ -325,6 +343,12 @@ function ensurePlatformOptionsCompatible (platformOptions) {
     return opts;
 }
 
+/**
+ * Checks to see if the argument is a directory
+ * 
+ * @param {string} dir - string representing path of directory
+ * @return {boolean}
+ */
 function isDirectory(dir) {
     try {
         return fs.lstatSync(dir).isDirectory();
@@ -372,6 +396,11 @@ function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
  * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
  */
 function getLatestMatchingNpmVersion(module_name, version) {
+    if (!version) {
+        // If no version specified, get the latest
+        return getLatestNpmVersion(module_name);
+    }
+
     var validVersion = semver.valid(version, /* loose */ true);
     if (validVersion) {
         // This method is really intended to work with ranges, so if a version rather than a range is specified, we just
@@ -403,6 +432,23 @@ function getAvailableNpmVersions(module_name) {
             //     {'<version>': {versions: ['1.2.3', '1.2.4', ...]}}
             // (where <version> is the latest version)
             return result[Object.keys(result)[0]].versions;
+        });
+    });
+}
+
+/**
+ * Returns a promise for the latest version available for the specified npm module.
+ * @param {string} module_name - npm module name.
+ * @returns {Promise} Promise for an array of versions.
+ */
+function getLatestNpmVersion(module_name) {
+    var npm = require('npm');
+    return Q.nfcall(npm.load).then(function () {
+        return Q.ninvoke(npm.commands, 'view', [module_name, 'version'], /* silent = */ true).then(function (result) {
+            // result is an object in the form:
+            //     {'<version>': {version: '<version>'}}
+            // (where <version> is the latest version)
+            return Object.keys(result)[0];
         });
     });
 }

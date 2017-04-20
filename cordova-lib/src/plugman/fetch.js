@@ -30,11 +30,11 @@ var shell   = require('shelljs'),
     path    = require('path'),
     Q       = require('q'),
     registry = require('./registry/registry'),
-    pluginMappernto = require('cordova-registry-mapper').newToOld,
-    pluginMapperotn = require('cordova-registry-mapper').oldToNew,
     pluginSpec      = require('../cordova/plugin_spec_parser'),
     fetch = require('cordova-fetch'),
     cordovaUtil = require('../cordova/util');
+
+var projectRoot;
 
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
@@ -68,8 +68,12 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             if (result[2])
                 options.subdir = result[2];
             //if --fetch was used, throw error for subdirectories
-            if (result[2] && options.fetch) {
-                return Q.reject(new CordovaError('--fetch does not support subdirectories'));
+
+            if (options.subdir && options.subdir !== '.') {
+                events.emit('warn', 'support for subdirectories is deprecated and will be removed in Cordova@7');
+                if (options.fetch) {
+                    return Q.reject(new CordovaError('--fetch does not support subdirectories'));
+                }
             }
 
             // Recurse and exit with the new options and truncated URL.
@@ -82,7 +86,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             }
         }
     }
-
     return Q.when().then(function() {
         // If it looks like a network URL, git clone it
         // skip git cloning if user passed in --fetch flag
@@ -113,17 +116,38 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         }
         // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
-
         return Q.when().then(function() {
+
             if (fs.existsSync(plugin_dir)) {
-                return {
-                    pinfo: pluginInfoProvider.get(plugin_dir),
-                    fetchJsonSource: {
-                        type: 'local',
-                        path: plugin_dir
+
+                if (options.fetch) {
+                    projectRoot = path.join(plugins_dir, '..');
+                    //Plugman projects need to go up two directories to reach project root. 
+                    //Plugman projects have an options.projectRoot variable
+                    if(options.projectRoot) {
+                        projectRoot = options.projectRoot;
                     }
-                };
+                    return fetch(path.resolve(plugin_dir), projectRoot, options)
+                    .then(function(directory) {
+                        return {
+                            pinfo: pluginInfoProvider.get(directory),
+                            fetchJsonSource: {
+                                type: 'local',
+                                path: directory
+                            }
+                        };
+                    });
+                } else {
+                    return {
+                        pinfo: pluginInfoProvider.get(plugin_dir),
+                        fetchJsonSource: {
+                            type: 'local',
+                            path: plugin_dir
+                        }
+                    };
+                }
             }
+
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
@@ -144,13 +168,6 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             }
             // If not found in local search path, fetch from the registry.
             var parsedSpec = pluginSpec.parse(plugin_src);
-            var newID = parsedSpec.scope ? null : pluginMapperotn[parsedSpec.id];
-            if(newID) {
-                plugin_src = newID;
-                if (parsedSpec.version) {
-                    plugin_src += '@' + parsedSpec.version;
-                }
-            }
             var P, skipCopyingPlugin;
             plugin_dir = path.join(plugins_dir, parsedSpec.id);
             // if the plugin has already been fetched, use it.
@@ -158,30 +175,19 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                 P = Q(plugin_dir);
                 skipCopyingPlugin = true;
             } else {
-                // if the plugin alias has already been fetched, use it.
-                var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || newID;
-                if (alias && fs.existsSync(path.join(plugins_dir, alias))) {
-                    events.emit('warn', 'Found '+alias+' is already fetched. Skipped fetching ' + parsedSpec.id);
-                    P = Q(path.join(plugins_dir, alias));
-                    skipCopyingPlugin = true;
+                //use cordova-fetch if --fetch was passed in
+                if(options.fetch) {
+                    projectRoot = path.join(plugins_dir, '..');
+                    //Plugman projects need to go up two directories to reach project root. 
+                    //Plugman projects have an options.projectRoot variable
+                    if(options.projectRoot) {
+                        projectRoot = options.projectRoot;
+                    }
+                    P = fetch(plugin_src, projectRoot, options); 
                 } else {
-                    if (newID) {
-                        events.emit('warn', 'Notice: ' + parsedSpec.id + ' has been automatically converted to ' + newID + ' to be fetched from npm. This is due to our old plugins registry shutting down.');
-                    }
-                    //use cordova-fetch if --fetch was passed in
-                    if(options.fetch) {
-                        var projectRoot = path.join(plugins_dir, '..');
-                        //Plugman projects need to go up two directories to reach project root. 
-                        //Plugman projects have an options.projectRoot variable
-                        if(options.projectRoot) {
-                            projectRoot = options.projectRoot;
-                        }
-                        P = fetch(plugin_src, projectRoot, options); 
-                    } else {
-                        P = registry.fetch([plugin_src]);
-                    }
-                    skipCopyingPlugin = false;
+                    P = registry.fetch([plugin_src]);
                 }
+                skipCopyingPlugin = false;
             }
             return P
             .fail(function (error) {
@@ -231,11 +237,9 @@ function checkID(expectedIdAndVersion, pinfo) {
     var parsedSpec = pluginSpec.parse(expectedIdAndVersion);
 
     if (parsedSpec.id != pinfo.id) {
-        var alias = parsedSpec.scope ? null : pluginMappernto[parsedSpec.id] || pluginMapperotn[parsedSpec.id];
-        if (alias !== pinfo.id) {
-            throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
-        }
+        throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
     }
+    
     if (parsedSpec.version && !semver.satisfies(pinfo.version, parsedSpec.version)) {
         throw new Error('Expected plugin ' + pinfo.id + ' to satisfy version "' + parsedSpec.version + '" but got "' + pinfo.version + '".');
     }
@@ -251,8 +255,8 @@ function loadLocalPlugins(searchpath, pluginInfoProvider) {
         if ( !underscore.isEqual(localPlugins.searchpath, searchpath) ) {
             var msg =
                 'loadLocalPlugins called twice with different search paths.' +
-                'Support for this is not implemented.';
-            throw new Error(msg);
+                'Support for this is not implemented.  Using previously cached path.';
+            events.emit('warn', msg);
         }
         return;
     }
@@ -314,23 +318,10 @@ function copyPlugin(pinfo, plugins_dir, link) {
 
     var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
-    var altDest;
-
-    //check if alternative id already exists in plugins directory
-    if(pluginMapperotn[pinfo.id]) {
-        altDest = path.join(plugins_dir, pluginMapperotn[pinfo.id]);
-    } else if(pluginMappernto[pinfo.id]) {
-        altDest = path.join(plugins_dir, pluginMappernto[pinfo.id]);
-    }
-
-    if(fs.existsSync(altDest)) {
-        events.emit('log', pinfo.id + '" will not be added because its alternate id "' + altDest + '" is already present.');
-        return altDest;
-    }
 
     shell.rm('-rf', dest);
 
-    if(!link && dest.indexOf(path.resolve(plugin_dir)) === 0) {
+    if(!link && dest.indexOf(path.resolve(plugin_dir)+path.sep) === 0) {
 
         if(/^win/.test(process.platform)) {
             /*

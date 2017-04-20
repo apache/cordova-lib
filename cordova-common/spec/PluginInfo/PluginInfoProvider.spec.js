@@ -24,7 +24,7 @@ var pluginsDir = path.join(__dirname, '../fixtures/plugins');
 
 describe('PluginInfoProvider', function () {
     describe('getAllWithinSearchPath', function () {
-        it('should load all plugins in a dir', function () {
+        it('Test 001 : should load all plugins in a dir', function () {
             var pluginInfoProvider = new PluginInfoProvider();
             var plugins = pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
             expect(plugins.length).not.toBe(0);

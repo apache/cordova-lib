@@ -1,0 +1,22 @@
+{
+    "name": "testbase",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "cordova-android": "^3.1.0",
+        "cordova-browser": "^4.1.0"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "cordova": {
+        "platforms": [
+            "android",
+            "browser"
+        ]
+    }
+}

@@ -23,7 +23,7 @@ var cordova = require('../src/cordova/cordova'),
 describe('retrieval of project metadata', function () {
     var projectRoot = path.resolve(__dirname, 'Projects/ProjectMetadata');
 
-    it('retrieve platforms saved in config.xml', function (done) {
+    it('Test 001 : retrieve platforms saved in config.xml', function (done) {
         var androidVersion = '3.7.1';
         var browserSrc = 'https://github.com/apache/cordova-browser.git';
 
@@ -45,7 +45,7 @@ describe('retrieval of project metadata', function () {
             }).finally(done);
     });
 
-    it('retrieve plugins saved in config.xml', function (done) {
+    it('Test 002 : retrieve plugins saved in config.xml', function (done) {
         var deviceId = 'org.apache.cordova.device';
         var deviceVersion = '0.3.0';
 

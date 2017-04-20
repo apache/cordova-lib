@@ -29,11 +29,11 @@ describe('webos project parser', function() {
     var proj = path.join('some', 'path');
     var exists, exec, custom;
     beforeEach(function() {
-        exists = spyOn(fs, 'existsSync').andReturn(true);
-        exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
+        exists = spyOn(fs, 'existsSync').and.returnValue(true);
+        exec = spyOn(shell, 'exec').and.callFake(function(cmd, opts, cb) {
             cb(0, '');
         });
-        custom = spyOn(config, 'has_custom_path').andReturn(false);
+        custom = spyOn(config, 'has_custom_path').and.returnValue(false);
     });
 
     describe('constructions', function() {
@@ -52,9 +52,9 @@ describe('webos project parser', function() {
             p = new webosParser(wos_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
             write = spyOn(fs, 'writeFileSync');
-            read = spyOn(fs, 'readFileSync').andReturn('');
+            read = spyOn(fs, 'readFileSync').and.returnValue('');
         });
 
         describe('update_from_config method', function() {
