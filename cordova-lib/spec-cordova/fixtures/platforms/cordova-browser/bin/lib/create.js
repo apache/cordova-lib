@@ -46,8 +46,6 @@ module.exports.createProject = function(project_path,package_name,project_name){
         process.exit(2);
     }
 
-    // console.log('Creating Browser project. Path: ' + path.relative(process.cwd(),project_path));
-
     //copy template directory
     shjs.cp('-r', path.join(ROOT, 'bin', 'templates', 'project', 'www'), project_path);
 
