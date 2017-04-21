@@ -117,10 +117,13 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
         // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Q.when().then(function() {
-
+            // check if it is a local path
             if (fs.existsSync(plugin_dir)) {
-
                 if (options.fetch) {
+                    if (!fs.existsSync(path.join(plugin_dir, 'package.json'))) {
+                        return Q.reject(new CordovaError('Invalid Plugin! '+ plugin_dir + ' needs a valid package.json'));
+                    }
+
                     projectRoot = path.join(plugins_dir, '..');
                     //Plugman projects need to go up two directories to reach project root. 
                     //Plugman projects have an options.projectRoot variable
@@ -136,8 +139,12 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                                 path: directory
                             }
                         };
+                    }).fail(function(error) {
+                        //something went wrong with cordova-fetch
+                        return Q.reject(new CordovaError(error.message));
                     });
                 } else {
+                    //nofetch
                     return {
                         pinfo: pluginInfoProvider.get(plugin_dir),
                         fetchJsonSource: {

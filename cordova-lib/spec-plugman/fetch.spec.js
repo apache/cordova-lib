@@ -28,6 +28,7 @@ var rewire  = require('rewire'),
     metadata = require('../src/plugman/util/metadata'),
     temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
     test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
+    test_pkgjson_plugin = path.join(__dirname, 'plugins', 'pkgjson-test-plugin'),
     test_plugin_searchpath = path.join(test_plugin, '..'),
     //test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
     //test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
@@ -61,14 +62,24 @@ describe('fetch', function() {
     });
 */
     describe('local plugins', function() {
-        var rm, sym, cp, save_metadata;
+        var rm, sym, cp, save_metadata, revertLocal, revertFetch, fetchCalls = 0;
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             cp = spyOn(shell, 'cp').and.callThrough();
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
-            fetch.__set__('localPlugins', null);
+            revertLocal = fetch.__set__('localPlugins', null);
+            revertFetch = fetch.__set__('fetch', function(pluginDir) {
+                fetchCalls ++;
+                return Q(pluginDir);
+            });
+        });
+
+        afterEach(function(){
+            revertLocal();
+            revertFetch();
+            fetchCalls = 0;
         });
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function(done) {
@@ -113,6 +124,22 @@ describe('fetch', function() {
             var exp_id = test_plugin_id + '@' + test_plugin_version;
             wrapper(fetch(test_plugin, temp, { expected_id: exp_id}), done, function() {
                 expect(1).toBe(1);
+            });
+        });
+        it('Test 027 : should copy locally-available plugin to plugins directory', function(done) {
+            wrapper(fetch(test_pkgjson_plugin, temp, {fetch:true}), done, function() {
+                expect(cp).toHaveBeenCalledWith('-R', path.join(test_pkgjson_plugin, '*'), path.join(temp, 'pkgjson-test-plugin'));
+                expect(fetchCalls).toBe(1);
+            });
+        });
+        it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function(done) {
+            fetch(test_plugin, temp, {fetch:true})
+            .then(function() {
+                expect(false).toBe(true);
+            }).fail(function(err) { 
+                expect(err).toBeDefined();
+                expect(err.message).toContain('needs a valid package.json');
+                done();
             });
         });
     });
