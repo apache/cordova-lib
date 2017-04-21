@@ -269,9 +269,11 @@ ConfigParser.prototype = {
     /**
      * Returns all resource-files for a specific platform.
      * @param  {string} platform Platform name
+     * @param  {boolean} includeGlobal Whether to return resource-files at the
+     *                                 root level.
      * @return {Resource[]}      Array of resource file objects.
      */
-    getFileResources: function(platform) {
+    getFileResources: function(platform, includeGlobal) {
         var fileResources = [];
 
         if (platform) { // platform specific resources
@@ -284,6 +286,19 @@ ConfigParser.prototype = {
                     deviceTarget: tag.attrib['device-target'],
                     arch: tag.attrib.arch
                 };
+            });
+        }
+
+        if (includeGlobal) {
+            this.doc.findall('resource-file').forEach(function(tag) {
+                fileResources.push({
+                    platform: platform || null,
+                    src: tag.attrib.src,
+                    target: tag.attrib.target,
+                    versions: tag.attrib.versions,
+                    deviceTarget: tag.attrib['device-target'],
+                    arch: tag.attrib.arch
+                });
             });
         }
 

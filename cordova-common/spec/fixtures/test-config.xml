@@ -106,6 +106,7 @@
         <icon src="res/windows/logo-small.scale-400_48.png" height="48" target="logo.png"/>
         <resource-file src="windowsconfig.json" target="windowsconfig.json" arch="x86" device-target="all" />
     </platform>
+    <resource-file src="top-level-file.txt" target="toplevel.txt" />
     <plugin name="org.apache.cordova.pluginwithvars">
         <variable name="var" value="varvalue" />
     </plugin>
