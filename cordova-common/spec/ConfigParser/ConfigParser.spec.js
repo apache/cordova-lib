@@ -313,6 +313,10 @@ describe('config.xml parser', function () {
                 expect(cfg.getFileResources('android').every(hasTargetPropertyDefined)).toBeTruthy();
                 expect(cfg.getFileResources('windows').every(hasArchPropertyDefined)).toBeTruthy();
             });
+
+            it('should find resources at the top level', function() {
+                expect(cfg.getFileResources('android', true).length).toBe(3);
+            });
         });
     });
 });
