@@ -57,7 +57,7 @@ function readDeps (test) {
     };
 }
 
-var name = package.name || basename;
+var name = package.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
 var version = package.version ||
