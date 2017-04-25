@@ -68,9 +68,9 @@ function getPlatformApi(platform, platformRootDir) {
             if (err && err.code === 'MODULE_NOT_FOUND') {
                 if (platforms[platform] && platforms[platform].apiCompatibleSince) {
                     events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-                        ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
+                        ' is deprecated. Upgrade to cordova-' + platform + '@' +
                         platforms[platform].apiCompatibleSince + ' or newer.');
-                } else if (platforms[platform] === undefined) {
+                } else if (platforms[platform] === undefined || !platforms[platform]) {
                     // throw error because polyfill doesn't support non core platforms 
                     throw new Error('The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. '+ platform +' not supported.');
                 }
@@ -81,7 +81,13 @@ function getPlatformApi(platform, platformRootDir) {
                 events.emit('warn', 'Error loading cordova-'+platform);
             }
 
-            PlatformApi = require('./PlatformApiPoly');
+            if (!PlatformApi && (platform !== 'ios' && platform !== 'windows' && platform !== 'android' && platform !== 'osx')) {
+                events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                    '". Using polyfill instead.');
+                PlatformApi = require('./PlatformApiPoly');
+            } else if (!PlatformApi) {
+                events.emit('warn', 'Your ' + platform + ' platform does not have Api.js');
+            }
         }
 
         platformApi = new PlatformApi(platform, platformRootDir, events);
