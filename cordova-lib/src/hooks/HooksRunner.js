@@ -178,7 +178,9 @@ function runScriptViaModuleLoader(script, context) {
     }
     var scriptFn = require(script.fullPath);
     context.scriptLocation = script.fullPath;
-    context.opts.plugin = script.plugin;
+    if(script.plugin) {
+        context.opts.plugin = script.plugin;
+    }
 
     // We can't run script if it is a plain Node script - it will run its commands when we require it.
     // This is not a desired case as we want to pass context, but added for compatibility.
