@@ -554,7 +554,11 @@ function installDependency(dep, install, options) {
                 version_required = '^' + dep.version;
             }
         }
-
+        //strip -dev from the installed plugin version so it properly passes
+        //semver.satisfies 
+        if(version_installed.includes('-dev')) {
+            version_installed = semver.inc(version_installed, 'patch');
+        }
         if (options.force || 
             semver.satisfies(version_installed, version_required, /*loose=*/true) || 
             version_required === null || 
