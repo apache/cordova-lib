@@ -190,6 +190,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
+
                 var PlatformApi = module.exports.getPlatformApi(platDetails.libDir, platform);
                 var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
