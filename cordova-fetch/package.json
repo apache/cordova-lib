@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "cordova-common": "2.0.2",
-    "dependency-ls": "^1.0.0",
+    "dependency-ls": "^1.1.0",
     "is-url": "^1.2.1",
     "q": "^1.4.1",
     "shelljs": "^0.7.0"
