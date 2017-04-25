@@ -556,11 +556,13 @@ function installDependency(dep, install, options) {
         }
         //strip -dev from the installed plugin version so it properly passes
         //semver.satisfies 
+        var stripped_version;
         if(version_installed.includes('-dev')) {
-            version_installed = semver.inc(version_installed, 'patch');
+            stripped_version = semver.inc(version_installed, 'patch');
         }
         if (options.force || 
-            semver.satisfies(version_installed, version_required, /*loose=*/true) || 
+            semver.satisfies(version_installed, version_required, /*loose=*/true) ||
+            semver.satisfies(stripped_version, version_required, /*loose=*/true) ||
             version_required === null || 
             version_required === undefined ||
             version_required === '' ) {
