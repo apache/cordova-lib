@@ -30,11 +30,11 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var knownPlatforms = require('../../src/platforms/platforms');
 var PlatformApiPoly = require('../../src/platforms/PlatformApiPoly');
 
-var PLATFORM = 'android';
-var PLATFORM_VERSION = '3.7.0';
+var PLATFORM = 'browser';
+var PLATFORM_VERSION = '4.1.0';
 var PLATFORM_LIB = '/some/platform/lib';
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
-var PLATFORM_ROOT = path.join(CORDOVA_ROOT, 'platforms/android');
+var PLATFORM_ROOT = path.join(CORDOVA_ROOT, 'platforms/browser');
 var DUMMY_PLUGIN = path.join(__dirname, '../fixtures/plugins/test');
 var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
