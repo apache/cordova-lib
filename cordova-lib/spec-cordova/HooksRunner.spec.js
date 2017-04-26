@@ -453,7 +453,8 @@ describe('HooksRunner', function() {
                             if(call.args[0] == 'before_plugin_uninstall' ||
                                 call.args[0] == 'before_plugin_install' ||
                                 call.args[0] == 'after_plugin_install') {
-                                if(call.args[1] && call.args[1].plugin) {
+                                if(call.args[1]) {
+                                    expect(call.args[1].plugin).toBeDefined();
                                     if(call.args[1].plugin.platform == 'android') {
                                         expect(JSON.stringify(androidPluginOpts) ===
                                             JSON.stringify(call.args[1])).toBe(true);
