@@ -41,7 +41,9 @@ var dummy_id = dummyPluginInfo.id;
 var valid_source = dummyPluginInfo.getSourceFiles('ios'),
     valid_headers = dummyPluginInfo.getHeaderFiles('ios'),
     valid_resources = dummyPluginInfo.getResourceFiles('ios'),
-    valid_custom_frameworks = dummyPluginInfo.getFrameworks('ios').filter(function(f) { return f.custom; });
+    valid_custom_frameworks = dummyPluginInfo.getFrameworks('ios').filter(function(f) { return f.custom && !(f.embed); }),
+    valid_embeddable_custom_frameworks = dummyPluginInfo.getFrameworks('ios').filter(function(f) { return f.custom && f.embed; }),
+    valid_weak_frameworks = dummyPluginInfo.getFrameworks('ios').filter(function(f) { return !(f.custom) && f.weak; });
 
 var faultyPluginInfo = new PluginInfo(faultyplugin);
 var faulty_id = faultyPluginInfo.id;
@@ -265,7 +267,16 @@ describe('ios project handler', function() {
                 var frameworks = copyArray(valid_custom_frameworks);
                 var spy = spyOn(proj_files.xcode, 'addFramework');
                 ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
-                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), {customFramework:true});
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/Custom.framework'), { customFramework: true, embed: false, link: true });
+
+                frameworks = copyArray(valid_embeddable_custom_frameworks);
+                ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith(path.normalize('SampleApp/Plugins/org.test.plugins.dummyplugin/CustomEmbeddable.framework'), { customFramework: true, embed: true, link: false });
+
+                frameworks = copyArray(valid_weak_frameworks);
+                ios['framework'].install(frameworks[0], dummyplugin, temp, dummy_id, null, proj_files);
+                expect(spy).toHaveBeenCalledWith('src/ios/libsqlite3.dylib', { customFramework: false, embed: false, link: true, weak: true });
+
             });
 
             // TODO: Add more tests to cover the cases:

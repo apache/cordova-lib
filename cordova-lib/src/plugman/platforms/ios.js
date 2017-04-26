@@ -178,7 +178,9 @@ module.exports = {
     'framework':{ // CB-5238 custom frameworks only
         install:function(obj, plugin_dir, project_dir, plugin_id, options, project) {
             var src = obj.src,
-                custom = obj.custom;
+                custom = !!(obj.custom), // convert to boolean (if truthy/falsy)
+                embed = !!(obj.embed), // convert to boolean (if truthy/falsy)
+                link = !embed; // either link or embed can be true, but not both. the other has to be false
 
             if (!custom) {
                 var keepFrameworks = keep_these_frameworks;
@@ -187,7 +189,7 @@ module.exports = {
                     keepFrameworks = keepFrameworks.concat(['CoreLocation.framework']);
                 }
                 if (keepFrameworks.indexOf(src) < 0) {
-                    project.xcode.addFramework(src, {weak: obj.weak});
+                    project.xcode.addFramework(src, { customFramework: false, embed: false, link: true, weak: obj.weak });
                     project.frameworks[src] = (project.frameworks[src] || 0) + 1;
                 }
                 return;
@@ -200,7 +202,7 @@ module.exports = {
             shell.mkdir('-p', path.dirname(targetDir));
             shell.cp('-R', srcFile, path.dirname(targetDir)); // frameworks are directories
             var project_relative = path.relative(project_dir, targetDir);
-            var pbxFile = project.xcode.addFramework(project_relative, {customFramework: true});
+            var pbxFile = project.xcode.addFramework(project_relative, { customFramework: true, embed: embed, link: link });
             if (pbxFile) {
                 project.xcode.addToPbxEmbedFrameworksBuildPhase(pbxFile);
             }
