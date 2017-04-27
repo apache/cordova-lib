@@ -180,7 +180,7 @@ describe('platform add', function() {
         spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
         spyOn(cordova, 'prepare').and.returnValue(Q());
         spyOn(platformMetadata, 'save').and.returnValue(true);
-        spyOn(platforms, 'getPlatformApiFunction').and.returnValue(PlatformApiMock);
+        spyOn(cordova_util, 'getPlatformApiFunction').and.returnValue(PlatformApiMock);
         //writes to package.json
         spyOn(fs, 'writeFileSync').and.callFake(function(dest, pkgJ) {
             pkgJson = JSON.parse(pkgJ);
@@ -230,7 +230,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -273,7 +273,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -313,7 +313,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -353,7 +353,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -393,7 +393,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -430,7 +430,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -470,7 +470,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(1);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(1);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(1);
             expect(cordova.prepare.calls.count()).toEqual(1);
             expect(prepare.preparePlatforms.calls.count()).toEqual(1);
             expect(platformMetadata.save.calls.count()).toEqual(1);
