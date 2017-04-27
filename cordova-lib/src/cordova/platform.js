@@ -190,8 +190,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-
-                var PlatformApi = platforms.getPlatformApiFunction(platDetails.libDir, platform);
+                var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                 var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
@@ -368,7 +367,7 @@ function platformFromName(name) {
 
 // Returns a Promise
 // Gets platform details from a directory
-function getPlatformDetailsFromDir(dir, platformIfKnown){
+function getPlatformDetailsFromDir(dir, platformIfKnown) {
     var libDir = path.resolve(dir);
     var platform;
     var version;
