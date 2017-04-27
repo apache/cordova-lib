@@ -1,0 +1,13 @@
+{
+    "spec_dir": "integration-tests",
+    "spec_files": [
+    	"**/*[sS]pec.js",
+    	"**/*[sS]pec.js"
+    ],
+    "helpers": [
+      "../spec-cordova/helpers.js",
+      "../spec-cordova/helper.js"
+    ],
+    "stopSpecOnExpectationFailure": false,
+    "random": false
+}

@@ -1,6 +1,6 @@
 {
   "name": "cordova-lib-test-plugin",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Empty plugin used as part of the tests in cordova-lib",
   "cordova": {
     "id": "cordova-lib-test-plugin",
@@ -18,10 +18,10 @@
         "cordova-android": "<2.1.0"
       },
       "1.1.2": {
-        "cordova-android": ">=2.1.0 <4.0.0"
+        "cordova-android": ">=2.1.0 <7.0.0"
       },
       "1.3.0": {
-        "cordova-android": "4.0.0"
+        "cordova-android": "7.0.0"
       }
     }
   }

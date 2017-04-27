@@ -97,7 +97,8 @@ describe('platform', function () {
 
 describe('platform add', function() {
     
-    var projectRoot = 'some/path',
+    var projectRoot = path.join('some', 'path'),
+        windowsPath = path.join(projectRoot,'cordova-windows'),
         platrevert,
         configParserRevert,
         pkgJson = {},
@@ -180,7 +181,7 @@ describe('platform add', function() {
         spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
         spyOn(cordova, 'prepare').and.returnValue(Q());
         spyOn(platformMetadata, 'save').and.returnValue(true);
-        spyOn(platforms, 'getPlatformApiFunction').and.returnValue(PlatformApiMock);
+        spyOn(cordova_util, 'getPlatformApiFunction').and.returnValue(PlatformApiMock);
         //writes to package.json
         spyOn(fs, 'writeFileSync').and.callFake(function(dest, pkgJ) {
             pkgJson = JSON.parse(pkgJ);
@@ -189,7 +190,7 @@ describe('platform add', function() {
 
         //return true for windows local path target
         spyOn(cordova_util,'isDirectory').and.callFake(function(filePath) {
-            if(filePath.indexOf('some/path/cordova-windows') !== -1) {
+            if(filePath.indexOf(windowsPath) !== -1) {
                 return true;
             } else {
                 return false;
@@ -225,12 +226,12 @@ describe('platform add', function() {
         //require packge.json object
         spyOn(cordova_util, 'requireNoCache').and.returnValue(pkgJson);
         
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': true, 'save': true})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': true, 'save': true})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -253,7 +254,7 @@ describe('platform add', function() {
                 { name: 'cordova-ios',
                 spec: 'https://github.com/apache/cordova-ios' },
                 { name: 'cordova-windows',
-                spec: '../some/path/cordova-windows' },
+                spec: windowsPath },
                 { name: 'atari', spec: '~1.0.0' } ]);
         }).fail(function(e) {
             expect(e).toBeUndefined();
@@ -268,12 +269,12 @@ describe('platform add', function() {
         //require packge.json object
         spyOn(cordova_util, 'requireNoCache');
  
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': true, 'save': true})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': true, 'save': true})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -295,7 +296,7 @@ describe('platform add', function() {
                 { name: 'cordova-ios',
                 spec: 'https://github.com/apache/cordova-ios' },
                 { name: 'cordova-windows',
-                spec: '../some/path/cordova-windows' },
+                spec: windowsPath },
                 { name: 'atari', spec: '~1.0.0' } ]);
         }).fail(function(e) {
             expect(e).toBeUndefined();
@@ -308,12 +309,12 @@ describe('platform add', function() {
         //spy for package.json to not exist
         spyOn(fs,'existsSync').and.returnValue(false);
  
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': true, 'save': false})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': true, 'save': false})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -348,12 +349,12 @@ describe('platform add', function() {
         //require packge.json object
         spyOn(cordova_util, 'requireNoCache').and.returnValue(pkgJson);
         
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': false, 'save': true})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': false, 'save': true})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -373,7 +374,7 @@ describe('platform add', function() {
                 { name: 'cordova-ios',
                 spec: 'https://github.com/apache/cordova-ios' },
                 { name: 'cordova-windows',
-                spec: '../some/path/cordova-windows' },
+                spec: windowsPath },
                 { name: 'atari', spec: '~1.0.0' } ]);
         }).fail(function(e) {
             expect(e).toBeUndefined();
@@ -388,12 +389,12 @@ describe('platform add', function() {
         //require packge.json object
         spyOn(cordova_util, 'requireNoCache').and.returnValue(pkgJson);
         
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': false, 'save': true})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': false, 'save': true})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -412,7 +413,7 @@ describe('platform add', function() {
                 { name: 'cordova-ios',
                 spec: 'https://github.com/apache/cordova-ios' },
                 { name: 'cordova-windows',
-                spec: '../some/path/cordova-windows' },
+                spec: windowsPath },
                 { name: 'atari', spec: '~1.0.0' } ]);
         }).fail(function(e) {
             expect(e).toBeUndefined();
@@ -425,12 +426,12 @@ describe('platform add', function() {
         //spy for package.json to not exist
         spyOn(fs,'existsSync').and.returnValue(false);
  
-        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', '../some/path/cordova-windows', 'atari@1.0.0'], {'fetch': false, 'save': false})
+        platform.add(hooksRunnerMock, projectRoot, ['android', 'https://github.com/apache/cordova-ios', windowsPath, 'atari@1.0.0'], {'fetch': false, 'save': false})
         .then(function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(4);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(4);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(4);
             expect(cordova.prepare.calls.count()).toEqual(4);
             expect(prepare.preparePlatforms.calls.count()).toEqual(4);
             expect(platformMetadata.save.calls.count()).toEqual(4);
@@ -470,7 +471,7 @@ describe('platform add', function() {
             expect(cordova_util.projectConfig.calls.count()).toEqual(1);
             expect(shell.mkdir.calls.count()).toEqual(1);
             expect(platform.getPlatformDetailsFromDir.calls.count()).toEqual(1);
-            expect(platforms.getPlatformApiFunction.calls.count()).toEqual(1);
+            expect(cordova_util.getPlatformApiFunction.calls.count()).toEqual(1);
             expect(cordova.prepare.calls.count()).toEqual(1);
             expect(prepare.preparePlatforms.calls.count()).toEqual(1);
             expect(platformMetadata.save.calls.count()).toEqual(1);

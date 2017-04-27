@@ -52,14 +52,14 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
         delete process.env.PWD;
     });
 
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        shell.rm('-rf', project);
     });
 
     it('Test#001 : should successfully add and remove a plugin with save and correct spec', function(done) {
@@ -110,11 +110,10 @@ describe('plugin end-to-end', function() {
     it('Test#002 : should NOT add a plugin to package.json if --save is not used', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
-
         expect(pkgJsonPath).toExist();
 
-        // Add the camera plugin with --save.
-        return cordova.raw.plugin('add', 'cordova-plugin-camera', {'save':true})
+        // Add the geolocation plugin with --save.
+        return cordova.raw.plugin('add', 'cordova-plugin-geolocation', {'save':true, 'fetch':true})
         .then(function() {
             // Add a second plugin without save.
             return cordova.raw.plugin('add', pluginId);
@@ -123,7 +122,7 @@ describe('plugin end-to-end', function() {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Check the plugin add was successful for the first plugin that had --save.
             expect(pkgJson).not.toBeUndefined();
-            expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
+            expect(pkgJson.cordova.plugins['cordova-plugin-geolocation']).toBeDefined();
             // Expect that the second plugin is not added.
             expect(pkgJson.cordova.plugins[pluginId]).toBeUndefined();
         }).fail(function(err) {
@@ -226,11 +225,12 @@ describe('plugin end-to-end', function() {
     }, TIMEOUT);
     // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
     // and --save --fetch is called, use the pinned version or plugin pkg.json version.
-    it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
+    fit('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
         var iosPlatform = 'ios';
         var iosVersion;
         var cwd = process.cwd();
         var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
+        var iosJsonPath = path.join(cwd, 'platforms/ios/ios.json');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -240,7 +240,7 @@ describe('plugin end-to-end', function() {
         var engSpec;
         var configPlugins = cfg.getPluginIdList();
         var configPlugin = cfg.getPlugin(configPlugins);
-        var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-camera/package.json');
+        var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-geolocation/package.json');
         var pluginPkgJsonVersion;
 
         // Pkg.json has no platform or plugin or specs.
@@ -272,9 +272,11 @@ describe('plugin end-to-end', function() {
                 expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
             });
         }).then(function() {
-            // Add camera plugin with --save --fetch.
-            return cordova.raw.plugin('add', 'cordova-plugin-camera', {'save':true, 'fetch':true});
+            // Add geolocation plugin with --save --fetch.
+            return cordova.raw.plugin('add', 'cordova-plugin-geolocation', {'save':true, 'fetch':true});
         }).then(function() {
+            var iosJson = cordova_util.requireNoCache(iosJsonPath);
+            expect(iosJson.installed_plugins['cordova-plugin-geolocation']).toBeDefined();
             var cfg3 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
             configPlugins = cfg3.getPluginIdList();

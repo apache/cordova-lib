@@ -26,7 +26,8 @@ var fs            = require('fs'),
     url           = require('url'),
     nopt          = require('nopt'),
     Q             = require('q'),
-    semver        = require('semver');
+    semver        = require('semver'),
+    platforms     = require('../platforms/platforms');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
@@ -76,6 +77,7 @@ exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
 exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
+exports.getPlatformApiFunction = getPlatformApiFunction;
 
 function requireNoCache(pkgJsonPath) {
     delete require.cache[require.resolve(pkgJsonPath)];
@@ -452,3 +454,41 @@ function getLatestNpmVersion(module_name) {
         });
     });
 }
+
+//libdir should be path to API.js
+function getPlatformApiFunction (libDir, platform) {
+    var PlatformApi;
+    try {
+        // First we need to find whether platform exposes its' API via js module
+        // If it does, then we require and instantiate it.
+        var apiEntryPoint = require.resolve(libDir);
+        if (path.basename(apiEntryPoint) === 'Api.js') {
+            PlatformApi = exports.requireNoCache(apiEntryPoint);
+            events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
+        }
+    } catch (err) {
+        // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
+        if (err && err.code === 'MODULE_NOT_FOUND') {
+            if (platforms[platform] && platforms[platform].apiCompatibleSince) {
+                events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
+                    ' is deprecated. Upgrade to cordova-' + platform + '@' +
+                    platforms[platform].apiCompatibleSince + ' or newer.');
+            }
+        } else {
+            events.emit('verbose', 'Error: PlatformApi not loaded for platform.' + err);
+        }
+    } finally {
+
+        // here is no Api.js and no deprecation information hence
+        // the platform just does not expose Api and we will try polyfill if applicable
+        if (!PlatformApi && (platform === 'blackberry10' || platform === 'browser' || platform === 'ubuntu' || platform === 'webos')) {
+            events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
+                '". Using polyfill instead.');
+            PlatformApi = require('../platforms/PlatformApiPoly.js');
+        } else if (!PlatformApi) {
+            throw new Error('Your ' + platform + ' platform does not have Api.js');
+        }
+    }
+    return PlatformApi;
+}
+
