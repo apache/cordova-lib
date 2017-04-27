@@ -78,7 +78,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     var current_stack = new action_stack();
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
-        return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
+        return module.exports.runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
     });
 };
 
@@ -586,7 +586,7 @@ function installDependency(dep, install, options) {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
-        return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
+        return module.exports.runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
         events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
@@ -604,7 +604,7 @@ function installDependency(dep, install, options) {
         return possiblyFetch(dep_src, install.plugins_dir, opts)
         .then(
             function(plugin_dir) {
-                return runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
+                return module.exports.runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
             }
         );
     }
