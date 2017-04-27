@@ -23,9 +23,9 @@ var helpers = require('./helpers'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
     cordova = require('../src/cordova/cordova'),
-    prepare = require('../src/cordova/prepare'),
     platforms = require('../src/platforms/platforms'),
     plugman = require('../src/plugman/plugman'),
+    install = require('../src/plugman/install'),
     registry = require('../src/plugman/registry/registry');
 
 var util = require('../src/cordova/util');
@@ -101,22 +101,6 @@ function mockPluginFetch(id, dir) {
     });
 }
 
-function setupPlatformApiSpies() {
-    var api = platforms.getPlatformApi(helpers.testPlatform, path.join(project, 'platforms', helpers.testPlatform));
-    var addPluginOrig = api.addPlugin;
-    var removePluginOrig = api.removePlugin;
-
-    spyOn(api, 'addPlugin').and.callFake(function () {
-        return addPluginOrig.apply(api, arguments)
-        .thenResolve(true);
-    });
-
-    spyOn(api, 'removePlugin').and.callFake(function () {
-        return removePluginOrig.apply(api, arguments)
-        .thenResolve(true);
-    });
-}
-
 describe('plugin end-to-end', function() {
     events.on('results', function(res) { results = res; });
 
@@ -128,14 +112,15 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
 
         // Reset origCwd before each spec to respect chdirs
         util._resetOrigCwd();
         delete process.env.PWD;
 
-        spyOn(prepare, 'preparePlatforms').and.callThrough();
+        spyOn(platforms, 'getPlatformApi').and.callThrough();
+        spyOn(install, 'runInstall').and.callThrough();
         spyOn(errorHandler, 'errorCallback').and.callThrough();
     });
 
@@ -148,41 +133,12 @@ describe('plugin end-to-end', function() {
     it('Test 001 : should successfully add and remove a plugin with no options', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
         .then(function() {
+            expect(install.runInstall).toHaveBeenCalled();
+            expect(platforms.getPlatformApi.calls.count()).toEqual(1);
             return removePlugin(pluginId);
-        })
-        .fail(function(err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
-    }, 30000);
-
-    it('Test 002 : should run prepare after plugin installation/removal by default', function(done) {
-        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
-        .then(function() {
-            expect(prepare.preparePlatforms).toHaveBeenCalled();
-            prepare.preparePlatforms.calls.reset();
-            return removePlugin(pluginId);
-        })
-        .then(function () {
-            expect(prepare.preparePlatforms).toHaveBeenCalled();
-        })
-        .fail(function(err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
-    }, 30000);
-
-    it('Test 003 : should not run prepare after plugin installation/removal if platform return non-falsy value', function(done) {
-        setupPlatformApiSpies();
-        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
-        .then(function() {
-            expect(prepare.preparePlatforms).not.toHaveBeenCalled();
-            return removePlugin(pluginId);
-        })
-        .then(function () {
-            expect(prepare.preparePlatforms).not.toHaveBeenCalled();
-        })
-        .fail(function(err) {
+        }).then(function() {
+            expect(platforms.getPlatformApi.calls.count()).toEqual(2);
+        }).fail(function(err) {
             expect(err).toBeUndefined();
         })
         .fin(done);
@@ -286,7 +242,7 @@ describe('plugin end-to-end', function() {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info').and.callThrough();
-        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {}, done)
+        addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {'fetch':true}, done)
         .then(function() {
             expect(registry.info).toHaveBeenCalled();
 
