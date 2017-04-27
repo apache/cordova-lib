@@ -65,6 +65,21 @@ GradleBuilder.prototype.getArgs = function(cmd, opts) {
     return args;
 };
 
+/*
+ * This returns a promise
+ */
+
+GradleBuilder.prototype.runGradleWrapper = function(gradle_cmd) {
+    var gradlePath = path.join(this.root, 'gradlew');
+    var wrapperGradle = path.join(this.root, 'wrapper.gradle');
+    if(fs.existsSync(gradlePath)) {
+      //Literally do nothing, for some reason this works, while !fs.existsSync didn't on Windows
+    } else {
+      return spawn(gradle_cmd, ['-p', this.root, 'wrapper', '-b', wrapperGradle], {stdio: 'inherit'});
+    }
+};
+
+
 // Makes the project buildable, minus the gradle wrapper.
 GradleBuilder.prototype.prepBuildFiles = function() {
     // Update the version of build.gradle in each dependent library.
@@ -159,17 +174,15 @@ GradleBuilder.prototype.prepBuildFiles = function() {
 GradleBuilder.prototype.prepEnv = function(opts) {
     var self = this;
     return check_reqs.check_gradle()
-    .then(function() {
-        return self.prepBuildFiles();
-    }).then(function() {
-        // Copy the gradle wrapper on each build so that:
-        // A) we don't require the Android SDK at project creation time, and
-        // B) we always use the SDK's latest version of it.
-        // check_reqs ensures that this is set.
-        /*jshint -W069 */
-        var sdkDir = process.env['ANDROID_HOME'];
-        /*jshint +W069 */
-        var wrapperDir = path.join(sdkDir, 'tools', 'templates', 'gradle', 'wrapper');
+      .then(function(gradlePath) {
+        return self.runGradleWrapper(gradlePath);
+      }).then(function() {
+          return self.prepBuildFiles();
+      }).then(function() {
+        // We now copy the gradle out of the framework
+        // This is a dirty patch to get the build working
+        /*
+        var wrapperDir = path.join(self.root, 'CordovaLib');
         if (process.platform == 'win32') {
             shell.rm('-f', path.join(self.root, 'gradlew.bat'));
             shell.cp(path.join(wrapperDir, 'gradlew.bat'), self.root);
@@ -180,13 +193,13 @@ GradleBuilder.prototype.prepEnv = function(opts) {
         shell.rm('-rf', path.join(self.root, 'gradle', 'wrapper'));
         shell.mkdir('-p', path.join(self.root, 'gradle'));
         shell.cp('-r', path.join(wrapperDir, 'gradle', 'wrapper'), path.join(self.root, 'gradle'));
-
+*/
         // If the gradle distribution URL is set, make sure it points to version we want.
         // If it's not set, do nothing, assuming that we're using a future version of gradle that we don't want to mess with.
         // For some reason, using ^ and $ don't work.  This does the job, though.
         var distributionUrlRegex = /distributionUrl.*zip/;
         /*jshint -W069 */
-        var distributionUrl = process.env['CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL'] || 'https\\://services.gradle.org/distributions/gradle-2.14.1-all.zip';
+        var distributionUrl = process.env['CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL'] || 'https\\://services.gradle.org/distributions/gradle-3.3-all.zip';
         /*jshint +W069 */
         var gradleWrapperPropertiesPath = path.join(self.root, 'gradle', 'wrapper', 'gradle-wrapper.properties');
         shell.chmod('u+w', gradleWrapperPropertiesPath);
