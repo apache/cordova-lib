@@ -42,9 +42,9 @@ var helpers = require('../spec-cordova/helpers'),
     Q = require('q'),
     spec    = __dirname,
     done    = false,
-    srcProject = path.join(spec, 'projects', 'android_install'),
+    srcProject = path.join(spec, 'projects', 'android'),
     temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test'),
-    project = path.join(temp_dir, 'android_install'),
+    project = path.join(temp_dir, 'android'),
     plugins_dir = path.join(spec, 'plugins'),
     plugins_install_dir = path.join(project, 'cordova', 'plugins'),
     plugins = {
@@ -178,6 +178,7 @@ describe('plugman install start', function() {
             done();
         }).fail(function(error) {
             expect(error).toBeUndefined();
+            done();
         });
     }, TIMEOUT);
 });
