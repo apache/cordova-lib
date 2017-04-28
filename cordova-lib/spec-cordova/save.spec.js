@@ -36,10 +36,11 @@ describe('(save flag)', function () {
     var appName                = 'testApp',
         tempPath               = path.join(__dirname, 'temp'),
         appPath                = path.join(tempPath, appName),
+        //srcProject             = path.join(__dirname, '..', 'spec-plugman','projects', 'android'),
         platformName           = helpers.testPlatform,
-        platformVersionOld     = '4.0.0',
-        platformVersionNew     = '4.0.1',
-        platformVersionNewer   = '5.2.2',
+        platformVersionOld     = '5.0.0',
+        platformVersionNew     = '6.0.0',
+        platformVersionNewer   = '6.2.1',
         platformLocalPathOld   = path.join(__dirname, 'cordova-' + platformName + '-old'),
         platformLocalPathNew   = path.join(__dirname, 'cordova-' + platformName + '-new'),
         platformLocalPathNewer = path.join(__dirname, 'cordova-' + platformName + '-newer'),
@@ -364,26 +365,23 @@ describe('(save flag)', function () {
     });
 
     describe('plugin add --save', function () {
+
         it('Test 015 : spec.12 should save plugin to config', function (done) {
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', pluginName, { 'save': true })
             .then(function () {
-                return cordova.raw.plugin('add', pluginName, { 'save': true });
-            }).then(function () {
                 expect(helpers.getPluginSpec(appPath, pluginName)).not.toBe(null);
                 done();
             }).catch(function (err) {
-                expect(true).toBe(false);
                 console.log(err.message);
+                expect(err).toBeUndefined();
                 done();
             });
         }, TIMEOUT);
 
         it('Test 016 : spec.13 should create new plugin tag in config with old plugin id when downgrading from plugin with new id', function (done) {
-            platform('add', platformLocalPathNewer)
+            helpers.setPluginSpec(appPath, pluginName, pluginOldVersion);
+            cordova.raw.plugin('add', pluginName, { 'save': true })
             .then(function () {
-                helpers.setPluginSpec(appPath, pluginName, pluginOldVersion);
-                return cordova.raw.plugin('add', pluginName, { 'save': true });
-            }).then(function () {
                 expect(helpers.getPluginSpec(appPath, pluginOldName)).toBe('~' + pluginOldVersion);
                 done();
             }).catch(function (err) {
@@ -394,15 +392,12 @@ describe('(save flag)', function () {
         }, TIMEOUT);
 
         it('Test 017 : spec.14 should save variables', function (done) {
-            platform('add', platformLocalPathNewer)
-            .then(function () {
-                return cordova.raw.plugin('add', variablePluginUrl, {
-                    'save': true,
-                    'cli_variables': {
-                        'APP_ID':'123456789',
-                        'APP_NAME':'myApplication'
-                    }
-                });
+            cordova.raw.plugin('add', variablePluginUrl, {
+                'save': true,
+                'cli_variables': {
+                    'APP_ID':'123456789',
+                    'APP_NAME':'myApplication'
+                }
             }).then(function () {
                 expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_ID')).toBe('123456789');
                 expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_NAME')).toBe('myApplication');
@@ -415,15 +410,12 @@ describe('(save flag)', function () {
         }, BIG_TIMEOUT);
 
         it('Test 018 : spec.14.1 should restore plugin with variables', function (done) {
-            platform('add', platformLocalPathNewer)
-            .then(function () {
-                return cordova.raw.plugin('add', variablePluginUrl, {
-                    'save': true,
-                    'cli_variables': {
-                        'APP_ID':'123456789',
-                        'APP_NAME':'myApplication'
-                    }
-                });
+            cordova.raw.plugin('add', variablePluginUrl, {
+                'save': true,
+                'cli_variables': {
+                    'APP_ID':'123456789',
+                    'APP_NAME':'myApplication'
+                }
             }).then(function () {
                 expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_ID')).toBe('123456789');
                 expect(helpers.getPluginVariable(appPath, variablePluginName, 'APP_NAME')).toBe('myApplication');
@@ -442,10 +434,8 @@ describe('(save flag)', function () {
         }, BIG_TIMEOUT);
 
         it('Test 019 : spec.15 save git url as spec', function (done) {
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', pluginGitUrl, { 'save': true })
             .then(function () {
-                return cordova.raw.plugin('add', pluginGitUrl, { 'save': true });
-            }).then(function () {
                 expect(helpers.getPluginSpec(appPath, pluginName)).toBe(pluginGitUrl);
                 done();
             }).catch(function (err) {
@@ -456,10 +446,8 @@ describe('(save flag)', function () {
         }, TIMEOUT);
 
         it('Test 020 : spec.16 should save local directory as spec', function (done) {
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', localPluginPath, { 'save': true })
             .then(function () {
-                return cordova.raw.plugin('add', localPluginPath, { 'save': true });
-            }).then(function () {
                 expect(helpers.getPluginSpec(appPath, localPluginName)).toBe(localPluginPath);
                 done();
             }).catch(function (err) {
@@ -473,10 +461,8 @@ describe('(save flag)', function () {
             redirectRegistryCalls(pluginName + '@' + pluginVersion);
             var scopedPackage = '@test-scope/' + pluginName;
 
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', scopedPackage + '@' + pluginVersion, { 'save': true })
             .then(function () {
-                return cordova.raw.plugin('add', scopedPackage + '@' + pluginVersion, { 'save': true });
-            }).then(function () {
                 expect(registry.fetch).toHaveBeenCalledWith([scopedPackage + '@' + pluginVersion]);
                 expect(helpers.getPluginSpec(appPath, pluginName)).toBe(scopedPackage + '@~' + pluginVersion);
                 done();
@@ -490,10 +476,8 @@ describe('(save flag)', function () {
 
     describe('plugin remove --save', function () {
         it('Test 022 : spec.17 should not add plugin to config', function (done) {
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', pluginName)
             .then(function () {
-                return cordova.raw.plugin('add', pluginName);
-            }).then(function () {
                 return cordova.raw.plugin('rm', pluginName, { 'save': true });
             }).then(function () {
                 expect(helpers.getPluginSpec(appPath, pluginName)).toBe(null);
@@ -506,10 +490,8 @@ describe('(save flag)', function () {
         }, TIMEOUT);
 
         it('Test 023 : spec.18 should remove plugin from config', function (done) {
-            platform('add', platformLocalPathNewer)
+            cordova.raw.plugin('add', pluginName)
             .then(function () {
-                return cordova.raw.plugin('add', pluginName);
-            }).then(function () {
                 helpers.setPluginSpec(appPath, pluginName, pluginGitUrl);
                 return cordova.raw.plugin('rm', pluginName, { 'save': true });
             }).then(function () {
@@ -685,15 +667,19 @@ describe('(save flag)', function () {
             });
 
             cordova.raw.plugin('add', localPluginPath)
-            .then(function () {
+            .then(function() {
                 helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
                 return prepare({ platforms: [ platformName ] });
             })
-            .then(function () {
+            .then(function() {
+                console.log('prepare ran');
                 expect(path.join(appPath, 'platforms', platformName)).toExist();
                 // Validate that plugin has been installed to platform by checking
+                console.log(path.join(appPath, 'platforms', platformName, platformName + '.json'));
                 // platformJson file for plugin entry added
                 var platformJson = require(path.join(appPath, 'platforms', platformName, platformName + '.json'));
+                console.log(platformJson);
+                //console.log(fs.readFileSync(path.join(appPath, 'config.xml'), 'utf8'))
                 expect(platformJson.installed_plugins[localPluginName]).toBeDefined();
             })
             .finally(function () {
