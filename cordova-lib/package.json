@@ -54,9 +54,9 @@
     "test-ios": "npm run test && npm run jasmine-ios",
     "ci": "npm run jshint && npm run cover && codecov",
     "jshint": "jshint src spec-cordova spec-plugman",
-    "jasmine": "JASMINE_CONFIG_PATH=spec-cordova/jasmine.json jasmine",
+    "jasmine": "jasmine JASMINE_CONFIG_PATH=spec-cordova/jasmine.json",
     "jasmine-ios": "jasmine spec-cordova/platform.spec.ios.js",
-    "cover": "istanbul cover --root src --print detail JASMINE_CONFIG_PATH=spec-cordova/jasmine.json jasmine",
+    "cover": "istanbul cover --root src --print detail jasmine",
     "e2e-tests" : "JASMINE_CONFIG_PATH=integration-tests/jasmine.json jasmine"
   },
   "contributors": [

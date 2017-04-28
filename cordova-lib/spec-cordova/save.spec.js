@@ -661,7 +661,7 @@ describe('(save flag)', function () {
             });
         }, BIG_TIMEOUT);
 
-        it('Test 033 : spec.25 should install plugins already added to the project into platform when restoring it', function (done) {
+        xit('Test 033 : spec.25 should install plugins already added to the project into platform when restoring it', function (done) {
             var fail = jasmine.createSpy('fail').and.callFake(function (err) {
                 console.log(err.message);
             });

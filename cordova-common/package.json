@@ -19,7 +19,7 @@
   "scripts": {
     "test": "npm run jshint && npm run jasmine",
     "jshint": "jshint src && jshint spec",
-    "jasmine": "JASMINE_CONFIG_PATH=spec/support/jasmine.json jasmine",
+    "jasmine": "jasmine JASMINE_CONFIG_PATH=spec/support/jasmine.json",
     "cover": "istanbul cover --root src --print detail jasmine"
   },
   "dependencies": {
