@@ -32,7 +32,7 @@ function dirExists(dir) {
 }
 
 function browser_parser(project) {
-    if (!dirExists(project) || !dirExists(path.join(project, 'cordova'))) {
+    if (!module.exports.dirExists(project) || !module.exports.dirExists(path.join(project, 'cordova'))) {
         throw new CordovaError('The provided path "' + project + '" is not a valid browser project.');
     }
 
@@ -105,3 +105,5 @@ browser_parser.prototype.update_project = function(cfg) {
             shell.cp('-rf', path.join(this.www_dir(), '..', 'config.xml'), this.www_dir());
         }.bind(this));
 };
+
+module.exports.dirExists = dirExists;

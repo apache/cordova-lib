@@ -190,7 +190,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
 
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-                var PlatformApi = module.exports.getPlatformApi(platDetails.libDir, platform);
+                var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                 var destination = path.resolve(projectRoot, 'platforms', platform);
                 var promise = cmd === 'add' ?
                     PlatformApi.createPlatform.bind(null, destination, cfg, options, events) :
@@ -367,7 +367,7 @@ function platformFromName(name) {
 
 // Returns a Promise
 // Gets platform details from a directory
-function getPlatformDetailsFromDir(dir, platformIfKnown){
+function getPlatformDetailsFromDir(dir, platformIfKnown) {
     var libDir = path.resolve(dir);
     var platform;
     var version;
@@ -647,37 +647,6 @@ function addDeprecatedInformationToPlatforms(platformsList){
 }
 
 /**
- * Tries to require PlatformApi from the platform. Uses PlatformApiPolyfill if PlatformApi doesn't exist.
- * @param {string} libDir - Command to execute (add, rm, ls, update, save)
- * @param {string} platform - Array containing platforms to execute commands on
- * @returns a module definition
- */
-function getPlatformApi(libDir, platform) {
-    var PlatformApi;
-    try {
-        // Try to get PlatformApi class from platform
-        // Get an entry point for platform package
-        var apiEntryPoint = require.resolve(libDir);
-        // Validate entry point filename. This is required since most of platforms
-        // defines 'main' entry in package.json pointing to bin/create which is
-        // basically a valid NodeJS script but intended to be used as a regular
-        // executable script.
-        if (path.basename(apiEntryPoint) === 'Api.js') {
-            PlatformApi = cordova_util.requireNoCache(apiEntryPoint);
-            events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-        }
-    } catch (e) {
-    } finally {
-        if (!PlatformApi) {
-            events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
-            '". Using polyfill instead.');
-            PlatformApi = require('../platforms/PlatformApiPoly');
-        }
-    return PlatformApi;
-    }
-}
-
-/**
  * Handles all cordova platform commands. 
  * @param {string} command - Command to execute (add, rm, ls, update, save)
  * @param {Object[]} targets - Array containing platforms to execute commands on
@@ -804,4 +773,3 @@ module.exports.check = check;
 module.exports.list = list;
 module.exports.save = save;
 module.exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
-module.exports.getPlatformApi = getPlatformApi;

@@ -78,7 +78,7 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
     var current_stack = new action_stack();
     return possiblyFetch(id, plugins_dir, options)
     .then(function(plugin_dir) {
-        return runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
+        return module.exports.runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
     });
 };
 
@@ -265,7 +265,6 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugin_dir = cordovaUtil.convertToRealPathSafe(plugin_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
-
     options = options || {};
     options.graph = options.graph || new dep_graph();
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
@@ -586,7 +585,7 @@ function installDependency(dep, install, options) {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
-        return runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
+        return module.exports.runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
 
     } else {
         events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
@@ -604,7 +603,7 @@ function installDependency(dep, install, options) {
         return possiblyFetch(dep_src, install.plugins_dir, opts)
         .then(
             function(plugin_dir) {
-                return runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
+                return module.exports.runInstall(install.actions, install.platform, install.project_dir, plugin_dir, install.plugins_dir, opts);
             }
         );
     }
@@ -616,11 +615,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     options.variables = filtered_variables;
-
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
-    .then (function(result) {
-
+    .then(function(result) {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // Add plugin to installed list. This already done in platform,
         // but need to be duplicated here to manage dependencies properly.

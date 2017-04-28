@@ -29,18 +29,15 @@ var cachedApis = {};
 // getPlatformApi() should be the only method of instantiating the
 // PlatformProject classes for now.
 function getPlatformApi(platform, platformRootDir) {
-
     // if platformRootDir is not specified, try to detect it first
     if (!platformRootDir) {
         var projectRootDir = util.isCordova();
         platformRootDir = projectRootDir && path.join(projectRootDir, 'platforms', platform);
     }
-
     if (!platformRootDir) {
         // If platformRootDir is still undefined, then we're probably is not inside of cordova project
         throw new Error('Current location is not a Cordova project');
     }
-
     // CB-11174 Resolve symlinks first before working with root directory
     platformRootDir = util.convertToRealPathSafe(platformRootDir);
 
@@ -52,39 +49,12 @@ function getPlatformApi(platform, platformRootDir) {
 
     var platformApi;
     var cached = cachedApis[platformRootDir];
+    var libDir = path.join(platformRootDir, 'cordova', 'Api.js');
     if (cached && cached.platform == platform) {
         platformApi = cached;
-    }
-    else {
-
-        var PlatformApi;
-        try {
-            // First we need to find whether platform exposes its' API via js module
-            // If it does, then we require and instantiate it.
-            var platformApiModule = path.join(platformRootDir, 'cordova', 'Api.js');
-            PlatformApi = require(platformApiModule);
-        } catch (err) {
-            // Check if platform already compatible w/ PlatformApi and show deprecation warning
-            if (err && err.code === 'MODULE_NOT_FOUND') {
-                if (platforms[platform] && platforms[platform].apiCompatibleSince) {
-                    events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-                        ' is being deprecated. Consider upgrading to cordova-' + platform + '@' +
-                        platforms[platform].apiCompatibleSince + ' or newer.');
-                } else if (platforms[platform] === undefined) {
-                    // throw error because polyfill doesn't support non core platforms 
-                    throw new Error('The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. '+ platform +' not supported.');
-                }
-
-                // else nothing - there is no Api.js and no deprecation information hence
-                // the platform just does not expose Api and we will use polyfill as usual
-            } else {
-                events.emit('warn', 'Error loading cordova-'+platform);
-            }
-
-            PlatformApi = require('./PlatformApiPoly');
-        }
-
-        platformApi = new PlatformApi(platform, platformRootDir, events);
+    } else {
+        var pApi = util.getPlatformApiFunction(libDir, platform);
+        platformApi = new pApi(platform, platformRootDir, events);
         cachedApis[platformRootDir] = platformApi;
     }
     return platformApi;
@@ -97,3 +67,4 @@ module.exports = platforms;
 Object.defineProperties(module.exports, {
     'getPlatformApi': {value: getPlatformApi, configurable: true, writable: true}
 });
+

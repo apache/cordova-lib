@@ -22,17 +22,17 @@ var os = require('os');
 var path = require('path');
 var rewire = require('rewire');
 var shell = require('shelljs');
+var events = require('cordova-common').events;
 
 var util = require('../../src/cordova/util');
 var platforms = rewire('../../src/platforms/platforms');
 
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
-var PLATFORM_WOUT_API = path.join(CORDOVA_ROOT, 'platforms/android');
 var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
-
-var MockPlatformApi = require(fs.realpathSync(path.join(PLATFORM_WITH_API, 'cordova/Api.js')));
 var PlatformApiPoly = require('../../src/platforms/PlatformApiPoly');
+
+var browserParser = require('../../src/cordova/metadata/browser_parser.js');
 
 shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
@@ -46,13 +46,46 @@ describe('getPlatformApi method', function () {
     });
 
     it('should return PlatformApi class defined by platform', function () {
+        spyOn(events, 'emit').and.returnValue(true);
+        spyOn(util, 'convertToRealPathSafe').and.callThrough();
+        spyOn(util, 'requireNoCache').and.callThrough();
         var platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
-        expect(platformApi).toEqual(jasmine.any(MockPlatformApi));
+        expect(platformApi).toBeDefined();
+        expect(platformApi.platform).toEqual('windows');
+        expect(events.emit.calls.count()).toEqual(1);
+        expect(events.emit.calls.argsFor(0)[1]).toEqual('PlatformApi successfully found for platform windows');
+        expect(util.convertToRealPathSafe.calls.count()).toEqual(1);
+        expect(util.isCordova.calls.count()).toEqual(0);
+        expect(util.requireNoCache.calls.count()).toEqual(1);
+        expect(util.requireNoCache.calls.argsFor(0)[0]).toEqual(path.join(CORDOVA_ROOT, 'platforms/windows/cordova/Api.js'));
     });
 
     it('should return PlatformApi polyfill if PlatformApi is not defined by platform', function () {
-        var platformApi = platforms.getPlatformApi('android', PLATFORM_WOUT_API);
+        spyOn(browserParser, 'dirExists').and.returnValue(true);
+        spyOn(fs, 'existsSync').and.callFake(function(somePath) {
+            if(somePath === 'PLATFORM_WOUT_API') {
+                return true;
+            }
+            return false;
+        });
+        spyOn(events, 'emit').and.returnValue(true);
+        spyOn(util, 'convertToRealPathSafe').and.returnValue('PLATFORM_WOUT_API');
+        spyOn(util, 'requireNoCache').and.callThrough();
+        var platformApi = platforms.getPlatformApi('browser', 'PLATFORM_WOUT_API');
         expect(platformApi).toEqual(jasmine.any(PlatformApiPoly));
+        expect(util.convertToRealPathSafe.calls.count()).toEqual(1);
+        expect(events.emit.calls.count()).toEqual(1);
+        expect(events.emit.calls.argsFor(0)[1]).toEqual('Failed to require PlatformApi instance for platform "browser". Using polyfill instead.');
+        expect(util.isCordova.calls.count()).toEqual(0);
+        expect(util.requireNoCache.calls.count()).toEqual(0);
+    });
+
+    it('should throw error if using deprecated platform', function () {
+        try {
+            platforms.getPlatformApi('android', path.join(CORDOVA_ROOT, 'platforms/android'));
+        } catch(error) {
+            expect(error.toString()).toContain('platform does not have Api.js');
+        }
     });
 
     it('should cache PlatformApi instance for further calls', function () {
@@ -74,7 +107,8 @@ describe('getPlatformApi method', function () {
 
     it('should succeed if called inside of cordova project w/out platformRoot param', function () {
         var platformApi = platforms.getPlatformApi('windows');
-        expect(platformApi instanceof MockPlatformApi).toBeTruthy();
+        expect(platformApi).toBeDefined();
+        expect(platformApi.platform).toEqual('windows');
     });
 
     it('should throw if called outside of cordova project w/out platformRoot param', function () {

@@ -1,1 +1,5 @@
-extra.gradle
+tasks.create(name: 'hello') {
+    doLast {
+        println "hello"
+    }
+}
