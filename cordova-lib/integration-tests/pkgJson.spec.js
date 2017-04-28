@@ -52,14 +52,14 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'platforms', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
         delete process.env.PWD;
     });
 
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        shell.rm('-rf', project);
     });
 
     it('Test#001 : should successfully add and remove a plugin with save and correct spec', function(done) {
@@ -110,11 +110,10 @@ describe('plugin end-to-end', function() {
     it('Test#002 : should NOT add a plugin to package.json if --save is not used', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
-
         expect(pkgJsonPath).toExist();
 
         // Add the camera plugin with --save.
-        return cordova.raw.plugin('add', 'cordova-plugin-camera', {'save':true})
+        return cordova.raw.plugin('add', 'cordova-plugin-camera', {'save':true, 'fetch':true})
         .then(function() {
             // Add a second plugin without save.
             return cordova.raw.plugin('add', pluginId);
