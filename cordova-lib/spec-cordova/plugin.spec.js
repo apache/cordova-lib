@@ -101,22 +101,6 @@ function mockPluginFetch(id, dir) {
     });
 }
 
-function setupPlatformApiSpies() {
-    var api = platforms.getPlatformApi(helpers.testPlatform, path.join(project, 'platforms', helpers.testPlatform));
-    var addPluginOrig = api.addPlugin;
-    var removePluginOrig = api.removePlugin;
-
-    spyOn(api, 'addPlugin').and.callFake(function () {
-        return addPluginOrig.apply(api, arguments)
-        .thenResolve(true);
-    });
-
-    spyOn(api, 'removePlugin').and.callFake(function () {
-        return removePluginOrig.apply(api, arguments)
-        .thenResolve(true);
-    });
-}
-
 describe('plugin end-to-end', function() {
     events.on('results', function(res) { results = res; });
 

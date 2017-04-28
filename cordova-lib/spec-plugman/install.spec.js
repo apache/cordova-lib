@@ -312,13 +312,12 @@ describe('install', function() {
 
         it('Test 014 : should not check custom engine version that is not supported for platform', function(done) {
             var spy = spyOn(semver, 'satisfies').and.returnValue(true);
-            install('blackberry10', project, plugins['com.cordova.engine']).then(function() {
-                expect(false).toBe(true);
-                done();
-            }).fail(function err () {
-                expect(spy).not.toHaveBeenCalledWith('','>=3.0.0');
-                done();
-            }, 6000);
+            var fail = jasmine.createSpy('fail');
+                install('blackberry10', project, plugins['com.cordova.engine'])
+                .then(fail)
+                .fail(function () {
+                    expect(spy).not.toHaveBeenCalledWith('','>=3.0.0');
+                }).fin(done);
         }, TIMEOUT);
 
         describe('with dependencies', function() {
