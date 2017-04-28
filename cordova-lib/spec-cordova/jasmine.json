@@ -1,7 +1,7 @@
 {
-    "spec_dir": "spec",
+    "spec_dir": "spec-cordova",
     "spec_files": [
-    	"../spec-cordova/**/*[sS]pec.js",
+    	"**/*[sS]pec.js",
     	"../spec-plugman/**/*[sS]pec.js"
     ],
     "helpers": [

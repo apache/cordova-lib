@@ -52,12 +52,12 @@
   "scripts": {
     "test": "npm run jshint && npm run jasmine",
     "test-ios": "npm run test && npm run jasmine-ios",
-    "ci": "npm run jshint && npm run e2e-tests && npm run cover && codecov",
+    "ci": "npm run jshint && npm run cover && codecov",
     "jshint": "jshint src spec-cordova spec-plugman",
-    "jasmine": "jasmine",
-    "jasmine-ios": "jasmine spec-cordova/platform.spec.ios.js --matchall",
-    "cover": "istanbul cover --root src --print detail jasmine",
-    "e2e-tests" : "jasmine --matchall integration-tests"
+    "jasmine": "JASMINE_CONFIG_PATH=spec-cordova/jasmine.json jasmine",
+    "jasmine-ios": "jasmine spec-cordova/platform.spec.ios.js",
+    "cover": "istanbul cover --root src --print detail JASMINE_CONFIG_PATH=spec-cordova/jasmine.json jasmine",
+    "e2e-tests" : "JASMINE_CONFIG_PATH=integration-tests/jasmine.json jasmine"
   },
   "contributors": [
     {
