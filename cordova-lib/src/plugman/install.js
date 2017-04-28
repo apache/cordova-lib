@@ -265,7 +265,6 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugin_dir = cordovaUtil.convertToRealPathSafe(plugin_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
-
     options = options || {};
     options.graph = options.graph || new dep_graph();
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
@@ -616,11 +615,9 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 
     options.variables = filtered_variables;
-
     return platform_modules.getPlatformApi(platform, project_dir)
     .addPlugin(pluginInfo, options)
-    .then (function(result) {
-
+    .then(function(result) {
         events.emit('verbose', 'Install complete for ' + pluginInfo.id + ' on ' + platform + '.');
         // Add plugin to installed list. This already done in platform,
         // but need to be duplicated here to manage dependencies properly.
