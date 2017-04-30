@@ -323,6 +323,12 @@ describe('install', function() {
                 exec.and.callFake(function(cmd, cb) {
                     cb(null, '9.0.0\n');
                 });
+
+                function PlatformApiMock() {}
+                PlatformApiMock.addPlugin = function() {
+                    return Q();
+                };
+                spyOn(knownPlatforms, 'getPlatformApi').and.returnValue(PlatformApiMock);
             });
 
             it('Test 015 : should install specific version of dependency', function(done) {
