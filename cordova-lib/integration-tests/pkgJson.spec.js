@@ -225,7 +225,7 @@ describe('plugin end-to-end', function() {
     }, TIMEOUT);
     // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
     // and --save --fetch is called, use the pinned version or plugin pkg.json version.
-    fit('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
+    it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
         var iosPlatform = 'ios';
         var iosVersion;
         var cwd = process.cwd();

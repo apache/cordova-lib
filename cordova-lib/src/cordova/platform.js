@@ -380,13 +380,7 @@ function getPlatformDetailsFromDir(dir, platformIfKnown) {
         platform = platformFromName(pkg.name);
         version = pkg.version;
     } catch(e) {
-        // Older platforms didn't have package.json.
-        platform = platformIfKnown || platformFromName(path.basename(dir));
-        var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') :
-                      fs.existsSync(path.join(libDir, 'CordovaLib', 'VERSION')) ? path.join(libDir, 'CordovaLib', 'VERSION') : null;
-        if (verFile) {
-            version = fs.readFileSync(verFile, 'UTF-8').trim();
-        }
+        return Q.reject(new CordovaError('The provided path does not seem to contain a valid package.json or a valid Cordova platform: ' + libDir));
     }
 
     // platform does NOT have to exist in 'platforms', but it should have a name, and a version

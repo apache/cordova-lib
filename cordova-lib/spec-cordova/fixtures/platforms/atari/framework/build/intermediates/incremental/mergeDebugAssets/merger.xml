@@ -1,2 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="/Users/steveng/repo/cordova/cordova-android/framework/assets"/><source path="/Users/steveng/repo/cordova/cordova-android/framework/build/generated/assets/shaders/debug"/></dataSet><dataSet config="debug"><source path="/Users/steveng/repo/cordova/cordova-android/framework/src/debug/assets"/></dataSet></merger>
