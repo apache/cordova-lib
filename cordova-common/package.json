@@ -3,7 +3,7 @@
   "name": "cordova-common",
   "description": "Apache Cordova tools and platforms shared routines",
   "license": "Apache-2.0",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "repository": {
     "type": "git",
     "url": "git://git-wip-us.apache.org/repos/asf/cordova-common.git"
@@ -26,7 +26,7 @@
     "ansi": "^0.3.1",
     "bplist-parser": "^0.1.0",
     "cordova-registry-mapper": "^1.1.8",
-    "elementtree": "^0.1.6",
+    "elementtree": "0.1.6",
     "glob": "^5.0.13",
     "minimatch": "^3.0.0",
     "osenv": "^0.1.3",
