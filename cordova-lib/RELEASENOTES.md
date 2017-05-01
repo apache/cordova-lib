@@ -20,6 +20,33 @@
 -->
 # Cordova-lib Release Notes
 
+### 7.0.0 (May 02, 2017)
+* [CB-12747](https://issues.apache.org/jira/browse/CB-12747): updated pinned platforms
+* [CB-12705](https://issues.apache.org/jira/browse/CB-12705): Modified `(before|after)_plugin_(uninstall|install)` to always expect existence of plugin field
+* [CB-12705](https://issues.apache.org/jira/browse/CB-12705): Pass plugin info to project `*_plugin_install` hooks
+* [CB-11242](https://issues.apache.org/jira/browse/CB-11242): removed support for platforms that don't have a `package.json`
+* [CB-11242](https://issues.apache.org/jira/browse/CB-11242): updated tests and fixtures
+* [CB-11242](https://issues.apache.org/jira/browse/CB-11242): refactored out `getPlatformApiFunction`
+* [CB-11242](https://issues.apache.org/jira/browse/CB-11242): removed `parser` and `handler` files for deprecated versions of platforms
+* [CB-12683](https://issues.apache.org/jira/browse/CB-12683): improved error messaging for when a plugin doesn't have `package.json`
+* [CB-12674](https://issues.apache.org/jira/browse/CB-12674): Added deprecation notice for **blackberry10** and **ubuntu**
+* [CB-11777](https://issues.apache.org/jira/browse/CB-11777): Restore plugins before preparing
+* [CB-12643](https://issues.apache.org/jira/browse/CB-12643): removed references to **wp8**
+* [CB-12645](https://issues.apache.org/jira/browse/CB-12645): removed references to **firefoxos**
+* [CB-12665](https://issues.apache.org/jira/browse/CB-12665): removed `engineStrict` as it is no longer supported
+* [CB-12612](https://issues.apache.org/jira/browse/CB-12612): removing old `amazon-fireos` code
+* [CB-12425](https://issues.apache.org/jira/browse/CB-12425): autocreate a `package.json` if it doesn't exist during `cordova prepare` 
+* [CB-12517](https://issues.apache.org/jira/browse/CB-12517): `package.json` `name` feild is `config.xml` `id` feild and `package.json` `displayName` feild is `config.xml` `name` feild
+* [CB-12592](https://issues.apache.org/jira/browse/CB-12592): added `requireNoCache` function and replaced instances of `delete.require cache`
+* [CB-12606](https://issues.apache.org/jira/browse/CB-12606): Fix plugin dependency installation. Now it respects the `spec` specified for dependencies of plugins in `plugin.xml`
+* [CB-12016](https://issues.apache.org/jira/browse/CB-12016): removed `pluginMapper` code from uninstall
+* [CB-12337](https://issues.apache.org/jira/browse/CB-12337): Resolve symbolic links in project root
+* [CB-11346](https://issues.apache.org/jira/browse/CB-11346): Remove known platforms check
+* [CB-11977](https://issues.apache.org/jira/browse/CB-11977): removed support for `node 0.x`
+* [CB-12021](https://issues.apache.org/jira/browse/CB-12021): Added local path support to `--fetch` and fixed failing tests for adding a relative path
+* [CB-11960](https://issues.apache.org/jira/browse/CB-11960): Added support to `package.json` for platform/plugin add/rm
+* [CB-12001](https://issues.apache.org/jira/browse/CB-12001): Added support for platform/plugin & `spec` restore to sync `config.xml` and `package.json`
+
 ### 6.5.0 (Jan 17, 2017)
 * [CB-12018](https://issues.apache.org/jira/browse/CB-12018): updated `jshint` and updated `jasmine` tests to work with `jasmine` instead of `jasmine-node`
 * [CB-12314](https://issues.apache.org/jira/browse/CB-12314) updated pinned android to 6.1.1
