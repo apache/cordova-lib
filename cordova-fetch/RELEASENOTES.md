@@ -20,6 +20,10 @@
 -->
 # Cordova-fetch Release Notes
 
+### 1.1.0 (May 02, 2017)
+* [CB-12665](https://issues.apache.org/jira/browse/CB-12665): removed `enginestrict` since it is deprecated
+* added support for dealing with local path targets
+
 ### 1.0.2 (Jan 17, 2017)
 * [CB-12358](https://issues.apache.org/jira/browse/cb-12358) updated cordova-common dep for cordova-fetch to 2.0.0
 
