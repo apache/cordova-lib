@@ -20,6 +20,11 @@
 -->
 # Cordova-common Release Notes
 
+### 2.0.3 (May 02, 2017)
+* [CB-8978](https://issues.apache.org/jira/browse/CB-8978) Add option to get `resource-file` from `root`
+* [CB-11908](https://issues.apache.org/jira/browse/CB-11908) Add tests for `edit-config` in `config.xml`
+* [CB-12665](https://issues.apache.org/jira/browse/CB-12665) removed `enginestrict` since it is deprecated
+
 ### 2.0.2 (Apr 14, 2017)
 * [CB-11233](https://issues.apache.org/jira/browse/CB-11233) - Support installing frameworks into 'Embedded Binaries' section of the Xcode project
 * [CB-10438](https://issues.apache.org/jira/browse/CB-10438) - Install correct dependency version. Removed shell.remove, added pkg.json to dependency tests 1-3, and updated install.js (.replace) to fix tests in uninstall.spec.js and update to workw with jasmine 2.0
