@@ -205,8 +205,29 @@ module.exports = function plugin(command, targets, opts) {
                             .thenResolve(pluginInfo);
                         })
                         .then(function(pluginInfo){
+                            var pkgJson;
+                            var pkgJsonPath = path.join(projectRoot,'package.json');
+
                             // save to config.xml
                             if(saveToConfigXmlOn(config_json, opts)){
+                                // If statement to see if pkgJsonPath exists in the filesystem
+                                if(fs.existsSync(pkgJsonPath)) {
+                                    // Delete any previous caches of require(package.json)
+                                    pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+                                }
+                                // If package.json exists, the plugin object and plugin name 
+                                // will be added to package.json if not already there.
+                                if(pkgJson) {
+                                    pkgJson.cordova = pkgJson.cordova || {};
+                                    pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
+                                    // Plugin and variables are added.
+                                    pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
+                                    events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
+
+                                    // Write to package.json
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                }
+
                                 var src = parseSource(target, opts);
                                 var attributes = {
                                     name: pluginInfo.id
@@ -218,10 +239,14 @@ module.exports = function plugin(command, targets, opts) {
                                     var ver = '~' + pluginInfo.version;
                                     // Scoped packages need to have the package-spec along with the version
                                     var parsedSpec = pluginSpec.parse(target);
-                                    if (parsedSpec.scope) {
-                                        attributes.spec = parsedSpec.package + '@' + ver;
+                                    if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]){
+                                        attributes.spec = pkgJson.dependencies[pluginInfo.id];
                                     } else {
-                                        attributes.spec = ver;
+                                        if (parsedSpec.scope) {
+                                            attributes.spec = parsedSpec.package + '@' + ver;
+                                        } else {
+                                            attributes.spec = ver;
+                                        }
                                     }
                                 }
                                 xml = cordova_util.projectConfig(projectRoot);
@@ -231,28 +256,6 @@ module.exports = function plugin(command, targets, opts) {
                                 cfg.write();
 
                                 events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
-
-                                var pkgJson;
-                                var pkgJsonPath = path.join(projectRoot,'package.json');
-
-                                // If statement to see if pkgJsonPath exists in the filesystem
-                                if(fs.existsSync(pkgJsonPath)) {
-                                    // Delete any previous caches of require(package.json)
-                                    pkgJson = cordova_util.requireNoCache(pkgJsonPath);
-                                }
-
-                                // If package.json exists, the plugin object and plugin name 
-                                // will be added to package.json if not already there.
-                                if (!pkgJson) {
-                                    return;
-                                }
-                                pkgJson.cordova = pkgJson.cordova || {};
-                                pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
-                                // Plugin and variables are added.
-                                pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
-                                events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
-                                // Write to package.json
-                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                             }
                         });
                     }, Q());

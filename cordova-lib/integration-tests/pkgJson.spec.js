@@ -91,7 +91,7 @@ describe('plugin end-to-end', function() {
             configPlugins = cfg2.getPluginIdList();
             configPlugin = cfg2.getPlugin(configPlugins);
             expect(configPlugins.length).toEqual(1);
-            expect(configPlugin).toEqual({ name: 'cordova-plugin-device', spec: '~1.1.2', variables: {} });
+            expect(configPlugin).toEqual({ name: 'cordova-plugin-device', spec: '^1.1.2', variables: {} });
         }).then(function() {
             // And now remove it with --save.
             return cordova.raw.plugin('rm', pluginId, {'save':true, 'fetch':true});
