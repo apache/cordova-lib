@@ -20,6 +20,10 @@
 -->
 # Cordova-lib Release Notes
 
+### 7.0.1 (May 08, 2017)
+* [CB-12769](https://issues.apache.org/jira/browse/CB-12769): updated `cordova-create` dependency to 1.1.1
+* [CB-12757](https://issues.apache.org/jira/browse/CB-12757): if there's a plugin dependency in `package.json`, use that one for `config.xml`
+
 ### 7.0.0 (May 02, 2017)
 * [CB-12747](https://issues.apache.org/jira/browse/CB-12747): updated pinned platforms
 * [CB-12705](https://issues.apache.org/jira/browse/CB-12705): Modified `(before|after)_plugin_(uninstall|install)` to always expect existence of plugin field
