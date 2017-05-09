@@ -21,6 +21,7 @@
 # Cordova-lib Release Notes
 
 ### 7.0.1 (May 08, 2017)
+* [CB-12773](https://issues.apache.org/jira/browse/CB-12773): fixed incorrect plugin version fetching issue
 * [CB-12769](https://issues.apache.org/jira/browse/CB-12769): updated `cordova-create` dependency to 1.1.1
 * [CB-12757](https://issues.apache.org/jira/browse/CB-12757): if there's a plugin dependency in `package.json`, use that one for `config.xml`
 
