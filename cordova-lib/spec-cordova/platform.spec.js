@@ -144,7 +144,7 @@ describe('platform end-to-end', function () {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    });
+    },60000);
 
     it('Test 003 : should call prepare after plugins were installed into platform', function(done) {
         var order = '';
