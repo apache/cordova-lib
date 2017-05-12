@@ -38,7 +38,7 @@ var isUrl = require('is-url');
  *
  */
 module.exports = function(target, dest, opts) {
-    var fetchArgs = ['install'];
+    var fetchArgs = opts.link ? ['link'] : ['install'];
     opts = opts || {};
     var tree1;
 

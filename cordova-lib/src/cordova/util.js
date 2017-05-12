@@ -230,12 +230,14 @@ function getInstalledPlatformsWithVersions(project_dir) {
 }
 
 // list the directories in the path, ignoring any files
-function findPlugins(pluginPath) {
+function findPlugins(pluginDir) {
     var plugins = [];
 
-    if (fs.existsSync(pluginPath)) {
-        plugins = fs.readdirSync(pluginPath).filter(function (fileName) {
-            return fileName != '.svn' && fileName != 'CVS' && isDirectory(path.join(pluginPath, fileName));
+    if (fs.existsSync(pluginDir)) {
+        plugins = fs.readdirSync(pluginDir).filter(function (fileName) {
+            var pluginPath = path.join(pluginDir, fileName);
+            var isPlugin = isDirectory(pluginPath) || isSymbolicLink(pluginPath);
+            return fileName != '.svn' && fileName != 'CVS' && isPlugin;
         });
     }
 
@@ -354,6 +356,20 @@ function ensurePlatformOptionsCompatible (platformOptions) {
 function isDirectory(dir) {
     try {
         return fs.lstatSync(dir).isDirectory();
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Checks to see if the argument is a symbolic link
+ * 
+ * @param {string} dir - string representing path of directory
+ * @return {boolean}
+ */
+function isSymbolicLink(dir) {
+    try {
+        return fs.lstatSync(dir).isSymbolicLink();
     } catch (e) {
         return false;
     }
