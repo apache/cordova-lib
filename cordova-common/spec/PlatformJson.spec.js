@@ -112,9 +112,9 @@ describe('PlatformJson class', function() {
             it('Test 009 : should generate text metadata containing list of installed modules', function () {
                 var meta = platformJson.addPluginMetadata(fakePlugin).generateMetadata();
                 expect(typeof meta).toBe('string');
-                expect(meta.indexOf(JSON.stringify(platformJson.root.modules, null, 4))).toBeGreaterThan(0);
-                // expect(meta).toMatch(JSON.stringify(platformJson.root.modules, null, 4));
-                expect(meta).toMatch(JSON.stringify(platformJson.root.plugin_metadata, null, 4));
+                expect(meta.indexOf(JSON.stringify(platformJson.root.modules, null, 2))).toBeGreaterThan(0);
+                // expect(meta).toMatch(JSON.stringify(platformJson.root.modules, null, 2));
+                expect(meta).toMatch(JSON.stringify(platformJson.root.plugin_metadata, null, 2));
             });
         });
     });

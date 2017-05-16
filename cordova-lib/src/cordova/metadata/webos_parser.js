@@ -105,7 +105,7 @@ webos_parser.prototype.update_from_config = function(config) {
         }
     }
 
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, '\t'));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     return Q();
 };
@@ -177,7 +177,7 @@ webos_parser.prototype.update_www = function() {
                 if(index<0) {
                     obj.assets.push('./' + assets[i]);
                 }
-                fs.writeFileSync(deploy, JSON.stringify(obj, null, '\t'));
+                fs.writeFileSync(deploy, JSON.stringify(obj, null, 2));
             }
         } catch(e) {
             console.error('Unable to update deploy.json: ' + e);

@@ -94,7 +94,7 @@ function save(projectRoot, platform, version) {
         data = getJson(platformJsonFile);
     }
     data[platform] = version;
-    fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 4), 'utf-8');
+    fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function remove(projectRoot, platform){
@@ -105,7 +105,7 @@ function remove(projectRoot, platform){
     }
     var data = getJson(platformJsonFile);
     delete data[platform];
-    fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 4), 'utf-8');
+    fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 module.exports.getPlatformVersions = getVersions;

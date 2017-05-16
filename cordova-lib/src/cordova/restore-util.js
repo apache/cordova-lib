@@ -80,7 +80,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             if(cfg.name()) {
                 pkgJson.displayName = cfg.name();
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
         }
 
         configPlatforms = engines.map(function(Engine) {
@@ -186,7 +186,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 }
                 pkgJson.dependencies[prefixKey] = mergedPlatformSpecs[key];
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
         }
         if (modifiedConfigXML === true) {
             cfg.write();
@@ -338,7 +338,7 @@ function installPluginsFromConfigXML(args) {
             for(key in mergedPluginSpecs) {
                 pkgJson.dependencies[key] = mergedPluginSpecs[key];
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
         }
     }
     // Write config.xml (only if plugins exist in package.json).
