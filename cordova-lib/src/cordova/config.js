@@ -63,7 +63,7 @@ config.read = function get_config(project_root) {
 
 config.write = function set_config(project_root, json) {
     var configPath = path.join(project_root, '.cordova', 'config.json');
-    var contents = JSON.stringify(json, null, 4);
+    var contents = JSON.stringify(json, null, 2);
     configCache[project_root] = contents;
     // Don't write the file for an empty config.
     if (contents != '{}' || fs.existsSync(configPath)) {

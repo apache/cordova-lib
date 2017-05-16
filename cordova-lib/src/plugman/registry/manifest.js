@@ -98,7 +98,7 @@ function generatePackageJsonFromPluginXml(plugin_path) {
 
         // Write package.json
         var package_json_path = path.resolve(plugin_path, 'package.json');
-        fs.writeFileSync(package_json_path, JSON.stringify(package_json, null, 4), 'utf8');
+        fs.writeFileSync(package_json_path, JSON.stringify(package_json, null, 2), 'utf8');
         return package_json;
     });
 }

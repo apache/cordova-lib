@@ -273,7 +273,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             // Save to package.json.
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
-                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
             }
         });
     }).then(function(){
@@ -446,7 +446,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
             });
             //Write out new package.json if changes have been made.
             if(modifiedPkgJson === true) {
-                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
             }
         }
     }).then(function() {

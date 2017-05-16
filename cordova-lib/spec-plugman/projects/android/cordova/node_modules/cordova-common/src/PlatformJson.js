@@ -39,7 +39,7 @@ PlatformJson.load = function(plugins_dir, platform) {
 
 PlatformJson.prototype.save = function() {
     shelljs.mkdir('-p', path.dirname(this.filePath));
-    fs.writeFileSync(this.filePath, JSON.stringify(this.root, null, 4), 'utf-8');
+    fs.writeFileSync(this.filePath, JSON.stringify(this.root, null, 2), 'utf-8');
 };
 
 /**
@@ -195,10 +195,10 @@ PlatformJson.prototype.makeTopLevel = function(pluginId) {
 PlatformJson.prototype.generateMetadata = function () {
     return [
         'cordova.define(\'cordova/plugin_list\', function(require, exports, module) {',
-        'module.exports = ' + JSON.stringify(this.root.modules, null, 4) + ';',
+        'module.exports = ' + JSON.stringify(this.root.modules, null, 2) + ';',
         'module.exports.metadata = ',
         '// TOP OF METADATA',
-        JSON.stringify(this.root.plugin_metadata, null, 4) + ';',
+        JSON.stringify(this.root.plugin_metadata, null, 2) + ';',
         '// BOTTOM OF METADATA',
         '});' // Close cordova.define.
     ].join('\n');

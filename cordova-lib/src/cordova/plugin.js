@@ -225,7 +225,7 @@ module.exports = function plugin(command, targets, opts) {
                                     events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
 
                                     // Write to package.json
-                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
                                 }
 
                                 var src = parseSource(target, opts);
@@ -334,7 +334,7 @@ module.exports = function plugin(command, targets, opts) {
                                     // Remove plugin from package.json
                                     delete pkgJson.cordova.plugins[target];
                                     //Write out new package.json with plugin removed correctly.
-                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
                                 }
                             }
                             
@@ -424,12 +424,12 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
                     pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
                 }
                 if(fetchOptions.save === true) {
-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
                 }
             } else if (!semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
                 pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
                 if (fetchOptions.save === true) {
-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
                 }
             }
         }
