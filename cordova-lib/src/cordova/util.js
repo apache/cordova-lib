@@ -455,6 +455,15 @@ function getLatestNpmVersion(module_name) {
     });
 }
 
+// Display deprecation message if platform is api compatible
+function checkPlatformApiCompatible(platform) {
+    if (platforms[platform] && platforms[platform].apiCompatibleSince) {
+        events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
+            ' is deprecated. Upgrade to cordova-' + platform + '@' +
+            platforms[platform].apiCompatibleSince + ' or newer.');
+    }
+}
+
 //libdir should be path to API.js
 function getPlatformApiFunction (libDir, platform) {
     var PlatformApi;
@@ -466,14 +475,16 @@ function getPlatformApiFunction (libDir, platform) {
             PlatformApi = exports.requireNoCache(apiEntryPoint);
             events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
         }
+
+        // For versions which are not api compatible, require.resolve returns path to /bin/create ('main' field in package.json)
+        // We should display the same deprecation message as in the catch block
+        if (!PlatformApi && ['android', 'windows', 'ios', 'osx'].indexOf(platform) >= 0) {
+            checkPlatformApiCompatible(platform);
+        }
     } catch (err) {
         // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
         if (err && err.code === 'MODULE_NOT_FOUND') {
-            if (platforms[platform] && platforms[platform].apiCompatibleSince) {
-                events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-                    ' is deprecated. Upgrade to cordova-' + platform + '@' +
-                    platforms[platform].apiCompatibleSince + ' or newer.');
-            }
+            checkPlatformApiCompatible(platform);
         } else {
             events.emit('verbose', 'Error: PlatformApi not loaded for platform.' + err);
         }
