@@ -619,6 +619,10 @@ function list(hooksRunner, projectRoot, opts) {
             return p.concat(' ', platforms[p].version);
         });
 
+        available = available.map(function (p){
+            return p.concat(' ', platforms[p].version);
+        });
+
         available = addDeprecatedInformationToPlatforms(available);
         results += 'Available platforms: \n  ' + available.sort().join('\n  ');
 
