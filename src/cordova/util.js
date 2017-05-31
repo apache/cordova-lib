@@ -459,49 +459,62 @@ function getLatestNpmVersion (module_name) {
     });
 }
 
-// Display deprecation message if platform is api compatible
-function checkPlatformApiCompatible (platform) {
-    if (platforms[platform] && platforms[platform].apiCompatibleSince) {
-        events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
-            ' is deprecated. Upgrade to cordova-' + platform + '@' +
-            platforms[platform].apiCompatibleSince + ' or newer.');
-    }
-}
-
-// libdir should be path to API.js
+// Takes a libDir (root of platform where pkgJson is expected) & a platform name.
+// Platform is used if things go wrong, so we can use polyfill.
+// Potential errors : path doesn't exist, module isn't found or can't load. 
+// Message prints if file not named Api.js or falls back to pollyfill.
 function getPlatformApiFunction (libDir, platform) {
     var PlatformApi;
     try {
         // First we need to find whether platform exposes its' API via js module
         // If it does, then we require and instantiate it.
+        // This will throw if package.json does not exist, or specify 'main'.
         var apiEntryPoint = require.resolve(libDir);
-        if (path.basename(apiEntryPoint) === 'Api.js') {
+        if (apiEntryPoint) {
+            if(path.basename(apiEntryPoint) !== 'Api.js') {
+                events.emit('verbose', 'File name should be called Api.js.');
+                // Not an error, still load it ...
+            }
             PlatformApi = exports.requireNoCache(apiEntryPoint);
-            events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-        }
 
-        // For versions which are not api compatible, require.resolve returns path to /bin/create ('main' field in package.json)
-        // We should display the same deprecation message as in the catch block
-        if (!PlatformApi && ['android', 'windows', 'ios', 'osx'].indexOf(platform) >= 0) {
-            checkPlatformApiCompatible(platform);
+            if (!PlatformApi.createPlatform) {
+                PlatformApi = null;
+                events.emit('error', 'Does not appear to implement platform Api.');
+            } else {
+               events.emit('verbose', 'PlatformApi successfully found for platform ' + platform); 
+            }
         }
-    } catch (err) {
+        else {
+            events.emit('verbose', 'No Api.js entry point found.');
+        }
+    }
+    catch (err) {
+        // Emit the err, someone might care ...
+        events.emit('warn','Unable to load PlatformApi from platform. ' + err);
         // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
-        if (err && err.code === 'MODULE_NOT_FOUND') {
-            checkPlatformApiCompatible(platform);
-        } else {
-            events.emit('verbose', 'Error: PlatformApi not loaded for platform.' + err);
+        //checkPlatformApiCompatible(platform);
+        if (platforms[platform] && platforms[platform].apiCompatibleSince) {
+            events.emit('error', ' Using this version of Cordova with older version of cordova-' + platform +
+                    ' is deprecated. Upgrade to cordova-' + platform + '@' +
+                    platforms[platform].apiCompatibleSince + ' or newer.');
         }
-    } finally {
+        else if (!platforms[platform]) {
+            // Throw error because polyfill doesn't support non core platforms
+            events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. '+ platform +' not supported.');
+        } else {
+            events.emit('verbose', 'Platform not found or needs polyfill.');
+        }
+    }
 
-        // here is no Api.js and no deprecation information hence
-        // the platform just does not expose Api and we will try polyfill if applicable
-        if (!PlatformApi && (platform === 'blackberry10' || platform === 'browser' || platform === 'ubuntu' || platform === 'webos')) {
+    if (!PlatformApi) {
+        // The platform just does not expose Api and we will try to polyfill it
+        var polyPlatforms = ['blackberry10','browser','ubuntu','webos'];
+        if( polyPlatforms.indexOf(platform) > -1) {
             events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
-                '". Using polyfill instead.');
+            '". Using polyfill instead.');
             PlatformApi = require('../platforms/PlatformApiPoly.js');
-        } else if (!PlatformApi) {
-            throw new Error('Your ' + platform + ' platform does not have Api.js'); // eslint-disable-line no-unsafe-finally
+        } else {
+            throw new Error('Your ' + platform + ' platform does not have Api.js');
         }
     }
     return PlatformApi;

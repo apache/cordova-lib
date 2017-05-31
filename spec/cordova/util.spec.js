@@ -309,5 +309,45 @@ describe('util module', function () {
                 });
             });
         });
+
+        describe('getPlatformApiFunction', function() {
+            it('Test 027 : should throw error informing user to update platform', function() {
+                expect(function(){util.getPlatformApiFunction('some/path', 'android');}).toThrow(new Error
+                ('Uncaught, unspecified "error" event. ( Using this version of Cordova with older version of cordova-android is deprecated. Upgrade to cordova-android@5.0.0 or newer.)'));
+            });
+
+            it('Test 028 : should throw error if platform is not supported', function() {
+                spyOn(events, 'emit').and.returnValue(true);
+                expect(function(){util.getPlatformApiFunction('some/path', 'somePlatform');}).toThrow();
+                expect(events.emit.calls.count()).toBe(2);
+                expect(events.emit.calls.argsFor(0)[1]).toBe('Unable to load PlatformApi from platform. Error: Cannot find module \'some/path\'');
+                expect(events.emit.calls.argsFor(1)[1]).toBe('The platform "somePlatform" does not appear to be a valid cordova platform. It is missing API.js. somePlatform not supported.');
+            });
+
+            it('Test 029 : should use polyfill if blackberry10, webos, ubuntu', function() {
+                spyOn(events, 'emit').and.returnValue(true);
+                util.getPlatformApiFunction('some/path', 'blackberry10');
+                expect(events.emit.calls.count()).toBe(3);
+                expect(events.emit.calls.argsFor(0)[1]).toBe('Unable to load PlatformApi from platform. Error: Cannot find module \'some/path\'');
+                expect(events.emit.calls.argsFor(1)[1]).toBe('Platform not found or needs polyfill.');
+                expect(events.emit.calls.argsFor(2)[1]).toBe('Failed to require PlatformApi instance for platform "blackberry10". Using polyfill instead.');
+            });
+
+            it('Test 030 : successfully find platform Api', function() {
+                spyOn(events, 'emit').and.returnValue(true);
+                var specPlugDir = __dirname.replace('spec-cordova', 'spec-plugman');
+                util.getPlatformApiFunction((path.join(specPlugDir, 'projects', 'android', 'cordova', 'Api.js')), 'android');
+                expect(events.emit.calls.count()).toBe(1);
+                expect(events.emit.calls.argsFor(0)[1]).toBe('PlatformApi successfully found for platform android');
+            });
+
+            it('Test 031 : should inform user that entry point should be called Api.js', function() {
+                spyOn(events, 'emit').and.returnValue(true);
+                var specPlugDir = __dirname.replace('spec-cordova', 'spec-plugman');
+                expect(function(){util.getPlatformApiFunction((path.join(specPlugDir, 'projects', 'android', 'cordova', 'clean')), 'android');}).toThrow();
+                expect(events.emit.calls.count()).toBe(3);
+                expect(events.emit.calls.argsFor(0)[1]).toBe('File name should be called Api.js.');
+            });
+        });
     });
 });

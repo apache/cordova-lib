@@ -670,8 +670,8 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.indexOf('browser')).toEqual(-1);
         expect(configEngArray.length === 1);
         // Pkg.json has cordova-browser in its dependencies.
-        expect(pkgJson.dependencies).toEqual({ 'cordova-android': '^3.1.0', 'cordova-browser': '^4.1.0' });
-        emptyPlatformList().then(function () {
+        expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^5.0.0', 'cordova-browser' : '^4.1.0' });
+        emptyPlatformList().then(function() {
             // Run cordova prepare.
             return prepare();
         }).then(function () {
@@ -690,10 +690,10 @@ describe('update config.xml to include platforms in pkg.json', function () {
             // Expect config.xml array to have 2 elements (platforms).
             expect(configEngArray.length === 2);
             // Check to make sure that 'browser' spec was added properly.
-            expect(engines).toEqual([ { name: 'android', spec: '^3.1.0' }, { name: 'browser', spec: '^4.1.0' } ]);
+            expect(engines).toEqual([ { name: 'android', spec: '^5.0.0' },{ name: 'browser', spec: '^4.1.0' } ]);
             // No change to pkg.json dependencies.
-            expect(pkgJson.dependencies).toEqual({ 'cordova-android': '^3.1.0', 'cordova-browser': '^4.1.0' });
-            expect(pkgJson.dependencies['cordova-android']).toEqual('^3.1.0');
+            expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^5.0.0', 'cordova-browser' : '^4.1.0' });
+            expect(pkgJson.dependencies['cordova-android']).toEqual('^5.0.0');
             expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
         }).fail(function (err) {
             expect(err).toBeUndefined();
@@ -1248,8 +1248,8 @@ describe('platforms and plugins should be restored with config.xml even without 
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        // Use basePkgJson6 because pkg.json and config.xml contain only android
-        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson13'), tmpDir);
+        // Use basePkgJson13 because pkg.json and config.xml contain only android
+        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson13'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson13'), project);
         process.chdir(project);
         events.on('results', function (res) { results = res; });
@@ -1285,7 +1285,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         var pluginsFolderPath16 = path.join(cwd, 'plugins');
         var platformsJson;
         var androidPlatform = 'android';
-        var browserPlatform = 'browser';
+        var browserPlatform = 'windows';
 
         // Pkg.json does not exist.
         expect(path.join(cwd, 'package.json')).not.toExist();
@@ -1491,7 +1491,7 @@ describe('tests platform/spec restore with --save', function () {
         var pkgJson;
         var platformsFolderPath = path.join(cwd, 'platforms/platforms.json');
         var platformsJson;
-        var secondPlatformAdded = 'browser';
+        var secondPlatformAdded = 'windows';
 
         emptyPlatformList().then(function () {
             // Add the testing platform with --save.

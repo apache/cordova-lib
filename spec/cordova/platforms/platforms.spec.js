@@ -74,8 +74,10 @@ describe('getPlatformApi method', function () {
         var platformApi = platforms.getPlatformApi('browser', 'PLATFORM_WOUT_API');
         expect(platformApi).toEqual(jasmine.any(PlatformApiPoly));
         expect(util.convertToRealPathSafe.calls.count()).toEqual(1);
-        expect(events.emit.calls.count()).toEqual(1);
-        expect(events.emit.calls.argsFor(0)[1]).toEqual('Failed to require PlatformApi instance for platform "browser". Using polyfill instead.');
+        expect(events.emit.calls.count()).toEqual(3);
+        expect(events.emit.calls.argsFor(0)[1]).toContain('Unable to load PlatformApi from platform. Error: Cannot find module');
+        expect(events.emit.calls.argsFor(1)[1]).toEqual('Platform not found or needs polyfill.');
+        expect(events.emit.calls.argsFor(2)[1]).toEqual('Failed to require PlatformApi instance for platform "browser". Using polyfill instead.');
         expect(util.isCordova.calls.count()).toEqual(0);
         expect(util.requireNoCache.calls.count()).toEqual(0);
     });
@@ -83,8 +85,8 @@ describe('getPlatformApi method', function () {
     it('should throw error if using deprecated platform', function () {
         try {
             platforms.getPlatformApi('android', path.join(CORDOVA_ROOT, 'platforms/android'));
-        } catch (error) {
-            expect(error.toString()).toContain('platform does not have Api.js');
+        } catch(error) {
+            expect(error.toString()).toContain('Using this version of Cordova with older version of cordova-android is deprecated. Upgrade to cordova-android@5.0.0 or newer.');
         }
     });
 
