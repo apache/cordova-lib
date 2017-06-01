@@ -6,7 +6,7 @@
   "version": "7.0.2-dev",
   "repository": {
     "type": "git",
-    "url": "git://git-wip-us.apache.org/repos/asf/cordova-lib.git"
+    "url": "https://github.com/apache/cordova-lib"
   },
   "bugs": {
     "url": "https://issues.apache.org/jira/browse/CB",
