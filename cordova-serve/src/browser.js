@@ -89,7 +89,7 @@ module.exports = function (opts) {
 function getBrowser(target, dataDir) {
     dataDir = dataDir || 'temp_chrome_user_data_dir_for_cordova';
 
-    var chromeArgs = ' --user-data-dir=/tmp/' + dataDir;
+    var chromeArgs = ' --auto-open-devtools-for-tabs --user-data-dir=/tmp/' + dataDir;
     var browsers = {
         'win32': {
             'ie': 'iexplore',
