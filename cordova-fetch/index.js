@@ -148,9 +148,15 @@ function trimID(target) {
         target = parts[1];
     }
 
-    //If local path exists, set target to final directory
+    // If local path exists, try to get plugin id from package.json or set target to final directory
     if (fs.existsSync(target)) {
-        target = path.basename(target);
+        var pluginId, pkgJsonPath = path.join(target, 'package.json');
+
+        if (fs.existsSync(pkgJsonPath)) {
+            pluginId = JSON.parse(fs.readFileSync(pkgJsonPath)).name;
+        }
+
+        target = pluginId ? pluginId : path.basename(target);
     }
     
     //strip away everything after '@'
