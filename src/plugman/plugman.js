@@ -23,35 +23,26 @@ var events = require('cordova-common').events;
 var Q = require('q');
 
 function addProperty(o, symbol, modulePath, doWrap) {
-    var val = null;
+    var modewl = require(modulePath);
 
     if (doWrap) {
         o[symbol] = function() {
-            val = val || require(modulePath);
             if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
                 // If args exist and the last one is a function, it's the callback.
                 var args = Array.prototype.slice.call(arguments);
                 var cb = args.pop();
-                val.apply(o, args).done(function(result) {cb(undefined, result);}, cb);
+                modewl.apply(o, args).done(function(result) {cb(undefined, result);}, cb);
             } else {
-                val.apply(o, arguments).done(null, function(err){ throw err; });
+                modewl.apply(o, arguments).done(null, function(err){ throw err; });
             }
         };
     } else {
         // The top-level plugman.foo
-        Object.defineProperty(o, symbol, {
-            configurable: true,
-            get : function() { val = val || require(modulePath); return val; },
-            set : function(v) { val = v; }
-        });
+        o[symbol] = modewl;
     }
 
     // The plugman.raw.foo
-    Object.defineProperty(o.raw, symbol, {
-        configurable: true,
-        get : function() { val = val || require(modulePath); return val; },
-        set : function(v) { val = v; }
-    });
+    o.raw[symbol] = modewl;
 }
 
 var plugman = {

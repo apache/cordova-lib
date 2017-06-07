@@ -62,11 +62,11 @@ exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
 exports.findPlugins = findPlugins;
+exports.addModuleProperty = addModuleProperty;
 exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
-exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports._resetOrigCwd = _resetOrigCwd;
 exports.fixRelativePath = fixRelativePath;
@@ -378,32 +378,25 @@ function isSymbolicLink(dir) {
 // opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
 // should be created.
 function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
-    var val = null;
+    var modewl = require(modulePath);
     if (opt_wrap) {
         module.exports[symbol] = function() {
-            val = val || module.require(modulePath);
             if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
                 // If args exist and the last one is a function, it's the callback.
                 var args = Array.prototype.slice.call(arguments);
                 var cb = args.pop();
-                val.apply(module.exports, args).done(function(result) { cb(undefined, result); }, cb);
+                modewl.apply(module.exports, args).done(function(result) { cb(undefined, result); }, cb);
             } else {
-                val.apply(module.exports, arguments).done(null, function(err) { throw err; });
+                modewl.apply(module.exports, arguments).done(null, function(err) { throw err; });
             }
         };
     } else {
-        Object.defineProperty(opt_obj || module.exports, symbol, {
-            get : function() { val = val || module.require(modulePath); return val; },
-            set : function(v) { val = v; }
-        });
+        (opt_obj || module.exports)[symbol] = modewl;
     }
 
     // Add the module.raw.foo as well.
-    if(module.exports.raw) {
-        Object.defineProperty(module.exports.raw, symbol, {
-            get : function() { val = val || module.require(modulePath); return val; },
-            set : function(v) { val = v; }
-        });
+    if (module.exports.raw) {
+        module.exports.raw[symbol] = modewl;
     }
 }
 

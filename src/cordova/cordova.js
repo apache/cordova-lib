@@ -55,7 +55,6 @@ exports.findProjectRoot = function(opt_startDir) {
 var addModuleProperty = cordova_util.addModuleProperty;
 addModuleProperty(module, 'prepare', './prepare', true);
 addModuleProperty(module, 'build', './build', true);
-addModuleProperty(module, 'help', './help');
 addModuleProperty(module, 'config', './config');
 addModuleProperty(module, 'create', './create', true);
 addModuleProperty(module, 'emulate', './emulate', true);

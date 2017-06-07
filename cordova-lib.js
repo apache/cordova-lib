@@ -17,21 +17,7 @@
     under the License.
 */
 
-// For now expose plugman and cordova just as they were in the old repos
-
-
-function addProperty(obj, property, modulePath) {
-    // Add properties as getter to delay load the modules on first invocation
-    Object.defineProperty(obj, property, {
-        configurable: true,
-        get: function () {
-            var module = require(modulePath);
-            // We do not need the getter any more
-            obj[property] = module;
-            return module;
-        }
-    });
-}
+var common = require('cordova-common');
 
 exports = module.exports = {
     set binname(name) {
@@ -40,13 +26,11 @@ exports = module.exports = {
     get binname() {
         return this.cordova.binname;
     },
-    get events() { return require('cordova-common').events },
-    get configparser() { return require('cordova-common').ConfigParser },
-    get PluginInfo() { return require('cordova-common').PluginInfo },
-    get CordovaError() { return require('cordova-common').CordovaError }
-
+    events: common.events,
+    configparser: common.ConfigParser,
+    PluginInfo: common.PluginInfo,
+    CordovaError: common.CordovaError,
+    plugman: require('./src/plugman/plugman'),
+    cordova: require('./src/cordova/cordova'),
+    cordova_platforms: require('./src/platforms/platforms')
 };
-
-addProperty(module.exports, 'plugman', './src/plugman/plugman');
-addProperty(module.exports, 'cordova', './src/cordova/cordova');
-addProperty(module.exports, 'cordova_platforms', './src/platforms/platforms');
