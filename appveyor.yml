@@ -29,10 +29,11 @@ install:
   - cd ../cordova-fetch
   - npm install
   - npm link ../cordova-common
+  - cd ../
 
 build: off
 
 test_script:
   - node --version
   - npm --version
-  - "cd ../cordova-lib && npm test && npm run e2e-tests"
+  - "npm test && npm run e2e-tests"
