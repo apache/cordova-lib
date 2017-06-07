@@ -9,20 +9,22 @@ environment:
 install:
   - ps: Install-Product node $env:nodejs_version
   - git clone https://github.com/apache/cordova-js --depth 10
-  - cd cordova-lib
-  - npm link ../cordova-js
-  - npm link ../cordova-common
-  - npm link ../cordova-serve
-  - cd ../cordova-fetch
+  - git clone https://github.com/apache/cordova-common --depth 10
+  - git clone https://github.com/apache/cordova-fetch --depth 10
+  - git clone https://github.com/apache/cordova-serve --depth 10
+  - npm link cordova-js
+  - npm link cordova-common
+  - npm link cordova-serve
+  - cd cordova-fetch
   - npm link ../cordova-common
   - npm install
-  - cd ../cordova-lib
-  - npm link ../cordova-fetch
+  - cd ../
+  - npm link cordova-fetch
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
   # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency
   # is moved to 'cordova-lib' and hence 'npm run jshint' on 'cordova-common' is failing
-  - cd ../cordova-common
+  - cd cordova-common
   - npm install
   - cd ../cordova-fetch
   - npm install
@@ -33,6 +35,4 @@ build: off
 test_script:
   - node --version
   - npm --version
-  - "cd ../cordova-common && npm test"
-  - "cd ../cordova-fetch && npm test"
   - "cd ../cordova-lib && npm test && npm run e2e-tests"

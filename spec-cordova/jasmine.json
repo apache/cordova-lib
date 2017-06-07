@@ -1,0 +1,13 @@
+{
+    "spec_dir": "spec-cordova",
+    "spec_files": [
+    	"**/*[sS]pec.js",
+    	"../spec-plugman/**/*[sS]pec.js"
+    ],
+    "helpers": [
+      "helpers.js",
+      "helper.js"
+    ],
+    "stopSpecOnExpectationFailure": false,
+    "random": false
+}
