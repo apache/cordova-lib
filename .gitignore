@@ -15,3 +15,4 @@ cordova-lib/src/plugman/defaults.json
 cordova-lib/spec-plugman/plugins/recursivePlug/demo/fetch.json
 cordova-lib/spec-plugman/plugins/recursivePlug/demo/test-recursive
 cordova-fetch/test/temp
+**/*.swp
