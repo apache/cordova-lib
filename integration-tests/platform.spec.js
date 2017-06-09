@@ -165,43 +165,6 @@ describe('platform end-to-end', function () {
     });
 });
 
-describe('add function', function () {
-    var opts;
-    var hooksRunnerMock;
-
-    beforeEach(function(){
-        opts = {};
-        hooksRunnerMock = {
-            fire: function () {
-                return Q();
-            }
-        };
-    });
-
-    it('Test 004 : throws if the target list is empty', function (done) {
-        var targets = [];
-        platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
-            done();
-        });
-    });
-
-    it('Test 005 : throws if the target list is undefined or null', function (done) {
-
-        // case 1 : target list undefined
-        var targets; // = undefined;
-        platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
-        });
-
-        // case 2 : target list null
-        targets = null;
-        platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-            expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
-            done();
-        });
-    });
-});
 
 describe('platform add plugin rm end-to-end', function () {
 
