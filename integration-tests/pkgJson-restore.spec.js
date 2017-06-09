@@ -55,7 +55,7 @@ describe('tests platform/spec restore with --save', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -79,7 +79,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add platform with save, fetch
-            return cordova.raw.platform('add', androidPlatform, {'save':true , 'fetch':true});
+            return cordova.platform('add', androidPlatform, {'save':true , 'fetch':true});
         }).then(function() {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Added platform properly to pkg.json
@@ -104,7 +104,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(firstCharConfig === '~');
         }).then(function() {
             // Run cordova prepare
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // No changes to pkg.json spec for android.
@@ -149,7 +149,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add platform with save and fetch
-            return cordova.raw.platform('add', 'https://github.com/apache/cordova-browser', {'save':true, 'fetch':true});
+            return cordova.platform('add', 'https://github.com/apache/cordova-browser', {'save':true, 'fetch':true});
         }).then(function() {
             // Check that platform was added to config.xml successfully.
             var cfg = new ConfigParser(configXmlPath);
@@ -171,7 +171,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(platformsJson[bPlatform]).toBeDefined();
         }).then(function() {
             // Remove platform without --save.
-            return cordova.raw.platform('rm', bPlatform, {'fetch':true});
+            return cordova.platform('rm', bPlatform, {'fetch':true});
         }).then(function() {
             // Platform in pkg.json should still be there.
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -182,7 +182,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(platformsJson[bPlatform]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare
-            return cordova.raw.prepare({'fetch':true});
+            return cordova.prepare({'fetch':true});
         }).then(function() {
             // Check config.xml for spec modification.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -224,7 +224,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add plugin with save and fetch.
-            return cordova.raw.plugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save':true, 'fetch':true});
+            return cordova.plugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save':true, 'fetch':true});
         }).then(function() {
             // Plugin id and spec were added to config.xml successfully.
             var cfg = new ConfigParser(configXmlPath);
@@ -240,7 +240,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).toExist();
         }).then(function() {
             // Remove plugin without --save.
-            return cordova.raw.plugin('rm', 'cordova-plugin-splashscreen', {'fetch':true});
+            return cordova.plugin('rm', 'cordova-plugin-splashscreen', {'fetch':true});
         }).then(function() {
             // Plugin id and spec are still in config.xml.
             var cfg2 = new ConfigParser(configXmlPath);
@@ -256,10 +256,10 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function() {
             // Add platform (so that prepare can run).
-            return cordova.raw.platform('add', 'browser', {'save':true});
+            return cordova.platform('add', 'browser', {'save':true});
         }).then(function() {
             // Run cordova prepare with fetch.
-            return cordova.raw.prepare({'fetch':true});
+            return cordova.prepare({'fetch':true});
         }).then(function() {
             // Config.xml spec is modified.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -304,7 +304,7 @@ describe('tests platform/spec restore with --save', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -312,7 +312,7 @@ describe('tests platform/spec restore with --save', function () {
     }
 
     function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -333,10 +333,10 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add 'browser' platform to project without --save
-            return cordova.raw.platform('add', secondPlatformAdded);
+            return cordova.platform('add', secondPlatformAdded);
         }).then(function() {
             // Add helpers.testPlatform to project with --save
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
+            return cordova.platform('add', [helpers.testPlatform], {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platformsJson)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -351,10 +351,10 @@ describe('tests platform/spec restore with --save', function () {
         }).then(fullPlatformList) // Platforms should still be in platform ls.
         .then(function() {
             // Remove helpers.testPlatform without --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform]);
+            return cordova.platform('rm', [helpers.testPlatform]);
         }).then(function() {
             // Remove secondPlatformAdded without --save.
-            return cordova.raw.platform('rm', secondPlatformAdded);
+            return cordova.platform('rm', secondPlatformAdded);
         }).then(function() {
             // Delete any previous caches of require(pkgJson) and (platformsJson)
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -366,7 +366,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(platformsJson[helpers.testPlatform]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of platformsJson
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -406,7 +406,7 @@ describe('files should not be modified if their platforms are identical', functi
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -430,7 +430,7 @@ describe('files should not be modified if their platforms are identical', functi
         // Pkg.json and config.xml contain only android at this point (basePkgJson6).
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -476,7 +476,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -513,7 +513,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         expect(pkgJson.dependencies[browserPlatform]).toBeUndefined();
         expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
         emptyPlatformList().then(function() {
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect 'browser' to be added to pkg.json.
@@ -560,7 +560,7 @@ describe('update empty package.json to match config.xml', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -590,7 +590,7 @@ describe('update empty package.json to match config.xml', function () {
         expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
         expect(configEngArray.length === 1);
         // Run cordova prepare.
-        cordova.raw.prepare();
+        cordova.prepare();
         emptyPlatformList().then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -638,7 +638,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -670,7 +670,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-browser' : '^4.1.0' });
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -725,7 +725,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
     });
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -759,7 +759,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
 
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -808,7 +808,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -844,7 +844,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -894,7 +894,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -946,7 +946,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
 
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1016,7 +1016,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -1075,7 +1075,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
         emptyPlatformList().then(function() {
             // Run cordova prepare
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1157,7 +1157,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -1193,7 +1193,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         emptyPlatformList().then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1256,7 +1256,7 @@ describe('platforms and plugins should be restored with config.xml even without 
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -1290,7 +1290,7 @@ describe('platforms and plugins should be restored with config.xml even without 
 
         emptyPlatformList().then(function() {
             // Run platform add.
-            return cordova.raw.platform('add', browserPlatform, {'save':true});
+            return cordova.platform('add', browserPlatform, {'save':true});
         }).then(function () {
             // Android and browser are in config.xml.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -1317,7 +1317,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(pkgJson.version).toEqual(cfg3.version());
             expect(pkgJson.displayName).toEqual(cfg3.name());
             // Remove android without --save.
-            return cordova.raw.platform('rm', [browserPlatform]);
+            return cordova.platform('rm', [browserPlatform]);
         }).then(function () {
             // Android should not be in the installed list (only browser).
             platformsJson = cordova_util.requireNoCache(platformsFolderPath1);
@@ -1326,7 +1326,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(platformsJson[androidPlatform]).not.toBeDefined();
         }).then(function () {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -1357,7 +1357,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
         }).then(function () {
             // Remove plugin without save.
-            return cordova.raw.plugin('rm', 'cordova-plugin-device');
+            return cordova.plugin('rm', 'cordova-plugin-device');
         }).then(function () {
             var cfg4 = new ConfigParser(configXmlPath);
             engines = cfg4.getEngines();
@@ -1372,7 +1372,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).not.toExist();
         }).then(function () {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function () {
         //  Plugin should be restored and returned to the installed list.
         expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
@@ -1407,7 +1407,7 @@ describe('tests platform/spec restore with --save', function () {
 
     // Factoring out some repeated checks.
     function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
@@ -1415,7 +1415,7 @@ describe('tests platform/spec restore with --save', function () {
     }
 
     function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
+        return cordova.platform('list').then(function() {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -1437,7 +1437,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add the testing platform with --save.
-            return cordova.raw.platform('add', 'android', {'save':true});
+            return cordova.platform('add', 'android', {'save':true});
         }).then(function() {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Require platformsFolderPath
@@ -1451,7 +1451,7 @@ describe('tests platform/spec restore with --save', function () {
         }).then(fullPlatformList) // Platform should still be in platform ls.
         .then(function() {
             // And now remove helpers.testPlatform without --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform]);
+            return cordova.platform('rm', [helpers.testPlatform]);
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platforms.json)
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -1462,7 +1462,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(platformsJson[helpers.testPlatform]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of platforms.json.
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -1489,10 +1489,10 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function() {
             // Add the testing platform with --save.
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
+            return cordova.platform('add', [helpers.testPlatform], {'save':true});
         }).then(function() {
             // Add the 'browser' platform with --save
-            return cordova.raw.platform('add',secondPlatformAdded, {'save':true});
+            return cordova.platform('add',secondPlatformAdded, {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platforms.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1508,10 +1508,10 @@ describe('tests platform/spec restore with --save', function () {
         }).then(fullPlatformList) // Platform should still be in platform ls.
         .then(function() {
             // Remove helpers.testPlatform with --save.
-            return cordova.raw.platform('rm', [helpers.testPlatform], {'save':true});
+            return cordova.platform('rm', [helpers.testPlatform], {'save':true});
         }).then(function() {
             // Remove secondPlatformAdded without --save.
-            return cordova.raw.platform('rm', secondPlatformAdded);
+            return cordova.platform('rm', secondPlatformAdded);
         }).then(function() {
             // Delete any previous caches of require(package.json) and (platformsJson).
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -1524,7 +1524,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(platformsJson[secondPlatformAdded]).toBeUndefined();
         }).then(function() {
             // Run cordova prepare.
-            return cordova.raw.prepare();
+            return cordova.prepare();
         }).then(function() {
             // Delete any previous caches of platformsJson.
             platformsJson = cordova_util.requireNoCache(platformsFolderPath);

@@ -41,7 +41,7 @@ module.exports = function emulate(options) {
         .then(function() {
             if (!options.options.noprepare) {
                 // Run a prepare first!
-                return require('./cordova').raw.prepare(options);
+                return require('./cordova').prepare(options);
             }
         }).then(function() {
             // Deploy in parallel (output gets intermixed though...)

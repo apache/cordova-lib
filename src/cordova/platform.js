@@ -215,7 +215,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                             fetch: opts.fetch || false,
                             save: opts.save || false
                         };
-                        return require('./cordova').raw.prepare(prepOpts);
+                        return require('./cordova').prepare(prepOpts);
                     }
                 })
                 .then(function() {
@@ -501,7 +501,7 @@ function check(hooksRunner, projectRoot) {
         /* oh well */
         updateCordova.resolve();
     });
-    cordova.raw.create(scratch)
+    cordova.create(scratch)
     .then(function () {
         var h = new HooksRunner(scratch);
         // Acquire the version number of each platform we have installed, and output that too.
@@ -749,7 +749,7 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                 options.cli_variables = variables;
             }
-            return plugman.raw.install(platform, output, plugin, plugins_dir, options);
+            return plugman.install(platform, output, plugin, plugins_dir, options);
         });
     }, Q());
 }

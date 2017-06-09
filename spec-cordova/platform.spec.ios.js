@@ -47,13 +47,13 @@ describe('cocoapod plugin add and rm end-to-end', function () {
 
     it('Test 001 : installs and uninstalls plugin depending on new pod and existing pod', function(done) {
 
-        cordova.raw.create('hello4')
+        cordova.create('hello4')
         .then(function() {
             process.chdir(project);
-            return cordova.raw.platform('add', 'https://git-wip-us.apache.org/repos/asf/cordova-ios.git');
+            return cordova.platform('add', 'https://git-wip-us.apache.org/repos/asf/cordova-ios.git');
         })
         .then(function() {
-            return cordova.raw.plugin('add', samplePlugin);
+            return cordova.plugin('add', samplePlugin);
         })
         .then(function() {
             podfile = path.resolve('./platforms/ios/Podfile');
@@ -81,7 +81,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             var podsJSONContent = require(podsJSON);
             expect(podsJSONContent[AFNetworking] !== null);
 
-            return cordova.raw.plugin('add', overlappingDependencyPlugin);
+            return cordova.plugin('add', overlappingDependencyPlugin);
         })
         .then(function() {
             var podfileContent = fs.readFileSync(podfile, {'encoding' : 'utf8'});
@@ -99,7 +99,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             //spec property should not be changed because of overlapping dependency
             expect(specPropertyOfAFNetworkingInPodsJSON).toEqual('~> 3.0');
 
-            return cordova.raw.plugin('rm','sample-cocoapod-plugin-overlapping-dependency');
+            return cordova.plugin('rm','sample-cocoapod-plugin-overlapping-dependency');
         })
         .then(function() {
             //expect only AFNetworking
@@ -113,7 +113,7 @@ describe('cocoapod plugin add and rm end-to-end', function () {
             expect(podsJSONContent[AFNetworking]);
             expect(podsJSONContent[CWStatusBarNotification] === undefined);
 
-            return cordova.raw.plugin('rm', 'sample-cordova-plugin-cocoapod-dependent');
+            return cordova.plugin('rm', 'sample-cordova-plugin-cocoapod-dependent');
         })
         .then(function() {
             //expect no pods 

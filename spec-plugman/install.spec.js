@@ -190,7 +190,7 @@ describe('install', function() {
         spyOn(shell, 'mkdir').and.returnValue(true);
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
-        fetchSpy = spyOn(plugman.raw, 'fetch').and.returnValue( Q( plugins['com.cordova.engine'] ) );
+        fetchSpy = spyOn(plugman, 'fetch').and.returnValue( Q( plugins['com.cordova.engine'] ) );
         chmod = spyOn(fs, 'chmodSync').and.returnValue(true);
         spyOn(fs, 'writeFileSync').and.returnValue(true);
         cp = spyOn(shell, 'cp').and.returnValue(true);

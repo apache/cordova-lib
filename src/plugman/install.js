@@ -98,7 +98,7 @@ function possiblyFetch(id, plugins_dir, options) {
         client: 'plugman'
     });
     // TODO: without runtime require below, we have a circular dependency.
-    return require('./plugman').raw.fetch(id, plugins_dir, opts);
+    return require('./plugman').fetch(id, plugins_dir, opts);
 }
 
 function checkEngines(engines) {

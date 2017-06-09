@@ -27,6 +27,7 @@ var fs            = require('fs'),
     nopt          = require('nopt'),
     Q             = require('q'),
     semver        = require('semver'),
+    aliasMethod   = require('../util/alias'),
     platforms     = require('../platforms/platforms');
 
 // Global configuration paths
@@ -55,14 +56,16 @@ Object.defineProperty(exports,'libDirectory', {
     }
 });
 
-addModuleProperty(module, 'plugin_parser', './plugin_parser');
-
+exports.plugin_parser = require('./plugin_parser');
+exports.raw = {};
+// Alias the plugin_parser method to the raw:{} object above.
+// Emits a deprecation warning if utilized, in prep for removal of `raw`.
+aliasMethod('plugin_parser', exports, 'cordova_util');
 exports.isCordova = isCordova;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
 exports.findPlugins = findPlugins;
-exports.addModuleProperty = addModuleProperty;
 exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
@@ -318,9 +321,9 @@ function ensurePlatformOptionsCompatible (platformOptions) {
     if (!Array.isArray(opts))
         return opts;
 
-    events.emit('warn', 'The format of cordova.raw.* methods "options" argument was changed in 5.4.0. ' +
+    events.emit('warn', 'The format of cordova.* methods "options" argument was changed in 5.4.0. ' +
         '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
-        'is still supported, consider updating your cordova.raw.* method calls to use new argument format.');
+        'is still supported, consider updating your cordova.* method calls to use new argument format.');
 
     var knownArgs = [
         'debug',
@@ -372,31 +375,6 @@ function isSymbolicLink(dir) {
         return fs.lstatSync(dir).isSymbolicLink();
     } catch (e) {
         return false;
-    }
-}
-
-// opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
-// should be created.
-function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
-    var modewl = require(modulePath);
-    if (opt_wrap) {
-        module.exports[symbol] = function() {
-            if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
-                // If args exist and the last one is a function, it's the callback.
-                var args = Array.prototype.slice.call(arguments);
-                var cb = args.pop();
-                modewl.apply(module.exports, args).done(function(result) { cb(undefined, result); }, cb);
-            } else {
-                modewl.apply(module.exports, arguments).done(null, function(err) { throw err; });
-            }
-        };
-    } else {
-        (opt_obj || module.exports)[symbol] = modewl;
-    }
-
-    // Add the module.raw.foo as well.
-    if (module.exports.raw) {
-        module.exports.raw[symbol] = modewl;
     }
 }
 

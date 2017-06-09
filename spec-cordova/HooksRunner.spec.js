@@ -125,7 +125,7 @@ describe('HooksRunner', function() {
 
 
         // Add the testing platform.
-        cordova.raw.platform('add', [helpers.testPlatform]).fail(function (err) {
+        cordova.platform('add', [helpers.testPlatform]).fail(function (err) {
             expect(err).toBeUndefined();
             done();
         }).then(function () {
@@ -142,7 +142,7 @@ describe('HooksRunner', function() {
 
             hookOptions = { projectRoot: project, cordova: options };
 
-            cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
+            cordova.plugin('add', testPluginFixturePath).fail(function (err) {
                 expect(err && err.stack).toBeUndefined();
                 done();
             }).then(function () {
@@ -423,10 +423,10 @@ describe('HooksRunner', function() {
                 var projectRoot = cordovaUtil.isCordova();
 
                 // remove plugin
-                cordova.raw.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
+                cordova.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
                     expect(err.stack).toBeUndefined();
                 }).then(function () {
-                    cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
+                    cordova.plugin('add', testPluginFixturePath).fail(function (err) {
                         expect(err).toBeUndefined();
                     }).then(function () {
                         testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');

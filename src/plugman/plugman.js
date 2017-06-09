@@ -20,51 +20,39 @@
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
 var events = require('cordova-common').events;
+var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 var Q = require('q');
-
-function addProperty(o, symbol, modulePath, doWrap) {
-    var modewl = require(modulePath);
-
-    if (doWrap) {
-        o[symbol] = function() {
-            if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
-                // If args exist and the last one is a function, it's the callback.
-                var args = Array.prototype.slice.call(arguments);
-                var cb = args.pop();
-                modewl.apply(o, args).done(function(result) {cb(undefined, result);}, cb);
-            } else {
-                modewl.apply(o, arguments).done(null, function(err){ throw err; });
-            }
-        };
-    } else {
-        // The top-level plugman.foo
-        o[symbol] = modewl;
-    }
-
-    // The plugman.raw.foo
-    o.raw[symbol] = modewl;
-}
 
 var plugman = {
     on:                 events.on.bind(events),
     off:                events.removeListener.bind(events),
     removeAllListeners: events.removeAllListeners.bind(events),
     emit:               events.emit.bind(events),
-    raw:                {}
+    install: require('./install'),
+    uninstall: require('./uninstall'),
+    fetch: require('./fetch'),
+    browserify: require('./browserify'),
+    help: require('./help'),
+    config: require('./config'),
+    owner: require('./owner'),
+    search: require('./search'),
+    info: require('./info'),
+    create: require('./create'),
+    platform: require('./platform_operation'),
+    createpackagejson: require('./createpackagejson'),
+    raw: {}
 };
 
-addProperty(plugman, 'install', './install', true);
-addProperty(plugman, 'uninstall', './uninstall', true);
-addProperty(plugman, 'fetch', './fetch', true);
-addProperty(plugman, 'browserify', './browserify');
-addProperty(plugman, 'help', './help');
-addProperty(plugman, 'config', './config', true);
-addProperty(plugman, 'owner', './owner', true);
-addProperty(plugman, 'search', './search', true);
-addProperty(plugman, 'info', './info', true);
-addProperty(plugman, 'create', './create', true);
-addProperty(plugman, 'platform', './platform_operation', true);
-addProperty(plugman, 'createpackagejson', './createpackagejson', true);
+// Add the below top-level plugman methods/modules as "aliases" to the
+// plugman.raw object. It will emit a warning deprecation notice about the
+// impending removal of plugman.raw.
+var modulesToAlias = ['install', 'uninstall', 'fetch', 'browserify', 'help',
+    'config', 'owner', 'search', 'info', 'create', 'platform',
+    'createpackagejson'];
+
+modulesToAlias.forEach(function(mod) {
+    aliasMethodToRawWithDeprecationNotice(mod, plugman, 'plugman');
+});
 
 plugman.commands =  {
     'config'   : function(cli_opts) {
@@ -106,7 +94,7 @@ plugman.commands =  {
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
             p = p.then(function () {
-                return plugman.raw.install(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
+                return plugman.install(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
             });
         });
 
@@ -130,7 +118,7 @@ plugman.commands =  {
                 projectRoot: cli_opts.project
             };
             p = p.then(function () {
-                return plugman.raw.uninstall(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
+                return plugman.uninstall(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
             });
         });
 

@@ -215,7 +215,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // If the platform is already installed, no need to re-install it.
             if (!fs.existsSync(platformsInstalled) && (installAllPlatforms || platforms.indexOf(platformName) > -1)) {
                 events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
-                return cordova.raw.platform('add', target, opts);
+                return cordova.platform('add', target, opts);
             }
         }
         return Q();

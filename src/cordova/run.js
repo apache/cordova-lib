@@ -39,7 +39,7 @@ module.exports = function run(options) {
         .then(function() {
             if (!options.options.noprepare) {
                 // Run a prepare first, then shell out to run
-                return require('./cordova').raw.prepare(options);
+                return require('./cordova').prepare(options);
             }
         }).then(function() {
             // Deploy in parallel (output gets intermixed though...)

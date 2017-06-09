@@ -17,25 +17,11 @@
     under the License.
 */
 
-var Q = require('q'),
-    cordovaUtil = require('./util'),
-    HooksRunner = require('../hooks/HooksRunner');
+var cordova_events = require('cordova-common').events;
 
-// Returns a promise.
-module.exports = function build(options) {
-    return Q().then(function() {
-        var projectRoot = cordovaUtil.cdProjectRoot();
-        options = cordovaUtil.preProcessOptions(options);
-
-        // fire build hooks
-        var hooksRunner = new HooksRunner(projectRoot);
-        return hooksRunner.fire('before_build', options)
-        .then(function() {
-            return require('./cordova').prepare(options);
-        }).then(function() {
-            return require('./cordova').compile(options);
-        }).then(function() {
-            return hooksRunner.fire('after_build', options);
-        });
-    });
+module.exports = function aliasMethodToRawWithDeprecationNotice(property, targetObj, component) {
+    targetObj.raw[property] = function() {
+        cordova_events.emit('warn', 'Use of `' + component + '.raw.*` methods is deprecated and `' + component + '.raw` will be removed in a future release. Please migrate to using the top-level `' + component + '.*` methods instead.');
+        return targetObj[property].apply(targetObj, arguments);
+    };
 };

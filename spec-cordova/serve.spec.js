@@ -84,14 +84,14 @@ xdescribe('serve command', function() {
             return function() {
                 var server;
                 runs(function() {
-                    cordova.raw.create(tempDir).then(function () {
+                    cordova.create(tempDir).then(function () {
                         process.chdir(tempDir);
                         process.env.PWD = tempDir;
                         var plats = [];
                         Object.getOwnPropertyNames(payloads).forEach(function(plat) {
                             var d = Q.defer();
                             plats.push(d.promise);
-                            cordova.raw.platform('add', plat, {spawnoutput:'ignore'}).then(function () {
+                            cordova.platform('add', plat, {spawnoutput:'ignore'}).then(function () {
                                 var dir = path.join(tempDir, 'merges', plat);
                                 shell.mkdir('-p', dir);
                                 // Write testing HTML files into the directory.

@@ -53,15 +53,15 @@ var results;
 // Runs: list, add, list
 function addPlugin(target, id, options) {
     // Check there are no plugins yet.
-    return cordova.raw.plugin('list').then(function() {
+    return cordova.plugin('list').then(function() {
         expect(results).toMatch(/No plugins added/gi);
     }).then(function() {
         // Add a fake plugin from fixtures.
-        return cordova.raw.plugin('add', target, options);
+        return cordova.plugin('add', target, options);
     }).then(function() {
         expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
     }).then(function() {
-        return cordova.raw.plugin('ls');
+        return cordova.plugin('ls');
     }).then(function() {
         expect(results).toContain(id);
     });
@@ -69,12 +69,12 @@ function addPlugin(target, id, options) {
 
 // Runs: remove, list
 function removePlugin(id) {
-    return cordova.raw.plugin('rm', id)
+    return cordova.plugin('rm', id)
     .then(function() {
         // The whole dir should be gone.
         expect(path.join(project, 'plugins', id)).not.toExist();
     }).then(function() {
-        return cordova.raw.plugin('ls');
+        return cordova.plugin('ls');
     }).then(function() {
         expect(results).toMatch(/No plugins added/gi);
     });
@@ -91,7 +91,7 @@ var errorHandler = {
 // that use a searchpath. See loadLocalPlugins() in plugman/fetch.js for details.
 // The searchpath behavior gets tested in the plugman spec
 function mockPluginFetch(id, dir) {
-    spyOn(plugman.raw, 'fetch').and.callFake(function(target, pluginPath, fetchOptions) {
+    spyOn(plugman, 'fetch').and.callFake(function(target, pluginPath, fetchOptions) {
         var dest = path.join(project, 'plugins', id);
         var src = path.join(dir, 'plugin.xml');
 
@@ -200,7 +200,7 @@ describe('plugin end-to-end', function() {
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
-            var fetchOptions = plugman.raw.fetch.calls.mostRecent().args[2];
+            var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
             expect(fetchOptions.searchpath[0]).toExist();
         })
         .fail(function(err) {
@@ -217,7 +217,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchOptions = plugman.raw.fetch.calls.mostRecent().args[2];
+            var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
             expect(fetchOptions.noregistry).toBeTruthy();
         })
         .fail(function(err) {
@@ -246,7 +246,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).toHaveBeenCalled();
 
-            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
+            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
         })
         .fail(function(err) {
@@ -267,7 +267,7 @@ describe('plugin end-to-end', function() {
 
             expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
 
-            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
+            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {
@@ -285,7 +285,7 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchTarget = plugman.raw.fetch.calls.mostRecent().args[0];
+            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
         .fail(function(err) {
