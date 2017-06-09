@@ -38,6 +38,15 @@ var config            = require('./config'),
     npmUninstall      = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
+module.exports = platform;
+module.exports.add = add;
+module.exports.remove = remove;
+module.exports.update = update;
+module.exports.check = check;
+module.exports.list = list;
+module.exports.save = save;
+module.exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
+
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
     module.exports[p] = platforms[p];
@@ -647,7 +656,6 @@ function addDeprecatedInformationToPlatforms(platformsList){
  * @param {Object} opts
  * @returns {Promise}
  */
-module.exports = platform;
 function platform(command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
     // would result in promise rejection instead of uncaught exception
@@ -760,10 +768,3 @@ function removePlatformPluginsJson(projectRoot, target) {
     shell.rm('-f', plugins_json);
 }
 
-module.exports.add = add;
-module.exports.remove = remove;
-module.exports.update = update;
-module.exports.check = check;
-module.exports.list = list;
-module.exports.save = save;
-module.exports.getPlatformDetailsFromDir = getPlatformDetailsFromDir;
