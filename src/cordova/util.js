@@ -81,6 +81,28 @@ exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
 exports.getPlatformApiFunction = getPlatformApiFunction;
+exports.hostSupports = hostSupports;
+exports.removePlatformPluginsJson = removePlatformPluginsJson;
+
+// Remove <platform>.json file from plugins directory.
+function removePlatformPluginsJson(projectRoot, target) {
+    var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
+    shell.rm('-f', plugins_json);
+}
+
+// Used to prevent attempts of installing platforms that are not supported on
+// the host OS. E.g. ios on linux.
+function hostSupports(platform) {
+    var p = platforms[platform] || {},
+        hostos = p.hostos || null;
+    if (!hostos)
+        return true;
+    if (hostos.indexOf('*') >= 0)
+        return true;
+    if (hostos.indexOf(process.platform) >= 0)
+        return true;
+    return false;
+}
 
 function requireNoCache(pkgJsonPath) {
     delete require.cache[require.resolve(pkgJsonPath)];
