@@ -14,19 +14,20 @@
     specific language governing permissions and limitations
     under the License.
 */
+/* eslint-env jasmine */
 
-var platform = require('../src/cordova/platform');
 var os = require('os');
+var Q = require('q');
+var platform = require('../src/cordova/platform');
 
-describe('cordova.platform', function() {
+describe('cordova.platform', function () {
     describe('add function', function () {
         var opts;
         var hooksRunnerMock;
         var projectRoot = os.tmpdir();
 
-        beforeEach(function(){
+        beforeEach(function () {
             opts = {};
-            projectRoot = 
             hooksRunnerMock = {
                 fire: function () {
                     return Q();
@@ -43,7 +44,6 @@ describe('cordova.platform', function() {
         });
 
         it('Test 005 : throws if the target list is undefined or null', function (done) {
-
             // case 1 : target list undefined
             var targets; // = undefined;
             platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {

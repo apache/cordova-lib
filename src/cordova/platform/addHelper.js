@@ -204,7 +204,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             fetch: opts.fetch || false,
                             save: opts.save || false
                         };
-                        return require('./cordova').prepare(prepOpts);
+                        return require('../cordova').prepare(prepOpts);
                     }
                 })
                 .then(function () {
@@ -320,7 +320,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             '\n' + error;
         return Q.reject(new CordovaError(message));
     }).then(function (libDir) {
-        return module.exports.getPlatformDetailsFromDir(libDir, platform);
+        return require('./index').getPlatformDetailsFromDir(libDir, platform);
     });
 }
 

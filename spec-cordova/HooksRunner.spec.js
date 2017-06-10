@@ -127,6 +127,7 @@ describe('HooksRunner', function() {
         // Add the testing platform.
         cordova.platform('add', [helpers.testPlatform]).fail(function (err) {
             expect(err).toBeUndefined();
+            console.error(err);
             done();
         }).then(function () {
             // Add the testing plugin
