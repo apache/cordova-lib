@@ -61,8 +61,8 @@ function platform (command, targets, opts) {
         if (targets && !(targets instanceof Array)) targets = [targets];
 
         // TODO: wouldn't update need a platform, too? what about save?
-        if (!targets && (command === 'add' || command === 'rm')) {
-            msg = 'You need to qualify `add` or `remove` with one or more platforms!';
+        if ((command === 'add' || command === 'rm' || command === 'remove') && (!targets || (targets instanceof Array && targets.length === 0))) {
+            msg = 'You need to qualify `' + command + '` with one or more platforms!';
             return Q.reject(new CordovaError(msg));
         }
 
