@@ -18,9 +18,10 @@
 
 var os = require('os');
 var Q = require('q');
-var platform = require('../src/cordova/platform');
+var platform = require('../../src/cordova/platform');
 
 describe('cordova.platform', function () {
+    // TODO: all these tests below can be moved to addHelper.spec.js, under the "it should require specifying at least one platform" test.
     describe('add function', function () {
         var opts;
         var hooksRunnerMock;

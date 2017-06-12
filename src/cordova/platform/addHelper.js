@@ -142,6 +142,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 var platformAlreadyAdded = fs.existsSync(platformPath);
 
                 if (cmd === 'add') {
+                    // TODO: Can we check for this before downloading the platform?
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
                     }
@@ -151,6 +152,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     // <platform>.json still exists).
                     cordova_util.removePlatformPluginsJson(projectRoot, target);
                 } else if (cmd === 'update') {
+                    // TODO: can we check for this before downloading the platform?
                     if (!platformAlreadyAdded) {
                         throw new CordovaError('Platform "' + platform + '" is not yet added. See `' +
                             cordova_util.binname + ' platform list`.');
@@ -165,6 +167,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     events.emit('warn', msg);
                 }
 
+                // TODO: NIT: can we rename this to platformapi options so as to not confuse with addHelper options?
                 var options = {
                     // We need to pass a platformDetails into update/create
                     // since PlatformApiPoly needs to know something about
@@ -184,6 +187,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 var promise = cmd === 'add'
                     ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
                     : PlatformApi.updatePlatform.bind(null, destination, options, events);
+                // TODO: if we return the promise immediately, can we not unindent the promise .then()s by one indent?
                 return promise()
                 .then(function () {
                     if (!opts.restoring) {
@@ -196,6 +200,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
                 })
                 .then(function () {
+                    // TODO: didnt we just do this two promise then's ago?
                     if (!opts.restoring) {
                         // Call prepare for the current platform if we're not restoring from config.xml.
                         var prepOpts = {
