@@ -15,7 +15,7 @@
     under the License.
 */
 
-var helpers = require('./helpers'),
+var helpers = require('../spec-cordova/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
@@ -26,10 +26,11 @@ var helpers = require('./helpers'),
     cordova = require('../src/cordova/cordova'),
     plugman = require('../src/plugman/plugman'),
     rewire = require('rewire'),
-    platform = rewire('../src/cordova/platform.js');
+    platform = rewire('../src/cordova/platform');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+var fixturesDir = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var pluginsDir = path.join(fixturesDir, 'plugins');
 
 describe('platform end-to-end', function () {
 
@@ -43,14 +44,14 @@ describe('platform end-to-end', function () {
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
+        shell.cp('-R', path.join(fixturesDir, 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         process.chdir(project);
 
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
         // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
         var c = config.read(project);
-        c.lib[helpers.testPlatform].url = path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform + '-lib');
+        c.lib[helpers.testPlatform].url = path.join(fixturesDir, 'platforms', helpers.testPlatform + '-lib');
         config.write(project, c);
 
         // The config.json in the fixture project points at fake "local" paths.
@@ -58,7 +59,7 @@ describe('platform end-to-end', function () {
         spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
+                shell.cp('-R', path.join(fixturesDir, 'platforms', 'android'), path.join(project, 'platforms'));
             } else if(cmd.match(/version\b/)) {
                 return Q('3.3.0');
             } else if(cmd.match(/update\b/)) {

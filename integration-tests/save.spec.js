@@ -20,7 +20,7 @@
 describe('(save flag)', function () {
     var rewire      = require('rewire'),
         cordova     = require('../src/cordova/cordova'),
-        helpers     = require('./helpers'),
+        helpers     = require('../spec-cordova/helpers'),
         path        = require('path'),
         Q           = require('q'),
         fs          = require('fs'),
