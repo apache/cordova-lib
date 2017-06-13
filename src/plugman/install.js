@@ -290,7 +290,7 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
         // we don't need to call prepare in any way
         return Q(true);
     }
-    events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
+    events.emit('log', 'Installing "' + pluginInfo.id + '" at "' + pluginInfo.version + '" for ' + platform);
 
     var theEngines = getEngines(pluginInfo, platform, project_dir, plugin_dir);
 

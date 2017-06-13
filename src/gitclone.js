@@ -58,8 +58,13 @@ function clone(git_url, git_ref, clone_dir){
             });
         }
     })
-    .then(function(){
-        events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + (git_ref || 'master') + '".');
+    .then(function() {
+        return superspawn.spawn('git', ['rev-parse', '--short', 'HEAD'], {
+            cwd: tmp_dir
+        });
+    })
+    .then(function(sha){
+        events.emit('log', 'Repository "' + git_url + '" checked out to git ref "' + (git_ref || 'master') + '" at "' + sha + '".');
         return tmp_dir;
     })
     .fail(function (err) {
