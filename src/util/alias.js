@@ -21,7 +21,7 @@ var cordova_events = require('cordova-common').events;
 
 module.exports = function aliasMethodToRawWithDeprecationNotice(property, targetObj, component) {
     targetObj.raw[property] = function() {
-        cordova_events.emit('warn', 'Use of `' + component + '.raw.*` methods is deprecated and `' + component + '.raw` will be removed in a future release. Please migrate to using the top-level `' + component + '.*` methods instead.');
+        cordova_events.emit('warn', 'Use of ' + component + '.raw.* methods is deprecated and ' + component + '.raw will be removed in a future release. Please migrate to using the top-level ' + component + '.* methods instead.');
         return targetObj[property].apply(targetObj, arguments);
     };
 };
