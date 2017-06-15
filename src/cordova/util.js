@@ -27,6 +27,7 @@ var fs            = require('fs'),
     nopt          = require('nopt'),
     Q             = require('q'),
     semver        = require('semver'),
+    aliasMethod   = require('../util/alias'),
     platforms     = require('../platforms/platforms');
 
 // Global configuration paths
@@ -55,8 +56,11 @@ Object.defineProperty(exports,'libDirectory', {
     }
 });
 
-addModuleProperty(module, 'plugin_parser', './plugin_parser');
-
+exports.plugin_parser = require('./plugin_parser');
+exports.raw = {};
+// Alias the plugin_parser method to the raw:{} object above.
+// Emits a deprecation warning if utilized, in prep for removal of `raw`.
+aliasMethod('plugin_parser', exports, 'cordova_util');
 exports.isCordova = isCordova;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
@@ -66,7 +70,6 @@ exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
-exports.addModuleProperty = addModuleProperty;
 exports.getOrigWorkingDirectory = getOrigWorkingDirectory;
 exports._resetOrigCwd = _resetOrigCwd;
 exports.fixRelativePath = fixRelativePath;
@@ -78,6 +81,28 @@ exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
 exports.getPlatformApiFunction = getPlatformApiFunction;
+exports.hostSupports = hostSupports;
+exports.removePlatformPluginsJson = removePlatformPluginsJson;
+
+// Remove <platform>.json file from plugins directory.
+function removePlatformPluginsJson(projectRoot, target) {
+    var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
+    shell.rm('-f', plugins_json);
+}
+
+// Used to prevent attempts of installing platforms that are not supported on
+// the host OS. E.g. ios on linux.
+function hostSupports(platform) {
+    var p = platforms[platform] || {},
+        hostos = p.hostos || null;
+    if (!hostos)
+        return true;
+    if (hostos.indexOf('*') >= 0)
+        return true;
+    if (hostos.indexOf(process.platform) >= 0)
+        return true;
+    return false;
+}
 
 function requireNoCache(pkgJsonPath) {
     delete require.cache[require.resolve(pkgJsonPath)];
@@ -318,9 +343,9 @@ function ensurePlatformOptionsCompatible (platformOptions) {
     if (!Array.isArray(opts))
         return opts;
 
-    events.emit('warn', 'The format of cordova.raw.* methods "options" argument was changed in 5.4.0. ' +
+    events.emit('warn', 'The format of cordova.* methods "options" argument was changed in 5.4.0. ' +
         '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
-        'is still supported, consider updating your cordova.raw.* method calls to use new argument format.');
+        'is still supported, consider updating your cordova.* method calls to use new argument format.');
 
     var knownArgs = [
         'debug',
@@ -372,38 +397,6 @@ function isSymbolicLink(dir) {
         return fs.lstatSync(dir).isSymbolicLink();
     } catch (e) {
         return false;
-    }
-}
-
-// opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
-// should be created.
-function addModuleProperty(module, symbol, modulePath, opt_wrap, opt_obj) {
-    var val = null;
-    if (opt_wrap) {
-        module.exports[symbol] = function() {
-            val = val || module.require(modulePath);
-            if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
-                // If args exist and the last one is a function, it's the callback.
-                var args = Array.prototype.slice.call(arguments);
-                var cb = args.pop();
-                val.apply(module.exports, args).done(function(result) { cb(undefined, result); }, cb);
-            } else {
-                val.apply(module.exports, arguments).done(null, function(err) { throw err; });
-            }
-        };
-    } else {
-        Object.defineProperty(opt_obj || module.exports, symbol, {
-            get : function() { val = val || module.require(modulePath); return val; },
-            set : function(v) { val = v; }
-        });
-    }
-
-    // Add the module.raw.foo as well.
-    if(module.exports.raw) {
-        Object.defineProperty(module.exports.raw, symbol, {
-            get : function() { val = val || module.require(modulePath); return val; },
-            set : function(v) { val = v; }
-        });
     }
 }
 

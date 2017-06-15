@@ -66,6 +66,13 @@ shell.chmod('-R', 'ug+x', hooksDir);
 shell.chmod('-R', 'ug+x', hooksDirDot);
 shell.chmod('-R', 'ug+x', scriptsDir);
 
+// To get more verbose output to help trace program flow, uncomment the lines below
+// TODO: think about how to factor this out so that it can be invoked from the command line
+//var events = require('cordova-common').events;
+//events.on('log', function(msg) { console.log(msg); });
+//events.on('verbose', function(msg) { console.log(msg); });
+//events.on('warn', function(msg) { console.log(msg); });
+
 describe('HooksRunner', function() {
     var hooksRunner;
     var hookOptions;
@@ -118,8 +125,10 @@ describe('HooksRunner', function() {
 
 
         // Add the testing platform.
-        cordova.raw.platform('add', [helpers.testPlatform]).fail(function (err) {
+        cordova.platform('add', [helpers.testPlatform]).fail(function (err) {
             expect(err).toBeUndefined();
+            console.error(err);
+            done();
         }).then(function () {
             // Add the testing plugin
             projectRoot = cordovaUtil.isCordova();
@@ -134,15 +143,16 @@ describe('HooksRunner', function() {
 
             hookOptions = { projectRoot: project, cordova: options };
 
-            cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
+            cordova.plugin('add', testPluginFixturePath).fail(function (err) {
                 expect(err && err.stack).toBeUndefined();
+                done();
             }).then(function () {
                 testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
                 shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
                 done();
             });
         });
-    });
+    }, 100000);
 
     describe('fire method', function() {
         beforeEach(function() {
@@ -414,10 +424,10 @@ describe('HooksRunner', function() {
                 var projectRoot = cordovaUtil.isCordova();
 
                 // remove plugin
-                cordova.raw.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
+                cordova.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
                     expect(err.stack).toBeUndefined();
                 }).then(function () {
-                    cordova.raw.plugin('add', testPluginFixturePath).fail(function (err) {
+                    cordova.plugin('add', testPluginFixturePath).fail(function (err) {
                         expect(err).toBeUndefined();
                     }).then(function () {
                         testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');

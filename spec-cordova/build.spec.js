@@ -34,13 +34,13 @@ describe('build command', function() {
         cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        prepare_spy = spyOn(cordova.raw, 'prepare').and.returnValue(Q());
-        compile_spy = spyOn(cordova.raw, 'compile').and.returnValue(Q());
+        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
+        compile_spy = spyOn(cordova, 'compile').and.returnValue(Q());
     });
     describe('failure', function() {
         it('Test 001 : should not run inside a project with no platforms', function(done) {
             list_platforms.and.returnValue([]);
-            cordova.raw.build()
+            cordova.build()
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -53,7 +53,7 @@ describe('build command', function() {
         it('Test 002 : should not run outside of a Cordova-based project', function(done) {
             is_cordova.and.returnValue(false);
 
-            cordova.raw.build()
+            cordova.build()
             .then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
@@ -66,7 +66,7 @@ describe('build command', function() {
 
     describe('success', function() {
         it('Test 003 : should run inside a Cordova-based project with at least one added platform and call both prepare and compile', function(done) {
-            cordova.raw.build(['android','ios']).then(function() {
+            cordova.build(['android','ios']).then(function() {
                 var opts = Object({ platforms: [ 'android', 'ios' ], verbose: false, options: Object({  }) });
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
@@ -74,7 +74,7 @@ describe('build command', function() {
             });
         });
         it('Test 004 : should pass down options', function(done) {
-            cordova.raw.build({platforms: ['android'], options: {release: true}}).then(function() {
+            cordova.build({platforms: ['android'], options: {release: true}}).then(function() {
                 var opts = {platforms: ['android'], options: {release: true}, verbose: false};
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
@@ -84,11 +84,11 @@ describe('build command', function() {
 
         it('Test 005 : should convert options from old format and warn user about this', function (done) {
             function warnSpy(message) {
-                expect(message).toMatch('The format of cordova.raw.* methods "options" argument was changed');
+                expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
             }
 
             cordova.on('warn', warnSpy);
-            cordova.raw.build({platforms:['android'], options:['--release', '--cdvBuildOpt=opt']}).then(function () {
+            cordova.build({platforms:['android'], options:['--release', '--cdvBuildOpt=opt']}).then(function () {
                 var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt=opt']}), verbose: false};
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
@@ -101,13 +101,13 @@ describe('build command', function() {
     describe('hooks', function() {
         describe('when platforms are added', function() {
             it('Test 006 : should fire before hooks through the hooker module', function(done) {
-                cordova.raw.build(['android', 'ios']).then(function() {
+                cordova.build(['android', 'ios']).then(function() {
                     expect(fire.calls.argsFor(0)).toEqual(['before_build', {verbose: false, platforms:['android', 'ios'] , options: {}}]);
                     done();
                 });
             });
             it('Test 007 : should fire after hooks through the hooker module', function(done) {
-                cordova.raw.build('android').then(function() {
+                cordova.build('android').then(function() {
                      expect(fire.calls.argsFor(1)).toEqual([ 'after_build', { platforms: [ 'android' ], verbose: false, options: {} } ]);
                      done();
                 });
@@ -117,7 +117,7 @@ describe('build command', function() {
         describe('with no platforms added', function() {
             it('Test 008 : should not fire the hooker', function(done) {
                 list_platforms.and.returnValue([]);
-                Q().then(cordova.raw.build).then(function() {
+                Q().then(cordova.build).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {
                     expect(err.message).toEqual(

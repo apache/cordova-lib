@@ -145,7 +145,7 @@ module.exports = function server(port, opts) {
         var hooksRunner = new HooksRunner(projectRoot);
         hooksRunner.fire('before_serve', opts).then(function () {
             // Run a prepare first!
-            return require('./cordova').raw.prepare([]);
+            return require('./cordova').prepare([]);
         }).then(function () {
             var server = serve();
 

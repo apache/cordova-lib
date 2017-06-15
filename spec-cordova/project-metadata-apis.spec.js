@@ -27,7 +27,7 @@ describe('retrieval of project metadata', function () {
         var androidVersion = '3.7.1';
         var browserSrc = 'https://github.com/apache/cordova-browser.git';
 
-        cordova.raw.projectMetadata.getPlatforms(projectRoot)
+        cordova.projectMetadata.getPlatforms(projectRoot)
             .then(function (platforms) {
                 expect(platforms.length).toBe(2);
 
@@ -57,7 +57,7 @@ describe('retrieval of project metadata', function () {
         var fileId = 'org.apache.cordova.file';
         var fileSource = 'https://github.com/apache/cordova-plugin-file.git';
 
-        cordova.raw.projectMetadata.getPlugins(projectRoot)
+        cordova.projectMetadata.getPlugins(projectRoot)
             .then(function (plugins) {
                 expect(plugins.length).toBe(3);
 

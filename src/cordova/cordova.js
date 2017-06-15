@@ -19,6 +19,7 @@
 
 var cordova_events = require('cordova-common').events;
 var cordova_util = require('./util');
+var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 
 var off = function() {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -36,38 +37,41 @@ exports = module.exports = {
     },
     off:       off,
     removeListener:off,
-    removeAllListeners:function() {
+    removeAllListeners: function() {
         cordova_events.removeAllListeners.apply(cordova_events, arguments);
     },
     emit:      emit,
     trigger:   emit,
+    findProjectRoot: function(opt_startDir) {
+        return cordova_util.isCordova(opt_startDir);
+    },
+    prepare: require('./prepare'),
+    build: require('./build'),
+    config: require('./config'),
+    create: require('./create'),
+    emulate: require('./emulate'),
+    plugin: require('./plugin'),
+    plugins: require('./plugin'),
+    serve: require('./serve'),
+    platform: require('./platform'),
+    platforms: require('./platform'),
+    compile: require('./compile'),
+    run: require('./run'),
+    info: require('./info'),
+    targets: require('./targets'),
+    requirements: require('./requirements'),
+    projectMetadata: require('./project_metadata'),
+    clean: require('./clean'),
     raw: {}
 };
 
-exports.findProjectRoot = function(opt_startDir) {
-    return cordova_util.isCordova(opt_startDir);
-};
+// Add the below top-level cordova methods/modules as "aliases" to the
+// cordova.raw object. It will emit a warning deprecation notice about the
+// impending removal of cordova.raw.
+var modulesToAlias = ['prepare', 'build', 'config', 'emulate', 'plugin',
+    'plugins', 'serve', 'platform', 'platforms', 'compile', 'run', 'info',
+    'targets', 'requirements', 'projectMetadata', 'clean'];
 
-// Each of these APIs takes a final parameter that is a callback function.
-// The callback is passed the error object upon failure, or undefined upon success.
-// To use a promise instead, call the APIs via cordova.raw.FOO(), which returns
-// a promise instead of using a final-parameter-callback.
-var addModuleProperty = cordova_util.addModuleProperty;
-addModuleProperty(module, 'prepare', './prepare', true);
-addModuleProperty(module, 'build', './build', true);
-addModuleProperty(module, 'help', './help');
-addModuleProperty(module, 'config', './config');
-addModuleProperty(module, 'create', './create', true);
-addModuleProperty(module, 'emulate', './emulate', true);
-addModuleProperty(module, 'plugin', './plugin', true);
-addModuleProperty(module, 'plugins', './plugin', true);
-addModuleProperty(module, 'serve', './serve');
-addModuleProperty(module, 'platform', './platform', true);
-addModuleProperty(module, 'platforms', './platform', true);
-addModuleProperty(module, 'compile', './compile', true);
-addModuleProperty(module, 'run', './run', true);
-addModuleProperty(module, 'info', './info', true);
-addModuleProperty(module, 'targets', './targets', true);
-addModuleProperty(module, 'requirements', './requirements', true);
-addModuleProperty(module, 'projectMetadata', './project_metadata', true);
-addModuleProperty(module, 'clean', './clean', true);
+modulesToAlias.forEach(function(mod) {
+    aliasMethodToRawWithDeprecationNotice(mod, module.exports, 'cordova');
+});

@@ -33,7 +33,6 @@ var path = require('path'),
     underscore = require('underscore'),
     shell   = require('shelljs'),
     events = require('cordova-common').events,
-    plugman = require('./plugman'),
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
     pluginSpec = require('../cordova/plugin_spec_parser'),
@@ -98,7 +97,8 @@ function possiblyFetch(id, plugins_dir, options) {
     var opts = underscore.extend({}, options, {
         client: 'plugman'
     });
-    return plugman.raw.fetch(id, plugins_dir, opts);
+    // TODO: without runtime require below, we have a circular dependency.
+    return require('./plugman').fetch(id, plugins_dir, opts);
 }
 
 function checkEngines(engines) {

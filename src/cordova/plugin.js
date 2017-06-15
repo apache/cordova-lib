@@ -143,7 +143,7 @@ module.exports = function plugin(command, targets, opts) {
                             .then(function(resolvedTarget) {
                                 target = resolvedTarget;
                                 events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                                return plugman.raw.fetch(target, pluginPath, fetchOptions);
+                                return plugman.fetch(target, pluginPath, fetchOptions);
                             })
                             .then(function (directory) {
                                 return pluginInfoProvider.get(directory);
@@ -195,7 +195,7 @@ module.exports = function plugin(command, targets, opts) {
                                 };
 
                                 events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
-                                return plugman.raw.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
+                                return plugman.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
                                 .then(function (didPrepare) {
                                     // If platform does not returned anything we'll need
                                     // to trigger a prepare after all plugins installed
@@ -298,7 +298,7 @@ module.exports = function plugin(command, targets, opts) {
                                 var options = {
                                     force: opts.force || false
                                 };
-                                return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
+                                return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
                                 .then(function (didPrepare) {
                                     // If platform does not returned anything we'll need
                                     // to trigger a prepare after all plugins installed
@@ -308,7 +308,7 @@ module.exports = function plugin(command, targets, opts) {
                         }, Q())
                         .then(function() {
                             // TODO: Should only uninstallPlugin when no platforms have it.
-                            return plugman.raw.uninstall.uninstallPlugin(target, pluginPath, opts);
+                            return plugman.uninstall.uninstallPlugin(target, pluginPath, opts);
                         }).then(function(){
                             //remove plugin from config.xml
                             if(saveToConfigXmlOn(config_json, opts)){

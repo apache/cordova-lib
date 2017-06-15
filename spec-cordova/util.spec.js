@@ -263,7 +263,7 @@ describe('util module', function() {
                 events.on('warn', warnSpy);
                 util.preProcessOptions({options: ['foo']});
                 expect(warnSpy).toHaveBeenCalled();
-                expect(warnSpy.calls.argsFor(0)).toMatch('consider updating your cordova.raw.* method calls');
+                expect(warnSpy.calls.argsFor(0)).toMatch('consider updating your cordova.* method calls');
                 events.removeListener('warn', warnSpy);
             });
 
