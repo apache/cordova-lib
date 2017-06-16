@@ -81,6 +81,8 @@ describe('cordova/platform/addHelper', function () {
             platform_addHelper('add', hooks_mock, projectRoot, ['atari']);
             expect(events.emit.calls.mostRecent().args[1]).toContain('can not be built on this OS');
         });
+        it('should throw if platform was already added before adding');
+        it('should throw if platform was not added before updating');
     });
     describe('happy path (success conditions)', function () {
         it('should fire the before_platform_* hook', function () {
@@ -105,24 +107,25 @@ describe('cordova/platform/addHelper', function () {
             it('should invoke fetch if provided as an option and spec is a directory');
         });
         describe('platform api invocation', function () {
-            // TODO: test these by checking how platform_api_mock.create/updatePlatform is called
-            it('should check if platform was already added when adding');
-            it('should check if platform was already added when updating');
+            it('should invoke the createPlatform platform API method when adding a platform, providing destination location, parsed config file and platform detail options as arguments');
+            it('should invoke the update platform API method when updating a platform, providing destination location and plaform detail options as arguments');
         });
-        /*
-         * second "leg" (`then`) of the promise:
-         * - checks for already-added or not-added platform requirements. TODO: couldnt we move this up to before downloading, to the initial error/warning checks?
-         * - invokes platform api createPlatform or updatePlatform
-         * - if not restoring, runs a `prepare`
-         * - if just added, installsPluginsForNewPlatform (TODO for fil: familiarize yourself why not just a regular "install plugin for platform" - why the 'newPlatform' API?)
-         * - if not restoring, run a prepare. TODO: didnt we just do this? we just installed plugins, so maybe its needed, but couldnt we just run a single prepare after possibly installing plugins?
-         * third `then`:
-         * - save particular platform version installed to platform metadata.
-         * - if autosaving or opts.save is provided, write platform to config.xml
-         * fourth `then`:
-         * - save added platform to package.json if exists.
-         * fifth `then`:
-         * - fire after_platform_add/update hook
-         */
+        describe('after platform api invocation', function () {
+            describe('when the restoring option is not provided', function () {
+                it('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!');
+            });
+            it('should invoke the installPluginsForNewPlatforms method in the platform-add case');
+            it('should save the platform metadata');
+            it('should write out the version of platform just added/updated to config.xml if the save option is provided');
+            describe('if the project contains a package.json', function () {
+                it('should write out the platform just added/updated to the cordova.platforms property of package.json');
+                it('should only write the package.json file if it was modified');
+            });
+            it('should file the after_platform_* hook');
+        });
+    });
+    describe('downloadPlatform', function () {
+    });
+    describe('installPluginsForNewPlatform', function () {
     });
 });
