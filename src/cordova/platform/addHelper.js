@@ -96,6 +96,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                // TODO: can we move this up much earlier in the code?
                 if (platform === 'ubuntu' || platform === 'blackberry10') {
                     events.emit(platform + ' has been deprecated and will be removed in the next major release of cordova.');
                 }
@@ -143,7 +144,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 var platformAlreadyAdded = fs.existsSync(platformPath);
 
                 if (cmd === 'add') {
-                    // TODO: Can we check for this before downloading the platform?
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
                     }
@@ -209,6 +209,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             fetch: opts.fetch || false,
                             save: opts.save || false
                         };
+                        
                         //delete require.cache[require.resolve('../cordova')]
                         return require('../prepare')(prepOpts);
                     }
