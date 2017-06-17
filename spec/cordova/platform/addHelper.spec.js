@@ -29,19 +29,25 @@ var prepare = require('../../src/cordova/prepare');
 var platform_metadata = require('../../src/cordova/platform_metadata');
 var cordova_util = require('../../src/cordova/util');
 var cordova_config = require('../../src/cordova/config');
+var plugman = require('../../src/plugman/plugman');
+var fetch_metadata = require('../../src/plugman/util/metadata');
 
 >>>>>>> Filling out more addHelper specs.
 describe('cordova/platform/addHelper', function () {
     var projectRoot = '/some/path';
     var cfg_parser_mock = function () {};
-    var cfg_parser_revert;
+    var cfg_parser_revert_mock;
     var hooks_mock;
     var platform_api_mock;
+    var fetch_mock;
+    var fetch_revert_mock;
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
         hooks_mock.fire.and.returnValue(Q());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine', 'addEngine']);
-        cfg_parser_revert = platform_addHelper.__set__('ConfigParser', cfg_parser_mock);
+        cfg_parser_revert_mock = platform_addHelper.__set__('ConfigParser', cfg_parser_mock);
+        fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Q());
+        fetch_revert_mock = platform_addHelper.__set__('fetch', fetch_mock);
         spyOn(shell, 'mkdir');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'writeFileSync');
@@ -65,7 +71,8 @@ describe('cordova/platform/addHelper', function () {
         spyOn(platform_metadata, 'save');
     });
     afterEach(function () {
-        cfg_parser_revert();
+        cfg_parser_revert_mock();
+        fetch_revert_mock();
     });
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function (done) {
@@ -125,7 +132,28 @@ describe('cordova/platform/addHelper', function () {
         });
     });
     describe('downloadPlatform', function () {
+        describe('errors', function () {
+            it('should reject the promise should fetch fail');
+            it('should reject the promise should lazy_load.git_clone fail');
+            it('should reject the promise should lazy_load.based_on_config fail');
+            it('should reject the promise should both git_clone and based_on_config fail after the latter was fallen back on');
+        });
+        describe('happy path', function () {
+            it('should invoke cordova-fetch if fetch was provided as an option');
+            it('should invoke lazy_load.git_clone if the version to download is a URL');
+            it('should attempt to lazy_load.based_on_config if lazy_load.git_clone fails');
+            it('should by default attempt to lazy_load.based_on_config');
+            it('should pass along a libDir argument to getPlatformDetailsFromDir on a successful platform download');
+        });
     });
     describe('installPluginsForNewPlatform', function () {
+        beforeEach(function () {
+            spyOn(fetch_metadata, 'get_fetch_metadata');
+            spyOn(plugman, 'install').and.returnValue(Q());
+        });
+        // TODO: these these by checking plugman.install calls.
+        it('should immediately return if there are no plugins to install into the platform');
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments');
+        it('should include any plugin variables as options when invoking plugman install');
     });
 });
