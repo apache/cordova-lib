@@ -31,7 +31,8 @@ describe('(save flag)', function () {
         registry    = require('../src/plugman/registry/registry'),
         PlatformApi = require('../src/platforms/PlatformApiPoly'),
         events      = require('cordova-common').events,
-        platform    = rewire('../src/cordova/platform');
+        addHelper   = rewire('../src/cordova/platform/addHelper'),
+        platform    = require('../src/cordova/platform');
 
     var appName                = 'testApp',
         tempPath               = path.join(__dirname, 'temp'),
@@ -71,7 +72,10 @@ describe('(save flag)', function () {
         createPlatformOrig = PlatformApi.createPlatform;
 
     function mockDownloadPlatform(libDir, version) {
-        revertDownloadPlatform = platform.__set__('downloadPlatform', function () {
+        console.log('in mockDownloadPlatform');
+        console.log(addHelper);
+        revertDownloadPlatform = addHelper.__set__('downloadPlatform', function () {
+            console.log('fake');
             return Q({
                 libDir: libDir,
                 platform: platformName,
@@ -111,7 +115,7 @@ describe('(save flag)', function () {
         spyOn(PlatformApi, 'updatePlatform').and.returnValue(Q());
 
         //rewire mocks
-        revertInstallPluginsForNewPlatform = platform.__set__('installPluginsForNewPlatform', function () { return Q(); });
+        revertInstallPluginsForNewPlatform = addHelper.__set__('installPluginsForNewPlatform', function () { return Q(); });
 
        //creating test app
         cordova.create(appPath, undefined, undefined, {}, events).then(function () {
@@ -175,10 +179,9 @@ describe('(save flag)', function () {
             });
         }, BIG_TIMEOUT);
 
-        it('Test 005 : spec.2 should save platform to config', function (done) {
+       it('Test 005 : spec.2 should save platform to config', function (done) {
             helpers.removeEngine(appPath, platformName);
             mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
-
             platform('add', platformName, { 'save': true })
             .then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionNew);

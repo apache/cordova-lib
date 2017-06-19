@@ -27,7 +27,8 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
-var prepare = require('../prepare');
+//delete require.cache[require.resolve('../prepare')];
+//var prepare = require('../prepare');
 var promiseutil = require('../../util/promise-util');
 var config = require('../config');
 var lazy_load = require('../lazy_load');
@@ -191,7 +192,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 return promise()
                 .then(function () {
                     if (!opts.restoring) {
-                        return prepare.preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                        return require('../prepare').preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
                     }
                 })
                 .then(function () {
@@ -209,7 +210,8 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             fetch: opts.fetch || false,
                             save: opts.save || false
                         };
-                        return require('../cordova').prepare(prepOpts);
+                        //delete require.cache[require.resolve('../cordova')]
+                        return require('../prepare')(prepOpts);
                     }
                 })
                 .then(function () {

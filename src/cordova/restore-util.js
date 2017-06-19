@@ -23,7 +23,7 @@ var cordova_util    = require('./util'),
     Q               = require('q'),
     fs              = require('fs'),
     events          = require('cordova-common').events,
-    cordova         = require('./cordova'),
+    cordovaPlatform = require('./platform'),
     semver          = require('semver'),
     platformsList   = require('../platforms/platforms.js'),
     promiseutil     = require('../util/promise-util');
@@ -215,7 +215,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // If the platform is already installed, no need to re-install it.
             if (!fs.existsSync(platformsInstalled) && (installAllPlatforms || platforms.indexOf(platformName) > -1)) {
                 events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
-                return cordova.platform('add', target, opts);
+                return cordovaPlatform('add', target, opts);
             }
         }
         return Q();

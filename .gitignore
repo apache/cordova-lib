@@ -11,8 +11,7 @@ spec-cordova/fixtures/projects/cordova
 *.jar
 .vscode
 src/plugman/defaults.json
-cordova-lib/src/plugman/defaults.json
-cordova-lib/spec-plugman/plugins/recursivePlug/demo/fetch.json
-cordova-lib/spec-plugman/plugins/recursivePlug/demo/test-recursive
-cordova-fetch/test/temp
+src/plugman/defaults.json
+spec-plugman/plugins/recursivePlug/demo/fetch.json
+spec-plugman/plugins/recursivePlug/demo/test-recursive
 **/*.swp
