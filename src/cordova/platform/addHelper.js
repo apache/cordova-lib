@@ -201,6 +201,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function () {
                     // TODO: didnt we just do this two promise then's ago?
+                    // TODO: what is the difference between calling prepare() here and prepare.preparePlatforms() a few lines above?
                     if (!opts.restoring) {
                         // Call prepare for the current platform if we're not restoring from config.xml.
                         var prepOpts = {
