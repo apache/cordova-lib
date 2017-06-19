@@ -32,7 +32,8 @@ var util = require('../src/cordova/util');
 
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+var fixturesDir = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var pluginsDir = path.join(fixturesDir, 'plugins');
 
 var pluginId = 'org.apache.cordova.fakeplugin1';
 var org_test_defaultvariables = 'org.test.defaultvariables';
@@ -109,7 +110,7 @@ describe('plugin end-to-end', function() {
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tmpDir);
+        shell.cp('-R', path.join(fixturesDir, 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         // Copy some platform to avoid working on a project with no platforms.
         shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
