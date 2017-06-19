@@ -30,7 +30,7 @@ module.exports.parse = parse;
  * @param {String} id       The id of the package if this is an npm package
  * @param {String} version  The version specified for the package if this is an npm package
  */
-function PluginSpec(raw, scope, id, version) {
+function PluginSpec (raw, scope, id, version) {
     /** @member {String|null} The npm scope of the plugin spec or null if it does not have one */
     this.scope = scope || null;
 
@@ -51,7 +51,7 @@ function PluginSpec(raw, scope, id, version) {
  * @param {String} raw  The string to be parsed
  * @return {PluginSpec}  The parsed plugin spec
  */
-function parse(raw) {
+function parse (raw) {
     var split = NPM_SPEC_REGEX.exec(raw);
     if (split) {
         return new PluginSpec(raw, split[1], split[2], split[3]);

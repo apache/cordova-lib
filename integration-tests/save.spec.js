@@ -551,26 +551,6 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
-        it('Test 027 : spec.22 should update config with plugins: one with version, one with local folder and another one vith git url', function (done) {
-            cordova.plugin('add', pluginName + '@' + pluginVersion)
-            .then(function () {
-                return cordova.plugin('add', gitPluginUrl);
-            }).then(function () {
-                return cordova.plugin('add', localPluginPath);
-            }).then(function () {
-                return cordova.plugin('save');
-            }).then(function () {
-                expect(helpers.getPluginSpec(appPath, pluginName)).toBe('~' + pluginVersion);
-                expect(helpers.getPluginSpec(appPath, gitPluginName)).toBe(gitPluginUrl);
-                expect(helpers.getPluginSpec(appPath, localPluginName)).toBe(localPluginPath);
-                done();
-            }).catch(function (err) {
-                expect(true).toBe(false);
-                console.log(err.message);
-                done();
-            });
-        }, TIMEOUT);
-
         it('Test 028 : spec.22.1 should update config with a spec that includes the scope for scoped plugins', function (done) {
             // Fetching globalization rather than console to avoid conflicts with earlier tests
             redirectRegistryCalls(pluginName2 + '@' + pluginVersion2);
