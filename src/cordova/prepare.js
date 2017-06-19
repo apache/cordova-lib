@@ -17,25 +17,27 @@
     under the License.
 */
 
-var cordova_util      = require('./util'),
-    ConfigParser      = require('cordova-common').ConfigParser,
-    PlatformJson      = require('cordova-common').PlatformJson,
-    PluginInfoProvider = require('cordova-common').PluginInfoProvider,
-    PlatformMunger    = require('cordova-common').ConfigChanges.PlatformMunger,
-    events            = require('cordova-common').events,
-    platforms         = require('../platforms/platforms'),
-    PlatformApiPoly = require('../platforms/PlatformApiPoly'),
-    HooksRunner       = require('../hooks/HooksRunner'),
-    Q                 = require('q'),
-    restore           = require('./restore-util'),
-    path              = require('path'),
-    config            = require('./config'),
-    _ = require('underscore');
+var cordova_util = require('./util');
+var ConfigParser = require('cordova-common').ConfigParser;
+var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
+var events = require('cordova-common').events;
+var platforms = require('../platforms/platforms');
+var PlatformApiPoly = require('../platforms/PlatformApiPoly');
+var HooksRunner = require('../hooks/HooksRunner');
+var Q = require('q');
+var restore = require('./restore-util');
+var path = require('path');
+var config = require('./config');
+var _ = require('underscore');
 
-// Returns a promise.
 exports = module.exports = prepare;
-function prepare(options) {
-    return Q().then(function() {
+module.exports.preparePlatforms = preparePlatforms;
+module.exports.restoreMissingPluginsForPlatform = restoreMissingPluginsForPlatform;
+
+function prepare (options) {
+    return Q().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
         var config_json = config.read(projectRoot);
         options = options || { verbose: false, platforms: [], options: {} };
@@ -43,12 +45,12 @@ function prepare(options) {
         options.fetch = options.fetch || false;
         var hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_prepare', options)
-        .then(function(){
-            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath : options.searchpath, fetch : options.fetch, restoring : true });
+        .then(function () {
+            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath: options.searchpath, fetch: options.fetch, restoring: true });
         })
-        .then(function(){
+        .then(function () {
             options = cordova_util.preProcessOptions(options);
-            var paths = options.platforms.map(function(p) {
+            var paths = options.platforms.map(function (p) {
                 var platform_path = path.join(projectRoot, 'platforms', p);
                 return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
             });
@@ -56,13 +58,13 @@ function prepare(options) {
         }).then(function () {
             options = cordova_util.preProcessOptions(options);
             return restore.installPluginsFromConfigXML(options);
-        }).then(function() {
+        }).then(function () {
             options = cordova_util.preProcessOptions(options);
             options.searchpath = options.searchpath || config_json.plugin_search_path;
             // Iterate over each added platform
-            return preparePlatforms(options.platforms, projectRoot, options);
-        }).then(function() {
-            options.paths = options.platforms.map(function(platform) {
+            return module.exports.preparePlatforms(options.platforms, projectRoot, options);
+        }).then(function () {
+            options.paths = options.platforms.map(function (platform) {
                 return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
             });
             return hooksRunner.fire('after_prepare', options);
@@ -79,7 +81,7 @@ function prepare(options) {
  * @return  {Promise}
  */
 function preparePlatforms (platformList, projectRoot, options) {
-    return Q.all(platformList.map(function(platform) {
+    return Q.all(platformList.map(function (platform) {
         // TODO: this need to be replaced by real projectInfo
         // instance for current project.
         var project = {
@@ -92,7 +94,7 @@ function preparePlatforms (platformList, projectRoot, options) {
         };
 
         // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
-        return restoreMissingPluginsForPlatform(platform, projectRoot, options)
+        return module.exports.restoreMissingPluginsForPlatform(platform, projectRoot, options)
         .then(function () {
             // platformApi prepare takes care of all functionality
             // which previously had been executed by cordova.prepare:
@@ -116,6 +118,7 @@ function preparePlatforms (platformList, projectRoot, options) {
             })
             .then(function () {
                 if (options.browserify) {
+                    // TODO: dynamic require here makes it difficult to test this code branch.
                     var browserify = require('../plugman/browserify');
                     return browserify(project, platformApi);
                 }
@@ -125,13 +128,12 @@ function preparePlatforms (platformList, projectRoot, options) {
                 var platformRoot = path.join(projectRoot, 'platforms', platform);
                 var platformJson = PlatformJson.load(platformRoot, platform);
                 var munger = new PlatformMunger(platform, platformRoot, platformJson);
-                munger.add_config_changes(project.projectConfig, /*should_increment=*/true).save_all();
+                // the boolean argument below is "should_increment"
+                munger.add_config_changes(project.projectConfig, true).save_all();
             });
         });
     }));
 }
-
-module.exports.preparePlatforms = preparePlatforms;
 
 /**
  * Ensures that plugins, installed with previous versions of CLI (<5.4.0) are
@@ -148,7 +150,7 @@ module.exports.preparePlatforms = preparePlatforms;
  * @return  {Promise}               Promise that'll be fulfilled if all the
  *   plugins reinstalled properly.
  */
-function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
+function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
     events.emit('verbose', 'Checking for any plugins added to the project that have not been installed in ' + platform + ' platform');
 
     // Flow:
@@ -162,11 +164,12 @@ function restoreMissingPluginsForPlatform(platform, projectRoot, options) {
     var missingPlugins = Object.keys(oldPlatformJson.root.installed_plugins)
         .concat(Object.keys(oldPlatformJson.root.dependent_plugins))
         .reduce(function (result, candidate) {
-            if (!platformJson.isPluginInstalled(candidate))
+            if (!platformJson.isPluginInstalled(candidate)) {
                 result.push({name: candidate,
                     // Note: isPluginInstalled is actually returns not a boolean,
                     // but object which corresponds to this particular plugin
                     variables: oldPlatformJson.isPluginInstalled(candidate)});
+            }
 
             return result;
         }, []);
