@@ -35,7 +35,7 @@ var path = require('path'),
     events = require('cordova-common').events,
     HooksRunner = require('../hooks/HooksRunner'),
     isWindows = (os.platform().substr(0,3) === 'win'),
-    pluginSpec = require('../cordova/plugin_spec_parser'),
+    pluginSpec = require('../cordova/plugin/plugin_spec_parser'),
     cordovaUtil = require('../cordova/util');
 
 var superspawn = require('cordova-common').superspawn;

@@ -30,7 +30,7 @@ var shell   = require('shelljs'),
     path    = require('path'),
     Q       = require('q'),
     registry = require('./registry/registry'),
-    pluginSpec      = require('../cordova/plugin_spec_parser'),
+    pluginSpec      = require('../cordova/plugin/plugin_spec_parser'),
     fetch = require('cordova-fetch'),
     cordovaUtil = require('../cordova/util');
 

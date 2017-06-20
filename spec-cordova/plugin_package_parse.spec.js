@@ -16,12 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+/* eslint-env jasmine */
 
-var pluginSpec = require('../src/cordova/plugin_spec_parser');
+var pluginSpec = require('../src/cordova/plugin/plugin_spec_parser');
 
-describe('methods for parsing npm plugin packages', function() {
-
-    function checkPluginSpecParsing(testString, scope, id, version) {
+describe('methods for parsing npm plugin packages', function () {
+    function checkPluginSpecParsing (testString, scope, id, version) {
         var parsedSpec = pluginSpec.parse(testString);
         expect(parsedSpec.scope).toEqual(scope);
         expect(parsedSpec.id).toEqual(id || testString);
@@ -29,21 +29,21 @@ describe('methods for parsing npm plugin packages', function() {
         expect(parsedSpec.package).toEqual(scope ? scope + id : id);
     }
 
-    it('Test 001 : should handle package names with no scope or version', function() {
+    it('Test 001 : should handle package names with no scope or version', function () {
         checkPluginSpecParsing('test-plugin', null, 'test-plugin', null);
     });
-    it('Test 002 : should handle package names with a version', function() {
+    it('Test 002 : should handle package names with a version', function () {
         checkPluginSpecParsing('test-plugin@1.0.0', null, 'test-plugin', '1.0.0');
         checkPluginSpecParsing('test-plugin@latest', null, 'test-plugin', 'latest');
     });
-    it('Test 003 : should handle package names with a scope', function() {
+    it('Test 003 : should handle package names with a scope', function () {
         checkPluginSpecParsing('@test/test-plugin', '@test/', 'test-plugin', null);
     });
-    it('Test 004 : should handle package names with a scope and a version', function() {
+    it('Test 004 : should handle package names with a scope and a version', function () {
         checkPluginSpecParsing('@test/test-plugin@1.0.0', '@test/', 'test-plugin', '1.0.0');
         checkPluginSpecParsing('@test/test-plugin@latest', '@test/', 'test-plugin', 'latest');
     });
-    it('Test 005 : should handle invalid package specs', function() {
+    it('Test 005 : should handle invalid package specs', function () {
         checkPluginSpecParsing('@nonsense', null, null, null);
         checkPluginSpecParsing('@/nonsense', null, null, null);
         checkPluginSpecParsing('@', null, null, null);

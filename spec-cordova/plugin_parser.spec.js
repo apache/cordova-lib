@@ -16,29 +16,29 @@
     specific language governing permissions and limitations
     under the License.
 */
-var path = require('path'),
-    fs = require('fs'),
-    plugin_parser = require('../src/cordova/plugin_parser'),
-    xml = path.join(__dirname, 'fixtures', 'plugins', 'test', 'plugin.xml');
+/* eslint-env jasmine */
+var path = require('path');
+var fs = require('fs');
+var Plugin_parser = require('../src/cordova/plugin_parser');
+var xml = path.join(__dirname, 'fixtures', 'plugins', 'test', 'plugin.xml');
 
 var xml_contents = fs.readFileSync(xml, 'utf-8');
 
 describe('plugin.xml parser', function () {
-    var readfile;
-    beforeEach(function() {
-        readfile = spyOn(fs, 'readFileSync').and.returnValue(xml_contents);
+    beforeEach(function () {
+        spyOn(fs, 'readFileSync').and.returnValue(xml_contents);
     });
 
-    it('Test 001 : should read a proper plugin.xml file', function() {
+    it('Test 001 : should read a proper plugin.xml file', function () {
         var cfg;
         expect(function () {
-            cfg = new plugin_parser(xml);
+            cfg = new Plugin_parser(xml);
         }).not.toThrow();
         expect(cfg).toBeDefined();
         expect(cfg.doc).toBeDefined();
     });
-    it('Test 002 : should be able to figure out which platforms the plugin supports', function() {
-        var cfg = new plugin_parser(xml);
+    it('Test 002 : should be able to figure out which platforms the plugin supports', function () {
+        var cfg = new Plugin_parser(xml);
         expect(cfg.platforms.length).toBe(1);
         expect(cfg.platforms.indexOf('ios') > -1).toBe(true);
     });

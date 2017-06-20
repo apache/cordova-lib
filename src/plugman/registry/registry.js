@@ -23,7 +23,7 @@ var npm = require('npm'),
     Q = require('q'),
     npmhelper = require('../../util/npm-helper'),
     events = require('cordova-common').events,
-    pluginSpec = require('../../cordova/plugin_spec_parser');
+    pluginSpec = require('../../cordova/plugin/plugin_spec_parser');
 
 module.exports = {
     settings: null,
