@@ -17,7 +17,9 @@
     under the License.
 */
 
-var plugin  = require('../src/cordova/plugin'),
+// TODO: all of these tests should go as unit tests to src/cordova/plugin/add
+
+var plugin  = require('../src/cordova/plugin/add'),
     helpers = require('../spec-cordova/helpers'),
     path    = require('path'),
     events = require('cordova-common').events,

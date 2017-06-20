@@ -112,7 +112,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
         if (!shouldRunPrepare) {
             return Q();
         }
-        return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
+        return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
     }).then(function () {
         opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
         return hooksRunner.fire('after_plugin_rm', opts);

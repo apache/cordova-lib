@@ -30,8 +30,10 @@ describe('cordova/plugin/remove', function () {
         it('should call plugman.uninstall.uninstallPlatform for each platform installed in the project and for each provided plugin');
         it('should trigger a prepare if plugman.uninstall.uninstallPlatform returned something falsy');
         it('should call plugman.uninstall.uninstallPlugin once plugin has been uninstalled for each platform');
-        it('should remove provided plugins from config.xml');
-        it('should remove provided plugins from package.json (if exists)');
+        describe('when save option is provided or autosave config is on', function () {
+            it('should remove provided plugins from config.xml');
+            it('should remove provided plugins from package.json (if exists)');
+        });
         it('should remove fetch metadata from fetch.json');
         it('should fire the after_plugin_rm hook');
     });

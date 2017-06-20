@@ -215,7 +215,7 @@ function add (projectRoot, targets, hooksRunner, opts) {
         // Need to require right here instead of doing this at the beginning of file
         // otherwise tests are failing without any real reason.
         // TODO: possible circular dependency?
-        return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
+        return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
     }).then(function () {
         opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
         return hooksRunner.fire('after_plugin_add', opts);
@@ -299,7 +299,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // TODO: whoa wat
     return (shouldUseNpmInfo ? registry.info([id])
     .then(function (pluginInfo) {
-        return getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
+        return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
     }) : Q(null))
     .then(function (fetchVersion) {
         return fetchVersion ? (id + '@' + fetchVersion) : target;
