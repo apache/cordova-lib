@@ -67,6 +67,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                     .then(function (didPrepare) {
                         // If platform does not returned anything we'll need
                         // to trigger a prepare after all plugins installed
+                        // TODO: if didPrepare is falsy, what does that imply? WHY are we doing this?
                         if (!didPrepare) shouldRunPrepare = true;
                     });
                 });

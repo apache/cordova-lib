@@ -17,7 +17,7 @@
     under the License.
 */
 
-var helpers = require('./helpers'),
+var helpers = require('../spec-cordova/helpers'),
     path = require('path'),
     Q = require('q'),
     shell = require('shelljs'),

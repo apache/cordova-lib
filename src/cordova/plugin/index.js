@@ -59,7 +59,7 @@ function plugin (command, targets, opts) {
 
         // Massage plugin name(s) / path(s)
         if (!targets || !targets.length) {
-            // TODO: what if command provided is 'remove' ?
+            // TODO: what if command provided is 'remove' ? shouldnt search need a target too?
             if (command === 'add' || command === 'rm') {
                 return Q.reject(new CordovaError('You need to qualify `' + cordova_util.binname + ' plugin add` or `' + cordova_util.binname + ' plugin remove` with one or more plugins!'));
             } else {

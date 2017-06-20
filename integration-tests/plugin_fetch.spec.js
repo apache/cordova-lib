@@ -18,7 +18,7 @@
 */
 
 var plugin  = require('../src/cordova/plugin'),
-    helpers = require('./helpers'),
+    helpers = require('../spec-cordova/helpers'),
     path    = require('path'),
     events = require('cordova-common').events,
     shell   = require('shelljs');
