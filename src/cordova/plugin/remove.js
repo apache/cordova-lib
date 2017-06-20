@@ -90,9 +90,6 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                     if (fs.existsSync(pkgJsonPath)) {
                         // delete any previous caches of require(package.json)
                         pkgJson = cordova_util.requireNoCache(pkgJsonPath);
-                    } else {
-                        // TODO: well this comment below seems kinda importnat
-                        // Create package.json in cordova@7
                     }
                     // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed
                     if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {

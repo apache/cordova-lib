@@ -18,7 +18,7 @@
 */
 /* eslint-env jasmine */
 
-var pluginSpec = require('../src/cordova/plugin/plugin_spec_parser');
+var pluginSpec = require('../../src/cordova/plugin/plugin_spec_parser');
 
 describe('methods for parsing npm plugin packages', function () {
     function checkPluginSpecParsing (testString, scope, id, version) {
