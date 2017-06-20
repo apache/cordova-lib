@@ -51,27 +51,89 @@ describe('cordova/prepare', function () {
 
     describe('main method', function () {
         beforeEach(function () {
-            spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
-            spyOn(util, 'preProcessOptions').and.returnValue({
-                platforms: []
-            });
             spyOn(cordova_config, 'read').and.returnValue({});
             spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
             spyOn(restore, 'installPlatformsFromConfigXML').and.returnValue(Q());
             spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Q());
+            spyOn(util, 'isCordova').and.returnValue(true);
+            spyOn(prepare, 'preparePlatforms').and.returnValue(Q);
         });
         describe('failure', function () {
-            it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection');
-            it('should not fire any hooks if preProcessOptions throws');
+            it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection and only fire the before_prepare hook', function(done) {
+                spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+                spyOn(util, 'preProcessOptions').and.throwError();
+                prepare({}).fail(function(err) {
+                    expect(err).toBeDefined();
+                    expect(HooksRunner.prototype.fire.calls.count()).toBe(1);
+                    expect(HooksRunner.prototype.fire.calls.argsFor(0)[0]).toEqual('before_prepare');
+                    done();
+                });
+            });
+            it('should invoke util.cdProjectRoot as a preflight task checker, which, if fails, should trigger a promise rejection and fire no hooks', function(done) {
+                spyOn(util, 'cdProjectRoot').and.throwError();
+                prepare({}).fail(function(err) {
+                    expect(err).toBeDefined();
+                    expect(HooksRunner.prototype.fire.calls.any()).toBe(false);
+                    done();
+                });
+            });
         });
 
         describe('success', function () {
-            it('should fire the before_prepare hook and provide platform and path information as arguments');
-            it('should invoke restore module\'s installPlatformsFromConfigXML method');
-            it('should retrieve PlatformApi instances for each platform provided');
-            it('should invoke restore module\'s installPluginsFromConfigXML method');
+            beforeEach(function () {
+                spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+                spyOn(util, 'preProcessOptions').and.callFake(function(options) {
+                    let platforms = options.platforms || []
+                    return {'platforms':platforms}
+                });
+            });
+            it('should fire the before_prepare hook and provide platform and path information as arguments', function(done) {
+                prepare({}).then(function() {
+                    expect(HooksRunner.prototype.fire.calls.argsFor(0)[0]).toEqual('before_prepare');
+                    done();
+                })
+            });
+            it('should invoke restore module\'s installPlatformsFromConfigXML method', function(done) {
+                prepare({}).then(function() {
+                    expect(restore.installPlatformsFromConfigXML).toHaveBeenCalled();
+                    done();
+                }).fail(function(err){
+                    console.log(err);
+                    expect(err).toBeUndefined();
+                    done();
+                });
+            });
+            it('should retrieve PlatformApi instances for each platform provided', function(done) {
+                prepare({'platforms':['android', 'ios']}).then(function() {
+                    expect(platforms.getPlatformApi.calls.count()).toBe(4);
+                    expect(platforms.getPlatformApi.calls.argsFor(0)[0]).toBe('android');
+                    expect(platforms.getPlatformApi.calls.argsFor(0)[1]).toBe('/some/path/platforms/android');
+                    expect(platforms.getPlatformApi.calls.argsFor(1)[0]).toBe('ios');
+                    expect(platforms.getPlatformApi.calls.argsFor(1)[1]).toBe('/some/path/platforms/ios');
+                    expect(platforms.getPlatformApi.calls.argsFor(2)[0]).toBe('android');
+                    expect(platforms.getPlatformApi.calls.argsFor(3)[0]).toBe('ios');
+
+                    done();
+                }).fail(function(err){
+                    console.log(err);
+                    expect(err).toBeUndefined();
+                    done();
+                });
+            });
+            it('should invoke restore module\'s installPluginsFromConfigXML method', function(done) {
+                prepare({platforms:[]}).then(function() {
+                    //expect(true).toHaveBeenCalled();
+                    done();
+                });
+            });
             it('should invoke preparePlatforms method, providing the appropriate platforms');
-            it('should fire the after_prepare hook and provide platform and path information as arguments');
+            it('should fire the after_prepare hook and provide platform and path information as arguments', function(done) {
+                prepare({}).then(function() {
+                    expect(HooksRunner.prototype.fire.calls.argsFor(1)[0]).toEqual('after_prepare');
+                    expect(HooksRunner.prototype.fire.calls.argsFor(1)[1]).toEqual({ 'platforms': [], 'paths': [], 'searchpath': undefined });
+                    done();
+                });
+            });
         });
     });
 
