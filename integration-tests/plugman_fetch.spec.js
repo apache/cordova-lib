@@ -26,9 +26,10 @@ var rewire  = require('rewire'),
     TIMEOUT = 60 * 1000,
     //xml_helpers = require('../src/util/xml-helpers'),
     metadata = require('../src/plugman/util/metadata'),
-    temp    = path.join(os.tmpdir(), 'plugman', 'fetch'),
-    test_plugin = path.join(__dirname, 'plugins', 'org.test.plugins.childbrowser'),
-    test_pkgjson_plugin = path.join(__dirname, 'plugins', 'pkgjson-test-plugin'),
+    temp    = path.join(os.tmpdir(), 'plugman', 'fetch');
+var plugins_dir = path.join(__dirname, '..', 'spec-plugman', 'plugins'),
+    test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser'),
+    test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin'),
     test_plugin_searchpath = path.join(test_plugin, '..'),
     //test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
     //test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
@@ -267,8 +268,8 @@ describe('fetch', function() {
 
     describe('fetch recursive error CB-8809', function(){
 
-        var srcDir = path.join(__dirname, 'plugins/recursivePlug');
-        var appDir = path.join(__dirname, 'plugins/recursivePlug/demo');
+        var srcDir = path.join(plugins_dir, 'recursivePlug');
+        var appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
 
         if(/^win/.test(process.platform)) {
             it('Test 020 : should copy all but the /demo/ folder',function(done) {

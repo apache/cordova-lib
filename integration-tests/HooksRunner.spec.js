@@ -27,7 +27,7 @@ var cordova = require('../src/cordova/cordova'),
     os     = require('os'),
     Q      = require('q'),
     child_process = require('child_process'),
-    helpers = require('./helpers'),
+    helpers = require('../spec-cordova/helpers'),
     PluginInfo = require('cordova-common').PluginInfo,
     superspawn = require('cordova-common').superspawn,
     config = require('../src/cordova/config');
@@ -40,26 +40,26 @@ var hooksDir = path.join(project, 'hooks');
 var hooksDirDot = path.join(project, '.cordova', 'hooks');
 var scriptsDir = path.join(project, 'scripts');
 var ext = platform.match(/(win32|win64)/)?'bat':'sh';
-var testPluginFixturePath = path.join(__dirname, 'fixtures', 'plugins', 'com.plugin.withhooks');
+var fixtures = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var testPluginFixturePath = path.join(fixtures, 'plugins', 'com.plugin.withhooks');
 
 var cordovaUtil = require('../src/cordova/util');
-
 
 // copy fixture
 shell.rm('-rf', project);
 shell.mkdir('-p', project);
-shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '*'), project);
+shell.cp('-R', path.join(fixtures, 'projWithHooks', '*'), project);
 
 shell.mkdir('-p', dotCordova);
-shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '.cordova'), project);
+shell.cp('-R', path.join(fixtures, 'projWithHooks', '.cordova'), project);
 
 // copy sh/bat scripts
 if(ext === 'bat') {
-    shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '_bat', '*'), project);
-    shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '_bat', '.cordova'), project);
+    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '*'), project);
+    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '.cordova'), project);
 } else {
-    shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '_sh', '*'), project);
-    shell.cp('-R', path.join(__dirname, 'fixtures', 'projWithHooks', '_sh', '.cordova'), project);
+    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_sh', '*'), project);
+    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_sh', '.cordova'), project);
 }
 
 shell.chmod('-R', 'ug+x', hooksDir);
@@ -106,7 +106,7 @@ describe('HooksRunner', function() {
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
         // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
         var c = config.read(project);
-        c.lib[helpers.testPlatform].url = path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform + '-lib');
+        c.lib[helpers.testPlatform].url = path.join(fixtures, 'platforms', helpers.testPlatform + '-lib');
         config.write(project, c);
 
         // The config.json in the fixture project points at fake "local" paths.
@@ -114,7 +114,7 @@ describe('HooksRunner', function() {
         spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
+                shell.cp('-R', path.join(fixtures, 'platforms', 'android'), path.join(project, 'platforms'));
             } else if(cmd.match(/update\b/)) {
                 fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
             } else if (cmd.match(/version/)) {

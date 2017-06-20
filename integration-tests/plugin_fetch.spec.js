@@ -135,18 +135,19 @@ function getWarningCheckCallback(done, requirements) {
         done();
     };
 }
+var fixtures = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
 
 function createTestProject() {
     // Get the base project
-    shell.cp('-R', path.join(__dirname, 'fixtures', 'base'), tempDir);
+    shell.cp('-R', path.join(fixtures, 'base'), tempDir);
     shell.mv(path.join(tempDir, 'base'), project);
 
     // Copy a platform and a plugin to our sample project
     shell.cp('-R',
-        path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform),
+        path.join(fixtures, 'platforms', helpers.testPlatform),
         path.join(project, 'platforms'));
     shell.cp('-R',
-        path.join(__dirname, 'fixtures', 'plugins', 'android'),
+        path.join(fixtures, 'plugins', 'android'),
         path.join(project, 'plugins'));
 }
 
