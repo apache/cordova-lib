@@ -18,12 +18,14 @@
 */
 
 var xml = require('cordova-common').xmlHelpers;
+var events = require('cordova-common').events;
 
 /** Deprecated. Use PluginInfo instead. */
-function plugin_parser(xmlPath) {
+function plugin_parser (xmlPath) {
+    events.emit('warn', 'WARNING: Cordova\'s plugin_parser class is now deprecated and will be removed in a future version. Please transition to using the PluginInfo class instead.');
     this.path = xmlPath;
     this.doc = xml.parseElementtreeSync(xmlPath);
-    this.platforms = this.doc.findall('platform').map(function(p) {
+    this.platforms = this.doc.findall('platform').map(function (p) {
         return p.attrib.name;
     });
 }

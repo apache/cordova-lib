@@ -56,6 +56,7 @@ Object.defineProperty(exports,'libDirectory', {
     }
 });
 
+// TODO: this is no longer used. we should deprecate and remove.
 exports.plugin_parser = require('./plugin_parser');
 exports.raw = {};
 // Alias the plugin_parser method to the raw:{} object above.
