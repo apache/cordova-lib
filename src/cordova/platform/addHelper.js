@@ -185,8 +185,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
                 var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                 var destination = path.resolve(projectRoot, 'platforms', platform);
-                var promise = cmd === 'add'
-                    ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
+                var promise = cmd === 'add' ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
                     : PlatformApi.updatePlatform.bind(null, destination, options, events);
                 // TODO: if we return the promise immediately, can we not unindent the promise .then()s by one indent?
                 return promise()

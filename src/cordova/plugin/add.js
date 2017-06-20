@@ -34,6 +34,7 @@ var Q = require('Q');
 var path = require('path');
 var fs = require('fs');
 var semver = require('semver');
+var url = require('url');
 
 module.exports = add;
 module.exports.determinePluginTarget = determinePluginTarget;
@@ -45,8 +46,8 @@ module.exports.getFailedRequirements = getFailedRequirements;
 module.exports.findVersion = findVersion;
 module.exports.listUnmetRequirements = listUnmetRequirements;
 
-function add (projectRoot, targets, hooksRunner, opts) {
-    if (!targets || !targets.length) {
+function add (projectRoot, hooksRunner, opts) {
+    if (!opts.plugins || !opts.plugins.length) {
         return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `' + cordova_util.binname + ' plugin search`.'));
     }
 
@@ -289,7 +290,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // their package.json
     var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
 
-    events.emit('verbose', 'No version for ' + parsedSpec.package + ' saved in config.xml');
+    events.emit('verbose', 'No version for ' + parsedSpec.package + ' saved in config.xml or package.json');
     if (shouldUseNpmInfo) {
         events.emit('verbose', 'Attempting to use npm info for ' + parsedSpec.package + ' to choose a compatible release');
     } else {
@@ -307,7 +308,6 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
 }
 
 function parseSource (target, opts) {
-    var url = require('url');
     var uri = url.parse(target);
     if (uri.protocol && uri.protocol !== 'file:' && uri.protocol[1] !== ':' && !target.match(/^\w+:\\/)) {
         return target;
@@ -387,6 +387,8 @@ var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
  *      '3.0.0' : { 'cordova-ios': '>5.0.0' }
  *  }
  *
+ * TODO: provide a better function description once logic is groked
+ * TODO: update comment below once tests are rewritten/moved around.
  * See cordova-spec/plugin_fetch.spec.js for test cases and examples
  */
 function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cordovaVersion) {
@@ -402,8 +404,11 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
     var upperBoundRange = null;
     var upperBoundExists = false;
 
+    // TODO: lots of 'versions' being thrown around in this function: cordova version,
+    // platform version, plugin version. The below for loop: what version is it
+    // iterating over? plugin version? please clarify the variable name.
     for (var version in engine) {
-        if (semver.valid(semver.clean(version)) && !semver.gt(version, latest)) {
+        if (semver.valid(semver.clean(version)) && semver.lte(version, latest)) {
             versions.push(version);
         } else {
             // Check if this is an upperbound; validRange() handles whitespace

@@ -80,7 +80,7 @@ function plugin (command, targets, opts) {
 
         switch (command) {
         case 'add':
-            return module.exports.add(projectRoot, targets, hooksRunner, opts);
+            return module.exports.add(projectRoot, hooksRunner, opts);
         case 'rm':
         case 'remove':
             return module.exports.remove(projectRoot, targets, hooksRunner, opts);

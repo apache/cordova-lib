@@ -14,7 +14,9 @@
     specific language governing permissions and limitations
     under the License.
 */
+// TODO: remove these once eslint lands
 /* eslint-env jasmine */
+/* globals fail */
 
 var rewire = require('rewire');
 var platform = rewire('../../src/cordova/platform');
