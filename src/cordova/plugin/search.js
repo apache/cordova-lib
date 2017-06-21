@@ -18,7 +18,7 @@
 */
 
 var opener = require('opener');
-var Q = require('Q');
+var Q = require('q');
 
 module.exports = search;
 

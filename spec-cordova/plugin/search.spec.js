@@ -16,12 +16,36 @@
     specific language governing permissions and limitations
     under the License.
 */
+// TODO: remove once eslint lands
 /* eslint-env jasmine */
+/* globals fail */
 
-var search = require('../../src/cordova/plugin/search');
+var Q = require('q');
+var rewire = require('rewire');
+var search = rewire('../../src/cordova/plugin/search');
 
 describe('cordova/plugin/search', function () {
-    it('should fire the before_plugin_search hook');
+    var hook_mock;
+    var opener_mock;
+    var opener_revert_mock;
+    beforeEach(function () {
+        hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
+        hook_mock.fire.and.returnValue(Q());
+        opener_mock = jasmine.createSpy('opener mock');
+        opener_revert_mock = search.__set__('opener', opener_mock);
+    });
+    afterEach(function () {
+        opener_revert_mock();
+    });
+    it('should fire the before_plugin_search hook', function (done) {
+        var opts = {important: 'options', plugins: []};
+        search(hook_mock, opts).then(function () {
+            expect(hook_mock.fire).toHaveBeenCalledWith('before_plugin_search', opts);
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
     it('should open a link to cordova.apache.org/plugins if no plugins are provided as parameter');
     it('should open a link to cordova.apache.org/plugins, providing the plugins passed in as a query-string parameter');
     it('should fire the after_plugin_search hook');

@@ -16,13 +16,22 @@
     specific language governing permissions and limitations
     under the License.
 */
+// TODO: remove this once eslint lands
 /* eslint-env jasmine */
+/* globals fail */
 
 var remove = require('../../src/cordova/plugin/remove');
 
 describe('cordova/plugin/remove', function () {
+    var projectRoot = '/some/path';
     describe('error/warning conditions', function () {
-        it('should require that a plugin be provided');
+        it('should require that a plugin be provided', function (done) {
+            remove(projectRoot, null).then(function () {
+                fail('success handler unexpectedly invoked');
+            }).fail(function (e) {
+                expect(e.message).toContain('No plugin specified');
+            }).done(done);
+        });
         it('should require that a provided plugin be installed in the current project');
     });
     describe('happy path', function () {

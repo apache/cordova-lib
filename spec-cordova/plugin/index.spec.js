@@ -16,14 +16,34 @@
     specific language governing permissions and limitations
     under the License.
 */
+// TODO: remove once eslint lands
 /* eslint-env jasmine */
+/* globals fail */
 
-var plugin = require('../../src/cordova/plugin');
+var rewire = require('rewire');
+var plugin = rewire('../../src/cordova/plugin');
+var cordova_util = require('../../src/cordova/util');
 
 describe('cordova/plugin', function () {
+    var projectRoot = '/some/path';
+    var hook_mock = function () {};
+    var hook_revert_mock;
+    beforeEach(function () {
+        hook_revert_mock = plugin.__set__('HooksRunner', hook_mock);
+        spyOn(cordova_util, 'cdProjectRoot').and.returnValue(projectRoot);
+    });
+    afterEach(function () {
+        hook_revert_mock();
+    });
     describe('error conditions', function () {
         // TODO: what about search cmd?
-        it('should require at least one target for add and rm commands');
+        it('should require at least one target for add and rm commands', function (done) {
+            plugin('add', null).then(function () {
+                fail('success handler unexpectedly invoked');
+            }).fail(function (e) {
+                expect(e.message).toContain('one or more plugins');
+            }).done(done);
+        });
     });
     describe('handling/massaging of parameters', function () {
         it('should be able to handle an array of targets');

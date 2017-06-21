@@ -16,14 +16,29 @@
     specific language governing permissions and limitations
     under the License.
 */
+// TODO: remove once eslint lands
 /* eslint-env jasmine */
+/* globals fail */
 
+var Q = require('q');
 var add = require('../../src/cordova/plugin/add');
 
 describe('cordova/plugin/add', function () {
+    var projectRoot = '/some/path';
+    var hook_mock;
+    beforeEach(function () {
+        hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
+        hook_mock.fire.and.returnValue(Q());
+    });
     describe('main method', function () {
         describe('error/warning conditions', function () {
-            it('should error out if at least one plugin is not specified');
+            it('should error out if at least one plugin is not specified', function (done) {
+                add(projectRoot, hook_mock, {plugins: []}).then(function () {
+                    fail('success handler unexpectedly invoked');
+                }).fail(function (e) {
+                    expect(e.message).toContain('No plugin specified');
+                }).done(done);
+            });
             it('should error out if any mandatory plugin variables are not provided');
         });
         describe('happy path', function () {
