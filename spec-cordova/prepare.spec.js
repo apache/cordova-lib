@@ -29,13 +29,18 @@ var platforms = require('../src/platforms/platforms');
 var HooksRunner = require('../src/hooks/HooksRunner');
 var Q = require('q');
 var PlatformJson = require('cordova-common').PlatformJson;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 var project_dir = '/some/path';
 
 describe('cordova/prepare', function () {
-    var platform_api_prepare_mock;
+    let platform_api_prepare_mock;
+    let platform_api_add_mock;
+    let platform_api_remove_mock;
     beforeEach(function () {
         platform_api_prepare_mock = jasmine.createSpy('prepare').and.returnValue(Q());
+        platform_api_add_mock = jasmine.createSpy('add').and.returnValue(Q());
+        platform_api_remove_mock = jasmine.createSpy('remove').and.returnValue(Q());
         spyOn(platforms, 'getPlatformApi').and.callFake(function (platform, rootDir) {
             return {
                 prepare: platform_api_prepare_mock,
@@ -43,19 +48,22 @@ describe('cordova/prepare', function () {
                     locations: {
                         www: path.join(project_dir, 'platforms', platform, 'www')
                     }
-                })
+                }),
+                removePlugin: platform_api_add_mock,
+                addPlugin: platform_api_remove_mock
             };
         });
         spyOn(PlatformJson, 'load');
+        spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        spyOn(util, 'isCordova').and.returnValue(true);
     });
 
     describe('main method', function () {
         beforeEach(function () {
             spyOn(cordova_config, 'read').and.returnValue({});
-            spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
             spyOn(restore, 'installPlatformsFromConfigXML').and.returnValue(Q());
             spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Q());
-            spyOn(util, 'isCordova').and.returnValue(true);
+            
             spyOn(prepare, 'preparePlatforms').and.returnValue(Q);
         });
         describe('failure', function () {
@@ -83,22 +91,21 @@ describe('cordova/prepare', function () {
             beforeEach(function () {
                 spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
                 spyOn(util, 'preProcessOptions').and.callFake(function(options) {
-                    let platforms = options.platforms || []
-                    return {'platforms':platforms}
+                    let platforms = options.platforms || [];
+                    return {'platforms':platforms};
                 });
             });
             it('should fire the before_prepare hook and provide platform and path information as arguments', function(done) {
                 prepare({}).then(function() {
                     expect(HooksRunner.prototype.fire.calls.argsFor(0)[0]).toEqual('before_prepare');
                     done();
-                })
+                });
             });
             it('should invoke restore module\'s installPlatformsFromConfigXML method', function(done) {
                 prepare({}).then(function() {
                     expect(restore.installPlatformsFromConfigXML).toHaveBeenCalled();
                     done();
                 }).fail(function(err){
-                    console.log(err);
                     expect(err).toBeUndefined();
                     done();
                 });
@@ -112,25 +119,31 @@ describe('cordova/prepare', function () {
                     expect(platforms.getPlatformApi.calls.argsFor(1)[1]).toBe('/some/path/platforms/ios');
                     expect(platforms.getPlatformApi.calls.argsFor(2)[0]).toBe('android');
                     expect(platforms.getPlatformApi.calls.argsFor(3)[0]).toBe('ios');
-
                     done();
                 }).fail(function(err){
-                    console.log(err);
                     expect(err).toBeUndefined();
                     done();
                 });
             });
             it('should invoke restore module\'s installPluginsFromConfigXML method', function(done) {
                 prepare({platforms:[]}).then(function() {
-                    //expect(true).toHaveBeenCalled();
+                    expect(restore.installPluginsFromConfigXML).toHaveBeenCalled();
                     done();
                 });
             });
-            it('should invoke preparePlatforms method, providing the appropriate platforms');
+            it('should invoke preparePlatforms method, providing the appropriate platforms', function(done) {
+                prepare({platforms:['android']}).then(function() {
+                    expect(prepare.preparePlatforms).toHaveBeenCalled();
+                    expect(prepare.preparePlatforms.calls.argsFor(0)[0][0]).toBe('android');
+                    expect(prepare.preparePlatforms.calls.argsFor(0)[1]).toBe('/some/path');
+                    done();
+                });
+            });
             it('should fire the after_prepare hook and provide platform and path information as arguments', function(done) {
-                prepare({}).then(function() {
+                prepare({platforms:['android']}).then(function() {
                     expect(HooksRunner.prototype.fire.calls.argsFor(1)[0]).toEqual('after_prepare');
-                    expect(HooksRunner.prototype.fire.calls.argsFor(1)[1]).toEqual({ 'platforms': [], 'paths': [], 'searchpath': undefined });
+                    expect(HooksRunner.prototype.fire.calls.argsFor(1)[1]).toEqual({ 'platforms': [ 'android' ], 'paths': [ '/some/path/platforms/android/www' ], 'searchpath': undefined });
+                    expect(HooksRunner.prototype.fire.calls.count()).toBe(2);
                     done();
                 });
             });
@@ -138,51 +151,131 @@ describe('cordova/prepare', function () {
     });
 
     describe('preparePlatforms helper method', function () {
-        var cfg_parser_mock = function () {};
-        var cfg_parser_revert_mock;
-        var platform_munger_mock = function () {};
-        var platform_munger_revert_mock;
-        var platform_munger_save_mock;
+        let cfg_parser_mock = function () {};
+        let cfg_parser_revert_mock;
+        let platform_munger_mock = function () {};
+        let platform_munger_revert_mock;
+        let platform_munger_save_mock;
         beforeEach(function () {
-            cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', []);
+            spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Q());
+            //cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['blah']);
+            //cfg_parser_mock.prototype = {};
             cfg_parser_revert_mock = prepare.__set__('ConfigParser', cfg_parser_mock);
             platform_munger_save_mock = jasmine.createSpy('platform munger save mock');
-            platform_munger_mock.protytpe = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);
+            platform_munger_mock.prototype = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);
             platform_munger_mock.prototype.add_config_changes.and.returnValue({
                 save_all: platform_munger_save_mock
             });
             platform_munger_revert_mock = prepare.__set__('PlatformMunger', platform_munger_mock);
             spyOn(util, 'projectConfig').and.returnValue(project_dir);
             spyOn(util, 'projectWww').and.returnValue(path.join(project_dir, 'www'));
-            spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Q());
+            
         });
         afterEach(function () {
             cfg_parser_revert_mock();
             platform_munger_revert_mock();
         });
-        it('should call restoreMissingPluginsForPlatform');
-        it('should retrieve the platform API via getPlatformApi per platform provided, and invoke the prepare method from that API');
-        it('should fire a pre_package hook for the windows platform when the platform API is not an instance of PlatformApiPoly');
+        it('should call restoreMissingPluginsForPlatform', function(done) {
+            prepare.preparePlatforms(['android'],project_dir, {}).then(function() {
+                expect(prepare.restoreMissingPluginsForPlatform).toHaveBeenCalled();
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
+            });
+        });
+        it('should retrieve the platform API via getPlatformApi per platform provided, and invoke the prepare method from that API', function(done) {
+            prepare.preparePlatforms(['android'],project_dir, {}).then(function() {
+                expect(platforms.getPlatformApi.calls.count()).toBe(1);
+                expect(platforms.getPlatformApi.calls.argsFor(0)[0]).toBe('android');
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
+            });
+        });
+        it('should fire a pre_package hook for the windows', function(done) {
+            prepare.preparePlatforms(['windows'],project_dir, {}).then(function() {
+                expect(HooksRunner.prototype.fire.calls.count()).toBe(1);
+                expect(HooksRunner.prototype.fire.calls.argsFor(0)[0]).toBe('pre_package');
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
+            });
+        });
         // TODO: xit'ed the one below as dynamic requires make it difficult to spy on
         // Can we refactor the relevant code to make it testable?
         xit('should invoke browserify if the browserify option is provided');
-        it('should handle config changes by invoking add_config_changes and save_all');
+        it('should handle config changes by invoking add_config_changes and save_all', function(done) {
+            prepare.preparePlatforms(['android'],project_dir, {}).then(function() {
+                expect(platform_munger_mock.prototype.add_config_changes).toHaveBeenCalled();
+                expect(platform_munger_save_mock).toHaveBeenCalled();
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
+            });
+        });
     });
 
     describe('restoreMissingPluginsForPlatform helper method', function () {
-        var is_plugin_installed_mock;
-        beforeEach(function () {
+        let is_plugin_installed_mock;
+        let is_plugin_provider_get_mock;
+        it('should resolve quickly if there is no difference between "old" and "new" platform.json', function(done) {
             is_plugin_installed_mock = jasmine.createSpy('is plugin installed mock');
             // mock platform json value below
-            PlatformJson.load.and.returnValue({
-                isPluginInstalled: is_plugin_installed_mock,
-                root: {
-                    installed_plugins: [],
-                    dependent_plugins: []
-                }
+            PlatformJson.load.and.callFake(function(platformJsonPath, plat) {
+                return {
+                    isPluginInstalled: is_plugin_installed_mock,
+                    root: {
+                        installed_plugins: [],
+                        dependent_plugins: []
+                    }
+                };
+            });
+
+            prepare.restoreMissingPluginsForPlatform('android', project_dir, {}).then(function() {
+                expect(platforms.getPlatformApi).not.toHaveBeenCalled();
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
             });
         });
-        it('should resolve quickly if there is no difference between "old" and "new" platform.json');
-        it('should leverage platform API to remove and add any missing plugins identified');
+        it('should leverage platform API to remove and add any missing plugins identified', function(done) {
+            is_plugin_installed_mock = jasmine.createSpy('is plugin installed mock');
+            is_plugin_provider_get_mock = jasmine.createSpy('is plugin provider get mock');
+            // mock platform json value below
+            PlatformJson.load.and.callFake(function(platformJsonPath, plat) {
+                //set different installed plugins to simulate missing plugins
+                let missingPlugins;
+                if (platformJsonPath === '/some/path/platforms/android') {
+                    missingPlugins = {'cordova-plugin-device': {}};
+                } else {
+                    missingPlugins = {'cordova-plugin-camera': {}};
+                }
+                return {
+                    isPluginInstalled: is_plugin_installed_mock,
+                    root: {
+                        installed_plugins: missingPlugins,
+                        dependent_plugins: []
+                    }
+                };
+            });
+            spyOn(PluginInfoProvider.prototype, 'get').and.callFake(function() {
+                return is_plugin_provider_get_mock;
+            });
+            prepare.restoreMissingPluginsForPlatform('android', project_dir, {}).then(function() {
+                expect(platforms.getPlatformApi).toHaveBeenCalled();
+                expect(platform_api_add_mock).toHaveBeenCalled();
+                expect(platform_api_remove_mock).toHaveBeenCalled();
+                expect(PluginInfoProvider.prototype.get).toHaveBeenCalled();
+                done();
+            }).fail(function(err) {
+                expect(err).toBeUndefined();
+                done();
+            });
+        });
     });
 });

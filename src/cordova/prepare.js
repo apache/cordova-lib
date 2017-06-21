@@ -92,7 +92,6 @@ function preparePlatforms (platformList, projectRoot, options) {
                 www: cordova_util.projectWww(projectRoot)
             }
         };
-
         // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
         return module.exports.restoreMissingPluginsForPlatform(platform, projectRoot, options)
         .then(function () {
@@ -107,7 +106,7 @@ function preparePlatforms (platformList, projectRoot, options) {
             var platformApi = platforms.getPlatformApi(platform);
             return platformApi.prepare(project, _.clone(options))
             .then(function () {
-                if (platform === 'windows' && !(platformApi instanceof PlatformApiPoly)) {
+                if (platform === 'windows') {
                     // Windows Api doesn't fire 'pre_package' hook, so we fire it here
                     return new HooksRunner(projectRoot).fire('pre_package', {
                         wwwPath: platformApi.getPlatformInfo().locations.www,
@@ -152,7 +151,6 @@ function preparePlatforms (platformList, projectRoot, options) {
  */
 function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
     events.emit('verbose', 'Checking for any plugins added to the project that have not been installed in ' + platform + ' platform');
-
     // Flow:
     // 1. Compare <platform>.json file in <project>/plugins ("old") and platforms/<platform> ("new")
     // 2. If there is any differences - merge "old" one into "new"
@@ -160,7 +158,6 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
 
     var oldPlatformJson = PlatformJson.load(path.join(projectRoot, 'plugins'), platform);
     var platformJson = PlatformJson.load(path.join(projectRoot, 'platforms', platform), platform);
-
     var missingPlugins = Object.keys(oldPlatformJson.root.installed_plugins)
         .concat(Object.keys(oldPlatformJson.root.dependent_plugins))
         .reduce(function (result, candidate) {
@@ -170,7 +167,6 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
                     // but object which corresponds to this particular plugin
                     variables: oldPlatformJson.isPluginInstalled(candidate)});
             }
-
             return result;
         }, []);
 
@@ -179,7 +175,6 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
             platform + ' platform. Continuing...');
         return Q.resolve();
     }
-
     var api = platforms.getPlatformApi(platform);
     var provider = new PluginInfoProvider();
     return missingPlugins.reduce(function (promise, plugin) {
@@ -187,7 +182,6 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
             var pluginOptions = options || {};
             pluginOptions.variables = plugin.variables;
             pluginOptions.usePlatformWww = true;
-
             events.emit('verbose', 'Reinstalling missing plugin ' + plugin.name + ' in ' + platform + ' platform');
             var pluginInfo = provider.get(path.join(projectRoot, 'plugins', plugin.name));
             return api.removePlugin(pluginInfo, pluginOptions)
