@@ -18,14 +18,36 @@
 */
 /* eslint-env jasmine */
 
-var plugin_util = require('../../src/cordova/plugin/util');
+var rewire = require('rewire');
+var plugin_util = rewire('../../src/cordova/plugin/util');
 
 describe('cordova/plugin/util', function () {
+    var plugin_info_mock = function () {};
+    var plugin_info_revert_mock;
+    beforeEach(function () {
+        plugin_info_mock.prototype = jasmine.createSpyObj('plugin info provider prototype mock', ['getAllWithinSearchPath']);
+        plugin_info_revert_mock = plugin_util.__set__('PluginInfoProvider', plugin_info_mock);
+    });
+    afterEach(function () {
+        plugin_info_revert_mock();
+    });
     describe('getInstalledPlugins helper method', function () {
-        it('should return result of PluginInfoProvider\'s getAllWithinSearchPath method');
+        it('should return result of PluginInfoProvider\'s getAllWithinSearchPath method', function () {
+            var plugins_list = ['VRPlugin', 'MastodonSocialPlugin'];
+            plugin_info_mock.prototype.getAllWithinSearchPath.and.returnValue(plugins_list);
+            expect(plugin_util.getInstalledPlugins('/some/path/to/a/project')).toEqual(plugins_list);
+        });
     });
     describe('saveToConfigXmlOn helper method', function () {
-        it('should return true if config.json\'s autosave option is truthy');
-        it('should return true if options passed in have a truthy save property');
+        it('should return true if config.json\'s autosave option is truthy', function () {
+            expect(plugin_util.saveToConfigXmlOn({
+                auto_save_plugins: true
+            })).toBe(true);
+        });
+        it('should return true if options passed in have a truthy save property', function () {
+            expect(plugin_util.saveToConfigXmlOn({}, {
+                save: true
+            })).toBe(true);
+        });
     });
 });
