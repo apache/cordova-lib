@@ -24,7 +24,6 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
 var events = require('cordova-common').events;
 var platforms = require('../platforms/platforms');
-var PlatformApiPoly = require('../platforms/PlatformApiPoly');
 var HooksRunner = require('../hooks/HooksRunner');
 var Q = require('q');
 var restore = require('./restore-util');
