@@ -50,13 +50,10 @@
     "rewire": "2.5.2"
   },
   "scripts": {
-    "test": "npm run jshint && npm run jasmine",
-    "test-ios": "npm run test && npm run jasmine-ios",
-    "ci": "npm run jshint && npm run cover && codecov",
-    "jshint": "jshint src spec-cordova spec-plugman",
-    "jasmine": "jasmine JASMINE_CONFIG_PATH=spec-cordova/jasmine.json",
-    "jasmine-ios": "jasmine spec-cordova/platform.spec.ios.js",
-    "cover": "istanbul cover --root src --print detail jasmine JASMINE_CONFIG_PATH=spec-cordova/jasmine.json",
+    "test": "npm run jshint && npm run unit-tests && npm run e2e-tests",
+    "jshint": "jshint src spec",
+    "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
+    "cover": "istanbul cover --root src --print detail jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "e2e-tests" : "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
   },
   "contributors": [

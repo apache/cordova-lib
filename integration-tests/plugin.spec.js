@@ -17,7 +17,7 @@
     under the License.
 */
 
-var helpers = require('../spec-cordova/helpers'),
+var helpers = require('../spec/helpers'),
     path = require('path'),
     Q = require('q'),
     shell = require('shelljs'),
@@ -32,7 +32,7 @@ var util = require('../src/cordova/util');
 
 var tmpDir = helpers.tmpDir('plugin_test');
 var project = path.join(tmpDir, 'project');
-var fixturesDir = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 var pluginsDir = path.join(fixturesDir, 'plugins');
 
 var pluginId = 'org.apache.cordova.fakeplugin1';
@@ -113,7 +113,7 @@ describe('plugin end-to-end', function() {
         shell.cp('-R', path.join(fixturesDir, 'base'), tmpDir);
         shell.mv(path.join(tmpDir, 'base'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
 
         // Reset origCwd before each spec to respect chdirs

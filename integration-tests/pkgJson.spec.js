@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var helpers = require('../spec-cordova/helpers'),
+var helpers = require('../spec/helpers'),
     path = require('path'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
@@ -49,10 +49,10 @@ describe('plugin end-to-end', function() {
 
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
         process.chdir(project);
         delete process.env.PWD;
     });
@@ -299,8 +299,8 @@ describe('plugin end-to-end', function() {
     it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
 
         var cwd = process.cwd();
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
-        var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
+        var platformPath = path.join(testRunRoot,'spec', 'cordova/fixtures/platforms/cordova-browser');
+        var pluginPath = path.join(testRunRoot,'spec', 'cordova/fixtures/plugins/cordova-lib-test-plugin');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
         var configXmlPath = path.join(cwd, 'config.xml');
@@ -374,7 +374,7 @@ describe('platform end-to-end with --save', function () {
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -591,7 +591,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson15'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson15'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson15'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -701,7 +701,7 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson16'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson16'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson16'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -799,7 +799,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
         shell.rm('-rf', tmpDir);
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson17'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson17'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson17'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -905,7 +905,7 @@ describe('local path is added to config.xml without pkg.json', function () {
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson13'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson13'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson13'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -924,7 +924,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
+        var platformPath = path.join(testRunRoot,'spec', 'cordova/fixtures/platforms/cordova-browser');
 
         // Run cordova platform add local path --save --fetch.
         return cordova.platform('add', platformPath, {'save':true, 'fetch':true})
@@ -949,7 +949,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
     it('Test#027 : if you add a plugin with local path, config.xml gets updated', function (done) {
         var cwd = process.cwd();
-        var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/cordova-lib-test-plugin');
+        var pluginPath = path.join(testRunRoot,'spec', 'cordova/fixtures/plugins/cordova-lib-test-plugin');
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
         var configPlugins = cfg.getPluginIdList();

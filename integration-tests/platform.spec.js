@@ -15,7 +15,7 @@
     under the License.
 */
 
-var helpers = require('../spec-cordova/helpers'),
+var helpers = require('../spec/helpers'),
     path = require('path'),
     fs = require('fs'),
     shell = require('shelljs'),
@@ -31,7 +31,7 @@ var helpers = require('../spec-cordova/helpers'),
     addHelper = rewire('../src/cordova/platform/addHelper');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
-var fixturesDir = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 var pluginsDir = path.join(fixturesDir, 'plugins');
 
 describe('platform end-to-end', function () {

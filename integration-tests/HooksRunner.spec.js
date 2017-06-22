@@ -27,7 +27,7 @@ var cordova = require('../src/cordova/cordova'),
     os     = require('os'),
     Q      = require('q'),
     child_process = require('child_process'),
-    helpers = require('../spec-cordova/helpers'),
+    helpers = require('../spec/helpers'),
     PluginInfo = require('cordova-common').PluginInfo,
     superspawn = require('cordova-common').superspawn,
     config = require('../src/cordova/config');
@@ -40,7 +40,7 @@ var hooksDir = path.join(project, 'hooks');
 var hooksDirDot = path.join(project, '.cordova', 'hooks');
 var scriptsDir = path.join(project, 'scripts');
 var ext = platform.match(/(win32|win64)/)?'bat':'sh';
-var fixtures = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 var testPluginFixturePath = path.join(fixtures, 'plugins', 'com.plugin.withhooks');
 
 var cordovaUtil = require('../src/cordova/util');

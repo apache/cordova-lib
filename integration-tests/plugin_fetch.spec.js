@@ -20,7 +20,7 @@
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
 var plugin  = require('../src/cordova/plugin/add'),
-    helpers = require('../spec-cordova/helpers'),
+    helpers = require('../spec/helpers'),
     path    = require('path'),
     events = require('cordova-common').events,
     shell   = require('shelljs');
@@ -137,7 +137,7 @@ function getWarningCheckCallback(done, requirements) {
         done();
     };
 }
-var fixtures = path.join(__dirname, '..', 'spec-cordova', 'fixtures');
+var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 
 function createTestProject() {
     // Get the base project

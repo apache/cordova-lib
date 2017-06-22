@@ -19,11 +19,11 @@
 
 var path = require('path'),
     shell = require('shelljs'),
-    helpers = require('../spec-cordova/helpers'),
+    helpers = require('../spec/helpers'),
     cordova = require('../src/cordova/cordova');
 
 var TIMEOUT = 90000,
-    plugins_dir = path.join(__dirname, '..', 'spec-plugman', 'plugins');
+    plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
 
 var plugins = {
     'Test1' : path.join(plugins_dir, 'dependencies', 'Test1'),
