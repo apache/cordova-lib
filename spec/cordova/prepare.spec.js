@@ -77,7 +77,7 @@ describe('cordova/prepare', function () {
                     throw new Error('preProcessOption error');
                 });
                 prepare({}).then(function () {
-                    fail('unexpected failure handler invoked');
+                    fail('unexpected success handler invoked');
                 }).fail(function (e) {
                     expect(e.message).toBe('preProcessOption error');
                     expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('before_prepare', jasmine.any(Object));
@@ -87,11 +87,12 @@ describe('cordova/prepare', function () {
                 util.cdProjectRoot.and.callFake(function () {
                     throw new Error('cdProjectRoot error');
                 });
-                prepare({}).then(function () {
-                    fail('unexpected failure handler invoked');
+
+                prepare({}).then(function () { 
+                    fail('unexpected success handler invoked');
                 }).fail(function (e) {
                     expect(e.message).toBe('cdProjectRoot error');
-                    expect(HooksRunner.prototype.fire).not.toHaveBeenCalledWith();
+                    expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
                 }).done(done);
             });
         });

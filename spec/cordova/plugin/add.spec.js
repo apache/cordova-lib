@@ -21,16 +21,69 @@
 /* globals fail */
 
 var Q = require('q');
-var add = require('../../../src/cordova/plugin/add');
+var rewire = require('rewire');
+var add = rewire('../../src/cordova/plugin/add');
+var plugman = require('../../src/plugman/plugman');
+var cordova_util = require('../../src/cordova/util');
+var path = require('path');
+var fs = require('fs');
+var config = require('../../src/cordova/config');
 
 describe('cordova/plugin/add', function () {
     var projectRoot = '/some/path';
     var hook_mock;
+    var cfg_parser_mock = function () {};
+    var cfg_parser_revert_mock;
+    var plugin_info_provider_mock = function () {};
+    var plugin_info_provider_revert_mock;
+    var plugin_info;
+
     beforeEach(function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Q());
+        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin', 'removePlugin', 'addPlugin', 'write']);
+        cfg_parser_mock.prototype.getPlugin.and.callFake(function (pluginId) {});
+        cfg_parser_mock.prototype.removePlugin.and.callFake(function () {});
+        cfg_parser_mock.prototype.addPlugin.and.callFake(function () {});
+        cfg_parser_mock.prototype.write.and.callFake(function () {});
+        cfg_parser_revert_mock = add.__set__('ConfigParser', cfg_parser_mock);
+        plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
+        plugin_info.getPreferences.and.returnValue({});
+        plugin_info.dir = 'some\plugin\path';
+        plugin_info.id = 'cordova-plugin-device';
+        plugin_info.version = '1.0.0';
+        plugin_info_provider_mock.prototype = jasmine.createSpyObj('plugin info provider mock', ['get']);
+        plugin_info_provider_mock.prototype.get = function (directory) {
+            console.log('fake get');
+            //id version dir getPreferences() engines engines.cordovaDependencies name versions
+            return plugin_info;
+        };
+        plugin_info_provider_revert_mock = add.__set__('PluginInfoProvider', plugin_info_provider_mock);
+        spyOn(fs,'existsSync').and.returnValue(false);
+        spyOn(fs,'writeFileSync').and.returnValue(false);
+        //requireNoCache is used to require package.json
+        spyOn(cordova_util, 'requireNoCache').and.returnValue({});
+    });
+    afterEach(function () {
+        cfg_parser_revert_mock();
+        plugin_info_provider_revert_mock();
     });
     describe('main method', function () {
+
+        beforeEach(function () {
+            spyOn(add,'determinePluginTarget').and.callFake(function(projRoot, cfg, target, opts) {
+                return Q(target);
+            });
+            spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, opts) {
+                return Q(target);
+            });
+            spyOn(plugman, 'install').and.returnValue(Q(true));
+            spyOn(cordova_util, 'listPlatforms').and.callFake(function () {
+                return ['android'];
+            });
+            spyOn(cordova_util,'findPlugins').and.returnValue({plugins:[]});
+            spyOn(config, 'read').and.returnValue({});
+        });
         describe('error/warning conditions', function () {
             it('should error out if at least one plugin is not specified', function (done) {
                 add(projectRoot, hook_mock, {plugins: []}).then(function () {
@@ -39,17 +92,102 @@ describe('cordova/plugin/add', function () {
                     expect(e.message).toContain('No plugin specified');
                 }).done(done);
             });
-            it('should error out if any mandatory plugin variables are not provided');
+            it('should error out if any mandatory plugin variables are not provided', function (done) {
+                plugin_info.getPreferences.and.returnValue({'some':undefined});
+
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    fail('success handler unexpectedly invoked');
+                }).fail(function (e) {
+                    expect(e.message).toContain('Variable(s) missing (use: --variable');
+                }).done(done);
+            });
         });
         describe('happy path', function () {
-            it('should fire the before_plugin_add hook');
-            it('should determine where to fetch a plugin from using determinePluginTarget and invoke plugman.fetch with the resolved target');
-            it('should retrieve any variables for the plugin from config.xml and provide them as cli variables only when the cli variables are not already provided via options');
-            it('should invoke plugman.install for each platform added to the project');
-            it('should save plugin variable information to package.json file (if exists)');
-            it('should overwrite plugin information in config.xml after a successful installation');
-            it('should invoke preparePlatforms if plugman.install returned a truthy value');
-            it('should fire after_plugin_add hook');
+            it('should fire the before_plugin_add hook', function (done) {
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    expect(hook_mock.fire).toHaveBeenCalledWith('before_plugin_add', jasmine.any(Object)); 
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            it('should determine where to fetch a plugin from using determinePluginTarget and invoke plugman.fetch with the resolved target', function (done) {
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    expect(add.determinePluginTarget).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), 'cordova-plugin-device', jasmine.any(Object)); 
+                    expect(plugman.fetch).toHaveBeenCalledWith('cordova-plugin-device', path.join(projectRoot,'plugins'), jasmine.any(Object));
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            it('should retrieve any variables for the plugin from config.xml and add them as cli variables only when the variables were not already provided via options', function (done) {
+                var cfg_plugin_variables = {'some':'variable'};
+                cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
+                    return {'variables': cfg_plugin_variables};
+                });
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    //confirm cli_variables are undefind
+                    expect(add.determinePluginTarget.calls.argsFor(0)[3]['variables']).toBeUndefined;
+                    expect(plugman.install).toHaveBeenCalled();
+                    //check that the plugin variables from config.xml got added to cli_variables
+                    expect(plugman.install.calls.argsFor(0)[4]['cli_variables']).toEqual(cfg_plugin_variables);
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            it('should invoke plugman.install for each platform added to the project', function (done) {
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    expect(plugman.install).toHaveBeenCalledWith('android', jasmine.any(String), jasmine.any(String), jasmine.any(String), jasmine.any(Object));
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            it('should save plugin variable information to package.json file (if exists)', function (done) {
+                var cli_plugin_variables = {'some':'variable'};
+
+                fs.existsSync.and.returnValue(true);
+
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save:'true'}).then(function () {
+                    expect(fs.writeFileSync).toHaveBeenCalledWith(jasmine.any(String), JSON.stringify({'cordova':{'plugins':{'cordova-plugin-device':cli_plugin_variables}}}, null, 2), 'utf8');
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            it('should overwrite plugin information in config.xml after a successful installation', function (done) {
+                var cfg_plugin_variables = {'some':'variable'};
+                var cli_plugin_variables = {'some':'new_variable'};
+                cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
+                    return {'variables': cfg_plugin_variables};
+                });
+
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save:'true'}).then(function () {
+                    //confirm cli_variables got passed through
+                    expect(add.determinePluginTarget.calls.argsFor(0)[3]['variables']).toEqual(cli_plugin_variables);
+                    //check that the plugin variables from config.xml got added to cli_variables
+                    expect(plugman.install.calls.argsFor(0)[4]['cli_variables']).toEqual(cli_plugin_variables);
+                    expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('cordova-plugin-device');
+                    expect(cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(jasmine.any(Object), cli_plugin_variables);
+                    expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
+            //can't test the following due to inline require of preparePlatforms
+            xit('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
+                plugman.install.and.returnValue(false);
+            });
+            it('should fire after_plugin_add hook', function (done) {
+                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_add', jasmine.any(Object)); 
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.log(e);
+                }).done(done);
+            });
         });
     });
     describe('determinePluginTarget helper method', function () {

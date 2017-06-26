@@ -138,6 +138,7 @@ function add (projectRoot, hooksRunner, opts) {
                     var pkgJsonPath = path.join(projectRoot, 'package.json');
 
                     // save to config.xml
+                    // TODO: no need to have saveToConfigXMLOn anymore. Should just check opts.save instead
                     if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
                         // If statement to see if pkgJsonPath exists in the filesystem
                         if (fs.existsSync(pkgJsonPath)) {
