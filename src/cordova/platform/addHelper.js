@@ -28,7 +28,7 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
 //delete require.cache[require.resolve('../prepare')];
-//var prepare = require('../prepare');
+var prepare = require('../prepare');
 var promiseutil = require('../../util/promise-util');
 var config = require('../config');
 var lazy_load = require('../lazy_load');
@@ -120,6 +120,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                 // If spec still doesn't exist, try to use pinned version
                 if (!spec && platforms[platform]) {
+                    events.emit('verbose', 'Grabbing pinned version.');
                     spec = platforms[platform].version;
                 }
 
@@ -212,7 +213,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         };
                         
                         //delete require.cache[require.resolve('../cordova')]
-                        return require('../prepare')(prepOpts);
+                        return prepare(prepOpts);
                     }
                 })
                 .then(function () {

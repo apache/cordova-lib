@@ -6,7 +6,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -14,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
     */
-    var helpers = require('../spec-cordova/helpers'),
+    var helpers = require('../spec/helpers'),
     path = require('path'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
@@ -41,7 +43,7 @@ describe('tests platform/spec restore with --save', function () {
         shell.rm('-rf', project);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         process.chdir(project);
         delete process.env.PWD;
@@ -291,7 +293,7 @@ describe('tests platform/spec restore with --save', function () {
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -393,7 +395,7 @@ describe('files should not be modified if their platforms are identical', functi
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         // Use basePkgJson6 because pkg.json and config.xml contain only android
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson6'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson6'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson6'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -463,7 +465,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson5'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson5'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson5'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -547,7 +549,7 @@ describe('update empty package.json to match config.xml', function () {
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson3'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson3'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson3'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -625,7 +627,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson4'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson4'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson4'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -713,7 +715,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson8'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson8'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson8'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -795,7 +797,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson9'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson9'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson9'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -881,7 +883,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson10'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson10'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson10'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -1003,7 +1005,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson11'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson11'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson11'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -1144,7 +1146,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson12'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson12'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson12'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -1244,7 +1246,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         // Use basePkgJson6 because pkg.json and config.xml contain only android
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson13'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson13'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson13'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
@@ -1394,7 +1396,7 @@ describe('tests platform/spec restore with --save', function () {
         shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson'), project);
         process.chdir(project);
         events.on('results', function(res) { results = res; });
