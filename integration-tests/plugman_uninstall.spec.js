@@ -24,7 +24,6 @@ var uninstall = require('../src/plugman/uninstall'),
     actions = require('cordova-common').ActionStack,
     PluginInfo = require('cordova-common').PluginInfo,
     events = require('cordova-common').events,
-    plugman = require('../src/plugman/plugman'),
     common  = require('../spec/common'),
     platforms = require('../src/platforms/platforms'),
     xmlHelpers = require('cordova-common').xmlHelpers,
@@ -325,7 +324,7 @@ describe('end', function() {
             return uninstall('android', project, plugins['A']);
         }).fin(function(err){
             if(err)
-                plugman.emit('error', err);
+                events.emit('error', err);
             shell.rm('-rf', project, project2, project3);
             done();
         });

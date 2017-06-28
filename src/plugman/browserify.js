@@ -25,7 +25,6 @@ var path               = require('path'),
     fs                 = require('fs'),
     childProcess       = require('child_process'),
     events             = require('cordova-common').events,
-    plugman            = require('./plugman'),
     bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
     writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
     Q                  = require('q'),
@@ -48,7 +47,7 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
 
     outReleaseFileStream.on('finish', function() {
         var newtime = new Date().valueOf() - time;
-        plugman.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
+        events.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
         deferred.resolve();
         // TODO clean up all the *.browserify files
     });
