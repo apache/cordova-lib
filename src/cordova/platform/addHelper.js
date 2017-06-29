@@ -119,6 +119,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                 // If spec still doesn't exist, try to use pinned version
                 if (!spec && platforms[platform]) {
+                    events.emit('verbose', 'Grabbing pinned version.');
                     spec = platforms[platform].version;
                 }
 
