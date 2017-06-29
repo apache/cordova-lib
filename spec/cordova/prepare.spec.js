@@ -88,7 +88,7 @@ describe('cordova/prepare', function () {
                     throw new Error('cdProjectRoot error');
                 });
 
-                prepare({}).then(function () { 
+                prepare({}).then(function () {
                     fail('unexpected success handler invoked');
                 }).fail(function (e) {
                     expect(e.message).toBe('cdProjectRoot error');

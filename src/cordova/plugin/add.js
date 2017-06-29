@@ -20,7 +20,7 @@
 var cordova_util = require('../util');
 var plugin_util = require('./util');
 var config = require('../config');
-var pkgJson = require('../../../package.json');
+var cordova_pkgJson = require('../../../package.json');
 var pluginSpec = require('./plugin_spec_parser');
 var plugman = require('../../plugman/plugman');
 var registry = require('../../plugman/registry/registry');
@@ -213,8 +213,9 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
         return Q(target);
     }
     // Require project pkgJson.
+    var pkgJson;
     var pkgJsonPath = path.join(projectRoot, 'package.json');
-    var cordovaVersion = pkgJson.version;
+    var cordovaVersion = cordova_pkgJson.version;
     if (fs.existsSync(pkgJsonPath)) {
         pkgJson = cordova_util.requireNoCache(pkgJsonPath);
     }
@@ -234,8 +235,10 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
 
     // If parsedSpec.version satisfies pkgJson version, no writing to pkg.json. Only write when
     // it does not satisfy.
-    if (parsedSpec.version) {
+    /* if (parsedSpec.version) {
+        
         if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[parsedSpec.package]) {
+            //it can only go in here if 
             var noSymbolVersion = parsedSpec.version;
             if (parsedSpec.version.charAt(0) === '^' || parsedSpec.version.charAt(0) === '~') {
                 noSymbolVersion = parsedSpec.version.slice(1);
@@ -255,7 +258,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
                 }
             }
         }
-    }
+    } */
 
     if (cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version) || pluginSpec.parse(parsedSpec.version).scope) {
         return Q(parsedSpec.version);
@@ -265,7 +268,6 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     if (parsedSpec.version) {
         return Q(id + '@' + parsedSpec.version);
     }
-
     // If no version is given at all and we are fetching from npm, we
     // can attempt to use the Cordova dependencies the plugin lists in
     // their package.json
@@ -277,8 +279,8 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     } else {
         events.emit('verbose', 'Not checking npm info for ' + parsedSpec.package + ' because searchpath or noregistry flag was given');
     }
-
-    // TODO: whoa wat
+    // if noregistry or searchpath are true, then shouldUseNpmInfo is false. Just return target
+    // else run `npm info` on the target via registry.info so we could get engines elemenent in package.json. Pass that info to getFetchVersion which determines the correct plugin to fetch based on engines element.
     return (shouldUseNpmInfo ? registry.info([id])
         .then(function (pluginInfo) {
             return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
@@ -332,13 +334,12 @@ function getVersionFromConfigFile (plugin, cfg) {
 function getFetchVersion (projectRoot, pluginInfo, cordovaVersion) {
     // Figure out the project requirements
     if (pluginInfo.engines && pluginInfo.engines.cordovaDependencies) {
+        // grab array of already installed plugins
         var pluginList = plugin_util.getInstalledPlugins(projectRoot);
         var pluginMap = {};
-
         pluginList.forEach(function (plugin) {
             pluginMap[plugin.id] = plugin.version;
         });
-
         return cordova_util.getInstalledPlatformsWithVersions(projectRoot)
             .then(function (platformVersions) {
                 return module.exports.determinePluginVersionToFetch(
@@ -389,6 +390,7 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
     // platform version, plugin version. The below for loop: what version is it
     // iterating over? plugin version? please clarify the variable name.
     for (var version in engine) {
+        // if a single version && less than latest
         if (semver.valid(semver.clean(version)) && semver.lte(version, latest)) {
             versions.push(version);
         } else {
@@ -409,7 +411,6 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
             }
         }
     }
-
     // If there were no valid requirements, we fall back to old behavior
     if (!upperBoundExists && versions.length === 0) {
         events.emit('verbose', 'Ignoring ' + name + ' cordovaDependencies entry because it did not contain any valid plugin version entries');
@@ -491,6 +492,13 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
     return null;
 }
 
+/*
+ * Returns an array full of objects of dependency requirements that are not met.
+ * reqs - CordovaDependency object from plugin's package.json
+ * pluginMap - previously installed plugins in the project
+ * platformMap - previously installed platforms in the project
+ * cordovaVersion - version of cordova being used
+ */
 function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
     var failed = [];
     var version = cordovaVersion;
@@ -502,6 +510,7 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
     for (var req in reqs) {
         if (reqs.hasOwnProperty(req) && typeof req === 'string' && semver.validRange(reqs[req])) {
             var badInstalledVersion = null;
+            // remove potential whitespace
             var trimmedReq = req.trim();
 
             if (pluginMap[trimmedReq] && !semver.satisfies(pluginMap[trimmedReq], reqs[req])) {
@@ -531,6 +540,8 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
     return failed;
 }
 
+// return the version if it is in the versions array
+// return null if the version doesn't exist in the array
 function findVersion (versions, version) {
     var cleanedVersion = semver.clean(version);
     for (var i = 0; i < versions.length; i++) {
@@ -541,6 +552,7 @@ function findVersion (versions, version) {
     return null;
 }
 
+// emits warnings to users of failed dependnecy requirements in their projects
 function listUnmetRequirements (name, failedRequirements) {
     events.emit('warn', 'Unmet project requirements for latest version of ' + name + ':');
 
