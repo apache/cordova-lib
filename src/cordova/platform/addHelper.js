@@ -52,8 +52,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
         if (!cordova_util.hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
-            // TODO: shouldnt this be a warn, not a log?
-            events.emit('log', msg);
+            events.emit('warning', msg);
         }
     }
 
