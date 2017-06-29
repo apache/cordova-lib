@@ -28,7 +28,7 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
 //delete require.cache[require.resolve('../prepare')];
-//var prepare = require('../prepare');
+var prepare = require('../prepare');
 var promiseutil = require('../../util/promise-util');
 var config = require('../config');
 var lazy_load = require('../lazy_load');
@@ -96,6 +96,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = null;
                 }
 
+                // TODO: can we move this up much earlier in the code?
                 if (platform === 'ubuntu' || platform === 'blackberry10') {
                     events.emit(platform + ' has been deprecated and will be removed in the next major release of cordova.');
                 }
@@ -119,6 +120,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                 // If spec still doesn't exist, try to use pinned version
                 if (!spec && platforms[platform]) {
+                    events.emit('verbose', 'Grabbing pinned version.');
                     spec = platforms[platform].version;
                 }
 
@@ -143,7 +145,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 var platformAlreadyAdded = fs.existsSync(platformPath);
 
                 if (cmd === 'add') {
-                    // TODO: Can we check for this before downloading the platform?
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
                     }
@@ -201,6 +202,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function () {
                     // TODO: didnt we just do this two promise then's ago?
+                    // TODO: what is the difference between calling prepare() here and prepare.preparePlatforms() a few lines above?
                     if (!opts.restoring) {
                         // Call prepare for the current platform if we're not restoring from config.xml.
                         var prepOpts = {
@@ -209,8 +211,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             fetch: opts.fetch || false,
                             save: opts.save || false
                         };
+                        
                         //delete require.cache[require.resolve('../cordova')]
-                        return require('../prepare')(prepOpts);
+                        return prepare(prepOpts);
                     }
                 })
                 .then(function () {
