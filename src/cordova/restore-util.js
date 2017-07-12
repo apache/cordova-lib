@@ -103,7 +103,6 @@ function installPlatformsFromConfigXML (platforms, opts) {
             return a;
         }, []);
         comboArray = uniq;
-        comboArray = comboArray.sort();
 
         // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
@@ -121,7 +120,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
                 pkgJson.cordova.platforms = [];
             }
             // If comboArray has the same platforms as pkg.json, no modification to pkg.json.
-            if (comboArray.toString() === pkgJson.cordova.platforms.sort().toString()) {
+            if (comboArray.toString() === pkgJson.cordova.platforms.toString()) {
                 events.emit('verbose', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
             } else {
                 // Modify pkg.json to include the elements.
@@ -308,9 +307,9 @@ function installPluginsFromConfigXML (args) {
         });
 
         // Check to see if pkg.json plugin(id) and config plugin(id) match.
-        if (comboPluginIdArray.sort().toString() !== pluginIdConfig.sort().toString()) {
+        if (comboPluginIdArray.toString() !== pluginIdConfig.toString()) {
             // If there is a config plugin that does NOT already exist in
-            // mergedPluginDataArray, add it and its variables.
+            // comboPluginIdArray, add it and its variables.
             pluginIdConfig.forEach(function (item) {
                 if (comboPluginIdArray.indexOf(item) < 0) {
                     comboPluginIdArray.push(item);
@@ -341,18 +340,28 @@ function installPluginsFromConfigXML (args) {
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
         }
     }
-    // Write config.xml (only if plugins exist in package.json).
+    // Write to config.xml (only if it is different from package.json in content)
     comboPluginIdArray.forEach(function (plugID) {
+        var configXMLPlugin = cfg.getPlugin(plugID);
         if (pluginIdConfig.indexOf(plugID) < 0) {
             pluginIdConfig.push(plugID);
-        }
-        cfg.removePlugin(plugID);
-        if (mergedPluginSpecs[plugID]) {
+            if (mergedPluginSpecs[plugID]) {
+                cfg.removePlugin(plugID);
+                cfg.addPlugin({name: plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]);
+                modifiedConfigXML = true;
+            } else {
+                cfg.removePlugin(plugID);
+                cfg.addPlugin({name: plugID}, comboObject[plugID]);
+                modifiedConfigXML = true;
+            }
+
+        // Write only if the plugin variables or specs are different from pkgJson
+        } else if (((pluginIdConfig.indexOf(plugID) >= 0) && (mergedPluginSpecs[plugID]) &&
+            (configXMLPlugin.variables !== comboObject[plugID])) ||
+            ((mergedPluginSpecs[plugID] !== configXMLPlugin.spec) ||
+            (configXMLPlugin.variables !== comboObject[plugID]))) {
+            cfg.removePlugin(plugID);
             cfg.addPlugin({name: plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]);
-            modifiedConfigXML = true;
-        // If no spec, just add the plugin.
-        } else {
-            cfg.addPlugin({name: plugID}, comboObject[plugID]);
             modifiedConfigXML = true;
         }
     });
