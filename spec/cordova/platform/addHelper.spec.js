@@ -112,7 +112,7 @@ describe('cordova/platform/addHelper', function () {
         fail('addHelper success handler unexpectedly invoked');
             }).fail(function (e) {
                 expect(cordova_util.hostSupports).toHaveBeenCalled();
-                //expect(events.emit).toHaveBeenCalledWith('warning', 'WARNING: Applications for platform atari can not be built on this OS - darwin.');
+                expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             }).done(done);
         });
 
@@ -227,6 +227,7 @@ describe('cordova/platform/addHelper', function () {
         describe('after platform api invocation', function () {
 
             describe('when the restoring option is not provided', function () {
+                // test is commented out b/c preparePlatforms can't be spied on as it is dynamically required due to circular references.
                 xit('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function (done) {
                     platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true}).then(function(result) {
                         expect(prepare.preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', Object({ searchpath: undefined }));
@@ -396,7 +397,6 @@ describe('cordova/platform/addHelper', function () {
             },60000);
             
             it('should by default attempt to lazy_load.based_on_config', function (done) {
-                // spyOn(lazy_load, 'based_on_config');
                 platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {save:true}).then(function () {
                     expect(lazy_load.based_on_config).toHaveBeenCalledWith('/some/path', 'android@6.0.0', Object({ save: true }));
                 }).fail(function (e) {
