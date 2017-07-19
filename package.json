@@ -44,17 +44,23 @@
   },
   "devDependencies": {
     "codecov": "^2.1.0",
+    "eslint": "^4.2.0",
+    "eslint-config-semistandard": "^11.0.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "istanbul": "^0.4.5",
     "jasmine": "^2.5.2",
-    "jshint": "2.5.8",
     "rewire": "2.5.2"
   },
   "scripts": {
-    "test": "npm run jshint && npm run unit-tests && npm run e2e-tests",
-    "jshint": "jshint src spec",
+    "test": "npm run eslint && npm run unit-tests && npm run e2e-tests",
+    "eslint": "eslint src spec",
     "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "cover": "istanbul cover --root src --print detail jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
-    "e2e-tests" : "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
+    "e2e-tests": "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
   },
   "contributors": [
     {
