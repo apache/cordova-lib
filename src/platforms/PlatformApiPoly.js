@@ -47,7 +47,7 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
  *
  * * platform: String that defines a platform name.
  */
-function PlatformApiPoly(platform, platformRootDir, events) {
+function PlatformApiPoly (platform, platformRootDir, events) {
     if (!platform) throw new CordovaError('\'platform\' argument is missing');
     if (!platformRootDir) throw new CordovaError('platformRootDir argument is missing');
 
@@ -55,8 +55,7 @@ function PlatformApiPoly(platform, platformRootDir, events) {
     this.platform = platform;
     this.events = events || require('cordova-common').events;
 
-    if (!(platform in knownPlatforms))
-        throw new CordovaError('Unknown platform ' + platform);
+    if (!(platform in knownPlatforms)) { throw new CordovaError('Unknown platform ' + platform); }
 
     var ParserConstructor = require(knownPlatforms[platform].parser_file);
     this._parser = new ParserConstructor(this.root);
@@ -87,21 +86,22 @@ function PlatformApiPoly(platform, platformRootDir, events) {
  *   instance or rejected with CordovaError.
  */
 PlatformApiPoly.createPlatform = function (destinationDir, projectConfig, options) {
-    if (!options || !options.platformDetails)
+    if (!options || !options.platformDetails) {
         return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
+    }
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'create');
     var commandArguments = getCreateArgs(destinationDir, projectConfig, options);
 
     return superspawn.spawn(command, commandArguments,
         { printCommand: true, stdio: 'inherit', chmod: true })
-    .then(function () {
-        var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destinationDir);
-        copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
-        return platformApi;
-    });
+        .then(function () {
+            var platformApi = knownPlatforms
+                .getPlatformApi(options.platformDetails.platform, destinationDir);
+            copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
+            return platformApi;
+        });
 };
 
 /**
@@ -119,19 +119,20 @@ PlatformApiPoly.createPlatform = function (destinationDir, projectConfig, option
  *   instance or rejected with CordovaError.
  */
 PlatformApiPoly.updatePlatform = function (destinationDir, options) {
-    if (!options || !options.platformDetails)
+    if (!options || !options.platformDetails) {
         return Q.reject(new CordovaError('Failed to find platform\'s \'create\' script. ' +
             'Either \'options\' parameter or \'platformDetails\' option is missing'));
+    }
 
     var command = path.join(options.platformDetails.libDir, 'bin', 'update');
     return superspawn.spawn(command, [destinationDir],
         { printCommand: true, stdio: 'inherit', chmod: true })
-    .then(function () {
-        var platformApi = knownPlatforms
-            .getPlatformApi(options.platformDetails.platform, destinationDir);
-        copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
-        return platformApi;
-    });
+        .then(function () {
+            var platformApi = knownPlatforms
+                .getPlatformApi(options.platformDetails.platform, destinationDir);
+            copyCordovaSrc(options.platformDetails.libDir, platformApi.getPlatformInfo());
+            return platformApi;
+        });
 };
 
 /**
@@ -227,9 +228,10 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject, options) {
  */
 PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
 
-    if (!plugin || !(plugin instanceof PluginInfo))
+    if (!plugin || !(plugin instanceof PluginInfo)) {
         return Q.reject('The parameter is incorrect. The first parameter ' +
             'should be valid PluginInfo instance');
+    }
 
     installOptions = installOptions || {};
     installOptions.variables = installOptions.variables || {};
@@ -245,36 +247,36 @@ PlatformApiPoly.prototype.addPlugin = function (plugin, installOptions) {
     plugin.getFilesAndFrameworks(this.platform)
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
-    .forEach(function(item) {
-        actions.push(actions.createAction(
-            self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile],
-            self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile]));
-    });
+        .forEach(function (item) {
+            actions.push(actions.createAction(
+                self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile],
+                self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, installOptions, projectFile]));
+        });
 
     // run through the action stack
     return actions.process(this.platform, this.root)
-    .then(function () {
-        if (projectFile) {
-            projectFile.write();
-        }
+        .then(function () {
+            if (projectFile) {
+                projectFile.write();
+            }
 
-        // Add PACKAGE_NAME variable into vars
-        if (!installOptions.variables.PACKAGE_NAME) {
-            installOptions.variables.PACKAGE_NAME = self._handler.package_name(self.root);
-        }
+            // Add PACKAGE_NAME variable into vars
+            if (!installOptions.variables.PACKAGE_NAME) {
+                installOptions.variables.PACKAGE_NAME = self._handler.package_name(self.root);
+            }
 
-        self._munger
-            // Ignore passed `is_top_level` option since platform itself doesn't know
-            // anything about managing dependencies - it's responsibility of caller.
-            .add_plugin_changes(plugin, installOptions.variables, /*is_top_level=*/true, /*should_increment=*/true)
-            .save_all();
+            self._munger
+                // Ignore passed `is_top_level` option since platform itself doesn't know
+                // anything about managing dependencies - it's responsibility of caller.
+                .add_plugin_changes(plugin, installOptions.variables, /* is_top_level= */true, /* should_increment= */true)
+                .save_all();
 
-        var targetDir = installOptions.usePlatformWww ?
-            self.getPlatformInfo().locations.platformWww :
-            self.getPlatformInfo().locations.www;
+            var targetDir = installOptions.usePlatformWww ?
+                self.getPlatformInfo().locations.platformWww :
+                self.getPlatformInfo().locations.www;
 
-        self._addModulesInfo(plugin, targetDir);
-    });
+            self._addModulesInfo(plugin, targetDir);
+        });
 };
 
 /**
@@ -305,34 +307,34 @@ PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
     plugin.getFilesAndFrameworks(this.platform)
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
-    .forEach(function(item) {
-        actions.push(actions.createAction(
-            self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile],
-            self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile]));
-    });
+        .forEach(function (item) {
+            actions.push(actions.createAction(
+                self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile],
+                self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile]));
+        });
 
     // run through the action stack
     return actions.process(this.platform, this.root)
-    .then(function() {
-        if (projectFile) {
-            projectFile.write();
-        }
+        .then(function () {
+            if (projectFile) {
+                projectFile.write();
+            }
 
-        self._munger
-            // Ignore passed `is_top_level` option since platform itself doesn't know
-            // anything about managing dependencies - it's responsibility of caller.
-            .remove_plugin_changes(plugin, /*is_top_level=*/true)
-            .save_all();
+            self._munger
+                // Ignore passed `is_top_level` option since platform itself doesn't know
+                // anything about managing dependencies - it's responsibility of caller.
+                .remove_plugin_changes(plugin, /* is_top_level= */true)
+                .save_all();
 
-        var targetDir = uninstallOptions.usePlatformWww ?
-            self.getPlatformInfo().locations.platformWww :
-            self.getPlatformInfo().locations.www;
+            var targetDir = uninstallOptions.usePlatformWww ?
+                self.getPlatformInfo().locations.platformWww :
+                self.getPlatformInfo().locations.www;
 
-        self._removeModulesInfo(plugin, targetDir);
-        // Remove stale plugin directory
-        // TODO: this should be done by plugin files uninstaller
-        shell.rm('-rf', path.resolve(self.root, 'Plugins', plugin.id));
-    });
+            self._removeModulesInfo(plugin, targetDir);
+            // Remove stale plugin directory
+            // TODO: this should be done by plugin files uninstaller
+            shell.rm('-rf', path.resolve(self.root, 'Plugins', plugin.id));
+        });
 };
 
 PlatformApiPoly.prototype.updatePlugin = function (plugin, updateOptions) {
@@ -343,9 +345,9 @@ PlatformApiPoly.prototype.updatePlugin = function (plugin, updateOptions) {
     updateOptions.usePlatformWww = true;
 
     return this.removePlugin(plugin, updateOptions)
-    .then(function () {
-        return  self.addPlugin(plugin, updateOptions);
-    });
+        .then(function () {
+            return self.addPlugin(plugin, updateOptions);
+        });
 };
 
 /**
@@ -393,7 +395,7 @@ PlatformApiPoly.prototype.updatePlugin = function (plugin, updateOptions) {
  *   there could be multiple items in output array, e.g. when multiple
  *   arhcitectures is specified.
  */
-PlatformApiPoly.prototype.build = function(buildOptions) {
+PlatformApiPoly.prototype.build = function (buildOptions) {
     var command = path.join(this.root, 'cordova', 'build');
     var commandArguments = getBuildArgs(buildOptions);
     return superspawn.spawn(command, commandArguments, {
@@ -412,7 +414,7 @@ PlatformApiPoly.prototype.build = function(buildOptions) {
  * @return {Promise} A promise either fulfilled if package was built and ran
  *   successfully, or rejected with CordovaError.
  */
-PlatformApiPoly.prototype.run = function(runOptions) {
+PlatformApiPoly.prototype.run = function (runOptions) {
     var command = path.join(this.root, 'cordova', 'run');
     var commandArguments = getBuildArgs(runOptions);
     return superspawn.spawn(command, commandArguments, {
@@ -425,7 +427,7 @@ PlatformApiPoly.prototype.run = function(runOptions) {
  * @return  {Promise}  Return a promise either fulfilled, or rejected with
  *   CordovaError.
  */
-PlatformApiPoly.prototype.clean = function() {
+PlatformApiPoly.prototype.clean = function () {
     var cmd = path.join(this.root, 'cordova', 'clean');
     return superspawn.spawn(cmd, [], { printCommand: true, stdio: 'inherit', chmod: true });
 };
@@ -438,7 +440,7 @@ PlatformApiPoly.prototype.clean = function() {
  * @return  {Promise<Requirement[]>}  Promise, resolved with set of Requirement
  *   objects for current platform.
  */
-PlatformApiPoly.prototype.requirements = function() {
+PlatformApiPoly.prototype.requirements = function () {
     var modulePath = path.join(this.root, 'cordova', 'lib', 'check_reqs');
     try {
         return require(modulePath).check_all();
@@ -463,18 +465,18 @@ module.exports = PlatformApiPoly;
  * @return  {String[]}     An array or arguments which can be passed to
  *   'bin/create'.
  */
-function getCreateArgs(destinationDir, projectConfig, options) {
+function getCreateArgs (destinationDir, projectConfig, options) {
     var platformName = options.platformDetails.platform;
     var platformVersion = options.platformDetails.version;
 
     var args = [];
     args.push(destinationDir); // output
-    args.push(projectConfig.packageName().replace(/[^\w.]/g,'_'));
+    args.push(projectConfig.packageName().replace(/[^\w.]/g, '_'));
     // CB-6992 it is necessary to normalize characters
     // because node and shell scripts handles unicode symbols differently
     // We need to normalize the name to NFD form since iOS uses NFD unicode form
     var name = projectConfig.name();
-    if (platformName == 'ios') {
+    if (platformName === 'ios') {
         var unorm = require('unorm');
         name = unorm.nfd(name);
     }
@@ -509,12 +511,12 @@ function getCreateArgs(destinationDir, projectConfig, options) {
  * @return  {String[]}         An array or arguments which can be passed to
  *   `create` build script.
  */
-function getBuildArgs(options) {
+function getBuildArgs (options) {
     // if no options passed, empty object will be returned
     if (!options) return [];
 
     var downstreamArgs = [];
-    var argNames =[
+    var argNames = [
         'debug',
         'release',
         'device',
@@ -523,7 +525,7 @@ function getBuildArgs(options) {
         'list'
     ];
 
-    argNames.forEach(function(flag) {
+    argNames.forEach(function (flag) {
         if (options[flag]) {
             downstreamArgs.push('--' + flag);
         }
@@ -552,7 +554,7 @@ function getBuildArgs(options) {
  * @param   {String}  targetDir  The directory, where updated cordova_plugins.js
  *   should be written to.
  */
-PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
+PlatformApiPoly.prototype._addModulesInfo = function (plugin, targetDir) {
     var installedModules = this._platformJson.root.modules || [];
 
     var installedPaths = installedModules.map(function (installedModule) {
@@ -560,27 +562,27 @@ PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
     });
 
     var modulesToInstall = plugin.getJsModules(this.platform)
-    .filter(function (moduleToInstall) {
-        return installedPaths.indexOf(moduleToInstall.file) === -1;
-    }).map(function (moduleToInstall) {
-        var moduleName = plugin.id + '.' + ( moduleToInstall.name || moduleToInstall.src.match(/([^\/]+)\.js/)[1] );
-        var obj = {
-            file: ['plugins', plugin.id, moduleToInstall.src].join('/'),
-            id: moduleName,
-            pluginId: plugin.id
-        };
-        if (moduleToInstall.clobbers.length > 0) {
-            obj.clobbers = moduleToInstall.clobbers.map(function(o) { return o.target; });
-        }
-        if (moduleToInstall.merges.length > 0) {
-            obj.merges = moduleToInstall.merges.map(function(o) { return o.target; });
-        }
-        if (moduleToInstall.runs) {
-            obj.runs = true;
-        }
+        .filter(function (moduleToInstall) {
+            return installedPaths.indexOf(moduleToInstall.file) === -1;
+        }).map(function (moduleToInstall) {
+            var moduleName = plugin.id + '.' + (moduleToInstall.name || moduleToInstall.src.match(/([^\/]+)\.js/)[1]); // eslint-disable-line no-useless-escape
+            var obj = {
+                file: ['plugins', plugin.id, moduleToInstall.src].join('/'),
+                id: moduleName,
+                pluginId: plugin.id
+            };
+            if (moduleToInstall.clobbers.length > 0) {
+                obj.clobbers = moduleToInstall.clobbers.map(function (o) { return o.target; });
+            }
+            if (moduleToInstall.merges.length > 0) {
+                obj.merges = moduleToInstall.merges.map(function (o) { return o.target; });
+            }
+            if (moduleToInstall.runs) {
+                obj.runs = true;
+            }
 
-        return obj;
-    });
+            return obj;
+        });
 
     this._platformJson.root.modules = installedModules.concat(modulesToInstall);
     if (!this._platformJson.root.plugin_metadata) {
@@ -601,17 +603,17 @@ PlatformApiPoly.prototype._addModulesInfo = function(plugin, targetDir) {
  * @param   {String}  targetDir  The directory, where updated cordova_plugins.js
  *   should be written to.
  */
-PlatformApiPoly.prototype._removeModulesInfo = function(plugin, targetDir) {
+PlatformApiPoly.prototype._removeModulesInfo = function (plugin, targetDir) {
     var installedModules = this._platformJson.root.modules || [];
     var modulesToRemove = plugin.getJsModules(this.platform)
-    .map(function (jsModule) {
-        return  ['plugins', plugin.id, jsModule.src].join('/');
-    });
+        .map(function (jsModule) {
+            return ['plugins', plugin.id, jsModule.src].join('/');
+        });
 
     var updatedModules = installedModules
-    .filter(function (installedModule) {
-        return (modulesToRemove.indexOf(installedModule.file) === -1);
-    });
+        .filter(function (installedModule) {
+            return (modulesToRemove.indexOf(installedModule.file) === -1);
+        });
 
     this._platformJson.root.modules = updatedModules;
     if (this._platformJson.root.plugin_metadata) {
@@ -644,7 +646,7 @@ PlatformApiPoly.prototype._writePluginModules = function (targetDir) {
     fs.writeFileSync(path.join(targetDir, 'cordova_plugins.js'), final_contents, 'utf-8');
 };
 
-PlatformApiPoly.prototype._getInstaller = function(type) {
+PlatformApiPoly.prototype._getInstaller = function (type) {
     var self = this;
     return function (item, plugin_dir, plugin_id, options, project) {
         var installer = self._handler[type] || common[type];
@@ -654,14 +656,14 @@ PlatformApiPoly.prototype._getInstaller = function(type) {
             self._handler.www_dir(self.root);
 
         var installerArgs = type === 'asset' ? [wwwDest] :
-            type === 'js-module' ? [plugin_id, wwwDest]:
-            [self.root, plugin_id, options, project];
+            type === 'js-module' ? [plugin_id, wwwDest] :
+                [self.root, plugin_id, options, project];
 
         installer.install.apply(null, [item, plugin_dir].concat(installerArgs));
     };
 };
 
-PlatformApiPoly.prototype._getUninstaller = function(type) {
+PlatformApiPoly.prototype._getUninstaller = function (type) {
     var self = this;
     return function (item, plugin_dir, plugin_id, options, project) {
         var uninstaller = self._handler[type] || common[type];
@@ -686,7 +688,7 @@ PlatformApiPoly.prototype._getUninstaller = function(type) {
  * @param   {PlatformInfo}  platformInfo  PlatformInfo structure, required for
  *   detecting copied files destination.
  */
-function copyCordovaSrc(sourceLib, platformInfo) {
+function copyCordovaSrc (sourceLib, platformInfo) {
     // Copy the cordova.js file to platforms/<platform>/platform_www/
     // The www dir is nuked on each prepare so we keep cordova.js in platform_www
     shell.mkdir('-p', platformInfo.locations.platformWww);
@@ -697,8 +699,8 @@ function copyCordovaSrc(sourceLib, platformInfo) {
     // We need these files to build cordova.js if using browserify method.
     var cordovaJsSrcPath = path.resolve(sourceLib, platformInfo.locations.cordovaJsSrc);
 
-    //only exists for platforms that have shipped cordova-js-src directory
-    if(fs.existsSync(cordovaJsSrcPath)) {
+    // only exists for platforms that have shipped cordova-js-src directory
+    if (fs.existsSync(cordovaJsSrcPath)) {
         shell.cp('-rf', cordovaJsSrcPath, platformInfo.locations.platformWww);
     }
 }

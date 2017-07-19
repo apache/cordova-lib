@@ -1,4 +1,4 @@
-﻿/**
+/**
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
     distributed with this work for additional information
@@ -20,24 +20,21 @@
     Helper for Android projects configuration
 */
 
-/* jshint boss:true */
+var fs = require('fs');
+var path = require('path');
+var properties_parser = require('properties-parser');
+var shell = require('shelljs');
 
-var fs = require('fs'),
-    path = require('path'),
-    properties_parser = require('properties-parser'),
-    shell = require('shelljs');
-
-
-function addToPropertyList(projectProperties, key, value) {
+function addToPropertyList (projectProperties, key, value) {
     var i = 1;
-    while (projectProperties.get(key + '.' + i))
-        i++;
+    while (projectProperties.get(key + '.' + i)) { i++; }
 
     projectProperties.set(key + '.' + i, value);
     projectProperties.dirty = true;
 }
 
-function removeFromPropertyList(projectProperties, key, value) {
+/* eslint-disable no-cond-assign */
+function removeFromPropertyList (projectProperties, key, value) {
     var i = 1;
     var currentValue;
     while (currentValue = projectProperties.get(key + '.' + i)) {
@@ -53,8 +50,9 @@ function removeFromPropertyList(projectProperties, key, value) {
     }
     projectProperties.dirty = true;
 }
+/* eslint-enable no-cond-assign */
 
-function AndroidProject(projectDir) {
+function AndroidProject (projectDir) {
     this._propertiesEditors = {};
     this._subProjectDirs = {};
     this._dirty = false;
@@ -63,7 +61,7 @@ function AndroidProject(projectDir) {
 }
 
 AndroidProject.prototype = {
-    addSubProject: function(parentDir, subDir) {
+    addSubProject: function (parentDir, subDir) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var subProjectFile = path.resolve(subDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
@@ -78,38 +76,38 @@ AndroidProject.prototype = {
 
         this._dirty = true;
     },
-    removeSubProject: function(parentDir, subDir) {
+    removeSubProject: function (parentDir, subDir) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         removeFromPropertyList(parentProperties, 'android.library.reference', module.exports.getRelativeLibraryPath(parentDir, subDir));
         delete this._subProjectDirs[subDir];
         this._dirty = true;
     },
-    addGradleReference: function(parentDir, subDir) {
+    addGradleReference: function (parentDir, subDir) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         addToPropertyList(parentProperties, 'cordova.gradle.include', module.exports.getRelativeLibraryPath(parentDir, subDir));
         this._dirty = true;
     },
-    removeGradleReference: function(parentDir, subDir) {
+    removeGradleReference: function (parentDir, subDir) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         removeFromPropertyList(parentProperties, 'cordova.gradle.include', module.exports.getRelativeLibraryPath(parentDir, subDir));
         this._dirty = true;
     },
-    addSystemLibrary: function(parentDir, value) {
+    addSystemLibrary: function (parentDir, value) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         addToPropertyList(parentProperties, 'cordova.system.library', value);
         this._dirty = true;
     },
-    removeSystemLibrary: function(parentDir, value) {
+    removeSystemLibrary: function (parentDir, value) {
         var parentProjectFile = path.resolve(parentDir, 'project.properties');
         var parentProperties = this._getPropertiesFile(parentProjectFile);
         removeFromPropertyList(parentProperties, 'cordova.system.library', value);
         this._dirty = true;
     },
-    write: function() {
+    write: function () {
         if (!this._dirty) {
             return;
         }
@@ -118,7 +116,7 @@ AndroidProject.prototype = {
         for (var filename in this._propertiesEditors) {
             var editor = this._propertiesEditors[filename];
             if (editor.dirty) {
-                // Check for parent directory existence before attempting write 
+                // Check for parent directory existence before attempting write
                 // (when uninstalling a plugin its subprojects' directories are deleted)
                 if (fs.existsSync(path.dirname(filename))) {
                     fs.writeFileSync(filename, editor.toString());
@@ -131,8 +129,7 @@ AndroidProject.prototype = {
         // no reason to keep run this command. Plus - we really want to avoid
         // relying on the presense of native SDKs within plugman.
         if (this.needsSubLibraryUpdate) {
-            for (var sub_dir in this._subProjectDirs)
-            {
+            for (var sub_dir in this._subProjectDirs) {
                 shell.exec('android update lib-project --path "' + sub_dir + '"');
             }
         }
@@ -151,11 +148,10 @@ AndroidProject.prototype = {
     }
 };
 
-
 module.exports = {
     AndroidProject: AndroidProject,
     getRelativeLibraryPath: function (parentDir, subDir) {
         var libraryPath = path.relative(parentDir, subDir);
-        return (path.sep == '\\') ? libraryPath.replace(/\\/g, '/') : libraryPath;
+        return (path.sep === '\\') ? libraryPath.replace(/\\/g, '/') : libraryPath;
     }
 };

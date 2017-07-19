@@ -20,7 +20,7 @@
 var create = require('cordova-create');
 var events = require('cordova-common').events;
 
-module.exports = function(dir, optionalId, optionalName, cfg, extEvents){
+module.exports = function (dir, optionalId, optionalName, cfg, extEvents) {
     if (extEvents) {
         return create(dir, optionalId, optionalName, cfg, extEvents);
     } else {

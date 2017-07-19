@@ -16,36 +16,35 @@
  *
 */
 
+var tizen = require('../../../src/plugman/platforms/tizen');
+var os = require('os');
+var path = require('path');
+var tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
 
-var tizen = require('../../../src/plugman/platforms/tizen'),
-    os = require('os'),
-    path = require('path'),
-    tizen_project = path.join(__dirname, '..', 'projects', 'tizen');
+path.join(os.tmpdir(), 'plugman-' + ((function () {
+    var index, subIndex;
+    var set = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var str = '';
 
-    path.join( os.tmpdir(), 'plugman-' + ((function() {
-        var index, subIndex,
-           set = 'abcdefghijklmnopqrstuvwxyz0123456789',
-           str = '';
+    for (index = 0; index < 12; index++) {
+        subIndex = Math.round(Math.random() * (set.length - 1));
+        str += set.substring(subIndex, subIndex + 1);
+    }
 
-        for ( index = 0 ; index < 12 ; index++ ) {
-            subIndex = Math.round( Math.random() * ( set.length - 1 ) );
-            str += set.substring( subIndex, subIndex + 1 );
-        }
+    return str;
+})()));
 
-        return str;
-    })() ));
-
-describe('Tizen project handler', function() {
-	describe('www_dir method', function() {
-		it('Test 001 : should append www to the directory passed in', function() {
-			expect(tizen.www_dir(path.sep)).toEqual(path.join(path.sep, 'www'));
-		});
-	});
-	describe('Manipulating project files', function() {
-		describe('package_name method', function() {
-			it('Test 002 : should return the id of the config.xml root element', function() {
-				expect(tizen.package_name(tizen_project)).toEqual('TizenTestPackage');
-			});
-		});
-	});
+describe('Tizen project handler', function () {
+    describe('www_dir method', function () {
+        it('Test 001 : should append www to the directory passed in', function () {
+            expect(tizen.www_dir(path.sep)).toEqual(path.join(path.sep, 'www'));
+        });
+    });
+    describe('Manipulating project files', function () {
+        describe('package_name method', function () {
+            it('Test 002 : should return the id of the config.xml root element', function () {
+                expect(tizen.package_name(tizen_project)).toEqual('TizenTestPackage');
+            });
+        });
+    });
 });

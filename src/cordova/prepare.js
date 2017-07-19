@@ -44,30 +44,30 @@ function prepare (options) {
         options.fetch = options.fetch || false;
         var hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_prepare', options)
-        .then(function () {
-            return restore.installPlatformsFromConfigXML(options.platforms, { searchpath: options.searchpath, fetch: options.fetch, restoring: true });
-        })
-        .then(function () {
-            options = cordova_util.preProcessOptions(options);
-            var paths = options.platforms.map(function (p) {
-                var platform_path = path.join(projectRoot, 'platforms', p);
-                return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
+            .then(function () {
+                return restore.installPlatformsFromConfigXML(options.platforms, { searchpath: options.searchpath, fetch: options.fetch, restoring: true });
+            })
+            .then(function () {
+                options = cordova_util.preProcessOptions(options);
+                var paths = options.platforms.map(function (p) {
+                    var platform_path = path.join(projectRoot, 'platforms', p);
+                    return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
+                });
+                options.paths = paths;
+            }).then(function () {
+                options = cordova_util.preProcessOptions(options);
+                return restore.installPluginsFromConfigXML(options);
+            }).then(function () {
+                options = cordova_util.preProcessOptions(options);
+                options.searchpath = options.searchpath || config_json.plugin_search_path;
+                // Iterate over each added platform
+                return module.exports.preparePlatforms(options.platforms, projectRoot, options);
+            }).then(function () {
+                options.paths = options.platforms.map(function (platform) {
+                    return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
+                });
+                return hooksRunner.fire('after_prepare', options);
             });
-            options.paths = paths;
-        }).then(function () {
-            options = cordova_util.preProcessOptions(options);
-            return restore.installPluginsFromConfigXML(options);
-        }).then(function () {
-            options = cordova_util.preProcessOptions(options);
-            options.searchpath = options.searchpath || config_json.plugin_search_path;
-            // Iterate over each added platform
-            return module.exports.preparePlatforms(options.platforms, projectRoot, options);
-        }).then(function () {
-            options.paths = options.platforms.map(function (platform) {
-                return platforms.getPlatformApi(platform).getPlatformInfo().locations.www;
-            });
-            return hooksRunner.fire('after_prepare', options);
-        });
     });
 }
 
@@ -93,43 +93,43 @@ function preparePlatforms (platformList, projectRoot, options) {
         };
         // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
         return module.exports.restoreMissingPluginsForPlatform(platform, projectRoot, options)
-        .then(function () {
-            // platformApi prepare takes care of all functionality
-            // which previously had been executed by cordova.prepare:
-            //   - reset config.xml and then merge changes from project's one,
-            //   - update www directory from project's one and merge assets from platform_www,
-            //   - reapply config changes, made by plugins,
-            //   - update platform's project
-            // Please note that plugins' changes, such as installed js files, assets and
-            // config changes is not being reinstalled on each prepare.
-            var platformApi = platforms.getPlatformApi(platform);
-            return platformApi.prepare(project, _.clone(options))
             .then(function () {
-                if (platform === 'windows') {
-                    // Windows Api doesn't fire 'pre_package' hook, so we fire it here
-                    return new HooksRunner(projectRoot).fire('pre_package', {
-                        wwwPath: platformApi.getPlatformInfo().locations.www,
-                        platforms: ['windows'],
-                        nohooks: options.nohooks
+                // platformApi prepare takes care of all functionality
+                // which previously had been executed by cordova.prepare:
+                //   - reset config.xml and then merge changes from project's one,
+                //   - update www directory from project's one and merge assets from platform_www,
+                //   - reapply config changes, made by plugins,
+                //   - update platform's project
+                // Please note that plugins' changes, such as installed js files, assets and
+                // config changes is not being reinstalled on each prepare.
+                var platformApi = platforms.getPlatformApi(platform);
+                return platformApi.prepare(project, _.clone(options))
+                    .then(function () {
+                        if (platform === 'windows') {
+                            // Windows Api doesn't fire 'pre_package' hook, so we fire it here
+                            return new HooksRunner(projectRoot).fire('pre_package', {
+                                wwwPath: platformApi.getPlatformInfo().locations.www,
+                                platforms: ['windows'],
+                                nohooks: options.nohooks
+                            });
+                        }
+                    })
+                    .then(function () {
+                        if (options.browserify) {
+                            // TODO: dynamic require here makes it difficult to test this code branch.
+                            var browserify = require('../plugman/browserify');
+                            return browserify(project, platformApi);
+                        }
+                    })
+                    .then(function () {
+                        // Handle edit-config in config.xml
+                        var platformRoot = path.join(projectRoot, 'platforms', platform);
+                        var platformJson = PlatformJson.load(platformRoot, platform);
+                        var munger = new PlatformMunger(platform, platformRoot, platformJson);
+                        // the boolean argument below is "should_increment"
+                        munger.add_config_changes(project.projectConfig, true).save_all();
                     });
-                }
-            })
-            .then(function () {
-                if (options.browserify) {
-                    // TODO: dynamic require here makes it difficult to test this code branch.
-                    var browserify = require('../plugman/browserify');
-                    return browserify(project, platformApi);
-                }
-            })
-            .then(function () {
-                // Handle edit-config in config.xml
-                var platformRoot = path.join(projectRoot, 'platforms', platform);
-                var platformJson = PlatformJson.load(platformRoot, platform);
-                var munger = new PlatformMunger(platform, platformRoot, platformJson);
-                // the boolean argument below is "should_increment"
-                munger.add_config_changes(project.projectConfig, true).save_all();
             });
-        });
     }));
 }
 
@@ -184,9 +184,9 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
             events.emit('verbose', 'Reinstalling missing plugin ' + plugin.name + ' in ' + platform + ' platform');
             var pluginInfo = provider.get(path.join(projectRoot, 'plugins', plugin.name));
             return api.removePlugin(pluginInfo, pluginOptions)
-            .then(function () {
-                return api.addPlugin(pluginInfo, pluginOptions);
-            });
+                .then(function () {
+                    return api.addPlugin(pluginInfo, pluginOptions);
+                });
         });
     }, Q());
 }

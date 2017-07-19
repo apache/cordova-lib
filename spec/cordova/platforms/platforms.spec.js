@@ -62,8 +62,8 @@ describe('getPlatformApi method', function () {
 
     it('should return PlatformApi polyfill if PlatformApi is not defined by platform', function () {
         spyOn(browserParser, 'dirExists').and.returnValue(true);
-        spyOn(fs, 'existsSync').and.callFake(function(somePath) {
-            if(somePath === 'PLATFORM_WOUT_API') {
+        spyOn(fs, 'existsSync').and.callFake(function (somePath) {
+            if (somePath === 'PLATFORM_WOUT_API') {
                 return true;
             }
             return false;
@@ -83,7 +83,7 @@ describe('getPlatformApi method', function () {
     it('should throw error if using deprecated platform', function () {
         try {
             platforms.getPlatformApi('android', path.join(CORDOVA_ROOT, 'platforms/android'));
-        } catch(error) {
+        } catch (error) {
             expect(error.toString()).toContain('platform does not have Api.js');
         }
     });

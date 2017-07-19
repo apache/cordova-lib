@@ -17,23 +17,23 @@
     under the License.
 */
 
-var cordova_util = require('./util'),
-    crypto       = require('crypto'),
-    path         = require('path'),
-    shell        = require('shelljs'),
-    url          = require('url'),
-    platforms    = require('../platforms/platforms'),
-    ConfigParser = require('cordova-common').ConfigParser,
-    HooksRunner  = require('../hooks/HooksRunner'),
-    Q            = require('q'),
-    fs           = require('fs'),
-    events       = require('cordova-common').events,
-    serve        = require('cordova-serve');
+var cordova_util = require('./util');
+var crypto = require('crypto');
+var path = require('path');
+var shell = require('shelljs');
+var url = require('url');
+var platforms = require('../platforms/platforms');
+var ConfigParser = require('cordova-common').ConfigParser;
+var HooksRunner = require('../hooks/HooksRunner');
+var Q = require('q');
+var fs = require('fs');
+var events = require('cordova-common').events;
+var serve = require('cordova-serve');
 
 var projectRoot;
 var installedPlatforms;
 
-function handleRoot(request, response, next) {
+function handleRoot (request, response, next) {
     if (url.parse(request.url).pathname !== '/') {
         response.sendStatus(404);
         return;
@@ -42,7 +42,7 @@ function handleRoot(request, response, next) {
     response.writeHead(200, {'Content-Type': 'text/html'});
     var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
     var contentNode = config.doc.find('content');
-    var contentSrc = contentNode && contentNode.attrib.src || 'index.html';
+    var contentSrc = (contentNode && contentNode.attrib.src) || ('index.html');
 
     response.write('<html><head><title>' + config.name() + '</title></head><body>');
     response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
@@ -70,25 +70,25 @@ function handleRoot(request, response, next) {
     response.end();
 }
 
-function getPlatformHandler(platform, wwwDir, configXml) {
+function getPlatformHandler (platform, wwwDir, configXml) {
     return function (request, response, next) {
         switch (url.parse(request.url).pathname) {
-            case '/' + platform + '/config.xml':
-                response.sendFile(configXml);
-                break;
+        case '/' + platform + '/config.xml':
+            response.sendFile(configXml);
+            break;
 
-            case '/' + platform + '/project.json':
-                response.send({
-                    'configPath': '/' + platform + '/config.xml',
-                    'wwwPath': '/' + platform + '/www',
-                    'wwwFileList': shell.find(wwwDir)
-                        .filter(function (a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
-                        .map(function (a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })
-                });
-                break;
+        case '/' + platform + '/project.json':
+            response.send({
+                'configPath': '/' + platform + '/config.xml',
+                'wwwPath': '/' + platform + '/www',
+                'wwwFileList': shell.find(wwwDir)
+                    .filter(function (a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
+                    .map(function (a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })
+            });
+            break;
 
-            default:
-                next();
+        default:
+            next();
         }
     };
 }
@@ -96,7 +96,7 @@ function getPlatformHandler(platform, wwwDir, configXml) {
 // https://issues.apache.org/jira/browse/CB-11274
 // Use referer url to redirect absolute urls to the requested platform resources
 // so that an URL is resolved against that platform www directory.
-function getAbsolutePathHandler() {
+function getAbsolutePathHandler () {
     return function (request, response, next) {
         if (!request.headers.referer) {
             next();
@@ -115,13 +115,13 @@ function getAbsolutePathHandler() {
     };
 }
 
-function calculateMd5(fileName) {
-    var md5sum,
-        BUF_LENGTH = 64*1024,
-        buf = new Buffer(BUF_LENGTH),
-        bytesRead = BUF_LENGTH,
-        pos = 0,
-        fdr = fs.openSync(fileName, 'r');
+function calculateMd5 (fileName) {
+    var md5sum;
+    var BUF_LENGTH = 64 * 1024;
+    var buf = Buffer.from(BUF_LENGTH);
+    var bytesRead = BUF_LENGTH;
+    var pos = 0;
+    var fdr = fs.openSync(fileName, 'r');
 
     try {
         md5sum = crypto.createHash('md5');
@@ -136,10 +136,10 @@ function calculateMd5(fileName) {
     return md5sum.digest('hex');
 }
 
-module.exports = function server(port, opts) {
+module.exports = function server (port, opts) {
     port = +port || 8000;
 
-    return Q.promise(function(resolve) {
+    return Q.promise(function (resolve) {
         projectRoot = cordova_util.cdProjectRoot();
 
         var hooksRunner = new HooksRunner(projectRoot);

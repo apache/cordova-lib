@@ -17,18 +17,16 @@
  *
 */
 
-/* jshint sub:true */
+var fs = require('fs');
+var path = require('path');
+var util = require('../util');
+var shell = require('shelljs');
+var Q = require('q');
+var Parser = require('./parser');
+var os = require('os');
+var ConfigParser = require('cordova-common').ConfigParser;
 
-var fs            = require('fs'),
-    path          = require('path'),
-    util          = require('../util'),
-    shell         = require('shelljs'),
-    Q             = require('q'),
-    Parser        = require('./parser'),
-    os            = require('os'),
-    ConfigParser = require('cordova-common').ConfigParser;
-
-function ubuntu_parser(project) {
+function ubuntu_parser (project) {
 
     // Call the base class constructor
     Parser.call(this, 'ubuntu', project);
@@ -38,7 +36,7 @@ function ubuntu_parser(project) {
     this.update_manifest();
 }
 
-function sanitize(str) {
+function sanitize (str) {
     return str.replace(/\n/g, ' ').replace(/^\s+|\s+$/g, '');
 }
 
@@ -46,7 +44,7 @@ require('util').inherits(ubuntu_parser, Parser);
 
 module.exports = ubuntu_parser;
 
-ubuntu_parser.prototype.update_from_config = function(config) {
+ubuntu_parser.prototype.update_from_config = function (config) {
     if (config instanceof ConfigParser) {
     } else {
         return Q.reject(new Error('update_from_config requires a ConfigParser object'));
@@ -63,48 +61,41 @@ ubuntu_parser.prototype.update_from_config = function(config) {
     return this.update_manifest();
 };
 
-ubuntu_parser.prototype.cordovajs_path = function(libDir) {
+ubuntu_parser.prototype.cordovajs_path = function (libDir) {
     var jsPath = path.join(libDir, 'www', 'cordova.js');
     return path.resolve(jsPath);
 };
 
-ubuntu_parser.prototype.cordovajs_src_path = function(libDir) {
+ubuntu_parser.prototype.cordovajs_src_path = function (libDir) {
     var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 
-ubuntu_parser.prototype.update_manifest = function() {
+ubuntu_parser.prototype.update_manifest = function () {
     var nodearch2debarch = { 'arm': 'armhf',
-                             'ia32': 'i386',
-                             'x64': 'amd64'};
+        'ia32': 'i386',
+        'x64': 'amd64'};
     var arch;
-    if (os.arch() in nodearch2debarch)
-        arch = nodearch2debarch[os.arch()];
-    else
-        return Q.reject(new Error('unknown cpu arch'));
+    if (os.arch() in nodearch2debarch) { arch = nodearch2debarch[os.arch()]; } else { return Q.reject(new Error('unknown cpu arch')); }
 
-    if (!this.config.author())
-        return Q.reject(new Error('config.xml should contain author'));
+    if (!this.config.author()) { return Q.reject(new Error('config.xml should contain author')); }
 
     var manifest = { name: this.config.packageName(),
-                     version: this.config.version(),
-                     title: this.config.name(),
-                     hooks: { cordova: { desktop: 'cordova.desktop',
-                                         apparmor: 'apparmor.json' } },
-                     framework: 'ubuntu-sdk-13.10',
-                     maintainer: sanitize(this.config.author())  + ' <' + this.config.doc.find('author').attrib.email + '>',
-                     architecture: arch,
-                     description: sanitize(this.config.description()) };
+        version: this.config.version(),
+        title: this.config.name(),
+        hooks: { cordova: { desktop: 'cordova.desktop',
+            apparmor: 'apparmor.json' } },
+        framework: 'ubuntu-sdk-13.10',
+        maintainer: sanitize(this.config.author()) + ' <' + this.config.doc.find('author').attrib.email + '>',
+        architecture: arch,
+        description: sanitize(this.config.description()) };
 
-    var name = sanitize(this.config.name()); //FIXME: escaping
+    var name = sanitize(this.config.name()); // FIXME: escaping
     var content = '[Desktop Entry]\nName=' + name + '\nExec=./cordova-ubuntu www/\nTerminal=false\nType=Application\nX-Ubuntu-Touch=true';
 
     if (this.config.doc.find('icon') && this.config.doc.find('icon').attrib.src) {
         var iconPath = path.join(this.path, '../..', this.config.doc.find('icon').attrib.src);
-        if (fs.existsSync(iconPath))
-            content += '\nIcon=' + this.config.doc.find('icon').attrib.src;
-        else
-            return Q.reject(new Error('icon does not exist: ' + iconPath));
+        if (fs.existsSync(iconPath)) { content += '\nIcon=' + this.config.doc.find('icon').attrib.src; } else { return Q.reject(new Error('icon does not exist: ' + iconPath)); }
     } else {
         content += '\nIcon=qmlscene';
         console.warn('missing icon element in config.xml');
@@ -115,8 +106,7 @@ ubuntu_parser.prototype.update_manifest = function() {
     var policy = { policy_groups: ['networking', 'audio'], policy_version: 1 };
 
     this.config.doc.getroot().findall('./feature/param').forEach(function (element) {
-        if (element.attrib.policy_group && policy.policy_groups.indexOf(element.attrib.policy_group) === -1)
-            policy.policy_groups.push(element.attrib.policy_group);
+        if (element.attrib.policy_group && policy.policy_groups.indexOf(element.attrib.policy_group) === -1) { policy.policy_groups.push(element.attrib.policy_group); }
     });
 
     fs.writeFileSync(path.join(this.path, 'apparmor.json'), JSON.stringify(policy));
@@ -124,15 +114,15 @@ ubuntu_parser.prototype.update_manifest = function() {
     return Q();
 };
 
-ubuntu_parser.prototype.config_xml = function(){
+ubuntu_parser.prototype.config_xml = function () {
     return path.join(this.path, 'config.xml');
 };
 
-ubuntu_parser.prototype.www_dir = function() {
+ubuntu_parser.prototype.www_dir = function () {
     return path.join(this.path, 'www');
 };
 
-ubuntu_parser.prototype.update_www = function() {
+ubuntu_parser.prototype.update_www = function () {
     var projectRoot = util.isCordova(this.path);
     var www = util.projectWww(projectRoot);
 
@@ -140,22 +130,22 @@ ubuntu_parser.prototype.update_www = function() {
     shell.cp('-rf', www, this.path);
 };
 
-ubuntu_parser.prototype.update_overrides = function() {
+ubuntu_parser.prototype.update_overrides = function () {
     var projectRoot = util.isCordova(this.path);
     var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'ubuntu');
-    if(fs.existsSync(mergesPath)) {
+    if (fs.existsSync(mergesPath)) {
         var overrides = path.join(mergesPath, '*');
         shell.cp('-rf', overrides, this.www_dir());
     }
 };
 
 // Returns a promise.
-ubuntu_parser.prototype.update_project = function(cfg) {
+ubuntu_parser.prototype.update_project = function (cfg) {
     var self = this;
 
     return this.update_from_config(cfg)
-    .then(function() {
-        self.update_overrides();
-        util.deleteSvnFolders(self.www_dir());
-    });
+        .then(function () {
+            self.update_overrides();
+            util.deleteSvnFolders(self.www_dir());
+        });
 };

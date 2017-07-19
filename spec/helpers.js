@@ -17,18 +17,18 @@
     under the License.
 */
 
-var path         = require('path'),
-    fs           = require('fs'),
-    shell        = require('shelljs'),
-    os           = require('os'),
-    ConfigParser = require('cordova-common').ConfigParser;
+var path = require('path');
+var fs = require('fs');
+var shell = require('shelljs');
+var os = require('os');
+var ConfigParser = require('cordova-common').ConfigParser;
 
 // Just use Android everywhere; we're mocking out any calls to the `android` binary.
 module.exports.testPlatform = 'android';
 
-function getConfigPath(dir) {
+function getConfigPath (dir) {
     // if path ends with 'config.xml', return it
-    if (dir.indexOf('config.xml') == dir.length - 10) {
+    if (dir.indexOf('config.xml') === dir.length - 10) {
         return dir;
     }
     // otherwise, add 'config.xml' to the end of it
@@ -40,7 +40,7 @@ module.exports.tmpDir = function (subdir) {
     if (subdir) {
         dir = path.join(dir, subdir);
     }
-    if(fs.existsSync(dir)) {
+    if (fs.existsSync(dir)) {
         shell.rm('-rf', dir);
     }
     shell.mkdir('-p', dir);
@@ -70,8 +70,8 @@ module.exports.setEngineSpec = function (appPath, engine, spec) {
 
 module.exports.getEngineSpec = function (appPath, engine) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath),
-        engines = parser.getEngines();
+    var parser = new ConfigParser(appPath);
+    var engines = parser.getEngines();
 
     for (var i = 0; i < engines.length; i++) {
         if (engines[i].name === module.exports.testPlatform) {
@@ -91,9 +91,9 @@ module.exports.removeEngine = function (appPath, engine) {
 
 module.exports.setPluginSpec = function (appPath, plugin, spec) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath),
-        p = parser.getPlugin(plugin),
-        variables = [];
+    var parser = new ConfigParser(appPath);
+    var p = parser.getPlugin(plugin);
+    var variables = [];
 
     if (p) {
         parser.removePlugin(p.name);
@@ -108,8 +108,8 @@ module.exports.setPluginSpec = function (appPath, plugin, spec) {
 
 module.exports.getPluginSpec = function (appPath, plugin) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath),
-        p = parser.getPlugin(plugin);
+    var parser = new ConfigParser(appPath);
+    var p = parser.getPlugin(plugin);
 
     if (p) {
         return p.spec;
@@ -119,8 +119,8 @@ module.exports.getPluginSpec = function (appPath, plugin) {
 
 module.exports.getPluginVariable = function (appPath, plugin, variable) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath),
-        p = parser.getPlugin(plugin);
+    var parser = new ConfigParser(appPath);
+    var p = parser.getPlugin(plugin);
 
     if (p && p.variables) {
         return p.variables[variable];
@@ -151,12 +151,12 @@ beforeEach(function () {
     jasmine.addMatchers({
         'toExist': function () {
             return {
-                compare: function(actual, expected) {
+                compare: function (actual, expected) {
                     var result = {};
 
                     result.pass = fs.existsSync(actual);
 
-                    if(result.pass) {
+                    if (result.pass) {
                         result.message = 'expected ' + actual + ' to not exist';
                     } else {
                         result.message = 'expected ' + actual + ' to exist';

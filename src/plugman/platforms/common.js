@@ -17,23 +17,23 @@
     under the License.
 */
 
-var shell = require('shelljs'),
-    path  = require('path'),
-    fs    = require('fs'),
-    common;
+var shell = require('shelljs');
+var path = require('path');
+var fs = require('fs');
+var common;
 
 var cordovaUtil = require('../../cordova/util');
 var CordovaError = require('cordova-common').CordovaError;
 var xmlHelpers = require('cordova-common').xmlHelpers;
 
 module.exports = common = {
-    package_name: function(project_dir, www_dir) {
+    package_name: function (project_dir, www_dir) {
 
         var configPaths = [
             // preferred location if cordova >= 3.4
             path.join(project_dir, 'config.xml'),
             // older location
-            path.join(www_dir || path.join(project_dir, 'www'), 'config.xml'),
+            path.join(www_dir || path.join(project_dir, 'www'), 'config.xml')
         ];
 
         var cordovaRoot = cordovaUtil.isCordova();
@@ -56,30 +56,28 @@ module.exports = common = {
             'the following directories:\n\t' + configPaths.join('\n\t'));
     },
     // helper for resolving source paths from plugin.xml
-    resolveSrcPath:function(plugin_dir, relative_path) {
+    resolveSrcPath: function (plugin_dir, relative_path) {
         var full_path = path.resolve(plugin_dir, relative_path);
         return full_path;
     },
     // helper for resolving target paths from plugin.xml into a cordova project
-    resolveTargetPath:function(project_dir, relative_path) {
+    resolveTargetPath: function (project_dir, relative_path) {
         var full_path = path.resolve(project_dir, relative_path);
         return full_path;
     },
-    copyFile:function(plugin_dir, src, project_dir, dest, link) {
+    copyFile: function (plugin_dir, src, project_dir, dest, link) {
         src = module.exports.resolveSrcPath(plugin_dir, src);
         if (!fs.existsSync(src)) throw new Error('"' + src + '" not found!');
 
         // check that src path is inside plugin directory
         var real_path = fs.realpathSync(src);
         var real_plugin_path = fs.realpathSync(plugin_dir);
-        if (real_path.indexOf(real_plugin_path) !== 0)
-            throw new Error('"' + src + '" not located within plugin!');
+        if (real_path.indexOf(real_plugin_path) !== 0) { throw new Error('"' + src + '" not located within plugin!'); }
 
         dest = module.exports.resolveTargetPath(project_dir, dest);
 
         // check that dest path is located in project directory
-        if (dest.indexOf(project_dir) !== 0)
-            throw new Error('"' + dest + '" not located within project!');
+        if (dest.indexOf(project_dir) !== 0) { throw new Error('"' + dest + '" not located within project!'); }
 
         shell.mkdir('-p', path.dirname(dest));
 
@@ -87,48 +85,46 @@ module.exports = common = {
             common.symlinkFileOrDirTree(src, dest);
         } else if (fs.statSync(src).isDirectory()) {
             // XXX shelljs decides to create a directory when -R|-r is used which sucks. http://goo.gl/nbsjq
-            shell.cp('-Rf', src+'/*', dest);
+            shell.cp('-Rf', src + '/*', dest);
         } else {
             shell.cp('-f', src, dest);
         }
     },
     // Same as copy file but throws error if target exists
-    copyNewFile:function(plugin_dir, src, project_dir, dest, link) {
+    copyNewFile: function (plugin_dir, src, project_dir, dest, link) {
         var target_path = common.resolveTargetPath(project_dir, dest);
-        if (fs.existsSync(target_path))
-            throw new Error('"' + target_path + '" already exists!');
+        if (fs.existsSync(target_path)) { throw new Error('"' + target_path + '" already exists!'); }
 
         common.copyFile(plugin_dir, src, project_dir, dest, !!link);
     },
-    symlinkFileOrDirTree:function symlinkFileOrDirTree(src, dest) {
-            if (fs.existsSync(dest)) {
-                shell.rm('-Rf', dest);
-            }
-            
-            if (fs.statSync(src).isDirectory()) {
-                shell.mkdir('-p', dest);
-                fs.readdirSync(src).forEach(function(entry) {
-                    symlinkFileOrDirTree(path.join(src, entry), path.join(dest, entry));
-                });
-            }
-            else {
-                fs.symlinkSync(path.relative(fs.realpathSync(path.dirname(dest)), src), dest);
-            }
+    symlinkFileOrDirTree: function symlinkFileOrDirTree (src, dest) {
+        if (fs.existsSync(dest)) {
+            shell.rm('-Rf', dest);
+        }
+
+        if (fs.statSync(src).isDirectory()) {
+            shell.mkdir('-p', dest);
+            fs.readdirSync(src).forEach(function (entry) {
+                symlinkFileOrDirTree(path.join(src, entry), path.join(dest, entry));
+            });
+        } else {
+            fs.symlinkSync(path.relative(fs.realpathSync(path.dirname(dest)), src), dest);
+        }
     },
     // checks if file exists and then deletes. Error if doesn't exist
-    removeFile:function(project_dir, src) {
+    removeFile: function (project_dir, src) {
         var file = module.exports.resolveSrcPath(project_dir, src);
         shell.rm('-Rf', file);
     },
     // deletes file/directory without checking
-    removeFileF:function(file) {
+    removeFileF: function (file) {
         shell.rm('-Rf', file);
     },
     // Sometimes we want to remove some java, and prune any unnecessary empty directories
-    deleteJava:function(project_dir, destFile) {
+    deleteJava: function (project_dir, destFile) {
         common.removeFileAndParents(project_dir, destFile, 'src');
     },
-    removeFileAndParents:function(baseDir, destFile, stopper) {
+    removeFileAndParents: function (baseDir, destFile, stopper) {
         stopper = stopper || '.';
         var file = path.resolve(baseDir, destFile);
         if (!fs.existsSync(file)) return;
@@ -138,8 +134,8 @@ module.exports = common = {
         // check if directory is empty
         var curDir = path.dirname(file);
 
-        while(curDir !== path.resolve(baseDir, stopper)) {
-            if(fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
+        while (curDir !== path.resolve(baseDir, stopper)) {
+            if (fs.existsSync(curDir) && fs.readdirSync(curDir).length === 0) {
                 fs.rmdirSync(curDir);
                 curDir = path.resolve(curDir, '..');
             } else {
@@ -149,8 +145,8 @@ module.exports = common = {
         }
     },
     // handle <asset> elements
-    asset:{
-        install:function(asset, plugin_dir, www_dir) {
+    asset: {
+        install: function (asset, plugin_dir, www_dir) {
             if (!asset.src) {
                 throw new Error('<asset> tag without required "src" attribute. plugin=' + plugin_dir);
             }
@@ -160,7 +156,7 @@ module.exports = common = {
 
             common.copyFile(plugin_dir, asset.src, www_dir, asset.target);
         },
-        uninstall:function(asset, www_dir, plugin_id) {
+        uninstall: function (asset, www_dir, plugin_id) {
             var target = asset.target || asset.src;
 
             if (!target) {
@@ -177,7 +173,7 @@ module.exports = common = {
             var moduleSource = path.resolve(plugin_dir, jsModule.src);
             // Get module name based on existing 'name' attribute or filename
             // Must use path.extname/path.basename instead of path.parse due to CB-9981
-            var moduleName = plugin_id + '.' + (jsModule.name || path.basename(jsModule.src, path.extname (jsModule.src)));
+            var moduleName = plugin_id + '.' + (jsModule.name || path.basename(jsModule.src, path.extname(jsModule.src)));
 
             // Read in the file, prepend the cordova.define, and write it back out.
             var scriptContent = fs.readFileSync(moduleSource, 'utf-8').replace(/^\ufeff/, ''); // Window BOM

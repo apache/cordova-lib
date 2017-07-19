@@ -17,20 +17,20 @@
     under the License.
 */
 
-var path = require('path'),
-    shell = require('shelljs'),
-    events = require('cordova-common').events,
-    gitclone = require('../../gitclone'),
-    tmp_dir;
+var path = require('path');
+var shell = require('shelljs');
+var events = require('cordova-common').events;
+var gitclone = require('../../gitclone');
+var tmp_dir;
 
 var PluginInfo = require('cordova-common').PluginInfo;
 
 module.exports = {
-    searchAndReplace:require('./search-and-replace'),
+    searchAndReplace: require('./search-and-replace'),
 
-    clonePluginGit:function(plugin_git_url, plugins_dir, options) {
+    clonePluginGit: function (plugin_git_url, plugins_dir, options) {
         return module.exports.clonePluginGitRepo(plugin_git_url, plugins_dir, options.subdir, options.git_ref, options.pluginInfoProvider).then(
-            function(dst){
+            function (dst) {
                 // Keep location where we checked out git repo
                 options.plugin_src_dir = tmp_dir;
                 return dst;
@@ -38,8 +38,8 @@ module.exports = {
         );
     },
 
-    clonePluginGitRepo:function(plugin_git_url, plugins_dir, subdir, git_ref, pluginInfoProvider) {
-	return gitclone.clone(plugin_git_url, git_ref).then(function(tmp_dir) {
+    clonePluginGitRepo: function (plugin_git_url, plugins_dir, subdir, git_ref, pluginInfoProvider) {
+        return gitclone.clone(plugin_git_url, git_ref).then(function (tmp_dir) {
             // Read the plugin.xml file and extract the plugin's ID.
             tmp_dir = path.join(tmp_dir, subdir);
             var pluginInfo = new PluginInfo(tmp_dir);
@@ -69,4 +69,3 @@ module.exports = {
         });
     }
 };
-

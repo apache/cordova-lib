@@ -16,12 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-var search = require('../../src/plugman/info'),
-    Q = require('q'),
-    registry = require('../../src/plugman/registry/registry');
+var search = require('../../src/plugman/info');
+var Q = require('q');
+var registry = require('../../src/plugman/registry/registry');
 
-describe('info', function() {
-    it('Test 001 : should show plugin info', function() {
+describe('info', function () {
+    it('Test 001 : should show plugin info', function () {
         var sSearch = spyOn(registry, 'info').and.returnValue(Q({
             name: 'fakePlugin',
             version: '1.0.0',

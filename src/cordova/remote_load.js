@@ -31,7 +31,7 @@ passed containing a packageName, name, and version.
 
 options - Package options
  */
-function npmFetch(packageName, packageVersion) {
+function npmFetch (packageName, packageVersion) {
     return npmHelper.fetchPackage(packageName, packageVersion);
 }
 
@@ -44,11 +44,11 @@ passed.
 gitURL - URL to Git repository
 branch - Branch to checkout at
  */
-function gitClone(gitURL, branch) {
-    var cloneCallback;          // Resultant callback
-    var tmpSubDir;              // Temporary sub-directory
-    var tmpDir;                 // Temporary directory
-    var checkoutBranch;         // Branch to checkout
+function gitClone (gitURL, branch) {
+    var cloneCallback; // Resultant callback
+    var tmpSubDir; // Temporary sub-directory
+    var tmpDir; // Temporary directory
+    var checkoutBranch; // Branch to checkout
 
     checkoutBranch = branch || 'master';
     tmpSubDir = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
@@ -61,7 +61,7 @@ function gitClone(gitURL, branch) {
 
     // Callback for Git clone
     cloneCallback.then(
-        function() {
+        function () {
             return tmpDir;
         },
         function (err) {

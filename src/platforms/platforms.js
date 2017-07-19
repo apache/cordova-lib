@@ -28,7 +28,7 @@ var cachedApis = {};
 
 // getPlatformApi() should be the only method of instantiating the
 // PlatformProject classes for now.
-function getPlatformApi(platform, platformRootDir) {
+function getPlatformApi (platform, platformRootDir) {
     // if platformRootDir is not specified, try to detect it first
     if (!platformRootDir) {
         var projectRootDir = util.isCordova();
@@ -42,19 +42,18 @@ function getPlatformApi(platform, platformRootDir) {
     platformRootDir = util.convertToRealPathSafe(platformRootDir);
 
     // Make sure the platforms/platform folder exists
-    if(!fs.existsSync(platformRootDir)) {
+    if (!fs.existsSync(platformRootDir)) {
         throw new Error('The platform "' + platform + '" does not appear to have been added to this project.');
     }
-
 
     var platformApi;
     var cached = cachedApis[platformRootDir];
     var libDir = path.join(platformRootDir, 'cordova', 'Api.js');
-    if (cached && cached.platform == platform) {
+    if (cached && cached.platform === platform) {
         platformApi = cached;
     } else {
         var pApi = util.getPlatformApiFunction(libDir, platform);
-        platformApi = new pApi(platform, platformRootDir, events);
+        platformApi = new pApi(platform, platformRootDir, events); // eslint-disable-line new-cap
         cachedApis[platformRootDir] = platformApi;
     }
     return platformApi;
@@ -67,4 +66,3 @@ module.exports = platforms;
 Object.defineProperties(module.exports, {
     'getPlatformApi': {value: getPlatformApi, configurable: true, writable: true}
 });
-

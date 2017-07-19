@@ -16,12 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-var owner = require('../../src/plugman/owner'),
-    Q = require('q'),
-    registry = require('../../src/plugman/registry/registry');
+var owner = require('../../src/plugman/owner');
+var Q = require('q');
+var registry = require('../../src/plugman/registry/registry');
 
-describe('owner', function() {
-    it('Test 001 : should run owner', function() {
+describe('owner', function () {
+    it('Test 001 : should run owner', function () {
         var sOwner = spyOn(registry, 'owner').and.returnValue(Q());
         var params = ['add', 'anis', 'org.test.plugins.dummyplugin'];
         owner(params);

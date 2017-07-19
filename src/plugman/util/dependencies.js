@@ -17,67 +17,62 @@
     under the License.
 */
 
-/* jshint expr:true */
+var dep_graph = require('dep-graph');
+var path = require('path');
+var fs = require('fs');
+var underscore = require('underscore');
+var events = require('cordova-common').events;
+var pkg;
 
-var dep_graph = require('dep-graph'),
-    path = require('path'),
-    fs = require('fs'),
-    underscore = require('underscore'),
-    events = require('cordova-common').events,
-    package;
+module.exports = pkg = {
 
-module.exports = package = {
-
-    generateDependencyInfo:function(platformJson, plugins_dir, pluginInfoProvider) {
+    generateDependencyInfo: function (platformJson, plugins_dir, pluginInfoProvider) {
         var json = platformJson.root;
 
         // TODO: store whole dependency tree in plugins/[platform].json
         // in case plugins are forcefully removed...
         var tlps = [];
-        var graph = new dep_graph();
-        Object.keys(json.installed_plugins).forEach(function(plugin_id) {
+        var graph = new dep_graph(); // eslint-disable-line new-cap
+        Object.keys(json.installed_plugins).forEach(function (plugin_id) {
             tlps.push(plugin_id);
 
             var plugin_dir = path.join(plugins_dir, plugin_id);
             var pluginInfo = pluginInfoProvider.get(plugin_dir);
             var deps = pluginInfo.getDependencies(platformJson.platform);
-            deps.forEach(function(dep) {
+            deps.forEach(function (dep) {
                 graph.add(plugin_id, dep.id);
             });
         });
-        Object.keys(json.dependent_plugins).forEach(function(plugin_id) {
+        Object.keys(json.dependent_plugins).forEach(function (plugin_id) {
             var plugin_dir = path.join(plugins_dir, plugin_id);
             // dependency plugin does not exist (CB-7846)
             if (!fs.existsSync(plugin_dir)) {
-                events.emit('verbose', 'Plugin "'+ plugin_id +'" does not exist ('+ plugin_dir+')');
+                events.emit('verbose', 'Plugin "' + plugin_id + '" does not exist (' + plugin_dir + ')');
                 return;
             }
 
             var pluginInfo = pluginInfoProvider.get(plugin_dir);
             var deps = pluginInfo.getDependencies(platformJson.platform);
-            deps.forEach(function(dep) {
+            deps.forEach(function (dep) {
                 graph.add(plugin_id, dep.id);
             });
         });
 
         return {
-            graph:graph,
-            top_level_plugins:tlps
+            graph: graph,
+            top_level_plugins: tlps
         };
     },
 
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
-    dependents: function(plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
+    dependents: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         var depsInfo;
-        if(typeof plugins_dir == 'object')
-            depsInfo = plugins_dir;
-        else
-            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+        if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
 
         var graph = depsInfo.graph;
         var tlps = depsInfo.top_level_plugins;
-        var dependents = tlps.filter(function(tlp) {
-            return tlp != plugin_id && graph.getChain(tlp).indexOf(plugin_id) >= 0;
+        var dependents = tlps.filter(function (tlp) {
+            return tlp !== plugin_id && graph.getChain(tlp).indexOf(plugin_id) >= 0;
         });
 
         return dependents;
@@ -85,20 +80,17 @@ module.exports = package = {
 
     // Returns a list of plugins which the given plugin depends on, for which it is the only dependent.
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
-    danglers: function(plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
+    danglers: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         var depsInfo;
-        if(typeof plugins_dir == 'object')
-            depsInfo = plugins_dir;
-        else
-            depsInfo = package.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+        if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
 
         var graph = depsInfo.graph;
         var dependencies = graph.getChain(plugin_id);
 
         var tlps = depsInfo.top_level_plugins;
         var diff_arr = [];
-        tlps.forEach(function(tlp) {
-            if (tlp != plugin_id) {
+        tlps.forEach(function (tlp) {
+            if (tlp !== plugin_id) {
                 diff_arr.push(graph.getChain(tlp));
             }
         });
@@ -108,7 +100,7 @@ module.exports = package = {
         var danglers = underscore.difference.apply(null, diff_arr);
 
         // Ensure no top-level plugins are tagged as danglers.
-        danglers = danglers && danglers.filter(function(x) { return tlps.indexOf(x) < 0; });
+        danglers = danglers && danglers.filter(function (x) { return tlps.indexOf(x) < 0; });
         return danglers;
     }
 };

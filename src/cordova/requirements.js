@@ -18,7 +18,7 @@
 */
 
 var cordova_util = require('./util');
-var Q            = require('q');
+var Q = require('q');
 var CordovaError = require('cordova-common').CordovaError;
 var knownPlatforms = require('../platforms/platforms');
 
@@ -31,14 +31,13 @@ var knownPlatforms = require('../platforms/platforms');
  * @return {Promise<Object>}    Promise fullfilled with map of platforms and
  *   requirements check results for each platform.
  */
-module.exports = function check_reqs(platforms) {
-    return Q().then(function() {
-        var platforms = cordova_util.preProcessOptions(platforms).platforms;
+module.exports = function check_reqs (platforms) {
+    return Q().then(function () {
+        var platforms = cordova_util.preProcessOptions(platforms).platforms; // eslint-disable-line no-use-before-define
 
         return Q.allSettled(platforms.map(function (platform) {
             return knownPlatforms.getPlatformApi(platform).requirements();
-        }))
-        .then(function (settledChecks) {
+        })).then(function (settledChecks) {
             var res = {};
             settledChecks.reduce(function (result, settledCheck, idx) {
                 var platformName = platforms[idx];

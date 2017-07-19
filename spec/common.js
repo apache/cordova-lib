@@ -49,30 +49,26 @@ var common = {};
 
 module.exports = common = {
     spy: {
-        getInstall: function(emitSpy){
+        getInstall: function (emitSpy) {
             return common.spy.startsWith(emitSpy, 'Install start');
         },
 
-        getDeleted: function(emitSpy){
+        getDeleted: function (emitSpy) {
             return common.spy.startsWith(emitSpy, 'Deleted');
         },
 
-        startsWith: function(emitSpy, string)
-        {
+        startsWith: function (emitSpy, string) {
             var match = [];
-            emitSpy.calls.all().forEach(function(val, i) {
-                if(emitSpy.calls.argsFor(i)[1].substr(0, string.length) === string)
-                    match.push(emitSpy.calls.argsFor(i)[1]);
+            emitSpy.calls.all().forEach(function (val, i) {
+                if (emitSpy.calls.argsFor(i)[1].substr(0, string.length) === string) { match.push(emitSpy.calls.argsFor(i)[1]); }
             });
             return match;
         },
 
-        contains: function(emitSpy, string)
-        {
+        contains: function (emitSpy, string) {
             var match = [];
-            emitSpy.calls.all().forEach(function(val, i) {
-                if(emitSpy.calls.argsFor(i)[1].indexOf(string) >= 0)
-                    match.push(emitSpy.calls.argsFor(i)[1]);
+            emitSpy.calls.all().forEach(function (val, i) {
+                if (emitSpy.calls.argsFor(i)[1].indexOf(string) >= 0) { match.push(emitSpy.calls.argsFor(i)[1]); }
             });
             return match;
         }

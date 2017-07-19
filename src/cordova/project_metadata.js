@@ -17,17 +17,16 @@
     under the License.
 */
 
-var cordova_util = require('./util'),
-    ConfigParser = require('cordova-common').ConfigParser,
-    Q            = require('q'),
-    semver       = require('semver');
-
+var cordova_util = require('./util');
+var ConfigParser = require('cordova-common').ConfigParser;
+var Q = require('q');
+var semver = require('semver');
 
 /** Returns all the platforms that are currently saved into config.xml
  *  @return {Promise<{name: string, version: string, src: string}[]>}
  *      e.g: [ {name: 'android', version: '3.5.0'}, {name: 'wp8', src: 'C:/path/to/platform'}, {name: 'ios', src: 'git://...'} ]
  */
-function getPlatforms(projectRoot){
+function getPlatforms (projectRoot) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 
@@ -53,7 +52,7 @@ function getPlatforms(projectRoot){
  *  @return {Promise<{id: string, version: string, variables: {name: string, value: string}[]}[]>}
  *      e.g: [ {id: 'org.apache.cordova.device', variables: [{name: 'APP_ID', value: 'my-app-id'}, {name: 'APP_NAME', value: 'my-app-name'}]} ]
  */
-function getPlugins(projectRoot){
+function getPlugins (projectRoot) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
 

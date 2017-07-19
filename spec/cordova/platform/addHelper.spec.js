@@ -108,8 +108,8 @@ describe('cordova/platform/addHelper', function () {
 
         it('should log if host OS does not support the specified platform', function (done) {
             cordova_util.hostSupports.and.returnValue(false);
-            platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function() {
-        fail('addHelper success handler unexpectedly invoked');
+            platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
+                fail('addHelper success handler unexpectedly invoked');
             }).fail(function (e) {
                 expect(cordova_util.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
@@ -125,7 +125,7 @@ describe('cordova/platform/addHelper', function () {
             }).done(done);
         });
 
-        it('should throw if platform was not added before updating', function(done) {
+        it('should throw if platform was not added before updating', function (done) {
             platform_addHelper('update', hooks_mock, projectRoot, ['atari']).then(function () {
                 fail('addHelper success handler unexpectedly invoked');
             }).fail(function (e) {
@@ -150,7 +150,7 @@ describe('cordova/platform/addHelper', function () {
             it('should retrieve platform details from directories-specified-as-platforms using getPlatformDetailsFromDir', function (done) {
                 cordova_util.isDirectory.and.returnValue(true);
                 var directory_to_platform = '/path/to/cordova-atari';
-                platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], {restoring:true}).then(function () {
+                platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], {restoring: true}).then(function () {
                     expect(platform_module.getPlatformDetailsFromDir).toHaveBeenCalledWith(directory_to_platform, null);
                     expect(platform_addHelper.downloadPlatform).not.toHaveBeenCalled();
                 }).fail(function (e) {
@@ -162,7 +162,7 @@ describe('cordova/platform/addHelper', function () {
             it('should retrieve platform details from URLs-specified-as-platforms using downloadPlatform', function (done) {
                 cordova_util.isUrl.and.returnValue(true);
                 var url_to_platform = 'http://github.com/apache/cordova-atari';
-                platform_addHelper('add', hooks_mock, projectRoot, [url_to_platform], {restoring:true}).then(function () {
+                platform_addHelper('add', hooks_mock, projectRoot, [url_to_platform], {restoring: true}).then(function () {
                     expect(platform_addHelper.downloadPlatform).toHaveBeenCalledWith(projectRoot, null, url_to_platform, jasmine.any(Object));
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
@@ -171,7 +171,7 @@ describe('cordova/platform/addHelper', function () {
             });
 
             it('should attempt to retrieve from config.xml if exists and package.json does not', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {restoring:true}).then(function() {
+                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {restoring: true}).then(function () {
                     expect(platform_addHelper.getVersionFromConfigFile).toHaveBeenCalled();
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
@@ -180,7 +180,7 @@ describe('cordova/platform/addHelper', function () {
             });
 
             it('should fall back to using pinned version if both package.json and config.xml do not specify it', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {restoring:true}).then(function() {
+                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {restoring: true}).then(function () {
                     expect(events.emit).toHaveBeenCalledWith('verbose', 'Grabbing pinned version.');
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
@@ -192,7 +192,7 @@ describe('cordova/platform/addHelper', function () {
                 cordova_util.isDirectory.and.returnValue(projectRoot);
                 cordova_util.fixRelativePath.and.returnValue(projectRoot);
                 spyOn(path, 'resolve').and.callThrough();
-                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save:true, fetch: true, restoring:true}).then(function() {
+                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, fetch: true, restoring: true}).then(function () {
                     expect(fetch_mock).toHaveBeenCalled();
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
@@ -204,7 +204,7 @@ describe('cordova/platform/addHelper', function () {
         describe('platform api invocation', function () {
 
             it('should invoke the createPlatform platform API method when adding a platform, providing destination location, parsed config file and platform detail options as arguments', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, fetch: true, restoring:true}).then(function(result) {
+                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, fetch: true, restoring: true}).then(function (result) {
                     expect(platform_api_mock.createPlatform).toHaveBeenCalled();
                 }).fail(function (err) {
                     fail('unexpected failure handler invoked!');
@@ -212,10 +212,10 @@ describe('cordova/platform/addHelper', function () {
                 }).done(done);
             });
 
-            it('should invoke the update platform API method when updating a platform, providing destination location and plaform detail options as arguments', function(done) {
+            it('should invoke the update platform API method when updating a platform, providing destination location and plaform detail options as arguments', function (done) {
                 cordova_util.isDirectory.and.returnValue(true);
                 fs.existsSync.and.returnValue(true);
-                platform_addHelper('update', hooks_mock, projectRoot, ['ios'], {restoring:true}).then(function(result) {
+                platform_addHelper('update', hooks_mock, projectRoot, ['ios'], {restoring: true}).then(function (result) {
                     expect(platform_api_mock.updatePlatform).toHaveBeenCalled();
                 }).fail(function (err) {
                     fail('unexpected failure handler invoked!');
@@ -229,7 +229,7 @@ describe('cordova/platform/addHelper', function () {
             describe('when the restoring option is not provided', function () {
                 // test is commented out b/c preparePlatforms can't be spied on as it is dynamically required due to circular references.
                 xit('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function (done) {
-                    platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true}).then(function(result) {
+                    platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true}).then(function (result) {
                         expect(prepare.preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', Object({ searchpath: undefined }));
                     }).fail(function (err) {
                         fail('unexpected failure handler invoked!');
@@ -239,7 +239,7 @@ describe('cordova/platform/addHelper', function () {
             });
 
             it('should invoke the installPluginsForNewPlatforms method in the platform-add case', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring:true}).then(function(result) {
+                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring: true}).then(function (result) {
                     expect(platform_addHelper.installPluginsForNewPlatform).toHaveBeenCalled();
                 }).fail(function (err) {
                     fail('unexpected failure handler invoked!');
@@ -248,7 +248,7 @@ describe('cordova/platform/addHelper', function () {
             });
 
             it('should save the platform metadata', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring:true}).then(function(result) {
+                platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring: true}).then(function (result) {
                     expect(platform_metadata.save).toHaveBeenCalledWith('/some/path', 'atari', undefined);
                 }).fail(function (err) {
                     fail('unexpected failure handler invoked!');
@@ -257,7 +257,7 @@ describe('cordova/platform/addHelper', function () {
             });
 
             it('should write out the version of platform just added/updated to config.xml if the save option is provided', function (done) {
-                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring:true}).then(function(result) {
+                platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function (result) {
                     expect(cfg_parser_mock.prototype.removeEngine).toHaveBeenCalled();
                     expect(cfg_parser_mock.prototype.addEngine).toHaveBeenCalled();
                     expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
@@ -268,17 +268,17 @@ describe('cordova/platform/addHelper', function () {
             });
 
             describe('if the project contains a package.json', function () {
-                it('should write out the platform just added/updated to the cordova.platforms property of package.json',function (done) {
-                    fs.existsSync.and.callFake(function(filePath) {
-                        if(path.basename(filePath) === 'package.json') {
+                it('should write out the platform just added/updated to the cordova.platforms property of package.json', function (done) {
+                    fs.existsSync.and.callFake(function (filePath) {
+                        if (path.basename(filePath) === 'package.json') {
                             return true;
                         } else {
                             return false;
                         }
                     });
-                    package_json_mock.cordova = {'platforms':['ios']};
+                    package_json_mock.cordova = {'platforms': ['ios']};
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
-                    platform_addHelper('add', hooks_mock, projectRoot, ['android'], {save: true, restoring:true}).then(function(result) {
+                    platform_addHelper('add', hooks_mock, projectRoot, ['android'], {save: true, restoring: true}).then(function (result) {
                         expect(fs.writeFileSync).toHaveBeenCalled();
                     }).fail(function (err) {
                         fail('unexpected failure handler invoked!');
@@ -287,9 +287,9 @@ describe('cordova/platform/addHelper', function () {
                 });
 
                 it('should only write the package.json file if it was modified', function (done) {
-                    package_json_mock.cordova = {'platforms':['ios']};
+                    package_json_mock.cordova = {'platforms': ['ios']};
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
-                    platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring:true}).then(function(result) {
+                    platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function (result) {
                         expect(fs.writeFileSync).not.toHaveBeenCalled();
                     }).fail(function (err) {
                         fail('unexpected failure handler invoked!');
@@ -297,9 +297,9 @@ describe('cordova/platform/addHelper', function () {
                     }).done(done);
                 });
 
-                it('should file the after_platform_* hook',function (done) {
-                    platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, restoring:true}).then(function(result) {
-                        expect(hooks_mock.fire).toHaveBeenCalledWith( 'before_platform_add', Object({ save: true, restoring: true, searchpath: undefined }));
+                it('should file the after_platform_* hook', function (done) {
+                    platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, restoring: true}).then(function (result) {
+                        expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', Object({ save: true, restoring: true, searchpath: undefined }));
                     }).fail(function (err) {
                         fail('unexpected failure handler invoked!');
                         console.error(err);
@@ -334,7 +334,7 @@ describe('cordova/platform/addHelper', function () {
                     expect(Q.reject).toHaveBeenCalled();
                     expect(events.emit).toHaveBeenCalledWith('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
                 }).done(done);
-            },60000);
+            }, 60000);
 
             it('should reject the promise should lazy_load.based_on_config fail', function (done) {
                 spyOn(gitclone, 'clone').and.callThrough();
@@ -347,7 +347,7 @@ describe('cordova/platform/addHelper', function () {
                     expect(Q.reject).toHaveBeenCalled();
                     expect(lazy_load.based_on_config).not.toHaveBeenCalled();
                 }).done(done);
-            },60000);
+            }, 60000);
 
             it('should reject the promise should both git_clone and based_on_config fail after the latter was fallen back on', function (done) {
                 lazy_load.git_clone.and.returnValue(Q.reject('git_clone failed'));
@@ -359,7 +359,7 @@ describe('cordova/platform/addHelper', function () {
                 }).fail(function (e) {
                     expect(Q.reject).toHaveBeenCalled();
                 }).done(done);
-            },60000);
+            }, 60000);
         });
         describe('happy path', function () {
             it('should invoke cordova-fetch if fetch was provided as an option', function (done) {
@@ -383,35 +383,35 @@ describe('cordova/platform/addHelper', function () {
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                 }).done(done);
-            },60000);
+            }, 60000);
 
             it('should attempt to lazy_load.based_on_config if lazy_load.git_clone fails', function (done) {
                 cordova_util.isUrl.and.returnValue(true);
                 platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
                     expect(events.emit).toHaveBeenCalledWith('verbose', '"git" command line tool is not installed: make sure it is accessible on your PATH.');
-                    expect(events.emit).toHaveBeenCalledWith('verbose','Cloning failed. Let\'s try handling it as a tarball');
+                    expect(events.emit).toHaveBeenCalledWith('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
                     expect(lazy_load.based_on_config).toHaveBeenCalled();
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                 }).done(done);
-            },60000);
-            
+            }, 60000);
+
             it('should by default attempt to lazy_load.based_on_config', function (done) {
-                platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {save:true}).then(function () {
+                platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {save: true}).then(function () {
                     expect(lazy_load.based_on_config).toHaveBeenCalledWith('/some/path', 'android@6.0.0', Object({ save: true }));
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                 }).done(done);
-            },60000);
+            }, 60000);
 
             it('should pass along a libDir argument to getPlatformDetailsFromDir on a successful platform download', function (done) {
                 cordova_util.isUrl.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save:true}).then(function () {
+                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
                     expect(require('../../../src/cordova/platform/index').getPlatformDetailsFromDir).toHaveBeenCalled();
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                 }).done(done);
-            },60000);
+            }, 60000);
         });
     });
     describe('installPluginsForNewPlatform', function () {
@@ -432,7 +432,7 @@ describe('cordova/platform/addHelper', function () {
         it('should invoke plugman.install, giving correct platform, plugin and other arguments', function (done) {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-whitelist']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ });
-            platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save:true , fetch:true}).then(function () {
+            platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
                 expect(plugman.install).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', 'Installing plugin "cordova-plugin-whitelist" following successful platform add of browser');
             }).fail(function (e) {
@@ -443,9 +443,9 @@ describe('cordova/platform/addHelper', function () {
         it('should include any plugin variables as options when invoking plugman install', function (done) {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-camera']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ source: {}, variables: {} });
-            platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save:true , fetch:true}).then(function () {
+            platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
                 expect(plugman.install).toHaveBeenCalled();
-                expect(events.emit).toHaveBeenCalledWith( 'verbose', 'Found variables for "cordova-plugin-camera". Processing as cli_variables.' );
+                expect(events.emit).toHaveBeenCalledWith('verbose', 'Found variables for "cordova-plugin-camera". Processing as cli_variables.');
             }).fail(function (e) {
                 fail('fail handler unexpectedly invoked');
             }).done(done);

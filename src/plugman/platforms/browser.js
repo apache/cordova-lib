@@ -17,59 +17,56 @@
     under the License.
 */
 
-/* jshint laxcomma:true, sub:true */
-
-var path = require('path')
-    , common = require('./common')
-    , events = require('cordova-common').events
-    ;
+var path = require('path');
+var common = require('./common');
+var events = require('cordova-common').events;
 
 module.exports = {
-    www_dir: function(project_dir) {
+    www_dir: function (project_dir) {
         return path.join(project_dir, 'www');
     },
-    package_name:function(project_dir) {
+    package_name: function (project_dir) {
         return common.package_name(project_dir, this.www_dir(project_dir));
     },
-    'source-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'source-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.copyFile(plugin_dir, obj.src, project_dir, dest);
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.removeFile(project_dir, dest);
         }
     },
     'header-file': {
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-fileinstall is not supported for browser');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for browser');
         }
     },
-    'resource-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'resource-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'resource-file.install is not supported for browser');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'resource-file.uninstall is not supported for browser');
         }
     },
     'framework': {
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.install is not supported for browser');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.uninstall is not supported for browser');
         }
     },
     'lib-file': {
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.install is not supported for browser');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'lib-file.uninstall is not supported for browser');
         }
     }

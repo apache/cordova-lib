@@ -81,21 +81,21 @@ describe('PlatformApi polyfill', function () {
 
     it('should be constructable', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly(PLATFORM, PLATFORM_ROOT);}).not.toThrow();
+        expect(function () { api = new PlatformApiPoly(PLATFORM, PLATFORM_ROOT); }).not.toThrow();
         expect(api).toEqual(jasmine.any(PlatformApiPoly));
     });
-
+    /* eslint-disable no-unused-vars */
     it('should fail when unknown platform is specified', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly('fakePlatform', PLATFORM_ROOT);}).toThrow();
+        expect(function () { api = new PlatformApiPoly('fakePlatform', PLATFORM_ROOT); }).toThrow();
     });
 
     it('should fail when mandatory argument is not specified', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly(PLATFORM);}).toThrow();
-        expect(function(){api = new PlatformApiPoly(null, PLATFORM_ROOT);}).toThrow();
+        expect(function () { api = new PlatformApiPoly(PLATFORM); }).toThrow();
+        expect(function () { api = new PlatformApiPoly(null, PLATFORM_ROOT); }).toThrow();
     });
-
+    /* eslint-enable no-unused-vars */
     it('should have fields defined', function () {
         expect(platformApi.platform).toBe(PLATFORM);
         expect(platformApi.root).toBe(PLATFORM_ROOT);
@@ -114,7 +114,12 @@ describe('PlatformApi polyfill', function () {
 
     describe('methods:', function () {
 
-        var FAKE_PROJECT, FAKE_CONFIG, OPTIONS, getPlatformApi, fail, success;
+        var FAKE_PROJECT;
+        var FAKE_CONFIG;
+        var OPTIONS;
+        var getPlatformApi; // eslint-disable-line no-unused-vars
+        var fail;
+        var success;
 
         beforeEach(function () {
             getPlatformApi = spyOn(knownPlatforms, 'getPlatformApi').and.returnValue(platformApi);
@@ -141,54 +146,54 @@ describe('PlatformApi polyfill', function () {
 
             it('should create/update platform through running platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
-                .then(function () {
-                    expect(spawn).toHaveBeenCalled();
-                    expect(spawn.calls.count()).toBe(2);
-                }).fail(function (err) {
-                    expect(err).not.toBeDefined();
-                }).fin(done);
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    .then(function () {
+                        expect(spawn).toHaveBeenCalled();
+                        expect(spawn.calls.count()).toBe(2);
+                    }).fail(function (err) {
+                        expect(err).not.toBeDefined();
+                    }).fin(done);
             });
 
             it('should pass down arguments to platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
-                .then(function () {
-                    expect(spawn).toHaveBeenCalled();
-                    expect(spawn.calls.count()).toBe(2);
-                    expect(spawn.calls.argsFor(0)[0]).toBe(path.join(PLATFORM_LIB, 'bin/create'));
-                    expect(spawn.calls.argsFor(0)[1]).toContain(PLATFORM_ROOT);
-                    expect(spawn.calls.argsFor(1)[0]).toBe(path.join(PLATFORM_LIB, 'bin/update'));
-                    expect(spawn.calls.argsFor(1)[1]).toContain(PLATFORM_ROOT);
-                }).fail(function (err) {
-                    expect(err).not.toBeDefined();
-                }).fin(done);
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    .then(function () {
+                        expect(spawn).toHaveBeenCalled();
+                        expect(spawn.calls.count()).toBe(2);
+                        expect(spawn.calls.argsFor(0)[0]).toBe(path.join(PLATFORM_LIB, 'bin/create'));
+                        expect(spawn.calls.argsFor(0)[1]).toContain(PLATFORM_ROOT);
+                        expect(spawn.calls.argsFor(1)[0]).toBe(path.join(PLATFORM_LIB, 'bin/update'));
+                        expect(spawn.calls.argsFor(1)[1]).toContain(PLATFORM_ROOT);
+                    }).fail(function (err) {
+                        expect(err).not.toBeDefined();
+                    }).fin(done);
             });
 
             it('should copy cordova JS sources into created platform', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
-                .then(function () {
-                    expect(shell.cp).toHaveBeenCalled();
-                    expect(shell.cp.calls.count()).toBe(2);
-                }).fail(fail)
-                .fin(function () {
-                    expect(fail).not.toHaveBeenCalled();
-                    done();
-                });
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    .then(function () {
+                        expect(shell.cp).toHaveBeenCalled();
+                        expect(shell.cp.calls.count()).toBe(2);
+                    }).fail(fail)
+                    .fin(function () {
+                        expect(fail).not.toHaveBeenCalled();
+                        done();
+                    });
             });
 
             it('should fail immediately if options.platformInfo is not specified', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG)])
-                .then(success)
-                .fail(fail)
-                .fin(function function_name (argument) {
-                    expect(success).not.toHaveBeenCalled();
-                    expect(fail).toHaveBeenCalled();
-                    expect(spawn).not.toHaveBeenCalled();
-                    done();
-                });
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG)])
+                    .then(success)
+                    .fail(fail)
+                    .fin(function function_name (argument) {
+                        expect(success).not.toHaveBeenCalled();
+                        expect(fail).toHaveBeenCalled();
+                        expect(spawn).not.toHaveBeenCalled();
+                        done();
+                    });
             });
         });
 
@@ -206,17 +211,17 @@ describe('PlatformApi polyfill', function () {
 
             it('should call parser\'s corresponding methods', function (done) {
                 platformApi.prepare(FAKE_PROJECT, OPTIONS)
-                .then(function () {
-                    [platformApi._parser.update_www, platformApi._parser.update_project]
-                    .forEach(function (method) {
-                        expect(method).toHaveBeenCalled();
+                    .then(function () {
+                        [platformApi._parser.update_www, platformApi._parser.update_project]
+                            .forEach(function (method) {
+                                expect(method).toHaveBeenCalled();
+                            });
+                    })
+                    .fail(fail)
+                    .fin(function () {
+                        expect(fail).not.toHaveBeenCalled();
+                        done();
                     });
-                })
-                .fail(fail)
-                .fin(function () {
-                    expect(fail).not.toHaveBeenCalled();
-                    done();
-                });
             });
         });
 
@@ -236,25 +241,25 @@ describe('PlatformApi polyfill', function () {
 
             it('should fail if plugin parameter is not specified', function (done) {
                 platformApi.addPlugin()
-                .then(success)
-                .fail(fail)
-                .fin(function () {
-                    expect(success).not.toHaveBeenCalled();
-                    expect(fail).toHaveBeenCalled();
-                    done();
-                });
+                    .then(success)
+                    .fail(fail)
+                    .fin(function () {
+                        expect(success).not.toHaveBeenCalled();
+                        expect(fail).toHaveBeenCalled();
+                        done();
+                    });
             });
 
             it('should process all plugin files through action stack', function (done) {
                 platformApi.addPlugin(plugin)
-                .then(success)
-                .fail(fail)
-                .fin(function () {
-                    expect(actionsProcess).toHaveBeenCalled();
-                    expect(success).toHaveBeenCalled();
-                    expect(fail).not.toHaveBeenCalled();
-                    done();
-                });
+                    .then(success)
+                    .fail(fail)
+                    .fin(function () {
+                        expect(actionsProcess).toHaveBeenCalled();
+                        expect(success).toHaveBeenCalled();
+                        expect(fail).not.toHaveBeenCalled();
+                        done();
+                    });
             });
         });
 
@@ -267,9 +272,9 @@ describe('PlatformApi polyfill', function () {
 
             it('should return promise', function (done) {
                 var ops = [
-                    platformApi.build(/*opts*/),
-                    platformApi.run(/*opts*/),
-                    platformApi.clean(/*opts*/),
+                    platformApi.build(/* opts */),
+                    platformApi.run(/* opts */),
+                    platformApi.clean(/* opts */),
                     platformApi.requirements()
                 ];
 
@@ -281,16 +286,16 @@ describe('PlatformApi polyfill', function () {
 
             it('should do their job through running platforms\' scripts', function (done) {
                 var ops = [
-                    platformApi.build(/*opts*/),
-                    platformApi.run(/*opts*/),
-                    platformApi.clean(/*opts*/)
+                    platformApi.build(/* opts */),
+                    platformApi.run(/* opts */),
+                    platformApi.clean(/* opts */)
                 ];
 
                 Q.all(ops)
-                .then(function () {
-                    expect(spawnSpy).toHaveBeenCalled();
-                    expect(spawnSpy.calls.count()).toEqual(3);
-                }).fin(done);
+                    .then(function () {
+                        expect(spawnSpy).toHaveBeenCalled();
+                        expect(spawnSpy.calls.count()).toEqual(3);
+                    }).fin(done);
             });
 
             it('should convert and pass down options to platforms\' scripts', function (done) {
@@ -304,12 +309,12 @@ describe('PlatformApi polyfill', function () {
                 };
                 spawnSpy.and.returnValue(Q());
                 platformApi.build(options)
-                .then(function () {
-                    ['--release', '--nobuild', '--device', '--target=' + options.target, '--archs=arm,x86', '--buildConfig='  +options.buildConfig]
-                    .forEach(function (arg) {
-                        expect(spawnSpy.calls[0].args[1]).toContain(arg);
-                    });
-                }).fin(done);
+                    .then(function () {
+                        ['--release', '--nobuild', '--device', '--target=' + options.target, '--archs=arm,x86', '--buildConfig=' + options.buildConfig]
+                            .forEach(function (arg) {
+                                expect(spawnSpy.calls[0].args[1]).toContain(arg);
+                            });
+                    }).fin(done);
             });
         });
     });

@@ -44,79 +44,79 @@ function remove (projectRoot, targets, hooksRunner, opts) {
 
     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
     return hooksRunner.fire('before_plugin_rm', opts)
-    .then(function () {
-        return opts.plugins.reduce(function (soFar, target) {
-            var validatedPluginId = module.exports.validatePluginId(target, plugins);
-            if (!validatedPluginId) {
-                return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.'));
-            }
-            target = validatedPluginId;
-
-            // Iterate over all installed platforms and uninstall.
-            // If this is a web-only or dependency-only plugin, then
-            // there may be nothing to do here except remove the
-            // reference from the platform's plugin config JSON.
-            return platformList.reduce(function (soFar, platform) {
-                return soFar.then(function () {
-                    var platformRoot = path.join(projectRoot, 'platforms', platform);
-                    events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                    var options = {
-                        force: opts.force || false
-                    };
-                    return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
-                    .then(function (didPrepare) {
-                        // If platform does not returned anything we'll need
-                        // to trigger a prepare after all plugins installed
-                        // TODO: if didPrepare is falsy, what does that imply? WHY are we doing this?
-                        if (!didPrepare) shouldRunPrepare = true;
-                    });
-                });
-            }, Q())
-            .then(function () {
-                // TODO: Should only uninstallPlugin when no platforms have it.
-                return plugman.uninstall.uninstallPlugin(target, pluginPath, opts);
-            }).then(function () {
-                // remove plugin from config.xml
-                if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
-                    events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
-                    var configPath = cordova_util.projectConfig(projectRoot);
-                    if (fs.existsSync(configPath)) { // should not happen with real life but needed for tests
-                        var configXml = new ConfigParser(configPath);
-                        configXml.removePlugin(target);
-                        configXml.write();
-                    }
-                    var pkgJson;
-                    var pkgJsonPath = path.join(projectRoot, 'package.json');
-                    // If statement to see if pkgJsonPath exists in the filesystem
-                    if (fs.existsSync(pkgJsonPath)) {
-                        // delete any previous caches of require(package.json)
-                        pkgJson = cordova_util.requireNoCache(pkgJsonPath);
-                    }
-                    // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed
-                    if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
-                        events.emit('log', 'Removing ' + target + ' from package.json');
-                        // Remove plugin from package.json
-                        delete pkgJson.cordova.plugins[target];
-                        // Write out new package.json with plugin removed correctly.
-                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
-                    }
+        .then(function () {
+            return opts.plugins.reduce(function (soFar, target) {
+                var validatedPluginId = module.exports.validatePluginId(target, plugins);
+                if (!validatedPluginId) {
+                    return Q.reject(new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.'));
                 }
-            }).then(function () {
-                // Remove plugin from fetch.json
-                events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
-                metadata.remove_fetch_metadata(pluginPath, target);
-            });
-        }, Q());
-    }).then(function () {
-        // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
-        if (!shouldRunPrepare) {
-            return Q();
-        }
-        return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
-    }).then(function () {
-        opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-        return hooksRunner.fire('after_plugin_rm', opts);
-    });
+                target = validatedPluginId;
+
+                // Iterate over all installed platforms and uninstall.
+                // If this is a web-only or dependency-only plugin, then
+                // there may be nothing to do here except remove the
+                // reference from the platform's plugin config JSON.
+                return platformList.reduce(function (soFar, platform) {
+                    return soFar.then(function () {
+                        var platformRoot = path.join(projectRoot, 'platforms', platform);
+                        events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
+                        var options = {
+                            force: opts.force || false
+                        };
+                        return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
+                            .then(function (didPrepare) {
+                                // If platform does not returned anything we'll need
+                                // to trigger a prepare after all plugins installed
+                                // TODO: if didPrepare is falsy, what does that imply? WHY are we doing this?
+                                if (!didPrepare) shouldRunPrepare = true;
+                            });
+                    });
+                }, Q())
+                    .then(function () {
+                        // TODO: Should only uninstallPlugin when no platforms have it.
+                        return plugman.uninstall.uninstallPlugin(target, pluginPath, opts);
+                    }).then(function () {
+                        // remove plugin from config.xml
+                        if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
+                            events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
+                            var configPath = cordova_util.projectConfig(projectRoot);
+                            if (fs.existsSync(configPath)) { // should not happen with real life but needed for tests
+                                var configXml = new ConfigParser(configPath);
+                                configXml.removePlugin(target);
+                                configXml.write();
+                            }
+                            var pkgJson;
+                            var pkgJsonPath = path.join(projectRoot, 'package.json');
+                            // If statement to see if pkgJsonPath exists in the filesystem
+                            if (fs.existsSync(pkgJsonPath)) {
+                                // delete any previous caches of require(package.json)
+                                pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+                            }
+                            // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed
+                            if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
+                                events.emit('log', 'Removing ' + target + ' from package.json');
+                                // Remove plugin from package.json
+                                delete pkgJson.cordova.plugins[target];
+                                // Write out new package.json with plugin removed correctly.
+                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+                            }
+                        }
+                    }).then(function () {
+                        // Remove plugin from fetch.json
+                        events.emit('verbose', 'Removing plugin ' + target + ' from fetch.json');
+                        metadata.remove_fetch_metadata(pluginPath, target);
+                    });
+            }, Q());
+        }).then(function () {
+            // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
+            if (!shouldRunPrepare) {
+                return Q();
+            }
+            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+        }).then(function () {
+            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
+            return hooksRunner.fire('after_plugin_rm', opts);
+        });
 }
 
 function validatePluginId (pluginId, installedPlugins) {

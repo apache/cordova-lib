@@ -17,8 +17,6 @@
     under the License.
 */
 
-/* jshint sub:true */
-
 'use strict';
 
 var extend = require('underscore').extend;
@@ -29,7 +27,7 @@ var preferences = require('./preferences');
  *
  * @param {String} [platform] Platform name (e.g. android)
  */
-function ParserHelper(platform) {
+function ParserHelper (platform) {
     this.platform = platform || '';
 }
 

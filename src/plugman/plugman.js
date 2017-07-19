@@ -24,10 +24,10 @@ var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 var Q = require('q');
 
 var plugman = {
-    on:                 events.on.bind(events),
-    off:                events.removeListener.bind(events),
+    on: events.on.bind(events),
+    off: events.removeListener.bind(events),
     removeAllListeners: events.removeAllListeners.bind(events),
-    emit:               events.emit.bind(events),
+    emit: events.emit.bind(events),
     install: require('./install'),
     uninstall: require('./uninstall'),
     fetch: require('./fetch'),
@@ -50,25 +50,25 @@ var modulesToAlias = ['install', 'uninstall', 'fetch', 'browserify', 'help',
     'config', 'owner', 'search', 'info', 'create', 'platform',
     'createpackagejson'];
 
-modulesToAlias.forEach(function(mod) {
+modulesToAlias.forEach(function (mod) {
     aliasMethodToRawWithDeprecationNotice(mod, plugman, 'plugman');
 });
 
-plugman.commands =  {
-    'config'   : function(cli_opts) {
-        plugman.config(cli_opts.argv.remain, function(err) {
+plugman.commands = {
+    'config': function (cli_opts) {
+        plugman.config(cli_opts.argv.remain, function (err) {
             if (err) throw err;
             else console.log('done');
         });
     },
-    'owner'   : function(cli_opts) {
+    'owner': function (cli_opts) {
         plugman.owner(cli_opts.argv.remain);
     },
-    'install'  : function(cli_opts) {
-        if(!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
+    'install': function (cli_opts) {
+        if (!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
             return console.log(plugman.help());
         }
-        if(cli_opts.browserify === true) {
+        if (cli_opts.browserify === true) {
             plugman.prepare = require('./prepare-browserify');
         }
         var cli_variables = {};
@@ -100,12 +100,12 @@ plugman.commands =  {
 
         return p;
     },
-    'uninstall': function(cli_opts) {
-        if(!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
+    'uninstall': function (cli_opts) {
+        if (!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
             return console.log(plugman.help());
         }
 
-        if(cli_opts.browserify === true) {
+        if (cli_opts.browserify === true) {
             plugman.prepare = require('./prepare-browserify');
         }
 
@@ -124,43 +124,43 @@ plugman.commands =  {
 
         return p;
     },
-    'search'   : function(cli_opts) {
-        plugman.search(cli_opts.argv.remain, function(err, plugins) {
+    'search': function (cli_opts) {
+        plugman.search(cli_opts.argv.remain, function (err, plugins) {
             if (err) throw err;
             else {
-                for(var plugin in plugins) {
+                for (var plugin in plugins) {
                     console.log(plugins[plugin].name, '-', plugins[plugin].description || 'no description provided');
                 }
             }
         });
     },
-    'info'     : function(cli_opts) {
-        plugman.info(cli_opts.argv.remain, function(err, plugin_info) {
+    'info': function (cli_opts) {
+        plugman.info(cli_opts.argv.remain, function (err, plugin_info) {
             if (err) throw err;
             else {
                 console.log('name:', plugin_info.name);
                 console.log('version:', plugin_info.version);
                 if (plugin_info.engines) {
-                    for(var i = 0, j = plugin_info.engines.length ; i < j ; i++) {
+                    for (var i = 0, j = plugin_info.engines.length; i < j; i++) {
                         console.log(plugin_info.engines[i].name, 'version:', plugin_info.engines[i].version);
                     }
                 }
             }
         });
     },
-    'publish'  : function() {
+    'publish': function () {
         events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
             'is moving to read-only state. For publishing use corresponding \'npm\' commands.\n\n' +
             'If for any reason you still need for \'plugman publish\' - consider downgrade to plugman@0.23.3');
     },
-    'unpublish': function(cli_opts) {
+    'unpublish': function (cli_opts) {
         events.emit('error', 'The publish functionality is not supported anymore since the Cordova Plugin registry\n' +
             'is moving to read-only state. For publishing/unpublishing use corresponding \'npm\' commands.\n\n' +
             'If for any reason you still need for \'plugman unpublish\' - consider downgrade to plugman@0.23.3');
     },
-    'create': function(cli_opts) {
-        if( !cli_opts.name || !cli_opts.plugin_id || !cli_opts.plugin_version) {
-            return console.log( plugman.help() );
+    'create': function (cli_opts) {
+        if (!cli_opts.name || !cli_opts.plugin_id || !cli_opts.plugin_version) {
+            return console.log(plugman.help());
         }
         var cli_variables = {};
         if (cli_opts.variable) {
@@ -170,22 +170,22 @@ plugman.commands =  {
                 if (/^[\w-_]+$/.test(key)) cli_variables[key] = tokens.join('=');
             });
         }
-        plugman.create( cli_opts.name, cli_opts.plugin_id, cli_opts.plugin_version, cli_opts.path || '.', cli_variables );
+        plugman.create(cli_opts.name, cli_opts.plugin_id, cli_opts.plugin_version, cli_opts.path || '.', cli_variables);
     },
-    'platform': function(cli_opts) {
+    'platform': function (cli_opts) {
         var operation = cli_opts.argv.remain[ 0 ] || '';
-        if( ( operation !== 'add' && operation !== 'remove' ) ||  !cli_opts.platform_name ) {
-            return console.log( plugman.help() );
+        if ((operation !== 'add' && operation !== 'remove') || !cli_opts.platform_name) {
+            return console.log(plugman.help());
         }
-        plugman.platform( { operation: operation, platform_name: cli_opts.platform_name } );
+        plugman.platform({ operation: operation, platform_name: cli_opts.platform_name });
     },
-    'createpackagejson'  : function(cli_opts) {
+    'createpackagejson': function (cli_opts) {
         var plugin_path = cli_opts.argv.remain[0];
-        if(!plugin_path) {
+        if (!plugin_path) {
             return console.log(plugman.help());
         }
         plugman.createpackagejson(plugin_path);
-    },
+    }
 };
 
 module.exports = plugman;

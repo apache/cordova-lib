@@ -17,79 +17,76 @@
     under the License.
 */
 
-/* jshint laxcomma:true, sub:true */
-
-var path = require('path')
-   , common = require('./common')
-   , events = require('cordova-common').events
-   , xml_helpers = require('cordova-common').xmlHelpers
-   ;
+var path = require('path');
+var common = require('./common');
+var events = require('cordova-common').events;
+var xml_helpers = require('cordova-common').xmlHelpers;
 
 var TARGETS = ['device', 'simulator'];
 
 module.exports = {
-    www_dir:function(project_dir) {
+    www_dir: function (project_dir) {
         return path.join(project_dir, 'www');
     },
-    package_name:function(project_dir) {
+    package_name: function (project_dir) {
         var config_path = path.join(module.exports.www_dir(project_dir), 'config.xml');
         var widget_doc = xml_helpers.parseElementtreeSync(config_path);
         return widget_doc._root.attrib['id'];
     },
-    'source-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'source-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             var src = obj.src;
             var target = obj.targetDir || plugin_id;
-            TARGETS.forEach(function(arch) {
+            TARGETS.forEach(function (arch) {
                 var dest = path.join('native', arch, 'chrome', 'plugin', target, path.basename(src));
 
                 common.copyNewFile(plugin_dir, src, project_dir, dest);
             });
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             var src = obj.src;
             var target = obj.targetDir || plugin_id;
-            TARGETS.forEach(function(arch) {
+            TARGETS.forEach(function (arch) {
                 var dest = path.join('native', arch, 'chrome', 'plugin', target, path.basename(src));
                 common.removeFile(project_dir, dest);
             });
         }
     },
     'header-file': {
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.install is not supported for blackberry');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'header-file.uninstall is not supported for blackberry');
         }
     },
-    'lib-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'lib-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             var src = obj.src;
             var arch = obj.arch;
             var dest = path.join('native', arch, 'plugins', 'jnext', path.basename(src));
             common.copyFile(plugin_dir, src, project_dir, dest, false);
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             var src = obj.src;
             var arch = obj.arch;
             var dest = path.join('native', arch, 'plugins', 'jnext', path.basename(src));
             common.removeFile(project_dir, dest);
         }
     },
-    'resource-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'resource-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'resource-file.install is not supported for blackberry');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'resource-file.uninstall is not supported for blackberry');
         }
     },
     'framework': {
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.install is not supported for blackberry');
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             events.emit('verbose', 'framework.uninstall is not supported for blackberry');
         }
     }

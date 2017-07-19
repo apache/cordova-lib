@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var blackberry10 = require('../../../src/plugman/platforms/blackberry10'),
-    common = require('../../../src/plugman/platforms/common'),
-    path = require('path'),
-    fs = require('fs'),
-    shell = require('shelljs'),
-    os = require('os'),
-    temp = path.join(os.tmpdir(), 'plugman'),
-    blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*');
+var blackberry10 = require('../../../src/plugman/platforms/blackberry10');
+var common = require('../../../src/plugman/platforms/common');
+var path = require('path');
+var fs = require('fs');
+var shell = require('shelljs');
+var os = require('os');
+var temp = path.join(os.tmpdir(), 'plugman');
+var blackberry10_project = path.join(__dirname, '..', 'projects', 'blackberry10', '*');
 var PluginInfo = require('cordova-common').PluginInfo;
 
 var plugins = {
@@ -32,67 +32,65 @@ var plugins = {
     echo: new PluginInfo(path.join(__dirname, '..', 'plugins', 'com.cordova.echo'))
 };
 
-
-function copyArray(arr) {
+function copyArray (arr) {
     return Array.prototype.slice.call(arr, 0);
 }
 
-
-describe('blackberry10 project handler', function() {
-    describe('www_dir method', function() {
-        it('Test 001 : should return cordova-blackberry10 project www location using www_dir', function() {
+describe('blackberry10 project handler', function () {
+    describe('www_dir method', function () {
+        it('Test 001 : should return cordova-blackberry10 project www location using www_dir', function () {
             expect(blackberry10.www_dir(path.sep)).toEqual(path.sep + 'www');
         });
     });
 
-    describe('package_name method', function() {
-        it('Test 002 : should return a blackberry10 project\'s proper package name', function() {
+    describe('package_name method', function () {
+        it('Test 002 : should return a blackberry10 project\'s proper package name', function () {
             expect(blackberry10.package_name(path.join(blackberry10_project, '..'))).toEqual('cordovaExample');
         });
     });
 
-    describe('installation', function() {
-        beforeEach(function() {
+    describe('installation', function () {
+        beforeEach(function () {
             shell.mkdir('-p', temp);
             shell.cp('-rf', blackberry10_project, temp);
         });
-        afterEach(function() {
+        afterEach(function () {
             shell.rm('-rf', temp);
         });
-        describe('of <lib-file> elements', function() {
+        describe('of <lib-file> elements', function () {
             it('Test 003 : should copy so files to native/target/plugins', function () {
-                var plugin = plugins.echo,
-                    libs = copyArray(plugin.getLibFiles('blackberry10')),
-                    s = spyOn(common, 'copyFile');
+                var plugin = plugins.echo;
+                var libs = copyArray(plugin.getLibFiles('blackberry10'));
+                var s = spyOn(common, 'copyFile');
 
                 blackberry10['lib-file'].install(libs[0], plugin.dir, temp);
                 expect(s).toHaveBeenCalledWith(plugin.dir, 'src/blackberry10/native/device/echoJnext.so', temp, path.join('native', 'device', 'plugins', 'jnext', 'echoJnext.so'), false);
             });
         });
-        describe('of <source-file> elements', function() {
-            it('Test 004 : should copy stuff from one location to another by calling common.copyFile', function() {
-                var plugin = plugins.echo,
-                    source = copyArray(plugin.getSourceFiles('blackberry10')),
-                    s = spyOn(common, 'copyFile');
+        describe('of <source-file> elements', function () {
+            it('Test 004 : should copy stuff from one location to another by calling common.copyFile', function () {
+                var plugin = plugins.echo;
+                var source = copyArray(plugin.getSourceFiles('blackberry10'));
+                var s = spyOn(common, 'copyFile');
 
                 blackberry10['source-file'].install(source[0], plugin.dir, temp, plugin.id);
                 expect(s).toHaveBeenCalledWith(plugin.dir, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'), false);
                 expect(s).toHaveBeenCalledWith(plugin.dir, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'), false);
             });
-            it('Test 005 : defaults to plugin id when dest is not present', function() {
+            it('Test 005 : defaults to plugin id when dest is not present', function () {
                 var source = copyArray(plugins.dummy.getSourceFiles('blackberry10'));
                 var s = spyOn(common, 'copyFile');
                 blackberry10['source-file'].install(source[0], plugins.dummy.dir, temp, plugins.dummy.id);
                 expect(s).toHaveBeenCalledWith(plugins.dummy.dir, 'src/blackberry10/index.js', temp, path.join('native', 'device', 'chrome', 'plugin', plugins.dummy.id, 'index.js'), false);
                 expect(s).toHaveBeenCalledWith(plugins.dummy.dir, 'src/blackberry10/index.js', temp, path.join('native', 'simulator', 'chrome', 'plugin', plugins.dummy.id, 'index.js'), false);
             });
-            it('Test 006 : should throw if source file cannot be found', function() {
+            it('Test 006 : should throw if source file cannot be found', function () {
                 var source = copyArray(plugins.faulty.getSourceFiles('blackberry10'));
-                expect(function() {
+                expect(function () {
                     blackberry10['source-file'].install(source[0], plugins.faulty.dir, temp, plugins.faulty.id);
-                }).toThrow(new Error ('"' + path.resolve(plugins.faulty.dir, 'src/blackberry10/index.js') + '" not found!'));
+                }).toThrow(new Error('"' + path.resolve(plugins.faulty.dir, 'src/blackberry10/index.js') + '" not found!'));
             });
-            it('Test 007 : should throw if target file already exists', function() {
+            it('Test 007 : should throw if target file already exists', function () {
                 // write out a file
                 var target = path.resolve(temp, 'native/device/chrome/plugin/org.test.plugins.dummyplugin');
                 shell.mkdir('-p', target);
@@ -100,34 +98,34 @@ describe('blackberry10 project handler', function() {
                 fs.writeFileSync(target, 'some bs', 'utf-8');
 
                 var source = copyArray(plugins.dummy.getSourceFiles('blackberry10'));
-                expect(function() {
+                expect(function () {
                     blackberry10['source-file'].install(source[0], plugins.dummy.dir, temp, plugins.dummy.id);
-                }).toThrow(new Error ('"' + target + '" already exists!'));
+                }).toThrow(new Error('"' + target + '" already exists!'));
             });
         });
     });
 
-    describe('uninstallation', function() {
-        beforeEach(function() {
+    describe('uninstallation', function () {
+        beforeEach(function () {
             shell.mkdir('-p', temp);
             shell.cp('-rf', blackberry10_project, temp);
         });
-        afterEach(function() {
+        afterEach(function () {
             shell.rm('-rf', temp);
         });
-        describe('of <source-file> elements', function() {
-            it('Test 008 : should remove stuff by calling common.removeFile', function() {
-                var s = spyOn(common, 'removeFile'),
-                    plugin = plugins.echo;
+        describe('of <source-file> elements', function () {
+            it('Test 008 : should remove stuff by calling common.removeFile', function () {
+                var s = spyOn(common, 'removeFile');
+                var plugin = plugins.echo;
                 var source = copyArray(plugin.getSourceFiles('blackberry10'));
                 blackberry10['source-file'].install(source[0], plugin.dir, temp, plugin.id);
                 blackberry10['source-file'].uninstall(source[0], temp, plugin.id);
                 expect(s).toHaveBeenCalledWith(temp, path.join('native', 'device', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'));
                 expect(s).toHaveBeenCalledWith(temp, path.join('native', 'simulator', 'chrome', 'plugin', 'com.cordova.echo', 'index.js'));
             });
-            it('Test 009 : should remove stuff by calling common.removeFile', function() {
-                var s = spyOn(common, 'removeFile'),
-                    plugin = plugins.dummy;
+            it('Test 009 : should remove stuff by calling common.removeFile', function () {
+                var s = spyOn(common, 'removeFile');
+                var plugin = plugins.dummy;
                 var source = copyArray(plugin.getSourceFiles('blackberry10'));
                 blackberry10['source-file'].install(source[0], plugin.dir, temp, plugin.id);
                 blackberry10['source-file'].uninstall(source[0], temp, plugin.id);
@@ -135,14 +133,14 @@ describe('blackberry10 project handler', function() {
                 expect(s).toHaveBeenCalledWith(temp, path.join('native', 'simulator', 'chrome', 'plugin', plugin.id, 'index.js'));
             });
         });
-        describe('of <lib-file> elements', function() {
+        describe('of <lib-file> elements', function () {
             it('Test 010 : should remove so files from www/plugins', function () {
-                var s = spyOn(common, 'removeFile'),
-                    plugin = plugins.echo;
+                var s = spyOn(common, 'removeFile');
+                var plugin = plugins.echo;
                 var source = copyArray(plugin.getLibFiles('blackberry10'));
                 blackberry10['lib-file'].install(source[0], plugin.dir, temp, plugin.id);
                 blackberry10['lib-file'].uninstall(source[0], temp, plugin.id);
-                expect(s).toHaveBeenCalledWith(temp, path.join('native','device','plugins','jnext','echoJnext.so'));
+                expect(s).toHaveBeenCalledWith(temp, path.join('native', 'device', 'plugins', 'jnext', 'echoJnext.so'));
             });
         });
     });

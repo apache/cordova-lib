@@ -17,62 +17,56 @@
     under the License.
 */
 
-/* jshint node:true, bitwise:true, undef:true, trailing:true, quotmark:true,
-          indent:4, unused:vars, latedef:nofunc,
-          laxcomma:true, sub:true
-*/
-
-var path = require('path')
-    , common = require('./common')
-    , events = require('cordova-common').events
-    ;
+var path = require('path');
+var common = require('./common');
+var events = require('cordova-common').events;
 
 module.exports = {
-    www_dir: function(project_dir) {
+    www_dir: function (project_dir) {
         return path.join(project_dir, 'www');
     },
-    package_name:function(project_dir) {
+    package_name: function (project_dir) {
         return common.package_name(project_dir, this.www_dir(project_dir));
     },
-    'source-file':{
-        install:function(obj, plugin_dir, project_dir, plugin_id, options) {
+    'source-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {
             var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.copyFile(plugin_dir, obj.src, project_dir, dest);
         },
-        uninstall:function(obj, project_dir, plugin_id, options) {
+        uninstall: function (obj, project_dir, plugin_id, options) {
             var dest = path.join(obj.targetDir, path.basename(obj.src));
             common.removeFile(project_dir, dest);
         }
     },
     'header-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install: function (source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'header-fileinstall is not supported for webos');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall: function (source_el, project_dir, plugin_id) {
             events.emit('verbose', 'header-file.uninstall is not supported for webos');
         }
     },
-    'resource-file':{
-        install:function(el, plugin_dir, project_dir, plugin_id) {
+    'resource-file': {
+        install: function (el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'resource-file.install is not supported for webos');
         },
-        uninstall:function(el, project_dir, plugin_id) {
+        uninstall: function (el, project_dir, plugin_id) {
             events.emit('verbose', 'resource-file.uninstall is not supported for webos');
         }
     },
     'framework': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install: function (source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'framework.install is not supported for webos');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall: function (source_el, project_dir, plugin_id) {
             events.emit('verbose', 'framework.uninstall is not supported for webos');
         }
     },
     'lib-file': {
-        install:function(source_el, plugin_dir, project_dir, plugin_id) {
+        install: function (source_el, plugin_dir, project_dir, plugin_id) {
             events.emit('verbose', 'lib-file.install is not supported for webos');
         },
-        uninstall:function(source_el, project_dir, plugin_id) {
+        uninstall: function (source_el, project_dir, plugin_id) {
             events.emit('verbose', 'lib-file.uninstall is not supported for webos');
         }
     }

@@ -17,13 +17,13 @@
     under the License.
 */
 
-var helpers = require('../helpers'),
-    path = require('path'),
-    shell = require('shelljs'),
-    Q = require('q'),
-    events = require('cordova-common').events,
-    ConfigParser = require('cordova-common').ConfigParser,
-    cordova = require('../../src/cordova/cordova');
+var helpers = require('../helpers');
+var path = require('path');
+var shell = require('shelljs');
+var Q = require('q');
+var events = require('cordova-common').events;
+var ConfigParser = require('cordova-common').ConfigParser;
+var cordova = require('../../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('create_test');
 var appName = 'TestBase';
@@ -38,43 +38,41 @@ var configBasic = {
     }
 };
 
-describe('cordova create checks for valid-identifier', function() {
-    it('Test 001 : should reject reserved words from start of id', function(done) {
+describe('cordova create checks for valid-identifier', function () {
+    it('Test 001 : should reject reserved words from start of id', function (done) {
         cordova.create('projectPath', 'int.bob', 'appName', {}, events)
-        .fail(function(err) {
-            expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-        })
-        .fin(done);
+            .fail(function (err) {
+                expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
+            })
+            .fin(done);
     });
-    
-    it('Test 002 : should reject reserved words from end of id', function(done) {
+
+    it('Test 002 : should reject reserved words from end of id', function (done) {
         cordova.create('projectPath', 'bob.class', 'appName', {}, events)
-        .fail(function(err) {
-            expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-        })
-        .fin(done);
+            .fail(function (err) {
+                expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
+            })
+            .fin(done);
     });
 });
 
+describe('create basic test (see more in cordova-create)', function () {
+    // this.timeout(240000);
 
-describe('create basic test (see more in cordova-create)', function() {
-    //this.timeout(240000);
-
-    beforeEach(function() {
+    beforeEach(function () {
         shell.rm('-rf', project);
         shell.mkdir('-p', tmpDir);
     });
 
-
-    afterEach(function() {
-        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+    afterEach(function () {
+        process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
     });
 
-    function checkProject() {
+    function checkProject () {
         // Check if top level dirs exist.
         var dirs = ['hooks', 'platforms', 'plugins', 'www'];
-        dirs.forEach(function(d) {
+        dirs.forEach(function (d) {
             expect(path.join(project, d)).toExist();
         });
 
@@ -91,18 +89,18 @@ describe('create basic test (see more in cordova-create)', function() {
         // expect(configXml.name()).toEqual('TestBase');
     }
 
-    var results;
-    events.on('results', function(res) { results = res; });
+    var results; // eslint-disable-line no-unused-vars
+    events.on('results', function (res) { results = res; });
 
-    it('Test 003 : should successfully run', function(done) {
+    it('Test 003 : should successfully run', function (done) {
         // Call cordova create with no args, should return help.
         Q()
-            .then(function() {
+            .then(function () {
                 // Create a real project
                 return cordova.create(project, appId, appName, configBasic, events);
             })
             .then(checkProject)
-            .fail(function(err) {
+            .fail(function (err) {
                 console.log(err && err.stack);
                 expect(err).toBeUndefined();
             })

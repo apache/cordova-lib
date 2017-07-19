@@ -70,157 +70,156 @@ function add (projectRoot, hooksRunner, opts) {
 
     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
     return hooksRunner.fire('before_plugin_add', opts)
-    .then(function () {
-        var pluginInfoProvider = new PluginInfoProvider();
-        return opts.plugins.reduce(function (soFar, target) {
-            return soFar.then(function () {
-                if (target[target.length - 1] === path.sep) {
-                    target = target.substring(0, target.length - 1);
-                }
+        .then(function () {
+            var pluginInfoProvider = new PluginInfoProvider();
+            return opts.plugins.reduce(function (soFar, target) {
+                return soFar.then(function () {
+                    if (target[target.length - 1] === path.sep) {
+                        target = target.substring(0, target.length - 1);
+                    }
 
-                // Fetch the plugin first.
-                var fetchOptions = {
-                    searchpath: searchPath,
-                    noregistry: opts.noregistry,
-                    fetch: opts.fetch || false,
-                    save: opts.save,
-                    nohooks: opts.nohooks,
-                    link: opts.link,
-                    pluginInfoProvider: pluginInfoProvider,
-                    variables: opts.cli_variables,
-                    is_top_level: true
-                };
-
-                return module.exports.determinePluginTarget(projectRoot, cfg, target, fetchOptions).then(function (resolvedTarget) {
-                    target = resolvedTarget;
-                    events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                    return plugman.fetch(target, pluginPath, fetchOptions);
-                });
-            }).then(function (directory) {
-                return pluginInfoProvider.get(directory);
-            }).then(function (pluginInfo) {
-                // Validate top-level required variables
-                var pluginVariables = pluginInfo.getPreferences();
-                opts.cli_variables = opts.cli_variables || {};
-                var pluginEntry = cfg.getPlugin(pluginInfo.id);
-                // Get variables from config.xml
-                var configVariables = pluginEntry ? pluginEntry.variables : {};
-                // Add config variable if it's missing in cli_variables
-                Object.keys(configVariables).forEach(function (variable) {
-                    opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
-                });
-                var missingVariables = Object.keys(pluginVariables)
-                .filter(function (variableName) {
-                    // discard variables with default value
-                    return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
-                });
-
-                if (missingVariables.length) {
-                    events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
-                    shell.rm('-rf', pluginInfo.dir);
-                    var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
-                    return Q.reject(new CordovaError(msg));
-                }
-
-                // Iterate (in serial!) over all platforms in the project and install the plugin.
-                return chainMap(platformList, function (platform) {
-                    var platformRoot = path.join(projectRoot, 'platforms', platform);
-                    var options = {
-                        cli_variables: opts.cli_variables || {},
-                        browserify: opts.browserify || false,
-                        fetch: opts.fetch || false,
-                        save: opts.save,
+                    // Fetch the plugin first.
+                    var fetchOptions = {
                         searchpath: searchPath,
                         noregistry: opts.noregistry,
+                        fetch: opts.fetch || false,
+                        save: opts.save,
+                        nohooks: opts.nohooks,
                         link: opts.link,
                         pluginInfoProvider: pluginInfoProvider,
-                        // Set up platform to install asset files/js modules to <platform>/platform_www dir
-                        // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
-                        // and files from 'platform_www' merged into 'www'. Thus we need to persist these
-                        // files platform_www directory, so they'll be applied to www on each prepare.
-                        usePlatformWww: true,
-                        nohooks: opts.nohooks,
-                        force: opts.force
+                        variables: opts.cli_variables,
+                        is_top_level: true
                     };
 
-                    events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
-                    return plugman.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
-                    .then(function (didPrepare) {
-                        // If platform does not returned anything we'll need
-                        // to trigger a prepare after all plugins installed
-                        if (!didPrepare) shouldRunPrepare = true;
+                    return module.exports.determinePluginTarget(projectRoot, cfg, target, fetchOptions).then(function (resolvedTarget) {
+                        target = resolvedTarget;
+                        events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
+                        return plugman.fetch(target, pluginPath, fetchOptions);
                     });
-                })
-                .thenResolve(pluginInfo);
-            })
-            .then(function (pluginInfo) {
-                var pkgJson;
-                var pkgJsonPath = path.join(projectRoot, 'package.json');
+                }).then(function (directory) {
+                    return pluginInfoProvider.get(directory);
+                }).then(function (pluginInfo) {
+                    // Validate top-level required variables
+                    var pluginVariables = pluginInfo.getPreferences();
+                    opts.cli_variables = opts.cli_variables || {};
+                    var pluginEntry = cfg.getPlugin(pluginInfo.id);
+                    // Get variables from config.xml
+                    var configVariables = pluginEntry ? pluginEntry.variables : {};
+                    // Add config variable if it's missing in cli_variables
+                    Object.keys(configVariables).forEach(function (variable) {
+                        opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
+                    });
+                    var missingVariables = Object.keys(pluginVariables)
+                        .filter(function (variableName) {
+                            // discard variables with default value
+                            return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
+                        });
 
-                // save to config.xml
-                if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
-                    // If statement to see if pkgJsonPath exists in the filesystem
-                    if (fs.existsSync(pkgJsonPath)) {
-                        // Delete any previous caches of require(package.json)
-                        pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+                    if (missingVariables.length) {
+                        events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
+                        shell.rm('-rf', pluginInfo.dir);
+                        var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
+                        return Q.reject(new CordovaError(msg));
                     }
-                    // If package.json exists, the plugin object and plugin name
-                    // will be added to package.json if not already there.
-                    if (pkgJson) {
-                        pkgJson.cordova = pkgJson.cordova || {};
-                        pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
-                        // Plugin and variables are added.
-                        pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
-                        events.emit('log', 'Adding ' + pluginInfo.id + ' to package.json');
 
-                        // Write to package.json
-                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
-                    }
+                    // Iterate (in serial!) over all platforms in the project and install the plugin.
+                    return chainMap(platformList, function (platform) {
+                        var platformRoot = path.join(projectRoot, 'platforms', platform);
+                        var options = {
+                            cli_variables: opts.cli_variables || {},
+                            browserify: opts.browserify || false,
+                            fetch: opts.fetch || false,
+                            save: opts.save,
+                            searchpath: searchPath,
+                            noregistry: opts.noregistry,
+                            link: opts.link,
+                            pluginInfoProvider: pluginInfoProvider,
+                            // Set up platform to install asset files/js modules to <platform>/platform_www dir
+                            // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
+                            // and files from 'platform_www' merged into 'www'. Thus we need to persist these
+                            // files platform_www directory, so they'll be applied to www on each prepare.
+                            usePlatformWww: true,
+                            nohooks: opts.nohooks,
+                            force: opts.force
+                        };
 
-                    var src = module.exports.parseSource(target, opts);
-                    var attributes = {
-                        name: pluginInfo.id
-                    };
+                        events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
+                        return plugman.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
+                            .then(function (didPrepare) {
+                                // If platform does not returned anything we'll need
+                                // to trigger a prepare after all plugins installed
+                                if (!didPrepare) shouldRunPrepare = true;
+                            });
+                    })
+                        .thenResolve(pluginInfo);
+                }).then(function (pluginInfo) {
+                    var pkgJson;
+                    var pkgJsonPath = path.join(projectRoot, 'package.json');
 
-                    if (src) {
-                        attributes.spec = src;
-                    } else {
-                        var ver = '~' + pluginInfo.version;
-                        // Scoped packages need to have the package-spec along with the version
-                        var parsedSpec = pluginSpec.parse(target);
-                        if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]) {
-                            attributes.spec = pkgJson.dependencies[pluginInfo.id];
+                    // save to config.xml
+                    if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
+                        // If statement to see if pkgJsonPath exists in the filesystem
+                        if (fs.existsSync(pkgJsonPath)) {
+                            // Delete any previous caches of require(package.json)
+                            pkgJson = cordova_util.requireNoCache(pkgJsonPath);
+                        }
+                        // If package.json exists, the plugin object and plugin name
+                        // will be added to package.json if not already there.
+                        if (pkgJson) {
+                            pkgJson.cordova = pkgJson.cordova || {};
+                            pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
+                            // Plugin and variables are added.
+                            pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
+                            events.emit('log', 'Adding ' + pluginInfo.id + ' to package.json');
+
+                            // Write to package.json
+                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+                        }
+
+                        var src = module.exports.parseSource(target, opts);
+                        var attributes = {
+                            name: pluginInfo.id
+                        };
+
+                        if (src) {
+                            attributes.spec = src;
                         } else {
-                            if (parsedSpec.scope) {
-                                attributes.spec = parsedSpec.package + '@' + ver;
+                            var ver = '~' + pluginInfo.version;
+                            // Scoped packages need to have the package-spec along with the version
+                            var parsedSpec = pluginSpec.parse(target);
+                            if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]) {
+                                attributes.spec = pkgJson.dependencies[pluginInfo.id];
                             } else {
-                                attributes.spec = ver;
+                                if (parsedSpec.scope) {
+                                    attributes.spec = parsedSpec.package + '@' + ver;
+                                } else {
+                                    attributes.spec = ver;
+                                }
                             }
                         }
-                    }
-                    xml = cordova_util.projectConfig(projectRoot);
-                    cfg = new ConfigParser(xml);
-                    cfg.removePlugin(pluginInfo.id);
-                    cfg.addPlugin(attributes, opts.cli_variables);
-                    cfg.write();
+                        xml = cordova_util.projectConfig(projectRoot);
+                        cfg = new ConfigParser(xml);
+                        cfg.removePlugin(pluginInfo.id);
+                        cfg.addPlugin(attributes, opts.cli_variables);
+                        cfg.write();
 
-                    events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
-                }
-            });
-        }, Q());
-    }).then(function () {
-        // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
-        if (!shouldRunPrepare) {
-            return Q();
-        }
-        // Need to require right here instead of doing this at the beginning of file
-        // otherwise tests are failing without any real reason.
-        // TODO: possible circular dependency?
-        return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
-    }).then(function () {
-        opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
-        return hooksRunner.fire('after_plugin_add', opts);
-    });
+                        events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
+                    }
+                });
+            }, Q());
+        }).then(function () {
+            // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
+            if (!shouldRunPrepare) {
+                return Q();
+            }
+            // Need to require right here instead of doing this at the beginning of file
+            // otherwise tests are failing without any real reason.
+            // TODO: possible circular dependency?
+            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+        }).then(function () {
+            opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
+            return hooksRunner.fire('after_plugin_add', opts);
+        });
 }
 
 function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
@@ -299,12 +298,12 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
 
     // TODO: whoa wat
     return (shouldUseNpmInfo ? registry.info([id])
-    .then(function (pluginInfo) {
-        return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
-    }) : Q(null))
-    .then(function (fetchVersion) {
-        return fetchVersion ? (id + '@' + fetchVersion) : target;
-    });
+        .then(function (pluginInfo) {
+            return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
+        }) : Q(null))
+        .then(function (fetchVersion) {
+            return fetchVersion ? (id + '@' + fetchVersion) : target;
+        });
 }
 
 function parseSource (target, opts) {
@@ -359,13 +358,13 @@ function getFetchVersion (projectRoot, pluginInfo, cordovaVersion) {
         });
 
         return cordova_util.getInstalledPlatformsWithVersions(projectRoot)
-        .then(function (platformVersions) {
-            return module.exports.determinePluginVersionToFetch(
-                pluginInfo,
-                pluginMap,
-                platformVersions,
-                cordovaVersion);
-        });
+            .then(function (platformVersions) {
+                return module.exports.determinePluginVersionToFetch(
+                    pluginInfo,
+                    pluginMap,
+                    platformVersions,
+                    cordovaVersion);
+            });
     } else {
         // If we have no engine, we want to fall back to the default behavior
         events.emit('verbose', 'npm info for ' + pluginInfo.name + ' did not contain any engine info. Fetching latest release');

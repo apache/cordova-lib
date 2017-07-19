@@ -19,16 +19,15 @@
 
 /* global dirname */
 /* global config */
-/* global package */
+/* global pkg */
 /* global basename */
 /* global yes */
 /* global prompt */
 // PromZard file that is used by createpackagejson and init-package-json module
 
-var fs = require('fs'),
-    path = require('path'),
-    defaults = require('./defaults.json');
-
+var fs = require('fs');
+var path = require('path');
+var defaults = require('./defaults.json');
 
 function readDeps (test) {
     return function (cb) {
@@ -43,8 +42,7 @@ function readDeps (test) {
                 var dp = path.join(dirname, 'node_modules', d, 'package.json');
                 fs.readFile(dp, 'utf8', function (er, p) {
                     if (er) return next();
-                    try { p = JSON.parse(p); }
-                    catch (e) { return next(); }
+                    try { p = JSON.parse(p); } catch (e) { return next(); }
                     if (!p.version) return next();
                     deps[d] = config.get('save-exact') ? p.version : config.get('save-prefix') + p.version;
                     return next();
@@ -57,47 +55,47 @@ function readDeps (test) {
     };
 }
 
-var name = package.name || defaults.id || basename;
+var name = pkg.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
-var version = package.version ||
+var version = pkg.version ||
               defaults.version ||
               config.get('init.version') ||
               config.get('init-version') ||
               '1.0.0';
 exports.version = yes ? version : prompt('version', version);
 
-if (!package.description) {
-    if(defaults.description){
+if (!pkg.description) {
+    if (defaults.description) {
         exports.description = defaults.description;
     } else {
         exports.description = yes ? '' : prompt('description');
     }
 }
 
-if(!package.cordova) {
+if (!pkg.cordova) {
     exports.cordova = {};
-    if(defaults.id) {
+    if (defaults.id) {
         exports.cordova.id = defaults.id;
     }
-    if(defaults.platforms) {
+    if (defaults.platforms) {
         exports.cordova.platforms = defaults.platforms;
     }
 }
 
-if (!package.dependencies) {
+if (!pkg.dependencies) {
     exports.dependencies = readDeps(false);
 }
 
-if (!package.devDependencies) {
+if (!pkg.devDependencies) {
     exports.devDependencies = readDeps(true);
 }
 
-if (!package.repository) {
+if (!pkg.repository) {
     exports.repository = function (cb) {
         fs.readFile('.git/config', 'utf8', function (er, gconf) {
             if (er || !gconf) {
-                if(defaults.repository) {
+                if (defaults.repository) {
                     return cb(null, yes ? defaults.repository : prompt('git repository', defaults.repository));
                 }
                 return cb(null, yes ? '' : prompt('git repository'));
@@ -105,24 +103,23 @@ if (!package.repository) {
             gconf = gconf.split(/\r?\n/);
             var i = gconf.indexOf('[remote "origin"]');
             var u;
-            if(i !== -1) {
+            if (i !== -1) {
                 u = gconf[i + 1];
                 if (!u.match(/^\s*url =/)) u = gconf[i + 2];
                 if (!u.match(/^\s*url =/)) u = null;
                 else u = u.replace(/^\s*url = /, '');
             }
-            if (u && u.match(/^git@github.com:/))
-                u = u.replace(/^git@github.com:/, 'https://github.com/');
+            if (u && u.match(/^git@github.com:/)) { u = u.replace(/^git@github.com:/, 'https://github.com/'); }
 
             return cb(null, yes ? u : prompt('git repository', u));
         });
     };
 }
 
-if (!package.keywords) {
-    if(defaults.keywords) {
+if (!pkg.keywords) {
+    if (defaults.keywords) {
         exports.keywords = defaults.keywords;
-    }else {
+    } else {
         exports.keywords = yes ? '' : prompt('keywords', function (s) {
             if (!s) return undefined;
             if (Array.isArray(s)) s = s.join(' ');
@@ -132,27 +129,27 @@ if (!package.keywords) {
     }
 }
 
-if (!package.engines) {
-    if(defaults.engines && defaults.engines.length > 0) {
+if (!pkg.engines) {
+    if (defaults.engines && defaults.engines.length > 0) {
         exports.engines = defaults.engines;
     }
 }
 
-if (!package.author) {
+if (!pkg.author) {
     exports.author = (config.get('init.author.name') ||
                      config.get('init-author-name')) ?
-                     {
-                        'name' : config.get('init.author.name') ||
+        {
+            'name': config.get('init.author.name') ||
                             config.get('init-author-name'),
-                        'email' : config.get('init.author.email') ||
+            'email': config.get('init.author.email') ||
                             config.get('init-author-email'),
-                        'url' : config.get('init.author.url') ||
+            'url': config.get('init.author.url') ||
                             config.get('init-author-url')
-                     }
-                     : prompt('author');
+        }
+        : prompt('author');
 }
 
-var license = package.license ||
+var license = pkg.license ||
               defaults.license ||
               config.get('init.license') ||
               config.get('init-license') ||

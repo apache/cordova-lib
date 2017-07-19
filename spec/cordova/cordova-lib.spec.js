@@ -17,7 +17,5 @@
     under the License.
 */
 
-/* jshint unused:false */
-
 // Verify that cordova-lib.js can be loaded
-var cordovaLib = require('../../cordova-lib');
+var cordovaLib = require('../../cordova-lib'); // eslint-disable-line no-unused-vars

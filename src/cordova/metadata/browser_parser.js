@@ -17,21 +17,19 @@
     under the License.
 */
 
-/* jshint sub:true */
+var fs = require('fs');
+var path = require('path');
+var shell = require('shelljs');
+var util = require('../util');
+var CordovaError = require('cordova-common').CordovaError;
+var Q = require('q');
+var Parser = require('./parser');
 
-var fs = require('fs'),
-    path = require('path'),
-    shell = require('shelljs'),
-    util = require('../util'),
-    CordovaError = require('cordova-common').CordovaError,
-    Q = require('q'),
-    Parser = require('./parser');
-
-function dirExists(dir) {
+function dirExists (dir) {
     return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
 }
 
-function browser_parser(project) {
+function browser_parser (project) {
     if (!module.exports.dirExists(project) || !module.exports.dirExists(path.join(project, 'cordova'))) {
         throw new CordovaError('The provided path "' + project + '" is not a valid browser project.');
     }
@@ -47,27 +45,27 @@ require('util').inherits(browser_parser, Parser);
 module.exports = browser_parser;
 
 // Returns a promise.
-browser_parser.prototype.update_from_config = function() {
+browser_parser.prototype.update_from_config = function () {
     return Q();
 };
 
-browser_parser.prototype.www_dir = function() {
+browser_parser.prototype.www_dir = function () {
     return path.join(this.path, 'www');
 };
 
 // Used for creating platform_www in projects created by older versions.
-browser_parser.prototype.cordovajs_path = function(libDir) {
+browser_parser.prototype.cordovajs_path = function (libDir) {
     var jsPath = path.join(libDir, 'cordova-lib', 'cordova.js');
     return path.resolve(jsPath);
 };
 
-browser_parser.prototype.cordovajs_src_path = function(libDir) {
+browser_parser.prototype.cordovajs_src_path = function (libDir) {
     var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 
 // Replace the www dir with contents of platform_www and app www.
-browser_parser.prototype.update_www = function() {
+browser_parser.prototype.update_www = function () {
     var projectRoot = util.isCordova(this.path);
     var app_www = util.projectWww(projectRoot);
     var platform_www = path.join(this.path, 'platform_www');
@@ -81,23 +79,23 @@ browser_parser.prototype.update_www = function() {
     shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
 };
 
-browser_parser.prototype.update_overrides = function() {
+browser_parser.prototype.update_overrides = function () {
     var projectRoot = util.isCordova(this.path);
     var mergesPath = path.join(util.appDir(projectRoot), 'merges', 'browser');
-    if(fs.existsSync(mergesPath)) {
+    if (fs.existsSync(mergesPath)) {
         var overrides = path.join(mergesPath, '*');
         shell.cp('-rf', overrides, this.www_dir());
     }
 };
 
-browser_parser.prototype.config_xml = function(){
+browser_parser.prototype.config_xml = function () {
     return path.join(this.path, 'config.xml');
 };
 
 // Returns a promise.
-browser_parser.prototype.update_project = function(cfg) {
+browser_parser.prototype.update_project = function (cfg) {
     return this.update_from_config()
-        .then(function(){
+        .then(function () {
             this.update_overrides();
             util.deleteSvnFolders(this.www_dir());
 

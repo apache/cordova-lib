@@ -18,31 +18,31 @@
 */
 
 // The URL:true below prevents jshint error "Redefinition or 'URL'."
-// globals URL:true 
+// globals URL:true
 
-var path          = require('path'),
-    _             = require('underscore'),
-    fs            = require('fs'),
-    shell         = require('shelljs'),
-    platforms     = require('../platforms/platforms'),
-    events        = require('cordova-common').events,
-    request       = require('request'),
-    config        = require('./config'),
-    HooksRunner   = require('../hooks/HooksRunner'),
-    zlib          = require('zlib'),
-    tar           = require('tar'),
-    URL           = require('url'),
-    Q             = require('q'),
-    npm           = require('npm'),
-    npmhelper     = require('../util/npm-helper'),
-    util          = require('./util'),
-    gitclone      = require('../gitclone'),
-    stubplatform  = {
-        url    : undefined,
-        version: undefined,
-        altplatform: undefined,
-        subdirectory: ''
-    };
+var path = require('path');
+var _ = require('underscore');
+var fs = require('fs');
+var shell = require('shelljs');
+var platforms = require('../platforms/platforms');
+var events = require('cordova-common').events;
+var request = require('request');
+var config = require('./config');
+var HooksRunner = require('../hooks/HooksRunner');
+var zlib = require('zlib');
+var tar = require('tar');
+var URL = require('url');
+var Q = require('q');
+var npm = require('npm');
+var npmhelper = require('../util/npm-helper');
+var util = require('./util');
+var gitclone = require('../gitclone');
+var stubplatform = {
+    url: undefined,
+    version: undefined,
+    altplatform: undefined,
+    subdirectory: ''
+};
 
 exports.cordova = cordova;
 exports.cordova_git = cordova_git;
@@ -51,12 +51,12 @@ exports.cordova_npm = cordova_npm;
 exports.custom = custom;
 exports.based_on_config = based_on_config;
 
-function Platform(platformString) {
+function Platform (platformString) {
     var name,
         platform,
         parts,
         version;
-    if (platformString.indexOf('@') != -1) {
+    if (platformString.indexOf('@') !== -1) {
         parts = platformString.split('@');
         name = parts[0];
         version = parts[1];
@@ -71,12 +71,12 @@ function Platform(platformString) {
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
-function based_on_config(project_root, platform, opts) {
+function based_on_config (project_root, platform, opts) {
     var custom_path = config.has_custom_path(project_root, platform);
     if (custom_path) {
-        var dot_file = config.read(project_root),
-            mixed_platforms = _.extend({}, platforms);
-        mixed_platforms[platform] = _.extend({}, mixed_platforms[platform], dot_file.lib && dot_file.lib[platform] || {});
+        var dot_file = config.read(project_root);
+        var mixed_platforms = _.extend({}, platforms);
+        mixed_platforms[platform] = _.extend(({}, mixed_platforms[platform], dot_file.lib && dot_file.lib[platform])) || ({});
         return module.exports.custom(mixed_platforms, platform);
     } else {
         return module.exports.cordova(platform, opts);
@@ -84,19 +84,19 @@ function based_on_config(project_root, platform, opts) {
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
-function cordova(platform, opts) {
+function cordova (platform, opts) {
     platform = new Platform(platform);
     var use_git = platform.source === 'git';
-    if ( use_git ) {
+    if (use_git) {
         return module.exports.cordova_git(platform);
     } else {
         return module.exports.cordova_npm(platform);
     }
 }
 
-function cordova_git(platform) {
-    var mixed_platforms = _.extend({}, platforms),
-        plat;
+function cordova_git (platform) {
+    var mixed_platforms = _.extend({}, platforms);
+    var plat;
     if (!(platform.name in platforms)) {
         return Q.reject(new Error('Cordova library "' + platform.name + '" not recognized.'));
     }
@@ -113,8 +113,8 @@ function cordova_git(platform) {
     });
 }
 
-function cordova_npm(platform) {
-    if ( !(platform.name in platforms) ) {
+function cordova_npm (platform) {
+    if (!(platform.name in platforms)) {
         return Q.reject(new Error('Cordova library "' + platform.name + '" not recognized.'));
     }
     // Check if this version was already downloaded from git, if yes, use that copy.
@@ -140,7 +140,7 @@ function cordova_npm(platform) {
 }
 
 // Returns a promise for the path to the lazy-loaded directory.
-function custom(platforms, platform) {
+function custom (platforms, platform) {
     var plat;
     var id;
     var uri;
@@ -167,7 +167,7 @@ function custom(platforms, platform) {
     platdir = plat.altplatform || platform;
     // Return early for already-cached remote URL, or for local URLs.
     uri = URL.parse(url);
-    isUri = uri.protocol && uri.protocol[1] != ':'; // second part of conditional is for awesome windows support. fuuu windows
+    isUri = uri.protocol && uri.protocol[1] !== ':'; // second part of conditional is for awesome windows support. fuuu windows
     if (isUri) {
         download_dir = path.join(util.libDirectory, platdir, id, version);
         lib_dir = path.join(download_dir, subdir);
@@ -182,19 +182,19 @@ function custom(platforms, platform) {
     }
 
     return HooksRunner.fire('before_library_download', {
-        platform:platform,
-        url:url,
-        id:id,
-        version:version
-    }).then(function() {
+        platform: platform,
+        url: url,
+        id: id,
+        version: version
+    }).then(function () {
         var uri = URL.parse(url);
         var d = Q.defer();
-        npm.load(function(err) {
+        npm.load(function (err) { // eslint-disable-line handle-callback-err
             // Check if NPM proxy settings are set. If so, include them in the request() call.
             var proxy;
-            if (uri.protocol == 'https:') {
+            if (uri.protocol === 'https:') {
                 proxy = npm.config.get('https-proxy');
-            } else if (uri.protocol == 'http:') {
+            } else if (uri.protocol === 'http:') {
                 proxy = npm.config.get('proxy');
             }
             var strictSSL = npm.config.get('strict-ssl');
@@ -207,20 +207,20 @@ function custom(platforms, platform) {
             shell.mkdir('-p', tmp_dir);
 
             var size = 0;
-            var request_options = {url:url};
+            var request_options = {url: url};
             if (proxy) {
                 request_options.proxy = proxy;
             }
-            if (typeof strictSSL == 'boolean') {
+            if (typeof strictSSL === 'boolean') {
                 request_options.strictSSL = strictSSL;
             }
             events.emit('verbose', 'Requesting ' + JSON.stringify(request_options) + '...');
             events.emit('log', 'Downloading ' + id + ' library for ' + platform + '...');
-            var req = request.get(request_options, function(err, res, body) {
+            var req = request.get(request_options, function (err, res, body) {
                 if (err) {
                     shell.rm('-rf', tmp_dir);
                     d.reject(err);
-                } else if (res.statusCode != 200) {
+                } else if (res.statusCode !== 200) {
                     shell.rm('-rf', tmp_dir);
                     d.reject(new Error('HTTP error ' + res.statusCode + ' retrieving version ' + version + ' of ' + id + ' for ' + platform));
                 } else {
@@ -228,44 +228,44 @@ function custom(platforms, platform) {
                 }
             });
             req.pipe(zlib.createUnzip())
-            .on('error', function(err) {
-                // Sometimes if the URL is bad (most likely unavailable version), and git-wip-us.apache.org is
-                // particularly slow at responding, we hit an error because of bad data piped to zlib.createUnzip()
-                // before we hit the request.get() callback above (with a 404 error). Handle that gracefully. It is
-                // likely that we will end up calling d.reject() for an HTTP error in the request() callback above, but
-                // in case not, reject with a useful error here.
-                d.reject(new Error('Unable to fetch platform ' + platform + '@' + version + ': Error: version not found.'));
-            })
-            .pipe(tar.Extract({path:tmp_dir}))
-            .on('error', function(err) {
-                shell.rm('-rf', tmp_dir);
-                d.reject(err);
-            })
-            .on('end', function() {
-                events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
-                events.emit('log', 'Download complete');
-                var entries = fs.readdirSync(tmp_dir);
-                var entry = path.join(tmp_dir, entries[0]);
-                shell.mkdir('-p', download_dir);
-                shell.mv('-f', path.join(entry, '*'), download_dir);
-                shell.rm('-rf', tmp_dir);
-                d.resolve(HooksRunner.fire('after_library_download', {
-                    platform:platform,
-                    url:url,
-                    id:id,
-                    version:version,
-                    path: lib_dir,
-                    size:size,
-                    symlink:false
-                }));
-            });
+                .on('error', function (err) { // eslint-disable-line handle-callback-err
+                    // Sometimes if the URL is bad (most likely unavailable version), and git-wip-us.apache.org is
+                    // particularly slow at responding, we hit an error because of bad data piped to zlib.createUnzip()
+                    // before we hit the request.get() callback above (with a 404 error). Handle that gracefully. It is
+                    // likely that we will end up calling d.reject() for an HTTP error in the request() callback above, but
+                    // in case not, reject with a useful error here.
+                    d.reject(new Error('Unable to fetch platform ' + platform + '@' + version + ': Error: version not found.'));
+                })
+                .pipe(tar.Extract({path: tmp_dir}))
+                .on('error', function (err) {
+                    shell.rm('-rf', tmp_dir);
+                    d.reject(err);
+                })
+                .on('end', function () {
+                    events.emit('verbose', 'Downloaded, unzipped and extracted ' + size + ' byte response.');
+                    events.emit('log', 'Download complete');
+                    var entries = fs.readdirSync(tmp_dir);
+                    var entry = path.join(tmp_dir, entries[0]);
+                    shell.mkdir('-p', download_dir);
+                    shell.mv('-f', path.join(entry, '*'), download_dir);
+                    shell.rm('-rf', tmp_dir);
+                    d.resolve(HooksRunner.fire('after_library_download', {
+                        platform: platform,
+                        url: url,
+                        id: id,
+                        version: version,
+                        path: lib_dir,
+                        size: size,
+                        symlink: false
+                    }));
+                });
         });
         return d.promise.then(function () { return lib_dir; });
     });
 }
 
 // Returns a promise
-function git_clone_platform(git_url, branch) {
+function git_clone_platform (git_url, branch) {
     // Create a tmp dir. Using /tmp is a problem because it's often on a different partition and sehll.mv()
     // fails in this case with "EXDEV, cross-device link not permitted".
     var tmp_subidr = 'tmp_cordova_git_' + process.pid + '_' + (new Date()).valueOf();
@@ -290,5 +290,3 @@ function git_clone_platform(git_url, branch) {
         return Q.reject(err);
     });
 }
-
-

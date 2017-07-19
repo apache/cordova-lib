@@ -17,81 +17,81 @@
     under the License.
 */
 
-/* jshint expr: true */
 /* global xdescribe */
 
-var cordova = require('../../src/cordova/cordova'),
-    console = require('console'),
-    path = require('path'),
-    shell = require('shelljs'),
-    fs = require('fs'),
-    Q = require('q'),
-    tempDir,
-    http = require('http');
+var cordova = require('../../src/cordova/cordova');
+var console = require('console');
+var path = require('path');
+var shell = require('shelljs');
+var fs = require('fs');
+var Q = require('q');
+var tempDir;
+var http = require('http');
 
 var cwd = process.cwd();
 
-//skipped because of CB-7078
-xdescribe('serve command', function() {
-    var payloads = {},
-        consoleSpy;
-    beforeEach(function() {
+// skipped because of CB-7078
+xdescribe('serve command', function () {
+    var payloads = {};
+    var consoleSpy; // eslint-disable-line  no-unused-vars
+    beforeEach(function () {
         // Make a temp directory
         tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
         shell.rm('-rf', tempDir);
         shell.mkdir('-p', tempDir);
         consoleSpy = spyOn(console, 'log');
     });
-    afterEach(function() {
+    afterEach(function () {
         process.chdir(cwd);
         process.env.PWD = cwd;
         shell.rm('-rf', tempDir);
     });
-    it('Test 001 : should not run outside of a Cordova-based project', function() {
+    it('Test 001 : should not run outside of a Cordova-based project', function () {
         process.chdir(tempDir);
 
-        expect(function() {
-            cordova.serve().then(function(server) {
+        expect(function () {
+            cordova.serve().then(function (server) {
                 expect(server).toBe(null);
                 server.close();
             });
         }).toThrow('Current working directory is not a Cordova-based project.');
     });
 
-    describe('`serve`', function() {
-        var done = false, failed = false;
-        beforeEach(function() {
+    describe('`serve`', function () {
+        var done = false; // eslint-disable-line  no-unused-vars
+        var failed = false;
+        beforeEach(function () {
             done = false;
             failed = false;
         });
 
-        afterEach(function() {
+        afterEach(function () {
             payloads = {};
         });
 
-        function cit(cond) {
+        function cit (cond) {
             if (cond) {
                 return it;
             }
             return xit;
         }
-        function itifapps(apps) {
-            return cit(apps.every(function (bin) {return shell.which(bin);}));
+        function itifapps (apps) {
+            return cit(apps.every(function (bin) { return shell.which(bin); }));
         }
 
-        function test_serve(platform, ref, expectedContents, opts) {
-            var timeout = opts && 'timeout' in opts && opts.timeout || 1000;
-            return function() {
+        function test_serve (platform, ref, expectedContents, opts) {
+            var timeout = (opts && 'timeout' in opts && opts.timeout) || (1000);
+            return function () {
                 var server;
-                runs(function() {
+                runs(function () {
                     cordova.create(tempDir).then(function () {
                         process.chdir(tempDir);
                         process.env.PWD = tempDir;
                         var plats = [];
-                        Object.getOwnPropertyNames(payloads).forEach(function(plat) {
+                        Object.getOwnPropertyNames(payloads).forEach(function (plat) {
                             var d = Q.defer();
                             plats.push(d.promise);
-                            cordova.platform('add', plat, {spawnoutput:'ignore'}).then(function () {
+                            cordova.platform('add', plat, {spawnoutput: 'ignore'}).then(function () {
                                 var dir = path.join(tempDir, 'merges', plat);
                                 shell.mkdir('-p', dir);
                                 // Write testing HTML files into the directory.
@@ -117,12 +117,12 @@ xdescribe('serve command', function() {
                     });
                 });
 
-                waitsFor(function() {
+                waitsFor(function () {
                     return server || failed;
                 }, 'the server should start', timeout);
 
                 var done, errorCB;
-                runs(function() {
+                runs(function () {
                     if (failed) {
                         return;
                     }
@@ -133,12 +133,12 @@ xdescribe('serve command', function() {
                         port: opts && 'port' in opts ? opts.port : 8000,
                         path: '/' + platform + '/www' + ref,
                         connection: 'Close'
-                    }).on('response', function(res) {
+                    }).on('response', function (res) {
                         var response = '';
-                        res.on('data', function(data) {
+                        res.on('data', function (data) {
                             response += data;
                         });
-                        res.on('end', function() {
+                        res.on('end', function () {
                             expect(response).toEqual(expectedContents);
                             if (response === expectedContents) {
                                 expect(res.statusCode).toEqual(200);
@@ -148,11 +148,11 @@ xdescribe('serve command', function() {
                     }).on('error', errorCB);
                 });
 
-                waitsFor(function() {
+                waitsFor(function () {
                     return done || failed;
                 }, 'the HTTP request should complete', timeout);
 
-                runs(function() {
+                runs(function () {
                     if (!failed) {
                         expect(done).toBeTruthy();
                         expect(errorCB).not.toHaveBeenCalled();
@@ -165,8 +165,8 @@ xdescribe('serve command', function() {
 
         itifapps([
             'android',
-            'ant',
-        ])('should fall back to assets/www on Android', function() {
+            'ant'
+        ])('should fall back to assets/www on Android', function () {
             payloads.android = 'This is the Android test file.';
             test_serve('android', '/test.html', payloads.android, {timeout: 20000})();
         });
@@ -175,18 +175,17 @@ xdescribe('serve command', function() {
             'blackberry-nativepackager',
             'blackberry-deploy',
             'blackberry-signer',
-            'blackberry-debugtokenrequest',
-        ])('should fall back to www on BlackBerry10', function() {
+            'blackberry-debugtokenrequest'
+        ])('should fall back to www on BlackBerry10', function () {
             payloads.blackberry10 = 'This is the BlackBerry10 test file.';
             test_serve('blackberry10', '/test.html', payloads.blackberry10, {timeout: 10000})();
         });
 
         itifapps([
-            'xcodebuild',
-        ])('should fall back to www on iOS', function() {
+            'xcodebuild'
+        ])('should fall back to www on iOS', function () {
             payloads.ios = 'This is the iOS test file.';
             test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
         });
     });
 });
-

@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platform = require('../../src/plugman/platform'),
-    Q = require('q'),
-    fs = require('fs');
+var platform = require('../../src/plugman/platform');
+var Q = require('q');
+var fs = require('fs');
 
-describe( 'platform add/remove', function() {
-    it( 'Test 001 : should call platform add', function() {
-        var sPlatformA = spyOn( platform, 'add' ).and.returnValue(Q()),
-            sPlatformR = spyOn( platform, 'remove' ).and.returnValue(Q());
+describe('platform add/remove', function () {
+    it('Test 001 : should call platform add', function () {
+        var sPlatformA = spyOn(platform, 'add').and.returnValue(Q());
+        var sPlatformR = spyOn(platform, 'remove').and.returnValue(Q());
         platform.add();
         expect(sPlatformA).toHaveBeenCalled();
         platform.remove();
@@ -31,43 +31,45 @@ describe( 'platform add/remove', function() {
     });
 });
 
+describe('platform add', function () {
+    /* eslint-disable no-unused-vars */
+    var done = false;
+    var existsSync;
+    /* eslint-enable no-unused-vars */
 
-describe( 'platform add', function() {
-    var done = false,
-        existsSync;
-
-    beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
+    beforeEach(function () {
+        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
         done = false;
     });
-    it( 'Test 002 : should error on non existing plugin.xml', function(done) {
-        platform.add().then(function(result){
+    it('Test 002 : should error on non existing plugin.xml', function (done) {
+        platform.add().then(function (result) {
             expect(false).toBe(true);
             done();
         },
-        function err(errMsg) {
+        function err (errMsg) {
             expect(errMsg.toString()).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
             done();
         });
     }, 6000);
 });
 
+describe('platform remove', function () {
+    /* eslint-disable no-unused-vars */
+    var done = false;
+    var existsSync;
+    /* eslint-enable no-unused-vars */
 
-describe( 'platform remove', function() {
-    var done = false,
-        existsSync;
-        
-    beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
+    beforeEach(function () {
+        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
         done = false;
     });
-    it( 'Test 003 : should error on non existing plugin.xml', function(done) {
-        platform.remove().then(function(result) {
+    it('Test 003 : should error on non existing plugin.xml', function (done) {
+        platform.remove().then(function (result) {
             expect(false).toBe(true);
             done();
         },
-        function err(errMsg) {
-            expect(errMsg.toString()).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
+        function err (errMsg) {
+            expect(errMsg.toString()).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
             done();
         });
     }, 6000);

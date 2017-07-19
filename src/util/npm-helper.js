@@ -19,14 +19,14 @@
 
 // Helper methods to help keep npm operations separated.
 
-var npm = require('npm'),
-    path = require('path'),
-    fs = require('fs'),
-    Q = require('q'),
-    unpack = require('./unpack'),
-    util = require('../cordova/util'),
-    cachedSettings = null,
-    cachedSettingsValues = null;
+var npm = require('npm');
+var path = require('path');
+var fs = require('fs');
+var Q = require('q');
+var unpack = require('./unpack');
+var util = require('../cordova/util');
+var cachedSettings = null;
+var cachedSettingsValues = null;
 
 /**
  * @description Calls npm.load, then initializes npm.config with the specified settings. Then executes a chain of
@@ -35,11 +35,11 @@ var npm = require('npm'),
  * @param {Object} settings
  * @param {Function} promiseChain
  */
-function loadWithSettingsThenRestore(settings, promiseChain) {
+function loadWithSettingsThenRestore (settings, promiseChain) {
     return loadWithSettings(settings).then(promiseChain).finally(restoreSettings);
 }
 
-function loadWithSettings(settings) {
+function loadWithSettings (settings) {
     if (cachedSettings) {
         throw new Error('Trying to initialize npm when settings have not been restored from a previous initialization.');
     }
@@ -62,7 +62,7 @@ function loadWithSettings(settings) {
     });
 }
 
-function restoreSettings() {
+function restoreSettings () {
     if (cachedSettings) {
         cachedSettings.forEach(function (prop) {
             if (prop in cachedSettingsValues) {
@@ -82,7 +82,7 @@ function restoreSettings() {
  * @param packageName - name of an npm package
  * @param packageVersion - requested version or version range
  */
-function fetchPackage(packageName, packageVersion) {
+function fetchPackage (packageName, packageVersion) {
     // Get the latest matching version from NPM if a version range is specified
     return util.getLatestMatchingNpmVersion(packageName, packageVersion).then(
         function (latestVersion) {
@@ -97,7 +97,7 @@ function fetchPackage(packageName, packageVersion) {
  * @param packageName - name of an npm package
  * @param packageVersion - requested version (not a version range)
  */
-function cachePackage(packageName, packageVersion) {
+function cachePackage (packageName, packageVersion) {
     return Q().then(function () {
         var cacheDir = path.join(util.libDirectory, 'npm_cache');
 

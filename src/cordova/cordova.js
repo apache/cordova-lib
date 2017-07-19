@@ -21,28 +21,28 @@ var cordova_events = require('cordova-common').events;
 var cordova_util = require('./util');
 var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 
-var off = function() {
+var off = function () {
     cordova_events.removeListener.apply(cordova_events, arguments);
 };
 
-var emit = function() {
+var emit = function () {
     cordova_events.emit.apply(cordova_events, arguments);
 };
 
 exports = module.exports = {
-    get binname() { return cordova_util.binname; },
-    set binname(name) { cordova_util.binname = name; },
-    on:        function() {
+    get binname () { return cordova_util.binname; },
+    set binname (name) { cordova_util.binname = name; },
+    on: function () {
         cordova_events.on.apply(cordova_events, arguments);
     },
-    off:       off,
-    removeListener:off,
-    removeAllListeners: function() {
+    off: off,
+    removeListener: off,
+    removeAllListeners: function () {
         cordova_events.removeAllListeners.apply(cordova_events, arguments);
     },
-    emit:      emit,
-    trigger:   emit,
-    findProjectRoot: function(opt_startDir) {
+    emit: emit,
+    trigger: emit,
+    findProjectRoot: function (opt_startDir) {
         return cordova_util.isCordova(opt_startDir);
     },
     prepare: require('./prepare'),
@@ -72,6 +72,6 @@ var modulesToAlias = ['prepare', 'build', 'config', 'emulate', 'plugin',
     'plugins', 'serve', 'platform', 'platforms', 'compile', 'run', 'info',
     'targets', 'requirements', 'projectMetadata', 'clean'];
 
-modulesToAlias.forEach(function(mod) {
+modulesToAlias.forEach(function (mod) {
     aliasMethodToRawWithDeprecationNotice(mod, module.exports, 'cordova');
 });

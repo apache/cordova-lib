@@ -17,24 +17,22 @@
     under the License.
 */
 
-/* jshint expr:true */
-
-var path               = require('path'),
-    aliasify           = require('aliasify'),
-    common             = require('./platforms/common'),
-    fs                 = require('fs'),
-    childProcess       = require('child_process'),
-    events             = require('cordova-common').events,
-    bundle             = require('cordova-js/tasks/lib/bundle-browserify'),
-    writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header'),
-    Q                  = require('q'),
-    computeCommitId    = require('cordova-js/tasks/lib/compute-commit-id'),
-    Readable           = require('stream').Readable;
+var path = require('path');
+var aliasify = require('aliasify');
+var common = require('./platforms/common');
+var fs = require('fs');
+var childProcess = require('child_process');
+var events = require('cordova-common').events;
+var bundle = require('cordova-js/tasks/lib/bundle-browserify');
+var writeLicenseHeader = require('cordova-js/tasks/lib/write-license-header');
+var Q = require('q');
+var computeCommitId = require('cordova-js/tasks/lib/compute-commit-id');
+var Readable = require('stream').Readable;
 
 var PlatformJson = require('cordova-common').PlatformJson;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
-function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
+function generateFinalBundle (platform, libraryRelease, outReleaseFile, commitId, platformVersion) {
     var deferred = Q.defer();
     var outReleaseFileStream = fs.createWriteStream(outReleaseFile);
     var time = new Date().valueOf();
@@ -45,33 +43,33 @@ function generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId,
 
     releaseBundle.pipe(outReleaseFileStream);
 
-    outReleaseFileStream.on('finish', function() {
+    outReleaseFileStream.on('finish', function () {
         var newtime = new Date().valueOf() - time;
         events.emit('verbose', 'generated cordova.' + platform + '.js @ ' + commitId + ' in ' + newtime + 'ms');
         deferred.resolve();
         // TODO clean up all the *.browserify files
     });
 
-    outReleaseFileStream.on('error', function(err) {
+    outReleaseFileStream.on('error', function (err) {
         events.emit('warn', 'Error while generating cordova.js');
         deferred.reject(err);
     });
     return deferred.promise;
 }
 
-function computeCommitIdSync() {
+function computeCommitIdSync () {
     var deferred = Q.defer();
-    computeCommitId(function(cId){
+    computeCommitId(function (cId) {
         deferred.resolve(cId);
     });
     return deferred.promise;
 }
 
-function getPlatformVersion(cId, project_dir) {
+function getPlatformVersion (cId, project_dir) {
     var deferred = Q.defer();
-    //run version script for each platform to get platformVersion
+    // run version script for each platform to get platformVersion
     var versionPath = path.join(project_dir, '/cordova/version');
-    childProcess.exec('"' + versionPath + '"', function(err, stdout, stderr) {
+    childProcess.exec('"' + versionPath + '"', function (err, stdout, stderr) {
         if (err) {
             err.message = 'Failed to get platform version (will use \'N/A\' instead).\n' + err.message;
             events.emit('warn', err);
@@ -101,81 +99,81 @@ module.exports = function doBrowserify (project, platformApi, pluginInfoProvider
 
     var commitId;
     return computeCommitIdSync()
-    .then(function(cId){
-        commitId = cId;
-        return getPlatformVersion(commitId, platformApi.root);
-    }).then(function(platformVersion){
-        var libraryRelease = bundle(platform, false, commitId, platformVersion, platformApi.getPlatformInfo().locations.platformWww);
+        .then(function (cId) {
+            commitId = cId;
+            return getPlatformVersion(commitId, platformApi.root);
+        }).then(function (platformVersion) {
+            var libraryRelease = bundle(platform, false, commitId, platformVersion, platformApi.getPlatformInfo().locations.platformWww);
 
-        var pluginMetadata = {};
-        var modulesMetadata = [];
+            var pluginMetadata = {};
+            var modulesMetadata = [];
 
-        var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
-        events.emit('verbose', 'Iterating over plugins in project:', plugins);
-        plugins.forEach(function (plugin) {
-            var pluginDir = path.join(project.locations.plugins, plugin);
-            var pluginInfo = pluginInfoProvider.get(pluginDir);
-            // pluginMetadata is a mapping from plugin IDs to versions.
-            pluginMetadata[pluginInfo.id] = pluginInfo.version;
+            var plugins = Object.keys(platformJson.root.installed_plugins).concat(Object.keys(platformJson.root.dependent_plugins));
+            events.emit('verbose', 'Iterating over plugins in project:', plugins);
+            plugins.forEach(function (plugin) {
+                var pluginDir = path.join(project.locations.plugins, plugin);
+                var pluginInfo = pluginInfoProvider.get(pluginDir);
+                // pluginMetadata is a mapping from plugin IDs to versions.
+                pluginMetadata[pluginInfo.id] = pluginInfo.version;
 
-            // Copy www assets described in <asset> tags.
-            pluginInfo.getAssets(platform)
-            .forEach(function(asset) {
-                common.asset.install(asset, pluginDir, wwwDir);
+                // Copy www assets described in <asset> tags.
+                pluginInfo.getAssets(platform)
+                    .forEach(function (asset) {
+                        common.asset.install(asset, pluginDir, wwwDir);
+                    });
+
+                pluginInfo.getJsModules(platform)
+                    .forEach(function (jsModule) {
+                        var moduleName = jsModule.name ? jsModule.name : path.basename(jsModule.src, '.js');
+                        var moduleId = pluginInfo.id + '.' + moduleName;
+                        var moduleMetadata = {
+                            file: jsModule.src,
+                            id: moduleId,
+                            name: moduleName,
+                            pluginId: pluginInfo.id
+                        };
+
+                        if (jsModule.clobbers.length > 0) {
+                            moduleMetadata.clobbers = jsModule.clobbers.map(function (o) { return o.target; });
+                        }
+                        if (jsModule.merges.length > 0) {
+                            moduleMetadata.merges = jsModule.merges.map(function (o) { return o.target; });
+                        }
+                        if (jsModule.runs) {
+                            moduleMetadata.runs = true;
+                        }
+
+                        modulesMetadata.push(moduleMetadata);
+                        libraryRelease.require(path.join(pluginDir, jsModule.src), { expose: moduleId });
+                    });
             });
 
-            pluginInfo.getJsModules(platform)
-            .forEach(function(jsModule) {
-                var moduleName = jsModule.name ? jsModule.name : path.basename(jsModule.src, '.js');
-                var moduleId = pluginInfo.id + '.' + moduleName;
-                var moduleMetadata = {
-                    file: jsModule.src,
-                    id: moduleId,
-                    name: moduleName,
-                    pluginId: pluginInfo.id
-                };
+            events.emit('verbose', 'Writing out cordova_plugins.js...');
 
-                if (jsModule.clobbers.length > 0) {
-                    moduleMetadata.clobbers = jsModule.clobbers.map(function(o) { return o.target; });
-                }
-                if (jsModule.merges.length > 0) {
-                    moduleMetadata.merges = jsModule.merges.map(function(o) { return o.target; });
-                }
-                if (jsModule.runs) {
-                    moduleMetadata.runs = true;
-                }
+            // Create a stream and write plugin metadata into it
+            // instead of generating intermediate file on FS
+            var cordova_plugins = new Readable();
+            cordova_plugins.push(
+                'module.exports = ' + JSON.stringify(modulesMetadata, null, 2) + ';\n' +
+                'module.exports.metadata = ' + JSON.stringify(pluginMetadata, null, 2) + ';\n', 'utf8');
+            cordova_plugins.push(null);
 
-                modulesMetadata.push(moduleMetadata);
-                libraryRelease.require(path.join(pluginDir, jsModule.src), { expose: moduleId });
-            });
+            var bootstrap = new Readable();
+            bootstrap.push('require(\'cordova/init\');\n', 'utf8');
+            bootstrap.push(null);
+
+            var moduleAliases = modulesMetadata
+                .reduce(function (accum, meta) {
+                    accum['./' + meta.name] = meta.id;
+                    return accum;
+                }, {});
+
+            libraryRelease
+                .add(cordova_plugins, {file: path.join(wwwDir, 'cordova_plugins.js'), expose: 'cordova/plugin_list'})
+                .add(bootstrap)
+                .transform(aliasify, {aliases: moduleAliases});
+
+            var outReleaseFile = path.join(wwwDir, 'cordova.js');
+            return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
         });
-
-        events.emit('verbose', 'Writing out cordova_plugins.js...');
-
-        // Create a stream and write plugin metadata into it
-        // instead of generating intermediate file on FS
-        var cordova_plugins = new Readable();
-        cordova_plugins.push(
-            'module.exports = ' + JSON.stringify(modulesMetadata, null, 2) + ';\n' +
-            'module.exports.metadata = ' + JSON.stringify(pluginMetadata, null, 2) + ';\n', 'utf8');
-        cordova_plugins.push(null);
-
-        var bootstrap = new Readable();
-        bootstrap.push('require(\'cordova/init\');\n', 'utf8');
-        bootstrap.push(null);
-
-        var moduleAliases = modulesMetadata
-        .reduce(function (accum, meta) {
-            accum['./' + meta.name] = meta.id;
-            return accum;
-        }, {});
-
-        libraryRelease
-            .add(cordova_plugins, {file: path.join(wwwDir, 'cordova_plugins.js'), expose: 'cordova/plugin_list'})
-            .add(bootstrap)
-            .transform(aliasify, {aliases: moduleAliases});
-
-        var outReleaseFile = path.join(wwwDir, 'cordova.js');
-        return generateFinalBundle(platform, libraryRelease, outReleaseFile, commitId, platformVersion);
-    });
 };

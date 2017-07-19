@@ -26,19 +26,19 @@ var events = require('cordova-common').events;
  * @param {String} hook The hook type
  * @param {Object} opts Hook options
  * @returns {Object} */
-function Context(hook, opts) {
+function Context (hook, opts) {
     var prop;
     this.hook = hook;
 
-    //create new object, to avoid affecting input opts in other places
-    //For example context.opts.plugin = Object is done, then it affects by reference
+    // create new object, to avoid affecting input opts in other places
+    // For example context.opts.plugin = Object is done, then it affects by reference
     this.opts = {};
     for (prop in opts) {
-    if (opts.hasOwnProperty(prop)) {
-        this.opts[prop] = opts[prop];
-      }
+        if (opts.hasOwnProperty(prop)) {
+            this.opts[prop] = opts[prop];
+        }
     }
-    this.cmdLine =  process.argv.join(' ');
+    this.cmdLine = process.argv.join(' ');
     this.cordova = require('../cordova/cordova');
 }
 

@@ -20,6 +20,6 @@
 module.exports = {
     fromCode: function (code) {
         // For simplicity, relies on the fact that the Apache license header doesn't contain a "*"
-        return code.replace(/^\s*\/\*\*[^\*]*\*\/\s*/, "");
+        return code.replace(/^\s*\/\*\*[^\*]*\*\/\s*/, ''); // eslint-disable-line no-useless-escape
     }
 };

@@ -17,13 +17,11 @@
     under the License.
 */
 
-/* jshint laxcomma:true */
-
-var npm = require('npm'),
-    Q = require('q'),
-    npmhelper = require('../../util/npm-helper'),
-    events = require('cordova-common').events,
-    pluginSpec = require('../../cordova/plugin/plugin_spec_parser');
+var npm = require('npm');
+var Q = require('q');
+var npmhelper = require('../../util/npm-helper');
+var events = require('cordova-common').events;
+var pluginSpec = require('../../cordova/plugin/plugin_spec_parser');
 
 module.exports = {
     settings: null,
@@ -43,11 +41,12 @@ module.exports = {
      * @param {Array} args Command argument
      * @return {Promise.<void>} Promise for completion.
      */
-    owner: function(args) {
+    owner: function (args) {
         var command = args && args[0];
-        if (command && (command === 'add' || command === 'rm'))
+        if (command && (command === 'add' || command === 'rm')) {
             return Q.reject('Support for \'owner add/rm\' commands has been removed ' +
                 'due to transition of Cordova plugins registry to read-only state');
+        }
 
         return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'owner', args);
@@ -59,7 +58,7 @@ module.exports = {
      * @param {Array} args Array of keywords
      * @return {Promise.<Object>} Promised search results.
      */
-    search: function(args) {
+    search: function (args) {
         return initThenLoadSettingsWithRestore(function () {
             return Q.ninvoke(npm.commands, 'search', args, true);
         });
@@ -70,13 +69,12 @@ module.exports = {
      * @param {Array} with one element - the plugin id or "id@version"
      * @return {Promise.<string>} Promised path to fetched package.
      */
-    fetch: function(plugin) {
+    fetch: function (plugin) {
         plugin = plugin.shift();
-        return Q.fcall(function() {
-            //fetch from npm
+        return Q.fcall(function () {
+            // fetch from npm
             return fetchPlugin(plugin);
-        })
-        .fail(function(error) {
+        }).fail(function (error) {
             return Q.reject(error);
         });
     },
@@ -86,20 +84,20 @@ module.exports = {
      * @param {String} name Plugin name
      * @return {Promise.<Object>} Promised package info.
      */
-    info: function(plugin) {
+    info: function (plugin) {
         plugin = plugin.shift();
         return npmhelper.loadWithSettingsThenRestore({
             'cache-min': 0,
             'cache-max': 0
-        }, function() {
-            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true )
-            .then(function(info) {
-                // Plugin info should be accessed as info[version]. If a version
-                // specifier like >=x.y.z was used when calling npm view, info
-                // can contain several versions, but we take the first one here.
-                var version = Object.keys(info)[0];
-                return info[version];
-            });
+        }, function () {
+            return Q.ninvoke(npm.commands, 'view', [plugin], /* silent = */ true)
+                .then(function (info) {
+                    // Plugin info should be accessed as info[version]. If a version
+                    // specifier like >=x.y.z was used when calling npm view, info
+                    // can contain several versions, but we take the first one here.
+                    var version = Object.keys(info)[0];
+                    return info[version];
+                });
         });
     }
 };
@@ -109,7 +107,7 @@ module.exports = {
  * settings, executes the promises, then restores npm.config. Use this rather than passing settings to npm.load, since
  * that only works the first time you try to load npm.
  */
-function initThenLoadSettingsWithRestore(promises) {
+function initThenLoadSettingsWithRestore (promises) {
     return npmhelper.loadWithSettingsThenRestore({}, promises);
 }
 
@@ -117,7 +115,7 @@ function initThenLoadSettingsWithRestore(promises) {
 * @param {string} plugin - the plugin id or "id@version"
 * @return {Promise.<string>} Promised path to fetched package.
 */
-function fetchPlugin(plugin) {
+function fetchPlugin (plugin) {
     events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
     var parsedSpec = pluginSpec.parse(plugin);
     var scope = parsedSpec.scope || '';

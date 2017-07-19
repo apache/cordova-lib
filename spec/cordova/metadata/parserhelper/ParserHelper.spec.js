@@ -17,19 +17,19 @@
     under the License.
 */
 
-var path = require('path'),
-    ParserHelper = require('../../../../src/cordova/metadata/parserhelper/ParserHelper'),
-    ConfigParser = require('cordova-common').ConfigParser;
+var path = require('path');
+var ParserHelper = require('../../../../src/cordova/metadata/parserhelper/ParserHelper');
+var ConfigParser = require('cordova-common').ConfigParser;
 
 // Create a real config object before mocking out everything.
 var xml = path.join(__dirname, '..', '..', 'test-config.xml');
 var cfg = new ConfigParser(xml);
 
-describe('ParserHelper', function() {
+describe('ParserHelper', function () {
 
-    describe('constructions', function() {
+    describe('constructions', function () {
 
-        it('should pass platform name as a constructor parameter', function() {
+        it('should pass platform name as a constructor parameter', function () {
             var ph = new ParserHelper();
             expect(ph.platform).toEqual('');
             ph = new ParserHelper('some-platform');
@@ -38,20 +38,20 @@ describe('ParserHelper', function() {
 
     });
 
-    describe('instance', function() {
+    describe('instance', function () {
 
         var parserHelper;
 
-        beforeEach(function() {
+        beforeEach(function () {
             parserHelper = new ParserHelper();
         });
 
-        describe('getOrientation method', function() {
+        describe('getOrientation method', function () {
 
-            it('should return the global orientation value', function() {
+            it('should return the global orientation value', function () {
                 expect(parserHelper.getOrientation(cfg)).toEqual('portrait');
             });
-            it('should return the platform-specific orientation value', function() {
+            it('should return the platform-specific orientation value', function () {
                 var parserHelperAndroid = new ParserHelper('android');
                 expect(parserHelperAndroid.getOrientation(cfg)).toEqual('landscape');
             });

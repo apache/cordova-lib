@@ -16,120 +16,130 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../../src/cordova/cordova'),
-    platforms = require('../../src/platforms/platforms'),
-    HooksRunner = require('../../src/hooks/HooksRunner'),
-    util = require('../../src/cordova/util'),
-    Q = require('q');
+var cordova = require('../../src/cordova/cordova');
+var platforms = require('../../src/platforms/platforms');
+var HooksRunner = require('../../src/hooks/HooksRunner');
+var util = require('../../src/cordova/util');
+var Q = require('q');
 
-var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
+var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
 
-
-describe('compile command', function() {
-    var is_cordova, list_platforms, fire, cd_project_root, fail, platformApi, getPlatformApi;
+describe('compile command', function () {
+    var is_cordova;
+    var list_platforms;
+    var fire;
+    var cd_project_root; // eslint-disable-line no-unused-vars
+    var fail;
+    var platformApi;
+    var getPlatformApi;
     var project_dir = '/some/path';
 
-    beforeEach(function() {
+    beforeEach(function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
-        list_platforms= spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        platformApi = { build: jasmine.createSpy('build').and.returnValue(Q())};
+        platformApi = { build: jasmine.createSpy('build').and.returnValue(Q()) };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
         fail = function (err) { expect(err.stack).not.toBeDefined(); };
     });
-    describe('failure', function() {
-        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function(done) {
+    describe('failure', function () {
+        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function (done) {
             list_platforms.and.returnValue([]);
             var success = jasmine.createSpy('success');
             cordova.compile()
-            .then(success, function(result) {
-                expect(result instanceof Error).toBe(true);
-                expect('' + result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-            })
-            .fin(function() {
-                expect(success).not.toHaveBeenCalled();
-                done();
-            });
+                .then(success, function (result) {
+                    expect(result instanceof Error).toBe(true);
+                    expect('' + result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
+                })
+                .fin(function () {
+                    expect(success).not.toHaveBeenCalled();
+                    done();
+                });
         });
-        it('Test 002 : should not run outside of a Cordova-based project', function(done) {
+        it('Test 002 : should not run outside of a Cordova-based project', function (done) {
             is_cordova.and.returnValue(false);
             var success = jasmine.createSpy('success');
             cordova.compile()
-            .then(success, function(result) {
-                expect(result instanceof Error).toBe(true);
-            })
-            .fin(function() {
-                expect(success).not.toHaveBeenCalled();
-                done();
-            });
+                .then(success, function (result) {
+                    expect(result instanceof Error).toBe(true);
+                })
+                .fin(function () {
+                    expect(success).not.toHaveBeenCalled();
+                    done();
+                });
         });
     });
 
-    describe('success', function() {
-        it('Test 003 : should run inside a Cordova-based project with at least one added platform and shell out to build', function(done) {
-            cordova.compile(['android','ios']).then(function() {
-                expect(getPlatformApi).toHaveBeenCalledWith('android');
-                expect(getPlatformApi).toHaveBeenCalledWith('ios');
-                expect(platformApi.build).toHaveBeenCalled();
-            })
-            .fail(fail)
-            .fin(done);
+    describe('success', function () {
+        it('Test 003 : should run inside a Cordova-based project with at least one added platform and shell out to build', function (done) {
+            cordova.compile(['android', 'ios'])
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('android');
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(platformApi.build).toHaveBeenCalled();
+                })
+                .fail(fail)
+                .fin(done);
         });
 
         it('Test 004 : should pass down optional parameters', function (done) {
-            cordova.compile({platforms:['blackberry10'], options:{release: true}}).then(function () {
-                expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
-                expect(platformApi.build).toHaveBeenCalledWith({release: true});
-            })
-            .fail(fail)
-            .fin(done);
+            cordova.compile({platforms: ['blackberry10'], options: {release: true}})
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
+                    expect(platformApi.build).toHaveBeenCalledWith({release: true});
+                })
+                .fail(fail)
+                .fin(done);
         });
 
         it('Test 005 : should convert options from old format and warn user about this', function (done) {
-            function warnSpy(message) {
+            function warnSpy (message) {
                 expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
             }
 
             cordova.on('warn', warnSpy);
-            cordova.compile({platforms:['blackberry10'], options:['--release']}).then(function () {
-                expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
-                expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
-            })
-            .fail(fail)
-            .fin(function () {
-                cordova.off('warn', warnSpy);
-                done();
-            });
+            cordova.compile({platforms: ['blackberry10'], options: ['--release']})
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
+                    expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
+                })
+                .fail(fail)
+                .fin(function () {
+                    cordova.off('warn', warnSpy);
+                    done();
+                });
         });
     });
 
-    describe('hooks', function() {
-        describe('when platforms are added', function() {
-            it('Test 006 : should fire before hooks through the hooker module', function(done) {
-                cordova.compile(['android', 'ios']).then(function() {
-                    expect(fire.calls.argsFor(0)).toEqual(['before_compile', {verbose: false, platforms:['android', 'ios'] , options: {}}]);
-                    done();
-                })
-                .fail(fail)
-                .fin(done);
+    describe('hooks', function () {
+        describe('when platforms are added', function () {
+            it('Test 006 : should fire before hooks through the hooker module', function (done) {
+                cordova.compile(['android', 'ios'])
+                    .then(function () {
+                        expect(fire.calls.argsFor(0)).toEqual(['before_compile', {verbose: false, platforms: ['android', 'ios'], options: {}}]);
+                        done();
+                    })
+                    .fail(fail)
+                    .fin(done);
             });
-            it('Test 007 : should fire after hooks through the hooker module', function(done) {
-                cordova.compile('android').then(function() {
-                    expect(fire.calls.argsFor(1)).toEqual(['after_compile', {verbose: false, platforms:['android'] , options: {}}]);
-                    done();
-                })
-                .fail(fail)
-                .fin(done);
+            it('Test 007 : should fire after hooks through the hooker module', function (done) {
+                cordova.compile('android')
+                    .then(function () {
+                        expect(fire.calls.argsFor(1)).toEqual(['after_compile', {verbose: false, platforms: ['android'], options: {}}]);
+                        done();
+                    })
+                    .fail(fail)
+                    .fin(done);
             });
         });
 
-        describe('with no platforms added', function() {
-            it('Test 008 : should not fire the hooker', function(done) {
+        describe('with no platforms added', function () {
+            it('Test 008 : should not fire the hooker', function (done) {
                 list_platforms.and.returnValue([]);
-                Q().then(cordova.compile).then(function() {
+                Q().then(cordova.compile).then(function () {
                     expect('this call').toBe('fail');
-                }, function(err) {
+                }, function (err) {
                     expect(fire).not.toHaveBeenCalled();
                     expect(err.message).toContain(
                         'No platforms added to this project. Please use `cordova platform add <platform>`.'

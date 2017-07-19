@@ -21,11 +21,11 @@
 
 var cordova = require('../src/cordova/cordova'),
     HooksRunner = require('../src/hooks/HooksRunner'),
-    shell  = require('shelljs'),
-    path   = require('path'),
-    fs     = require('fs'),
-    os     = require('os'),
-    Q      = require('q'),
+    shell = require('shelljs'),
+    path = require('path'),
+    fs = require('fs'),
+    os = require('os'),
+    Q = require('q'),
     child_process = require('child_process'),
     helpers = require('../spec/helpers'),
     PluginInfo = require('cordova-common').PluginInfo,
@@ -39,7 +39,7 @@ var dotCordova = path.join(project, '.cordova');
 var hooksDir = path.join(project, 'hooks');
 var hooksDirDot = path.join(project, '.cordova', 'hooks');
 var scriptsDir = path.join(project, 'scripts');
-var ext = platform.match(/(win32|win64)/)?'bat':'sh';
+var ext = platform.match(/(win32|win64)/) ? 'bat' : 'sh';
 var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 var testPluginFixturePath = path.join(fixtures, 'plugins', 'com.plugin.withhooks');
 
@@ -54,7 +54,7 @@ shell.mkdir('-p', dotCordova);
 shell.cp('-R', path.join(fixtures, 'projWithHooks', '.cordova'), project);
 
 // copy sh/bat scripts
-if(ext === 'bat') {
+if (ext === 'bat') {
     shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '*'), project);
     shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '.cordova'), project);
 } else {
@@ -68,39 +68,39 @@ shell.chmod('-R', 'ug+x', scriptsDir);
 
 // To get more verbose output to help trace program flow, uncomment the lines below
 // TODO: think about how to factor this out so that it can be invoked from the command line
-//var events = require('cordova-common').events;
-//events.on('log', function(msg) { console.log(msg); });
-//events.on('verbose', function(msg) { console.log(msg); });
-//events.on('warn', function(msg) { console.log(msg); });
+// var events = require('cordova-common').events;
+// events.on('log', function(msg) { console.log(msg); });
+// events.on('verbose', function(msg) { console.log(msg); });
+// events.on('warn', function(msg) { console.log(msg); });
 
-describe('HooksRunner', function() {
+describe('HooksRunner', function () {
     var hooksRunner;
     var hookOptions;
     var testPluginInstalledPath;
     var projectRoot;
     var fire;
 
-    beforeEach(function() {
+    beforeEach(function () {
         process.chdir(project);
     });
 
-    afterEach(function() {
+    afterEach(function () {
         process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
     });
 
-    it('Test 001 : should throw if provided directory is not a cordova project', function() {
-        expect(function() {
+    it('Test 001 : should throw if provided directory is not a cordova project', function () {
+        expect(function () {
             new HooksRunner(tmpDir);
         }).toThrow();
     });
 
-    it('Test 002 : should not throw if provided directory is a cordova project', function() {
+    it('Test 002 : should not throw if provided directory is a cordova project', function () {
         expect(function () {
             new HooksRunner(project);
         }).not.toThrow();
     });
 
-    it('Test 003 : should init test fixtures', function(done) {
+    it('Test 003 : should init test fixtures', function (done) {
         hooksRunner = new HooksRunner(project);
 
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
@@ -111,18 +111,17 @@ describe('HooksRunner', function() {
 
         // The config.json in the fixture project points at fake "local" paths.
         // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
+        spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(fixtures, 'platforms', 'android'), path.join(project, 'platforms'));
-            } else if(cmd.match(/update\b/)) {
+            } else if (cmd.match(/update\b/)) {
                 fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
             } else if (cmd.match(/version/)) {
                 return '3.6.0';
             }
             return Q();
         });
-
 
         // Add the testing platform.
         cordova.platform('add', [helpers.testPlatform]).fail(function (err) {
@@ -154,8 +153,8 @@ describe('HooksRunner', function() {
         });
     }, 100000);
 
-    describe('fire method', function() {
-        beforeEach(function() {
+    describe('fire method', function () {
+        beforeEach(function () {
             projectRoot = cordovaUtil.isCordova();
 
             var options = {
@@ -174,12 +173,12 @@ describe('HooksRunner', function() {
         });
 
         // helper methods
-        function hooksOrderFileContents(hooksOrderFile) {
+        function hooksOrderFileContents (hooksOrderFile) {
             var order = fs.readFileSync(hooksOrderFile, 'ascii').replace(/\W/gm, ' ');
 
             var orderArrOriginal = order.split(' ').slice(0);
 
-            function splitNumbers(mixedString) {
+            function splitNumbers (mixedString) {
                 var re = /\w+/g, match, params = [];
 
                 while (match = re.exec(mixedString)) {
@@ -188,77 +187,77 @@ describe('HooksRunner', function() {
                 return params;
             }
 
-            return splitNumbers(orderArrOriginal).map(function(str) { return parseInt(str, 10); });
+            return splitNumbers(orderArrOriginal).map(function (str) { return parseInt(str, 10); });
         }
 
-        function hooksOrderFileIsOrdered(hooksOrderFile) {
+        function hooksOrderFileIsOrdered (hooksOrderFile) {
             var splitArrOriginal = hooksOrderFileContents(hooksOrderFile);
-            var splitArrSorted = splitArrOriginal.slice(0).sort(function(a, b) { return a - b; });
+            var splitArrSorted = splitArrOriginal.slice(0).sort(function (a, b) { return a - b; });
 
             return JSON.stringify(splitArrOriginal) === JSON.stringify(splitArrSorted);
         }
 
-        function backupAppConfig(projectRoot) {
+        function backupAppConfig (projectRoot) {
             shell.cp('-f', path.join(projectRoot, 'config.xml'), path.join(projectRoot, 'configOrig.xml'));
         }
 
-        function restoreAppConfig(projectRoot) {
+        function restoreAppConfig (projectRoot) {
             shell.cp('-f', path.join(projectRoot, 'configOrig.xml'), path.join(projectRoot, 'config.xml'));
             shell.rm('-rf', path.join(projectRoot, 'configOrig.xml'));
         }
 
-        function switchToOnlyNonPlatformScriptsAppConfig(projectRoot) {
+        function switchToOnlyNonPlatformScriptsAppConfig (projectRoot) {
             backupAppConfig(projectRoot);
             shell.cp('-f', path.join(projectRoot, 'configOnlyNonPlatformScripts_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
         }
 
-        function switchToOnePlatformScriptsAppConfig(projectRoot) {
+        function switchToOnePlatformScriptsAppConfig (projectRoot) {
             backupAppConfig(projectRoot);
             shell.cp('-f', path.join(projectRoot, 'configOnePlatform_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
         }
 
-        function switchToTwoPlatformsScriptsAppConfig(projectRoot) {
+        function switchToTwoPlatformsScriptsAppConfig (projectRoot) {
             backupAppConfig(projectRoot);
             shell.cp('-f', path.join(projectRoot, 'configTwoPlatforms_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
         }
 
-        function backupPluginConfig() {
+        function backupPluginConfig () {
             shell.cp('-f', path.join(testPluginInstalledPath, 'plugin.xml'), path.join(testPluginInstalledPath, 'pluginOrig.xml'));
         }
 
-        function restorePluginConfig() {
+        function restorePluginConfig () {
             shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOrig.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
             shell.rm('-rf', path.join(testPluginInstalledPath, 'pluginOrig.xml'));
         }
 
-        function switchToOnlyNonPlatformScriptsPluginConfig(projectRoot) {
+        function switchToOnlyNonPlatformScriptsPluginConfig (projectRoot) {
             backupPluginConfig();
             shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOnlyNonPlatformScripts_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
         }
 
-        function switchToOnePlatformScriptsPluginConfig(projectRoot) {
+        function switchToOnePlatformScriptsPluginConfig (projectRoot) {
             backupPluginConfig();
             shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOnePlatform_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
         }
 
-        function switchToTwoPlatformsScriptsPluginConfig(projectRoot) {
+        function switchToTwoPlatformsScriptsPluginConfig (projectRoot) {
             backupPluginConfig();
             shell.cp('-f', path.join(testPluginInstalledPath, 'pluginTwoPlatforms_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
         }
 
-        function removeFileIfExists(file) {
+        function removeFileIfExists (file) {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
         }
 
-        describe('application hooks', function() {
+        describe('application hooks', function () {
             it('Test 004 : should execute hook scripts serially', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
 
-                return hooksRunner.fire(test_event, hookOptions).then(function() {
+                return hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
@@ -354,7 +353,7 @@ describe('HooksRunner', function() {
             });
         });
 
-        describe('plugin hooks', function() {
+        describe('plugin hooks', function () {
             it('Test 009 : should execute hook scripts serially from plugin.xml', function (done) {
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
@@ -454,18 +453,18 @@ describe('HooksRunner', function() {
                         // Delete unique ids to allow comparing PluginInfo
                         delete androidPluginOpts.plugin.pluginInfo._et;
 
-                        fire.calls.all().forEach(function(call) {
-                            if(call.args[1] && call.args[1].plugin) {
+                        fire.calls.all().forEach(function (call) {
+                            if (call.args[1] && call.args[1].plugin) {
                                 // Delete unique ids to allow comparing PluginInfo
                                 delete call.args[1].plugin.pluginInfo._et;
                             }
 
-                            if(call.args[0] == 'before_plugin_uninstall' ||
+                            if (call.args[0] == 'before_plugin_uninstall' ||
                                 call.args[0] == 'before_plugin_install' ||
                                 call.args[0] == 'after_plugin_install') {
-                                if(call.args[1]) {
+                                if (call.args[1]) {
                                     expect(call.args[1].plugin).toBeDefined();
-                                    if(call.args[1].plugin.platform == 'android') {
+                                    if (call.args[1].plugin.platform == 'android') {
                                         expect(JSON.stringify(androidPluginOpts) ===
                                             JSON.stringify(call.args[1])).toBe(true);
                                     }
@@ -496,8 +495,8 @@ describe('HooksRunner', function() {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['before*'];
 
-                return test_events.reduce(function(soFar, test_event) {
-                    return soFar.then(function() {
+                return test_events.reduce(function (soFar, test_event) {
+                    return soFar.then(function () {
                         return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
                             if (msg) {
                                 expect(msg).toBe('hook ' + test_event + ' is disabled.');
@@ -517,8 +516,8 @@ describe('HooksRunner', function() {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['.'];
 
-                return test_events.reduce(function(soFar, test_event) {
-                    return soFar.then(function() {
+                return test_events.reduce(function (soFar, test_event) {
+                    return soFar.then(function () {
                         return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
                             expect(msg).toBeDefined();
                             expect(msg).toBe('hook ' + test_event + ' is disabled.');
@@ -532,7 +531,7 @@ describe('HooksRunner', function() {
             });
         });
 
-        describe('module-level hooks (event handlers)', function() {
+        describe('module-level hooks (event handlers)', function () {
             var handler = jasmine.createSpy().and.returnValue(Q());
             var test_event = 'before_build';
 
@@ -541,7 +540,7 @@ describe('HooksRunner', function() {
                 handler.calls.reset();
             });
 
-            it('Test 016 : should fire handlers using cordova.on', function(done) {
+            it('Test 016 : should fire handlers using cordova.on', function (done) {
                 cordova.on(test_event, handler);
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(handler).toHaveBeenCalled();
@@ -560,7 +559,7 @@ describe('HooksRunner', function() {
                 }).fin(done);
             });
 
-            it('Test 018 : should be able to stop listening to events using cordova.off', function(done) {
+            it('Test 018 : should be able to stop listening to events using cordova.off', function (done) {
                 cordova.on(test_event, handler);
                 cordova.off(test_event, handler);
                 hooksRunner.fire(test_event, hookOptions).then(function () {
@@ -571,20 +570,20 @@ describe('HooksRunner', function() {
                 }).fin(done);
             });
 
-            it('Test 019 : should execute event listeners serially', function(done) {
+            it('Test 019 : should execute event listeners serially', function (done) {
                 var h1_fired = false;
                 var h2_fired;
-                var h1 = function() {
+                var h1 = function () {
                     expect(h2_fired).toBe(false);
                     // Delay 100 ms here to check that h2 is not executed until after
                     // the promise returned by h1 is resolved.
-                    var q = Q.delay(100).then(function() {
+                    var q = Q.delay(100).then(function () {
                         h1_fired = true;
                     });
                     return q;
                 };
                 h2_fired = false;
-                var h2 = function() {
+                var h2 = function () {
                     h2_fired = true;
                     expect(h1_fired).toBe(true);
                     return Q();
@@ -593,18 +592,18 @@ describe('HooksRunner', function() {
                 cordova.on(test_event, h1);
                 cordova.on(test_event, h2);
 
-                return hooksRunner.fire(test_event, hookOptions).then(function() {
+                return hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(h1_fired).toBe(true);
                     expect(h2_fired).toBe(true);
-                }).fail(function(err) {
+                }).fail(function (err) {
                     expect(err).toBeUndefined();
-                }).then(function() {
+                }).then(function () {
                     cordova.removeAllListeners(test_event);
                     done();
                 });
             });
 
-            it('Test 020 : should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function(done) {
+            it('Test 020 : should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function (done) {
                 var h1_fired = false;
                 var h2_fired;
                 var h1 = function () {
@@ -621,14 +620,14 @@ describe('HooksRunner', function() {
 
                 cordova.on(test_event, h1);
                 cordova.on(test_event, h2);
-                hooksRunner.fire(test_event, hookOptions).then(function() {
+                hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(h1_fired).toBe(true);
                     expect(h2_fired).toBe(true);
                     done();
                 });
             });
 
-            it('Test 021 : should pass data object that fire calls into async handlers', function(done) {
+            it('Test 021 : should pass data object that fire calls into async handlers', function (done) {
                 var async = function (opts) {
                     expect(opts).toEqual(hookOptions);
                     return Q();
@@ -639,7 +638,7 @@ describe('HooksRunner', function() {
                 });
             });
 
-            it('Test 022 : should pass data object that fire calls into sync handlers', function(done) {
+            it('Test 022 : should pass data object that fire calls into sync handlers', function (done) {
                 var async = function (opts) {
                     expect(opts).toEqual(hookOptions);
                 };
@@ -647,7 +646,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire(test_event, hookOptions).fin(done);
             });
 
-            it('Test 023 : should error if any script exits with non-zero code', function(done) {
+            it('Test 023 : should error if any script exits with non-zero code', function (done) {
                 hooksRunner.fire('fail', hookOptions).then(function () {
                     expect('the call').toBe('a failure');
                 }, function (err) {
@@ -656,7 +655,7 @@ describe('HooksRunner', function() {
             });
         });
 
-        it('Test 024 :should not error if the hook is unrecognized', function(done) {
+        it('Test 024 :should not error if the hook is unrecognized', function (done) {
             hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions).fail(function (err) {
                 expect('Call with unrecognized hook ').toBe('successful.\n' + err);
             }).fin(done);

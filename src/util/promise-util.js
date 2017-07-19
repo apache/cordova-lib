@@ -23,10 +23,10 @@ var Q = require('q');
 // will sequentially execute func(args[i]).
 // Returns a promise.
 //
-function Q_chainmap(args, func) {
-    return Q.when().then(function(inValue) {
-        return args.reduce(function(soFar, arg) {
-            return soFar.then(function(val) {
+function Q_chainmap (args, func) {
+    return Q.when().then(function (inValue) {
+        return args.reduce(function (soFar, arg) {
+            return soFar.then(function (val) {
                 return func(arg, val);
             });
         }, Q(inValue));
@@ -35,12 +35,12 @@ function Q_chainmap(args, func) {
 
 // Behaves similar to Q_chainmap but gracefully handles failures.
 // When a promise in the chain is rejected, it will call the failureCallback and then continue the processing, instead of stopping
-function Q_chainmap_graceful(args, func, failureCallback) {
-    return Q.when().then(function(inValue) {
-        return args.reduce(function(soFar, arg) {
-            return soFar.then(function(val) {
+function Q_chainmap_graceful (args, func, failureCallback) {
+    return Q.when().then(function (inValue) {
+        return args.reduce(function (soFar, arg) {
+            return soFar.then(function (val) {
                 return func(arg, val);
-            }).fail(function(err) {
+            }).fail(function (err) {
                 if (failureCallback) {
                     failureCallback(err);
                 }

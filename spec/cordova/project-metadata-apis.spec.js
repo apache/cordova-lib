@@ -17,8 +17,8 @@
  under the License.
  */
 
-var cordova = require('../../src/cordova/cordova'),
-    path = require('path');
+var cordova = require('../../src/cordova/cordova');
+var path = require('path');
 
 describe('retrieval of project metadata', function () {
     var projectRoot = path.resolve(__dirname, 'Projects/ProjectMetadata');
@@ -98,7 +98,7 @@ describe('retrieval of project metadata', function () {
     });
 });
 
-function findPlatform(platforms, platformName) {
+function findPlatform (platforms, platformName) {
     for (var i = 0; i < platforms.length; i++) {
         if (platforms[i].name === platformName) {
             return platforms[i];
@@ -107,7 +107,7 @@ function findPlatform(platforms, platformName) {
     return null;
 }
 
-function findPlugin(plugins, pluginId) {
+function findPlugin (plugins, pluginId) {
     for (var i = 0; i < plugins.length; i++) {
         if (plugins[i].name === pluginId) {
             return plugins[i];

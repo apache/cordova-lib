@@ -24,33 +24,33 @@ module.exports.addDeprecatedInformationToPlatforms = addDeprecatedInformationToP
 
 function list (hooksRunner, projectRoot, opts) {
     return hooksRunner.fire('before_platform_ls', opts)
-    .then(function () {
-        return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
-    }).then(function (platformMap) {
-        var platformsText = [];
-        for (var plat in platformMap) {
-            platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
-        }
+        .then(function () {
+            return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
+        }).then(function (platformMap) {
+            var platformsText = [];
+            for (var plat in platformMap) {
+                platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
+            }
 
-        platformsText = addDeprecatedInformationToPlatforms(platformsText);
-        var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
-        var available = Object.keys(platforms).filter(cordova_util.hostSupports);
+            platformsText = addDeprecatedInformationToPlatforms(platformsText);
+            var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
+            var available = Object.keys(platforms).filter(cordova_util.hostSupports);
 
-        available = available.filter(function (p) {
-            return !platformMap[p]; // Only those not already installed.
+            available = available.filter(function (p) {
+                return !platformMap[p]; // Only those not already installed.
+            });
+
+            available = available.map(function (p) {
+                return p.concat(' ', platforms[p].version);
+            });
+
+            available = addDeprecatedInformationToPlatforms(available);
+            results += 'Available platforms: \n  ' + available.sort().join('\n  ');
+
+            events.emit('results', results);
+        }).then(function () {
+            return hooksRunner.fire('after_platform_ls', opts);
         });
-
-        available = available.map(function (p) {
-            return p.concat(' ', platforms[p].version);
-        });
-
-        available = addDeprecatedInformationToPlatforms(available);
-        results += 'Available platforms: \n  ' + available.sort().join('\n  ');
-
-        events.emit('results', results);
-    }).then(function () {
-        return hooksRunner.fire('after_platform_ls', opts);
-    });
 }
 
 function addDeprecatedInformationToPlatforms (platformsList) {

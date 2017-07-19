@@ -16,62 +16,66 @@
     specific language governing permissions and limitations
     under the License.
 */
-var create = require('../../src/plugman/create'),
-    Q = require('q'),
-    fs = require('fs'),
-    shell = require('shelljs'),
-    plugman = require('../../src/plugman/plugman');
+var create = require('../../src/plugman/create');
+var Q = require('q');
+var fs = require('fs');
+var shell = require('shelljs');
+var plugman = require('../../src/plugman/plugman');
 
-describe( 'create', function() {
-    it( 'Test 001 : should call create', function() {
-        var sCreate = spyOn( plugman, 'create' ).and.returnValue(Q());
+describe('create', function () {
+    it('Test 001 : should call create', function () {
+        var sCreate = spyOn(plugman, 'create').and.returnValue(Q());
         plugman.create();
         expect(sCreate).toHaveBeenCalled();
     });
 });
 
-describe( 'create plugin', function() {
-    var done = false,
-        existsSync,
-        mkdir,
-        writeFileSync;
+describe('create plugin', function () {
+    /* eslint-disable no-unused-vars */
+    var done = false;
+    var existsSync;
+    var mkdir;
+    var writeFileSync;
+    /* eslint-enable no-unused-vars */
 
-    beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
-        mkdir = spyOn( shell, 'mkdir' ).and.returnValue( true );
-        writeFileSync = spyOn( fs, 'writeFileSync' );
+    beforeEach(function () {
+        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
+        mkdir = spyOn(shell, 'mkdir').and.returnValue(true);
+        writeFileSync = spyOn(fs, 'writeFileSync');
         done = false;
     });
 
-    it( 'Test 002 : should be successful', function(done) {
+    it('Test 002 : should be successful', function (done) {
         create('name', 'org.plugin.id', '0.0.0', '.', [])
-        .then(function(result) {
-            expect( writeFileSync.calls.count() ).toEqual( 2 );
-            done();
-        }).fail(function err(errMsg) {
-            expect(errMsg).toBeUndefined();
-            done();
-        });
+            .then(function (result) {
+                expect(writeFileSync.calls.count()).toEqual(2);
+                done();
+            }).fail(function err (errMsg) {
+                expect(errMsg).toBeUndefined();
+                done();
+            });
     }, 6000);
 });
 
-describe( 'create plugin in existing plugin', function() {
-    var done = false,
-        existsSync;
+describe('create plugin in existing plugin', function () {
+    /* eslint-disable no-unused-vars */
+    var done = false;
+    var existsSync;
+    /* eslint-enable no-unused-vars */
 
-    beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( true );
-        done = false;
+    beforeEach(function () {
+        existsSync = spyOn(fs, 'existsSync').and.returnValue(true); // eslint-disable-line  no-unused-vars
+        done = false; // eslint-disable-line  no-unused-vars
     });
 
-    it( 'Test 003 : should fail due to an existing plugin.xml', function(done) {
+    it('Test 003 : should fail due to an existing plugin.xml', function (done) {
         create()
-        .then(function(result) {
-            expect(false).toBe(true);
-            done();
-        }).fail(function err(errMsg) {
-            expect(errMsg.toString()).toContain( 'plugin.xml already exists. Are you already in a plugin?'  );
-            done();
-        });
+            .then(function (result) {
+                expect(false).toBe(true);
+                done();
+            }).fail(function err (errMsg) {
+                expect(errMsg.toString()).toContain('plugin.xml already exists. Are you already in a plugin?');
+                done();
+            });
     }, 6000);
 });

@@ -22,9 +22,6 @@
 var PLATFORM_VERSION_BUILD_LABEL = '6.2.1';
 // file: src/scripts/require.js
 
-/*jshint -W079 */
-/*jshint -W020 */
-
 var require,
     define;
 

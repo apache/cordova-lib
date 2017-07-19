@@ -17,37 +17,37 @@
     under the License.
 */
 
-var Q = require('q'),
-    fs = require('fs'),
-    path = require('path'),
-    PluginInfo = require('cordova-common').PluginInfo,
-    events = require('cordova-common').events,
-    init = require('init-package-json');
+var Q = require('q');
+var fs = require('fs');
+var path = require('path');
+var PluginInfo = require('cordova-common').PluginInfo;
+var events = require('cordova-common').events;
+var init = require('init-package-json');
 
-//returns a promise
-function createPackageJson(plugin_path) {
+// returns a promise
+function createPackageJson (plugin_path) {
     var pluginInfo = new PluginInfo(plugin_path);
 
     var defaults = {
-        id:pluginInfo.id,
-        version:pluginInfo.version,
-        description:pluginInfo.description,
-        license:pluginInfo.license,
-        keywords:pluginInfo.getKeywordsAndPlatforms(),
-        repository:pluginInfo.repo,
-        bugs:pluginInfo.issue,
-        engines:pluginInfo.getEngines(),
+        id: pluginInfo.id,
+        version: pluginInfo.version,
+        description: pluginInfo.description,
+        license: pluginInfo.license,
+        keywords: pluginInfo.getKeywordsAndPlatforms(),
+        repository: pluginInfo.repo,
+        bugs: pluginInfo.issue,
+        engines: pluginInfo.getEngines(),
         platforms: pluginInfo.getPlatformsArray()
     };
 
-    fs.writeFile(path.join(__dirname,'defaults.json'), JSON.stringify(defaults), 'utf8', function (err) {
+    fs.writeFile(path.join(__dirname, 'defaults.json'), JSON.stringify(defaults), 'utf8', function (err) {
         if (err) throw err;
         events.emit('verbose', 'defaults.json created from plugin.xml');
         var initFile = require.resolve('./init-defaults');
         var dir = process.cwd();
 
         init(dir, initFile, {}, function (err, data) {
-            if(err) throw err;
+            if (err) throw err;
             events.emit('verbose', 'Package.json successfully created');
         });
     });

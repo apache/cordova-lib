@@ -24,18 +24,18 @@ module.exports = search;
 
 function search (hooksRunner, opts) {
     return hooksRunner.fire('before_plugin_search', opts)
-    .then(function () {
-        var link = 'http://cordova.apache.org/plugins/';
-        if (opts.plugins.length > 0) {
-            var keywords = (opts.plugins).join(' ');
-            var query = link + '?q=' + encodeURI(keywords);
-            opener(query);
-        } else {
-            opener(link);
-        }
+        .then(function () {
+            var link = 'http://cordova.apache.org/plugins/';
+            if (opts.plugins.length > 0) {
+                var keywords = (opts.plugins).join(' ');
+                var query = link + '?q=' + encodeURI(keywords);
+                opener(query);
+            } else {
+                opener(link);
+            }
 
-        return Q.resolve();
-    }).then(function () {
-        return hooksRunner.fire('after_plugin_search', opts);
-    });
+            return Q.resolve();
+        }).then(function () {
+            return hooksRunner.fire('after_plugin_search', opts);
+        });
 }

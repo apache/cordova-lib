@@ -17,23 +17,22 @@
     under the License.
 */
 
-/* jshint sub:true */
-var fs            = require('fs'),
-    path          = require('path'),
-    events        = require('cordova-common').events,
-    CordovaError  = require('cordova-common').CordovaError,
-    shell         = require('shelljs'),
-    url           = require('url'),
-    nopt          = require('nopt'),
-    Q             = require('q'),
-    semver        = require('semver'),
-    aliasMethod   = require('../util/alias'),
-    platforms     = require('../platforms/platforms');
+var fs = require('fs');
+var path = require('path');
+var events = require('cordova-common').events;
+var CordovaError = require('cordova-common').CordovaError;
+var shell = require('shelljs');
+var url = require('url');
+var nopt = require('nopt');
+var Q = require('q');
+var semver = require('semver');
+var aliasMethod = require('../util/alias');
+var platforms = require('../platforms/platforms');
 
 // Global configuration paths
 var global_config_path = process.env['CORDOVA_HOME'];
 if (!global_config_path) {
-    var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
+    var HOME = process.env[(process.platform.slice(0, 3) === 'win') ? 'USERPROFILE' : 'HOME'];
     global_config_path = path.join(HOME, '.cordova');
 }
 
@@ -41,17 +40,16 @@ var origCwd = null;
 
 var lib_path = path.join(global_config_path, 'lib');
 
-
 exports.binname = 'cordova';
 exports.globalConfig = global_config_path;
 
 // defer defining libDirectory on exports so we don't create it if
 // someone simply requires this module
-Object.defineProperty(exports,'libDirectory', {
-        configurable: true,
-        get: function () {
-            shell.mkdir('-p', lib_path);
-            exports.libDirectory = lib_path;
+Object.defineProperty(exports, 'libDirectory', {
+    configurable: true,
+    get: function () {
+        shell.mkdir('-p', lib_path);
+        exports.libDirectory = lib_path;
         return lib_path;
     }
 });
@@ -86,38 +84,35 @@ exports.hostSupports = hostSupports;
 exports.removePlatformPluginsJson = removePlatformPluginsJson;
 
 // Remove <platform>.json file from plugins directory.
-function removePlatformPluginsJson(projectRoot, target) {
+function removePlatformPluginsJson (projectRoot, target) {
     var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
     shell.rm('-f', plugins_json);
 }
 
 // Used to prevent attempts of installing platforms that are not supported on
 // the host OS. E.g. ios on linux.
-function hostSupports(platform) {
-    var p = platforms[platform] || {},
-        hostos = p.hostos || null;
-    if (!hostos)
-        return true;
-    if (hostos.indexOf('*') >= 0)
-        return true;
-    if (hostos.indexOf(process.platform) >= 0)
-        return true;
+function hostSupports (platform) {
+    var p = platforms[platform] || {};
+    var hostos = p.hostos || null;
+    if (!hostos) { return true; }
+    if (hostos.indexOf('*') >= 0) { return true; }
+    if (hostos.indexOf(process.platform) >= 0) { return true; }
     return false;
 }
 
-function requireNoCache(pkgJsonPath) {
+function requireNoCache (pkgJsonPath) {
     delete require.cache[require.resolve(pkgJsonPath)];
     var returnVal = require(pkgJsonPath);
     delete require.cache[require.resolve(pkgJsonPath)];
     return returnVal;
 }
 
-function isUrl(value) {
+function isUrl (value) {
     var u = value && url.parse(value);
     return !!(u && u.protocol && u.protocol.length > 2); // Account for windows c:/ paths
 }
 
-function isRootDir(dir) {
+function isRootDir (dir) {
     if (fs.existsSync(path.join(dir, 'www'))) {
         if (fs.existsSync(path.join(dir, 'config.xml'))) {
             // For sure is.
@@ -138,12 +133,12 @@ function isRootDir(dir) {
 // Runs up the directory chain looking for a .cordova directory.
 // IF it is found we are in a Cordova project.
 // Omit argument to use CWD.
-function isCordova(dir) {
+function isCordova (dir) {
     if (!dir) {
         // Prefer PWD over cwd so that symlinked dirs within your PWD work correctly (CB-5687).
         var pwd = process.env.PWD;
         var cwd = process.cwd();
-        if (pwd && pwd != cwd && pwd != 'undefined') {
+        if (pwd && pwd !== cwd && pwd !== 'undefined') {
             return this.isCordova(pwd) || this.isCordova(cwd);
         }
         return this.isCordova(cwd);
@@ -159,7 +154,7 @@ function isCordova(dir) {
         }
         var parentDir = path.normalize(path.join(dir, '..'));
         // Detect fs root.
-        if (parentDir == dir) {
+        if (parentDir === dir) {
             return bestReturnValueSoFar;
         }
         dir = parentDir;
@@ -169,7 +164,7 @@ function isCordova(dir) {
 }
 
 // Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
-function cdProjectRoot() {
+function cdProjectRoot () {
     var projectRoot = convertToRealPathSafe(this.isCordova());
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
@@ -182,18 +177,18 @@ function cdProjectRoot() {
     return projectRoot;
 }
 
-function getOrigWorkingDirectory() {
+function getOrigWorkingDirectory () {
     return origCwd || process.env.PWD || process.cwd();
 }
 
-function _resetOrigCwd() {
+function _resetOrigCwd () {
     origCwd = null;
 }
 
 // Fixes up relative paths that are no longer valid due to chdir() within cdProjectRoot().
-function fixRelativePath(value, /* optional */ cwd) {
+function fixRelativePath (value, /* optional */ cwd) {
     // Don't touch absolute paths.
-    if (value[1] == ':' || value[0] == path.sep) {
+    if (value[1] === ':' || value[0] === path.sep) {
         return value;
     }
     var newDir = cwd || process.env.PWD || process.cwd();
@@ -204,7 +199,7 @@ function fixRelativePath(value, /* optional */ cwd) {
 }
 
 // Resolve any symlinks in order to avoid relative path issues. See https://issues.apache.org/jira/browse/CB-8757
-function convertToRealPathSafe(path) {
+function convertToRealPathSafe (path) {
     if (path && fs.existsSync(path)) {
         return fs.realpathSync(path);
     }
@@ -213,72 +208,72 @@ function convertToRealPathSafe(path) {
 }
 
 // Recursively deletes .svn folders from a target path
-function deleteSvnFolders(dir) {
+function deleteSvnFolders (dir) {
     var contents = fs.readdirSync(dir);
-    contents.forEach(function(entry) {
+    contents.forEach(function (entry) {
         var fullpath = path.join(dir, entry);
         if (isDirectory(fullpath)) {
-            if (entry == '.svn') {
+            if (entry === '.svn') {
                 shell.rm('-rf', fullpath);
             } else module.exports.deleteSvnFolders(fullpath);
         }
     });
 }
 
-function listPlatforms(project_dir) {
+function listPlatforms (project_dir) {
     var platforms_dir = path.join(project_dir, 'platforms');
-    if ( !fs.existsSync(platforms_dir)) {
+    if (!fs.existsSync(platforms_dir)) {
         return [];
     }
     // get subdirs (that are actually dirs, and not files)
     var subdirs = fs.readdirSync(platforms_dir)
-    .filter(function(file) {
-        return isDirectory(path.join(platforms_dir, file));
-    });
+        .filter(function (file) {
+            return isDirectory(path.join(platforms_dir, file));
+        });
     return subdirs;
 }
 
-function getInstalledPlatformsWithVersions(project_dir) {
+function getInstalledPlatformsWithVersions (project_dir) {
     var result = {};
     var platforms_on_fs = listPlatforms(project_dir);
 
-    return Q.all(platforms_on_fs.map(function(p) {
-        var superspawn    = require('cordova-common').superspawn;
+    return Q.all(platforms_on_fs.map(function (p) {
+        var superspawn = require('cordova-common').superspawn;
         return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-        .then(function(v) {
-            result[p] = v || null;
-        }, function(v) {
-            result[p] = 'broken';
-        });
-    })).then(function() {
+            .then(function (v) {
+                result[p] = v || null;
+            }, function (v) {
+                result[p] = 'broken';
+            });
+    })).then(function () {
         return result;
     });
 }
 
 // list the directories in the path, ignoring any files
-function findPlugins(pluginDir) {
+function findPlugins (pluginDir) {
     var plugins = [];
 
     if (fs.existsSync(pluginDir)) {
         plugins = fs.readdirSync(pluginDir).filter(function (fileName) {
             var pluginPath = path.join(pluginDir, fileName);
             var isPlugin = isDirectory(pluginPath) || isSymbolicLink(pluginPath);
-            return fileName != '.svn' && fileName != 'CVS' && isPlugin;
+            return fileName !== '.svn' && fileName !== 'CVS' && isPlugin;
         });
     }
 
     return plugins;
 }
 
-function appDir(projectDir) {
+function appDir (projectDir) {
     return projectDir;
 }
 
-function projectWww(projectDir) {
+function projectWww (projectDir) {
     return path.join(projectDir, 'www');
 }
 
-function projectConfig(projectDir) {
+function projectConfig (projectDir) {
     var rootPath = path.join(projectDir, 'config.xml');
     var wwwPath = path.join(projectDir, 'www', 'config.xml');
     if (fs.existsSync(rootPath)) {
@@ -314,7 +309,7 @@ function preProcessOptions (inputOptions) {
     }
     var projectPlatforms = this.listPlatforms(projectRoot);
     if (projectPlatforms.length === 0) {
-        throw new CordovaError('No platforms added to this project. Please use `'+exports.binname+' platform add <platform>`.');
+        throw new CordovaError('No platforms added to this project. Please use `' + exports.binname + ' platform add <platform>`.');
     }
     if (result.platforms.length === 0) {
         result.platforms = projectPlatforms;
@@ -341,8 +336,7 @@ function preProcessOptions (inputOptions) {
 function ensurePlatformOptionsCompatible (platformOptions) {
     var opts = platformOptions || {};
 
-    if (!Array.isArray(opts))
-        return opts;
+    if (!Array.isArray(opts)) { return opts; }
 
     events.emit('warn', 'The format of cordova.* methods "options" argument was changed in 5.4.0. ' +
         '"options.options" property now should be an object instead of an array of plain strings. Though the old format ' +
@@ -362,24 +356,24 @@ function ensurePlatformOptionsCompatible (platformOptions) {
 
     opts = nopt({}, {}, opts, 0);
     opts.argv = Object.keys(opts)
-    .filter(function (arg) {
-        return arg !== 'argv' && knownArgs.indexOf(arg) === -1;
-    }).map(function (arg) {
-        return opts[arg] === true ?
-            '--' + arg :
-            '--' + arg + '=' + opts[arg].toString();
-    });
+        .filter(function (arg) {
+            return arg !== 'argv' && knownArgs.indexOf(arg) === -1;
+        }).map(function (arg) {
+            return opts[arg] === true ?
+                '--' + arg :
+                '--' + arg + '=' + opts[arg].toString();
+        });
 
     return opts;
 }
 
 /**
  * Checks to see if the argument is a directory
- * 
+ *
  * @param {string} dir - string representing path of directory
  * @return {boolean}
  */
-function isDirectory(dir) {
+function isDirectory (dir) {
     try {
         return fs.lstatSync(dir).isDirectory();
     } catch (e) {
@@ -389,11 +383,11 @@ function isDirectory(dir) {
 
 /**
  * Checks to see if the argument is a symbolic link
- * 
+ *
  * @param {string} dir - string representing path of directory
  * @return {boolean}
  */
-function isSymbolicLink(dir) {
+function isSymbolicLink (dir) {
     try {
         return fs.lstatSync(dir).isSymbolicLink();
     } catch (e) {
@@ -407,7 +401,7 @@ function isSymbolicLink(dir) {
  * @param {string} version - semver version or range (loose allowed).
  * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
  */
-function getLatestMatchingNpmVersion(module_name, version) {
+function getLatestMatchingNpmVersion (module_name, version) {
     if (!version) {
         // If no version specified, get the latest
         return getLatestNpmVersion(module_name);
@@ -436,7 +430,7 @@ function getLatestMatchingNpmVersion(module_name, version) {
  * @param {string} module_name - npm module name.
  * @returns {Promise} Promise for an array of versions.
  */
-function getAvailableNpmVersions(module_name) {
+function getAvailableNpmVersions (module_name) {
     var npm = require('npm');
     return Q.nfcall(npm.load).then(function () {
         return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
@@ -453,7 +447,7 @@ function getAvailableNpmVersions(module_name) {
  * @param {string} module_name - npm module name.
  * @returns {Promise} Promise for an array of versions.
  */
-function getLatestNpmVersion(module_name) {
+function getLatestNpmVersion (module_name) {
     var npm = require('npm');
     return Q.nfcall(npm.load).then(function () {
         return Q.ninvoke(npm.commands, 'view', [module_name, 'version'], /* silent = */ true).then(function (result) {
@@ -466,7 +460,7 @@ function getLatestNpmVersion(module_name) {
 }
 
 // Display deprecation message if platform is api compatible
-function checkPlatformApiCompatible(platform) {
+function checkPlatformApiCompatible (platform) {
     if (platforms[platform] && platforms[platform].apiCompatibleSince) {
         events.emit('warn', ' Using this version of Cordova with older version of cordova-' + platform +
             ' is deprecated. Upgrade to cordova-' + platform + '@' +
@@ -474,7 +468,7 @@ function checkPlatformApiCompatible(platform) {
     }
 }
 
-//libdir should be path to API.js
+// libdir should be path to API.js
 function getPlatformApiFunction (libDir, platform) {
     var PlatformApi;
     try {
@@ -507,9 +501,8 @@ function getPlatformApiFunction (libDir, platform) {
                 '". Using polyfill instead.');
             PlatformApi = require('../platforms/PlatformApiPoly.js');
         } else if (!PlatformApi) {
-            throw new Error('Your ' + platform + ' platform does not have Api.js');
+            throw new Error('Your ' + platform + ' platform does not have Api.js'); // eslint-disable-line no-unsafe-finally
         }
     }
     return PlatformApi;
 }
-

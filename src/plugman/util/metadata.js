@@ -22,7 +22,7 @@ var path = require('path');
 
 var cachedJson = null;
 
-function getJson(pluginsDir) {
+function getJson (pluginsDir) {
     if (!cachedJson) {
         var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
         if (fs.existsSync(fetchJsonPath)) {
@@ -34,7 +34,7 @@ function getJson(pluginsDir) {
     return cachedJson;
 }
 
-exports.get_fetch_metadata = function(plugin_dir) {
+exports.get_fetch_metadata = function (plugin_dir) {
     var pluginsDir = path.dirname(plugin_dir);
     var pluginId = path.basename(plugin_dir);
 
@@ -52,17 +52,16 @@ exports.get_fetch_metadata = function(plugin_dir) {
     return {};
 };
 
-exports.save_fetch_metadata = function(pluginsDir, pluginId, data) {
+exports.save_fetch_metadata = function (pluginsDir, pluginId, data) {
     var metadataJson = getJson(pluginsDir);
     metadataJson[pluginId] = data;
     var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
     fs.writeFileSync(fetchJsonPath, JSON.stringify(metadataJson, null, 2), 'utf-8');
 };
 
-exports.remove_fetch_metadata = function(pluginsDir, pluginId){
+exports.remove_fetch_metadata = function (pluginsDir, pluginId) {
     var metadataJson = getJson(pluginsDir);
     delete metadataJson[pluginId];
     var fetchJsonPath = path.join(pluginsDir, 'fetch.json');
     fs.writeFileSync(fetchJsonPath, JSON.stringify(metadataJson, null, 2), 'utf-8');
 };
-

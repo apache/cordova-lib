@@ -17,22 +17,22 @@
  under the License.
  */
 
-var path = require('path'),
-    fs = require('fs'),
-    cordovaUtil = require('../cordova/util'),
-    events = require('cordova-common').events,
-    PluginInfoProvider = require('cordova-common').PluginInfoProvider,
-    ConfigParser = require('cordova-common').ConfigParser;
+var path = require('path');
+var fs = require('fs');
+var cordovaUtil = require('../cordova/util');
+var events = require('cordova-common').events;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+var ConfigParser = require('cordova-common').ConfigParser;
 
 /**
  * Implements logic to retrieve hook script files defined in special folders and configuration
  * files: config.xml, hooks/hook_type, plugins/../plugin.xml, etc
  */
-module.exports  = {
+module.exports = {
     /**
      * Returns all script files for the hook type specified.
      */
-    getHookScripts: function(hook, opts) {
+    getHookScripts: function (hook, opts) {
         // args check
         if (!hook) {
             throw new Error('hook type is not specified');
@@ -46,7 +46,7 @@ module.exports  = {
  * Returns script files defined on application level.
  * They are stored in .cordova/hooks folders and in config.xml.
  */
-function getApplicationHookScripts(hook, opts) {
+function getApplicationHookScripts (hook, opts) {
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
@@ -59,7 +59,7 @@ function getApplicationHookScripts(hook, opts) {
 /**
  * Returns script files defined by plugin developers as part of plugin.xml.
  */
-function getPluginsHookScripts(hook, opts) {
+function getPluginsHookScripts (hook, opts) {
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
@@ -67,10 +67,10 @@ function getPluginsHookScripts(hook, opts) {
 
     // In case before_plugin_install, after_plugin_install, before_plugin_uninstall hooks we receive opts.plugin and
     // retrieve scripts exclusive for this plugin.
-    if(opts.plugin) {
+    if (opts.plugin) {
         events.emit('verbose', 'Finding scripts for "' + hook + '" hook from plugin ' + opts.plugin.id + ' on ' + opts.plugin.platform + ' platform only.');
         // if plugin hook is not run for specific platform then use all available platforms
-        return getPluginScriptFiles(opts.plugin, hook, opts.plugin.platform  ? [opts.plugin.platform] : opts.cordova.platforms);
+        return getPluginScriptFiles(opts.plugin, hook, opts.plugin.platform ? [opts.plugin.platform] : opts.cordova.platforms);
     }
 
     return getAllPluginsHookScriptFiles(hook, opts);
@@ -79,19 +79,19 @@ function getPluginsHookScripts(hook, opts) {
 /**
  * Gets application level hooks from the directrory specified.
  */
-function getApplicationHookScriptsFromDir(dir) {
+function getApplicationHookScriptsFromDir (dir) {
     if (!(fs.existsSync(dir))) {
         return [];
     }
 
-    var compareNumbers = function(a, b) {
+    var compareNumbers = function (a, b) {
         // TODO SG looks very complex, do we really need this?
-        return isNaN (parseInt(a, 10)) ? a.toLowerCase().localeCompare(b.toLowerCase ? b.toLowerCase(): b)
+        return isNaN(parseInt(a, 10)) ? a.toLowerCase().localeCompare(b.toLowerCase ? b.toLowerCase() : b)
             : parseInt(a, 10) > parseInt(b, 10) ? 1 : parseInt(a, 10) < parseInt(b, 10) ? -1 : 0;
     };
 
-    var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function(s) {
-        return s[0] != '.';
+    var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function (s) {
+        return s[0] !== '.';
     });
     return scripts.map(function (scriptPath) {
         // for old style hook files we don't use module loader for backward compatibility
@@ -102,11 +102,11 @@ function getApplicationHookScriptsFromDir(dir) {
 /**
  * Gets all scripts defined in config.xml with the specified type and platforms.
  */
-function getScriptsFromConfigXml(hook, opts) {
+function getScriptsFromConfigXml (hook, opts) {
     var configPath = cordovaUtil.projectConfig(opts.projectRoot);
     var configXml = new ConfigParser(configPath);
 
-    return configXml.getHookScripts(hook, opts.cordova.platforms).map(function(scriptElement) {
+    return configXml.getHookScripts(hook, opts.cordova.platforms).map(function (scriptElement) {
         return {
             path: scriptElement.attrib.src,
             fullPath: path.join(opts.projectRoot, scriptElement.attrib.src)
@@ -117,10 +117,10 @@ function getScriptsFromConfigXml(hook, opts) {
 /**
  * Gets hook scripts defined by the plugin.
  */
-function getPluginScriptFiles(plugin, hook, platforms) {
+function getPluginScriptFiles (plugin, hook, platforms) {
     var scriptElements = plugin.pluginInfo.getHookScripts(hook, platforms);
 
-    return scriptElements.map(function(scriptElement) {
+    return scriptElements.map(function (scriptElement) {
         return {
             path: scriptElement.attrib.src,
             fullPath: path.join(plugin.dir, scriptElement.attrib.src),
@@ -132,13 +132,13 @@ function getPluginScriptFiles(plugin, hook, platforms) {
 /**
  * Gets hook scripts defined by all plugins.
  */
-function getAllPluginsHookScriptFiles(hook, opts) {
+function getAllPluginsHookScriptFiles (hook, opts) {
     var scripts = [];
     var currentPluginOptions;
 
     var plugins = (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins'));
 
-    plugins.forEach(function(pluginInfo) {
+    plugins.forEach(function (pluginInfo) {
         currentPluginOptions = {
             id: pluginInfo.id,
             pluginInfo: pluginInfo,

@@ -17,47 +17,45 @@
     under the License.
 */
 
+var path = require('path');
+var cordova_util = require('./util');
+var fs = require('fs');
+var Q = require('q');
+var child_process = require('child_process');
 
-var path         = require('path'),
-    cordova_util = require('./util'),
-    fs           = require('fs'),
-    Q            = require('q'),
-    child_process = require('child_process');
-
-
-function getJson(jsonFile) {
+function getJson (jsonFile) {
     return JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
 }
 
 // Retrieves the platforms and their versions from the platforms.json file
 // Returns an array of {platform: platform, version: version} ...
 // ... where version could be '3.4.0', '/path/to/platform' or 'git://...'
-function getVersions(projectRoot) {
+function getVersions (projectRoot) {
     var platformsDir = path.join(projectRoot, 'platforms');
     var platformsJsonFile = path.join(platformsDir, 'platforms.json');
 
     // If the platforms.json file doesn't exist, retrieve versions from platforms installed on the filesystem...
     // ...Note that in this case, we won't be able to know what source(folder, git-url) the platform came from, we'll just use versions
-    return getPlatVersionsFromFile(platformsJsonFile).fail(function(){
+    return getPlatVersionsFromFile(platformsJsonFile).fail(function () {
         return getPlatVersionsFromFileSystem(projectRoot);
     });
 }
 
 // Returns a promise
-function getPlatVersionsFromFile(platformsJsonFile){
+function getPlatVersionsFromFile (platformsJsonFile) {
 
     var platformData;
 
     // Handle 'file not found' exception and stay within the 'promise monad'
-    try{
+    try {
         platformData = getJson(platformsJsonFile);
-    } catch(e) {
+    } catch (e) {
         return Q.reject(e);
     }
 
     var platformVersions = [];
 
-    platformVersions = Object.keys(platformData).map(function(p){
+    platformVersions = Object.keys(platformData).map(function (p) {
         return {platform: p, version: platformData[p]};
     });
 
@@ -65,11 +63,11 @@ function getPlatVersionsFromFile(platformsJsonFile){
 }
 
 // Returns a promise
-function getPlatVersionsFromFileSystem(projectRoot){
+function getPlatVersionsFromFileSystem (projectRoot) {
     var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
-    var platformVersions = platforms_on_fs.map(function(platform){
+    var platformVersions = platforms_on_fs.map(function (platform) {
         var script = path.join(projectRoot, 'platforms', platform, 'cordova', 'version');
-        return Q.ninvoke(child_process, 'exec', script, {}).then(function(result){
+        return Q.ninvoke(child_process, 'exec', script, {}).then(function (result) {
             var version = result[0];
 
             // clean the version we get back from the script
@@ -85,22 +83,22 @@ function getPlatVersionsFromFileSystem(projectRoot){
 }
 
 // Saves platform@version into platforms.json
-function save(projectRoot, platform, version) {
+function save (projectRoot, platform, version) {
     var platformsDir = path.join(projectRoot, 'platforms');
     var platformJsonFile = path.join(platformsDir, 'platforms.json');
 
     var data = {};
-    if(fs.existsSync(platformJsonFile)){
+    if (fs.existsSync(platformJsonFile)) {
         data = getJson(platformJsonFile);
     }
     data[platform] = version;
     fs.writeFileSync(platformJsonFile, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-function remove(projectRoot, platform){
+function remove (projectRoot, platform) {
     var platformsDir = path.join(projectRoot, 'platforms');
     var platformJsonFile = path.join(platformsDir, 'platforms.json');
-    if(!fs.existsSync(platformJsonFile)){
+    if (!fs.existsSync(platformJsonFile)) {
         return;
     }
     var data = getJson(platformJsonFile);

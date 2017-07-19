@@ -17,33 +17,34 @@
     under the License.
 */
 
-var fs = require('fs'),
-    Parser = require('../../../src/cordova/metadata/parser'),
-    ParserHelper = require('../../../src/cordova/metadata/parserhelper/ParserHelper');
+var fs = require('fs');
+var Parser = require('../../../src/cordova/metadata/parser');
+var ParserHelper = require('../../../src/cordova/metadata/parserhelper/ParserHelper');
 
-describe('base parser', function() {
+describe('base parser', function () {
 
-    var exists, parser;
+    var exists; // eslint-disable-line no-unused-vars
+    var parser;
 
-    beforeEach(function() {
+    beforeEach(function () {
         exists = spyOn(fs, 'existsSync');
         parser = new Parser();
     });
 
-    describe('properties', function() {
+    describe('properties', function () {
 
-        it('should have properties named path and platform', function() {
+        it('should have properties named path and platform', function () {
             expect(parser.path).not.toBeUndefined();
             expect(parser.platform).not.toBeUndefined();
         });
 
-        it('should have a property named helper that is an instace of ParserHelper', function() {
+        it('should have a property named helper that is an instace of ParserHelper', function () {
             var descriptor = Object.getOwnPropertyDescriptor(parser, 'helper');
             expect(descriptor).not.toBeUndefined();
             expect(descriptor.value instanceof ParserHelper).toBe(true);
         });
 
-        it('should have an immutable helper property', function() {
+        it('should have an immutable helper property', function () {
             var value = 'foo';
             parser.helpers = value;
             expect(parser.helper instanceof ParserHelper).toBe(true);

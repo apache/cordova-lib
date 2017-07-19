@@ -17,17 +17,17 @@
     under the License.
 */
 
-var fs            = require('fs'),
-    path          = require('path'),
-    shell         = require('shelljs'),
-    util          = require('../util'),
-    Q             = require('q'),
-    Parser        = require('./parser'),
-    ConfigParser = require('cordova-common').ConfigParser,
-    CordovaError = require('cordova-common').CordovaError,
-    events = require('cordova-common').events;
+var fs = require('fs');
+var path = require('path');
+var shell = require('shelljs');
+var util = require('../util');
+var Q = require('q');
+var Parser = require('./parser');
+var ConfigParser = require('cordova-common').ConfigParser;
+var CordovaError = require('cordova-common').CordovaError;
+var events = require('cordova-common').events;
 
-function blackberry_parser(project) {
+function blackberry_parser (project) {
     if (!fs.existsSync(path.join(project, 'www'))) {
         throw new CordovaError('The provided path "' + project + '" is not a Cordova BlackBerry10 project.');
     }
@@ -44,18 +44,18 @@ require('util').inherits(blackberry_parser, Parser);
 
 module.exports = blackberry_parser;
 
-blackberry_parser.prototype.update_from_config = function(config) {
-    var projectRoot = util.isCordova(this.path),
-        resDir = path.join(this.path, 'platform_www', 'res'),
-        platform_www = path.join(this.path, 'platform_www'),
-        icons,
-        splashscreens;
+blackberry_parser.prototype.update_from_config = function (config) {
+    var projectRoot = util.isCordova(this.path);
+    var resDir = path.join(this.path, 'platform_www', 'res');
+    var platform_www = path.join(this.path, 'platform_www');
+    var icons;
+    var splashscreens;
 
-    var copyResources = function(resList) {
+    var copyResources = function (resList) {
         for (var i = 0; i < resList.length; i++) {
-                var src = path.join(projectRoot, resList[i].src),
-                dest = path.join(platform_www, resList[i].src),
-                destFolder = path.dirname(dest);
+            var src = path.join(projectRoot, resList[i].src);
+            var dest = path.join(platform_www, resList[i].src);
+            var destFolder = path.dirname(dest);
 
             if (!fs.existsSync(destFolder)) {
                 shell.mkdir('-p', destFolder); // make sure target dir exists
@@ -84,12 +84,12 @@ blackberry_parser.prototype.update_from_config = function(config) {
 };
 
 // Returns a promise.
-blackberry_parser.prototype.update_project = function(cfg) {
+blackberry_parser.prototype.update_project = function (cfg) {
     var self = this;
 
     try {
         self.update_from_config(cfg);
-    } catch(e) {
+    } catch (e) {
         return Q.reject(e);
     }
     self.update_overrides();
@@ -98,27 +98,27 @@ blackberry_parser.prototype.update_project = function(cfg) {
 };
 
 // Returns the platform-specific www directory.
-blackberry_parser.prototype.www_dir = function() {
+blackberry_parser.prototype.www_dir = function () {
     return path.join(this.path, 'www');
 };
 
-blackberry_parser.prototype.config_xml = function(){
+blackberry_parser.prototype.config_xml = function () {
     return this.config_path;
 };
 
 // Used for creating platform_www in projects created by older versions.
-blackberry_parser.prototype.cordovajs_path = function(libDir) {
+blackberry_parser.prototype.cordovajs_path = function (libDir) {
     var jsPath = path.join(libDir, 'javascript', 'cordova.blackberry10.js');
     return path.resolve(jsPath);
 };
 
-blackberry_parser.prototype.cordovajs_src_path = function(libDir) {
+blackberry_parser.prototype.cordovajs_src_path = function (libDir) {
     var jsPath = path.join(libDir, 'cordova-js-src');
     return path.resolve(jsPath);
 };
 
 // Replace the www dir with contents of platform_www and app www.
-blackberry_parser.prototype.update_www = function() {
+blackberry_parser.prototype.update_www = function () {
     var projectRoot = util.isCordova(this.path);
     var app_www = util.projectWww(projectRoot);
     var platform_www = path.join(this.path, 'platform_www');
@@ -131,12 +131,12 @@ blackberry_parser.prototype.update_www = function() {
     shell.cp('-rf', path.join(app_www, '*'), this.www_dir());
     // Copy over stock platform www assets (cordova.js)
     shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
-    //Re-Write config.xml
+    // Re-Write config.xml
     platform_cfg_backup.write();
 };
 
 // update the overrides folder into the www folder
-blackberry_parser.prototype.update_overrides = function() {
+blackberry_parser.prototype.update_overrides = function () {
     var projectRoot = util.isCordova(this.path);
     var merges_path = path.join(util.appDir(projectRoot), 'merges', 'blackberry10');
     if (fs.existsSync(merges_path)) {

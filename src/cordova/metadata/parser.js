@@ -17,8 +17,6 @@
     under the License.
 */
 
-/* jshint sub:true */
-
 'use strict';
 
 var ParserHelper = require('./parserhelper/ParserHelper');

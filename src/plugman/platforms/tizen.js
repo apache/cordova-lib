@@ -17,18 +17,16 @@
     under the License.
 */
 
-/* jshint laxcomma:true, sub:true */
-
-var path = require('path')
-    , fs = require('fs')
-    , events = require('cordova-common').events
-    , xml_helpers = require('cordova-common').xmlHelpers;
+var path = require('path');
+var fs = require('fs');
+var events = require('cordova-common').events;
+var xml_helpers = require('cordova-common').xmlHelpers;
 
 module.exports = {
-    www_dir: function(project_dir) {
+    www_dir: function (project_dir) {
         return path.join(project_dir, 'www');
     },
-    package_name:function(project_dir) {
+    package_name: function (project_dir) {
         // preferred location if cordova >= 3.4
         var preferred_path = path.join(project_dir, 'config.xml');
         var config_path;
@@ -38,7 +36,7 @@ module.exports = {
             if (!fs.existsSync(old_config_path)) {
                 // output newer location and fail reading
                 config_path = preferred_path;
-                events.emit('verbose', 'unable to find '+config_path);
+                events.emit('verbose', 'unable to find ' + config_path);
             } else {
                 config_path = old_config_path;
             }
@@ -48,24 +46,24 @@ module.exports = {
         var widget_doc = xml_helpers.parseElementtreeSync(config_path);
         return widget_doc._root.attrib['id'];
     },
-    'source-file':{
-        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(obj, project_dir, plugin_id, options) {}
+    'source-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function (obj, project_dir, plugin_id, options) {}
     },
     'header-file': {
-        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(obj, project_dir, plugin_id, options) {}
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function (obj, project_dir, plugin_id, options) {}
     },
-    'resource-file':{
-        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(obj, project_dir, plugin_id, options) {}
+    'resource-file': {
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function (obj, project_dir, plugin_id, options) {}
     },
     'framework': {
-        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(obj, project_dir, plugin_id, options) {}
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function (obj, project_dir, plugin_id, options) {}
     },
     'lib-file': {
-        install: function(obj, plugin_dir, project_dir, plugin_id, options) {},
-        uninstall: function(obj, project_dir, plugin_id, options) {}
+        install: function (obj, plugin_dir, project_dir, plugin_id, options) {},
+        uninstall: function (obj, project_dir, plugin_id, options) {}
     }
 };
