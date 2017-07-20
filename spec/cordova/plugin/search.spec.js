@@ -44,7 +44,34 @@ describe('cordova/plugin/search', function () {
             console.error(e);
         }).done(done);
     });
-    it('should open a link to cordova.apache.org/plugins if no plugins are provided as parameter');
-    it('should open a link to cordova.apache.org/plugins, providing the plugins passed in as a query-string parameter');
-    it('should fire the after_plugin_search hook');
+
+    it('should open a link to cordova.apache.org/plugins if no plugins are provided as parameter', function (done) {
+        var opts = {important: 'options', plugins: []};
+        search(hook_mock, opts).then(function () {
+            expect(opener_mock).toHaveBeenCalled();
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+
+    it('should open a link to cordova.apache.org/plugins, providing the plugins passed in as a query-string parameter', function (done) {
+        var opts = {important: 'options', plugins: ['cordova-plugin-camera', 'cordova-plugin-splashscreen']};
+        search(hook_mock, opts).then(function () {
+            expect(opener_mock).toHaveBeenCalled();
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+
+    it('should fire the after_plugin_search hook', function (done) {
+        var opts = {important: 'options', plugins: []};
+        search(hook_mock, opts).then(function () {
+            expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_search', opts);
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
 });
