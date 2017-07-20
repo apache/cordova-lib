@@ -636,7 +636,7 @@ describe('HooksRunner', function () {
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     done();
                 });
-            });
+            }, 60000);
 
             it('Test 022 : should pass data object that fire calls into sync handlers', function (done) {
                 var async = function (opts) {
