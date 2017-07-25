@@ -19,11 +19,11 @@
 
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
-var plugin = require('../src/cordova/plugin/add'),
-    helpers = require('../spec/helpers'),
-    path = require('path'),
-    events = require('cordova-common').events,
-    shell = require('shelljs');
+var plugin = require('../src/cordova/plugin/add');
+var helpers = require('../spec/helpers');
+var path = require('path');
+var events = require('cordova-common').events;
+var shell = require('shelljs');
 
 var testPluginVersions = [
     '0.0.2',
@@ -68,11 +68,11 @@ function testEngineWithProject (done, testEngine, testResult) {
             'engines': { 'cordovaDependencies': testEngine },
             'versions': testPluginVersions
         }, cordovaVersion)
-    .then(function (toFetch) {
-        expect(toFetch).toBe(testResult);
-    })
-    .fail(getVersionErrorCallback)
-    .fin(done);
+        .then(function (toFetch) {
+            expect(toFetch).toBe(testResult);
+        })
+        .fail(getVersionErrorCallback)
+        .fin(done);
 }
 
 // Checks the warnings that were printed by the CLI to ensure that the code is
@@ -378,10 +378,10 @@ describe('plugin fetching version selection', function () {
             name: 'test-plugin',
             versions: testPluginVersions
         }, cordovaVersion)
-        .then(function (toFetch) {
-            expect(toFetch).toBe(null);
-        })
-        .fail(getVersionErrorCallback).fin(done);
+            .then(function (toFetch) {
+                expect(toFetch).toBe(null);
+            })
+            .fail(getVersionErrorCallback).fin(done);
     });
 
     it('Test 016 : should not fail if there is no cordovaDependencies in the engines', function (done) {
@@ -396,10 +396,10 @@ describe('plugin fetching version selection', function () {
                 'npm': '~2.0.0'
             }
         }, cordovaVersion)
-        .then(function (toFetch) {
-            expect(toFetch).toBe(null);
-        })
-        .fail(getVersionErrorCallback).fin(after);
+            .then(function (toFetch) {
+                expect(toFetch).toBe(null);
+            })
+            .fail(getVersionErrorCallback).fin(after);
 
     });
 
@@ -434,9 +434,9 @@ describe('plugin fetching version selection', function () {
     it('Test 019 : should ignore badly typed constraint entries', function (done) {
         var testEngine = {
             '0.0.2': { 'cordova': 1 },
-            '0.7.0': { 'cordova': {}},
-            '1.0.0': { 'cordova': undefined},
-            '1.1.3': { 8: '5.0.0'},
+            '0.7.0': { 'cordova': {} },
+            '1.0.0': { 'cordova': undefined },
+            '1.1.3': { 8: '5.0.0' },
             '1.3.0': { 'cordova': [] },
             '1.7.1': { 'cordova': null }
         };
@@ -469,8 +469,8 @@ describe('plugin fetching version selection', function () {
             'notAVersion': { 'cordova-android': '3.1.0' },
             '^1.1.2': { 'cordova-android': '3.1.0' },
             '<=1.3.0': { 'cordova-android': '3.1.0' },
-            '1.0.0': { 'cordova-android': '~3' },   // Good semver
-            '2.0.0': { 'cordova-android': '5.1.0' },   // Good semver
+            '1.0.0': { 'cordova-android': '~3' }, // Good semver
+            '2.0.0': { 'cordova-android': '5.1.0' }, // Good semver
             '1.0': { 'cordova-android': '3.1.0' },
             '2': { 'cordova-android': '3.1.0' }
         };

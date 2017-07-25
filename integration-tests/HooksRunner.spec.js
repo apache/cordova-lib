@@ -17,20 +17,18 @@
  under the License.
  **/
 
-/* jshint boss:true */
-
-var cordova = require('../src/cordova/cordova'),
-    HooksRunner = require('../src/hooks/HooksRunner'),
-    shell = require('shelljs'),
-    path = require('path'),
-    fs = require('fs'),
-    os = require('os'),
-    Q = require('q'),
-    child_process = require('child_process'),
-    helpers = require('../spec/helpers'),
-    PluginInfo = require('cordova-common').PluginInfo,
-    superspawn = require('cordova-common').superspawn,
-    config = require('../src/cordova/config');
+var cordova = require('../src/cordova/cordova');
+var HooksRunner = require('../src/hooks/HooksRunner');
+var shell = require('shelljs');
+var path = require('path');
+var fs = require('fs');
+var os = require('os');
+var Q = require('q');
+var child_process = require('child_process');
+var helpers = require('../spec/helpers');
+var PluginInfo = require('cordova-common').PluginInfo;
+var superspawn = require('cordova-common').superspawn;
+var config = require('../src/cordova/config');
 
 var platform = os.platform();
 var tmpDir = helpers.tmpDir('hooks_test');
@@ -85,18 +83,18 @@ describe('HooksRunner', function () {
     });
 
     afterEach(function () {
-        process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
+        process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
     });
 
     it('Test 001 : should throw if provided directory is not a cordova project', function () {
         expect(function () {
-            new HooksRunner(tmpDir);
+            new HooksRunner(tmpDir); // eslint-disable-line no-new
         }).toThrow();
     });
 
     it('Test 002 : should not throw if provided directory is a cordova project', function () {
         expect(function () {
-            new HooksRunner(project);
+            new HooksRunner(project); // eslint-disable-line no-new
         }).not.toThrow();
     });
 
@@ -179,9 +177,11 @@ describe('HooksRunner', function () {
             var orderArrOriginal = order.split(' ').slice(0);
 
             function splitNumbers (mixedString) {
-                var re = /\w+/g, match, params = [];
+                var re = /\w+/g;
+                var match;
+                var params = [];
 
-                while (match = re.exec(mixedString)) {
+                while (match = re.exec(mixedString)) { // eslint-disable-line no-cond-assign
                     params.push(match[0]);
                 }
                 return params;
@@ -664,7 +664,7 @@ describe('HooksRunner', function () {
 
     // Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
     it('Test 025 : should not fail during cleanup', function () {
-        process.chdir(path.join(__dirname, '..'));  // Non e2e tests assume CWD is repo root.
+        process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
         if (ext == 'sh') {
             shell.rm('-rf', tmpDir);
         } else { // Windows:

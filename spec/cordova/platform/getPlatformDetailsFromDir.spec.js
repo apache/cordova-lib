@@ -51,8 +51,8 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
     });
 
     it('should return a promise with platform and version', function (done) {
-        fs.existsSync.and.callFake(function(filePath) {
-            if(path.basename(filePath) === 'package.json') {
+        fs.existsSync.and.callFake(function (filePath) {
+            if (path.basename(filePath) === 'package.json') {
                 return true;
             } else {
                 return false;
@@ -60,14 +60,14 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
         });
         cordova_util.requireNoCache.and.returnValue(package_json_mock);
         platform_getPlatformDetails('dir', ['cordova-android'])
-        .then(function(result) {
-            expect(result.platform).toBe('io.cordova.hellocordova');
-            expect(result.version).toBe('1.0.0');
-            expect(Q.reject).not.toHaveBeenCalled();
-        }).fail(function (err) {
-            fail('unexpected failure handler invoked!');
-            console.error(err);
-        }).done(done);
+            .then(function (result) {
+                expect(result.platform).toBe('io.cordova.hellocordova');
+                expect(result.version).toBe('1.0.0');
+                expect(Q.reject).not.toHaveBeenCalled();
+            }).fail(function (err) {
+                fail('unexpected failure handler invoked!');
+                console.error(err);
+            }).done(done);
     });
 
     it('should remove the cordova- prefix from the platform name for known platforms', function (done) {

@@ -16,28 +16,28 @@
     specific language governing permissions and limitations
     under the License.
 */
-var rewire = require('rewire'),
-    fetch = rewire('../src/plugman/fetch'),
-    fs = require('fs'),
-    os = require('os'),
-    path = require('path'),
-    shell = require('shelljs'),
-    realrm = shell.rm,
-    TIMEOUT = 60 * 1000,
-    // xml_helpers = require('../src/util/xml-helpers'),
-    metadata = require('../src/plugman/util/metadata'),
-    temp = path.join(os.tmpdir(), 'plugman', 'fetch');
-var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins'),
-    test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser'),
-    test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin'),
-    test_plugin_searchpath = path.join(test_plugin, '..'),
-    // test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
-    // test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
-    test_plugin_id = 'org.test.plugins.childbrowser',
-    test_plugin_version = '0.6.0',
-    plugins = require('../src/plugman/util/plugins'),
-    Q = require('q'),
-    registry = require('../src/plugman/registry/registry');
+var rewire = require('rewire');
+var fetch = rewire('../src/plugman/fetch');
+var fs = require('fs');
+var os = require('os');
+var path = require('path');
+var shell = require('shelljs');
+var realrm = shell.rm;
+var TIMEOUT = 60 * 1000;
+// xml_helpers = require('../src/util/xml-helpers'),
+var metadata = require('../src/plugman/util/metadata');
+var temp = path.join(os.tmpdir(), 'plugman', 'fetch');
+var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
+var test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
+var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
+var test_plugin_searchpath = path.join(test_plugin, '..');
+// test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
+// test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
+var test_plugin_id = 'org.test.plugins.childbrowser';
+var test_plugin_version = '0.6.0';
+var plugins = require('../src/plugman/util/plugins');
+var Q = require('q');
+var registry = require('../src/plugman/registry/registry');
 
 describe('fetch', function () {
 
@@ -63,7 +63,15 @@ describe('fetch', function () {
     });
 */
     describe('local plugins', function () {
-        var rm, sym, cp, save_metadata, revertLocal, revertFetch, fetchCalls = 0;
+        /* eslint-disable no-unused-vars */
+        var rm;
+        var sym;
+        var cp;
+        var save_metadata;
+        var revertLocal;
+        var revertFetch;
+        var fetchCalls = 0;
+        /* eslint-enable no-unused-vars */
         beforeEach(function () {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
@@ -101,11 +109,11 @@ describe('fetch', function () {
 
         it('Test 004 : should fail when the expected ID doesn\'t match', function (done) {
             fetch(test_plugin, temp, { expected_id: 'wrongID' })
-            .then(function () {
-                expect('this call').toBe('fail');
-            }, function (err) {
-                expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
-            }).fin(done);
+                .then(function () {
+                    expect('this call').toBe('fail');
+                }, function (err) {
+                    expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
+                }).fin(done);
         });
 
         it('Test 005 : should succeed when the expected ID is correct', function (done) {
@@ -115,15 +123,15 @@ describe('fetch', function () {
         });
         it('Test 006 : should fail when the expected ID with version specified doesn\'t match', function (done) {
             fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion' })
-            .then(function () {
-                expect('this call').toBe('fail');
-            }, function (err) {
-                expect('' + err).toContain('to satisfy version "wrongVersion" but got');
-            }).fin(done);
+                .then(function () {
+                    expect('this call').toBe('fail');
+                }, function (err) {
+                    expect('' + err).toContain('to satisfy version "wrongVersion" but got');
+                }).fin(done);
         });
         it('Test 007 : should succeed when the plugin version specified is correct', function (done) {
             var exp_id = test_plugin_id + '@' + test_plugin_version;
-            wrapper(fetch(test_plugin, temp, { expected_id: exp_id}), done, function () {
+            wrapper(fetch(test_plugin, temp, { expected_id: exp_id }), done, function () {
                 expect(1).toBe(1);
             });
         });
@@ -135,17 +143,19 @@ describe('fetch', function () {
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function (done) {
             fetch(test_plugin, temp, {fetch: true})
-            .then(function () {
-                expect(false).toBe(true);
-            }).fail(function (err) {
-                expect(err).toBeDefined();
-                expect(err.message).toContain('needs a valid package.json');
-                done();
-            });
+                .then(function () {
+                    expect(false).toBe(true);
+                }).fail(function (err) {
+                    expect(err).toBeDefined();
+                    expect(err.message).toContain('needs a valid package.json');
+                    done();
+                });
         });
     });
     describe('git plugins', function () {
-        var clone, save_metadata, done;
+        var clone;
+        var save_metadata;
+        var done; // eslint-disable-line no-unused-vars
 
         beforeEach(function () {
             clone = spyOn(plugins, 'clonePluginGitRepo').and.returnValue(Q(test_plugin));
@@ -214,20 +224,20 @@ describe('fetch', function () {
 
         it('Test 014 : should fail when the expected ID doesn\'t match', function (done) {
             fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: 'wrongID' })
-            .then(function () {
-                expect('this call').toBe('fail');
-            }, function (err) {
-                expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
-            }).fin(done);
+                .then(function () {
+                    expect('this call').toBe('fail');
+                }, function (err) {
+                    expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
+                }).fin(done);
         });
 
         it('Test 015 : should fail when the expected ID with version specified doesn\'t match', function (done) {
             fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: 'id@wrongVersion' })
-            .then(function () {
-                expect('this call').toBe('fail');
-            }, function (err) {
-                expect('' + err).toContain('Expected plugin to have ID "id" but got');
-            }).fin(done);
+                .then(function () {
+                    expect('this call').toBe('fail');
+                }, function (err) {
+                    expect('' + err).toContain('Expected plugin to have ID "id" but got');
+                }).fin(done);
         });
 
         it('Test 016 : should succeed when the expected ID is correct', function (done) {
@@ -293,8 +303,13 @@ describe('fetch', function () {
     });
 
     describe('registry plugins', function () {
-        var pluginId = 'dummyplugin', sFetch;
-        var rm, sym, save_metadata;
+        /* eslint-disable no-unused-vars */
+        var pluginId = 'dummyplugin';
+        var sFetch;
+        var rm;
+        var sym;
+        var save_metadata;
+        /* eslint-enable no-unused-vars */
         beforeEach(function () {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
@@ -306,11 +321,11 @@ describe('fetch', function () {
         it('Test 022 : should fail when the expected ID with version specified doesn\'t match', function (done) {
             // fetch(pluginId, temp, { expected_id: test_plugin_id + '@wrongVersion' })
             fetch(pluginId, temp, { expected_id: 'wrongID' })
-            .then(function () {
-                expect('this call').toBe('fail');
-            }, function (err) {
-                expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
-            }).fin(done);
+                .then(function () {
+                    expect('this call').toBe('fail');
+                }, function (err) {
+                    expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
+                }).fin(done);
         });
 
         it('Test 023 : should succeed when the expected ID is correct', function (done) {

@@ -6,9 +6,7 @@
  to you under the Apache License, Version 2.0 (the
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
-
  http://www.apache.org/licenses/LICENSE-2.0
-
  Unless required by applicable law or agreed to in writing,
  software distributed under the License is distributed on an
  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,6 +14,7 @@
  specific language governing permissions and limitations
  under the License.
  */
+
 var cordovaUtil = require('../cordova/util');
 var events = require('cordova-common').events;
 var Q = require('q');
@@ -142,7 +141,7 @@ function runScript (script, context) {
     if (typeof script.useModuleLoader === 'undefined') {
         // if it is not explicitly defined whether we should use modeule loader or not
         // we assume we should use module loader for .js files
-        script.useModuleLoader = path.extname(script.path).toLowerCase() === '.js';
+        script.useModuleLoader = path.extname(script.path).toLowerCase() == '.js'; // eslint-disable-line eqeqeq
     }
 
     var source;
@@ -226,7 +225,7 @@ function runScriptViaChildProcessSpawn (script, context) {
     return superspawn.spawn(command, args, execOpts)
         .catch(function (err) {
             // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
-            if (!isWindows && err.code === 'EACCES') {
+            if (!isWindows && err.code == 'EACCES') { // eslint-disable-line eqeqeq
                 events.emit('verbose', 'Skipped non-executable file: ' + script.fullPath);
             } else {
                 throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
@@ -243,7 +242,7 @@ function extractSheBangInterpreter (fullpath) {
     var hookFd = fs.openSync(fullpath, 'r');
     try {
         // this is a modern cluster size. no need to read less
-        fileData = Buffer.from(4096);
+        fileData = new Buffer(4096); // eslint-disable-line
         octetsRead = fs.readSync(hookFd, fileData, 0, 4096, 0);
         fileChunk = fileData.toString();
     } finally {
@@ -253,7 +252,7 @@ function extractSheBangInterpreter (fullpath) {
     var hookCmd, shMatch;
     // Filter out /usr/bin/env so that "/usr/bin/env node" works like "node".
     var shebangMatch = fileChunk.match(/^#!(?:\/usr\/bin\/env )?([^\r\n]+)/m);
-    if (octetsRead === 4096 && !fileChunk.match(/[\r\n]/)) { events.emit('warn', 'shebang is too long for "' + fullpath + '"'); }
+    if (octetsRead == 4096 && !fileChunk.match(/[\r\n]/)) { events.emit('warn', 'shebang is too long for "' + fullpath + '"'); } // eslint-disable-line eqeqeq
     if (shebangMatch) { hookCmd = shebangMatch[1]; }
     // Likewise, make /usr/bin/bash work like "bash".
     if (hookCmd) { shMatch = hookCmd.match(/bin\/((?:ba)?sh)$/); }

@@ -17,16 +17,16 @@
     under the License.
 */
 
-var helpers = require('../spec/helpers'),
-    path = require('path'),
-    Q = require('q'),
-    shell = require('shelljs'),
-    events = require('cordova-common').events,
-    cordova = require('../src/cordova/cordova'),
-    platforms = require('../src/platforms/platforms'),
-    plugman = require('../src/plugman/plugman'),
-    install = require('../src/plugman/install'),
-    registry = require('../src/plugman/registry/registry');
+var helpers = require('../spec/helpers');
+var path = require('path');
+var Q = require('q');
+var shell = require('shelljs');
+var events = require('cordova-common').events;
+var cordova = require('../src/cordova/cordova');
+var platforms = require('../src/platforms/platforms');
+var plugman = require('../src/plugman/plugman');
+var install = require('../src/plugman/install');
+var registry = require('../src/plugman/registry/registry');
 
 var util = require('../src/cordova/util');
 
@@ -71,14 +71,14 @@ function addPlugin (target, id, options) {
 // Runs: remove, list
 function removePlugin (id) {
     return cordova.plugin('rm', id)
-    .then(function () {
-        // The whole dir should be gone.
-        expect(path.join(project, 'plugins', id)).not.toExist();
-    }).then(function () {
-        return cordova.plugin('ls');
-    }).then(function () {
-        expect(results).toMatch(/No plugins added/gi);
-    });
+        .then(function () {
+            // The whole dir should be gone.
+            expect(path.join(project, 'plugins', id)).not.toExist();
+        }).then(function () {
+            return cordova.plugin('ls');
+        }).then(function () {
+            expect(results).toMatch(/No plugins added/gi);
+        });
 }
 
 var errorHandler = {
@@ -126,23 +126,23 @@ describe('plugin end-to-end', function () {
     });
 
     afterEach(function () {
-        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
         expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
     it('Test 001 : should successfully add and remove a plugin with no options', function (done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
-        .then(function () {
-            expect(install.runInstall).toHaveBeenCalled();
-            expect(platforms.getPlatformApi.calls.count()).toEqual(1);
-            return removePlugin(pluginId);
-        }).then(function () {
-            expect(platforms.getPlatformApi.calls.count()).toEqual(2);
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+            .then(function () {
+                expect(install.runInstall).toHaveBeenCalled();
+                expect(platforms.getPlatformApi.calls.count()).toEqual(1);
+                return removePlugin(pluginId);
+            }).then(function () {
+                expect(platforms.getPlatformApi.calls.count()).toEqual(2);
+            }).fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 004 : should successfully add a plugin using relative path when running from subdir inside of project', function (done) {
@@ -159,55 +159,55 @@ describe('plugin end-to-end', function () {
 
         // Add plugin using relative path
         addPlugin(path.relative(subdir, plugindir), pluginId, {}, done)
-        .then(function () {
-            return removePlugin(pluginId);
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+            .then(function () {
+                return removePlugin(pluginId);
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 005 : should respect preference default values', function (done) {
-        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO'}}, done)
-       .then(function () {
-           var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
-           var installed_plugins = require(platformJsonPath).installed_plugins;
-           var defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
-           expect(defaultPluginPreferences).toBeDefined();
-           expect(defaultPluginPreferences.DEFAULT).toBe('yes');
-           expect(defaultPluginPreferences.DEFAULT_ANDROID).toBe('yes');
-           expect(defaultPluginPreferences.REQUIRED_ANDROID).toBe('NO');
-           expect(defaultPluginPreferences.REQUIRED).toBe('NO');
-           return removePlugin(org_test_defaultvariables);
-       })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' }}, done)
+            .then(function () {
+                var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
+                var installed_plugins = require(platformJsonPath).installed_plugins;
+                var defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
+                expect(defaultPluginPreferences).toBeDefined();
+                expect(defaultPluginPreferences.DEFAULT).toBe('yes');
+                expect(defaultPluginPreferences.DEFAULT_ANDROID).toBe('yes');
+                expect(defaultPluginPreferences.REQUIRED_ANDROID).toBe('NO');
+                expect(defaultPluginPreferences.REQUIRED).toBe('NO');
+                return removePlugin(org_test_defaultvariables);
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 006 : should successfully add a plugin when specifying CLI variables', function (done) {
-        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes'}}, done)
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }}, done)
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 007 : should not check npm info when using the searchpath flag', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
         spyOn(registry, 'info');
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
-        .then(function () {
-            expect(registry.info).not.toHaveBeenCalled();
-            var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
-            expect(fetchOptions.searchpath[0]).toExist();
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+            .then(function () {
+                expect(registry.info).not.toHaveBeenCalled();
+                var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
+                expect(fetchOptions.searchpath[0]).toExist();
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 008 : should not check npm info when using the noregistry flag', function (done) {
@@ -215,28 +215,28 @@ describe('plugin end-to-end', function () {
 
         spyOn(registry, 'info');
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {noregistry: true}, done)
-        .then(function () {
-            expect(registry.info).not.toHaveBeenCalled();
+            .then(function () {
+                expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
-            expect(fetchOptions.noregistry).toBeTruthy();
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+                var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
+                expect(fetchOptions.noregistry).toBeTruthy();
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 009 : should not check npm info when fetching from a Git repository', function (done) {
         spyOn(registry, 'info');
         addPlugin(testGitPluginRepository, testGitPluginId, {}, done)
-        .then(function () {
-            expect(registry.info).not.toHaveBeenCalled();
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+            .then(function () {
+                expect(registry.info).not.toHaveBeenCalled();
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 010 : should select the plugin version based on npm info when fetching from npm', function (done) {
@@ -244,16 +244,16 @@ describe('plugin end-to-end', function () {
 
         spyOn(registry, 'info').and.callThrough();
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {'fetch': true}, done)
-        .then(function () {
-            expect(registry.info).toHaveBeenCalled();
+            .then(function () {
+                expect(registry.info).toHaveBeenCalled();
 
-            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-            expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 011 : should handle scoped npm packages', function (done) {
@@ -262,19 +262,19 @@ describe('plugin end-to-end', function () {
 
         spyOn(registry, 'info').and.returnValue(Q({}));
         addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
-        .then(function () {
-            // Check to make sure that we are at least trying to get the correct package.
-            // This package is not published to npm, so we can't truly do end-to-end tests
+            .then(function () {
+                // Check to make sure that we are at least trying to get the correct package.
+                // This package is not published to npm, so we can't truly do end-to-end tests
 
-            expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
+                expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
 
-            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-            expect(fetchTarget).toEqual(scopedPackage);
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                expect(fetchTarget).toEqual(scopedPackage);
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 
     it('Test 012 : should handle scoped npm packages with given version tags', function (done) {
@@ -283,15 +283,15 @@ describe('plugin end-to-end', function () {
 
         spyOn(registry, 'info');
         addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
-        .then(function () {
-            expect(registry.info).not.toHaveBeenCalled();
+            .then(function () {
+                expect(registry.info).not.toHaveBeenCalled();
 
-            var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-            expect(fetchTarget).toEqual(scopedPackage);
-        })
-        .fail(function (err) {
-            expect(err).toBeUndefined();
-        })
-        .fin(done);
+                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                expect(fetchTarget).toEqual(scopedPackage);
+            })
+            .fail(function (err) {
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
     }, 30000);
 });

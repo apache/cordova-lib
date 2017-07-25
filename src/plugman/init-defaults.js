@@ -140,11 +140,11 @@ if (!pkg.author) {
                      config.get('init-author-name')) ?
         {
             'name': config.get('init.author.name') ||
-                            config.get('init-author-name'),
+                                    config.get('init-author-name'),
             'email': config.get('init.author.email') ||
-                            config.get('init-author-email'),
+                                    config.get('init-author-email'),
             'url': config.get('init.author.url') ||
-                            config.get('init-author-url')
+                                    config.get('init-author-url')
         }
         : prompt('author');
 }
