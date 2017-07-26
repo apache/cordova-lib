@@ -285,7 +285,7 @@ describe('HooksRunner', function () {
                 }).then(function () {
                     done();
                 });
-            });
+            }, 60000);
 
             it('Test 006 : should execute hook scripts serially from config.xml', function (done) {
                 var test_event = 'before_build';
@@ -636,7 +636,7 @@ describe('HooksRunner', function () {
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     done();
                 });
-            }, 60000);
+            }, 80000);
 
             it('Test 022 : should pass data object that fire calls into sync handlers', function (done) {
                 var async = function (opts) {
