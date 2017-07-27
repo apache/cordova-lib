@@ -71,9 +71,8 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
     });
 
     it('should remove the cordova- prefix from the platform name for known platforms', function (done) {
-        platform_getPlatformDetails.platformFromName('cordova-ios');
-        expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Removing "cordova-" prefix/));
         expect(platform_getPlatformDetails.platformFromName('cordova-ios')).toBe('ios');
+        expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Removing "cordova-" prefix/));
         done();
     });
 });
