@@ -27,11 +27,8 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
-// delete require.cache[require.resolve('../prepare')];
-// var prepare = require('../prepare');
 var promiseutil = require('../../util/promise-util');
 var config = require('../config');
-var platformMetadata = require('../platform_metadata');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
 
@@ -224,7 +221,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             // actually installed.
                             var versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
-                            platformMetadata.save(projectRoot, platform, versionToSave);
+                            // platformMetadata.save(projectRoot, platform, versionToSave);
 
                             if (opts.save || autosave) {
                                 // Similarly here, we save the source location if that was specified, otherwise the version that
