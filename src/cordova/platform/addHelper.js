@@ -95,7 +95,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         platform = null;
                     }
 
-                    if (platform === 'ubuntu' || platform === 'blackberry10') {
+                    if (platform === 'ubuntu' || platform === 'blackberry10' || platform === 'webos') {
                         events.emit(platform + ' has been deprecated and will be removed in the next major release of cordova.');
                     }
 
