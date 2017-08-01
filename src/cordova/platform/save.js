@@ -15,33 +15,35 @@
     under the License.
 */
 
-var semver = require('semver');
-var cordova_util = require('../util');
-var ConfigParser = require('cordova-common').ConfigParser;
-var platformMetadata = require('../platform_metadata');
+// var semver = require('semver');
+// var cordova_util = require('../util');
+// var ConfigParser = require('cordova-common').ConfigParser;
+// var platformMetadata = require('../platform_metadata');
 
-module.exports = save;
-module.exports.getSpecString = getSpecString;
+// module.exports = save;
+// module.exports.getSpecString = getSpecString;
 
-function save (hooksRunner, projectRoot, opts) {
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+// function save (hooksRunner, projectRoot, opts) {
+//     console.log('in save!');
+//     var xml = cordova_util.projectConfig(projectRoot);
+//     var cfg = new ConfigParser(xml);
 
-    // First, remove all platforms that are already in config.xml
-    cfg.getEngines().forEach(function (engine) {
-        cfg.removeEngine(engine.name);
-    });
+//     // First, remove all platforms that are already in config.xml
+//     cfg.getEngines().forEach(function (engine) {
+//         cfg.removeEngine(engine.name);
+//     });
 
-    // Save installed platforms into config.xml
-    return platformMetadata.getPlatformVersions(projectRoot).then(function (platformVersions) {
-        platformVersions.forEach(function (platVer) {
-            cfg.addEngine(platVer.platform, module.exports.getSpecString(platVer.version));
-        });
-        cfg.write();
-    });
-}
+//     // Save installed platforms into config.xml
+//     return platformMetadata.getPlatformVersions(projectRoot).then(function (platformVersions) {
+//         platformVersions.forEach(function (platVer) {
+//             cfg.addEngine(platVer.platform, module.exports.getSpecString(platVer.version));
+//         });
+//         console.log('saving and writing');
+//         cfg.write();
+//     });
+// }
 
-function getSpecString (spec) {
-    var validVersion = semver.valid(spec, true);
-    return validVersion ? '~' + validVersion : spec;
-}
+// function getSpecString (spec) {
+//     var validVersion = semver.valid(spec, true);
+//     return validVersion ? '~' + validVersion : spec;
+// }
