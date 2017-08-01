@@ -21,7 +21,6 @@ var HooksRunner = require('../../hooks/HooksRunner');
 var CordovaError = require('cordova-common').CordovaError;
 var platforms = require('../../platforms/platforms');
 var addHelper = require('./addHelper');
-var events = require('cordova-common').events;
 
 module.exports = platform;
 
