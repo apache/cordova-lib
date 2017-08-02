@@ -132,7 +132,7 @@ describe('plugin end-to-end', function () {
     });
 
     it('Test 001 : should successfully add and remove a plugin with no options', function (done) {
-        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
+        addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {'fetch': true}, done)
             .then(function () {
                 expect(install.runInstall).toHaveBeenCalled();
                 expect(platforms.getPlatformApi.calls.count()).toEqual(1);
@@ -158,7 +158,7 @@ describe('plugin end-to-end', function () {
         shell.cd(subdir);
 
         // Add plugin using relative path
-        addPlugin(path.relative(subdir, plugindir), pluginId, {}, done)
+        addPlugin(path.relative(subdir, plugindir), pluginId, {'fetch': true}, done)
             .then(function () {
                 return removePlugin(pluginId);
             })
@@ -171,7 +171,7 @@ describe('plugin end-to-end', function () {
     it('Test 005 : should respect preference default values', function (done) {
         var plugin_util = require('../src/cordova/plugin/util');
         spyOn(plugin_util, 'mergeVariables').and.returnValue({ REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' });
-        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' }}, done)
+        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, { cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' }, 'fetch': true }, done)
             .then(function () {
                 var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
                 var installed_plugins = require(platformJsonPath).installed_plugins;
@@ -190,7 +190,7 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 006 : should successfully add a plugin when specifying CLI variables', function (done) {
-        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }}, done)
+        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }, 'fetch': true}, done)
             .fail(function (err) {
                 expect(err).toBeUndefined();
             })
@@ -231,7 +231,7 @@ describe('plugin end-to-end', function () {
 
     it('Test 009 : should not check npm info when fetching from a Git repository', function (done) {
         spyOn(registry, 'info');
-        addPlugin(testGitPluginRepository, testGitPluginId, {}, done)
+        addPlugin(testGitPluginRepository, testGitPluginId, {'fetch': true}, done)
             .then(function () {
                 expect(registry.info).not.toHaveBeenCalled();
             })
@@ -241,7 +241,7 @@ describe('plugin end-to-end', function () {
             .fin(done);
     }, 30000);
 
-    it('Test 010 : should select the plugin version based on npm info when fetching from npm', function (done) {
+    it('Test 010 : should use registry.info to get plugin & version', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info').and.callThrough();
@@ -250,7 +250,7 @@ describe('plugin end-to-end', function () {
                 expect(registry.info).toHaveBeenCalled();
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-                expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
+                expect(fetchTarget).toEqual(npmInfoTestPlugin);
             })
             .fail(function (err) {
                 expect(err).toBeUndefined();
@@ -268,7 +268,7 @@ describe('plugin end-to-end', function () {
                 // Check to make sure that we are at least trying to get the correct package.
                 // This package is not published to npm, so we can't truly do end-to-end tests
 
-                expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
+                expect(registry.info).toHaveBeenCalledWith([scopedPackage], jasmine.any(String), jasmine.any(Object));
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedPackage);

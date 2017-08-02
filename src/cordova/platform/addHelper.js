@@ -31,7 +31,6 @@ var cordova_util = require('../util');
 // var prepare = require('../prepare');
 var promiseutil = require('../../util/promise-util');
 var config = require('../config');
-var lazy_load = require('../lazy_load');
 var platformMetadata = require('../platform_metadata');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
@@ -313,22 +312,6 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             events.emit('log', 'Using cordova-fetch for ' + target);
             return fetch(target, projectRoot, opts);
         }
-
-        if (cordova_util.isUrl(version)) {
-            events.emit('log', 'git cloning: ' + version);
-            var parts = version.split('#');
-            var git_url = parts[0];
-            var branchToCheckout = parts[1];
-            return lazy_load.git_clone(git_url, branchToCheckout).fail(function (err) {
-                // If it looks like a url, but cannot be cloned, try handling it differently.
-                // it's because it's a tarball of the form:
-                //     - https://api.github.com/repos/msopenTech/cordova-browser/tarball/my-branch
-                events.emit('verbose', err.message);
-                events.emit('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
-                return lazy_load.based_on_config(projectRoot, target, opts);
-            });
-        }
-        return lazy_load.based_on_config(projectRoot, target, opts);
     }).fail(function (error) {
         var message = 'Failed to fetch platform ' + target +
             '\nProbably this is either a connection problem, or platform spec is incorrect.' +

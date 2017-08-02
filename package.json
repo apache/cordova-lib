@@ -29,7 +29,6 @@
     "glob": "7.1.1",
     "init-package-json": "^1.2.0",
     "nopt": "4.0.1",
-    "npm": "^2.10.x",
     "opener": "1.4.2",
     "plist": "2.0.1",
     "properties-parser": "0.3.1",

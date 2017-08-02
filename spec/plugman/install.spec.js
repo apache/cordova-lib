@@ -461,20 +461,6 @@ describe('install', function () {
                 });
         }, TIMEOUT);
 
-        it('Test 024 : should throw if git is not found on the path and a remote url is requested', function (done) {
-            spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
-            fetchSpy.and.callThrough();
-            spyOn(shell, 'which').and.returnValue(null);
-            install('android', project, 'https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git')
-                .then(function (result) {
-                    expect(false).toBe(true);
-                    done();
-                }).fail(function err (errMsg) {
-                    expect(errMsg.toString()).toContain('"git" command line tool is not installed: make sure it is accessible on your PATH.');
-                    done();
-                });
-        }, TIMEOUT);
-
         it('Test 025 :should not fail when trying to install plugin less than minimum version. Skip instead  ', function (done) {
             spyOn(semver, 'satisfies').and.returnValue(false);
             exec.and.callFake(function (cmd, cb) {

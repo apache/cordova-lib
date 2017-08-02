@@ -29,9 +29,7 @@ var cordova_util = require('../../../src/cordova/util');
 var cordova_config = require('../../../src/cordova/config');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
-var lazy_load = require('../../../src/cordova/lazy_load');
 var prepare = require('../../../src/cordova/prepare');
-var gitclone = require('../../../src/gitclone');
 var fail;
 
 describe('cordova/platform/addHelper', function () {
@@ -346,8 +344,6 @@ describe('cordova/platform/addHelper', function () {
     describe('downloadPlatform', function () {
         beforeEach(function () {
             spyOn(Q, 'reject').and.callThrough();
-            spyOn(lazy_load, 'based_on_config');
-            spyOn(lazy_load, 'git_clone').and.callThrough();
             platform_addHelper.downloadPlatform.and.callThrough();
         });
         describe('errors', function () {
@@ -359,42 +355,6 @@ describe('cordova/platform/addHelper', function () {
                     expect(e.message).toContain('fetch has failed, rejecting promise');
                 }).done(done);
             });
-
-            it('should reject the promise should lazy_load.git_clone fail', function (done) {
-                lazy_load.based_on_config.and.returnValue(false);
-                cordova_util.isUrl.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
-                    fail('success handler unexpectedly invoked');
-                }).fail(function (e) {
-                    expect(Q.reject).toHaveBeenCalled();
-                    expect(events.emit).toHaveBeenCalledWith('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
-                }).done(done);
-            }, 60000);
-
-            it('should reject the promise should lazy_load.based_on_config fail', function (done) {
-                spyOn(gitclone, 'clone').and.callThrough();
-                lazy_load.git_clone.and.returnValue(true);
-                lazy_load.based_on_config.and.returnValue(false);
-                cordova_util.isUrl.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
-                    fail('success handler unexpectedly invoked');
-                }).fail(function (e) {
-                    expect(Q.reject).toHaveBeenCalled();
-                    expect(lazy_load.based_on_config).not.toHaveBeenCalled();
-                }).done(done);
-            }, 60000);
-
-            it('should reject the promise should both git_clone and based_on_config fail after the latter was fallen back on', function (done) {
-                lazy_load.git_clone.and.returnValue(Q.reject('git_clone failed'));
-                lazy_load.based_on_config.and.returnValue(Q.reject('based_on_config failed'));
-                cordova_util.isUrl.and.returnValue(true);
-                fetch_mock.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
-                    fail('success handler unexpectedly invoked');
-                }).fail(function (e) {
-                    expect(Q.reject).toHaveBeenCalled();
-                }).done(done);
-            }, 60000);
         });
         describe('happy path', function () {
             it('should invoke cordova-fetch if fetch was provided as an option', function (done) {
@@ -405,40 +365,6 @@ describe('cordova/platform/addHelper', function () {
                     fail('fail handler unexpectedly invoked');
                 }).done(done);
             });
-
-            it('should invoke lazy_load.git_clone if the version to download is a URL', function (done) {
-                lazy_load.git_clone.and.callThrough();
-                spyOn(gitclone, 'clone').and.returnValue(true);
-                fetch_mock.and.returnValue(true);
-                cordova_util.isUrl.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
-                    expect(events.emit).toHaveBeenCalledWith('log', 'git cloning: https://github.com/apache/cordova-android');
-                    expect(cordova_util.isUrl).toHaveBeenCalledWith('https://github.com/apache/cordova-android');
-                    expect(lazy_load.git_clone).toHaveBeenCalled();
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                }).done(done);
-            }, 60000);
-
-            it('should attempt to lazy_load.based_on_config if lazy_load.git_clone fails', function (done) {
-                cordova_util.isUrl.and.returnValue(true);
-                platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
-                    expect(events.emit).toHaveBeenCalledWith('verbose', '"git" command line tool is not installed: make sure it is accessible on your PATH.');
-                    expect(events.emit).toHaveBeenCalledWith('verbose', 'Cloning failed. Let\'s try handling it as a tarball');
-                    expect(lazy_load.based_on_config).toHaveBeenCalled();
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                }).done(done);
-            }, 60000);
-
-            it('should by default attempt to lazy_load.based_on_config', function (done) {
-                platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {save: true}).then(function () {
-                    expect(lazy_load.based_on_config).toHaveBeenCalledWith('/some/path', 'android@6.0.0', Object({ save: true }));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                }).done(done);
-            }, 60000);
-
             it('should pass along a libDir argument to getPlatformDetailsFromDir on a successful platform download', function (done) {
                 cordova_util.isUrl.and.returnValue(true);
                 platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', {save: true}).then(function () {
