@@ -6,9 +6,7 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -259,7 +257,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function () {
             // Add platform (so that prepare can run).
-            return cordovaPlatform('add', 'browser', {'save': true, 'fetch': true});
+            return cordovaPlatform('add', 'https://github.com/apache/cordova-browser.git', {'save': true, 'fetch': true});
         }).then(function () {
             // Run cordova prepare with fetch.
             return prepare({'save': true, 'fetch': true});
@@ -339,7 +337,7 @@ describe('tests platform/spec restore with --save', function () {
             return cordovaPlatform('add', secondPlatformAdded, {'fetch': true});
         }).then(function () {
             // Add helpers.testPlatform to project with --save
-            return cordovaPlatform('add', [helpers.testPlatform], {'save': true});
+            return cordovaPlatform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json) and (platformsJson)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -369,7 +367,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(platformsJson[helpers.testPlatform]).toBeUndefined();
             }).then(function () {
                 // Run cordova prepare
-                return prepare();
+                return prepare({'fetch': true});
             }).then(function () {
                 // Delete any previous caches of platformsJson
                 platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -433,7 +431,7 @@ describe('files should not be modified if their platforms are identical', functi
         // Pkg.json and config.xml contain only android at this point (basePkgJson6).
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -516,7 +514,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         expect(pkgJson.dependencies[browserPlatform]).toBeUndefined();
         expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
         emptyPlatformList().then(function () {
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect 'browser' to be added to pkg.json.
@@ -673,7 +671,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(pkgJson.dependencies).toEqual({ 'cordova-android': '^5.0.0', 'cordova-browser': '^4.1.0' });
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({ 'fetch': true });
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1079,7 +1077,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare
-            return prepare({'save': true});
+            return prepare({'save': true, 'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1096,13 +1094,13 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
                         variable_3: 'value_3',
                         variable_2: 'value_2' });
                     // Config.xml plugin spec should be updated to ^2.3.0
-                    expect(configPlugin.spec).toEqual('^2.3.0');
+                    expect(configPlugin.spec).toEqual('^2.4.1');
                 }
                 // Expect that splashscreen and device have 0 variables
                 if (configPlugin.name === 'cordova-plugin-device') {
                     expect(configPluginVariables).toEqual({});
                     // Config.xml device plugin still has the spec ~1.0.0
-                    expect(configPlugin.spec).toEqual('~1.0.0');
+                    expect(configPlugin.spec).toEqual('^1.0.1');
                 }
                 if (configPlugin.name === 'cordova-plugin-splashscreen') {
                     expect(configPluginVariables).toEqual({});
@@ -1116,10 +1114,10 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             // Pkg.json has all 3 plugins with the correct specs
             expect(Object.keys(pkgJson.cordova.plugins).length === 3);
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
-            expect(pkgJson.dependencies['cordova-plugin-camera']).toEqual('^2.3.0');
+            expect(pkgJson.dependencies['cordova-plugin-camera']).toEqual('^2.4.1');
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             expect(pkgJson.cordova.plugins['cordova-plugin-device']).toBeDefined();
-            expect(pkgJson.dependencies['cordova-plugin-device']).toEqual('~1.0.0');
+            expect(pkgJson.dependencies['cordova-plugin-device']).toEqual('^1.0.1');
             // Expect that splashscreen and device have 0 variables
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toEqual({});
             expect(pkgJson.cordova.plugins['cordova-plugin-device']).toEqual({});
@@ -1199,7 +1197,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': false, 'save': true});
+            return prepare({'fetch': true, 'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1212,16 +1210,16 @@ describe('update config.xml to include the plugin that is in pkg.json', function
                 configPlugin = cfg2.getPlugin(configPlugins[i]);
                 configPluginVariables = configPlugin.variables;
                 // Pkg.json dependencies should be the same.
-                expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-camera': '^2.3.0' });
+                expect(pkgJson.dependencies['cordova-plugin-camera']).toEqual(('^2.4.1'));
                 // Config.xml camera variables have been added.
                 if (configPlugin.name === 'cordova-plugin-camera') {
                     expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
                     // Check that the camera plugin has the correct spec and has been updated in config.xml
-                    expect(configPlugin.spec).toEqual('^2.3.0');
+                    expect(configPlugin.spec).toEqual('^2.4.1');
                 }
             }
             // Check to make sure that the config.xml spec was overwritten by the pkg.json one.
-            expect(configPluginSpecs).toEqual({ name: 'cordova-plugin-camera', spec: '^2.3.0', variables: { variable_1: 'value_1' } });
+            expect(configPluginSpecs).toEqual({ name: 'cordova-plugin-camera', spec: '^2.4.1', variables: { variable_1: 'value_1' } });
             // Camera plugin gets added to config.xml.
             expect(Object.keys(configPlugins).length === 1);
             expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
@@ -1296,7 +1294,7 @@ describe('platforms and plugins should be restored with config.xml even without 
 
         emptyPlatformList().then(function () {
             // Run platform add.
-            return cordovaPlatform('add', browserPlatform, {'save': true});
+            return cordovaPlatform('add', browserPlatform, {'save': true, 'fetch': true});
         }).then(function () {
             // Android and browser are in config.xml.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -1443,7 +1441,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordovaPlatform('add', 'android', {'save': true});
+            return cordovaPlatform('add', 'android', {'save': true, 'fetch': true});
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Require platformsFolderPath
@@ -1468,7 +1466,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(platformsJson[helpers.testPlatform]).toBeUndefined();
             }).then(function () {
                 // Run cordova prepare.
-                return prepare();
+                return prepare({'fetch': true});
             }).then(function () {
                 // Delete any previous caches of platforms.json.
                 platformsJson = cordova_util.requireNoCache(platformsFolderPath);
@@ -1495,10 +1493,10 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordovaPlatform('add', [helpers.testPlatform], {'save': true});
+            return cordovaPlatform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
         }).then(function () {
             // Add the 'browser' platform with --save
-            return cordovaPlatform('add', secondPlatformAdded, {'save': true});
+            return cordovaPlatform('add', secondPlatformAdded, {'save': true, 'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json) and (platforms.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1530,7 +1528,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(platformsJson[secondPlatformAdded]).toBeUndefined();
             }).then(function () {
                 // Run cordova prepare.
-                return prepare();
+                return prepare({'fetch': true});
             }).then(function () {
                 // Delete any previous caches of platformsJson.
                 platformsJson = cordova_util.requireNoCache(platformsFolderPath);

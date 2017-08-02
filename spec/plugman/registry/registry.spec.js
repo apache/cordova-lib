@@ -93,7 +93,8 @@ describe('registry', function () {
         }, 6000);
     });
     describe('actions', function () {
-        var fakeLoad, fakeNPMCommands;
+        var fakeLoad; // eslint-disable-line no-unused-vars
+        var fakeNPMCommands;
 
         beforeEach(function () {
             done = false;
@@ -123,21 +124,5 @@ describe('registry', function () {
             npm.config.get = function () {};
             npm.config.del = function () {};
         });
-        it('Test 005 : should run config', function (done) {
-            var params = ['set', 'registry', 'http://registry.cordova.io'];
-            return registryPromise(true, registry.config(params).then(function () {
-                expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Function));
-                expect(fakeNPMCommands.config).toHaveBeenCalledWith(params, jasmine.any(Function));
-                done();
-            }));
-        }, 6000);
-        it('Test 006 : should run search', function (done) {
-            var params = ['dummyplugin', 'plugin'];
-            return registryPromise(true, registry.search(params).then(function () {
-                expect(fakeLoad).toHaveBeenCalledWith(jasmine.any(Object), jasmine.any(Function));
-                expect(fakeNPMCommands.search).toHaveBeenCalledWith(params, true, jasmine.any(Function));
-                done();
-            }));
-        }, 6000);
     });
 });

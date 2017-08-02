@@ -356,7 +356,7 @@ describe('cordova/plugin/add', function () {
                 it('should retrieve plugin info via registry.info', function (done) {
                     add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
-                            expect(registry.info).toHaveBeenCalledWith(['cordova-plugin-device']);
+                            expect(registry.info).toHaveBeenCalledWith(['cordova-plugin-device'], '/some/path', jasmine.any(Object));
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
                             expect(target).toEqual('cordova-plugin-device');
                         }).fail(function (e) {

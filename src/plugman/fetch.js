@@ -23,13 +23,11 @@ var url = require('url');
 var underscore = require('underscore');
 var semver = require('semver');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var plugins = require('./util/plugins');
 var CordovaError = require('cordova-common').CordovaError;
 var events = require('cordova-common').events;
 var metadata = require('./util/metadata');
 var path = require('path');
 var Q = require('q');
-var registry = require('./registry/registry');
 var pluginSpec = require('../cordova/plugin/plugin_spec_parser');
 var fetch = require('cordova-fetch');
 var cordovaUtil = require('../cordova/util');
@@ -85,33 +83,6 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         }
     }
     return Q.when().then(function () {
-        // If it looks like a network URL, git clone it
-        // skip git cloning if user passed in --fetch flag
-        if (uri.protocol && uri.protocol !== 'file:' && uri.protocol[1] !== ':' && !plugin_src.match(/^\w+:\\/) && !options.fetch) {
-            events.emit('log', 'Fetching plugin "' + plugin_src + '" via git clone');
-            if (options.link) {
-                events.emit('log', '--link is not supported for git URLs and will be ignored');
-            }
-
-            return plugins.clonePluginGit(plugin_src, plugins_dir, options)
-                .fail(function (error) {
-                    var message = 'Failed to fetch plugin ' + plugin_src + ' via git.' +
-                        '\nEither there is a connection problems, or plugin spec is incorrect:\n\t' + error;
-                    return Q.reject(new CordovaError(message));
-                })
-                .then(function (dir) {
-                    return {
-                        pinfo: pluginInfoProvider.get(dir),
-                        dest: dir,
-                        fetchJsonSource: {
-                            type: 'git',
-                            url: plugin_src,
-                            subdir: options.subdir,
-                            ref: options.git_ref
-                        }
-                    };
-                });
-        }
         // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Q.when().then(function () {
@@ -141,18 +112,8 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                             // something went wrong with cordova-fetch
                             return Q.reject(new CordovaError(error.message));
                         });
-                } else {
-                    // nofetch
-                    return {
-                        pinfo: pluginInfoProvider.get(plugin_dir),
-                        fetchJsonSource: {
-                            type: 'local',
-                            path: plugin_dir
-                        }
-                    };
                 }
             }
-
             // If there is no such local path, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
@@ -201,8 +162,6 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                     var fetchPluginSrc = specContainsSpecialCharacters ?
                         parsedSpec.package + '@"' + parsedSpec.version + '"' : plugin_src;
                     P = fetch(fetchPluginSrc, projectRoot, options);
-                } else {
-                    P = registry.fetch([plugin_src]);
                 }
                 skipCopyingPlugin = false;
             }
