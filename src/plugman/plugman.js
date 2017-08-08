@@ -89,7 +89,8 @@ plugman.commands = {
             searchpath: cli_opts.searchpath,
             link: cli_opts.link,
             projectRoot: cli_opts.project,
-            force: cli_opts.force || false
+            force: cli_opts.force || false,
+            nohooks: cli_opts.nohooks || false
         };
         var p = Q();
         cli_opts.plugin.forEach(function (pluginSrc) {
