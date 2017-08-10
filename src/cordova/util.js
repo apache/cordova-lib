@@ -461,7 +461,7 @@ function getLatestNpmVersion (module_name) {
 
 // Takes a libDir (root of platform where pkgJson is expected) & a platform name.
 // Platform is used if things go wrong, so we can use polyfill.
-// Potential errors : path doesn't exist, module isn't found or can't load. 
+// Potential errors : path doesn't exist, module isn't found or can't load.
 // Message prints if file not named Api.js or falls back to pollyfill.
 function getPlatformApiFunction (libDir, platform) {
     var PlatformApi;
@@ -471,7 +471,7 @@ function getPlatformApiFunction (libDir, platform) {
         // This will throw if package.json does not exist, or specify 'main'.
         var apiEntryPoint = require.resolve(libDir);
         if (apiEntryPoint) {
-            if(path.basename(apiEntryPoint) !== 'Api.js') {
+            if (path.basename(apiEntryPoint) !== 'Api.js') {
                 events.emit('verbose', 'File name should be called Api.js.');
                 // Not an error, still load it ...
             }
@@ -481,26 +481,23 @@ function getPlatformApiFunction (libDir, platform) {
                 PlatformApi = null;
                 events.emit('error', 'Does not appear to implement platform Api.');
             } else {
-               events.emit('verbose', 'PlatformApi successfully found for platform ' + platform); 
+                events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
             }
-        }
-        else {
+        } else {
             events.emit('verbose', 'No Api.js entry point found.');
         }
-    }
-    catch (err) {
+    } catch (err) {
         // Emit the err, someone might care ...
-        events.emit('warn','Unable to load PlatformApi from platform. ' + err);
+        events.emit('warn', 'Unable to load PlatformApi from platform. ' + err);
         // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
-        //checkPlatformApiCompatible(platform);
+        // checkPlatformApiCompatible(platform);
         if (platforms[platform] && platforms[platform].apiCompatibleSince) {
             events.emit('error', ' Using this version of Cordova with older version of cordova-' + platform +
                     ' is deprecated. Upgrade to cordova-' + platform + '@' +
                     platforms[platform].apiCompatibleSince + ' or newer.');
-        }
-        else if (!platforms[platform]) {
+        } else if (!platforms[platform]) {
             // Throw error because polyfill doesn't support non core platforms
-            events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. '+ platform +' not supported.');
+            events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. ' + platform + ' not supported.');
         } else {
             events.emit('verbose', 'Platform not found or needs polyfill.');
         }
@@ -508,8 +505,8 @@ function getPlatformApiFunction (libDir, platform) {
 
     if (!PlatformApi) {
         // The platform just does not expose Api and we will try to polyfill it
-        var polyPlatforms = ['blackberry10','browser','ubuntu','webos'];
-        if( polyPlatforms.indexOf(platform) > -1) {
+        var polyPlatforms = ['blackberry10', 'browser', 'ubuntu', 'webos'];
+        if (polyPlatforms.indexOf(platform) > -1) {
             events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
             '". Using polyfill instead.');
             PlatformApi = require('../platforms/PlatformApiPoly.js');

@@ -85,7 +85,7 @@ describe('getPlatformApi method', function () {
     it('should throw error if using deprecated platform', function () {
         try {
             platforms.getPlatformApi('android', path.join(CORDOVA_ROOT, 'platforms/android'));
-        } catch(error) {
+        } catch (error) {
             expect(error.toString()).toContain('Using this version of Cordova with older version of cordova-android is deprecated. Upgrade to cordova-android@5.0.0 or newer.');
         }
     });

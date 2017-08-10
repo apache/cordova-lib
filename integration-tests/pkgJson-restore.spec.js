@@ -1249,7 +1249,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         // Use basePkgJson13 because pkg.json and config.xml contain only android
-        shell.cp('-R', path.join(__dirname, '..', 'spec-cordova', 'fixtures', 'basePkgJson13'), tmpDir);
+        shell.cp('-R', path.join(__dirname, '..', 'spec', 'cordova', 'fixtures', 'basePkgJson13'), tmpDir);
         shell.mv(path.join(tmpDir, 'basePkgJson13'), project);
         process.chdir(project);
         events.on('results', function (res) { results = res; });
