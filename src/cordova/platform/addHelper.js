@@ -111,7 +111,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         } else if (pkgJson.dependencies[platform]) {
                             spec = pkgJson.dependencies[platform];
                         }
-                    } else if (platform && spec === undefined && cmd === 'add') {
+                    }
+
+                    if (platform && spec === undefined && cmd === 'add') {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                         spec = module.exports.getVersionFromConfigFile(platform, cfg);
                     }
