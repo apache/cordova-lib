@@ -170,6 +170,21 @@ describe('cordova/platform/addHelper', function () {
                 }).done(done);
             });
 
+            it('should use spec from config.xml if package.json does not contain dependency for platform', function (done) {
+                package_json_mock.dependencies = {};
+                cordova_util.requireNoCache.and.returnValue(package_json_mock);
+                fs.existsSync.and.callFake(function (filePath) {
+                    return path.basename(filePath) === 'package.json';
+                });
+
+                platform_addHelper('add', hooks_mock, projectRoot, ['windows'], {restoring: true}).then(function () {
+                    expect(platform_addHelper.getVersionFromConfigFile).toHaveBeenCalled();
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                    console.error(e);
+                }).done(done);
+            });
+
             it('should attempt to retrieve from config.xml if exists and package.json does not', function (done) {
                 platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {restoring: true}).then(function () {
                     expect(platform_addHelper.getVersionFromConfigFile).toHaveBeenCalled();
