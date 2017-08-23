@@ -138,14 +138,14 @@ if (!pkg.engines) {
 if (!pkg.author) {
     exports.author = (config.get('init.author.name') ||
                      config.get('init-author-name')) ?
-        {
-            'name': config.get('init.author.name') ||
+    {
+        'name': config.get('init.author.name') ||
                                     config.get('init-author-name'),
-            'email': config.get('init.author.email') ||
+        'email': config.get('init.author.email') ||
                                     config.get('init-author-email'),
-            'url': config.get('init.author.url') ||
+        'url': config.get('init.author.url') ||
                                     config.get('init-author-url')
-        }
+    }
         : prompt('author');
 }
 
