@@ -22,6 +22,7 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 module.exports.getInstalledPlugins = getInstalledPlugins;
+module.exports.mergeVariables = mergeVariables;
 
 function getInstalledPlugins (projectRoot) {
     var pluginsDir = path.join(projectRoot, 'plugins');
@@ -34,4 +35,32 @@ function saveToConfigXmlOn (config_json, options) {
     options = options || {};
     var autosave = config_json.auto_save_plugins || false;
     return autosave || options.save;
+}
+
+// merges cli variables and config.xml (cfg) variables
+// used when adding and removing
+function mergeVariables (pluginInfo, cfg, opts) {
+    // Validate top-level required variables
+    var pluginVariables = pluginInfo.getPreferences();
+    opts.cli_variables = opts.cli_variables || {};
+    var pluginEntry = cfg.getPlugin(pluginInfo.id);
+    // Get variables from config.xml
+    var configVariables = pluginEntry ? pluginEntry.variables : {};
+    // Add config variable if it's missing in cli_variables
+    Object.keys(configVariables).forEach(function (variable) {
+        opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
+    });
+    var missingVariables = Object.keys(pluginVariables)
+        .filter(function (variableName) {
+            // discard variables with default value
+            return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
+        });
+
+    if (missingVariables.length) {
+        events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
+        shell.rm('-rf', pluginInfo.dir);
+        var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
+        return Q.reject(new CordovaError(msg));
+    }
+
 }
