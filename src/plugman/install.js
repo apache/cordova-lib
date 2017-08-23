@@ -39,6 +39,7 @@ var cordovaUtil = require('../cordova/util');
 var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+var variableMerge = require('../plugman/variable-merge');
 
 /* INSTALL FLOW
    ------------
@@ -311,27 +312,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
     }).then(function (engines) {
         return checkEngines(engines);
     }).then(function () {
-        var prefs = pluginInfo.getPreferences(platform);
-        var keys = underscore.keys(prefs);
-
-        options.cli_variables = options.cli_variables || {};
-        var missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
-
-        underscore.each(missing_vars, function (_key) {
-            var def = prefs[_key];
-            if (def) {
-                options.cli_variables[_key] = def;
-            }
-        });
-
-        // test missing vars once again after having default
-        missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
-
-        if (missing_vars.length > 0) {
-            throw new Error('Variable(s) missing: ' + missing_vars.join(', '));
-        }
-
-        filtered_variables = underscore.pick(options.cli_variables, keys);
+        filtered_variables = variableMerge.mergeVariables(plugin_dir, platform, options);
         install.filtered_variables = filtered_variables;
 
         // Check for dependencies

@@ -29,7 +29,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var CordovaError = require('cordova-common').CordovaError;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var events = require('cordova-common').events;
-var shell = require('shelljs');
 var Q = require('q');
 var path = require('path');
 var fs = require('fs');
@@ -50,7 +49,7 @@ function add (projectRoot, hooksRunner, opts) {
     if (!opts.plugins || !opts.plugins.length) {
         return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `' + cordova_util.binname + ' plugin search`.'));
     }
-
+    var pluginInfo;
     var shouldRunPrepare = false;
     var pluginPath = path.join(projectRoot, 'plugins');
     var platformList = cordova_util.listPlatforms(projectRoot);
@@ -98,9 +97,11 @@ function add (projectRoot, hooksRunner, opts) {
                     });
                 }).then(function (directory) {
                     return pluginInfoProvider.get(directory);
-                }).then(function (pluginInfo) {
-                    
-                    plugin_util.mergeVariables(pluginInfo, cfg, opts);
+                }).then(function (plugInfoProvider) {
+                    pluginInfo = plugInfoProvider;
+                    return plugin_util.mergeVariables(pluginInfo, cfg, opts);
+                }).then(function (variables) {
+                    opts.cli_variables = variables;
 
                     // Iterate (in serial!) over all platforms in the project and install the plugin.
                     return chainMap(platformList, function (platform) {

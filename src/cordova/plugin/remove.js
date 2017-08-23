@@ -49,7 +49,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     return hooksRunner.fire('before_plugin_rm', opts)
         .then(function () {
             var pluginInfoProvider = new PluginInfoProvider();
-            var cli_variables;
+            var platformRoot;
             return opts.plugins.reduce(function (soFar, target) {
                 var validatedPluginId = module.exports.validatePluginId(target, plugins);
                 if (!validatedPluginId) {
@@ -63,15 +63,15 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                 // reference from the platform's plugin config JSON.
                 return platformList.reduce(function (soFar, platform) {
                     return soFar.then(function () {
-                        var platformRoot = path.join(projectRoot, 'platforms', platform);
+                        platformRoot = path.join(projectRoot, 'platforms', platform);
                         var directory = path.join(pluginPath, target);
                         var pluginInfo = pluginInfoProvider.get(directory);
                         events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                         opts.force = opts.force || false;
-                        cli_variables = opts.cli_variables || {};
 
-                        plugin_util.mergeVariables(pluginInfo, cfg, opts);
-
+                        return plugin_util.mergeVariables(pluginInfo, cfg, opts);
+                    }).then(function (variables) {
+                        opts.cli_variables = variables;
                         return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, opts)
                             .then(function (didPrepare) {
                                 // If platform does not returned anything we'll need
