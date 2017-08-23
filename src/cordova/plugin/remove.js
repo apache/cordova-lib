@@ -60,10 +60,8 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                     return soFar.then(function () {
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
                         events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                        var options = {
-                            force: opts.force || false
-                        };
-                        return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
+                        opts.force = opts.force || false;
+                        return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, opts)
                             .then(function (didPrepare) {
                                 // If platform does not returned anything we'll need
                                 // to trigger a prepare after all plugins installed
