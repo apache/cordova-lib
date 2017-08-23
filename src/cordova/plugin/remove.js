@@ -28,6 +28,7 @@ var metadata = require('../../plugman/util/metadata');
 var Q = require('q');
 var path = require('path');
 var fs = require('fs');
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 module.exports = remove;
 module.exports.validatePluginId = validatePluginId;
@@ -41,10 +42,14 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     var plugins = cordova_util.findPlugins(pluginPath);
     var platformList = cordova_util.listPlatforms(projectRoot);
     var shouldRunPrepare = false;
+    var xml = cordova_util.projectConfig(projectRoot);
+    var cfg = new ConfigParser(xml);
 
     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
     return hooksRunner.fire('before_plugin_rm', opts)
         .then(function () {
+            var pluginInfoProvider = new PluginInfoProvider();
+            var cli_variables;
             return opts.plugins.reduce(function (soFar, target) {
                 var validatedPluginId = module.exports.validatePluginId(target, plugins);
                 if (!validatedPluginId) {
@@ -59,11 +64,15 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                 return platformList.reduce(function (soFar, platform) {
                     return soFar.then(function () {
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
+                        var directory = path.join(pluginPath, target);
+                        var pluginInfo = pluginInfoProvider.get(directory);
                         events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                        var options = {
-                            force: opts.force || false
-                        };
-                        return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, options)
+                        opts.force = opts.force || false;
+                        cli_variables = opts.cli_variables || {};
+
+                        plugin_util.mergeVariables(pluginInfo, cfg, opts);
+
+                        return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, opts)
                             .then(function (didPrepare) {
                                 // If platform does not returned anything we'll need
                                 // to trigger a prepare after all plugins installed
