@@ -134,12 +134,12 @@ if (!pkg.engines) {
         exports.engines = defaults.engines;
     }
 }
-
+/* eslint-disable indent */
 if (!pkg.author) {
     exports.author = (config.get('init.author.name') ||
                      config.get('init-author-name')) ?
     {
-        'name': config.get('init.author.name') ||
+            'name': config.get('init.author.name') ||
                                     config.get('init-author-name'),
         'email': config.get('init.author.email') ||
                                     config.get('init-author-email'),
@@ -148,7 +148,7 @@ if (!pkg.author) {
     }
         : prompt('author');
 }
-
+/* eslint-enable indent */
 var license = pkg.license ||
               defaults.license ||
               config.get('init.license') ||
