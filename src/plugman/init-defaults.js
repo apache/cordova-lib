@@ -150,7 +150,6 @@ if (!pkg.author) {
         : prompt('author');
 }
 /* eslint-enable indent */
-
 var license = pkg.license ||
               defaults.license ||
               config.get('init.license') ||

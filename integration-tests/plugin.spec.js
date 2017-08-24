@@ -169,6 +169,8 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 005 : should respect preference default values', function (done) {
+        var plugin_util = require('../src/cordova/plugin/util');
+        spyOn(plugin_util, 'mergeVariables').and.returnValue({ REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' });
         addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' }}, done)
             .then(function () {
                 var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');

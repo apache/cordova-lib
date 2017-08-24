@@ -21,7 +21,6 @@ var path = require('path');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var shell = require('shelljs');
 var events = require('cordova-common').events;
-var Q = require('q');
 var CordovaError = require('cordova-common').CordovaError;
 
 module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
@@ -72,7 +71,7 @@ function mergeVariables (pluginInfo, cfg, opts) {
         events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
         shell.rm('-rf', pluginInfo.dir);
         var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
-        return Q.reject(new CordovaError(msg));
+        throw new CordovaError(msg);
     }
     return opts.cli_variables;
 }
