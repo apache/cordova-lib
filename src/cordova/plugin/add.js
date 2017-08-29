@@ -29,7 +29,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var CordovaError = require('cordova-common').CordovaError;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var events = require('cordova-common').events;
-var shell = require('shelljs');
 var Q = require('q');
 var path = require('path');
 var fs = require('fs');
@@ -50,7 +49,7 @@ function add (projectRoot, hooksRunner, opts) {
     if (!opts.plugins || !opts.plugins.length) {
         return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `' + cordova_util.binname + ' plugin search`.'));
     }
-
+    var pluginInfo;
     var shouldRunPrepare = false;
     var pluginPath = path.join(projectRoot, 'plugins');
     var platformList = cordova_util.listPlatforms(projectRoot);
@@ -98,29 +97,11 @@ function add (projectRoot, hooksRunner, opts) {
                     });
                 }).then(function (directory) {
                     return pluginInfoProvider.get(directory);
-                }).then(function (pluginInfo) {
-                    // Validate top-level required variables
-                    var pluginVariables = pluginInfo.getPreferences();
-                    opts.cli_variables = opts.cli_variables || {};
-                    var pluginEntry = cfg.getPlugin(pluginInfo.id);
-                    // Get variables from config.xml
-                    var configVariables = pluginEntry ? pluginEntry.variables : {};
-                    // Add config variable if it's missing in cli_variables
-                    Object.keys(configVariables).forEach(function (variable) {
-                        opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
-                    });
-                    var missingVariables = Object.keys(pluginVariables)
-                        .filter(function (variableName) {
-                            // discard variables with default value
-                            return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
-                        });
-
-                    if (missingVariables.length) {
-                        events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
-                        shell.rm('-rf', pluginInfo.dir);
-                        var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
-                        return Q.reject(new CordovaError(msg));
-                    }
+                }).then(function (plugInfoProvider) {
+                    pluginInfo = plugInfoProvider;
+                    return plugin_util.mergeVariables(pluginInfo, cfg, opts);
+                }).then(function (variables) {
+                    opts.cli_variables = variables;
 
                     // Iterate (in serial!) over all platforms in the project and install the plugin.
                     return chainMap(platformList, function (platform) {

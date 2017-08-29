@@ -134,21 +134,21 @@ if (!pkg.engines) {
         exports.engines = defaults.engines;
     }
 }
-
+/* eslint-disable indent */
 if (!pkg.author) {
     exports.author = (config.get('init.author.name') ||
                      config.get('init-author-name')) ?
-        {
+    {
             'name': config.get('init.author.name') ||
                                     config.get('init-author-name'),
-            'email': config.get('init.author.email') ||
+        'email': config.get('init.author.email') ||
                                     config.get('init-author-email'),
-            'url': config.get('init.author.url') ||
+        'url': config.get('init.author.url') ||
                                     config.get('init-author-url')
-        }
+    }
         : prompt('author');
 }
-
+/* eslint-enable indent */
 var license = pkg.license ||
               defaults.license ||
               config.get('init.license') ||

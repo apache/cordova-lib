@@ -36,6 +36,7 @@ var npmUninstall = require('cordova-fetch').uninstall;
 var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+var variableMerge = require('../plugman/variable-merge');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -243,6 +244,9 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     var pluginInfo = pluginInfoProvider.get(plugin_dir);
     var plugin_id = pluginInfo.id;
 
+    // Merge cli_variables and plugin.xml variables
+    var variables = variableMerge.mergeVariables(plugin_dir, platform, options); // eslint-disable-line
+
     // Deps info can be passed recusively
     var platformJson = PlatformJson.load(plugins_dir, platform);
     var depsInfo = options.depsInfo || dependencies.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
@@ -300,6 +304,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
         // platform inside of the existing CLI project. This option is usually set by cordova-lib for CLI projects
         // but since we're running this code through plugman, we need to set it here implicitly
         options.usePlatformWww = true;
+        options.cli_variables = variables;
 
         var hooksRunner = new HooksRunner(projectRoot);
 
