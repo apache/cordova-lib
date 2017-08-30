@@ -187,7 +187,7 @@ describe('platform add plugin rm end-to-end', function () {
         cordova.create('hello')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'browser@latest');
+                return cordova.platform('add', 'browser@latest', {'fetch': true});
             })
             .then(function () {
                 return cordova.plugin('add', 'cordova-plugin-media');
