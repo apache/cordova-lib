@@ -459,6 +459,7 @@ describe('cordova/plugin/add', function () {
                     }).done(done);
             });
         });
+        // TODO More work to be done here to replace plugin_fetch.spec.js
         describe('determinePluginVersionToFetch helper method', function () {
             var pluginInfo;
             beforeEach(function () {
