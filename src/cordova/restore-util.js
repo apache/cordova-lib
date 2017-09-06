@@ -395,8 +395,6 @@ function installPluginsFromConfigXML (args) {
         var installFrom = pluginSpec || pluginName;
         if (pluginSpec && semver.validRange(pluginSpec, true)) {
             installFrom = pluginName + '@' + pluginSpec;
-        } else if (args.fetch && pluginSpec) {
-            installFrom = pluginName + '@' + pluginSpec;
         }
 
         // Add feature preferences as CLI variables if have any
