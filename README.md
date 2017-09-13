@@ -44,7 +44,7 @@ Contains npm modules used primarily by [cordova](https://github.com/apache/cordo
 
 This package exposes the following commands;
 
-* `npm run jshint` - runs a linter (jshint) on relevant source and test code
+* `npm run eslint` - runs a linter (eslint) on relevant source and test code
 * `npm run unit-tests` - runs the unit tests (via jasmine) from the `spec/` directory
 * `npm run cover` - runs istanbul code coverage tool to measure unit test code coverage
 * `npm run e2e-tests` - runs heavy integration tests from the `integration-tests/` directory (WARNING: these take a long time to run and rely on file and network I/O)
