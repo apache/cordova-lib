@@ -57,7 +57,6 @@ function findClassName (pluginxml, plugin_id) {
             }
         }
     }
-    /* jshint ignore:end */
 
     // fallback to guess work, based on the plugin package name
 
