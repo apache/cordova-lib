@@ -23,15 +23,18 @@
 var Q = require('q');
 var list = require('../../../src/cordova/plugin/list');
 var plugin_util = require('../../../src/cordova/plugin/util');
+var events = require('cordova-common').events;
+var semver = require('semver');
 
 describe('cordova/plugin/list', function () {
     var projectRoot = '/some/path';
     var hook_mock;
-    var fake_plugins_list = [{id: 'VRPlugin'}, {id: 'MastodonSocialPlugin'}];
+    var fake_plugins_list = [{id: 'VRPlugin', version: '1.0.0', name: 'VR'}, {id: 'MastodonSocialPlugin', version: '2.0.0', name: 'Mastodon'}];
     beforeEach(function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Q());
         spyOn(plugin_util, 'getInstalledPlugins').and.returnValue(Q.resolve(fake_plugins_list));
+        spyOn(events, 'emit');
     });
     it('should fire the before_plugin_ls hook', function (done) {
         var opts = {important: 'options'};
@@ -42,10 +45,60 @@ describe('cordova/plugin/list', function () {
             console.error(e);
         }).done(done);
     });
-    it('should emit a "no plugins added" result if there are no installed plugins');
-    it('should warn if plugin list contains dependencies that are missing');
-    it('should warn if plugin list contains a plugin dependency that does not have a version satisfied');
-    it('should emit a result containing a description of plugins installed');
-    it('should fire the after_plugin_ls hook');
-    it('should resolve the promise by returning an array of plugin ids installed');
+    it('should emit a "no plugins added" result if there are no installed plugins', function (done) {
+        plugin_util.getInstalledPlugins.and.returnValue([]);
+        list(projectRoot, hook_mock).then(function () {
+            expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No plugins added/));
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+    it('should warn if plugin list contains dependencies that are missing', function (done) {
+        var fake_plugins_list = [{id: 'VRPlugin', deps: '1'}];
+        plugin_util.getInstalledPlugins.and.returnValue(Q.resolve(fake_plugins_list));
+        list(projectRoot, hook_mock).then(function () {
+            expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/WARNING, missing dependency/));
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+    xit('should warn if plugin list contains a plugin dependency that does not have a version satisfied', function (done) {
+        spyOn(semver, 'satisfies').and.returnValue(false);
+        var fake_plugins_list = [{id: 'VRPlugin', version: '1', deps: '1'}];
+        plugin_util.getInstalledPlugins.and.returnValue(Q.resolve(fake_plugins_list));
+        list(projectRoot, hook_mock).then(function () {
+            expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/WARNING, broken dependency/));
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+    it('should emit a result containing a description of plugins installed', function (done) {
+        list(projectRoot, hook_mock).then(function () {
+            expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching('VRPlugin 1.0.0'));
+            expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching('MastodonSocialPlugin 2.0.0'));
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+    it('should fire the after_plugin_ls hook', function (done) {
+        var opts = {important: 'options'};
+        list(projectRoot, hook_mock, opts).then(function () {
+            expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_ls', opts);
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
+    it('should resolve the promise by returning an array of plugin ids installed', function (done) {
+        list(projectRoot, hook_mock).then(function (results) {
+            expect(results).toEqual([ 'VRPlugin', 'MastodonSocialPlugin' ]);
+        }).fail(function (e) {
+            fail('fail handler unexpectedly invoked');
+            console.error(e);
+        }).done(done);
+    });
 });
