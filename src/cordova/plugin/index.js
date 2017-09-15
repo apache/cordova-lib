@@ -27,6 +27,7 @@ module.exports.add = require('./add');
 module.exports.remove = require('./remove');
 module.exports.list = require('./list');
 module.exports.save = require('./save');
+module.exports.search = require('./search');
 
 function plugin (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error

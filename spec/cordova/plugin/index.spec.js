@@ -121,7 +121,7 @@ describe('cordova/plugin', function () {
                 }).done(done);
         });
 
-        xit('should direct "search" command to the "search" submodule', function (done) {
+        it('should direct "search" command to the "search" submodule', function (done) {
             spyOn(plugin, 'search').and.returnValue(true);
             plugin('search')
                 .then(function () {
