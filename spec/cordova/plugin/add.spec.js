@@ -474,16 +474,17 @@ describe('cordova/plugin/add', function () {
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'^1.0.0': {'cordova': '<7.0.0'}};
                 expect(add.determinePluginVersionToFetch(pluginInfo, {}, {}, '7.0.0')).toBe(null);
+                expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Ignoring invalid version/));
                 done();
             });
-
-            xit('', function (done) {
+            it('should return null and fetching latest version of plugin', function (done) {
+                add.getFailedRequirements.and.returnValue(['2.0.0']);
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'1.0.0': {'cordova': '<7.0.0'}, '<3.0.0': {'cordova': '>=7.0.0'}};
                 expect(add.determinePluginVersionToFetch(pluginInfo, {}, {}, '7.0.0')).toBe(null);
+                expect(events.emit).toHaveBeenCalledWith('warn', jasmine.stringMatching(/Current project does not satisfy/));
                 done();
             });
-
             it('should return highest version of plugin available based on constraints', function (done) {
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'1.0.0': {'cordova': '<7.0.0'}, '<3.0.0': {'cordova': '>=7.0.0'}};
@@ -492,6 +493,14 @@ describe('cordova/plugin/add', function () {
             });
         });
         describe('getFailedRequirements helper method', function () {
+            it('should remove prerelease version', function (done) {
+                var semver = require('semver');
+                spyOn(semver, 'prerelease').and.returnValue('7.0.1');
+                spyOn(semver, 'inc').and.callThrough();
+                expect(add.getFailedRequirements({'cordova': '>=7.0.0'}, {}, {}, '7.0.0').length).toBe(0);
+                expect(semver.inc).toHaveBeenCalledWith('7.0.0', 'patch');
+                done();
+            });
             it('should return an empty array if no failed requirements', function (done) {
                 expect(add.getFailedRequirements({'cordova': '>=7.0.0'}, {}, {}, '7.0.0').length).toBe(0);
                 done();
