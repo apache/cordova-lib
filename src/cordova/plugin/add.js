@@ -87,7 +87,9 @@ function add (projectRoot, hooksRunner, opts) {
                         link: opts.link,
                         pluginInfoProvider: pluginInfoProvider,
                         variables: opts.cli_variables,
-                        is_top_level: true
+                        is_top_level: true,
+                        save_exact: opts['save-exact'] || false,
+                        production: opts.production
                     };
 
                     return module.exports.determinePluginTarget(projectRoot, cfg, target, fetchOptions).then(function (resolvedTarget) {
@@ -121,7 +123,9 @@ function add (projectRoot, hooksRunner, opts) {
                             // files platform_www directory, so they'll be applied to www on each prepare.
                             usePlatformWww: true,
                             nohooks: opts.nohooks,
-                            force: opts.force
+                            force: opts.force,
+                            save_exact: opts['save-exact'] || false,
+                            production: opts.production
                         };
 
                         events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
