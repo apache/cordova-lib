@@ -2,7 +2,7 @@
     "ios": {
         "hostos": ["darwin"],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git",
-        "version": "~4.4.0",
+        "version": "~4.5.1",
         "apiCompatibleSince": "4.0.0",
         "deprecated": false
     },
@@ -15,7 +15,7 @@
     },
     "android": {
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~6.2.2",
+        "version": "~6.3.0",
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
@@ -38,7 +38,7 @@
         "hostos": [],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git",
         "source": "git",
-        "version": "^3.11.0",
+        "version": "^3.12.0",
         "deprecated": false
     },
     "windows": {
@@ -59,7 +59,7 @@
         "parser_file": "../cordova/metadata/browser_parser",
         "handler_file": "../plugman/platforms/browser",
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-browser.git",
-        "version": "~4.1.0",
+        "version": "~5.0.0",
         "deprecated": false
     }
 }

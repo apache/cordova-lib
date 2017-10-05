@@ -20,6 +20,34 @@
 -->
 # Cordova-lib Release Notes
 
+### 7.1.0 (Oct 04, 2017)
+* [CB-13303](https://issues.apache.org/jira/browse/CB-13303) added `--save_exact`, `--production` flags
+* [CB-13288](https://issues.apache.org/jira/browse/CB-13288) updated `index.js` and test to fix `cordova plugin search`
+* [CB-13206](https://issues.apache.org/jira/browse/CB-13206) fixed incorrect target being passed in to `plugin add` from `restore-util.js`
+* [CB-13145](https://issues.apache.org/jira/browse/CB-13145) added `variable-merge.js` to deal with `plugin.xml` variables for uninstall
+* [CB-12870](https://issues.apache.org/jira/browse/CB-12870) catch all use cases for `getPlatformApiFunction` and update tests accordingly
+* [CB-12944](https://issues.apache.org/jira/browse/CB-12944) Platform's spec is ignored in `config.xml` if `package.json` doesn't contain dependency for platform
+* [CB-12361](https://issues.apache.org/jira/browse/CB-12361) added new unit tests for plugin tests
+* [CB-13020](https://issues.apache.org/jira/browse/CB-13020) (plugman) install filters out `nohooks`
+* [CB-13056](https://issues.apache.org/jira/browse/CB-13056) added deprecation notice for **WebOS**
+* [CB-13057](https://issues.apache.org/jira/browse/CB-13057) added deprecation warning for `cordova platform save`
+* [CB-12361](https://issues.apache.org/jira/browse/CB-12361) added tests for `save.js` and rebased
+* [CB-12895](https://issues.apache.org/jira/browse/CB-12895) switched from `jshint` to `eslint`
+* [CB-12361](https://issues.apache.org/jira/browse/CB-12361) updated `addHelper` tests
+* [CB-11980](https://issues.apache.org/jira/browse/CB-11980) Update `README` to reflect new repos
+* [CB-6143](https://issues.apache.org/jira/browse/CB-6143) Change `plugman.emit()` to `events.emit()`
+* Reorganized unit test directory. Changes include: - consolidate `spec-cordova/` and `spec-plugman/` into a single `spec/` dir. - put `jasmine config` and helper modules in top-level spec dir. - changed `package.json` npm run scripts to reflect purposes of tasks. remove `npm run ci`. Updated `README` to reflect `package.json` npm run script changes. 
+* [CB-12361](https://issues.apache.org/jira/browse/CB-12361) added unit tests for `prepare.spec.js`
+* Update cordova-lib api. Deprecate `raw` from api calls. 
+* [CB-11980](https://issues.apache.org/jira/browse/CB-11980) moved `fetch`, `common` and `serve` into their own repos
+* [CB-12786](https://issues.apache.org/jira/browse/CB-12786) Improve logic for searching plugin id in case of module already exists in `node_modules`
+* [CB-12250](https://issues.apache.org/jira/browse/CB-12250) [CB-12409](https://issues.apache.org/jira/browse/CB-12409) **iOS**: Fix bug with escaping properties from plist file
+* [CB-12762](https://issues.apache.org/jira/browse/CB-12762) point `package.json` repo items to github mirrors instead of apache repos site
+* [CB-12777](https://issues.apache.org/jira/browse/CB-12777) removed **Android**, **iOS**, and **Windows** projects fixtures
+* [CB-12787](https://issues.apache.org/jira/browse/CB-12787) Fix plugin installation with `--link` option
+* [CB-12738](https://issues.apache.org/jira/browse/CB-12738) Cordova ignores plugin dependency version on **Windows** platform
+* [CB-12766](https://issues.apache.org/jira/browse/CB-12766) Consistently write JSON with 2 spaces indentation
+
 ### 7.0.1 (May 08, 2017)
 * [CB-12773](https://issues.apache.org/jira/browse/CB-12773): fixed incorrect plugin version fetching issue
 * [CB-12769](https://issues.apache.org/jira/browse/CB-12769): updated `cordova-create` dependency to 1.1.1
