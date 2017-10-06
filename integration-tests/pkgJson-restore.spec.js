@@ -259,7 +259,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function () {
             // Add platform (so that prepare can run).
-            return cordovaPlatform('add', 'browser', {'save': true});
+            return cordovaPlatform('add', 'browser', {'save': true, 'fetch': true});
         }).then(function () {
             // Run cordova prepare with fetch.
             return prepare({'fetch': true});
@@ -336,7 +336,7 @@ describe('tests platform/spec restore with --save', function () {
 
         emptyPlatformList().then(function () {
             // Add 'browser' platform to project without --save
-            return cordovaPlatform('add', secondPlatformAdded);
+            return cordovaPlatform('add', secondPlatformAdded, {'fetch': true});
         }).then(function () {
             // Add helpers.testPlatform to project with --save
             return cordovaPlatform('add', [helpers.testPlatform], {'save': true});
@@ -762,7 +762,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -847,7 +847,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -949,7 +949,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1079,7 +1079,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1199,7 +1199,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1332,7 +1332,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(platformsJson[androidPlatform]).not.toBeDefined();
         }).then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -1378,7 +1378,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).not.toExist();
         }).then(function () {
             // Run cordova prepare.
-            return prepare();
+            return prepare({'fetch': true});
         }).then(function () {
             // Plugin should be restored and returned to the installed list.
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();

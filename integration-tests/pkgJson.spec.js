@@ -487,10 +487,10 @@ describe('platform end-to-end with --save', function () {
         expect(pkgJsonPath).toExist();
 
         // Add a platform without --save.
-        cordova.platform('add', platformNotToAdd)
+        cordova.platform('add', platformNotToAdd, {'fetch': true})
             .then(function () {
                 // And now add another platform with --save.
-                return cordova.platform('add', [helpers.testPlatform], {'save': true});
+                return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
             }).then(function () {
                 // Check the platform add was successful, reload, skipping cache.
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -527,7 +527,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         emptyPlatformList().then(function () {
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.platform('add', ['android@6.1.0', 'browser@4.1.0'], {'save': true, 'fetch': true});
+            return cordova.platform('add', ['android@6.3.0', 'browser@5.0.0'], {'save': true, 'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -539,7 +539,7 @@ describe('platform end-to-end with --save', function () {
             expect(pkgJson.dependencies['cordova-android']).toBeDefined();
             expect(pkgJson.dependencies['cordova-browser']).toBeDefined();
             // Android platform should have specific version from add.
-            expect(pkgJson.dependencies['cordova-android']).toEqual('^6.1.0');
+            expect(pkgJson.dependencies['cordova-android']).toEqual('^6.3.0');
 
             var cfg3 = new ConfigParser(configXmlPath);
             engines = cfg3.getEngines();
@@ -549,7 +549,7 @@ describe('platform end-to-end with --save', function () {
             configEngArray = engNames.slice();
             // Check that android and browser were added to config.xml with the correct spec.
             expect(configEngArray.length === 2);
-            expect(engines).toEqual([ { name: 'android', spec: '~6.1.0' }, { name: 'browser', spec: '~4.1.0' } ]);
+            expect(engines).toEqual([ { name: 'android', spec: '~6.3.0' }, { name: 'browser', spec: '~5.0.0' } ]);
 
         }).then(fullPlatformList) // Platform should still be in platform ls.
             .then(function () {
