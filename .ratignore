@@ -1,8 +1,9 @@
-spec-plugman
-spec-cordova
+spec
+spec
 fixtures
 platformsConfig.json
 defaults.json
 help.txt
 jasmine.json
 coverage
+appveyor.yml
