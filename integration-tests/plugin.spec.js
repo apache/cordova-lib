@@ -98,8 +98,7 @@ function mockPluginFetch (id, dir) {
     spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, fetchOptions) {
         var dest = path.join(project, 'plugins', id);
         var src = path.join(dir, 'plugin.xml');
-
-        shell.mkdir(dest);
+        shell.mkdir('-p', dest);
         shell.cp(src, dest);
         return Q(dest);
     });
@@ -262,19 +261,18 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 011 : should handle scoped npm packages', function (done) {
-        var scopedPackage = '@testscope/' + npmInfoTestPlugin;
-        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+        mockPluginFetch(npmScopedTestPlugin, path.join(pluginsDir, npmScopedTestPluginDir));
 
         spyOn(registry, 'info').and.returnValue(Q({}));
-        addPlugin(scopedPackage, npmInfoTestPlugin, {})
+        addPlugin(npmScopedTestPlugin, npmScopedTestPlugin, {})
             .then(function () {
                 // Check to make sure that we are at least trying to get the correct package.
                 // This package is not published to npm, so we can't truly do end-to-end tests
 
-                expect(registry.info).toHaveBeenCalledWith([scopedPackage]);
+                expect(registry.info).toHaveBeenCalledWith([npmScopedTestPlugin]);
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-                expect(fetchTarget).toEqual(scopedPackage);
+                expect(fetchTarget).toEqual(npmScopedTestPlugin);
             })
             .fail(function (err) {
                 expect(err).toBeUndefined();
@@ -283,11 +281,11 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 012 : should handle scoped npm packages with given version tags', function (done) {
-        var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
-        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+        var scopedPackage = npmScopedTestPlugin + '@latest';
+        mockPluginFetch(npmScopedTestPlugin, path.join(pluginsDir, npmScopedTestPluginDir));
 
         spyOn(registry, 'info');
-        addPlugin(scopedPackage, npmInfoTestPlugin, {})
+        addPlugin(scopedPackage, npmScopedTestPlugin, {})
             .then(function () {
                 expect(registry.info).not.toHaveBeenCalled();
 

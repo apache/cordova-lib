@@ -255,11 +255,20 @@ function findPlugins (pluginDir) {
     var plugins = [];
 
     if (fs.existsSync(pluginDir)) {
-        plugins = fs.readdirSync(pluginDir).filter(function (fileName) {
-            var pluginPath = path.join(pluginDir, fileName);
-            var isPlugin = isDirectory(pluginPath) || isSymbolicLink(pluginPath);
-            return fileName !== '.svn' && fileName !== 'CVS' && isPlugin;
-        });
+        plugins = fs.readdirSync(pluginDir)
+            .reduce(function (plugins, pluginOrScope) {
+                if (pluginOrScope[0] === '@') {
+                    plugins.push(...fs.readdirSync(path.join(pluginDir, pluginOrScope)).map(s => path.join(pluginOrScope, s)));
+                } else {
+                    plugins.push(pluginOrScope);
+                }
+                return plugins;
+            }, [])
+            .filter(function (fileName) {
+                var pluginPath = path.join(pluginDir, fileName);
+                var isPlugin = isDirectory(pluginPath) || isSymbolicLink(pluginPath);
+                return fileName !== '.svn' && fileName !== 'CVS' && isPlugin;
+            });
     }
 
     return plugins;
