@@ -329,7 +329,7 @@ function installPluginsFromConfigXML (args) {
             }
         });
         // If pkg.json plugins have been modified, write to it.
-        if (modifiedPkgJson === true) {
+        if (modifiedPkgJson === true && args.save !== false) {
             pkgJson.cordova.plugins = comboObject;
             if (pkgJson.dependencies === undefined) {
                 pkgJson.dependencies = {};
@@ -366,7 +366,7 @@ function installPluginsFromConfigXML (args) {
         }
     });
 
-    if (modifiedConfigXML === true) {
+    if (modifiedConfigXML === true && args.save !== false) {
         cfg.write();
     }
 
