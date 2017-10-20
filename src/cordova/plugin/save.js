@@ -80,17 +80,12 @@ function getSpec (pluginSource, projectRoot, pluginName) {
     }
 
     var version = null;
-    var scopedPackage = null;
     if (pluginSource.hasOwnProperty('id')) {
         // Note that currently version is only saved here if it was explicitly specified when the plugin was added.
         var parsedSpec = pluginSpec.parse(pluginSource.id);
         version = parsedSpec.version;
         if (version) {
             version = module.exports.versionString(version);
-        }
-
-        if (parsedSpec.scope) {
-            scopedPackage = parsedSpec.package;
         }
     }
 
@@ -107,10 +102,6 @@ function getSpec (pluginSource, projectRoot, pluginName) {
             }
         } catch (err) {
         }
-    }
-
-    if (scopedPackage) {
-        version = scopedPackage + '@' + version;
     }
 
     return version;
