@@ -46,6 +46,9 @@ var org_test_defaultvariables = 'org.test.defaultvariables';
 var npmInfoTestPlugin = 'cordova-lib-test-plugin';
 var npmInfoTestPluginVersion = '1.1.2';
 
+var npmScopedTestPlugin = '@testscope/cordova-lib-test-plugin-scoped';
+var npmScopedTestPluginDir = 'cordova-lib-test-plugin-scoped';
+
 var testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.git';
 var testGitPluginId = 'cordova-plugin-device';
 
