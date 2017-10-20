@@ -55,7 +55,6 @@ function readDeps (test) {
     };
 }
 
-/* eslint-disable */
 var name = package.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
@@ -154,6 +153,5 @@ var license = package.license ||
               config.get('init.license') ||
               config.get('init-license') ||
               'ISC';
-/* eslint-enable */
 
 exports.license = yes ? license : prompt('license', license);
