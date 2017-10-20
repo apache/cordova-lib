@@ -166,18 +166,12 @@ function add (projectRoot, hooksRunner, opts) {
                             attributes.spec = src;
                         } else {
                             var ver = '~' + pluginInfo.version;
-                            // Scoped packages need to have the package-spec along with the version
-                            var parsedSpec = pluginSpec.parse(target);
                             if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]) {
                                 attributes.spec = pkgJson.dependencies[pluginInfo.id];
                             } else if (pkgJson && pkgJson.devDependencies && pkgJson.devDependencies[pluginInfo.id]) {
                                 attributes.spec = pkgJson.devDependencies[pluginInfo.id];
                             } else {
-                                if (parsedSpec.scope) {
-                                    attributes.spec = parsedSpec.package + '@' + ver;
-                                } else {
-                                    attributes.spec = ver;
-                                }
+                                attributes.spec = ver;
                             }
                         }
                     }
@@ -256,7 +250,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
         }
     } */
 
-    if (cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version) || pluginSpec.parse(parsedSpec.version).scope) {
+    if (cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version)) {
         return Promise.resolve(parsedSpec.version);
     }
 
