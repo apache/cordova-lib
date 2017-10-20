@@ -297,4 +297,37 @@ describe('plugin end-to-end', function () {
             })
             .fin(done);
     }, 30000);
+
+    it('Test 013 : should be able to add and remove scoped npm packages without screwing up everything', function (done) {
+        mockPluginFetch(npmScopedTestPlugin, path.join(pluginsDir, npmScopedTestPluginDir));
+
+        spyOn(registry, 'info').and.returnValue(Q({}));
+        addPlugin(npmScopedTestPlugin, npmScopedTestPlugin, {})
+            .then(function () {
+                expect(registry.info).toHaveBeenCalledWith([npmScopedTestPlugin]);
+
+                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                expect(fetchTarget).toEqual(npmScopedTestPlugin);
+            })
+            .then(function () {
+                return cordova.plugin('ls');
+            })
+            .then(function (list) {
+                console.dir(list);
+            })
+            .then(function () {
+                return removePlugin(npmScopedTestPlugin);
+            })
+            .then(function () {
+                return cordova.plugin('ls');
+            })
+            .then(function (list) {
+                console.dir(list);
+            })
+            .fail(function (err) {
+                console.error(err);
+                expect(err).toBeUndefined();
+            })
+            .fin(done);
+    }, 30000);
 });
