@@ -263,7 +263,7 @@ describe('plugin end-to-end', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info').and.returnValue(Q({}));
-        addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
+        addPlugin(scopedPackage, npmInfoTestPlugin, {})
             .then(function () {
                 // Check to make sure that we are at least trying to get the correct package.
                 // This package is not published to npm, so we can't truly do end-to-end tests
@@ -284,7 +284,7 @@ describe('plugin end-to-end', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info');
-        addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
+        addPlugin(scopedPackage, npmInfoTestPlugin, {})
             .then(function () {
                 expect(registry.info).not.toHaveBeenCalled();
 
