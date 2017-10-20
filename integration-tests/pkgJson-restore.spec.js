@@ -138,7 +138,7 @@ describe('tests platform/spec restore with --save', function () {
     *   pkg.json and config.xml would add it to their files properly.
     *   When prepare is run with fetch, platform should be installed.
     */
-    it('Test#017 : test to make sure that platform url is added and restored properly', function (done) {
+    xit('Test#017 : test to make sure that platform url is added and restored properly', function (done) {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
