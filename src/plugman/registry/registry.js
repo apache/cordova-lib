@@ -118,6 +118,5 @@ function initThenLoadSettingsWithRestore (promises) {
 function fetchPlugin (plugin) {
     events.emit('log', 'Fetching plugin "' + plugin + '" via npm');
     var parsedSpec = pluginSpec.parse(plugin);
-    var scope = parsedSpec.scope || '';
-    return npmhelper.fetchPackage(scope + parsedSpec.id, parsedSpec.version);
+    return npmhelper.fetchPackage(parsedSpec.id, parsedSpec.version);
 }

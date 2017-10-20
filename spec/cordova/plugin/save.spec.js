@@ -150,9 +150,9 @@ describe('cordova/plugin/save', function () {
             expect(save.getSpec({id: 'cordova-plugin-camera@^1.1.0'}, '/some/path', 'cordova-plugin-camera')).toEqual('^1.1.0');
         });
 
-        it('should return a version that includes scope if scope was part of plugin id', function () {
+        it('should return a version if the package name includes a scope', function () {
             save.versionString.and.callThrough();
-            expect(save.getSpec({ type: 'registry', id: '@scoped/package@^1.0.0' }, '/some/path', 'cordova-plugin-camera')).toEqual('@scoped/package@^1.0.0');
+            expect(save.getSpec({ type: 'registry', id: '@scoped/package@^1.0.0' }, '/some/path', 'cordova-plugin-camera')).toEqual('^1.0.0');
         });
 
         it('should fall back to using PluginInfoProvider to retrieve a version as last resort', function () {
