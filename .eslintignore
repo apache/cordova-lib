@@ -1,4 +1,6 @@
-spec/cordova/fixtures/**
-spec/plugman/projects/**
-spec/plugman/plugins/**
-spec/cordova/temp/**
+src/plugman/init-defaults.js
+spec/cordova/fixtures/*
+spec/plugman/projects/*
+spec/plugman/plugins/*
+spec/cordova/temp/*
+

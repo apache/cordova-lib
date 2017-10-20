@@ -19,7 +19,7 @@
 
 /* global dirname */
 /* global config */
-/* global pkg */
+/* global package */
 /* global basename */
 /* global yes */
 /* global prompt */
@@ -55,17 +55,17 @@ function readDeps (test) {
     };
 }
 
-var name = pkg.name || defaults.id || basename;
+var name = package.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
-var version = pkg.version ||
+var version = package.version ||
               defaults.version ||
               config.get('init.version') ||
               config.get('init-version') ||
               '1.0.0';
 exports.version = yes ? version : prompt('version', version);
 
-if (!pkg.description) {
+if (!package.description) {
     if (defaults.description) {
         exports.description = defaults.description;
     } else {
@@ -73,7 +73,7 @@ if (!pkg.description) {
     }
 }
 
-if (!pkg.cordova) {
+if (!package.cordova) {
     exports.cordova = {};
     if (defaults.id) {
         exports.cordova.id = defaults.id;
@@ -83,15 +83,15 @@ if (!pkg.cordova) {
     }
 }
 
-if (!pkg.dependencies) {
+if (!package.dependencies) {
     exports.dependencies = readDeps(false);
 }
 
-if (!pkg.devDependencies) {
+if (!package.devDependencies) {
     exports.devDependencies = readDeps(true);
 }
 
-if (!pkg.repository) {
+if (!package.repository) {
     exports.repository = function (cb) {
         fs.readFile('.git/config', 'utf8', function (er, gconf) {
             if (er || !gconf) {
@@ -116,7 +116,7 @@ if (!pkg.repository) {
     };
 }
 
-if (!pkg.keywords) {
+if (!package.keywords) {
     if (defaults.keywords) {
         exports.keywords = defaults.keywords;
     } else {
@@ -129,14 +129,13 @@ if (!pkg.keywords) {
     }
 }
 
-if (!pkg.engines) {
+if (!package.engines) {
     if (defaults.engines && defaults.engines.length > 0) {
         exports.engines = defaults.engines;
     }
 }
 
-/* eslint-disable indent */
-if (!pkg.author) {
+if (!package.author) {
     exports.author = (config.get('init.author.name') ||
                      config.get('init-author-name')) ?
     {
@@ -149,10 +148,10 @@ if (!pkg.author) {
     }
         : prompt('author');
 }
-/* eslint-enable indent */
-var license = pkg.license ||
+var license = package.license ||
               defaults.license ||
               config.get('init.license') ||
               config.get('init-license') ||
               'ISC';
+
 exports.license = yes ? license : prompt('license', license);
