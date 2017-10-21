@@ -1,0 +1,3 @@
+* text=auto eol=lf
+/spec/plugman/projects/windows*/* text=auto eol=crlf
+/spec/plugman/projects/wp*/* text=auto eol=crlf

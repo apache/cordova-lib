@@ -8,3 +8,6 @@ rules:
   padded-blocks: off
   operator-linebreak: off
   no-throw-literal: off
+  linebreak-style:
+    - error
+    - unix

@@ -57,7 +57,7 @@
   },
   "scripts": {
     "test": "npm run eslint && npm run unit-tests && npm run e2e-tests",
-    "eslint": "eslint src spec",
+    "eslint": "eslint src spec integration-tests",
     "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "cover": "istanbul cover --root src --print detail jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "e2e-tests": "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
