@@ -381,7 +381,7 @@ describe('cordova/plugin/add', function () {
                     });
             });
             it('should retrieve installed plugins and installed platforms version and feed that information into determinePluginVersionToFetch', function () {
-                plugin_util.getInstalledPlugins.and.returnValue([{ 'id': 'cordova-plugin-camera', 'version': '2.0.0' }]);
+                plugin_util.getInstalledPlugins.and.returnValue([{ 'id': '@cordova/plugin-thinger', 'version': '2.0.0' }]);
                 cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Promise.resolve({ 'android': '6.0.0' }));
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = { '^1.0.0': { 'cordova': '>7.0.0' } };
@@ -389,7 +389,7 @@ describe('cordova/plugin/add', function () {
                     .then(function () {
                         expect(plugin_util.getInstalledPlugins).toHaveBeenCalledWith(projectRoot);
                         expect(cordova_util.getInstalledPlatformsWithVersions).toHaveBeenCalledWith(projectRoot);
-                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { 'cordova-plugin-camera': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
+                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { '@cordova/plugin-thinger': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
                     });
             });
         });
