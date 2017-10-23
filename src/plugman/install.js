@@ -380,11 +380,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
 function installDependencies (install, dependencies, options) {
     events.emit('verbose', 'Dependencies detected, iterating through them...');
 
-    var top_plugins = path.join(options.plugin_src_dir || install.top_plugin_dir, '..');
-
-    // Add directory of top-level plugin to search path
     options.searchpath = options.searchpath || [];
-    if (top_plugins !== install.plugins_dir && options.searchpath.indexOf(top_plugins) === -1) { options.searchpath.push(top_plugins); }
 
     // Search for dependency by Id is:
     // a) Look for {$top_plugins}/{$depId} directory
