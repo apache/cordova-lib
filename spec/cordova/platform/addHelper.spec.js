@@ -444,15 +444,33 @@ describe('cordova/platform/addHelper', function () {
             }).done(done);
         });
 
-        it('should invoke plugman.install, giving correct platform, plugin and other arguments', function (done) {
-            spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-whitelist']);
-            fetch_metadata.get_fetch_metadata.and.returnValue({ });
+        function testInstallPluginsForNewPlatform (pluginName, getFetchMetadataResponse, expectedInstallOptions, done) {
+            spyOn(cordova_util, 'findPlugins').and.returnValue([pluginName]);
+            fetch_metadata.get_fetch_metadata.and.returnValue(getFetchMetadataResponse);
             platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
-                expect(plugman.install).toHaveBeenCalled();
-                expect(events.emit).toHaveBeenCalledWith('verbose', 'Installing plugin "cordova-plugin-whitelist" following successful platform add of browser');
+                expect(plugman.install).toHaveBeenCalledWith(
+                    'browser',
+                    '/some/path/platforms/browser',
+                    pluginName,
+                    '/some/path/plugins',
+                    jasmine.objectContaining(expectedInstallOptions)
+                );
+                expect(events.emit).toHaveBeenCalledWith('verbose', `Installing plugin "${pluginName}" following successful platform add of browser`);
             }).fail(function (e) {
                 fail('fail handler unexpectedly invoked');
             }).done(done);
+        }
+
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', function (done) {
+            testInstallPluginsForNewPlatform('cordova-plugin-whitelist', {}, {is_top_level: undefined, fetch: true, save: true}, done);
+        });
+
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', function (done) {
+            testInstallPluginsForNewPlatform('cordova-plugin-top-level', {is_top_level: true}, {is_top_level: true, fetch: true, save: true}, done);
+        });
+
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', function (done) {
+            testInstallPluginsForNewPlatform('@cordova/cordova-plugin-scoped', {is_top_level: true}, {is_top_level: true, fetch: true, save: true}, done);
         });
 
         it('should include any plugin variables as options when invoking plugman install', function (done) {
