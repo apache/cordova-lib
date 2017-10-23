@@ -324,6 +324,33 @@ describe('cordova/platform/addHelper', function () {
             });
         });
 
+        function testInstallPluginsForNewPlatform (pluginName, getFetchMetadataResponse, expectedInstallOptions) {
+            spyOn(cordova_util, 'findPlugins').and.returnValue([pluginName]);
+            fetch_metadata.get_fetch_metadata.and.returnValue(getFetchMetadataResponse);
+
+            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, { save: true }).then(() => {
+                expect(plugman.install).toHaveBeenCalledWith(
+                    'browser',
+                    path.normalize('/some/path/platforms/browser'),
+                    pluginName,
+                    path.normalize('/some/path/plugins'),
+                    jasmine.objectContaining(expectedInstallOptions)
+                );
+                expect(events.emit).toHaveBeenCalledWith(
+                    'verbose',
+                    `Installing plugin "${pluginName}" following successful platform add of browser`
+                );
+            });
+        }
+
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', () => {
+            return testInstallPluginsForNewPlatform('cordova-plugin-whitelist', {}, { is_top_level: undefined, save: true });
+        });
+
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', () => {
+            return testInstallPluginsForNewPlatform('cordova-plugin-top-level', { is_top_level: true }, { is_top_level: true, save: true });
+        });
+
         it('should include any plugin variables as options when invoking plugman install', function () {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-camera']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ source: {}, variables: {} });
