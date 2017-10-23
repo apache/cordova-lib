@@ -312,8 +312,9 @@ describe('util module', function () {
 
         describe('getPlatformApiFunction', function () {
             it('Test 027 : should throw error informing user to update platform', function () {
-                expect(function () { util.getPlatformApiFunction('some/path', 'android'); }).toThrow(new Error // eslint-disable-line func-call-spacing
-                ('Uncaught, unspecified "error" event. ( Using this version of Cordova with older version of cordova-android is deprecated. Upgrade to cordova-android@5.0.0 or newer.)'));
+                expect(function () { util.getPlatformApiFunction('some/path', 'android'); }).toThrowError(
+                    /(Uncaught, unspecified|Unhandled) "error" event. \( Using this version of Cordova with older version of cordova-android is deprecated\. Upgrade to cordova-android@5\.0\.0 or newer.\)/
+                );
             });
 
             it('Test 028 : should throw error if platform is not supported', function () {
