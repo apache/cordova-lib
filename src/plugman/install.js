@@ -427,7 +427,7 @@ function tryFetchDependency (dep, install, options) {
     if (dep.url === '.') {
 
         // Look up the parent plugin's fetch metadata and determine the correct URL.
-        var fetchdata = require('./util/metadata').get_fetch_metadata(install.top_plugin_dir);
+        var fetchdata = require('./util/metadata').get_fetch_metadata(install.plugins_dir, install.top_plugin_id);
         if (!fetchdata || !(fetchdata.source && fetchdata.source.type)) {
 
             relativePath = dep.subdir || dep.id;

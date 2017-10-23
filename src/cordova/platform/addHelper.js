@@ -354,10 +354,9 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
     return plugins.reduce(function (soFar, plugin) {
         return soFar.then(function () {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
-            plugin = path.basename(plugin);
 
             // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
-            var pluginMetadata = fetchMetadata.get_fetch_metadata(path.join(plugins_dir, plugin));
+            var pluginMetadata = fetchMetadata.get_fetch_metadata(plugins_dir, plugin);
 
             var options = {
                 searchpath: opts.searchpath,
