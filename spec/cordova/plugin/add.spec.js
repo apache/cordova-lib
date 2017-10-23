@@ -396,6 +396,18 @@ describe('cordova/plugin/add', function () {
                         expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { 'cordova-plugin-camera': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
                     });
             });
+            it('should retrieve installed plugins and installed platforms version with a scoped plugin, and feed that information into determinePluginVersionToFetch', function () {
+                plugin_util.getInstalledPlugins.and.returnValue([{ 'id': '@cordova/cordova-plugin-camera', 'version': '2.0.0' }]);
+                cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Promise.resolve({ 'android': '6.0.0' }));
+                pluginInfo.engines = {};
+                pluginInfo.engines.cordovaDependencies = { '^1.0.0': { 'cordova': '>7.0.0' } };
+                return add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
+                    .then(function () {
+                        expect(plugin_util.getInstalledPlugins).toHaveBeenCalledWith(projectRoot);
+                        expect(cordova_util.getInstalledPlatformsWithVersions).toHaveBeenCalledWith(projectRoot);
+                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { '@cordova/cordova-plugin-camera': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
+                    });
+            });
         });
         // TODO More work to be done here to replace plugin_fetch.spec.js
         describe('determinePluginVersionToFetch helper method', function () {
