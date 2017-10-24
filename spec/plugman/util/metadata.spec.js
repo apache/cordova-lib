@@ -65,8 +65,7 @@ describe('plugman.metadata', function () {
 
     describe('get_fetch_metadata', function () {
 
-        var get_fetch_metadata = (pluginsDir, pluginId) =>
-            metadata.get_fetch_metadata(path.join(pluginsDir, pluginId));
+        var get_fetch_metadata = metadata.get_fetch_metadata;
 
         describe('with no record', function () {
             it('should return an empty object if there is no record', function () {
@@ -130,6 +129,23 @@ describe('plugman.metadata', function () {
 
             expect(meta).toEqual({ metadata: 'matches' });
         });
+
+        it('should return the fetch metadata in plugins_dir/fetch.json if it is there with a scoped plugin', function () {
+            fileMocks[path.normalize('/plugins_dir/fetch.json')] = JSON.stringify({
+                '@cordova/cordova-plugin-thinger': {
+                    'metadata': 'matches'
+                }
+            });
+            spyOn(fsMock, 'readFileSync').and.callThrough();
+            spyOn(fsMock, 'existsSync').and.callThrough();
+
+            var meta = get_fetch_metadata(pluginsDir, '@cordova/cordova-plugin-thinger');
+
+            expect(meta).toEqual({ metadata: 'matches' });
+            expect(fsMock.existsSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'));
+            expect(fsMock.readFileSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'), 'utf-8');
+        });
+
     });
 
     describe('save_fetch_metadata', function () {

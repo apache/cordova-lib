@@ -351,6 +351,10 @@ describe('cordova/platform/addHelper', function () {
             return testInstallPluginsForNewPlatform('cordova-plugin-top-level', { is_top_level: true }, { is_top_level: true, save: true });
         });
 
+        it('should invoke plugman.install, giving correct platform, plugin and other arguments with a dependent plugin', () => {
+            return testInstallPluginsForNewPlatform('@cordova/cordova-plugin-scoped', { is_top_level: true }, { is_top_level: true, save: true });
+        });
+
         it('should include any plugin variables as options when invoking plugman install', function () {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-camera']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ source: {}, variables: {} });
