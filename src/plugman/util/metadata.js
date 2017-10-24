@@ -34,10 +34,7 @@ function getJson (pluginsDir) {
     return cachedJson;
 }
 
-exports.get_fetch_metadata = function (plugin_dir) {
-    var pluginsDir = path.dirname(plugin_dir);
-    var pluginId = path.basename(plugin_dir);
-
+exports.get_fetch_metadata = function (pluginsDir, pluginId) {
     var metadataJson = getJson(pluginsDir);
     return metadataJson[pluginId] || {};
 };

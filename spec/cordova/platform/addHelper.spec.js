@@ -349,6 +349,17 @@ describe('cordova/platform/addHelper', function () {
             });
         });
 
+        it('should invoke plugman.install with correct plugin ID for a scoped plugin', () => {
+            const scopedPluginId = '@cordova/cordova-plugin-scoped';
+            cordova_util.findPlugins.and.returnValue([scopedPluginId]);
+
+            return installPluginsForNewPlatformWithTestArgs().then(() => {
+                expect(plugman.install).toHaveBeenCalledTimes(1);
+                const pluginId = plugman.install.calls.argsFor(0)[2];
+                expect(pluginId).toBe(scopedPluginId);
+            });
+        });
+
         it('should include any plugin variables as options when invoking plugman install', function () {
             const variables = {};
             fetch_metadata.get_fetch_metadata.and.returnValue({ variables });
