@@ -459,12 +459,12 @@ describe('HooksRunner', function () {
                                 delete call.args[1].plugin.pluginInfo._et;
                             }
 
-                            if (call.args[0] == 'before_plugin_uninstall' ||
-                                call.args[0] == 'before_plugin_install' ||
-                                call.args[0] == 'after_plugin_install') {
+                            if (call.args[0] === 'before_plugin_uninstall' ||
+                                call.args[0] === 'before_plugin_install' ||
+                                call.args[0] === 'after_plugin_install') {
                                 if (call.args[1]) {
                                     expect(call.args[1].plugin).toBeDefined();
-                                    if (call.args[1].plugin.platform == 'android') {
+                                    if (call.args[1].plugin.platform === 'android') {
                                         expect(JSON.stringify(androidPluginOpts) ===
                                             JSON.stringify(call.args[1])).toBe(true);
                                     }
@@ -665,7 +665,7 @@ describe('HooksRunner', function () {
     // Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
     it('Test 025 : should not fail during cleanup', function () {
         process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
-        if (ext == 'sh') {
+        if (ext === 'sh') {
             shell.rm('-rf', tmpDir);
         } else { // Windows:
             // For some mysterious reason, both shell.rm and RMDIR /S /Q won't

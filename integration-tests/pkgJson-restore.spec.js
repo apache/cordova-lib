@@ -670,8 +670,8 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.indexOf('browser')).toEqual(-1);
         expect(configEngArray.length === 1);
         // Pkg.json has cordova-browser in its dependencies.
-        expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^5.0.0', 'cordova-browser' : '^4.1.0' });
-        emptyPlatformList().then(function() {
+        expect(pkgJson.dependencies).toEqual({ 'cordova-android': '^5.0.0', 'cordova-browser': '^4.1.0' });
+        emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare();
         }).then(function () {
@@ -690,9 +690,9 @@ describe('update config.xml to include platforms in pkg.json', function () {
             // Expect config.xml array to have 2 elements (platforms).
             expect(configEngArray.length === 2);
             // Check to make sure that 'browser' spec was added properly.
-            expect(engines).toEqual([ { name: 'android', spec: '^5.0.0' },{ name: 'browser', spec: '^4.1.0' } ]);
+            expect(engines).toEqual([ { name: 'android', spec: '^5.0.0' }, { name: 'browser', spec: '^4.1.0' } ]);
             // No change to pkg.json dependencies.
-            expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^5.0.0', 'cordova-browser' : '^4.1.0' });
+            expect(pkgJson.dependencies).toEqual({ 'cordova-android': '^5.0.0', 'cordova-browser': '^4.1.0' });
             expect(pkgJson.dependencies['cordova-android']).toEqual('^5.0.0');
             expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
         }).fail(function (err) {
@@ -762,7 +762,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true, 'save':true});
+            return prepare({'fetch': true, 'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1199,7 +1199,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': false, 'save':true});
+            return prepare({'fetch': false, 'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
