@@ -5,16 +5,8 @@ git:
 node_js:
   - "4"
   - "6"
+  - "8"
 install:
-  - git clone https://github.com/apache/cordova-js --depth 10
-  - git clone https://github.com/apache/cordova-fetch --depth 10
-  - git clone https://github.com/apache/cordova-serve --depth 10
-  - git clone https://github.com/apache/cordova-common --depth 10
-  - (cd cordova-js && npm install && npm link .)
-  - (cd cordova-common && npm install && npm link .)
-  - (cd cordova-serve && npm install && npm link .)
-  - (cd cordova-fetch && npm link cordova-common && npm install && npm link .)
-  - (npm link cordova-serve && npm link cordova-fetch && npm link cordova-common && npm link cordova-js)
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
   # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency

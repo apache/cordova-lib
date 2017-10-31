@@ -20,7 +20,7 @@
     "aliasify": "^2.1.0",
     "cordova-common": "2.1.1",
     "cordova-create": "~1.1.0",
-    "cordova-fetch": "1.2.0",
+    "cordova-fetch": "1.2.1",
     "cordova-js": "4.2.2",
     "cordova-serve": "^2.0.0",
     "dep-graph": "1.1.0",
