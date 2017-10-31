@@ -291,7 +291,9 @@ function getVersionFromConfigFile (platform, cfg) {
 function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function () {
-        if (opts.fetch) {
+        var platformPath = path.join(projectRoot, 'platforms', platform);
+        var platformAlreadyAdded = fs.existsSync(platformPath);
+        if ((opts.fetch) && (!platformAlreadyAdded || platformAlreadyAdded === undefined || platformAlreadyAdded === null)) {
             // append cordova to platform
             if (platform in platforms) {
                 target = 'cordova-' + target;
