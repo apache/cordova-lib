@@ -5,31 +5,10 @@ environment:
   matrix:
   - nodejs_version: "4"
   - nodejs_version: "6"
+  - nodejs_version: "8"
   
 install:
   - ps: Install-Product node $env:nodejs_version
-  - git clone https://github.com/apache/cordova-js --depth 10
-  - git clone https://github.com/apache/cordova-common --depth 10
-  - git clone https://github.com/apache/cordova-fetch --depth 10
-  - git clone https://github.com/apache/cordova-serve --depth 10
-  - cd cordova-js
-  - npm install
-  - npm link .
-  - cd ../cordova-common
-  - npm install
-  - npm link .
-  - cd ../cordova-serve
-  - npm install
-  - npm link .
-  - cd ../cordova-fetch
-  - npm link cordova-common
-  - npm install
-  - npm link .
-  - cd ../
-  - npm link cordova-js
-  - npm link cordova-fetch
-  - npm link cordova-common
-  - npm link cordova-serve
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
   # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency

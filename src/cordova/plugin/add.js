@@ -240,9 +240,8 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // If parsedSpec.version satisfies pkgJson version, no writing to pkg.json. Only write when
     // it does not satisfy.
     /* if (parsedSpec.version) {
-        
         if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[parsedSpec.package]) {
-            //it can only go in here if 
+            //it can only go in here if
             var noSymbolVersion = parsedSpec.version;
             if (parsedSpec.version.charAt(0) === '^' || parsedSpec.version.charAt(0) === '~') {
                 noSymbolVersion = parsedSpec.version.slice(1);
