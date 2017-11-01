@@ -258,7 +258,9 @@ function findPlugins (pluginDir) {
         plugins = fs.readdirSync(pluginDir)
             .reduce(function (plugins, pluginOrScope) {
                 if (pluginOrScope[0] === '@') {
-                    plugins.push(...fs.readdirSync(path.join(pluginDir, pluginOrScope)).map(s => path.join(pluginOrScope, s)));
+                    var scopedPlugins = fs.readdirSync(path.join(pluginDir, pluginOrScope))
+                        .map(scopedPluginDir => path.join(pluginOrScope, scopedPluginDir));
+                    plugins.push.apply(plugins, scopedPlugins);
                 } else {
                     plugins.push(pluginOrScope);
                 }
