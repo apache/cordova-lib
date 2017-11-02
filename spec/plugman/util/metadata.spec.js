@@ -1,6 +1,7 @@
 
 var rewire = require('rewire');
 var metadata = rewire('../../../src/plugman/util/metadata');
+var path = require('path');
 
 var fileMocks;
 var fsMock = {
@@ -42,13 +43,15 @@ describe('plugman.metadata', function () {
         metadata.__set__('cachedJson', null);
     });
 
+    var pluginsDir = path.normalize('/plugins_dir/');
+
     describe('get_fetch_metadata', function () {
 
         var get_fetch_metadata = metadata.get_fetch_metadata;
 
         describe('with no record', function () {
             it('should return an empty object if there is no record', function () {
-                expect(get_fetch_metadata('/plugins_dir/', 'cordova-plugin-thinger')).toEqual({});
+                expect(get_fetch_metadata(pluginsDir, 'cordova-plugin-thinger')).toEqual({});
             });
         });
 
@@ -62,17 +65,17 @@ describe('plugman.metadata', function () {
             it('with no cache, it should read from the filesystem', function () {
 
                 metadata.__set__('cachedJson', null);
-                fileMocks['/plugins_dir/fetch.json'] = JSON.stringify({
+                fileMocks[path.normalize('/plugins_dir/fetch.json')] = JSON.stringify({
                     'cordova-plugin-thinger': {
                         'metadata': 'matches'
                     }
                 });
 
-                var meta = get_fetch_metadata('/plugins_dir/', 'cordova-plugin-thinger');
+                var meta = get_fetch_metadata(pluginsDir, 'cordova-plugin-thinger');
 
                 expect(meta).toEqual({metadata: 'matches'});
-                expect(fsMock.existsSync).toHaveBeenCalledWith('/plugins_dir/fetch.json');
-                expect(fsMock.readFileSync).toHaveBeenCalledWith('/plugins_dir/fetch.json', 'utf-8');
+                expect(fsMock.existsSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'));
+                expect(fsMock.readFileSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'), 'utf-8');
             });
 
             it('with a cache, it should read from the cache', function () {
@@ -82,13 +85,13 @@ describe('plugman.metadata', function () {
                     }
                 });
 
-                fileMocks['/plugins_dir/fetch.json'] = JSON.stringify({
+                fileMocks[path.normalize('/plugins_dir/fetch.json')] = JSON.stringify({
                     'cordova-plugin-thinger': {
                         'metadata': 'matches'
                     }
                 });
 
-                var meta = get_fetch_metadata('/plugins_dir/', 'cordova-plugin-thinger');
+                var meta = get_fetch_metadata(pluginsDir, 'cordova-plugin-thinger');
 
                 expect(meta).toEqual({metadata: 'cached'});
                 expect(fsMock.existsSync).not.toHaveBeenCalled();
@@ -98,31 +101,31 @@ describe('plugman.metadata', function () {
         });
 
         it('should return the fetch metadata in plugins_dir/fetch.json if it is there', function () {
-            fileMocks['/plugins_dir/fetch.json'] = JSON.stringify({
+            fileMocks[path.normalize('/plugins_dir/fetch.json')] = JSON.stringify({
                 'cordova-plugin-thinger': {
                     'metadata': 'matches'
                 }
             });
 
-            var meta = get_fetch_metadata('/plugins_dir/', 'cordova-plugin-thinger');
+            var meta = get_fetch_metadata(pluginsDir, 'cordova-plugin-thinger');
 
             expect(meta).toEqual({metadata: 'matches'});
         });
 
         it('should migrate legacy fetch metadata if it is there', function () {
-            fileMocks['/plugins_dir/cordova-plugin-thinger/.fetch.json'] = JSON.stringify({
+            fileMocks[path.normalize('/plugins_dir/cordova-plugin-thinger/.fetch.json')] = JSON.stringify({
                 metadata: 'matches'
             });
-            fileMocks['/plugins_dir/@cordova/cordova-plugin-thinger/.fetch.json'] = JSON.stringify({
+            fileMocks[path.normalize('/plugins_dir/@cordova/cordova-plugin-thinger/.fetch.json')] = JSON.stringify({
                 metadata: 'matches'
             });
 
-            var meta = get_fetch_metadata('/plugins_dir', '@cordova/cordova-plugin-thinger');
+            var meta = get_fetch_metadata(pluginsDir, '@cordova/cordova-plugin-thinger');
 
             expect(meta).toEqual({metadata: 'matches'});
             expect(getFileMocksJson()).toEqual({
-                '/plugins_dir/cordova-plugin-thinger/.fetch.json': {metadata: 'matches'},
-                '/plugins_dir/fetch.json': {
+                [path.normalize('/plugins_dir/cordova-plugin-thinger/.fetch.json')]: {metadata: 'matches'},
+                [path.normalize('/plugins_dir/fetch.json')]: {
                     '@cordova/cordova-plugin-thinger': {
                         metadata: 'matches'
                     }
@@ -131,7 +134,7 @@ describe('plugman.metadata', function () {
         });
 
         it('should return the fetch metadata in plugins_dir/fetch.json if it is there with a scoped plugin', function () {
-            fileMocks['/plugins_dir/fetch.json'] = JSON.stringify({
+            fileMocks[path.normalize('/plugins_dir/fetch.json')] = JSON.stringify({
                 '@cordova/cordova-plugin-thinger': {
                     'metadata': 'matches'
                 }
@@ -139,11 +142,11 @@ describe('plugman.metadata', function () {
             spyOn(fsMock, 'readFileSync').and.callThrough();
             spyOn(fsMock, 'existsSync').and.callThrough();
 
-            var meta = get_fetch_metadata('/plugins_dir/', '@cordova/cordova-plugin-thinger');
+            var meta = get_fetch_metadata(pluginsDir, '@cordova/cordova-plugin-thinger');
 
             expect(meta).toEqual({metadata: 'matches'});
-            expect(fsMock.existsSync).toHaveBeenCalledWith('/plugins_dir/fetch.json');
-            expect(fsMock.readFileSync).toHaveBeenCalledWith('/plugins_dir/fetch.json', 'utf-8');
+            expect(fsMock.existsSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'));
+            expect(fsMock.readFileSync).toHaveBeenCalledWith(path.normalize('/plugins_dir/fetch.json'), 'utf-8');
         });
 
     });
@@ -152,10 +155,10 @@ describe('plugman.metadata', function () {
         it('should save plugin metadata to a new fetch.json', function () {
             var meta = {metadata: 'saved'};
 
-            metadata.save_fetch_metadata('/plugins_dir', '@cordova/cordova-plugin-thinger', meta);
+            metadata.save_fetch_metadata(pluginsDir, '@cordova/cordova-plugin-thinger', meta);
 
             expect(getFileMocksJson()).toEqual({
-                '/plugins_dir/fetch.json': {
+                [path.normalize('/plugins_dir/fetch.json')]: {
                     '@cordova/cordova-plugin-thinger': {
                         metadata: 'saved'
                     }
@@ -167,7 +170,7 @@ describe('plugman.metadata', function () {
             var meta = {metadata: 'saved'};
 
             fileMocks = {
-                '/plugins_dir/fetch.json': JSON.stringify({
+                [path.normalize('/plugins_dir/fetch.json')]: JSON.stringify({
                     'some-other-plugin': {
                         metadata: 'not-touched'
                     }
@@ -177,7 +180,7 @@ describe('plugman.metadata', function () {
             metadata.save_fetch_metadata('/plugins_dir', '@cordova/cordova-plugin-thinger', meta);
 
             expect(getFileMocksJson()).toEqual({
-                '/plugins_dir/fetch.json': {
+                [path.normalize('/plugins_dir/fetch.json')]: {
                     '@cordova/cordova-plugin-thinger': {
                         metadata: 'saved'
                     },
@@ -192,17 +195,17 @@ describe('plugman.metadata', function () {
     describe('remove_fetch_metadata', function () {
         it('should remove metadata', function () {
             fileMocks = {
-                '/plugins_dir/fetch.json': JSON.stringify({
+                [path.normalize('/plugins_dir/fetch.json')]: JSON.stringify({
                     'some-plugin': {
                         metadata: 'existing'
                     }
                 })
             };
 
-            metadata.remove_fetch_metadata('/plugins_dir', 'some-plugin');
+            metadata.remove_fetch_metadata(pluginsDir, 'some-plugin');
 
             expect(getFileMocksJson()).toEqual({
-                '/plugins_dir/fetch.json': { }
+                [path.normalize('/plugins_dir/fetch.json')]: { }
             });
         });
     });
