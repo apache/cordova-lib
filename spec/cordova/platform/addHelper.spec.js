@@ -450,9 +450,9 @@ describe('cordova/platform/addHelper', function () {
             platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
                 expect(plugman.install).toHaveBeenCalledWith(
                     'browser',
-                    '/some/path/platforms/browser',
+                    path.normalize('/some/path/platforms/browser'),
                     pluginName,
-                    '/some/path/plugins',
+                    path.normalize('/some/path/plugins'),
                     jasmine.objectContaining(expectedInstallOptions)
                 );
                 expect(events.emit).toHaveBeenCalledWith('verbose', `Installing plugin "${pluginName}" following successful platform add of browser`);
