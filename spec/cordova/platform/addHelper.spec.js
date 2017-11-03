@@ -284,6 +284,7 @@ describe('cordova/platform/addHelper', function () {
 
             describe('if the project contains a package.json', function () {
                 it('should write out the platform just added/updated to the cordova.platforms property of package.json', function (done) {
+                    spyOn(fs, 'readFileSync').and.returnValue('file');
                     fs.existsSync.and.callFake(function (filePath) {
                         if (path.basename(filePath) === 'package.json') {
                             return true;

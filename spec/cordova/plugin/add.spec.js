@@ -167,6 +167,7 @@ describe('cordova/plugin/add', function () {
                     }
                 });
 
+                spyOn(fs, 'readFileSync').and.returnValue('file');
                 add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
                     expect(fs.writeFileSync).toHaveBeenCalledWith(jasmine.any(String), JSON.stringify({'cordova': {'plugins': {'cordova-plugin-device': cli_plugin_variables}}, 'dependencies': {}}, null, 2), 'utf8');
                 }).fail(function (e) {

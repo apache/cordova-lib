@@ -29,6 +29,7 @@ var Q = require('q');
 var path = require('path');
 var fs = require('fs');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+var detectIndent = require('detect-indent');
 
 module.exports = remove;
 module.exports.validatePluginId = validatePluginId;
@@ -107,7 +108,9 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                                 // Remove plugin from package.json
                                 delete pkgJson.cordova.plugins[target];
                                 // Write out new package.json with plugin removed correctly.
-                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+                                var file = fs.readFileSync(pkgJsonPath, 'utf8');
+                                var indent = detectIndent(file).indent || '  ';
+                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                             }
                         }
                     }).then(function () {

@@ -27,6 +27,7 @@ var cordovaPlatform = require('./platform');
 var semver = require('semver');
 var platformsList = require('../platforms/platforms.js');
 var promiseutil = require('../util/promise-util');
+var detectIndent = require('detect-indent');
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
@@ -48,10 +49,14 @@ function installPlatformsFromConfigXML (platforms, opts) {
     var mergedPlatformSpecs = {};
     var key;
     var installAllPlatforms = !platforms || platforms.length === 0;
+    var file;
+    var indent;
 
     // Check if path exists and require pkgJsonPath.
     if (fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
+        file = fs.readFileSync(pkgJsonPath, 'utf8');
+        indent = detectIndent(file).indent || '  ';
     }
 
     if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
@@ -80,7 +85,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
             if (cfg.name()) {
                 pkgJson.displayName = cfg.name();
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
         }
 
         configPlatforms = engines.map(function (Engine) {
@@ -185,7 +190,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
                 }
                 pkgJson.dependencies[prefixKey] = mergedPlatformSpecs[key];
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
         }
         if (modifiedConfigXML === true) {
             cfg.write();
@@ -337,7 +342,9 @@ function installPluginsFromConfigXML (args) {
             for (key in mergedPluginSpecs) {
                 pkgJson.dependencies[key] = mergedPluginSpecs[key];
             }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+            var file = fs.readFileSync(pkgJsonPath, 'utf8');
+            var indent = detectIndent(file).indent || '  ';
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
         }
     }
     // Write to config.xml (only if it is different from package.json in content)
