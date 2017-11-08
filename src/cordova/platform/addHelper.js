@@ -111,6 +111,12 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         } else if (pkgJson.dependencies[platform]) {
                             spec = pkgJson.dependencies[platform];
                         }
+                    } else if (spec === undefined && pkgJson && pkgJson.devDependencies && cmd === 'add') {
+                        if (pkgJson.devDependencies['cordova-' + platform]) {
+                            spec = pkgJson.devDependencies['cordova-' + platform];
+                        } else if (pkgJson.devDependencies[platform]) {
+                            spec = pkgJson.devDependencies[platform];
+                        }
                     }
 
                     if (platform && spec === undefined && cmd === 'add') {
