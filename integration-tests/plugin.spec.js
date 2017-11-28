@@ -26,7 +26,7 @@ var cordova = require('../src/cordova/cordova');
 var platforms = require('../src/platforms/platforms');
 var plugman = require('../src/plugman/plugman');
 var install = require('../src/plugman/install');
-var registry = require('../src/plugman/registry/registry');
+var plugin_util = require('../src/cordova/plugin/util');
 
 var util = require('../src/cordova/util');
 
@@ -199,10 +199,10 @@ describe('plugin end-to-end', function () {
 
     it('Test 007 : should not check npm info when using the searchpath flag', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
-        spyOn(registry, 'info');
+        spyOn(plugin_util, 'info');
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
             .then(function () {
-                expect(registry.info).not.toHaveBeenCalled();
+                expect(plugin_util.info).not.toHaveBeenCalled();
                 var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
                 expect(fetchOptions.searchpath[0]).toExist();
             })
@@ -215,10 +215,10 @@ describe('plugin end-to-end', function () {
     it('Test 008 : should not check npm info when using the noregistry flag', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info');
+        spyOn(plugin_util, 'info');
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {noregistry: true}, done)
             .then(function () {
-                expect(registry.info).not.toHaveBeenCalled();
+                expect(plugin_util.info).not.toHaveBeenCalled();
 
                 var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
                 expect(fetchOptions.noregistry).toBeTruthy();
@@ -230,10 +230,10 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 009 : should not check npm info when fetching from a Git repository', function (done) {
-        spyOn(registry, 'info');
+        spyOn(plugin_util, 'info');
         addPlugin(testGitPluginRepository, testGitPluginId, {'fetch': true}, done)
             .then(function () {
-                expect(registry.info).not.toHaveBeenCalled();
+                expect(plugin_util.info).not.toHaveBeenCalled();
             })
             .fail(function (err) {
                 expect(err).toBeUndefined();
@@ -244,13 +244,13 @@ describe('plugin end-to-end', function () {
     it('Test 010 : should use registry.info to get plugin & version', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info').and.callThrough();
+        spyOn(plugin_util, 'info').and.callThrough();
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {'fetch': true}, done)
             .then(function () {
-                expect(registry.info).toHaveBeenCalled();
+                expect(plugin_util.info).toHaveBeenCalled();
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-                expect(fetchTarget).toEqual(npmInfoTestPlugin);
+                expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
             })
             .fail(function (err) {
                 expect(err).toBeUndefined();
@@ -262,13 +262,13 @@ describe('plugin end-to-end', function () {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin;
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info').and.returnValue(Q({}));
+        spyOn(plugin_util, 'info').and.returnValue(Q({}));
         addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
             .then(function () {
                 // Check to make sure that we are at least trying to get the correct package.
                 // This package is not published to npm, so we can't truly do end-to-end tests
 
-                expect(registry.info).toHaveBeenCalledWith([scopedPackage], jasmine.any(String), jasmine.any(Object));
+                expect(plugin_util.info).toHaveBeenCalledWith([scopedPackage]);
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedPackage);
@@ -283,10 +283,10 @@ describe('plugin end-to-end', function () {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info');
+        spyOn(plugin_util, 'info');
         addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
             .then(function () {
-                expect(registry.info).not.toHaveBeenCalled();
+                expect(plugin_util.info).not.toHaveBeenCalled();
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedPackage);

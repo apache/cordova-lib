@@ -25,6 +25,7 @@
     "cordova-serve": "^2.0.0",
     "dep-graph": "1.1.0",
     "detect-indent": "^5.0.0",
+    "dependency-ls": "^1.1.1",
     "elementtree": "0.1.6",
     "glob": "7.1.1",
     "init-package-json": "^1.2.0",

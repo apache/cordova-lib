@@ -29,7 +29,6 @@ var path = require('path');
 var fs = require('fs');
 var config = require('../../../src/cordova/config');
 var events = require('cordova-common').events;
-var registry = require('../../../src/plugman/registry/registry');
 var plugin_util = require('../../../src/cordova/plugin/util');
 
 describe('cordova/plugin/add', function () {
@@ -72,7 +71,7 @@ describe('cordova/plugin/add', function () {
         // requireNoCache is used to require package.json
         spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
         spyOn(events, 'emit');
-        spyOn(registry, 'info').and.returnValue(Q());
+        spyOn(plugin_util, 'info').and.returnValue(Q());
         spyOn(add, 'getFetchVersion').and.returnValue(Q());
         spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
@@ -356,7 +355,7 @@ describe('cordova/plugin/add', function () {
                 it('should retrieve plugin info via registry.info', function (done) {
                     add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
-                            expect(registry.info).toHaveBeenCalledWith(['cordova-plugin-device'], '/some/path', jasmine.any(Object));
+                            expect(plugin_util.info).toHaveBeenCalledWith(['cordova-plugin-device']);
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
                             expect(target).toEqual('cordova-plugin-device');
                         }).fail(function (e) {
@@ -365,10 +364,10 @@ describe('cordova/plugin/add', function () {
                         }).done(done);
                 });
                 it('should feed registry.info plugin information into getFetchVersion', function (done) {
-                    registry.info.and.returnValue(Q({'plugin': 'info'}));
+                    plugin_util.info.and.returnValue(Q({'plugin': 'info'}));
                     add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
-                            expect(registry.info).toHaveBeenCalled();
+                            expect(plugin_util.info).toHaveBeenCalled();
                             expect(add.getFetchVersion).toHaveBeenCalledWith(jasmine.anything(), {'plugin': 'info'}, jasmine.anything());
                             expect(target).toEqual('cordova-plugin-device');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
@@ -381,7 +380,7 @@ describe('cordova/plugin/add', function () {
                     add.getFetchVersion.and.returnValue(Q('1.0.0'));
                     add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
-                            expect(registry.info).toHaveBeenCalled();
+                            expect(plugin_util.info).toHaveBeenCalled();
                             expect(add.getFetchVersion).toHaveBeenCalled();
                             expect(target).toEqual('cordova-plugin-device@1.0.0');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');

@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "dependencies": {
-        "cordova-android": "^5.0.0",
+        "cordova-ios": "^4.5.4",
         "cordova-browser": "^4.1.0"
     },
     "devDependencies": {},
@@ -15,7 +15,7 @@
     "license": "ISC",
     "cordova": {
         "platforms": [
-            "android",
+            "ios",
             "browser"
         ]
     }

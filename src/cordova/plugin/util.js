@@ -22,10 +22,13 @@ var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var shell = require('shelljs');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
+var fetch = require('cordova-fetch');
+var superspawn = require('cordova-common').superspawn;
 
 module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
+module.exports.info = info;
 
 function getInstalledPlugins (projectRoot) {
     var pluginsDir = path.join(projectRoot, 'plugins');
@@ -74,4 +77,20 @@ function mergeVariables (pluginInfo, cfg, opts) {
         throw new CordovaError(msg);
     }
     return opts.cli_variables;
+}
+
+function info (plugin) {
+    var viewArgs = ['view'];
+    plugin = plugin.shift();
+    viewArgs.push(plugin);
+    viewArgs.push('--json');
+    // check if npm is installed
+    return fetch.isNpmInstalled()
+        .then(function () {
+            return superspawn.spawn('npm', viewArgs)
+                .then(function (info) {
+                    var pluginInfo = JSON.parse(info);
+                    return pluginInfo;
+                });
+        });
 }
