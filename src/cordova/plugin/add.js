@@ -23,7 +23,6 @@ var config = require('../config');
 var cordova_pkgJson = require('../../../package.json');
 var pluginSpec = require('./plugin_spec_parser');
 var plugman = require('../../plugman/plugman');
-var registry = require('../../plugman/registry/registry');
 var chainMap = require('../../util/promise-util').Q_chainmap;
 var ConfigParser = require('cordova-common').ConfigParser;
 var CordovaError = require('cordova-common').CordovaError;
@@ -287,7 +286,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     }
     // if noregistry or searchpath are true, then shouldUseNpmInfo is false. Just return target
     // else run `npm info` on the target via registry.info so we could get engines elemenent in package.json. Pass that info to getFetchVersion which determines the correct plugin to fetch based on engines element.
-    return (shouldUseNpmInfo ? registry.info([id], projectRoot, fetchOptions)
+    return (shouldUseNpmInfo ? plugin_util.info([id])
         .then(function (pluginInfo) {
             return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
         }) : Q(null))
