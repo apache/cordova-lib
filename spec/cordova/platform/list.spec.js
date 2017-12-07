@@ -65,10 +65,4 @@ describe('cordova/platform/list', function () {
         expect(platform_list.addDeprecatedInformationToPlatforms(platformList).toString()).toBe('android,ios');
         done();
     });
-
-    it('should return deprecated platform information', function (done) {
-        var platformList = ['blackberry10'];
-        expect(platform_list.addDeprecatedInformationToPlatforms(platformList).toString()).toBe('blackberry10 (deprecated)');
-        done();
-    });
 });
