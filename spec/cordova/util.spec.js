@@ -330,7 +330,7 @@ describe('util module', function () {
                 util.getPlatformApiFunction('some/path', 'blackberry10');
                 expect(events.emit.calls.count()).toBe(3);
                 expect(events.emit.calls.argsFor(0)[1]).toBe('Unable to load PlatformApi from platform. Error: Cannot find module \'some/path\'');
-                expect(events.emit.calls.argsFor(1)[1]).toBe('Platform not found or needs polyfill.');
+                expect(events.emit.calls.argsFor(1)[1]).toBe('The platform "blackberry10" does not appear to be a valid cordova platform. It is missing API.js. blackberry10 not supported.');
                 expect(events.emit.calls.argsFor(2)[1]).toBe('Failed to require PlatformApi instance for platform "blackberry10". Using polyfill instead.');
             });
 
