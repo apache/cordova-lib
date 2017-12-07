@@ -293,7 +293,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
     return Q().then(function () {
         var platformPath = path.join(projectRoot, 'platforms', platform);
         var platformAlreadyAdded = fs.existsSync(platformPath);
-        if ((opts.fetch) && (!platformAlreadyAdded || platformAlreadyAdded === undefined || platformAlreadyAdded === null)) {
+        if ((opts.fetch) && (!platformAlreadyAdded)) {
             // append cordova to platform
             if (platform in platforms) {
                 target = 'cordova-' + target;
