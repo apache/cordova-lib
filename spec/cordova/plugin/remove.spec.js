@@ -165,6 +165,7 @@ describe('cordova/plugin/remove', function () {
             });
 
             it('should remove provided plugins from package.json (if exists)', function (done) {
+                spyOn(fs, 'readFileSync').and.returnValue('file');
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
                 fs.existsSync.and.returnValue(true);

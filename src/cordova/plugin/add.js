@@ -34,6 +34,7 @@ var path = require('path');
 var fs = require('fs');
 var semver = require('semver');
 var url = require('url');
+var detectIndent = require('detect-indent');
 
 module.exports = add;
 module.exports.determinePluginTarget = determinePluginTarget;
@@ -159,7 +160,9 @@ function add (projectRoot, hooksRunner, opts) {
                             events.emit('log', 'Adding ' + pluginInfo.id + ' to package.json');
 
                             // Write to package.json
-                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+                            var file = fs.readFileSync(pkgJsonPath, 'utf8');
+                            var indent = detectIndent(file).indent || '  ';
+                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                         }
 
                         var src = module.exports.parseSource(target, opts);

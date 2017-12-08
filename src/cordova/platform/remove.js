@@ -28,6 +28,7 @@ var config = require('../config');
 var platformMetadata = require('../platform_metadata');
 var promiseutil = require('../../util/promise-util');
 var platforms = require('../../platforms/platforms');
+var detectIndent = require('detect-indent');
 
 module.exports = remove;
 
@@ -72,7 +73,9 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                 });
                 // Write out new package.json if changes have been made.
                 if (modifiedPkgJson === true) {
-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
+                    var file = fs.readFileSync(pkgJsonPath, 'utf8');
+                    var indent = detectIndent(file).indent || '  ';
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                 }
             }
         }).then(function () {
