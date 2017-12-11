@@ -53,7 +53,7 @@ describe('cordova/platform/addHelper', function () {
         'platform': 'atari'
     };
     var package_json_mock;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies', 'devDependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
 
@@ -299,6 +299,23 @@ describe('cordova/platform/addHelper', function () {
                     }).fail(function (err) {
                         fail('unexpected failure handler invoked!');
                         console.error(err);
+                    }).done(done);
+                });
+
+                it('should use pkgJson version devDependencies, if dependencies are undefined', function (done) {
+                    package_json_mock.dependencies = undefined;
+                    package_json_mock.cordova = {'platforms': ['ios']};
+                    package_json_mock.devDependencies['ios'] = {};
+                    cordova_util.requireNoCache.and.returnValue(package_json_mock);
+                    fs.existsSync.and.callFake(function (filePath) {
+                        return path.basename(filePath) === 'package.json';
+                    });
+                    platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function () {
+                        expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
+                        expect(fs.writeFileSync).toHaveBeenCalled();
+                    }).fail(function (e) {
+                        fail('fail handler unexpectedly invoked');
+                        console.error(e);
                     }).done(done);
                 });
 
