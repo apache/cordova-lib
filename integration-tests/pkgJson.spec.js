@@ -621,7 +621,6 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
         var iosVersion;
         var cwd = process.cwd();
         var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
-        //var platformsFolderPath = path.join(cwd, 'platforms/platforms.json');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -629,7 +628,6 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
         var engines = cfg.getEngines();
         var engNames;
         var engSpec; // eslint-disable-line no-unused-vars
-        //var platformsJson;
         var configPlugins = cfg.getPluginIdList();
         var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-splashscreen/package.json');
         var pluginPkgJsonVersion;
@@ -645,8 +643,6 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
             // Add ios with --save and --fetch.
             return cordova.platform('add', [iosPlatform], {'save': true, 'fetch': true});
         }).then(function () {
-            // Require platformsFolderPath, ios and spec should be in there.
-            //platformsJson = cordova_util.requireNoCache(platformsFolderPath);
             // Delete any previous caches of require(package.json).
             // ios has been added.
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -666,15 +662,11 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
                 // Check that config and ios/cordova/version versions "satify" each other.
                 iosVersion = cordova_util.requireNoCache(iosDirectory);
                 expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
-                // Check that config and platforms.json "satisfy".
-                //expect(semver.satisfies(platformsJson[iosPlatform], elem.spec)).toEqual(true);
             });
             // Config.xml added ios platform.
             expect(engNames).toEqual([ 'ios' ]);
             // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
             expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
-            // Check that pkg.json and platforms.json "satisfy".
-            //expect(semver.satisfies(platformsJson[iosPlatform], pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function () {
             // Add splashscreen plugin with --save --fetch.
             return cordova.plugin('add', 'cordova-plugin-splashscreen', {'save': true, 'fetch': true});

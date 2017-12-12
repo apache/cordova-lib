@@ -18,7 +18,6 @@
 var events = require('cordova-common').events;
 var Q = require('q');
 var platform_list = require('../../../src/cordova/platform/list');
-var platform_metadata = require('../../../src/cordova/platform_metadata');
 var cordova_util = require('../../../src/cordova/util');
 var fail;
 
@@ -31,7 +30,6 @@ describe('cordova/platform/list', function () {
         hooks_mock.fire.and.returnValue(Q());
         spyOn(cordova_util, 'getInstalledPlatformsWithVersions').and.callThrough();
         spyOn(events, 'emit');
-        spyOn(platform_metadata, 'save');
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
     });
 

@@ -137,16 +137,6 @@ describe('cordova/platform', function () {
                         fail('did not expect fail handler to be invoked');
                     }).done(done);
             });
-            // it('should direct `save` commands to the `save` method/module', function (done) {
-            //     spyOn(platform, 'save').and.returnValue(true);
-            //     platform('save', ['android'])
-            //         .then(function () {
-            //             expect(platform.save).toHaveBeenCalled();
-            //         }).fail(function (e) {
-            //             expect(e).toBeUndefined();
-            //             fail('did not expect fail handler to be invoked');
-            //         }).done(done);
-            // });
             it('should direct `list`, all other commands and no command at all to the `list` method/module', function (done) {
                 spyOn(platform, 'list').and.returnValue(true);
                 // test the `list` command directly

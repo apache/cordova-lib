@@ -24,7 +24,6 @@ var events = require('cordova-common').events;
 var rewire = require('rewire');
 var platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
 var platform_module = require('../../../src/cordova/platform');
-// var platform_metadata = require('../../../src/cordova/platform_metadata');
 var cordova_util = require('../../../src/cordova/util');
 var cordova_config = require('../../../src/cordova/config');
 var plugman = require('../../../src/plugman/plugman');
@@ -88,7 +87,6 @@ describe('cordova/platform/addHelper', function () {
         platform_api_mock.createPlatform.and.returnValue(Q());
         platform_api_mock.updatePlatform.and.returnValue(Q());
         spyOn(cordova_util, 'getPlatformApiFunction').and.returnValue(platform_api_mock);
-        // spyOn(platform_metadata, 'save');
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
     });
     afterEach(function () {
@@ -260,15 +258,6 @@ describe('cordova/platform/addHelper', function () {
                     console.error(err);
                 }).done(done);
             });
-
-            // it('should save the platform metadata', function (done) {
-            //     platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring: true}).then(function (result) {
-            //         expect(platform_metadata.save).toHaveBeenCalledWith('/some/path', 'atari', undefined);
-            //     }).fail(function (err) {
-            //         fail('unexpected failure handler invoked!');
-            //         console.error(err);
-            //     }).done(done);
-            // });
 
             it('should write out the version of platform just added/updated to config.xml if the save option is provided', function (done) {
                 platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function (result) {

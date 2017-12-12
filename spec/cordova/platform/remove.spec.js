@@ -21,7 +21,6 @@ var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var platform_remove = rewire('../../../src/cordova/platform/remove');
-// var platform_metadata = require('../../../src/cordova/platform_metadata');
 var cordova_util = require('../../../src/cordova/util');
 var promiseutil = require('../../../src/util/promise-util');
 var fail;
@@ -112,29 +111,6 @@ describe('cordova/platform/remove', function () {
                     console.error(e);
                 }).done(done);
         });
-
-        // it('should only remove from platforms.json', function (done) {
-        //     spyOn(platform_metadata, 'remove').and.callThrough();
-        //     package_json_mock.cordova = {'platforms': ['atari']};
-        //     cordova_util.requireNoCache.and.returnValue(package_json_mock);
-        //     fs.existsSync.and.callFake(function (filePath) {
-        //         if (path.basename(filePath) === 'package.json') {
-        //             return true;
-        //         } else {
-        //             return false;
-        //         }
-        //     });
-        //     platform_remove(hooks_mock, projectRoot, ['atari'], {save: false})
-        //         .then(function () {
-        //             expect(fs.writeFileSync).not.toHaveBeenCalled();
-        //             expect(cfg_parser_mock.prototype.write).not.toHaveBeenCalled();
-        //             expect(platform_metadata.remove).toHaveBeenCalled();
-        //             expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Removing platform atari from platforms.json file/));
-        //         }).fail(function (e) {
-        //             fail('fail handler unexpectedly invoked');
-        //             console.error(e);
-        //         }).done(done);
-        // });
 
         it('fetch should be called', function (done) {
             spyOn(promiseutil, 'Q_chainmap').and.returnValue(true);
