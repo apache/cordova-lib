@@ -69,6 +69,7 @@ describe('cordova/platform/addHelper', function () {
         prepare_revert_mock = platform_addHelper.__set__('prepare', prepare_mock);
         spyOn(shell, 'mkdir');
         spyOn(fs, 'existsSync').and.returnValue(false);
+        spyOn(fs, 'readFileSync');
         spyOn(fs, 'writeFileSync');
         spyOn(cordova_util, 'projectConfig').and.returnValue(path.join(projectRoot, 'config.xml'));
         spyOn(cordova_util, 'isDirectory').and.returnValue(false);
@@ -284,7 +285,7 @@ describe('cordova/platform/addHelper', function () {
 
             describe('if the project contains a package.json', function () {
                 it('should write out the platform just added/updated to the cordova.platforms property of package.json', function (done) {
-                    spyOn(fs, 'readFileSync').and.returnValue('file');
+                    fs.readFileSync.and.returnValue('file');
                     fs.existsSync.and.callFake(function (filePath) {
                         if (path.basename(filePath) === 'package.json') {
                             return true;
@@ -310,6 +311,7 @@ describe('cordova/platform/addHelper', function () {
                     fs.existsSync.and.callFake(function (filePath) {
                         return path.basename(filePath) === 'package.json';
                     });
+                    fs.readFileSync.and.returnValue('{}');
                     platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function () {
                         expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
                         expect(fs.writeFileSync).toHaveBeenCalled();
