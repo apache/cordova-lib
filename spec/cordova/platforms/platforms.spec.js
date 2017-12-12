@@ -17,7 +17,6 @@
     under the License.
 */
 
-var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var rewire = require('rewire');
@@ -30,9 +29,6 @@ var platforms = rewire('../../../src/platforms/platforms');
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
 var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
-var PlatformApiPoly = require('../../../src/platforms/PlatformApiPoly');
-
-var browserParser = require('../../../src/cordova/metadata/browser_parser.js');
 
 shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
@@ -58,28 +54,6 @@ describe('getPlatformApi method', function () {
         expect(util.isCordova.calls.count()).toEqual(0);
         expect(util.requireNoCache.calls.count()).toEqual(1);
         expect(util.requireNoCache.calls.argsFor(0)[0]).toEqual(path.join(CORDOVA_ROOT, 'platforms/windows/cordova/Api.js'));
-    });
-
-    it('should return PlatformApi polyfill if PlatformApi is not defined by platform', function () {
-        spyOn(browserParser, 'dirExists').and.returnValue(true);
-        spyOn(fs, 'existsSync').and.callFake(function (somePath) {
-            if (somePath === 'PLATFORM_WOUT_API') {
-                return true;
-            }
-            return false;
-        });
-        spyOn(events, 'emit').and.returnValue(true);
-        spyOn(util, 'convertToRealPathSafe').and.returnValue('PLATFORM_WOUT_API');
-        spyOn(util, 'requireNoCache').and.callThrough();
-        var platformApi = platforms.getPlatformApi('browser', 'PLATFORM_WOUT_API');
-        expect(platformApi).toEqual(jasmine.any(PlatformApiPoly));
-        expect(util.convertToRealPathSafe.calls.count()).toEqual(1);
-        expect(events.emit.calls.count()).toEqual(3);
-        expect(events.emit.calls.argsFor(0)[1]).toContain('Unable to load PlatformApi from platform. Error: Cannot find module');
-        expect(events.emit.calls.argsFor(1)[1]).toEqual('Platform not found or needs polyfill.');
-        expect(events.emit.calls.argsFor(2)[1]).toEqual('Failed to require PlatformApi instance for platform "browser". Using polyfill instead.');
-        expect(util.isCordova.calls.count()).toEqual(0);
-        expect(util.requireNoCache.calls.count()).toEqual(0);
     });
 
     it('should throw error if using deprecated platform', function () {
