@@ -221,7 +221,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             // actually installed.
                             var versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
-                            // platformMetadata.save(projectRoot, platform, versionToSave);
 
                             if (opts.save || autosave) {
                                 // Similarly here, we save the source location if that was specified, otherwise the version that
