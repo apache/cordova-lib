@@ -503,5 +503,9 @@ function getPlatformApiFunction (libDir, platform) {
         }
     }
 
+    if (!PlatformApi) {
+        throw new Error('Your ' + platform + ' platform does not have Api.js');
+    }
+
     return PlatformApi;
 }
