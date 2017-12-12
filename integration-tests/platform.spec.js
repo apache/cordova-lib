@@ -128,8 +128,8 @@ describe('platform end-to-end', function () {
                 expect(err).toBeUndefined();
             }).fin(done);
     });
-    // was using old fetch code/gitclone... test might not be valid anymore.
-    xit('Test 002 : should install plugins correctly while adding platform', function (done) {
+
+    it('Test 002 : should install plugins correctly while adding platform', function (done) {
         cordova.plugin('add', path.join(pluginsDir, 'test'), {'fetch': true})
             .then(function () {
                 return cordova.platform('add', [helpers.testPlatform], {'fetch': true});

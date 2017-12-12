@@ -83,7 +83,6 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         }
     }
     return Q.when().then(function () {
-        // If it's not a network URL, it's either a local path or a plugin ID.
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Q.when().then(function () {
             // check if it is a local path
@@ -114,7 +113,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                         });
                 }
             }
-            // If there is no such local path, it's a plugin id or id@versionspec.
+            // If there is no such local path or it's a git URL, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
             var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
             if (pinfo) {

@@ -241,7 +241,7 @@ describe('plugin end-to-end', function () {
             .fin(done);
     }, 30000);
 
-    it('Test 010 : should use registry.info to get plugin & version', function (done) {
+    it('Test 010 : should select the plugin version based on npm info when fetching from npm', function (done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(plugin_util, 'info').and.callThrough();
