@@ -459,6 +459,21 @@ describe('cordova/plugin/add', function () {
                         console.log(e);
                     }).done(done);
             });
+            it('should retrieve installed plugins and installed platforms version with a scoped page, and feed that information into determinePluginVersionToFetch', function (done) {
+                plugin_util.getInstalledPlugins.and.returnValue([{'id': '@cordova/cordova-plugin-camera', 'version': '2.0.0'}]);
+                cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Q({'android': '6.0.0'}));
+                pluginInfo.engines = {};
+                pluginInfo.engines.cordovaDependencies = {'^1.0.0': {'cordova': '>7.0.0'}};
+                add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
+                    .then(function () {
+                        expect(plugin_util.getInstalledPlugins).toHaveBeenCalledWith(projectRoot);
+                        expect(cordova_util.getInstalledPlatformsWithVersions).toHaveBeenCalledWith(projectRoot);
+                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, {'@cordova/cordova-plugin-camera': '2.0.0'}, {'android': '6.0.0'}, '7.0.0');
+                    }).fail(function (e) {
+                        fail('fail handler unexpectedly invoked');
+                        console.log(e);
+                    }).done(done);
+            });
         });
         // TODO More work to be done here to replace plugin_fetch.spec.js
         describe('determinePluginVersionToFetch helper method', function () {

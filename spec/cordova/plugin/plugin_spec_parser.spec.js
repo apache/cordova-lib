@@ -21,39 +21,37 @@
 var pluginSpec = require('../../../src/cordova/plugin/plugin_spec_parser');
 
 describe('methods for parsing npm plugin packages', function () {
-    function checkPluginSpecParsing (testString, scope, id, version) {
+    function checkPluginSpecParsing (testString, id, version) {
         var parsedSpec = pluginSpec.parse(testString);
-        expect(parsedSpec.scope).toEqual(scope);
         expect(parsedSpec.id).toEqual(id || testString);
         expect(parsedSpec.version).toEqual(version);
-        expect(parsedSpec.package).toEqual(scope ? scope + id : id);
     }
 
     it('Test 001 : should handle package names with no scope or version', function () {
-        checkPluginSpecParsing('test-plugin', null, 'test-plugin', null);
+        checkPluginSpecParsing('test-plugin', 'test-plugin', null);
     });
     it('Test 002 : should handle package names with a version', function () {
-        checkPluginSpecParsing('test-plugin@1.0.0', null, 'test-plugin', '1.0.0');
-        checkPluginSpecParsing('test-plugin@latest', null, 'test-plugin', 'latest');
+        checkPluginSpecParsing('test-plugin@1.0.0', 'test-plugin', '1.0.0');
+        checkPluginSpecParsing('test-plugin@latest', 'test-plugin', 'latest');
     });
     it('Test 003 : should handle package names with a scope', function () {
-        checkPluginSpecParsing('@test/test-plugin', '@test/', 'test-plugin', null);
+        checkPluginSpecParsing('@test/test-plugin', '@test/test-plugin', null);
     });
     it('Test 004 : should handle package names with a scope and a version', function () {
-        checkPluginSpecParsing('@test/test-plugin@1.0.0', '@test/', 'test-plugin', '1.0.0');
-        checkPluginSpecParsing('@test/test-plugin@latest', '@test/', 'test-plugin', 'latest');
+        checkPluginSpecParsing('@test/test-plugin@1.0.0', '@test/test-plugin', '1.0.0');
+        checkPluginSpecParsing('@test/test-plugin@latest', '@test/test-plugin', 'latest');
     });
     it('Test 005 : should handle invalid package specs', function () {
-        checkPluginSpecParsing('@nonsense', null, null, null);
-        checkPluginSpecParsing('@/nonsense', null, null, null);
-        checkPluginSpecParsing('@', null, null, null);
-        checkPluginSpecParsing('@nonsense@latest', null, null, null);
-        checkPluginSpecParsing('@/@', null, null, null);
-        checkPluginSpecParsing('/', null, null, null);
-        checkPluginSpecParsing('../../@directory', null, null, null);
-        checkPluginSpecParsing('@directory/../@directory', null, null, null);
-        checkPluginSpecParsing('./directory', null, null, null);
-        checkPluginSpecParsing('directory/directory', null, null, null);
-        checkPluginSpecParsing('http://cordova.apache.org', null, null, null);
+        checkPluginSpecParsing('@nonsense', null, null);
+        checkPluginSpecParsing('@/nonsense', null, null);
+        checkPluginSpecParsing('@', null, null);
+        checkPluginSpecParsing('@nonsense@latest', null, null);
+        checkPluginSpecParsing('@/@', null, null);
+        checkPluginSpecParsing('/', null, null);
+        checkPluginSpecParsing('../../@directory', null, null);
+        checkPluginSpecParsing('@directory/../@directory', null, null);
+        checkPluginSpecParsing('./directory', null, null);
+        checkPluginSpecParsing('directory/directory', null, null);
+        checkPluginSpecParsing('http://cordova.apache.org', null, null);
     });
 });

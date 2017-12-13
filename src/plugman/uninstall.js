@@ -149,7 +149,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     // Recursively remove plugins which were installed as dependents (that are not top-level)
     var toDelete = [];
     function findDependencies (pluginId) {
-        var depPluginDir = path.join(plugin_dir, '..', pluginId);
+        var depPluginDir = path.join(plugins_dir, pluginId);
         // Skip plugin check for dependencies if it does not exist (CB-7846).
         if (!fs.existsSync(depPluginDir)) {
             events.emit('verbose', 'Plugin "' + pluginId + '" does not exist (' + depPluginDir + ')');

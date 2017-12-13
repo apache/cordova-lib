@@ -27,6 +27,49 @@ module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
 
+/** TODO JARRAD REMOVE THIS */
+var fs = require('fs');
+PluginInfoProvider.prototype.getAllWithinSearchPath = function (dirName) {
+    var absPath = path.resolve(dirName);
+    if (!this._getAllCache[absPath]) {
+        this._getAllCache[absPath] = getAllHelper(absPath, this);
+    }
+    return this._getAllCache[absPath];
+};
+
+function getAllHelper (absPath, provider) {
+    if (!fs.existsSync(absPath)) {
+        return [];
+    }
+    // If dir itself is a plugin, return it in an array with one element.
+    if (fs.existsSync(path.join(absPath, 'plugin.xml'))) {
+        return [provider.get(absPath)];
+    }
+    var subdirs = fs.readdirSync(absPath);
+    subdirs.forEach(function (subdir) {
+        // if subdir is an npm @scope/
+        if (subdir[0] === '@') {
+            // add the real plugins inside it
+            var scopePluginDirs = fs.readdirSync(path.join(absPath, subdir))
+                .map((scopedPluginDir) => path.join(subdir, scopedPluginDir));
+            subdirs.push.apply(subdirs, scopePluginDirs);
+        }
+    });
+    var plugins = [];
+    subdirs.forEach(function (subdir) {
+        var d = path.join(absPath, subdir);
+        if (fs.existsSync(path.join(d, 'plugin.xml'))) {
+            try {
+                plugins.push(provider.get(d));
+            } catch (e) {
+                events.emit('warn', 'Error parsing ' + path.join(d, 'plugin.xml.\n' + e.stack));
+            }
+        }
+    });
+    return plugins;
+}
+/* END TODO JARRAD */
+
 function getInstalledPlugins (projectRoot) {
     var pluginsDir = path.join(projectRoot, 'plugins');
     // TODO: This should list based off of platform.json, not directories within plugins/
