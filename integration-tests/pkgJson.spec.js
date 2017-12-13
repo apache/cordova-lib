@@ -116,7 +116,7 @@ describe('plugin end-to-end', function () {
         return cordova.plugin('add', 'cordova-plugin-geolocation', {'save': true, 'fetch': true})
             .then(function () {
                 // Add a second plugin without save.
-                return cordova.plugin('add', pluginId);
+                return cordova.plugin('add', pluginId, {'fetch': true});
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -137,7 +137,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', pluginId, {'save': true})
+        return cordova.plugin('add', pluginId, {'save': true, 'fetch': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -166,7 +166,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', pluginId, {'save': true, 'cli_variables': {'someKey': 'someValue'}})
+        return cordova.plugin('add', pluginId, {'fetch': true, 'save': true, 'cli_variables': {'someKey': 'someValue'}})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -411,7 +411,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordova.platform('add', [helpers.testPlatform], {'save': true});
+            return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
         }).then(function () {
             // Check the platform add was successful.
             pkgJson = require(pkgJsonPath);
@@ -438,7 +438,7 @@ describe('platform end-to-end with --save', function () {
 
         emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordova.platform('add', [helpers.testPlatform], {'save': true});
+            return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
         }).then(function () {
             // Check the platform add was successful.
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -467,7 +467,7 @@ describe('platform end-to-end with --save', function () {
         // Pkg.json "platforms" should be empty and helpers.testPlatform should not exist in pkg.json.
         expect(pkgJson.cordova).toBeUndefined();
         // Add platform without --save.
-        cordova.platform('add', [helpers.testPlatform])
+        cordova.platform('add', [helpers.testPlatform], {'fetch': true})
             .then(function () {
                 // Check the platform add was successful, reload, skipping cache.
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);

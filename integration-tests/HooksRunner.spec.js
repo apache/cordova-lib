@@ -17,6 +17,9 @@
  under the License.
  **/
 
+/* eslint  no-mixed-spaces-and-tabs : 0 */
+/* eslint  no-tabs : 0 */
+
 var cordova = require('../src/cordova/cordova');
 var HooksRunner = require('../src/hooks/HooksRunner');
 var shell = require('shelljs');
@@ -28,7 +31,6 @@ var child_process = require('child_process');
 var helpers = require('../spec/helpers');
 var PluginInfo = require('cordova-common').PluginInfo;
 var superspawn = require('cordova-common').superspawn;
-var config = require('../src/cordova/config');
 
 var platform = os.platform();
 var tmpDir = helpers.tmpDir('hooks_test');
@@ -101,28 +103,8 @@ describe('HooksRunner', function () {
     it('Test 003 : should init test fixtures', function (done) {
         hooksRunner = new HooksRunner(project);
 
-        // Now we load the config.json in the newly created project and edit the target platform's lib entry
-        // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
-        var c = config.read(project);
-        c.lib[helpers.testPlatform].url = path.join(fixtures, 'platforms', helpers.testPlatform + '-lib');
-        config.write(project, c);
-
-        // The config.json in the fixture project points at fake "local" paths.
-        // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
-            if (cmd.match(/create\b/)) {
-                // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(fixtures, 'platforms', 'android'), path.join(project, 'platforms'));
-            } else if (cmd.match(/update\b/)) {
-                fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
-            } else if (cmd.match(/version/)) {
-                return '3.6.0';
-            }
-            return Q();
-        });
-
         // Add the testing platform.
-        cordova.platform('add', [helpers.testPlatform]).fail(function (err) {
+        cordova.platform('add', [helpers.testPlatform], {'fetch': true}).fail(function (err) {
             expect(err).toBeUndefined();
             console.error(err);
             done();
@@ -137,15 +119,13 @@ describe('HooksRunner', function () {
             };
 
             options = cordovaUtil.preProcessOptions(options);
-
             hookOptions = { projectRoot: project, cordova: options };
 
-            cordova.plugin('add', testPluginFixturePath).fail(function (err) {
+            cordova.plugin('add', testPluginFixturePath, {'fetch': true}).fail(function (err) {
                 expect(err && err.stack).toBeUndefined();
                 done();
             }).then(function () {
                 testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
-                shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
                 done();
             });
         });
@@ -354,45 +334,8 @@ describe('HooksRunner', function () {
         });
 
         describe('plugin hooks', function () {
-            it('Test 009 : should execute hook scripts serially from plugin.xml', function (done) {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-
-                switchToOnlyNonPlatformScriptsPluginConfig();
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).fail(function (err) {
-                    expect(err).toBeUndefined();
-                }).then(function () {
-                    restorePluginConfig(projectRoot);
-                    done();
-                });
-            });
-
-            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function (done) {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-
-                switchToOnePlatformScriptsPluginConfig();
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).fail(function (err) {
-                    expect(err).toBeUndefined();
-                }).then(function () {
-                    restorePluginConfig(projectRoot);
-                    done();
-                });
-            });
-
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function (done) {
+                shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
                 var test_event = 'before_build';
                 var projectRoot = cordovaUtil.isCordova();
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
@@ -426,7 +369,7 @@ describe('HooksRunner', function () {
                 cordova.plugin('rm', 'com.plugin.withhooks').fail(function (err) {
                     expect(err.stack).toBeUndefined();
                 }).then(function () {
-                    cordova.plugin('add', testPluginFixturePath).fail(function (err) {
+                    cordova.plugin('add', testPluginFixturePath, {'fetch': true}).fail(function (err) {
                         expect(err).toBeUndefined();
                     }).then(function () {
                         testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
@@ -474,6 +417,60 @@ describe('HooksRunner', function () {
                     }).fail(function (err) {
                         expect(err).toBeUndefined();
                     }).fin(done);
+                });
+            });
+        });
+
+        describe('plugin hooks', function () {
+        	beforeEach(function () {
+        		spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
+		            if (cmd.match(/create\b/)) {
+		                // This is a call to the bin/create script, so do the copy ourselves.
+		                shell.cp('-R', path.join(fixtures, 'platforms', 'android'), path.join(project, 'platforms'));
+		            } else if (cmd.match(/update\b/)) {
+		                fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
+		            } else if (cmd.match(/version/)) {
+		                return '3.6.0';
+		            }
+		            return Q();
+		        });
+        	});
+
+            it('Test 009 : should execute hook scripts serially from plugin.xml', function (done) {
+                var test_event = 'before_build';
+                var projectRoot = cordovaUtil.isCordova();
+                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+
+                switchToOnlyNonPlatformScriptsPluginConfig();
+
+                return hooksRunner.fire(test_event, hookOptions).then(function () {
+                    expect(hooksOrderFile).toExist();
+
+                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
+                }).fail(function (err) {
+                    expect(err).toBeUndefined();
+                }).then(function () {
+                    restorePluginConfig(projectRoot);
+                    done();
+                });
+            });
+
+            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function (done) {
+                var test_event = 'before_build';
+                var projectRoot = cordovaUtil.isCordova();
+                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+
+                switchToOnePlatformScriptsPluginConfig();
+
+                return hooksRunner.fire(test_event, hookOptions).then(function () {
+                    expect(hooksOrderFile).toExist();
+
+                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
+                }).fail(function (err) {
+                    expect(err).toBeUndefined();
+                }).then(function () {
+                    restorePluginConfig(projectRoot);
+                    done();
                 });
             });
 

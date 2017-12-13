@@ -130,10 +130,9 @@ describe('platform end-to-end', function () {
     });
 
     it('Test 002 : should install plugins correctly while adding platform', function (done) {
-
-        cordova.plugin('add', path.join(pluginsDir, 'test'))
+        cordova.plugin('add', path.join(pluginsDir, 'test'), {'fetch': true})
             .then(function () {
-                return cordova.platform('add', [helpers.testPlatform]);
+                return cordova.platform('add', [helpers.testPlatform], {'fetch': true});
             })
             .then(function () {
                 // Check the platform add was successful.
@@ -190,17 +189,17 @@ describe('platform add plugin rm end-to-end', function () {
                 return cordova.platform('add', 'browser@latest', {'fetch': true});
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-media');
+                return cordova.plugin('add', 'cordova-plugin-media', {'fetch': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.platform('add', 'android');
+                return cordova.platform('add', 'android', {'fetch': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('rm', 'cordova-plugin-media');
+                return cordova.plugin('rm', 'cordova-plugin-media', {'fetch': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
@@ -235,7 +234,7 @@ describe('platform add and remove --fetch', function () {
         cordova.create('helloFetch')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'browser', {'fetch': true});
+                return cordova.platform('add', 'browser', {'fetch': true, 'save': true});
             })
             .then(function () {
                 expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
@@ -289,26 +288,23 @@ describe('plugin add and rm end-to-end --fetch', function () {
                 return cordova.platform('add', 'browser', {'fetch': true});
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-media', {'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-media', {'fetch': true, 'save': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                expect(path.join(pluginsDir, 'cordova-plugin-compat')).toExist();
                 expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
                 expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
-                expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).toExist();
                 return cordova.platform('add', 'android', {'fetch': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('rm', 'cordova-plugin-media', {'fetch': true});
+                return cordova.plugin('rm', 'cordova-plugin-media');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
-                expect(path.join(pluginsDir, 'cordova-plugin-compat')).not.toExist();
                 // These don't work yet due to the tests finishing before the promise resolves.
                 // expect(path.join(project, 'node_modules', 'cordova-plugin-media')).not.toExist();
                 // expect(path.join(project, 'node_modules', 'cordova-plugin-file')).not.toExist();

@@ -145,7 +145,7 @@ describe('end-to-end plugin dependency tests', function () {
                 return cordova.platform('add', 'android', {'fetch': true});
             })
             .then(function () {
-                return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file');
+                return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file', {'fetch': true});
             })
             .then(function () {
                 return cordova.plugin('add', plugins['Test4'], {'fetch': true});
