@@ -256,7 +256,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function () {
             // Add platform (so that prepare can run).
-            return cordovaPlatform('add', 'https://github.com/apache/cordova-browser.git', {'save': true, 'fetch': true});
+            return cordovaPlatform('add', 'browser', {'save': true, 'fetch': true});
         }).then(function () {
             // Run cordova prepare with fetch.
             return prepare({'save': true, 'fetch': true});
