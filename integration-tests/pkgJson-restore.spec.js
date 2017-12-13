@@ -222,7 +222,6 @@ describe('tests platform/spec restore with --save', function () {
         var configXmlPath = path.join(cwd, 'config.xml');
         var configPlugins;
         var configPlugin;
-
         emptyPlatformList().then(function () {
             // Add plugin with save and fetch.
             return cordovaPlugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save': true, 'fetch': true});
