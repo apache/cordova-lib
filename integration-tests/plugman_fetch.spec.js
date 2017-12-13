@@ -155,6 +155,9 @@ describe('fetch', function () {
 
         var srcDir = path.join(plugins_dir, 'recursivePlug');
         var appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
+        fetch.__set__('fetch', function (pluginDir) {
+            return Q(pluginDir);
+        });
 
         if (/^win/.test(process.platform)) {
             it('Test 020 : should copy all but the /demo/ folder', function (done) {
