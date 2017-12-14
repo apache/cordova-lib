@@ -21,7 +21,6 @@ var HooksRunner = require('../../hooks/HooksRunner');
 var CordovaError = require('cordova-common').CordovaError;
 var platforms = require('../../platforms/platforms');
 var addHelper = require('./addHelper');
-var events = require('cordova-common').events;
 
 module.exports = platform;
 
@@ -34,7 +33,6 @@ module.exports.update = function update (hooksRunner, projectRoot, targets, opts
 module.exports.remove = require('./remove');
 module.exports.check = require('./check');
 module.exports.list = require('./list');
-module.exports.save = require('./save');
 module.exports.getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
 
 // Expose the platform parsers on top of this command
@@ -80,9 +78,6 @@ function platform (command, targets, opts) {
             return module.exports.update(hooksRunner, projectRoot, targets, opts);
         case 'check':
             return module.exports.check(hooksRunner, projectRoot);
-        case 'save':
-            events.emit('warn', 'This command has been deprecated and will be removed in the next major release of cordova.');
-            return module.exports.save(hooksRunner, projectRoot, opts);
         default:
             return module.exports.list(hooksRunner, projectRoot, opts);
         }

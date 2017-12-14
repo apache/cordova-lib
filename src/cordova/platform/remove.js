@@ -25,7 +25,6 @@ var events = require('cordova-common').events;
 var npmUninstall = require('cordova-fetch').uninstall;
 var cordova_util = require('../util');
 var config = require('../config');
-var platformMetadata = require('../platform_metadata');
 var promiseutil = require('../../util/promise-util');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
@@ -82,7 +81,6 @@ function remove (hooksRunner, projectRoot, targets, opts) {
             // Remove targets from platforms.json.
             targets.forEach(function (target) {
                 events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
-                platformMetadata.remove(projectRoot, target);
             });
         }).then(function () {
             // Remove from node_modules if it exists and --fetch was used.
