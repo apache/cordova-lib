@@ -504,15 +504,8 @@ function getPlatformApiFunction (libDir, platform) {
     }
 
     if (!PlatformApi) {
-        // The platform just does not expose Api and we will try to polyfill it
-        var polyPlatforms = ['blackberry10', 'browser', 'ubuntu', 'webos'];
-        if (polyPlatforms.indexOf(platform) > -1) {
-            events.emit('verbose', 'Failed to require PlatformApi instance for platform "' + platform +
-            '". Using polyfill instead.');
-            PlatformApi = require('../platforms/PlatformApiPoly.js');
-        } else {
-            throw new Error('Your ' + platform + ' platform does not have Api.js');
-        }
+        throw new Error('Your ' + platform + ' platform does not have Api.js');
     }
+
     return PlatformApi;
 }

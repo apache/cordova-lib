@@ -1,50 +1,67 @@
 {
-    "name": "cordova-browser",
-    "version": "4.2.0-dev",
-    "description": "cordova-browser release",
-    "repository": {
-        "type": "git",
-        "url": "https://git-wip-us.apache.org/repos/asf/cordova-browser.git"
+  "name": "cordova-browser",
+  "version": "5.1.0-dev",
+  "description": "cordova-browser release",
+  "main": "bin/template/cordova/Api.js",
+  "bin": "bin/create",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apache/cordova-browser"
+  },
+  "bugs": {
+    "url": "https://issues.apache.org/jira/browse/CB"
+  },
+  "keywords": [
+    "cordova",
+    "browser",
+    "apache"
+  ],
+  "scripts": {
+    "eslint": "eslint bin && eslint spec",
+    "jasmine": "jasmine",
+    "test": "npm run eslint && npm run jasmine"
+  },
+  "dependencies": {
+    "cordova-common": "^2.1.1",
+    "cordova-serve": "^2.0.0",
+    "nopt": "^3.0.6",
+    "shelljs": "^0.5.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.0.0",
+    "eslint-config-semistandard": "^11.0.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.3.0",
+    "eslint-plugin-node": "^5.0.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "jasmine": "^2.5.3",
+    "tmp": "^0.0.26"
+  },
+  "bundledDependencies": [
+    "cordova-serve",
+    "nopt",
+    "shelljs",
+    "cordova-common"
+  ],
+  "author": "Apache Software Foundation",
+  "contributors": [
+    {
+      "name": "Steve Gill",
+      "email": "steveng@adobe.com"
     },
-    "keywords": [
-        "cordova",
-        "browser",
-        "apache"
-    ],
-    "scripts": {
-        "test": "npm run jshint && npm run test-unit",
-        "test-unit": "node node_modules/jasmine-node/lib/jasmine-node/cli.js --captureExceptions tests/spec/",
-        "jshint": "node node_modules/jshint/bin/jshint bin && node node_modules/jshint/bin/jshint tests"
+    {
+      "name": "Suraj Pindoria",
+      "email": "spindori@adobe.com"
     },
-    "dependencies": {
-        "adm-zip": "^0.4.7",
-        "cordova-serve": "^1.0.0",
-        "nopt": "^3.0.6",
-        "q": "^1.4.1",
-        "shelljs": "^0.6.0"
-    },
-    "devDependencies": {
-        "jasmine-node": "~1",
-        "jshint": "^2.6.0",
-        "tmp": "^0.0.26"
-    },
-    "bundledDependencies": [
-        "adm-zip",
-        "cordova-serve",
-        "nopt",
-        "q",
-        "shelljs"
-    ],
-    "author": "Apache Software Foundation",
-    "contributors": [
-        {
-            "name": "Steve Gill",
-            "email": "steveng@adobe.com"
-        },
-        {
-            "name": "Suraj Pindoria",
-            "email": "spindori@adobe.com"
-        }
-    ],
-    "license": "Apache-2.0"
+    {
+      "name": "Jesse MacFadyen",
+      "email": "purplecabbage@apache.org"
+    }
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "engineStrict": true
 }

@@ -19,21 +19,6 @@
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
-    "ubuntu": {
-        "hostos": ["linux"],
-        "parser_file": "../cordova/metadata/ubuntu_parser",
-        "handler_file": "../plugman/platforms/ubuntu",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "~4.3.4",
-        "deprecated": true
-    },
-    "blackberry10": {
-        "parser_file": "../cordova/metadata/blackberry10_parser",
-        "handler_file": "../plugman/platforms/blackberry10",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git",
-        "version": "~3.8.0",
-        "deprecated": true
-    },
     "www": {
         "hostos": [],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git",
@@ -46,13 +31,6 @@
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
         "version": "~5.0.0",
         "apiCompatibleSince": "4.3.0",
-        "deprecated": false
-    },
-    "webos": {
-        "parser_file": "../cordova/metadata/webos_parser",
-        "handler_file": "../plugman/platforms/webos",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-webos.git",
-        "version": "~3.7.0",
         "deprecated": false
     },
     "browser": {

@@ -138,13 +138,6 @@ describe('cordova/platform/addHelper', function () {
             expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
         });
 
-        it('should warn about using deprecated platforms', function (done) {
-            platform_addHelper('add', hooks_mock, projectRoot, ['ubuntu', 'blackberry10']);
-            process.nextTick(function () {
-                expect(events.emit).toHaveBeenCalledWith(jasmine.stringMatching(/has been deprecated/));
-                done();
-            });
-        });
         describe('platform spec inference', function () {
             it('should retrieve platform details from directories-specified-as-platforms using getPlatformDetailsFromDir', function (done) {
                 cordova_util.isDirectory.and.returnValue(true);
