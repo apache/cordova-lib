@@ -129,7 +129,7 @@ describe('platform end-to-end', function () {
             }).fin(done);
     });
 
-    it('Test 002 : should install plugins correctly while adding platform', function (done) {
+    xit('Test 002 : should install plugins correctly while adding platform', function (done) {
         cordova.plugin('add', path.join(pluginsDir, 'test'), {'fetch': true})
             .then(function () {
                 return cordova.platform('add', [helpers.testPlatform], {'fetch': true});

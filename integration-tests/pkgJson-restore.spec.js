@@ -136,7 +136,7 @@ describe('tests platform/spec restore with --save', function () {
     *   pkg.json and config.xml would add it to their files properly.
     *   When prepare is run with fetch, platform should be installed.
     */
-    xit('Test#017 : test to make sure that platform url is added and restored properly', function (done) {
+    it('Test#017 : test to make sure that platform url is added and restored properly', function (done) {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
@@ -488,7 +488,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
     *   is updated with the correct spec/dependencies when restored. Checks that specs are
     *   added properly, too.
     */
-    xit('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function (done) {
+    it('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function (done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -527,8 +527,8 @@ describe('update pkg.json to include platforms in config.xml', function () {
             expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
             expect(configEngArray.indexOf(browserPlatform)).toBeGreaterThan(-1);
             // Platform specs from config.xml have been added to pkg.json.
-            expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
-            expect(pkgJson.dependencies['cordova-android']).toEqual('6.1.1');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('^5.0.0');
+            expect(pkgJson.dependencies['cordova-android']).toEqual('7.0.0');
         }).fail(function (err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -649,7 +649,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
     *   and config.xml is updated to include 'browser'. Also, if there is a specified spec in pkg.json,
     *   it should be added to config.xml during restore.
     */
-    xit('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function (done) {
+    it('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function (done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg1 = new ConfigParser(configXmlPath);
@@ -667,7 +667,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.indexOf('browser')).toEqual(-1);
         expect(configEngArray.length === 1);
         // Pkg.json has cordova-browser in its dependencies.
-        expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^4.1.0' });
+        expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.0' });
         emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({ 'fetch': true });
@@ -687,11 +687,11 @@ describe('update config.xml to include platforms in pkg.json', function () {
             // Expect config.xml array to have 2 elements (platforms).
             expect(configEngArray.length === 2);
             // Check to make sure that 'browser' spec was added properly.
-            expect(engines).toEqual([ { name: 'ios', spec: '^4.5.4' }, { name: 'browser', spec: '^4.1.0' } ]);
+            expect(engines).toEqual([ { name: 'ios', spec: '^4.5.4' }, { name: 'browser', spec: '^5.0.0' } ]);
             // No change to pkg.json dependencies.
-            expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^4.1.0' });
+            expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.0' });
             expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.5.4');
-            expect(pkgJson.dependencies['cordova-browser']).toEqual('^4.1.0');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('^5.0.0');
         }).fail(function (err) {
             expect(err).toBeUndefined();
         }).fin(done);

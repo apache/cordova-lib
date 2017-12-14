@@ -476,7 +476,6 @@ function getPlatformApiFunction (libDir, platform) {
                 // Not an error, still load it ...
             }
             PlatformApi = exports.requireNoCache(apiEntryPoint);
-
             if (!PlatformApi.createPlatform) {
                 PlatformApi = null;
                 events.emit('error', 'Does not appear to implement platform Api.');

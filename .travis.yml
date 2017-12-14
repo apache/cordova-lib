@@ -6,6 +6,8 @@ node_js:
   - "4"
   - "6"
   - "8"
+# we don't test with npm 2.x
+before_install: if [[ `npm -v` < 3 ]]; then npm i -g npm@3; fi
 install:
   - npm install
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
