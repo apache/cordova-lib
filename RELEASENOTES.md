@@ -20,6 +20,16 @@
 -->
 # Cordova-lib Release Notes
 
+### 8.0.0 (Dec 14, 2017)
+* [CB-13057](https://issues.apache.org/jira/browse/CB-13057): removed `cordova save` command
+* [CB-13056](https://issues.apache.org/jira/browse/CB-13056): removed support for **WebOS**, **BlackBerry10**, and **Ubuntu**
+* [CB-13674](https://issues.apache.org/jira/browse/CB-13674): updated cordova dependencies
+* [CB-13055](https://issues.apache.org/jira/browse/CB-13055): updated integration tests, removed `lazy_load.js`, removed `gitclone.js` and `--nofetch` flag. This removes the need for us to include an npm dependency.
+* [CB-13532](https://issues.apache.org/jira/browse/CB-13532): updated to include a check for `package.json` `devDependencies`
+* [CB-12361](https://issues.apache.org/jira/browse/CB-12361): added unit tests for `check.js`
+* [CB-13501](https://issues.apache.org/jira/browse/CB-13501): added support for node 8 to tests
+* [CB-13463](https://issues.apache.org/jira/browse/CB-13463): prevent `package.json` updating plugins with `--nosave`
+
 ### 7.1.0 (Oct 04, 2017)
 * [CB-13303](https://issues.apache.org/jira/browse/CB-13303) added `--save_exact`, `--production` flags
 * [CB-13288](https://issues.apache.org/jira/browse/CB-13288) updated `index.js` and test to fix `cordova plugin search`
