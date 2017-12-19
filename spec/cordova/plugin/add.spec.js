@@ -65,9 +65,10 @@ describe('cordova/plugin/add', function () {
         plugin_info_provider_revert_mock = add.__set__('PluginInfoProvider', plugin_info_provider_mock);
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'writeFileSync').and.returnValue(false);
-        package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+        package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies', 'devDependencies']);
         package_json_mock.cordova = {};
         package_json_mock.dependencies = {};
+        package_json_mock.devDependencies = {};
         // requireNoCache is used to require package.json
         spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
         spyOn(events, 'emit');
@@ -168,7 +169,7 @@ describe('cordova/plugin/add', function () {
 
                 spyOn(fs, 'readFileSync').and.returnValue('file');
                 add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
-                    expect(fs.writeFileSync).toHaveBeenCalledWith(jasmine.any(String), JSON.stringify({'cordova': {'plugins': {'cordova-plugin-device': cli_plugin_variables}}, 'dependencies': {}}, null, 2), 'utf8');
+                    expect(fs.writeFileSync).toHaveBeenCalledWith(jasmine.any(String), JSON.stringify({'cordova': {'plugins': {'cordova-plugin-device': cli_plugin_variables}}, 'dependencies': {}, 'devDependencies': {}}, null, 2), 'utf8');
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                     console.log(e);
@@ -251,6 +252,24 @@ describe('cordova/plugin/add', function () {
             });
 
             package_json_mock.dependencies['cordova-plugin-device'] = '^1.0.0';
+
+            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+                expect(target).toEqual('cordova-plugin-device@^1.0.0');
+            }).fail(function (e) {
+                fail('fail handler unexpectedly invoked');
+                console.log(e);
+            }).done(done);
+        });
+        it('should retrieve plugin version from package.json devDependencies (if exists)', function (done) {
+            fs.existsSync.and.callFake(function (file_path) {
+                if (path.basename(file_path) === 'package.json') {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+
+            package_json_mock.devDependencies['cordova-plugin-device'] = '^1.0.0';
 
             add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('cordova-plugin-device@^1.0.0');
