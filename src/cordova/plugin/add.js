@@ -177,6 +177,8 @@ function add (projectRoot, hooksRunner, opts) {
                             var parsedSpec = pluginSpec.parse(target);
                             if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]) {
                                 attributes.spec = pkgJson.dependencies[pluginInfo.id];
+                            } else if (pkgJson && pkgJson.devDependencies && pkgJson.devDependencies[pluginInfo.id]) {
+                                attributes.spec = pkgJson.devDependencies[pluginInfo.id];
                             } else {
                                 if (parsedSpec.scope) {
                                     attributes.spec = parsedSpec.package + '@' + ver;
@@ -232,6 +234,9 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
         if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[id]) {
             events.emit('verbose', 'No version specified for ' + id + ', retrieving version from package.json');
             parsedSpec.version = pkgJson.dependencies[id];
+        } else if (pkgJson && pkgJson.devDependencies && pkgJson.devDependencies[id]) {
+            events.emit('verbose', 'No version specified for ' + id + ', retrieving version from package.json');
+            parsedSpec.version = pkgJson.devDependencies[id];
         } else {
             // If no version is specified, retrieve the version (or source) from config.xml.
             events.emit('verbose', 'No version specified for ' + id + ', retrieving version from config.xml');
