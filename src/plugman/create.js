@@ -47,7 +47,7 @@ module.exports = function create (name, id, version, pluginPath, options) {
     root.set('version', version);
 
     // Add the name tag
-    pluginName = et.XML('<name>');
+    pluginName = et.XML('<name></name>');
     pluginName.text = name;
     root.append(pluginName);
 
