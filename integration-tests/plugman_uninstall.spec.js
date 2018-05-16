@@ -25,9 +25,8 @@ var common = require('../spec/common');
 var platforms = require('../src/platforms/platforms');
 var xmlHelpers = require('cordova-common').xmlHelpers;
 var et = require('elementtree');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
-var shell = require('shelljs');
 var Q = require('q');
 var rewire = require('rewire');
 var spec = path.join(__dirname, '..', 'spec', 'plugman');
@@ -35,6 +34,7 @@ var srcProject = path.join(spec, 'projects', 'android');
 var project = path.join(spec, 'projects', 'android_uninstall.test');
 var project2 = path.join(spec, 'projects', 'android_uninstall.test2');
 var project3 = path.join(spec, 'projects', 'android_uninstall.test3');
+const projects = [project, project2, project3];
 
 var plugins_dir = path.join(spec, 'plugins');
 var plugins_install_dir = path.join(project, 'cordova', 'plugins');
@@ -83,10 +83,9 @@ describe('plugman uninstall start', function () {
     });
 
     it('Test 001 : plugman uninstall start', function () {
-        shell.rm('-rf', project, project2, project3);
-        shell.cp('-R', path.join(srcProject, '*'), project);
-        shell.cp('-R', path.join(srcProject, '*'), project2);
-        shell.cp('-R', path.join(srcProject, '*'), project3);
+        for (const p of projects) {
+            fs.copySync(srcProject, p);
+        }
 
         return install('android', project, plugins['org.test.plugins.dummyplugin'])
             .then(function (result) {
@@ -109,8 +108,8 @@ describe('uninstallPlatform', function () {
     beforeEach(function () {
         spyOn(actions.prototype, 'process').and.returnValue(Q());
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(shell, 'rm').and.returnValue(true);
-        spyOn(shell, 'cp').and.returnValue(true);
+        spyOn(fs, 'removeSync').and.returnValue(true);
+        spyOn(fs, 'copySync').and.returnValue(true);
     });
     describe('success', function () {
 
@@ -196,7 +195,7 @@ describe('uninstallPlugin', function () {
 
     beforeEach(function () {
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(shell, 'rm').and.callFake(function (f, p) { rmstack.push(p); return true; });
+        spyOn(fs, 'removeSync').and.callFake(function (f, p) { rmstack.push(p); return true; });
         rmstack = [];
         emit = spyOn(events, 'emit');
     });
@@ -259,7 +258,7 @@ describe('uninstall', function () {
 
     beforeEach(function () {
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(fs, 'removeSync').and.returnValue(true);
     });
 
     describe('failure', function () {
@@ -286,7 +285,9 @@ describe('uninstall', function () {
 describe('end', function () {
 
     afterEach(function () {
-        shell.rm('-rf', project, project2, project3);
+        for (const p of projects) {
+            fs.removeSync(p);
+        }
     });
 
     it('Test 013 : end', function () {

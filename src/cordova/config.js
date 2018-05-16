@@ -18,9 +18,8 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var url = require('url');
-var shell = require('shelljs');
 
 // Map of project_root -> JSON
 var configCache = {};
@@ -67,7 +66,7 @@ config.write = function set_config (project_root, json) {
     configCache[project_root] = contents;
     // Don't write the file for an empty config.
     if (contents !== '{}' || fs.existsSync(configPath)) {
-        shell.mkdir('-p', path.join(project_root, '.cordova'));
+        fs.ensureDirSync(path.join(project_root, '.cordova'));
         fs.writeFileSync(configPath, contents, 'utf-8');
     }
     return json;

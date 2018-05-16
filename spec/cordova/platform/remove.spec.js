@@ -16,7 +16,7 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');

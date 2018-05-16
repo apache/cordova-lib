@@ -17,9 +17,8 @@
     under the License.
 */
 
-var shell = require('shelljs');
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var common;
 
 var cordovaUtil = require('../../cordova/util');
@@ -79,15 +78,12 @@ module.exports = common = {
         // check that dest path is located in project directory
         if (dest.indexOf(project_dir) !== 0) { throw new Error('"' + dest + '" not located within project!'); }
 
-        shell.mkdir('-p', path.dirname(dest));
+        fs.ensureDirSync(path.dirname(dest));
 
         if (link) {
             common.symlinkFileOrDirTree(src, dest);
-        } else if (fs.statSync(src).isDirectory()) {
-            // XXX shelljs decides to create a directory when -R|-r is used which sucks. http://goo.gl/nbsjq
-            shell.cp('-Rf', src + '/*', dest);
         } else {
-            shell.cp('-f', src, dest);
+            fs.copySync(src, dest);
         }
     },
     // Same as copy file but throws error if target exists
@@ -99,11 +95,11 @@ module.exports = common = {
     },
     symlinkFileOrDirTree: function symlinkFileOrDirTree (src, dest) {
         if (fs.existsSync(dest)) {
-            shell.rm('-Rf', dest);
+            fs.removeSync(dest);
         }
 
         if (fs.statSync(src).isDirectory()) {
-            shell.mkdir('-p', dest);
+            fs.ensureDirSync(dest);
             fs.readdirSync(src).forEach(function (entry) {
                 symlinkFileOrDirTree(path.join(src, entry), path.join(dest, entry));
             });
@@ -114,11 +110,11 @@ module.exports = common = {
     // checks if file exists and then deletes. Error if doesn't exist
     removeFile: function (project_dir, src) {
         var file = module.exports.resolveSrcPath(project_dir, src);
-        shell.rm('-Rf', file);
+        fs.removeSync(file);
     },
     // deletes file/directory without checking
     removeFileF: function (file) {
-        shell.rm('-Rf', file);
+        fs.removeSync(file);
     },
     // Sometimes we want to remove some java, and prune any unnecessary empty directories
     deleteJava: function (project_dir, destFile) {
@@ -183,7 +179,6 @@ module.exports = common = {
             scriptContent = 'cordova.define("' + moduleName + '", function(require, exports, module) { ' + scriptContent + '\n});\n';
 
             var moduleDestination = path.resolve(www_dir, 'plugins', plugin_id, jsModule.src);
-            shell.mkdir('-p', path.dirname(moduleDestination));
             fs.writeFileSync(moduleDestination, scriptContent, 'utf-8');
         },
         uninstall: function (jsModule, www_dir, plugin_id) {

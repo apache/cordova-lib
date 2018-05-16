@@ -18,7 +18,7 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var os = require('os');
 var ConfigParser = require('cordova-common').ConfigParser;
 

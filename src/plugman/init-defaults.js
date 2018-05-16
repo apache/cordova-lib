@@ -25,7 +25,7 @@
 /* global prompt */
 // PromZard file that is used by createpackagejson and init-package-json module
 
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var defaults = require('./defaults.json');
 

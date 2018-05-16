@@ -17,9 +17,9 @@
     under the License.
 */
 
+var fs = require('fs-extra');
 var helpers = require('../helpers');
 var path = require('path');
-var shell = require('shelljs');
 var Q = require('q');
 var events = require('cordova-common').events;
 var ConfigParser = require('cordova-common').ConfigParser;
@@ -62,13 +62,12 @@ describe('create basic test (see more in cordova-create)', function () {
     // this.timeout(240000);
 
     beforeEach(function () {
-        shell.rm('-rf', project);
-        shell.mkdir('-p', tmpDir);
+        fs.emptyDirSync(tmpDir);
     });
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     function checkProject () {

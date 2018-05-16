@@ -18,7 +18,7 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
 var DepGraph = require('dep-graph');
 var child_process = require('child_process');
@@ -29,7 +29,6 @@ var Q = require('q');
 var platform_modules = require('../platforms/platforms');
 var os = require('os');
 var underscore = require('underscore');
-var shell = require('shelljs');
 var events = require('cordova-common').events;
 var HooksRunner = require('../hooks/HooksRunner');
 var isWindows = (os.platform().substr(0, 3) === 'win');
@@ -551,7 +550,7 @@ function installDependency (dep, install, options) {
             return Q()
                 .then(function () {
                     // Remove plugin
-                    return shell.rm('-rf', path.join(install.plugins_dir, install.top_plugin_id));
+                    return fs.removeSync(path.join(install.plugins_dir, install.top_plugin_id));
                 }).then(function () {
                     // Return promise chain and finally reject
                     return Q.reject(new CordovaError(msg));
@@ -629,16 +628,14 @@ function isAbsolutePath (_path) {
 function copyPlugin (plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
     var pluginInfo = new PluginInfo(plugin_src_dir);
     var dest = path.join(plugins_dir, pluginInfo.id);
-    shell.rm('-rf', dest);
 
     if (link) {
         events.emit('verbose', 'Symlinking from location "' + plugin_src_dir + '" to location "' + dest + '"');
-        shell.mkdir('-p', path.dirname(dest));
-        fs.symlinkSync(plugin_src_dir, dest, 'junction');
+        fs.removeSync(dest);
+        fs.ensureSymlinkSync(plugin_src_dir, dest, 'junction');
     } else {
-        shell.mkdir('-p', dest);
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');
-        shell.cp('-R', path.join(plugin_src_dir, '*'), dest);
+        fs.copySync(plugin_src_dir, dest);
     }
     pluginInfo.dir = dest;
     pluginInfoProvider.put(pluginInfo);

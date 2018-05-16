@@ -17,8 +17,7 @@
 
 var helpers = require('../spec/helpers');
 var path = require('path');
-var fs = require('fs');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var superspawn = require('cordova-common').superspawn;
 var config = require('../src/cordova/config');
 var Q = require('q');
@@ -39,12 +38,9 @@ describe('platform end-to-end', function () {
     var results;
 
     beforeEach(function () {
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
 
-        // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
-        // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(fixturesDir, 'base'), tmpDir);
-        shell.mv(path.join(tmpDir, 'base'), project);
+        fs.copySync(path.join(fixturesDir, 'base'), project);
         process.chdir(project);
 
         // Now we load the config.json in the newly created project and edit the target platform's lib entry
@@ -58,7 +54,7 @@ describe('platform end-to-end', function () {
         spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(fixturesDir, 'platforms', 'android'), path.join(project, 'platforms'));
+                fs.copySync(path.join(fixturesDir, 'platforms/android'), path.join(project, 'platforms/android'));
             } else if (cmd.match(/version\b/)) {
                 return Q('3.3.0');
             } else if (cmd.match(/update\b/)) {
@@ -72,7 +68,7 @@ describe('platform end-to-end', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     // Factoring out some repeated checks.
@@ -166,7 +162,7 @@ describe('platform add plugin rm end-to-end', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     it('Test 006 : should remove dependency when removing parent plugin', function () {
@@ -209,7 +205,7 @@ describe('platform add and remove --fetch', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     it('Test 007 : should add and remove platform from node_modules directory', function () {
@@ -255,7 +251,7 @@ describe('plugin add and rm end-to-end --fetch', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     it('Test 008 : should remove dependency when removing parent plugin', function () {
@@ -304,7 +300,7 @@ describe('non-core platform add and rm end-to-end --fetch', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
     });
 
     it('Test 009 : should add and remove 3rd party platforms', function () {

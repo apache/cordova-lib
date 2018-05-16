@@ -16,9 +16,8 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var Q = require('q');
-var shell = require('shelljs');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
@@ -62,7 +61,7 @@ describe('cordova/platform/addHelper', function () {
         prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
         prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
         prepare_revert_mock = platform_addHelper.__set__('prepare', prepare_mock);
-        spyOn(shell, 'mkdir');
+        spyOn(fs, 'ensureDirSync');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'readFileSync');
         spyOn(fs, 'writeFileSync');
