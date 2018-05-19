@@ -100,32 +100,53 @@ function possiblyFetch (id, plugins_dir, options) {
     return require('./plugman').fetch(id, plugins_dir, opts);
 }
 
-function checkEngines (engines) {
+function checkEngines (engines, plugin_dir) {
+    var plugin_pkgJson_path = path.join(plugin_dir, 'package.json');
+    var plugin_pkgJson;
+
+    if (fs.existsSync(plugin_pkgJson_path)) {
+        plugin_pkgJson = cordovaUtil.requireNoCache(plugin_pkgJson_path);
+    }
 
     for (var i = 0; i < engines.length; i++) {
         var engine = engines[i];
-
-        // This is a hack to allow plugins with <engine> tag to be installed with
-        // engine with '-dev' or '-nightly' suffixes. It is required due to new semver range logic,
-        // introduced in semver@3.x. For more details see https://github.com/npm/node-semver#prerelease-tags.
-        //
-        // This may lead to false-positive checks, when engine version with dropped
-        // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
-        // However this shouldn't be a problem, because this only should happen in dev workflow.
-        engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev|-nightly.*$/, '');
-        if (semver.satisfies(engine.currentVersion, engine.minVersion, /* loose= */true) || engine.currentVersion === null) {
-            continue; // engine ok!
-        } else {
-            var msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
-                      engine.name + ': ' + engine.currentVersion +
-                      ', failed version requirement: ' + engine.minVersion;
-            events.emit('warn', msg);
-            return Q.reject('skip');
+        if (engine && engine.currentVersion) {
+            if (plugin_pkgJson && plugin_pkgJson.engines && plugin_pkgJson.engines.cordovaDependencies) {
+                for (var key in plugin_pkgJson.engines.cordovaDependencies) {
+                    if (plugin_pkgJson.engines.cordovaDependencies.hasOwnProperty(key)) {
+                        if (((key < engine.currentVersion) || (key === engine.currentVersion)) && (plugin_pkgJson.engines.cordovaDependencies[key])) {
+                            var plugin_pkgJson_min = plugin_pkgJson.engines.cordovaDependencies[key];
+                            if (plugin_pkgJson_min[engine.name]) {
+                                engine.minVersion = plugin_pkgJson_min[engine.name];
+                            }
+                        }
+                    }
+                }
+            // This is a hack to allow plugins with <engine> tag to be installed with
+            // engine with '-dev' or '-nightly' suffixes. It is required due to new semver range logic,
+            // introduced in semver@3.x. For more details see https://github.com/npm/node-semver#prerelease-tags.
+            //
+            // This may lead to false-positive checks, when engine version with dropped
+            // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
+            // However this shouldn't be a problem, because this only should happen in dev workflow.
+            }
+            engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev|-nightly.*$/, '');
+            if (semver.satisfies(engine.currentVersion, engine.minVersion, /* loose= */true) || engine.currentVersion === null) {
+                continue; // engine ok!
+            } else {
+                var msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
+                          engine.name + ': ' + engine.currentVersion +
+                          ', failed version requirement: ' + engine.minVersion;
+                events.emit('warn', msg);
+                return Q.reject('skip');
+            }
         }
     }
 
     return Q(true);
 }
+
+module.exports.checkEngines = checkEngines;
 
 function cleanVersionOutput (version, name) {
     var out = version.trim();
@@ -310,7 +331,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         options.platformVersion = platformVersion;
         return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
     }).then(function (engines) {
-        return checkEngines(engines);
+        return module.exports.checkEngines(engines, plugin_dir);
     }).then(function () {
         filtered_variables = variableMerge.mergeVariables(plugin_dir, platform, options);
         install.filtered_variables = filtered_variables;

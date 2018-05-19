@@ -27,6 +27,7 @@ var events = require('cordova-common').events;
 var plugman = require('../../src/plugman/plugman');
 var platforms = require('../../src/plugman/platforms/common');
 var knownPlatforms = require('../../src/platforms/platforms');
+var cordovaUtil = require('../../src/cordova/util');
 var common = require('../common');
 var fs = require('fs');
 var os = require('os');
@@ -287,15 +288,12 @@ describe('install', function () {
                     .fin(function () {
                         var plugmanVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
                         var cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
-                        expect(satisfies.calls.count()).toBe(4);
+                        // var megaFun = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                        expect(satisfies.calls.count()).toBe(2);
                         // <engine name="cordova" version=">=2.3.0"/>
                         expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=2.3.0', true ]);
                         // <engine name="cordova-plugman" version=">=0.10.0" />
                         expect(satisfies.calls.argsFor(1)).toEqual([ plugmanVersion, '>=0.10.0', true ]);
-                        // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />
-                        expect(satisfies.calls.argsFor(2)).toEqual([ null, '>=1.0.0', true ]);
-                        // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
-                        expect(satisfies.calls.argsFor(3)).toEqual([ null, '>=3.0.0', true ]);
                         done();
                     });
             }, TIMEOUT);
@@ -528,4 +526,68 @@ describe('end', function () {
     it('Test 034 : end', function () {
         shell.rm('-rf', temp_dir);
     }, TIMEOUT);
+});
+
+describe('unit tests for checkEngines', function () {
+    var fail;
+    var engine = [ { platform: 'android',
+        minVersion: '>=3.6.0',
+        currentVersion: '6.2.3' } ];
+    beforeEach(function () {
+        spyOn(semver, 'satisfies');
+    });
+
+    it('checkEngines should return true', function () {
+        spyOn(fs, 'existsSync').and.returnValue(false);
+        semver.satisfies.and.returnValue(true);
+        install.checkEngines(engine, 'pluginDir')
+            .then(function (res) {
+                expect(res).toBe(true);
+            }).fail(function err (errMsg) {
+                fail('fail handler unexpectedly invoked');
+                console.error(errMsg);
+            });
+    });
+
+    it('checkEngines should check cordovaDependencies', function () {
+        var pkgJson = { engines: { cordovaDependencies: { '9.0.0': [Object], '2.0.0': [Object] } } };
+        spyOn(fs, 'existsSync').and.returnValue(true);
+        spyOn(cordovaUtil, 'requireNoCache').and.returnValue(pkgJson);
+        semver.satisfies.and.callThrough();
+        install.checkEngines(engine, 'pluginDir')
+            .then(function (res) {
+                expect(res).toBe(true);
+                expect(semver.satisfies).toHaveBeenCalledWith('6.2.3', '>=3.6.0', true);
+            }).fail(function err (errMsg) {
+                fail('fail handler unexpectedly invoked');
+                console.error(errMsg);
+            });
+    });
+
+    it('checkEngines should check if plugin version is supported', function () {
+        spyOn(fs, 'existsSync').and.returnValue(true);
+        spyOn(cordovaUtil, 'requireNoCache').and.returnValue(true);
+        semver.satisfies.and.callThrough();
+        install.checkEngines(engine, 'pluginDir')
+            .then(function (res) {
+                expect(res).toBe(true);
+                expect(semver.satisfies).toHaveBeenCalledWith('6.2.3', '>=3.6.0', true);
+            }).fail(function err (errMsg) {
+                fail('fail handler unexpectedly invoked');
+                console.error(errMsg);
+            });
+    });
+
+    it('checkEngines should warn if plugin is not supported', function () {
+        spyOn(events, 'emit');
+        spyOn(Q, 'reject').and.callThrough();
+        semver.satisfies.and.returnValue(false);
+        install.checkEngines(engine, 'pluginDir')
+            .then(function (res) {
+                fail('success handler unexpectedly invoked');
+            }).fail(function err (errMsg) {
+                expect(errMsg).toBe('skip');
+                expect(events.emit).toHaveBeenCalledWith('warn', jasmine.stringMatching(/failed version requirement/));
+            });
+    });
 });
