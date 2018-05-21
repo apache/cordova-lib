@@ -840,7 +840,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
         expect(engines).toEqual([ { name: 'ios', spec: '~4.2.1' } ]);
         emptyPlatformList().then(function () {
             // Add ios with --save and --fetch.
-            return cordova.platform('add', ['ios@4.3.0'], {'save': true, 'fetch': true});
+            return cordova.platform('add', ['ios@4.5.4'], {'save': true, 'fetch': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);

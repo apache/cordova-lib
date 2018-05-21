@@ -16,5 +16,8 @@ install:
   #- "(cd cordova-common && npm install)"
   #- (cd cordova-fetch && npm install && npm link ../cordova-common)
 
+before_install:
+  - npm -v | awk '/^5\.6\./ { system("npm install xml2js@0.4.19") }'
+
 script:
   - "npm test"
