@@ -12,5 +12,5 @@
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <engine name="android" spec="7.0.0"/>
-    <engine name="browser" spec="^5.0.0"/>
+    <engine name="browser" spec="^5.0.3"/>
 </widget>
