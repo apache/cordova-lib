@@ -5,7 +5,7 @@
     "main": "index.js",
     "dependencies": {
         "cordova-ios": "^4.5.4",
-        "cordova-browser": "^5.0.0"
+        "cordova-browser": "^5.0.3"
     },
     "devDependencies": {},
     "scripts": {

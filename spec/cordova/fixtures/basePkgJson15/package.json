@@ -18,6 +18,6 @@
     },
     "dependencies": {
         "cordova-plugin-splashscreen": "^3.2.2",
-        "cordova-ios": "^4.2.1"
+        "cordova-ios": "^4.5.4"
     }
 }

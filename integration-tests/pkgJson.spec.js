@@ -22,7 +22,7 @@ var shell = require('shelljs');
 var events = require('cordova-common').events;
 var ConfigParser = require('cordova-common').ConfigParser;
 var cordova = require('../src/cordova/cordova');
-var TIMEOUT = 60 * 1000;
+var TIMEOUT = 120 * 1000;
 var cordova_util = require('../src/cordova/util');
 var semver = require('semver');
 
@@ -45,6 +45,7 @@ describe('plugin end-to-end', function () {
     events.on('results', function (res) { results = res; });
 
     beforeEach(function () {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', project);
 
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
@@ -293,7 +294,7 @@ describe('plugin end-to-end', function () {
                 expect(err).toBeUndefined();
             }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    }, 60000);
+    }, TIMEOUT);
 
     // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
     it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
@@ -360,7 +361,7 @@ describe('plugin end-to-end', function () {
             }).fail(function (err) {
                 expect(err).toBeUndefined();
             }).fin(done);
-    }, 60000);
+    }, TIMEOUT);
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
@@ -370,7 +371,7 @@ describe('platform end-to-end with --save', function () {
     var results;
 
     beforeEach(function () {
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 30 * 1000;
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', tmpDir);
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
@@ -588,6 +589,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
     var results;
 
     beforeEach(function () {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', tmpDir);
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
@@ -635,7 +637,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
 
         // Pkg.json has ios and spec '^4.2.1' and splashscreen '^3.2.2'.
         expect(pkgJson.cordova.platforms).toEqual([ iosPlatform ]);
-        expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen': '^3.2.2', 'cordova-ios': '^4.2.1' });
+        expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen': '^3.2.2', 'cordova-ios': '^4.5.4' });
         // Config.xml has no platforms or plugins yet.
         expect(engines.length).toEqual(0);
         expect(configPlugins.length).toEqual(0);
@@ -680,7 +682,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    }, 120000);
+    }, TIMEOUT * 2);
 });
 
 // Test #021 : use basePkgJson16 as config.xml contains platform/spec and plugin/spec pkg.json does not.
@@ -690,6 +692,7 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
     var results;
 
     beforeEach(function () {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', tmpDir);
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
@@ -779,7 +782,7 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    }, 60000);
+    }, TIMEOUT);
 });
 
 // Test #022 : use basePkgJson17 (config.xml and pkg.json each have ios platform with different specs).
@@ -789,6 +792,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
     var results;
 
     beforeEach(function () {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', tmpDir);
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
         // Using /* doesn't work because of hidden files.
@@ -882,7 +886,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-    }, 60000);
+    }, TIMEOUT);
 });
 
 // No pkg.json included in test file.
@@ -893,6 +897,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     var testRunRoot = process.cwd();
 
     beforeEach(function () {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 150 * 1000;
         shell.rm('-rf', tmpDir);
 
         // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
@@ -936,7 +941,7 @@ describe('local path is added to config.xml without pkg.json', function () {
             }).fail(function (err) {
                 expect(err).toBeUndefined();
             }).fin(done);
-    }, 60000);
+    }, TIMEOUT);
 
     // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
     it('Test#027 : if you add a plugin with local path, config.xml gets updated', function (done) {
@@ -961,5 +966,5 @@ describe('local path is added to config.xml without pkg.json', function () {
             }).fail(function (err) {
                 expect(err).toBeUndefined();
             }).fin(done);
-    }, 60000);
+    }, TIMEOUT);
 });
