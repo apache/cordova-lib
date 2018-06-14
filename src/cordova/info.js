@@ -47,17 +47,15 @@ function getPlatformInfo (platform) {
 }
 
 module.exports = function info () {
-    // Get projectRoot
-    var projectRoot = cordova_util.cdProjectRoot();
-    if (!projectRoot) {
-        return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
-    }
-
-    const infoPromises = [
+    const basicInfo = [
         // Get versions for cordova and all direct cordova dependencies
         cordovaVersionInfo(),
         // Get information on the current environment
-        environmentInformation(),
+        environmentInformation()
+    ];
+
+    const projectRoot = cordova_util.isCordova();
+    const projectInfo = !projectRoot ? [] : [
         // Get list of plugins
         listPlugins(projectRoot),
         // Get Platforms information
@@ -68,6 +66,7 @@ module.exports = function info () {
         displayFileContents(path.join(projectRoot, 'package.json'))
     ];
 
+    const infoPromises = [].concat(basicInfo, projectInfo);
     const failSafePromises = infoPromises.map(p => Q(p).catch(err => err));
     return Q.all(failSafePromises)
         .then(results => console.info(results.join('\n\n')));
