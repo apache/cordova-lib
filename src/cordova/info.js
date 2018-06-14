@@ -54,8 +54,8 @@ module.exports = function info () {
     }
 
     const infoPromises = [
-        // Get Cordova version
-        Q('Cordova version: ' + pkg.version),
+        // Get versions for cordova and all direct cordova dependencies
+        cordovaVersionInfo(),
         // Get information on the current environment
         environmentInformation(),
         // Get list of plugins
@@ -72,6 +72,15 @@ module.exports = function info () {
     return Q.all(failSafePromises)
         .then(results => console.info(results.join('\n\n')));
 };
+
+function cordovaVersionInfo () {
+    const versionFor = name => require(`${name}/package`).version;
+    const deps = Object.keys(pkg.dependencies)
+        .filter(name => name.startsWith('cordova-'))
+        .map(name => `${name}@${versionFor(name)}`)
+        .join('\n');
+    return `Cordova version ${pkg.version} with:\n${indent(deps)}`;
+}
 
 function environmentInformation () {
     return Q.all([
