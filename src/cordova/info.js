@@ -17,10 +17,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-/*
-A utility funciton to help output the information needed
-when submitting a help request.
- */
 var cordova_util = require('./util');
 var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
@@ -30,6 +26,14 @@ var Q = require('q');
 
 const indent = s => require('indent-string')(s, 2);
 
+/**
+ * Outputs information about your system, your Cordova installation and
+ * the Cordova project this is called in, if applicable.
+ *
+ * Useful when submitting bug reports and asking for help.
+ *
+ * @return {Promise} resolved when info has been dumped
+ */
 module.exports = function info () {
     const basicInfo = [
         // Get versions for cordova and all direct cordova dependencies
