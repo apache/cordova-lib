@@ -30,22 +30,6 @@ var Q = require('q');
 
 const indent = s => require('indent-string')(s, 2);
 
-function failSafeSpawn (command, args) {
-    return superspawn.spawn(command, args)
-        .catch(err => `ERROR: ${err.message}`);
-}
-
-function getPlatformInfo (platform) {
-    switch (platform) {
-    case 'ios':
-        return failSafeSpawn('xcodebuild', ['-version'])
-            .then(out => 'iOS platform:\n' + indent(out));
-    case 'android':
-        return failSafeSpawn('android', ['list', 'target'])
-            .then(out => 'Android platform:\n' + indent(out));
-    }
-}
-
 module.exports = function info () {
     const basicInfo = [
         // Get versions for cordova and all direct cordova dependencies
@@ -91,6 +75,12 @@ function environmentInformation () {
         .then(env => 'Environment: \n' + indent(env));
 }
 
+function listPlugins (projectRoot) {
+    var pluginPath = path.join(projectRoot, 'plugins');
+    var plugins = cordova_util.findPlugins(pluginPath).join('\n');
+    return 'Plugins:' + (plugins.length ? '\n' + indent(plugins) : ' []');
+}
+
 function getPlatforms (projectRoot) {
     var platforms = cordova_util.listPlatforms(projectRoot);
     if (!platforms.length) {
@@ -100,10 +90,20 @@ function getPlatforms (projectRoot) {
         .then(outs => outs.join('\n\n'));
 }
 
-function listPlugins (projectRoot) {
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath).join('\n');
-    return 'Plugins:' + (plugins.length ? '\n' + indent(plugins) : ' []');
+function getPlatformInfo (platform) {
+    switch (platform) {
+    case 'ios':
+        return failSafeSpawn('xcodebuild', ['-version'])
+            .then(out => 'iOS platform:\n' + indent(out));
+    case 'android':
+        return failSafeSpawn('android', ['list', 'target'])
+            .then(out => 'Android platform:\n' + indent(out));
+    }
+}
+
+function failSafeSpawn (command, args) {
+    return superspawn.spawn(command, args)
+        .catch(err => `ERROR: ${err.message}`);
 }
 
 function displayFileContents (filePath) {
