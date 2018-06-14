@@ -58,7 +58,6 @@ module.exports = function info () {
     }
 
     // Array of functions, Q.allSettled
-    console.log('Collecting Data...\n\n');
     return Q.allSettled([
         // Get Node version
         Q('Node version: ' + process.version),
