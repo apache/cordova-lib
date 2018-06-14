@@ -62,8 +62,10 @@ module.exports = function info () {
         listPlugins(projectRoot),
         // Get Platforms information
         getPlatforms(projectRoot),
-        // Get project config.xml file using ano
-        getProjectConfig(projectRoot)
+        // Display project config.xml file
+        displayFileContents(cordova_util.projectConfig(projectRoot)),
+        // Display project package.json file
+        displayFileContents(path.join(projectRoot, 'package.json'))
     ];
 
     const failSafePromises = infoPromises.map(p => Q(p).catch(err => err));
@@ -86,11 +88,11 @@ function listPlugins (projectRoot) {
     return 'Plugins:' + (plugins.length ? '\n' + indent(plugins) : ' []');
 }
 
-function getProjectConfig (projectRoot) {
-    const configPath = cordova_util.projectConfig(projectRoot);
-    if (!fs.existsSync(configPath)) {
-        return 'config.xml file not found';
+function displayFileContents (filePath) {
+    const fileName = path.basename(filePath);
+    if (!fs.existsSync(filePath)) {
+        return fileName + ' file not found';
     }
-    const config = fs.readFileSync(configPath, 'utf-8');
-    return `config.xml <<EOF\n${config}\nEOF`;
+    const contents = fs.readFileSync(filePath, 'utf-8');
+    return `${fileName} <<EOF\n${contents}\nEOF`;
 }
