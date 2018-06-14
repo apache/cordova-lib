@@ -20,7 +20,6 @@ under the License.
 /*
 A utility funciton to help output the information needed
 when submitting a help request.
-Outputs to a file
  */
 var cordova_util = require('./util');
 var superspawn = require('cordova-common').superspawn;
@@ -74,9 +73,6 @@ module.exports = function info () {
             output += p.state === 'fulfilled' ? p.value + '\n\n' : p.reason + '\n\n';
         });
         console.info(output);
-        fs.writeFile(path.join(projectRoot, 'info.txt'), output, 'utf-8', function (err) {
-            if (err) throw err;
-        });
     });
 };
 
