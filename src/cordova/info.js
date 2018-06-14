@@ -54,10 +54,10 @@ module.exports = function info () {
     }
 
     const infoPromises = [
-        // Get Node version
-        Q('Node version: ' + process.version),
         // Get Cordova version
         Q('Cordova version: ' + pkg.version),
+        // Get information on the current environment
+        environmentInformation(),
         // Get list of plugins
         listPlugins(projectRoot),
         // Get Platforms information
@@ -72,6 +72,16 @@ module.exports = function info () {
     return Q.all(failSafePromises)
         .then(results => console.info(results.join('\n\n')));
 };
+
+function environmentInformation () {
+    return Q.all([
+        'OS: ' + process.platform,
+        'Node: ' + process.version,
+        failSafeSpawn('npm', ['-v']).then(out => 'npm: ' + out)
+    ])
+        .then(env => env.join('\n'))
+        .then(env => 'Environment: \n' + indent(env));
+}
 
 function getPlatforms (projectRoot) {
     var platforms = cordova_util.listPlatforms(projectRoot);
