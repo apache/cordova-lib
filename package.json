@@ -27,6 +27,7 @@
     "detect-indent": "^5.0.0",
     "elementtree": "^0.1.7",
     "glob": "^7.1.2",
+    "indent-string": "^3.2.0",
     "init-package-json": "^1.2.0",
     "nopt": "4.0.1",
     "opener": "^1.4.3",
