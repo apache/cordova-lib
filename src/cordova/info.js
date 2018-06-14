@@ -41,9 +41,11 @@ function execSpawn (command, args, resultMsg, errorMsg) {
 function getPlatformInfo (platform, projectRoot) {
     switch (platform) {
     case 'ios':
-        return execSpawn('xcodebuild', ['-version'], 'iOS platform:\n\n', 'Error retrieving iOS platform information: ');
+        return execSpawn('xcodebuild', ['-version'], 'iOS platform:\n\n',
+            'Error retrieving iOS platform information: ');
     case 'android':
-        return execSpawn('android', ['list', 'target'], 'Android platform:\n\n', 'Error retrieving Android platform information: \nAndroid SDK is not set up properly. Make sure that the Android SDK \'tools\' and \'platform-tools\' directories are in the PATH variable. \n\n');
+        return execSpawn('android', ['list', 'target'], 'Android platform:\n\n',
+            'Error retrieving Android platform information: ');
     }
 }
 
