@@ -153,7 +153,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                 skipCopyingPlugin = false;
             }
             return P
-                .fail(function (error) {
+                .catch(function (error) {
                     var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
                         '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
                         '\nCheck your connection and plugin name/version/URL.' +

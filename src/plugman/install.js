@@ -364,7 +364,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
                 return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);
             }
         }
-    ).fail(
+    ).catch(
         function (error) {
 
             if (error === 'skip') {
@@ -460,7 +460,7 @@ function tryFetchDependency (dep, install, options) {
                 var url = path.join(git_repo, dep.subdir);
                 dep.subdir = '';
                 return Q(url);
-            }).fail(function (error) { // eslint-disable-line handle-callback-err
+            }).catch(function () {
                 return Q(dep.url);
             });
 

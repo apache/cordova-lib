@@ -297,7 +297,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
         }
         events.emit('log', 'Using cordova-fetch for ' + target);
         return fetch(target, projectRoot, opts);
-    }).fail(function (error) {
+    }).catch(function (error) {
         var message = 'Failed to fetch platform ' + target +
             '\nProbably this is either a connection problem, or platform spec is incorrect.' +
             '\nCheck your connection and platform name/version/URL.' +
