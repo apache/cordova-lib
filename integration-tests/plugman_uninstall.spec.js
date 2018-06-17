@@ -303,7 +303,7 @@ describe('end', function () {
             .then(function () {
                 // Fails... A depends on
                 return uninstall('android', project, plugins['C']);
-            }).fail(function (err) {
+            }).catch(function (err) {
                 expect(err.stack).toMatch(/The plugin 'C' is required by \(A\), skipping uninstallation./);
             }).then(function () {
                 // dependencies on C,D ... should this only work with --recursive? prompt user..?

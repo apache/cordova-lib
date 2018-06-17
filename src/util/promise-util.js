@@ -40,7 +40,7 @@ function Q_chainmap_graceful (args, func, failureCallback) {
         return args.reduce(function (soFar, arg) {
             return soFar.then(function (val) {
                 return func(arg, val);
-            }).fail(function (err) {
+            }).catch(function (err) {
                 if (failureCallback) {
                     failureCallback(err);
                 }

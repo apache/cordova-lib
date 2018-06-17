@@ -372,7 +372,7 @@ describe('install', function () {
                 return install('android', project, plugins['G'])
                     .then(function () {
                         common.spy.getInstall(emit);
-                    }).fail(function err (errMsg) {
+                    }).catch(function err (errMsg) {
                         expect(errMsg.toString()).toContain('Cyclic dependency from G to H');
                     });
             }, TIMEOUT);

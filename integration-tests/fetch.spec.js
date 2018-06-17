@@ -57,7 +57,7 @@ describe('end-to-end plugin dependency tests', function () {
             }).then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 return cordova.plugin('add', plugins['Test1']);
-            }).fail(function (err) {
+            }).catch(function (err) {
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
             });
     }, TIMEOUT);
@@ -118,7 +118,7 @@ describe('end-to-end plugin dependency tests', function () {
             .then(function () {
                 return cordova.plugin('add', plugins['Test3']);
             })
-            .fail(function (err) {
+            .catch(function (err) {
                 expect(path.join(pluginsDir, 'Test2')).toExist();
                 expect(path.join(pluginsDir, 'Test3')).not.toExist();
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
