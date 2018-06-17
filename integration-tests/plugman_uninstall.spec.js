@@ -298,6 +298,11 @@ describe('uninstall', function () {
 });
 
 describe('end', function () {
+
+    afterEach(function () {
+        shell.rm('-rf', project, project2, project3);
+    });
+
     it('Test 013 : end', function () {
         return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
             .then(function () {
@@ -308,9 +313,6 @@ describe('end', function () {
             }).then(function () {
                 // dependencies on C,D ... should this only work with --recursive? prompt user..?
                 return uninstall('android', project, plugins['A']);
-            }).fin(function (err) {
-                if (err) { events.emit('error', err); }
-                shell.rm('-rf', project, project2, project3);
             });
     });
 });
