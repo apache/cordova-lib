@@ -39,20 +39,22 @@ var configBasic = {
 };
 
 describe('cordova create checks for valid-identifier', function () {
-    it('Test 001 : should reject reserved words from start of id', function (done) {
-        cordova.create('projectPath', 'int.bob', 'appName', {}, events)
-            .fail(function (err) {
+    it('Test 001 : should reject reserved words from start of id', function () {
+        return cordova.create('projectPath', 'int.bob', 'appName', {}, events)
+            .then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
                 expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-            })
-            .fin(done);
+            });
     });
 
-    it('Test 002 : should reject reserved words from end of id', function (done) {
-        cordova.create('projectPath', 'bob.class', 'appName', {}, events)
-            .fail(function (err) {
+    it('Test 002 : should reject reserved words from end of id', function () {
+        return cordova.create('projectPath', 'bob.class', 'appName', {}, events)
+            .then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
                 expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-            })
-            .fin(done);
+            });
     });
 });
 
@@ -92,19 +94,13 @@ describe('create basic test (see more in cordova-create)', function () {
     var results; // eslint-disable-line no-unused-vars
     events.on('results', function (res) { results = res; });
 
-    it('Test 003 : should successfully run', function (done) {
-        // Call cordova create with no args, should return help.
-        Q()
+    it('Test 003 : should successfully run', function () {
+        return Q()
             .then(function () {
                 // Create a real project
                 return cordova.create(project, appId, appName, configBasic, events);
             })
-            .then(checkProject)
-            .fail(function (err) {
-                console.log(err && err.stack);
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
+            .then(checkProject);
     }, 60000);
 
 });

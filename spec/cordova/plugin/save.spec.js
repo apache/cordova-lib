@@ -50,29 +50,26 @@ describe('cordova/plugin/save', function () {
         plugin_info_provider_revert_mock();
     });
     describe('error conditions', function () {
-        it('should explode if there was an issue parsing or reading from fetch.json file', function (done) {
+        it('should explode if there was an issue parsing or reading from fetch.json file', function () {
             fs.readFileSync.and.callFake(function () {
                 throw new Error('massive explosions during file reading!');
             });
-            save(projectRoot).then(function () {
-                fail('unexpected success handler invoked');
-            }).fail(function (e) {
-                expect(e).toContain('massive explosions');
-            }).done(done);
+            return save(projectRoot).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toContain('massive explosions');
+            });
         });
     });
     describe('happy path', function () {
-        it('check that existing plugins are getting removed', function (done) {
-            save(projectRoot).then(function () {
+        it('check that existing plugins are getting removed', function () {
+            return save(projectRoot).then(function () {
                 expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('VRPlugin');
                 expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('MastodonSocialPlugin');
-            }).fail(function (e) {
-                expect(e).toBeUndefined();
-                fail('did not expect fail handler to be invoked');
-            }).done(done);
+            });
         });
 
-        it('plugins are being removed first and then only top level plugins are being restored', function (done) {
+        it('plugins are being removed first and then only top level plugins are being restored', function () {
             var fake_fetch_json =
                 {'VRPlugin': {'source': {
                     'type': 'registry',
@@ -87,19 +84,16 @@ describe('cordova/plugin/save', function () {
                 'is_top_level': false }};
 
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
-            save(projectRoot).then(function () {
+            return save(projectRoot).then(function () {
                 expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('VRPlugin');
                 expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('MastodonSocialPlugin');
                 expect(cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(Object({ name: 'VRPlugin' }), [ ]);
                 expect(cfg_parser_mock.prototype.addPlugin).not.toHaveBeenCalledWith(Object({ name: 'MastodonSocialPlugin' }), [ ]);
                 expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
-            }).fail(function (e) {
-                expect(e).toBeUndefined();
-                fail('did not expect fail handler to be invoked');
-            }).done(done);
+            });
         });
 
-        it('should write individual plugin specs to config.xml', function (done) {
+        it('should write individual plugin specs to config.xml', function () {
             var fake_fetch_json =
                 {'VRPlugin': {'source': {
                     'type': 'registry',
@@ -108,16 +102,13 @@ describe('cordova/plugin/save', function () {
                 'is_top_level': true }};
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
             spyOn(save, 'getSpec').and.returnValue('1.0.0');
-            save(projectRoot).then(function () {
+            return save(projectRoot).then(function () {
                 expect(cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(Object({ name: 'VRPlugin', spec: '1.0.0' }), jasmine.any(Object));
                 expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
-            }).fail(function (e) {
-                expect(e).toBeUndefined();
-                fail('did not expect fail handler to be invoked');
-            }).done(done);
+            });
         });
 
-        it('should write individual plugin variables to config.xml', function (done) {
+        it('should write individual plugin variables to config.xml', function () {
             var fake_fetch_json =
                 {'VRPlugin': {'source': {
                     'type': 'registry',
@@ -128,13 +119,10 @@ describe('cordova/plugin/save', function () {
                     'var 1': ' '
                 }}};
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
-            save(projectRoot).then(function () {
+            return save(projectRoot).then(function () {
                 expect(cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(jasmine.any(Object), [ Object({ name: 'var 1', value: ' ' }) ]);
                 expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
-            }).fail(function (e) {
-                expect(e).toBeUndefined();
-                fail('did not expect fail handler to be invoked');
-            }).done(done);
+            });
         });
     });
     describe('getSpec helper method', function () {

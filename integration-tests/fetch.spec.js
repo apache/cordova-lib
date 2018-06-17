@@ -47,8 +47,8 @@ describe('end-to-end plugin dependency tests', function () {
         shell.rm('-rf', tmpDir);
     });
 
-    it('Test 029 : should fail if dependency already installed is wrong version', function (done) {
-        cordova.create('hello3')
+    it('Test 029 : should fail if dependency already installed is wrong version', function () {
+        return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
                 return cordova.platform('add', 'android', {'fetch': true});
@@ -59,12 +59,11 @@ describe('end-to-end plugin dependency tests', function () {
                 return cordova.plugin('add', plugins['Test1'], {'fetch': true});
             }).fail(function (err) {
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
-            })
-            .fin(done);
+            });
     }, TIMEOUT);
 
-    it('Test 030 : should pass if dependency already installed is wrong version with --force', function (done) {
-        cordova.create('hello3')
+    it('Test 030 : should pass if dependency already installed is wrong version with --force', function () {
+        return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
                 return cordova.platform('add', 'android', {'fetch': true});
@@ -78,16 +77,12 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
-            })
-            .fail(function (err) {
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
+            });
     }, TIMEOUT);
 
-    it('Test 031 : should pass if dependency already installed is same major version (if specific version is specified)', function (done) {
+    it('Test 031 : should pass if dependency already installed is same major version (if specific version is specified)', function () {
         // Test1 requires cordova-plugin-file version 2.0.0 (which should automatically turn into ^2.0.0); we'll install version 2.1.0
-        cordova.create('hello3')
+        return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
                 return cordova.platform('add', 'android', {'fetch': true});
@@ -101,18 +96,13 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
-            })
-            .fail(function (err) {
-                // console.error(err);
-                expect(err).toBeUndefined();
-            })
-            .fin(done);
+            });
     }, TIMEOUT);
 
-    it('Test 032 : should handle two plugins with same dependent plugin', function (done) {
+    it('Test 032 : should handle two plugins with same dependent plugin', function () {
         // Test1 and Test2 have compatible dependencies on cordova-plugin-file
         // Test1 and Test3 have incompatible dependencies on cordova-plugin-file
-        cordova.create('hello3')
+        return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
                 return cordova.platform('add', 'android', {'fetch': true});
@@ -132,14 +122,13 @@ describe('end-to-end plugin dependency tests', function () {
                 expect(path.join(pluginsDir, 'Test2')).toExist();
                 expect(path.join(pluginsDir, 'Test3')).not.toExist();
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
-            }, TIMEOUT)
-            .fin(done);
+            }, TIMEOUT);
     }, TIMEOUT);
 
-    it('Test 033 : should use a dev version of a dependent plugin if it is already installed', function (done) {
+    it('Test 033 : should use a dev version of a dependent plugin if it is already installed', function () {
         // Test4 has this dependency in its plugin.xml:
         // <dependency id="cordova-plugin-file" url="https://github.com/apache/cordova-plugin-file" />
-        cordova.create('hello3')
+        return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
                 return cordova.platform('add', 'android', {'fetch': true});
@@ -153,9 +142,6 @@ describe('end-to-end plugin dependency tests', function () {
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(pluginsDir, 'Test4')).toExist();
-            }, function (error) {
-                fail(error);
-            })
-            .fin(done);
+            });
     }, TIMEOUT);
 });

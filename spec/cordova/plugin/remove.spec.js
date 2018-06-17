@@ -72,71 +72,61 @@ describe('cordova/plugin/remove', function () {
     });
 
     describe('error/warning conditions', function () {
-        it('should require that a plugin be provided', function (done) {
-            remove(projectRoot, null).then(function () {
-                fail('success handler unexpectedly invoked');
-            }).fail(function (e) {
-                expect(e.message).toContain('No plugin specified');
-            }).done(done);
+        it('should require that a plugin be provided', function () {
+            return remove(projectRoot, null).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('No plugin specified');
+            });
         });
 
-        it('should require that a provided plugin be installed in the current project', function (done) {
+        it('should require that a provided plugin be installed in the current project', function () {
             var opts = { plugins: [ undefined ] };
-            remove(projectRoot, 'plugin', hook_mock, opts).then(function () {
-                fail('success handler unexpectedly invoked');
-            }).fail(function (e) {
-                expect(e.message).toContain('is not present in the project');
-            }).done(done);
+            return remove(projectRoot, 'plugin', hook_mock, opts).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('is not present in the project');
+            });
         });
     });
     describe('happy path', function () {
-        it('should fire the before_plugin_rm hook', function (done) {
+        it('should fire the before_plugin_rm hook', function () {
             var opts = { important: 'options', plugins: [] };
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(hook_mock.fire).toHaveBeenCalledWith('before_plugin_rm', opts);
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
 
-        it('should call plugman.uninstall.uninstallPlatform for each platform installed in the project and for each provided plugin', function (done) {
+        it('should call plugman.uninstall.uninstallPlatform for each platform installed in the project and for each provided plugin', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
             var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlatform).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching('plugman.uninstall on plugin "cordova-plugin-splashscreen" for platform "ios"'));
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching('plugman.uninstall on plugin "cordova-plugin-splashscreen" for platform "android"'));
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
 
-        it('should trigger a prepare if plugman.uninstall.uninstallPlatform returned something falsy', function (done) {
+        it('should trigger a prepare if plugman.uninstall.uninstallPlatform returned something falsy', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
             plugman.uninstall.uninstallPlatform.and.returnValue(Q(false));
             var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlatform).toHaveBeenCalled();
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
 
-        it('should call plugman.uninstall.uninstallPlugin once plugin has been uninstalled for each platform', function (done) {
+        it('should call plugman.uninstall.uninstallPlugin once plugin has been uninstalled for each platform', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
             var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlugin).toHaveBeenCalled();
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
 
         describe('when save option is provided or autosave config is on', function () {
@@ -149,60 +139,48 @@ describe('cordova/plugin/remove', function () {
                 spyOn(metadata, 'remove_fetch_metadata').and.returnValue(true);
             });
 
-            it('should remove provided plugins from config.xml', function (done) {
+            it('should remove provided plugins from config.xml', function () {
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(true);
                 fs.existsSync.and.returnValue(true);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
                 var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-                remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+                return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalled();
                     expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
                     expect(events.emit).toHaveBeenCalledWith('log', jasmine.stringMatching('Removing plugin cordova-plugin-splashscreen from config.xml file'));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.error(e);
-                }).done(done);
+                });
             });
 
-            it('should remove provided plugins from package.json (if exists)', function (done) {
+            it('should remove provided plugins from package.json (if exists)', function () {
                 spyOn(fs, 'readFileSync').and.returnValue('file');
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
                 fs.existsSync.and.returnValue(true);
                 var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-                remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+                return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(fs.writeFileSync).toHaveBeenCalled();
                     expect(events.emit).toHaveBeenCalledWith('log', jasmine.stringMatching('Removing cordova-plugin-splashscreen from package.json'));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.error(e);
-                }).done(done);
+                });
             });
         });
 
-        it('should remove fetch metadata from fetch.json', function (done) {
+        it('should remove fetch metadata from fetch.json', function () {
             plugin_info_provider_mock.prototype.getPreferences.and.returnValue(true);
             spyOn(plugin_util, 'mergeVariables');
             spyOn(metadata, 'remove_fetch_metadata').and.callThrough();
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
             var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(metadata.remove_fetch_metadata).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching('Removing plugin cordova-plugin-splashscreen from fetch.json'));
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
 
-        it('should fire the after_plugin_rm hook', function (done) {
+        it('should fire the after_plugin_rm hook', function () {
             var opts = {important: 'options', plugins: []};
-            remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
+            return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_rm', opts);
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.error(e);
-            }).done(done);
+            });
         });
     });
 });

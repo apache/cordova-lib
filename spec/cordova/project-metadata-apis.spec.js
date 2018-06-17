@@ -23,11 +23,11 @@ var path = require('path');
 describe('retrieval of project metadata', function () {
     var projectRoot = path.resolve(__dirname, 'Projects/ProjectMetadata');
 
-    it('Test 001 : retrieve platforms saved in config.xml', function (done) {
+    it('Test 001 : retrieve platforms saved in config.xml', function () {
         var androidVersion = '3.7.1';
         var browserSrc = 'https://github.com/apache/cordova-browser.git';
 
-        cordova.projectMetadata.getPlatforms(projectRoot)
+        return cordova.projectMetadata.getPlatforms(projectRoot)
             .then(function (platforms) {
                 expect(platforms.length).toBe(2);
 
@@ -42,10 +42,10 @@ describe('retrieval of project metadata', function () {
                 expect(browserPlatform).not.toBeNull();
                 expect(browserPlatform.version).toBeUndefined();
                 expect(browserPlatform.src).toBe(browserSrc);
-            }).finally(done);
+            });
     });
 
-    it('Test 002 : retrieve plugins saved in config.xml', function (done) {
+    it('Test 002 : retrieve plugins saved in config.xml', function () {
         var deviceId = 'org.apache.cordova.device';
         var deviceVersion = '0.3.0';
 
@@ -57,7 +57,7 @@ describe('retrieval of project metadata', function () {
         var fileId = 'org.apache.cordova.file';
         var fileSource = 'https://github.com/apache/cordova-plugin-file.git';
 
-        cordova.projectMetadata.getPlugins(projectRoot)
+        return cordova.projectMetadata.getPlugins(projectRoot)
             .then(function (plugins) {
                 expect(plugins.length).toBe(3);
 
@@ -94,7 +94,7 @@ describe('retrieval of project metadata', function () {
                 expect(fileVariables).not.toBeNull();
                 expect(Array.isArray(fileVariables)).toBeTruthy();
                 expect(fileVariables.length).toBe(0);
-            }).finally(done);
+            });
     });
 });
 

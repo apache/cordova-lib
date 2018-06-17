@@ -97,66 +97,56 @@ describe('cordova/plugin/add', function () {
             spyOn(config, 'read').and.returnValue({});
         });
         describe('error/warning conditions', function () {
-            it('should error out if at least one plugin is not specified', function (done) {
-                add(projectRoot, hook_mock, {plugins: []}).then(function () {
-                    fail('success handler unexpectedly invoked');
-                }).fail(function (e) {
-                    expect(e.message).toContain('No plugin specified');
-                }).done(done);
+            it('should error out if at least one plugin is not specified', function () {
+                return add(projectRoot, hook_mock, {plugins: []}).then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    expect(err.message).toContain('No plugin specified');
+                });
             });
-            it('should error out if any mandatory plugin variables are not provided', function (done) {
+            it('should error out if any mandatory plugin variables are not provided', function () {
                 plugin_info.getPreferences.and.returnValue({'some': undefined});
 
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
-                    fail('success handler unexpectedly invoked');
-                }).fail(function (e) {
-                    expect(e.message).toContain('Variable(s) missing (use: --variable');
-                }).done(done);
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    expect(err.message).toContain('Variable(s) missing (use: --variable');
+                });
             });
         });
         describe('happy path', function () {
-            it('should fire the before_plugin_add hook', function (done) {
-                add(projectRoot, hook_mock, {plugins: ['https://github.com/apache/cordova-plugin-device'], save: true}).then(function () {
+            it('should fire the before_plugin_add hook', function () {
+                return add(projectRoot, hook_mock, {plugins: ['https://github.com/apache/cordova-plugin-device'], save: true}).then(function () {
                     expect(hook_mock.fire).toHaveBeenCalledWith('before_plugin_add', jasmine.any(Object));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
-            it('should determine where to fetch a plugin from using determinePluginTarget and invoke plugman.fetch with the resolved target', function (done) {
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+            it('should determine where to fetch a plugin from using determinePluginTarget and invoke plugman.fetch with the resolved target', function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
                     expect(add.determinePluginTarget).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), 'cordova-plugin-device', jasmine.any(Object));
                     expect(plugman.fetch).toHaveBeenCalledWith('cordova-plugin-device', path.join(projectRoot, 'plugins'), jasmine.any(Object));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
-            it('should retrieve any variables for the plugin from config.xml and add them as cli variables only when the variables were not already provided via options', function (done) {
+            it('should retrieve any variables for the plugin from config.xml and add them as cli variables only when the variables were not already provided via options', function () {
                 var cfg_plugin_variables = {'some': 'variable'};
                 Cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
                     return {'variables': cfg_plugin_variables};
                 });
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
                     // confirm cli_variables are undefind
                     expect(add.determinePluginTarget).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({'variables': undefined}));
                     expect(plugman.install).toHaveBeenCalled();
                     // check that the plugin variables from config.xml got added to cli_variables
                     expect(plugman.install).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({'cli_variables': cfg_plugin_variables}));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
-            it('should invoke plugman.install for each platform added to the project', function (done) {
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+            it('should invoke plugman.install for each platform added to the project', function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
                     expect(plugman.install).toHaveBeenCalledWith('android', jasmine.any(String), jasmine.any(String), jasmine.any(String), jasmine.any(Object));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
-            it('should save plugin variable information to package.json file (if exists)', function (done) {
+            it('should save plugin variable information to package.json file (if exists)', function () {
                 var cli_plugin_variables = {'some': 'variable'};
 
                 fs.existsSync.and.callFake(function (file_path) {
@@ -168,21 +158,18 @@ describe('cordova/plugin/add', function () {
                 });
 
                 spyOn(fs, 'readFileSync').and.returnValue('file');
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
                     expect(fs.writeFileSync).toHaveBeenCalledWith(jasmine.any(String), JSON.stringify({'cordova': {'plugins': {'cordova-plugin-device': cli_plugin_variables}}, 'dependencies': {}, 'devDependencies': {}}, null, 2), 'utf8');
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
-            it('should overwrite plugin information in config.xml after a successful installation', function (done) {
+            it('should overwrite plugin information in config.xml after a successful installation', function () {
                 var cfg_plugin_variables = {'some': 'variable'};
                 var cli_plugin_variables = {'some': 'new_variable'};
                 Cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
                     return {'variables': cfg_plugin_variables};
                 });
 
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device'], cli_variables: cli_plugin_variables, save: 'true'}).then(function () {
                     // confirm cli_variables got passed through
                     expect(add.determinePluginTarget).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({'variables': cli_plugin_variables}));
                     // check that the plugin variables from config.xml got added to cli_variables
@@ -190,22 +177,16 @@ describe('cordova/plugin/add', function () {
                     expect(Cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('cordova-plugin-device');
                     expect(Cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(jasmine.any(Object), cli_plugin_variables);
                     expect(Cfg_parser_mock.prototype.write).toHaveBeenCalled();
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
             // can't test the following due to inline require of preparePlatforms
             xit('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
                 plugman.install.and.returnValue(false);
             });
-            it('should fire after_plugin_add hook', function (done) {
-                add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
+            it('should fire after_plugin_add hook', function () {
+                return add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
                     expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_add', jasmine.any(Object));
-                }).fail(function (e) {
-                    fail('fail handler unexpectedly invoked');
-                    console.log(e);
-                }).done(done);
+                });
             });
         });
     });
@@ -217,32 +198,23 @@ describe('cordova/plugin/add', function () {
         });
         afterEach(function () {
         });
-        it('should return the target directly if the target is pluginSpec-parseable', function (done) {
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device@1.0.0', {}).then(function (target) {
+        it('should return the target directly if the target is pluginSpec-parseable', function () {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device@1.0.0', {}).then(function (target) {
                 expect(target).toEqual('cordova-plugin-device@1.0.0');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should return the target directly if the target is a URL', function (done) {
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'https://github.com/apache/cordova-plugin-device.git', {}).then(function (target) {
+        it('should return the target directly if the target is a URL', function () {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'https://github.com/apache/cordova-plugin-device.git', {}).then(function (target) {
                 expect(target).toEqual('https://github.com/apache/cordova-plugin-device.git');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should return the target directly if the target is a directory', function (done) {
+        it('should return the target directly if the target is a directory', function () {
             cordova_util.isDirectory.and.returnValue(true);
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, '../some/dir/cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, '../some/dir/cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('../some/dir/cordova-plugin-device');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should retrieve plugin version from package.json (if exists)', function (done) {
+        it('should retrieve plugin version from package.json (if exists)', function () {
             fs.existsSync.and.callFake(function (file_path) {
                 if (path.basename(file_path) === 'package.json') {
                     return true;
@@ -253,14 +225,11 @@ describe('cordova/plugin/add', function () {
 
             package_json_mock.dependencies['cordova-plugin-device'] = '^1.0.0';
 
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('cordova-plugin-device@^1.0.0');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should retrieve plugin version from package.json devDependencies (if exists)', function (done) {
+        it('should retrieve plugin version from package.json devDependencies (if exists)', function () {
             fs.existsSync.and.callFake(function (file_path) {
                 if (path.basename(file_path) === 'package.json') {
                     return true;
@@ -271,24 +240,18 @@ describe('cordova/plugin/add', function () {
 
             package_json_mock.devDependencies['cordova-plugin-device'] = '^1.0.0';
 
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('cordova-plugin-device@^1.0.0');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should retrieve plugin version from config.xml as a last resort', function (done) {
+        it('should retrieve plugin version from config.xml as a last resort', function () {
             add.getVersionFromConfigFile.and.returnValue('~1.0.0');
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(add.getVersionFromConfigFile).toHaveBeenCalled();
                 expect(target).toEqual('cordova-plugin-device@~1.0.0');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should return plugin version retrieved from package.json or config.xml if it is a URL', function (done) {
+        it('should return plugin version retrieved from package.json or config.xml if it is a URL', function () {
             fs.existsSync.and.callFake(function (file_path) {
                 if (path.basename(file_path) === 'package.json') {
                     return true;
@@ -299,14 +262,11 @@ describe('cordova/plugin/add', function () {
 
             package_json_mock.dependencies['cordova-plugin-device'] = 'https://github.com/apache/cordova-plugin-device.git';
 
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('https://github.com/apache/cordova-plugin-device.git');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should return plugin version retrieved from package.json or config.xml if it is a directory', function (done) {
+        it('should return plugin version retrieved from package.json or config.xml if it is a directory', function () {
             fs.existsSync.and.callFake(function (file_path) {
                 if (path.basename(file_path) === 'package.json') {
                     return true;
@@ -322,14 +282,11 @@ describe('cordova/plugin/add', function () {
             });
             package_json_mock.dependencies['cordova-plugin-device'] = '../some/dir/cordova-plugin-device';
 
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('../some/dir/cordova-plugin-device');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
-        it('should return plugin version retrieved from package.json or config.xml if it has a scope', function (done) {
+        it('should return plugin version retrieved from package.json or config.xml if it has a scope', function () {
             fs.existsSync.and.callFake(function (file_path) {
                 if (path.basename(file_path) === 'package.json') {
                     return true;
@@ -340,94 +297,73 @@ describe('cordova/plugin/add', function () {
 
             package_json_mock.dependencies['@cordova/cordova-plugin-device'] = '^1.0.0';
 
-            add.determinePluginTarget(projectRoot, Cfg_parser_mock, '@cordova/cordova-plugin-device', {}).then(function (target) {
+            return add.determinePluginTarget(projectRoot, Cfg_parser_mock, '@cordova/cordova-plugin-device', {}).then(function (target) {
                 expect(target).toEqual('@cordova/cordova-plugin-device@^1.0.0');
-            }).fail(function (e) {
-                fail('fail handler unexpectedly invoked');
-                console.log(e);
-            }).done(done);
+            });
         });
         describe('with no version inferred from config files or provided plugin target', function () {
             describe('when searchpath or noregistry flag is provided', function () {
-                it('should end up just returning the target passed in case of searchpath', function (done) {
-                    add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {'searchpath': 'some/path'})
+                it('should end up just returning the target passed in case of searchpath', function () {
+                    return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {'searchpath': 'some/path'})
                         .then(function (target) {
                             expect(target).toEqual('cordova-plugin-device');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Not checking npm info for cordova-plugin-device because searchpath or noregistry flag was given');
-                        }).fail(function (e) {
-                            fail('fail handler unexpectedly invoked');
-                            console.log(e);
-                        }).done(done);
+                        });
                 });
-                it('should end up just returning the target passed in case of noregistry', function (done) {
-                    add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {'noregistry': true})
+                it('should end up just returning the target passed in case of noregistry', function () {
+                    return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {'noregistry': true})
                         .then(function (target) {
                             expect(target).toEqual('cordova-plugin-device');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Not checking npm info for cordova-plugin-device because searchpath or noregistry flag was given');
-                        }).fail(function (e) {
-                            fail('fail handler unexpectedly invoked');
-                            console.log(e);
-                        }).done(done);
+                        });
                 });
             });
             describe('when registry/npm is to be used (neither searchpath nor noregistry flag is provided)', function () {
-                it('should retrieve plugin info via registry.info', function (done) {
-                    add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
+                it('should retrieve plugin info via registry.info', function () {
+                    return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
                             expect(plugin_util.info).toHaveBeenCalledWith(['cordova-plugin-device']);
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
                             expect(target).toEqual('cordova-plugin-device');
-                        }).fail(function (e) {
-                            fail('fail handler unexpectedly invoked');
-                            console.log(e);
-                        }).done(done);
+                        });
                 });
-                it('should feed registry.info plugin information into getFetchVersion', function (done) {
+                it('should feed registry.info plugin information into getFetchVersion', function () {
                     plugin_util.info.and.returnValue(Q({'plugin': 'info'}));
-                    add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
+                    return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
                             expect(plugin_util.info).toHaveBeenCalled();
                             expect(add.getFetchVersion).toHaveBeenCalledWith(jasmine.anything(), {'plugin': 'info'}, jasmine.anything());
                             expect(target).toEqual('cordova-plugin-device');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
-                        }).fail(function (e) {
-                            fail('fail handler unexpectedly invoked');
-                            console.log(e);
-                        }).done(done);
+                        });
                 });
-                it('should return the target as plugin-id@fetched-version', function (done) {
+                it('should return the target as plugin-id@fetched-version', function () {
                     add.getFetchVersion.and.returnValue(Q('1.0.0'));
-                    add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
+                    return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
                             expect(plugin_util.info).toHaveBeenCalled();
                             expect(add.getFetchVersion).toHaveBeenCalled();
                             expect(target).toEqual('cordova-plugin-device@1.0.0');
                             expect(events.emit).toHaveBeenCalledWith('verbose', 'Attempting to use npm info for cordova-plugin-device to choose a compatible release');
-                        }).fail(function (e) {
-                            fail('fail handler unexpectedly invoked');
-                            console.log(e);
-                        }).done(done);
+                        });
                 });
             });
         });
     });
     describe('parseSource helper method', function () {
-        it('should return target when url is passed', function (done) {
+        it('should return target when url is passed', function () {
             expect(add.parseSource('https://github.com/apache/cordova-plugin-device', {})).toEqual('https://github.com/apache/cordova-plugin-device');
-            done();
         });
-        it('should return target when local path is passed', function (done) {
+        it('should return target when local path is passed', function () {
             fs.existsSync.and.returnValue(true);
             expect(add.parseSource('../cordova-plugin-device', {})).toEqual('../cordova-plugin-device');
-            done();
         });
-        it('should return null when target is not url or local path', function (done) {
+        it('should return null when target is not url or local path', function () {
             expect(add.parseSource('cordova-plugin-device', {})).toEqual(null);
-            done();
         });
     });
     describe('getVersionFromConfigFile helper method', function () {
-        it('should return spec', function (done) {
+        it('should return spec', function () {
             var fakePlugin = {};
             fakePlugin.name = '';
             fakePlugin.spec = '1.0.0';
@@ -436,7 +372,6 @@ describe('cordova/plugin/add', function () {
             Cfg_parser_mock.prototype.getPlugin.and.returnValue(fakePlugin);
             var new_cfg = new Cfg_parser_mock();
             expect(add.getVersionFromConfigFile('cordova-plugin-device', new_cfg)).toEqual('1.0.0');
-            done();
         });
     });
 
@@ -453,29 +388,23 @@ describe('cordova/plugin/add', function () {
                 spyOn(cordova_util, 'getInstalledPlatformsWithVersions').and.returnValue(Q({}));
                 spyOn(add, 'determinePluginVersionToFetch');
             });
-            it('should resolve with null if plugin info does not contain engines and engines.cordovaDependencies properties', function (done) {
-                add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
+            it('should resolve with null if plugin info does not contain engines and engines.cordovaDependencies properties', function () {
+                return add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
                     .then(function (value) {
                         expect(value).toBe(null);
-                    }).fail(function (e) {
-                        fail('fail handler unexpectedly invoked');
-                        console.log(e);
-                    }).done(done);
+                    });
             });
-            it('should retrieve installed plugins and installed platforms version and feed that information into determinePluginVersionToFetch', function (done) {
+            it('should retrieve installed plugins and installed platforms version and feed that information into determinePluginVersionToFetch', function () {
                 plugin_util.getInstalledPlugins.and.returnValue([{'id': 'cordova-plugin-camera', 'version': '2.0.0'}]);
                 cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Q({'android': '6.0.0'}));
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'^1.0.0': {'cordova': '>7.0.0'}};
-                add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
+                return add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')
                     .then(function () {
                         expect(plugin_util.getInstalledPlugins).toHaveBeenCalledWith(projectRoot);
                         expect(cordova_util.getInstalledPlatformsWithVersions).toHaveBeenCalledWith(projectRoot);
                         expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, {'cordova-plugin-camera': '2.0.0'}, {'android': '6.0.0'}, '7.0.0');
-                    }).fail(function (e) {
-                        fail('fail handler unexpectedly invoked');
-                        console.log(e);
-                    }).done(done);
+                    });
             });
         });
         // TODO More work to be done here to replace plugin_fetch.spec.js
@@ -489,75 +418,63 @@ describe('cordova/plugin/add', function () {
                 spyOn(add, 'findVersion').and.returnValue(null);
                 spyOn(add, 'listUnmetRequirements');
             });
-            it('should return null if no valid semver versions exist and no upperbound constraints were placed', function (done) {
+            it('should return null if no valid semver versions exist and no upperbound constraints were placed', function () {
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'^1.0.0': {'cordova': '<7.0.0'}};
                 expect(add.determinePluginVersionToFetch(pluginInfo, {}, {}, '7.0.0')).toBe(null);
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Ignoring invalid version/));
-                done();
             });
-            it('should return null and fetching latest version of plugin', function (done) {
+            it('should return null and fetching latest version of plugin', function () {
                 add.getFailedRequirements.and.returnValue(['2.0.0']);
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'1.0.0': {'cordova': '<7.0.0'}, '<3.0.0': {'cordova': '>=7.0.0'}};
                 expect(add.determinePluginVersionToFetch(pluginInfo, {}, {}, '7.0.0')).toBe(null);
                 expect(events.emit).toHaveBeenCalledWith('warn', jasmine.stringMatching(/Current project does not satisfy/));
-                done();
             });
-            it('should return highest version of plugin available based on constraints', function (done) {
+            it('should return highest version of plugin available based on constraints', function () {
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'1.0.0': {'cordova': '<7.0.0'}, '<3.0.0': {'cordova': '>=7.0.0'}};
                 expect(add.determinePluginVersionToFetch(pluginInfo, {}, {}, '7.0.0')).toEqual('2.0.0');
-                done();
             });
         });
         describe('getFailedRequirements helper method', function () {
-            it('should remove prerelease version', function (done) {
+            it('should remove prerelease version', function () {
                 var semver = require('semver');
                 spyOn(semver, 'prerelease').and.returnValue('7.0.1');
                 spyOn(semver, 'inc').and.callThrough();
                 expect(add.getFailedRequirements({'cordova': '>=7.0.0'}, {}, {}, '7.0.0').length).toBe(0);
                 expect(semver.inc).toHaveBeenCalledWith('7.0.0', 'patch');
-                done();
             });
-            it('should return an empty array if no failed requirements', function (done) {
+            it('should return an empty array if no failed requirements', function () {
                 expect(add.getFailedRequirements({'cordova': '>=7.0.0'}, {}, {}, '7.0.0').length).toBe(0);
-                done();
             });
-            it('should return an empty array if invalid dependency constraint', function (done) {
+            it('should return an empty array if invalid dependency constraint', function () {
                 expect(add.getFailedRequirements({1: 'wrong'}, {}, {}, '7.0.0').length).toBe(0);
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Ignoring invalid plugin dependency constraint/));
-                done();
             });
-            it('should return an array with failed plugin requirements ', function (done) {
+            it('should return an array with failed plugin requirements ', function () {
                 expect(add.getFailedRequirements({'cordova-plugin-camera': '>1.0.0'}, {'cordova-plugin-camera': '1.0.0'}, {}, '7.0.0')).toEqual([{ dependency: 'cordova-plugin-camera', installed: '1.0.0', required: '>1.0.0' }]);
-                done();
             });
-            it('should return an array with failed cordova requirements ', function (done) {
+            it('should return an array with failed cordova requirements ', function () {
                 expect(add.getFailedRequirements({'cordova': '>=7.0.0'}, {}, {}, '6.5.0')).toEqual([{ dependency: 'cordova', installed: '6.5.0', required: '>=7.0.0' }]);
-                done();
             });
-            it('should return an array with failed platform requirements ', function (done) {
+            it('should return an array with failed platform requirements ', function () {
                 expect(add.getFailedRequirements({'cordova-android': '>=6.0.0'}, {}, {'android': '5.5.0'}, '7.0.0')).toEqual([{ dependency: 'cordova-android', installed: '5.5.0', required: '>=6.0.0' }]);
-                done();
             });
         });
         describe('listUnmetRequirements helper method', function () {
-            it('should emit warnings for failed requirements', function (done) {
+            it('should emit warnings for failed requirements', function () {
                 add.listUnmetRequirements('cordova-plugin-device', [{ dependency: 'cordova', installed: '6.5.0', required: '>=7.0.0' }]);
                 expect(events.emit).toHaveBeenCalledWith('warn', 'Unmet project requirements for latest version of cordova-plugin-device:');
                 expect(events.emit).toHaveBeenCalledWith('warn', '    cordova (6.5.0 in project, >=7.0.0 required)');
-                done();
             });
         });
         describe('findVersion helper method', function () {
-            it('should return null if version is not in array', function (done) {
+            it('should return null if version is not in array', function () {
                 expect(add.findVersion(['0.0.1', '1.0.0', '2.0.0'], '0.0.0')).toEqual(null);
-                done();
             });
-            it('should return the version if it is in the array', function (done) {
+            it('should return the version if it is in the array', function () {
                 expect(add.findVersion(['0.0.1', '1.0.0', '2.0.0'], '1.0.0')).toEqual('1.0.0');
-                done();
             });
         });
     });

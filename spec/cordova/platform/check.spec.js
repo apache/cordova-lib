@@ -34,50 +34,38 @@ describe('cordova/platform/check', function () {
         spyOn(cordova_util, 'listPlatforms');
     });
 
-    it('If no results, platforms cannot be updated', function (done) {
+    it('If no results, platforms cannot be updated', function () {
         cordova_util.listPlatforms.and.callThrough();
-        platform_check(hooks_mock, projectRoot).then(function () {
+        return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
             expect(superspawn.spawn).toHaveBeenCalledWith('npm', ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'], jasmine.any(Object));
             expect(shell.rm).toHaveBeenCalledWith('-rf', jasmine.any(String));
-        }).fail(function (err) {
-            fail('unexpected failure handler invoked!');
-            console.error(err);
-        }).done(done);
+        });
     });
 
-    it('Should warn if install failed', function (done) {
+    it('Should warn if install failed', function () {
         cordova_util.listPlatforms.and.returnValue(['ios']);
-        platform_check(hooks_mock, projectRoot).then(function () {
+        return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current did not install/));
-        }).fail(function (err) {
-            fail('unexpected failure handler invoked!');
-            console.error(err);
-        }).done(done);
+        });
     });
 
-    it('Should warn if version-empty', function (done) {
+    it('Should warn if version-empty', function () {
         cordova_util.listPlatforms.and.returnValue(['ios']);
         spyOn(require('../../../src/cordova/platform/index'), 'add').and.returnValue(Q());
         superspawn.spawn.and.returnValue(Q());
-        platform_check(hooks_mock, projectRoot).then(function () {
+        return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current version script failed to return a version/));
-        }).fail(function (err) {
-            fail('unexpected failure handler invoked!');
-            console.error(err);
-        }).done(done);
+        });
     });
 
-    it('Should warn if version-failed', function (done) {
+    it('Should warn if version-failed', function () {
         cordova_util.listPlatforms.and.returnValue(['ios']);
         spyOn(require('../../../src/cordova/platform/index'), 'add').and.returnValue(Q());
         spyOn(superspawn, 'maybeSpawn').and.returnValue(Q('version-failed'));
         spyOn(Q.defer(), 'resolve').and.returnValue('version-failed');
-        platform_check(hooks_mock, projectRoot).then(function () {
+        return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current version script failed, and/));
-        }).fail(function (err) {
-            fail('unexpected failure handler invoked!');
-            console.error(err);
-        }).done(done);
+        });
     });
 });

@@ -37,12 +37,6 @@ var test_plugin_version = '0.6.0';
 var Q = require('q');
 
 describe('fetch', function () {
-
-    function wrapper (p, done, post) {
-        p.then(post, function (err) {
-            expect(err).toBeUndefined('Unexpected exception' + err.stack);
-        }).fin(done);
-    }
     /*
      * Taking out the following test. Fetch has a copyPlugin method that uses existsSync to see if a plugin already exists in the plugins folder. If the plugin exists in the plugins directory for the cordova project, it won't be copied over. This test fails now due it always returning true for existsSync.
     describe('plugin in a dir with spaces', function() {
@@ -53,7 +47,7 @@ describe('fetch', function () {
             spyOn(shell, 'rm');
             spyOn(metadata, 'save_fetch_metadata');
             var cp = spyOn(shell, 'cp');
-            wrapper(fetch(test_plugin_with_space, temp), done, function() {
+            fetch(test_plugin_with_space, temp).then(function() {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin_with_space, '*'), path.join(temp, test_plugin_id));
             });
         });
@@ -88,65 +82,64 @@ describe('fetch', function () {
             fetchCalls = 0;
         });
 
-        it('Test 001 : should copy locally-available plugin to plugins directory', function (done) {
-            wrapper(fetch(test_plugin, temp, { fetch: true }), done, function () {
+        it('Test 001 : should copy locally-available plugin to plugins directory', function () {
+            return fetch(test_plugin, temp, { fetch: true }).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
-        it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function (done) {
-            wrapper(fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }), done, function () {
+        it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
+            return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
-        it('Test 003 : should create a symlink if used with `link` param', function (done) {
-            wrapper(fetch(test_plugin, temp, { fetch: true, link: true }), done, function () {
+        it('Test 003 : should create a symlink if used with `link` param', function () {
+            return fetch(test_plugin, temp, { fetch: true, link: true }).then(function () {
                 expect(sym).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), 'dir');
             });
         });
 
-        it('Test 004 : should fail when the expected ID doesn\'t match', function (done) {
-            fetch(test_plugin, temp, { expected_id: 'wrongID', fetch: true })
+        it('Test 004 : should fail when the expected ID doesn\'t match', function () {
+            return fetch(test_plugin, temp, { expected_id: 'wrongID', fetch: true })
                 .then(function () {
                     expect('this call').toBe('fail');
                 }, function (err) {
                     expect('' + err).toContain('Expected plugin to have ID "wrongID" but got');
-                }).fin(done);
+                });
         });
 
-        it('Test 005 : should succeed when the expected ID is correct', function (done) {
-            wrapper(fetch(test_plugin, temp, { expected_id: test_plugin_id, fetch: true }), done, function () {
-                expect(1).toBe(1);
+        it('Test 005 : should succeed when the expected ID is correct', function () {
+            return fetch(test_plugin, temp, { expected_id: test_plugin_id, fetch: true }).then(function () {
+                expect().nothing();
             });
         });
-        it('Test 006 : should fail when the expected ID with version specified doesn\'t match', function (done) {
-            fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion', fetch: true })
+        it('Test 006 : should fail when the expected ID with version specified doesn\'t match', function () {
+            return fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion', fetch: true })
                 .then(function () {
                     expect('this call').toBe('fail');
                 }, function (err) {
                     expect('' + err).toContain('to satisfy version "wrongVersion" but got');
-                }).fin(done);
+                });
         });
-        it('Test 007 : should succeed when the plugin version specified is correct', function (done) {
+        it('Test 007 : should succeed when the plugin version specified is correct', function () {
             var exp_id = test_plugin_id + '@' + test_plugin_version;
-            wrapper(fetch(test_plugin, temp, { expected_id: exp_id, fetch: true }), done, function () {
-                expect(1).toBe(1);
+            return fetch(test_plugin, temp, { expected_id: exp_id, fetch: true }).then(function () {
+                expect().nothing();
             });
         });
-        it('Test 027 : should copy locally-available plugin to plugins directory', function (done) {
-            wrapper(fetch(test_pkgjson_plugin, temp, {fetch: true}), done, function () {
+        it('Test 027 : should copy locally-available plugin to plugins directory', function () {
+            return fetch(test_pkgjson_plugin, temp, {fetch: true}).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_pkgjson_plugin, '*'), path.join(temp, 'pkgjson-test-plugin'));
                 expect(fetchCalls).toBe(1);
             });
         });
-        it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function (done) {
+        it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {
             test_plugin = path.join(plugins_dir, 'org.test.androidonly');
-            fetch(test_plugin, temp, {fetch: true})
+            return fetch(test_plugin, temp, {fetch: true})
                 .then(function () {
-                    expect(false).toBe(true);
-                }).fail(function (err) {
+                    fail();
+                }, function (err) {
                     expect(err).toBeDefined();
                     expect(err.message).toContain('needs a valid package.json');
-                    done();
                 });
         });
     });
@@ -160,19 +153,19 @@ describe('fetch', function () {
         });
 
         if (/^win/.test(process.platform)) {
-            it('Test 020 : should copy all but the /demo/ folder', function (done) {
+            it('Test 020 : should copy all but the /demo/ folder', function () {
                 var cp = spyOn(shell, 'cp');
-                wrapper(fetch(srcDir, appDir, {fetch: true}), done, function () {
+                return fetch(srcDir, appDir, {fetch: true}).then(function () {
                     expect(cp).toHaveBeenCalledWith('-R', path.join(srcDir, 'asset.txt'), path.join(appDir, 'test-recursive'));
                     expect(cp).not.toHaveBeenCalledWith('-R', srcDir, path.join(appDir, 'test-recursive'));
                 });
             });
         } else {
-            it('Test 021 : should skip copy to avoid recursive error', function (done) {
+            it('Test 021 : should skip copy to avoid recursive error', function () {
 
                 var cp = spyOn(shell, 'cp').and.callFake(function () {});
 
-                wrapper(fetch(srcDir, appDir, {fetch: true}), done, function () {
+                return fetch(srcDir, appDir, {fetch: true}).then(function () {
                     expect(cp).not.toHaveBeenCalled();
                 });
             });

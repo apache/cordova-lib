@@ -45,14 +45,10 @@ describe('create plugin', function () {
         done = false;
     });
 
-    it('Test 002 : should be successful', function (done) {
-        create('name', 'org.plugin.id', '0.0.0', '.', [])
+    it('Test 002 : should be successful', function () {
+        return create('name', 'org.plugin.id', '0.0.0', '.', [])
             .then(function (result) {
                 expect(writeFileSync.calls.count()).toEqual(2);
-                done();
-            }).fail(function err (errMsg) {
-                expect(errMsg).toBeUndefined();
-                done();
             });
     }, 6000);
 });
@@ -68,14 +64,13 @@ describe('create plugin in existing plugin', function () {
         done = false; // eslint-disable-line  no-unused-vars
     });
 
-    it('Test 003 : should fail due to an existing plugin.xml', function (done) {
-        create()
-            .then(function (result) {
-                expect(false).toBe(true);
-                done();
-            }).fail(function err (errMsg) {
-                expect(errMsg.toString()).toContain('plugin.xml already exists. Are you already in a plugin?');
-                done();
+    it('Test 003 : should fail due to an existing plugin.xml', function () {
+        return create()
+            .then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('plugin.xml already exists. Are you already in a plugin?');
             });
     }, 6000);
 });

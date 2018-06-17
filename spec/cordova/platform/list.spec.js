@@ -19,7 +19,6 @@ var events = require('cordova-common').events;
 var Q = require('q');
 var platform_list = require('../../../src/cordova/platform/list');
 var cordova_util = require('../../../src/cordova/util');
-var fail;
 
 describe('cordova/platform/list', function () {
     var hooks_mock;
@@ -38,29 +37,22 @@ describe('cordova/platform/list', function () {
         expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_ls', Object({ save: true }));
     });
 
-    it('should fire the after_platform_ls hook', function (done) {
-        platform_list(hooks_mock, projectRoot, {save: true})
+    it('should fire the after_platform_ls hook', function () {
+        return platform_list(hooks_mock, projectRoot, {save: true})
             .then(function (result) {
                 expect(hooks_mock.fire).toHaveBeenCalledWith('after_platform_ls', Object({ save: true }));
-            }).fail(function (err) {
-                fail('unexpected failure handler invoked!');
-                console.error(err);
-            }).done(done);
+            });
     });
 
-    it('should print results of available platforms', function (done) {
-        platform_list(hooks_mock, projectRoot, {save: true})
+    it('should print results of available platforms', function () {
+        return platform_list(hooks_mock, projectRoot, {save: true})
             .then(function (result) {
                 expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:/));
-            }).fail(function (err) {
-                fail('unexpected failure handler invoked!');
-                console.error(err);
-            }).done(done);
+            });
     });
 
-    it('should return platform list', function (done) {
+    it('should return platform list', function () {
         var platformList = ['android', 'ios'];
         expect(platform_list.addDeprecatedInformationToPlatforms(platformList).toString()).toBe('android,ios');
-        done();
     });
 });
