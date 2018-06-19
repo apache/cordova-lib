@@ -10,6 +10,7 @@ node_js:
 before_install: if [[ `npm -v` < 3 ]]; then npm i -g npm@3; fi
 install:
   - npm install
+  - npm audit
   # Workaround for npm/npm#10343 when dependency of linked module is moved to dependent
   # module's 'node_modules' In our case 'cordova-common' -> jshint' -> 'cli' dependency
   # is moved to 'cordova-lib' and hence 'npm run jshint' on 'cordova-common' is failing
