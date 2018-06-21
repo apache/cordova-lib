@@ -85,17 +85,11 @@ describe('build command', function () {
             });
         });
 
-        it('Test 005 : should convert options from old format and warn user about this', function () {
-            function warnSpy (message) {
-                expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
-            }
-
-            cordova.on('warn', warnSpy);
+        it('Test 005 : should convert options from old format', function () {
             return cordova.build({platforms: ['android'], options: ['--release', '--cdvBuildOpt=opt']}).then(function () {
                 var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt=opt']}), verbose: false};
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
-                cordova.off('warn', warnSpy);
             });
         });
     });

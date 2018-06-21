@@ -88,20 +88,12 @@ describe('run command', function () {
             });
         });
         it('Test 006 : should convert parameters from old format and warn user about this', function () {
-            function warnSpy (message) {
-                expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
-            }
-
-            cordova.on('warn', warnSpy);
             return cordova.run({platforms: ['blackberry10'], options: ['--password=1q1q']})
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ],
                         options: jasmine.objectContaining({argv: ['--password=1q1q']}),
                         verbose: false });
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({argv: ['--password=1q1q']}));
-                })
-                .fin(function () {
-                    cordova.off('warn', warnSpy);
                 });
         });
 

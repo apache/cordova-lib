@@ -89,20 +89,12 @@ describe('emulate command', function () {
                     expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true, nobuild: true });
                 });
         });
-        it('Test 005 : should convert options from old format and warn user about this', function () {
-            function warnSpy (message) {
-                expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
-            }
-
-            cordova.on('warn', warnSpy);
+        it('Test 005 : should convert options from old format', function () {
             return cordova.emulate({platforms: ['ios'], options: ['--optionTastic']})
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({emulator: true, argv: ['--optionTastic']}));
-                })
-                .fin(function () {
-                    cordova.off('warn', warnSpy);
                 });
         });
         describe('run parameters should not be altered by intermediate build command', function () {

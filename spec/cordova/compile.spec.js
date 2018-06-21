@@ -81,19 +81,11 @@ describe('compile command', function () {
                 });
         });
 
-        it('Test 005 : should convert options from old format and warn user about this', function () {
-            function warnSpy (message) {
-                expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
-            }
-
-            cordova.on('warn', warnSpy);
+        it('Test 005 : should convert options from old format', function () {
             return cordova.compile({platforms: ['blackberry10'], options: ['--release']})
                 .then(function () {
                     expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
                     expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
-                })
-                .fin(function () {
-                    cordova.off('warn', warnSpy);
                 });
         });
     });
