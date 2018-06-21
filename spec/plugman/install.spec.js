@@ -136,7 +136,7 @@ describe('plugman install start', function () {
         var addPluginOrig = api.addPlugin;
         spyOn(api, 'addPlugin').and.callFake(function () {
             return addPluginOrig.apply(api, arguments)
-                .thenResolve(returnValues[returnValueIndex++]);
+                .then(_ => returnValues[returnValueIndex++]);
         });
 
         return install('android', project, plugins['org.test.plugins.dummyplugin'])

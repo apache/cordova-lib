@@ -224,7 +224,7 @@ Api.prototype.addPlugin = function (plugin, installOptions) {
         })
         // CB-11022 return non-falsy value to indicate
         // that there is no need to run prepare after
-        .thenResolve(true);
+        .then(_ => true);
 };
 
 /**
@@ -261,7 +261,7 @@ Api.prototype.removePlugin = function (plugin, uninstallOptions) {
         })
         // CB-11022 return non-falsy value to indicate
         // that there is no need to run prepare after
-        .thenResolve(true);
+        .then(_ => true);
 };
 
 /**

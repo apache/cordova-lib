@@ -92,7 +92,7 @@ function check (hooksRunner, projectRoot) {
                         d_cur.resolve('broken');
                     });
 
-                Q.all([d_avail.promise, d_cur.promise]).spread(function (avail, v) {
+                Q.all([d_avail.promise, d_cur.promise]).then(([avail, v]) => {
                     var m;
                     var prefix = p + ' @ ' + (v || 'unknown');
                     switch (avail) {
