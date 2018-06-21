@@ -358,7 +358,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
                 }).then(function (installResult) {
                     return hooksRunner.fire('after_plugin_install', hookOptions)
                         // CB-11022 Propagate install result to caller to be able to avoid unnecessary prepare
-                        .thenResolve(installResult);
+                        .then(_ => installResult);
                 });
             } else {
                 return handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, install_plugin_dir, filtered_variables, options);

@@ -134,7 +134,7 @@ function add (projectRoot, hooksRunner, opts) {
                                 if (!didPrepare) shouldRunPrepare = true;
                             });
                     })
-                        .thenResolve(pluginInfo);
+                        .then(_ => pluginInfo);
                 }).then(function (pluginInfo) {
                     var pkgJson;
                     var pkgJsonPath = path.join(projectRoot, 'package.json');
