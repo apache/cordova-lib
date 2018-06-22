@@ -37,21 +37,23 @@ describe('cordova/platform', function () {
     describe('main module function', function () {
         describe('error/warning conditions', function () {
             // TODO: what about other commands? update? save?
-            it('should require at least one platform for add and remove commands', function (done) {
+            it('should require at least one platform for add and remove commands', function () {
                 // targets = empty array
-                platform('add', []).then(function () {
-                    fail('should not succeed without targets');
-                }, function (err) {
-                    expect(err).toMatch(/You need to qualify.* with one or more platforms/gi);
-                }).then(function () {
-                    // targets = null
-                    return platform('remove', null);
-                })
+                return platform('add', [])
                     .then(function () {
                         fail('should not succeed without targets');
                     }, function (err) {
                         expect(err).toMatch(/You need to qualify.* with one or more platforms/gi);
-                    }).done(done);
+                    })
+                    .then(function () {
+                        // targets = null
+                        return platform('remove', null);
+                    })
+                    .then(function () {
+                        fail('should not succeed without targets');
+                    }, function (err) {
+                        expect(err).toMatch(/You need to qualify.* with one or more platforms/gi);
+                    });
             });
         });
         describe('handling of targets parameter', function () {
@@ -59,112 +61,79 @@ describe('cordova/platform', function () {
             beforeEach(function () {
                 spyOn(platform, cmd).and.returnValue(true);
             });
-            it('should be able to handle an array of platform targets', function (done) {
+            it('should be able to handle an array of platform targets', function () {
                 var targets = ['nokia brick', 'HAM radio', 'nintendo wii'];
-                platform(cmd, targets)
+                return platform(cmd, targets)
                     .then(function () {
                         expect(platform[cmd]).toHaveBeenCalledWith(jasmine.any(Object), projectRoot, targets, jasmine.any(Object));
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
-            it('should be able to handle a single platform target string', function (done) {
+            it('should be able to handle a single platform target string', function () {
                 var target = 'motorola razr';
-                platform(cmd, target)
+                return platform(cmd, target)
                     .then(function () {
                         expect(platform[cmd]).toHaveBeenCalledWith(jasmine.any(Object), projectRoot, [target], jasmine.any(Object));
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
         });
         describe('happy path (success conditions)', function () {
-            it('should direct `add` commands to the `add` method/module', function (done) {
+            it('should direct `add` commands to the `add` method/module', function () {
                 spyOn(platform, 'add').and.returnValue(true);
-                platform('add', ['android'])
+                return platform('add', ['android'])
                     .then(function () {
                         expect(platform.add).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
-            it('should direct `remove` + `rm` commands to the `remove` method/module', function (done) {
+            it('should direct `remove` + `rm` commands to the `remove` method/module', function () {
                 spyOn(platform, 'remove').and.returnValue(true);
-                platform('remove', ['android'])
+                return platform('remove', ['android'])
                     .then(function () {
                         expect(platform.remove).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
                     }).then(function () {
                         platform.remove.calls.reset(); // reset spy counter
                         return platform('rm', ['android']);
                     }).then(function () {
                         expect(platform.remove).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
-            it('should direct `update` + `up` commands to the `update` method/module', function (done) {
+            it('should direct `update` + `up` commands to the `update` method/module', function () {
                 spyOn(platform, 'update').and.returnValue(true);
-                platform('update', ['android'])
+                return platform('update', ['android'])
                     .then(function () {
                         expect(platform.update).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
                     }).then(function () {
                         platform.update.calls.reset(); // reset spy counter
                         return platform('up', ['android']);
                     }).then(function () {
                         expect(platform.update).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
-            it('should direct `check` commands to the `check` method/module', function (done) {
+            it('should direct `check` commands to the `check` method/module', function () {
                 spyOn(platform, 'check').and.returnValue(true);
-                platform('check', ['android'])
+                return platform('check', ['android'])
                     .then(function () {
                         expect(platform.check).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
-            it('should direct `list`, all other commands and no command at all to the `list` method/module', function (done) {
+            it('should direct `list`, all other commands and no command at all to the `list` method/module', function () {
                 spyOn(platform, 'list').and.returnValue(true);
                 // test the `list` command directly
-                platform('list')
+                return platform('list')
                     .then(function () {
                         expect(platform.list).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
                     }).then(function () {
                         platform.list.calls.reset(); // reset spy counter
                         // test the list catch-all
                         return platform('please give me the list command');
                     }).then(function () {
                         expect(platform.list).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
                     }).then(function () {
                         platform.list.calls.reset(); // reset spy counter
                         // test the lack of providing an argument.
                         return platform();
                     }).then(function () {
                         expect(platform.list).toHaveBeenCalled();
-                    }).fail(function (e) {
-                        expect(e).toBeUndefined();
-                        fail('did not expect fail handler to be invoked');
-                    }).done(done);
+                    });
             });
         });
     });

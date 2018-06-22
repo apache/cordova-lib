@@ -48,73 +48,61 @@ describe('emulate command', function () {
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function () {
-        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function (done) {
+        it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function () {
             list_platforms.and.returnValue([]);
-            var success = jasmine.createSpy('success');
-            cordova.compile()
-                .then(success, function (result) {
-                    expect(result instanceof Error).toBe(true);
-                    expect('' + result).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-                })
-                .fin(function () {
-                    expect(success).not.toHaveBeenCalled();
-                    done();
+            return cordova.compile()
+                .then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    expect(err.message).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
                 });
         });
-        it('Test 002 : should not run outside of a Cordova-based project', function (done) {
+        it('Test 002 : should not run outside of a Cordova-based project', function () {
             is_cordova.and.returnValue(false);
-            var success = jasmine.createSpy('success');
-            cordova.compile()
-                .then(success, function (result) {
-                    expect(result instanceof Error).toBe(true);
-                })
-                .fin(function () {
-                    expect(success).not.toHaveBeenCalled();
-                    done();
+            return cordova.compile()
+                .then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
                 });
         });
     });
 
     describe('success', function () {
-        it('Test 003 : should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function (done) {
-            cordova.emulate(['android', 'ios'])
+        it('Test 003 : should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function () {
+            return cordova.emulate(['android', 'ios'])
                 .then(function (err) { // eslint-disable-line handle-callback-err
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['android', 'ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('android');
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalled();
                     expect(platformApi.run).toHaveBeenCalled();
-                })
-                .fail(fail)
-                .fin(done);
+                });
         });
-        it('Test 004 : should pass down options', function (done) {
-            cordova.emulate({platforms: ['ios'], options: { optionTastic: true }})
+        it('Test 004 : should pass down options', function () {
+            return cordova.emulate({platforms: ['ios'], options: { optionTastic: true }})
                 .then(function (err) { // eslint-disable-line handle-callback-err
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
                     expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true, nobuild: true });
-                })
-                .fail(fail)
-                .fin(done);
+                });
         });
-        it('Test 005 : should convert options from old format and warn user about this', function (done) {
+        it('Test 005 : should convert options from old format and warn user about this', function () {
             function warnSpy (message) {
                 expect(message).toMatch('The format of cordova.* methods "options" argument was changed');
             }
 
             cordova.on('warn', warnSpy);
-            cordova.emulate({platforms: ['ios'], options: ['--optionTastic']})
+            return cordova.emulate({platforms: ['ios'], options: ['--optionTastic']})
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({emulator: true, argv: ['--optionTastic']}));
                 })
-                .fail(fail)
                 .fin(function () {
                     cordova.off('warn', warnSpy);
-                    done();
                 });
         });
         describe('run parameters should not be altered by intermediate build command', function () {
@@ -129,74 +117,63 @@ describe('emulate command', function () {
             afterEach(function () {
                 platformApi.build = originalBuildSpy;
             });
-            it('Test 006 : should leave parameters unchanged', function (done) {
-                cordova.run({platforms: ['blackberry10'], options: {password: '1q1q'}})
+            it('Test 006 : should leave parameters unchanged', function () {
+                return cordova.run({platforms: ['blackberry10'], options: {password: '1q1q'}})
                     .then(function () {
                         expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
                         expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q', 'couldBeModified': 'insideBuild'});
                         expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
-                    }, function (err) {
-                        expect(err).toBeUndefined();
-                    }).fin(done);
+                    });
             });
         });
 
-        it('Test 007 : should call platform\'s build method', function (done) {
-            cordova.emulate({platforms: ['blackberry10']})
+        it('Test 007 : should call platform\'s build method', function () {
+            return cordova.emulate({platforms: ['blackberry10']})
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalled();
                     expect(platformApi.build).toHaveBeenCalledWith({device: false, emulator: true});
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
-                }, function (err) {
-                    expect(err).toBeUndefined();
-                })
-                .fin(done);
+                });
         });
 
-        it('Test 008 : should not call build if --nobuild option is passed', function (done) {
-            cordova.emulate({platforms: ['blackberry10'], options: { nobuild: true }})
+        it('Test 008 : should not call build if --nobuild option is passed', function () {
+            return cordova.emulate({platforms: ['blackberry10'], options: { nobuild: true }})
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalled();
                     expect(platformApi.build).not.toHaveBeenCalled();
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
-                }, function (err) {
-                    expect(err).toBeUndefined();
-                })
-                .fin(done);
+                });
         });
     });
 
     describe('hooks', function () {
         describe('when platforms are added', function () {
-            it('Test 009 : should fire before hooks through the hooker module', function (done) {
-                cordova.emulate(['android', 'ios'])
+            it('Test 009 : should fire before hooks through the hooker module', function () {
+                return cordova.emulate(['android', 'ios'])
                     .then(function () {
                         expect(fire).toHaveBeenCalledWith('before_emulate',
                             jasmine.objectContaining({verbose: false, platforms: ['android', 'ios'], options: jasmine.any(Object)}));
-                    })
-                    .fail(fail)
-                    .fin(done);
+                    });
             });
-            it('Test 010 : should fire after hooks through the hooker module', function (done) {
-                cordova.emulate('android')
+            it('Test 010 : should fire after hooks through the hooker module', function () {
+                return cordova.emulate('android')
                     .then(function () {
                         expect(fire).toHaveBeenCalledWith('after_emulate',
                             jasmine.objectContaining({verbose: false, platforms: ['android'], options: jasmine.any(Object)}));
-                    })
-                    .fail(fail)
-                    .fin(done);
+                    });
             });
         });
 
         describe('with no platforms added', function () {
-            it('Test 011 : should not fire the hooker', function (done) {
+            it('Test 011 : should not fire the hooker', function () {
                 list_platforms.and.returnValue([]);
-                Q().then(cordova.emulate).then(function () {
-                    expect('this call').toBe('fail');
+                return Q().then(cordova.emulate).then(function () {
+                    fail('Expected promise to be rejected');
                 }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    expect(err.message).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
                     expect(fire).not.toHaveBeenCalled();
-                    expect('' + err).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-                }).fin(done);
+                });
             });
         });
     });

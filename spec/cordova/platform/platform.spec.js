@@ -27,6 +27,8 @@ describe('cordova.platform', function () {
         var hooksRunnerMock;
         var projectRoot = os.tmpdir();
 
+        const NO_PLATFORMS_MSG = 'No platform specified. Please specify a platform to add. See `cordova platform list`.';
+
         beforeEach(function () {
             opts = {};
             hooksRunnerMock = {
@@ -36,26 +38,33 @@ describe('cordova.platform', function () {
             };
         });
 
-        it('Test 004 : throws if the target list is empty', function (done) {
+        it('Test 004 : throws if the target list is empty', function () {
             var targets = [];
-            platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-                expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
-                done();
+            return platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toBe(NO_PLATFORMS_MSG);
             });
         });
 
-        it('Test 005 : throws if the target list is undefined or null', function (done) {
-            // case 1 : target list undefined
+        it('Test 005 : throws if the target list is undefined', function () {
             var targets; // = undefined;
-            platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-                expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
+            return platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toBe(NO_PLATFORMS_MSG);
             });
+        });
 
-            // case 2 : target list null
-            targets = null;
-            platform.add(hooksRunnerMock, projectRoot, targets, opts).fail(function (error) {
-                expect(error.message).toBe('No platform specified. Please specify a platform to add. See `cordova platform list`.');
-                done();
+        it('Test 006 : throws if the target list is null', function () {
+            const targets = null;
+            return platform.add(hooksRunnerMock, projectRoot, targets, opts).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toBe(NO_PLATFORMS_MSG);
             });
         });
     });

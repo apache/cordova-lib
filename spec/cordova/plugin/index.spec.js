@@ -36,12 +36,13 @@ describe('cordova/plugin', function () {
 
     describe('error conditions', function () {
         // TODO: what about search cmd?
-        it('should require at least one target for add and rm commands', function (done) {
-            plugin('add', null).then(function () {
-                fail('success handler unexpectedly invoked');
-            }).fail(function (e) {
-                expect(e.message).toContain('one or more plugins');
-            }).done(done);
+        it('should require at least one target for add and rm commands', function () {
+            return plugin('add', null).then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('one or more plugins');
+            });
         });
     });
 
@@ -51,107 +52,80 @@ describe('cordova/plugin', function () {
             spyOn(plugin, cmd).and.returnValue(true);
         });
 
-        it('should be able to handle an array of platform targets', function (done) {
+        it('should be able to handle an array of platform targets', function () {
             var targets = ['plugin1', 'plugin2', 'plugin3'];
-            plugin(cmd, targets)
+            return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ ], plugins: [ 'plugin1', 'plugin2', 'plugin3' ] }));
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should be able to handle a single string as a target', function (done) {
+        it('should be able to handle a single string as a target', function () {
             var targets = 'plugin1';
-            plugin(cmd, targets)
+            return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ ], plugins: [ 'plugin1' ] }));
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should transform targets that start with a dash into options', function (done) {
+        it('should transform targets that start with a dash into options', function () {
             var targets = '-plugin1';
-            plugin(cmd, targets)
+            return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ '-plugin1' ], plugins: [ ] }));
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should also include targets into a plugins property on options', function (done) {
+        it('should also include targets into a plugins property on options', function () {
             var options = {save: true};
             var targets = 'plugin1';
-            plugin(cmd, targets, options)
+            return plugin(cmd, targets, options)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ save: true, options: [ ], plugins: [ 'plugin1' ] }));
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
     });
 
     describe('happy path', function () {
 
-        it('should direct "add" command to the "add" submodule', function (done) {
+        it('should direct "add" command to the "add" submodule', function () {
             spyOn(plugin, 'add').and.returnValue(true);
-            plugin('add', ['cordova-plugin-splashscreen'])
+            return plugin('add', ['cordova-plugin-splashscreen'])
                 .then(function () {
                     expect(plugin.add).toHaveBeenCalled();
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should direct "rm" and "remove" commands to the "remove" submodule', function (done) {
+        it('should direct "rm" and "remove" commands to the "remove" submodule', function () {
             spyOn(plugin, 'remove').and.returnValue(true);
-            plugin('remove', ['cordova-plugin-splashscreen'])
+            return plugin('remove', ['cordova-plugin-splashscreen'])
                 .then(function () {
                     expect(plugin.remove).toHaveBeenCalled();
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should direct "search" command to the "search" submodule', function (done) {
+        it('should direct "search" command to the "search" submodule', function () {
             spyOn(plugin, 'search').and.returnValue(true);
-            plugin('search')
+            return plugin('search')
                 .then(function () {
                     expect(plugin.search).toHaveBeenCalled();
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should direct "save" command to the "save" submodule', function (done) {
+        it('should direct "save" command to the "save" submodule', function () {
             spyOn(plugin, 'save').and.returnValue(true);
-            plugin('save')
+            return plugin('save')
                 .then(function () {
                     expect(plugin.save).toHaveBeenCalled();
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
 
-        it('should direct "list", all other commands and no command at all to the "list" submodule', function (done) {
+        it('should direct "list", all other commands and no command at all to the "list" submodule', function () {
             spyOn(plugin, 'list').and.returnValue(true);
-            plugin('list')
+            return plugin('list')
                 .then(function () {
                     expect(plugin.list).toHaveBeenCalled();
-                }).fail(function (e) {
-                    expect(e).toBeUndefined();
-                    fail('did not expect fail handler to be invoked');
-                }).done(done);
+                });
         });
     });
 });

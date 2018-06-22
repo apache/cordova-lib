@@ -137,7 +137,7 @@ describe('util module', function () {
         afterEach(function () {
             shell.rm('-rf', temp);
         });
-        it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function (done) {
+        it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
 
@@ -145,10 +145,10 @@ describe('util module', function () {
 
             shell.cp('-R',
                 path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), platforms);
-            util.getInstalledPlatformsWithVersions(temp)
+            return util.getInstalledPlatformsWithVersions(temp)
                 .then(function (platformMap) {
                     expect(platformMap['android']).toBe('3.1.0');
-                }).fin(done);
+                });
         });
     });
     describe('findPlugins method', function () {

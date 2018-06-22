@@ -69,7 +69,7 @@ describe('tests platform/spec restore with --save', function () {
     *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
     *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
     */
-    it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function (done) {
+    it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         cordova_util.requireNoCache(pkgJsonPath);
@@ -81,7 +81,7 @@ describe('tests platform/spec restore with --save', function () {
         var engNames;
         var engSpec;
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add platform with save, fetch
             return cordovaPlatform('add', androidPlatform, {'save': true, 'fetch': true});
         }).then(function () {
@@ -128,9 +128,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(firstCharConfig === '^');
             expect(engNames).toEqual([ androidPlatform ]);
             expect(engines.length === 1);
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, 300000);
 
@@ -139,7 +137,7 @@ describe('tests platform/spec restore with --save', function () {
     *   pkg.json and config.xml would add it to their files properly.
     *   When prepare is run with fetch, platform should be installed.
     */
-    it('Test#017 : test to make sure that platform url is added and restored properly', function (done) {
+    it('Test#017 : test to make sure that platform url is added and restored properly', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
@@ -149,7 +147,7 @@ describe('tests platform/spec restore with --save', function () {
         var engNames;
         var engSpec;
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add platform with save and fetch
             return cordovaPlatform('add', 'https://github.com/apache/cordova-browser', {'save': true, 'fetch': true});
         }).then(function () {
@@ -195,9 +193,7 @@ describe('tests platform/spec restore with --save', function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 
@@ -206,7 +202,7 @@ describe('tests platform/spec restore with --save', function () {
     *   pkg.json and config.xml would add it to their files properly.
     *   When prepare is run with fetch, plugin should be installed.
     */
-    it('Test#018 : test to make sure that plugin url is added and restored properly', function (done) {
+    it('Test#018 : test to make sure that plugin url is added and restored properly', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
@@ -214,7 +210,7 @@ describe('tests platform/spec restore with --save', function () {
         var configXmlPath = path.join(cwd, 'config.xml');
         var configPlugins;
         var configPlugin;
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add plugin with save and fetch.
             return cordovaPlugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save': true, 'fetch': true});
         }).then(function () {
@@ -265,9 +261,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             // Plugin was restored and added to installed plugin list successfully.
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -318,13 +312,13 @@ describe('tests platform/spec restore with --save', function () {
     *   After running cordova prepare, only the platform added with the 'save' flag is restored
     *   in platforms.json.
     */
-    it('Test#003 : should NOT restore platform that was not saved and removed', function (done) {
+    it('Test#003 : should NOT restore platform that was not saved and removed', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
         var secondPlatformAdded = 'ios';
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add 'browser' platform to project without --save
             return cordovaPlatform('add', secondPlatformAdded, {'fetch': true});
         }).then(function () {
@@ -352,9 +346,7 @@ describe('tests platform/spec restore with --save', function () {
             }).then(function () {
                 // Run cordova prepare
                 return prepare({'fetch': true});
-            }).fail(function (err) {
-                expect(err).toBeUndefined();
-            }).fin(done);
+            });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -396,7 +388,7 @@ describe('files should not be modified if their platforms are identical', functi
     *   When both files contain the same platforms and cordova prepare is run,
     *   neither file is modified.
     */
-    it('Test#004 : if pkg.json and config.xml have the same platforms, do not modify either file', function (done) {
+    it('Test#004 : if pkg.json and config.xml have the same platforms, do not modify either file', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg1 = new ConfigParser(configXmlPath);
@@ -408,7 +400,7 @@ describe('files should not be modified if their platforms are identical', functi
         });
         var configEngArray = engNames.slice();
         // Pkg.json and config.xml contain only android at this point (basePkgJson6).
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({'fetch': true});
         }).then(function () {
@@ -425,9 +417,7 @@ describe('files should not be modified if their platforms are identical', functi
             // Expect pkg.json and config.xml to have only 1 element each.
             expect(configEngArray.length === 1);
             expect(pkgJson.cordova.platforms.length === 1);
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -470,7 +460,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
     *   is updated with the correct spec/dependencies when restored. Checks that specs are
     *   added properly, too.
     */
-    it('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function (done) {
+    it('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -494,7 +484,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         // pkg.json browser/android specs should be undefined.
         expect(pkgJson.dependencies[browserPlatform]).toBeUndefined();
         expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             return prepare({'fetch': true});
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -511,9 +501,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
             // Platform specs from config.xml have been added to pkg.json.
             expect(pkgJson.dependencies['cordova-browser']).toEqual('^5.0.3');
             expect(pkgJson.dependencies['cordova-android']).toEqual('7.0.0');
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -554,7 +542,7 @@ describe('update empty package.json to match config.xml', function () {
      *   If it does not and config.xml has a platform(s) installed already, run cordova prepare
      *   and it will add a cordova key and the platform(s) from config.xml to package.json.
      */
-    it('Test#006 : if pkg.json exists without cordova key, create one with same platforms in config.xml ', function (done) {
+    it('Test#006 : if pkg.json exists without cordova key, create one with same platforms in config.xml ', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -575,7 +563,7 @@ describe('update empty package.json to match config.xml', function () {
         expect(configEngArray.length === 1);
         // Run cordova prepare.
         prepare();
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
             engNames = engines.map(function (elem) {
@@ -591,9 +579,7 @@ describe('update empty package.json to match config.xml', function () {
             // Expect both pkg.json and config.xml to each have (only) android in their arrays.
             expect(configEngArray.length === 1);
             expect(pkgJson.cordova.platforms.length === 1);
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -635,7 +621,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
     *   and config.xml is updated to include 'browser'. Also, if there is a specified spec in pkg.json,
     *   it should be added to config.xml during restore.
     */
-    it('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function (done) {
+    it('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg1 = new ConfigParser(configXmlPath);
@@ -654,7 +640,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.length === 1);
         // Pkg.json has cordova-browser in its dependencies.
         expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.3' });
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({ 'fetch': true });
         }).then(function () {
@@ -678,9 +664,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
             expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.3' });
             expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.5.4');
             expect(pkgJson.dependencies['cordova-browser']).toEqual('^5.0.3');
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -723,7 +707,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
     *   When pkg.json and config.xml have the same variables, but different values,
     *   pkg.json should win and that value will be used and replaces config's value.
     */
-    it('Test#011 : if pkg.Json has 1 plugin and 1 variable, update config.xml to include these variables', function (done) {
+    it('Test#011 : if pkg.Json has 1 plugin and 1 variable, update config.xml to include these variables', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -745,7 +729,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         expect(configPluginVariables).toEqual({ variable_1: 'config' });
         expect(Object.keys(configPlugin).length === 1);
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({'fetch': true, 'save': true});
         }).then(function () {
@@ -765,9 +749,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             expect(Object.keys(configPlugin).length === 1);
             // Expect that the camera plugin is restored.
             expect(path.join(pluginsFolderPath, 'cordova-plugin-camera')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -808,7 +790,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
     *   When config.xml has a 'camera plugin and 1 variable' and pkg.json has 1 plugins/0 variables,
     *   cordova prepare runs and will update pkg.json to match config.xml's plugins/variables.
     */
-    it('Test#012 : if pkg.Json has 1 plugin and 2 variables, update config.xml to include these plugins/variables', function (done) {
+    it('Test#012 : if pkg.Json has 1 plugin and 2 variables, update config.xml to include these plugins/variables', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -832,7 +814,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
         expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
         expect(Object.keys(configPlugin).length === 1);
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({'fetch': true, 'save': true});
         }).then(function () {
@@ -852,9 +834,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             expect(Object.keys(configPlugin).length === 1);
             // Expect camera to be restored and in the installed plugin list.
             expect(path.join(pluginsFolderPath12, 'cordova-plugin-camera')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -897,7 +877,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
     *   Plugins that are unique to that file, will be copied over to the file that is missing it.
     *   Config.xml and pkg.json will have identical plugins and variables after cordova prepare.
     */
-    it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', function (done) {
+    it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -936,7 +916,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
         expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: ' ', variable_2: ' ' });
         expect(pkgJson.cordova.plugins['cordova-plugin-device']).toEqual({ variable_1: 'value_1' });
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({'fetch': true, 'save': true});
         }).then(function () {
@@ -977,9 +957,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
             expect(path.join(pluginsFolderPath13, 'cordova-plugin-device')).toExist();
             expect(path.join(pluginsFolderPath13, 'cordova-plugin-camera')).toExist();
             expect(path.join(pluginsFolderPath13, 'cordova-plugin-splashscreen')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -1022,7 +1000,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
     *   If there is a matching plugin name, the variables will be merged and then added
     *   to config and pkg.json.
     */
-    it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', function (done) {
+    it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -1068,7 +1046,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
         // Pkg.json splashscreen has no variables
         expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toEqual({});
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare
             return prepare({'save': true, 'fetch': true});
         }).then(function () {
@@ -1123,9 +1101,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             expect(path.join(pluginsFolderPath14, 'cordova-plugin-camera')).toExist();
             expect(path.join(pluginsFolderPath14, 'cordova-plugin-splashscreen')).toExist();
             expect(path.join(pluginsFolderPath14, 'cordova-plugin-device')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -1166,7 +1142,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
     *   When config has 0 plugins and is restored, the plugins will be restored with the
     *   pkg.json plugins and with the spec from pkg.json dependencies.
     */
-    it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function (done) {
+    it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd, 'package.json');
@@ -1190,7 +1166,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         // Pkg.json has '^2.3.0' spec for camera plugin.
         expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-camera': '^2.3.0' });
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run cordova prepare.
             return prepare({'fetch': true, 'save': true});
         }).then(function () {
@@ -1224,9 +1200,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1' });
             // Check if the camera plugin is in the installed list.
             expect(path.join(pluginsFolderPath15, 'cordova-plugin-camera')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -1266,7 +1240,7 @@ describe('platforms and plugins should be restored with config.xml even without 
     /** Test#016 will check that cordova prepare will still restore the correct
     *   platforms and plugins even without package.json file.
     */
-    it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function (done) {
+    it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function () {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg1 = new ConfigParser(configXmlPath);
@@ -1287,7 +1261,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         // Config.xml contains only 1 plugin at this point.
         expect(Object.keys(configPlugins).length === 1);
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Run platform add.
             return cordovaPlatform('add', browserPlatform, {'save': true, 'fetch': true});
         }).then(function () {
@@ -1359,9 +1333,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         }).then(function () {
             // Plugin should be restored and returned to the installed list.
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
-        }).fail(function (err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
+        });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });
@@ -1413,13 +1385,13 @@ describe('tests platform/spec restore with --save', function () {
     *   After running cordova prepare, that platform should be restored in the
     *   installed platform list in platforms.json.
     */
-    it('Test#001 : should restore platform that has been removed from project', function (done) {
+    it('Test#001 : should restore platform that has been removed from project', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         cordova_util.requireNoCache(pkgJsonPath);
         var pkgJson;
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
             return cordovaPlatform('add', 'android', {'save': true, 'fetch': true});
         }).then(function () {
@@ -1439,9 +1411,7 @@ describe('tests platform/spec restore with --save', function () {
             }).then(function () {
                 // Run cordova prepare.
                 return prepare({'fetch': true});
-            }).fail(function (err) {
-                expect(err).toBeUndefined();
-            }).fin(done);
+            });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 
@@ -1450,13 +1420,13 @@ describe('tests platform/spec restore with --save', function () {
     *   the other platform with the 'save' flag. After running cordova prepare,
     *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
     */
-    it('Test#002 : should NOT restore platform that was removed with --save', function (done) {
+    it('Test#002 : should NOT restore platform that was removed with --save', function () {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd, 'package.json');
         var pkgJson;
         var secondPlatformAdded = 'browser';
 
-        emptyPlatformList().then(function () {
+        return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
             return cordovaPlatform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
         }).then(function () {
@@ -1485,9 +1455,7 @@ describe('tests platform/spec restore with --save', function () {
             }).then(function () {
                 // Run cordova prepare.
                 return prepare({'fetch': true});
-            }).fail(function (err) {
-                expect(err).toBeUndefined();
-            }).fin(done);
+            });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
 });

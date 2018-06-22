@@ -17,12 +17,10 @@
 
 var path = require('path');
 var fs = require('fs');
-var Q = require('q');
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
 var platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');
 var events = require('cordova-common').events;
-var fail;
 
 describe('cordova/platform/getPlatformDetailsFromDir', function () {
     var package_json_mock;
@@ -31,26 +29,31 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
     package_json_mock.version = '1.0.0';
 
     beforeEach(function () {
-        spyOn(Q, 'reject');
         spyOn(fs, 'existsSync');
         spyOn(cordova_util, 'requireNoCache');
         spyOn(events, 'emit');
     });
 
-    it('should throw if no config.xml or pkgJson', function (done) {
-        platform_getPlatformDetails('dir', ['ios']);
-        expect(Q.reject).toHaveBeenCalledWith(jasmine.stringMatching(/does not seem to contain a valid package.json or a valid Cordova platform/));
-        done();
+    it('should throw if no config.xml or pkgJson', function () {
+        return platform_getPlatformDetails('dir', ['ios'])
+            .then(function () {
+                fail('Expected promise to be rejected');
+            }, function (reason) {
+                expect(reason).toMatch(/does not seem to contain a valid package.json or a valid Cordova platform/);
+            });
     });
 
-    it('should throw if no platform is provided', function (done) {
+    it('should throw if no platform is provided', function () {
         cordova_util.requireNoCache.and.returnValue({});
-        platform_getPlatformDetails('dir');
-        expect(Q.reject).toHaveBeenCalledWith(jasmine.stringMatching(/does not seem to contain a Cordova platform:/));
-        done();
+        return platform_getPlatformDetails('dir')
+            .then(function () {
+                fail('Expected promise to be rejected');
+            }, function (reason) {
+                expect(reason).toMatch(/does not seem to contain a Cordova platform:/);
+            });
     });
 
-    it('should return a promise with platform and version', function (done) {
+    it('should return a promise with platform and version', function () {
         fs.existsSync.and.callFake(function (filePath) {
             if (path.basename(filePath) === 'package.json') {
                 return true;
@@ -59,20 +62,15 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
             }
         });
         cordova_util.requireNoCache.and.returnValue(package_json_mock);
-        platform_getPlatformDetails('dir', ['cordova-android'])
+        return platform_getPlatformDetails('dir', ['cordova-android'])
             .then(function (result) {
                 expect(result.platform).toBe('io.cordova.hellocordova');
                 expect(result.version).toBe('1.0.0');
-                expect(Q.reject).not.toHaveBeenCalled();
-            }).fail(function (err) {
-                fail('unexpected failure handler invoked!');
-                console.error(err);
-            }).done(done);
+            });
     });
 
-    it('should remove the cordova- prefix from the platform name for known platforms', function (done) {
+    it('should remove the cordova- prefix from the platform name for known platforms', function () {
         expect(platform_getPlatformDetails.platformFromName('cordova-ios')).toBe('ios');
         expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching(/Removing "cordova-" prefix/));
-        done();
     });
 });

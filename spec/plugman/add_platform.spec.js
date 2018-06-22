@@ -41,14 +41,12 @@ describe('platform add', function () {
         existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
         done = false;
     });
-    it('Test 002 : should error on non existing plugin.xml', function (done) {
-        platform.add().then(function (result) {
-            expect(false).toBe(true);
-            done();
-        },
-        function err (errMsg) {
-            expect(errMsg.toString()).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
-            done();
+    it('Test 002 : should error on non existing plugin.xml', function () {
+        return platform.add().then(function () {
+            fail('Expected promise to be rejected');
+        }, function (err) {
+            expect(err).toEqual(jasmine.any(Error));
+            expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
         });
     }, 6000);
 });
@@ -63,14 +61,12 @@ describe('platform remove', function () {
         existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
         done = false;
     });
-    it('Test 003 : should error on non existing plugin.xml', function (done) {
-        platform.remove().then(function (result) {
-            expect(false).toBe(true);
-            done();
-        },
-        function err (errMsg) {
-            expect(errMsg.toString()).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
-            done();
+    it('Test 003 : should error on non existing plugin.xml', function () {
+        return platform.remove().then(function () {
+            fail('Expected promise to be rejected');
+        }, function (err) {
+            expect(err).toEqual(jasmine.any(Error));
+            expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
         });
     }, 6000);
 });
