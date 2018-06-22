@@ -31,8 +31,6 @@ var TIMEOUT = 240 * 1000;
 *   should initially be in pkg.json and/or config.xml.
 */
 
-/* eslint "promise/catch-or-return": "error" */
-
 // Use basePkgJson
 describe('tests platform/spec restore with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson2');
