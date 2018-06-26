@@ -39,8 +39,7 @@ describe('platforms object', function () {
     });
 
     it('should have correct number of platform properties', function () {
-        // CB-14148 TODO includes nonsense "www" platform:
-        expect(Object.keys(platforms).length).toBe(6);
+        expect(Object.keys(platforms).length).toBe(5);
     });
 
     it('should include the supported platforms', function () {
@@ -49,8 +48,10 @@ describe('platforms object', function () {
         expect(platforms.ios).toBeDefined();
         expect(platforms.osx).toBeDefined();
         expect(platforms.windows).toBeDefined();
-        // REPRODUCE CB-14148:
-        expect(platforms.www).toBeDefined();
+    });
+
+    it('should *not* include nonsense "www" platform (CB-14148)', function () {
+        expect(platforms.www).not.toBeDefined();
     });
 });
 
