@@ -89,7 +89,8 @@ function add (projectRoot, hooksRunner, opts) {
                         variables: opts.cli_variables,
                         is_top_level: true,
                         save_exact: opts['save-exact'] || false,
-                        production: opts.production
+                        production: opts.production,
+                        manager: opts.manager
                     };
 
                     return module.exports.determinePluginTarget(projectRoot, cfg, target, fetchOptions).then(function (resolvedTarget) {
