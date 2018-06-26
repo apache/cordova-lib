@@ -32,6 +32,28 @@ var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
 shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
+describe('platforms object', function () {
+    it('should have getPlatformApi function as a property', function () {
+        expect(platforms.getPlatformApi).toBeDefined();
+        expect(typeof platforms.getPlatformApi).toBe('function');
+    });
+
+    it('should have correct number of platform properties', function () {
+        // CB-14148 TODO includes nonsense "www" platform:
+        expect(Object.keys(platforms).length).toBe(6);
+    });
+
+    it('should include the supported platforms', function () {
+        expect(platforms.android).toBeDefined();
+        expect(platforms.browser).toBeDefined();
+        expect(platforms.ios).toBeDefined();
+        expect(platforms.osx).toBeDefined();
+        expect(platforms.windows).toBeDefined();
+        // REPRODUCE CB-14148:
+        expect(platforms.www).toBeDefined();
+    });
+});
+
 describe('getPlatformApi method', function () {
     var isCordova;
 
@@ -94,5 +116,9 @@ describe('getPlatformApi method', function () {
 
     it('should throw for unknown platform', function () {
         expect(function () { platforms.getPlatformApi('invalid_platform'); }).toThrow();
+    });
+
+    it('should throw for nonsense www platform', function () {
+        expect(function () { platforms.getPlatformApi('www'); }).toThrow();
     });
 });
