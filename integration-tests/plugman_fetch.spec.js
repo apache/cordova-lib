@@ -94,7 +94,7 @@ describe('fetch', function () {
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
             return fetch(test_plugin, temp, { link: true }).then(function () {
-                expect(sym).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), 'dir');
+                expect(sym).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), 'junction');
             });
         });
 
@@ -152,23 +152,13 @@ describe('fetch', function () {
             return Q(pluginDir);
         });
 
-        if (/^win/.test(process.platform)) {
-            it('Test 020 : should copy all but the /demo/ folder', function () {
-                var cp = spyOn(shell, 'cp');
-                return fetch(srcDir, appDir).then(function () {
-                    expect(cp).toHaveBeenCalledWith('-R', path.join(srcDir, 'asset.txt'), path.join(appDir, 'test-recursive'));
-                    expect(cp).not.toHaveBeenCalledWith('-R', srcDir, path.join(appDir, 'test-recursive'));
-                });
-            });
-        } else {
-            it('Test 021 : should skip copy to avoid recursive error', function () {
+        it('Test 021 : should skip copy to avoid recursive error', function () {
 
-                var cp = spyOn(shell, 'cp').and.callFake(function () {});
+            var cp = spyOn(shell, 'cp').and.callFake(function () {});
 
-                return fetch(srcDir, appDir).then(function () {
-                    expect(cp).not.toHaveBeenCalled();
-                });
+            return fetch(srcDir, appDir).then(function () {
+                expect(cp).not.toHaveBeenCalled();
             });
-        }
+        });
     });
 });

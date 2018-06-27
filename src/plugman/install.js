@@ -654,7 +654,7 @@ function copyPlugin (plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
     if (link) {
         events.emit('verbose', 'Symlinking from location "' + plugin_src_dir + '" to location "' + dest + '"');
         shell.mkdir('-p', path.dirname(dest));
-        fs.symlinkSync(plugin_src_dir, dest, 'dir');
+        fs.symlinkSync(plugin_src_dir, dest, 'junction');
     } else {
         shell.mkdir('-p', dest);
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');
