@@ -306,6 +306,16 @@ describe('cordova/platform/addHelper', function () {
                     expect(require('../../../src/cordova/platform/index').getPlatformDetailsFromDir).toHaveBeenCalled();
                 });
             }, 60000);
+
+            it('should not fetch if platform has already been fetched', function (done) {
+                fs.existsSync.and.returnValue('android');
+                platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {fetch: true}).then(function () {
+                    expect(fetch_mock).not.toHaveBeenCalled();
+                    expect(events.emit).not.toHaveBeenCalled();
+                }).fail(function (e) {
+                    fail('fail handler unexpectedly invoked');
+                }).done(done);
+            }, 60000);
         });
     });
     describe('installPluginsForNewPlatform', function () {
