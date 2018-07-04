@@ -26,6 +26,7 @@
     "dep-graph": "1.1.0",
     "detect-indent": "^5.0.0",
     "elementtree": "^0.1.7",
+    "fs-extra": "^6.0.1",
     "glob": "^7.1.2",
     "init-package-json": "^1.2.0",
     "nopt": "4.0.1",
