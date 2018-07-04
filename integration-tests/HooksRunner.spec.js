@@ -17,425 +17,267 @@
  under the License.
  **/
 
-/* eslint  no-mixed-spaces-and-tabs : 0 */
-/* eslint  no-tabs : 0 */
+const Q = require('q');
+const path = require('path');
+const fs = require('fs-extra');
+const globby = require('globby');
 
-var cordova = require('../src/cordova/cordova');
-var HooksRunner = require('../src/hooks/HooksRunner');
-var shell = require('shelljs');
-var path = require('path');
-var fs = require('fs');
-var os = require('os');
-var Q = require('q');
-var child_process = require('child_process');
-var helpers = require('../spec/helpers');
-var PluginInfo = require('cordova-common').PluginInfo;
-var superspawn = require('cordova-common').superspawn;
+const HooksRunner = require('../src/hooks/HooksRunner');
+const cordovaUtil = require('../src/cordova/util');
+const cordova = require('../src/cordova/cordova');
+const { tmpDir, testPlatform } = require('../spec/helpers');
+const { PluginInfo, superspawn } = require('cordova-common');
+const { Q_chainmap } = require('../src/util/promise-util');
 
-var platform = os.platform();
-var tmpDir = helpers.tmpDir('hooks_test');
-var project = path.join(tmpDir, 'project');
-var dotCordova = path.join(project, '.cordova');
-var hooksDir = path.join(project, 'hooks');
-var hooksDirDot = path.join(project, '.cordova', 'hooks');
-var scriptsDir = path.join(project, 'scripts');
-var ext = platform.match(/(win32|win64)/) ? 'bat' : 'sh';
-var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
-var testPluginFixturePath = path.join(fixtures, 'plugins', 'com.plugin.withhooks');
+const tmp = tmpDir('hooks_test');
+const project = path.join(tmp, 'project');
+const preparedProject = path.join(tmp, 'preparedProject');
+const ext = process.platform === 'win32' ? 'bat' : 'sh';
+const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
 
-var cordovaUtil = require('../src/cordova/util');
-
-// copy fixture
-shell.rm('-rf', project);
-shell.mkdir('-p', project);
-shell.cp('-R', path.join(fixtures, 'projWithHooks', '*'), project);
-
-shell.mkdir('-p', dotCordova);
-shell.cp('-R', path.join(fixtures, 'projWithHooks', '.cordova'), project);
-
-// copy sh/bat scripts
-if (ext === 'bat') {
-    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '*'), project);
-    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_bat', '.cordova'), project);
-} else {
-    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_sh', '*'), project);
-    shell.cp('-R', path.join(fixtures, 'projWithHooks', '_sh', '.cordova'), project);
-}
-
-shell.chmod('-R', 'ug+x', hooksDir);
-shell.chmod('-R', 'ug+x', hooksDirDot);
-shell.chmod('-R', 'ug+x', scriptsDir);
-
-// To get more verbose output to help trace program flow, uncomment the lines below
-// TODO: think about how to factor this out so that it can be invoked from the command line
-// var events = require('cordova-common').events;
-// events.on('log', function(msg) { console.log(msg); });
-// events.on('verbose', function(msg) { console.log(msg); });
-// events.on('warn', function(msg) { console.log(msg); });
+const testPlugin = 'com.plugin.withhooks';
+const testPluginFixture = path.join(fixtures, 'plugins', testPlugin);
+const testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
 
 describe('HooksRunner', function () {
-    var hooksRunner;
-    var hookOptions;
-    var testPluginInstalledPath;
-    var projectRoot;
-    var fire;
+    let hooksRunner, hookOptions;
 
-    beforeEach(function () {
-        process.chdir(project);
+    // This prepares a project that we will copy and use for all tests
+    beforeAll(function () {
+        // Copy project fixture
+        const projectFixture = path.join(fixtures, 'projWithHooks');
+        fs.copySync(projectFixture, preparedProject);
+
+        // Copy sh/bat scripts
+        const extDir = path.join(projectFixture, `_${ext}`);
+        fs.readdirSync(extDir).forEach(d => {
+            fs.copySync(path.join(extDir, d), path.join(preparedProject, d));
+        });
+
+        // Ensure scripts are executable
+        globby.sync(['hooks/**', '.cordova/hooks/**', 'scripts/**'], {
+            cwd: preparedProject, absolute: true
+        }).forEach(f => fs.chmodSync(f, 0o755));
+
+        // Add the testing platform and plugin to our project
+        fs.copySync(
+            path.join(__dirname, '../spec/plugman/projects', testPlatform),
+            path.join(preparedProject, 'platforms', testPlatform)
+        );
+        fs.copySync(
+            testPluginFixture,
+            path.join(preparedProject, 'plugins', testPlugin)
+        );
     });
 
-    afterEach(function () {
+    beforeEach(function () {
+        // Reset our test project
+        // We are linking node_modules to improve performance
+        process.chdir(__dirname); // Avoid EBUSY on Windows
+        fs.removeSync(project);
+        fs.copySync(preparedProject, project, {
+            filter: p => path.basename(p) !== 'node_modules'
+        });
+        const platformModules = 'platforms/android/cordova/node_modules';
+        fs.symlinkSync(path.join(preparedProject, platformModules),
+            path.join(project, platformModules), 'junction');
+
+        // Change into our project directory
+        process.chdir(project);
+        process.env.PWD = project; // this is used by cordovaUtil.isCordova
+
+        hookOptions = {
+            projectRoot: project,
+            cordova: cordovaUtil.preProcessOptions()
+        };
+
+        hooksRunner = new HooksRunner(project);
+    });
+
+    afterAll(function () {
         process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
+        fs.removeSync(tmp);
     });
 
     it('Test 001 : should throw if provided directory is not a cordova project', function () {
-        expect(function () {
-            new HooksRunner(tmpDir); // eslint-disable-line no-new
-        }).toThrow();
+        expect(_ => new HooksRunner(tmp)).toThrow();
     });
 
     it('Test 002 : should not throw if provided directory is a cordova project', function () {
-        expect(function () {
-            new HooksRunner(project); // eslint-disable-line no-new
-        }).not.toThrow();
+        expect(_ => new HooksRunner(project)).not.toThrow();
     });
 
-    it('Test 003 : should init test fixtures', function () {
-        hooksRunner = new HooksRunner(project);
-
-        // Add the testing platform.
-        return cordova.platform('add', [helpers.testPlatform], {'fetch': true}).then(function () {
-            // Add the testing plugin
-            projectRoot = cordovaUtil.isCordova();
-
-            var options = {
-                verbose: false,
-                platforms: [],
-                options: []
-            };
-
-            options = cordovaUtil.preProcessOptions(options);
-            hookOptions = { projectRoot: project, cordova: options };
-
-            return cordova.plugin('add', testPluginFixturePath, {'fetch': true}).then(function () {
-                testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
-            });
-        });
-    }, 100000);
-
     describe('fire method', function () {
+        const test_event = 'before_build';
+        const hooksOrderFile = path.join(project, 'hooks_order.txt');
+        let fire;
+
         beforeEach(function () {
-            projectRoot = cordovaUtil.isCordova();
-
-            var options = {
-                verbose: false,
-                platforms: [],
-                options: []
-            };
-
-            options = cordovaUtil.preProcessOptions(options);
-            hookOptions = { projectRoot: project, cordova: options };
-
-            var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-            removeFileIfExists(hooksOrderFile);
-
+            fs.removeSync(hooksOrderFile);
             fire = spyOn(HooksRunner.prototype, 'fire').and.callThrough();
         });
 
         // helper methods
-        function hooksOrderFileContents (hooksOrderFile) {
-            var order = fs.readFileSync(hooksOrderFile, 'ascii').replace(/\W/gm, ' ');
-
-            var orderArrOriginal = order.split(' ').slice(0);
-
-            function splitNumbers (mixedString) {
-                var re = /\w+/g;
-                var match;
-                var params = [];
-
-                while (match = re.exec(mixedString)) { // eslint-disable-line no-cond-assign
-                    params.push(match[0]);
-                }
-                return params;
-            }
-
-            return splitNumbers(orderArrOriginal).map(function (str) { return parseInt(str, 10); });
+        function getActualHooksOrder () {
+            const fileContents = fs.readFileSync(hooksOrderFile, 'ascii');
+            return fileContents.match(/\d+/g).map(Number);
         }
 
-        function hooksOrderFileIsOrdered (hooksOrderFile) {
-            var splitArrOriginal = hooksOrderFileContents(hooksOrderFile);
-            var splitArrSorted = splitArrOriginal.slice(0).sort(function (a, b) { return a - b; });
+        function checkHooksOrderFile () {
+            expect(hooksOrderFile).toExist();
 
-            return JSON.stringify(splitArrOriginal) === JSON.stringify(splitArrSorted);
+            const hooksOrder = getActualHooksOrder();
+            const sortedHooksOrder = hooksOrder.slice(0).sort((a, b) => a - b);
+            expect(hooksOrder).toEqual(sortedHooksOrder);
         }
 
-        function backupAppConfig (projectRoot) {
-            shell.cp('-f', path.join(projectRoot, 'config.xml'), path.join(projectRoot, 'configOrig.xml'));
+        function useAppConfig (name) {
+            fs.copySync(path.join(project, `config${name}_${ext}.xml`), path.join(project, 'config.xml'));
         }
 
-        function restoreAppConfig (projectRoot) {
-            shell.cp('-f', path.join(projectRoot, 'configOrig.xml'), path.join(projectRoot, 'config.xml'));
-            shell.rm('-rf', path.join(projectRoot, 'configOrig.xml'));
-        }
-
-        function switchToOnlyNonPlatformScriptsAppConfig (projectRoot) {
-            backupAppConfig(projectRoot);
-            shell.cp('-f', path.join(projectRoot, 'configOnlyNonPlatformScripts_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
-        }
-
-        function switchToOnePlatformScriptsAppConfig (projectRoot) {
-            backupAppConfig(projectRoot);
-            shell.cp('-f', path.join(projectRoot, 'configOnePlatform_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
-        }
-
-        function switchToTwoPlatformsScriptsAppConfig (projectRoot) {
-            backupAppConfig(projectRoot);
-            shell.cp('-f', path.join(projectRoot, 'configTwoPlatforms_' + ext + '.xml'), path.join(projectRoot, 'config.xml'));
-        }
-
-        function backupPluginConfig () {
-            shell.cp('-f', path.join(testPluginInstalledPath, 'plugin.xml'), path.join(testPluginInstalledPath, 'pluginOrig.xml'));
-        }
-
-        function restorePluginConfig () {
-            shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOrig.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
-            shell.rm('-rf', path.join(testPluginInstalledPath, 'pluginOrig.xml'));
-        }
-
-        function switchToOnlyNonPlatformScriptsPluginConfig (projectRoot) {
-            backupPluginConfig();
-            shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOnlyNonPlatformScripts_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
-        }
-
-        function switchToOnePlatformScriptsPluginConfig (projectRoot) {
-            backupPluginConfig();
-            shell.cp('-f', path.join(testPluginInstalledPath, 'pluginOnePlatform_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
-        }
-
-        function switchToTwoPlatformsScriptsPluginConfig (projectRoot) {
-            backupPluginConfig();
-            shell.cp('-f', path.join(testPluginInstalledPath, 'pluginTwoPlatforms_' + ext + '.xml'), path.join(testPluginInstalledPath, 'plugin.xml'));
-        }
-
-        function removeFileIfExists (file) {
-            if (fs.existsSync(file)) {
-                fs.unlinkSync(file);
-            }
+        function usePluginConfig (name) {
+            fs.copySync(path.join(testPluginInstalledPath, `plugin${name}_${ext}.xml`), path.join(testPluginInstalledPath, 'plugin.xml'));
         }
 
         describe('application hooks', function () {
             it('Test 004 : should execute hook scripts serially', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
             });
 
             it('Test 005 : should execute hook scripts serially from .cordova/hooks/hook_type and hooks/hook_type directories', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-
                 // using empty platforms list to test only hooks/ directories
                 hookOptions.cordova.platforms = [];
 
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                });
-            }, 60000);
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
+            });
 
             it('Test 006 : should execute hook scripts serially from config.xml', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+                useAppConfig('OnlyNonPlatformScripts');
 
-                switchToOnlyNonPlatformScriptsAppConfig(projectRoot);
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).then(function () {
-                    restoreAppConfig(projectRoot);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
             });
 
             it('Test 007 : should execute hook scripts serially from config.xml including platform scripts', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+                useAppConfig('OnePlatform');
 
-                switchToOnePlatformScriptsAppConfig(projectRoot);
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).then(function () {
-                    restoreAppConfig(projectRoot);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
             });
 
             it('Test 008 : should filter hook scripts from config.xml by platform', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
-
-                switchToTwoPlatformsScriptsAppConfig(projectRoot);
-
+                useAppConfig('TwoPlatforms');
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    checkHooksOrderFile();
 
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-
-                    var baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-                    var androidPlatformScriptsResults = [14, 15];
-
-                    expect(JSON.stringify(hooksOrderFileContents(hooksOrderFile)) ===
-                        JSON.stringify(baseScriptResults.slice(0).concat(androidPlatformScriptsResults))).toBe(true);
-                }).then(function () {
-                    restoreAppConfig(projectRoot);
+                    const baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                    const androidPlatformScriptsResults = [14, 15];
+                    const expectedResults = baseScriptResults.concat(androidPlatformScriptsResults);
+                    expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
         });
 
         describe('plugin hooks', function () {
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
-                shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+                // Make scripts executable
+                globby.sync('scripts/**', {cwd: testPluginInstalledPath, absolute: true})
+                    .forEach(f => fs.chmodSync(f, 0o755));
 
-                switchToTwoPlatformsScriptsPluginConfig(projectRoot);
-
+                usePluginConfig('TwoPlatforms');
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    checkHooksOrderFile();
 
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-
-                    var baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 21, 22];
-                    var androidPlatformScriptsResults = [26];
-
-                    expect(JSON.stringify(hooksOrderFileContents(hooksOrderFile)) ===
-                        JSON.stringify(baseScriptResults.slice(0).concat(androidPlatformScriptsResults))).toBe(true);
-                }).then(function () {
-                    restorePluginConfig(projectRoot);
+                    const baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 21, 22];
+                    const androidPlatformScriptsResults = [26];
+                    const expectedResults = baseScriptResults.concat(androidPlatformScriptsResults);
+                    expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
 
             it('Test 012 : should run before_plugin_uninstall, before_plugin_install, after_plugin_install hooks for a plugin being installed with correct opts.plugin context', function () {
-                var projectRoot = cordovaUtil.isCordova();
+                const hooksToTest = [
+                    'before_plugin_uninstall',
+                    'before_plugin_install',
+                    'after_plugin_install'
+                ];
+                const toPlainObject = o => JSON.parse(JSON.stringify(o));
 
-                // remove plugin
-                return cordova.plugin('rm', 'com.plugin.withhooks').then(function () {
-                    return cordova.plugin('add', testPluginFixturePath, {'fetch': true}).then(function () {
-                        testPluginInstalledPath = path.join(projectRoot, 'plugins', 'com.plugin.withhooks');
-                        shell.chmod('-R', 'ug+x', path.join(testPluginInstalledPath, 'scripts'));
-
-                        var pluginInfo = new PluginInfo(testPluginInstalledPath);
-
-                        var cordovaVersion = require('../package').version;
-
-                        var androidPluginOpts = {
-                            cordova: {
-                                platforms: [ 'android' ],
-                                plugins: ['com.plugin.withhooks'],
-                                version: cordovaVersion
-                            },
-                            plugin: {
-                                id: 'com.plugin.withhooks',
-                                pluginInfo: pluginInfo,
-                                platform: 'android',
-                                dir: testPluginInstalledPath
-                            },
-                            projectRoot: projectRoot
-                        };
-                        // Delete unique ids to allow comparing PluginInfo
-                        delete androidPluginOpts.plugin.pluginInfo._et;
-
-                        fire.calls.all().forEach(function (call) {
-                            if (call.args[1] && call.args[1].plugin) {
-                                // Delete unique ids to allow comparing PluginInfo
-                                delete call.args[1].plugin.pluginInfo._et;
-                            }
-
-                            if (call.args[0] === 'before_plugin_uninstall' ||
-                                call.args[0] === 'before_plugin_install' ||
-                                call.args[0] === 'after_plugin_install') {
-                                if (call.args[1]) {
-                                    expect(call.args[1].plugin).toBeDefined();
-                                    if (call.args[1].plugin.platform === 'android') {
-                                        expect(JSON.stringify(androidPluginOpts) ===
-                                            JSON.stringify(call.args[1])).toBe(true);
-                                    }
-                                }
-                            }
-                        });
-                    });
+                const expectedContext = toPlainObject({
+                    cordova: {
+                        platforms: [ 'android' ],
+                        plugins: [testPlugin],
+                        version: require('../package').version
+                    },
+                    plugin: {
+                        id: testPlugin,
+                        pluginInfo: new PluginInfo(testPluginInstalledPath),
+                        platform: 'android',
+                        dir: testPluginInstalledPath
+                    },
+                    projectRoot: project
                 });
+                // Delete unique ids to allow comparing PluginInfo
+                delete expectedContext.plugin.pluginInfo._et;
+
+                return Promise.resolve()
+                    .then(_ => cordova.plugin('rm', testPlugin))
+                    .then(_ => cordova.plugin('add', testPluginFixture, {fetch: true}))
+                    .then(_ => {
+                        fire.calls.all()
+                            .filter(call => hooksToTest.includes(call.args[0]))
+                            .forEach(call => {
+                                const context = toPlainObject(call.args[1]);
+
+                                expect(context).toBeDefined();
+                                expect(context.plugin).toBeDefined();
+                                expect(context.plugin.platform).toBe(testPlatform);
+
+                                // Delete unique ids to allow comparing PluginInfo
+                                delete context.plugin.pluginInfo._et;
+
+                                expect(context).toEqual(expectedContext);
+                            });
+                    });
             });
         });
 
         describe('plugin hooks', function () {
-        	beforeEach(function () {
-        		spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
-		            if (cmd.match(/create\b/)) {
-		                // This is a call to the bin/create script, so do the copy ourselves.
-		                shell.cp('-R', path.join(fixtures, 'platforms', 'android'), path.join(project, 'platforms'));
-		            } else if (cmd.match(/update\b/)) {
-		                fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
-		            } else if (cmd.match(/version/)) {
-		                return '3.6.0';
-		            }
-		            return Q();
-		        });
-        	});
+            beforeEach(function () {
+                spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
+                    if (cmd.match(/create\b/)) {
+                        // This is a call to the bin/create script, so do the copy ourselves.
+                        fs.copySync(path.join(fixtures, 'platforms/android'), path.join(project, 'platforms/android'));
+                    } else if (cmd.match(/update\b/)) {
+                        fs.writeFileSync(path.join(project, 'platforms', testPlatform, 'updated'), 'I was updated!', 'utf-8');
+                    } else if (cmd.match(/version/)) {
+                        return '3.6.0';
+                    }
+                    return Q();
+                });
+            });
 
             it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+                usePluginConfig('OnlyNonPlatformScripts');
 
-                switchToOnlyNonPlatformScriptsPluginConfig();
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).then(function () {
-                    restorePluginConfig(projectRoot);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
             });
 
             it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function () {
-                var test_event = 'before_build';
-                var projectRoot = cordovaUtil.isCordova();
-                var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
+                usePluginConfig('OnePlatform');
 
-                switchToOnePlatformScriptsPluginConfig();
-
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
-
-                    expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
-                }).then(function () {
-                    restorePluginConfig(projectRoot);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
             });
 
             it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
-                var test_event = 'before_build';
                 hookOptions.nohooks = ['before_build'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
@@ -448,37 +290,33 @@ describe('HooksRunner', function () {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['before*'];
 
-                return test_events.reduce(function (soFar, test_event) {
-                    return soFar.then(function () {
-                        return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                            if (msg) {
-                                expect(msg).toBe('hook ' + test_event + ' is disabled.');
-                            } else {
-                                expect(test_event).toBe('after_plugin_add');
-                            }
-                        });
+                return Q_chainmap(test_events, e => {
+                    return hooksRunner.fire(e, hookOptions).then(msg => {
+                        if (e === 'after_plugin_add') {
+                            expect(msg).toBeUndefined();
+                        } else {
+                            expect(msg).toBeDefined();
+                            expect(msg).toBe(`hook ${e} is disabled.`);
+                        }
                     });
-                }, Q());
+                });
             });
 
             it('Test 015 : should not execute all hooks when --nohooks option specifies .', function () {
                 var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
                 hookOptions.nohooks = ['.'];
 
-                return test_events.reduce(function (soFar, test_event) {
-                    return soFar.then(function () {
-                        return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                            expect(msg).toBeDefined();
-                            expect(msg).toBe('hook ' + test_event + ' is disabled.');
-                        });
+                return Q_chainmap(test_events, e => {
+                    return hooksRunner.fire(e, hookOptions).then(msg => {
+                        expect(msg).toBeDefined();
+                        expect(msg).toBe(`hook ${e} is disabled.`);
                     });
-                }, Q());
+                });
             });
         });
 
         describe('module-level hooks (event handlers)', function () {
             var handler = jasmine.createSpy().and.returnValue(Q());
-            var test_event = 'before_build';
 
             afterEach(function () {
                 cordova.removeAllListeners(test_event);
@@ -508,103 +346,47 @@ describe('HooksRunner', function () {
             });
 
             it('Test 019 : should execute event listeners serially', function () {
-                var h1_fired = false;
-                var h2_fired;
-                var h1 = function () {
-                    expect(h2_fired).toBe(false);
-                    // Delay 100 ms here to check that h2 is not executed until after
-                    // the promise returned by h1 is resolved.
-                    var q = Q.delay(100).then(function () {
-                        h1_fired = true;
-                    });
-                    return q;
-                };
-                h2_fired = false;
-                var h2 = function () {
-                    h2_fired = true;
-                    expect(h1_fired).toBe(true);
-                    return Q();
-                };
+                const order = [];
+                // Delay 100 ms here to check that h2 is not executed until after
+                // the promise returned by h1 is resolved.
+                const h1 = _ => Q.delay(100).then(_ => order.push(1));
+                const h2 = _ => Q().then(_ => order.push(2));
 
                 cordova.on(test_event, h1);
                 cordova.on(test_event, h2);
 
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(h1_fired).toBe(true);
-                    expect(h2_fired).toBe(true);
-                    cordova.removeAllListeners(test_event);
-                });
-            });
-
-            it('Test 020 : should allow for hook to opt into asynchronous execution and block further hooks from firing using the done callback', function () {
-                var h1_fired = false;
-                var h2_fired;
-                var h1 = function () {
-                    h1_fired = true;
-                    expect(h2_fired).toBe(false);
-                    return Q();
-                };
-                h2_fired = false;
-                var h2 = function () {
-                    h2_fired = true;
-                    expect(h1_fired).toBe(true);
-                    return Q();
-                };
-
-                cordova.on(test_event, h1);
-                cordova.on(test_event, h2);
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(h1_fired).toBe(true);
-                    expect(h2_fired).toBe(true);
-                });
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(_ => expect(order).toEqual([1, 2]));
             });
 
             it('Test 021 : should pass data object that fire calls into async handlers', function () {
-                var async = function (opts) {
+                var asyncHandler = function (opts) {
                     expect(opts).toEqual(hookOptions);
                     return Q();
                 };
-                cordova.on(test_event, async);
+                cordova.on(test_event, asyncHandler);
                 return hooksRunner.fire(test_event, hookOptions);
-            }, 80000);
+            });
 
             it('Test 022 : should pass data object that fire calls into sync handlers', function () {
-                var async = function (opts) {
+                var syncHandler = function (opts) {
                     expect(opts).toEqual(hookOptions);
                 };
-                cordova.on(test_event, async);
+                cordova.on(test_event, syncHandler);
                 return hooksRunner.fire(test_event, hookOptions);
             });
 
             it('Test 023 : should error if any script exits with non-zero code', function () {
                 return hooksRunner.fire('fail', hookOptions).then(function () {
-                    expect('the call').toBe('a failure');
+                    fail('Expected promise to be rejected');
                 }, function (err) {
-                    expect(err).toBeDefined();
+                    expect(err).toEqual(jasmine.any(Error));
                 });
             });
         });
 
-        it('Test 024 :should not error if the hook is unrecognized', function () {
+        it('Test 024 : should not error if the hook is unrecognized', function () {
             return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions);
         });
-    });
-
-    // Cleanup. Must be the last spec. Is there a better place for final cleanup in Jasmine?
-    it('Test 025 : should not fail during cleanup', function () {
-        process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
-        if (ext === 'sh') {
-            shell.rm('-rf', tmpDir);
-        } else { // Windows:
-            // For some mysterious reason, both shell.rm and RMDIR /S /Q won't
-            // delete the dir on Windows, but they do remove the files leaving
-            // only folders. But the dir is removed just fine by
-            // shell.rm('-rf', tmpDir) at the top of this file with the next
-            // invocation of this test. The benefit of RMDIR /S /Q is that it
-            // doesn't print warnings like shell.rmdir() that look like this:
-            // rm: could not remove directory (code ENOTEMPTY): C:\Users\...
-            var cmd = 'RMDIR /S /Q ' + tmpDir;
-            child_process.exec(cmd);
-        }
     });
 });
