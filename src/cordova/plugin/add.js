@@ -129,7 +129,7 @@ function add (projectRoot, hooksRunner, opts) {
                         };
 
                         events.emit('verbose', 'Calling plugman.install on plugin "' + pluginInfo.dir + '" for platform "' + platform);
-                        return plugman.install(platform, platformRoot, path.basename(pluginInfo.dir), pluginPath, options)
+                        return plugman.install(platform, platformRoot, pluginInfo.id, pluginPath, options)
                             .then(function (didPrepare) {
                                 // If platform does not returned anything we'll need
                                 // to trigger a prepare after all plugins installed
