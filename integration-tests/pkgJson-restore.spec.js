@@ -561,9 +561,10 @@ describe('update empty package.json to match config.xml', function () {
         // Expect that config.xml contains only android at this point.
         expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
         expect(configEngArray.length === 1);
-        // Run cordova prepare.
-        prepare();
+
         return emptyPlatformList().then(function () {
+            return prepare({ fetch: true });
+        }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
             engNames = engines.map(function (elem) {
