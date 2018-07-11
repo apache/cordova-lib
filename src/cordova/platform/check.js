@@ -25,17 +25,19 @@ var superspawn = require('cordova-common').superspawn;
 var cordova_util = require('../util');
 var HooksRunner = require('../../hooks/HooksRunner');
 
-module.exports = check;
+// Wrap in a Q promise to avoid breaking any users of this function
+module.exports = (...args) => Q(check(...args));
 
 function check (hooksRunner, projectRoot) {
-    var platformsText = [];
-    var platforms_on_fs = cordova_util.listPlatforms(projectRoot);
-    var scratch = path.join(os.tmpdir(), 'cordova-platform-check-' + Date.now());
-    var listeners = events._events;
-    events._events = {};
-    var result = Q.defer();
-    var updateCordova = Q.defer();
-    superspawn.spawn('npm',
+    return Promise.all([
+        getCordovaUpdateMessage(), getPlatformUpdateMessages(projectRoot)
+    ]).then(messages => {
+        events.emit('results', messages.join('\n'));
+    });
+}
+
+function getCordovaUpdateMessage () {
+    return superspawn.spawn('npm',
         ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'],
         {cwd: path.dirname(require.main.filename)}
     ).then(function (output) {
@@ -47,105 +49,93 @@ function check (hooksRunner, projectRoot) {
             vers = ('' || output).match(/cordova-lib@(\S+)\s+\S+\s+current=(\S+)/);
         }
         if (vers) {
-            updateCordova.resolve([vers[1], vers[2]]);
-        } else {
-            updateCordova.resolve();
+            return [vers[1], vers[2]];
         }
     }).catch(function () {
         /* oh well */
-        updateCordova.resolve();
+    }).then(function (versions) {
+        var message = '';
+        if (versions && semver.gt(versions[0], versions[1])) {
+            message = 'An update of cordova is available: ' + versions[0];
+        }
+        return message;
     });
-    require('../cordova').create(scratch)
+}
+
+function getPlatformUpdateMessages (projectRoot) {
+    var installedPlatforms = cordova_util.listPlatforms(projectRoot);
+    var scratch = path.join(os.tmpdir(), 'cordova-platform-check-' + Date.now());
+    var listeners = events._events;
+    events._events = {};
+    function cleanup () {
+        events._events = listeners;
+        fs.removeSync(scratch);
+    }
+
+    // Acquire the version number of each platform we have installed, and output that too.
+    return require('../cordova').create(scratch)
         .then(function () {
             var h = new HooksRunner(scratch);
-            // Acquire the version number of each platform we have installed, and output that too.
-            Q.all(platforms_on_fs.map(function (p) {
-                var d = Q.defer();
-                var d_avail = Q.defer();
-                var d_cur = Q.defer();
-                require('./index').add(h, scratch, [p], {spawnoutput: {stdio: 'ignore'}})
-                    .then(function () {
-                        // TODO: couldnt we return the promise on the next line, and then
-                        // unindent all the promise handlers one level?
-                        superspawn.maybeSpawn(path.join(scratch, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-                            .then(function (avail) {
-                                if (!avail) {
-                                    /* Platform version script was silent, we can't work with this */
-                                    d_avail.resolve('version-empty');
-                                } else {
-                                    d_avail.resolve(avail);
-                                }
-                            })
-                            .catch(function () {
-                                /* Platform version script failed, we can't work with this */
-                                d_avail.resolve('version-failed');
-                            });
-                    }).catch(function () {
-                        /* If a platform doesn't install, then we can't realistically suggest updating */
-                        d_avail.resolve('install-failed');
-                    });
+            return Promise.all(installedPlatforms.map(p =>
+                getPlatformUpdateMessage(p, h, projectRoot, scratch)
+            ));
+        })
+        .then(platformsText => {
+            var platformResults = '';
 
-                superspawn.maybeSpawn(path.join(projectRoot, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-                    .then(function (v) {
-                        d_cur.resolve(v || '');
-                    }).catch(function () {
-                        d_cur.resolve('broken');
-                    });
+            if (platformsText) {
+                platformResults = platformsText.filter(p => p).sort().join('\n');
+            }
+            if (!platformResults) {
+                platformResults = 'No platforms can be updated at this time.';
+            }
+            return platformResults;
+        })
+        // .finally(cleanup)
+        .then(
+            res => { cleanup(); return res; },
+            err => { cleanup(); throw err; }
+        );
+}
 
-                Q.all([d_avail.promise, d_cur.promise]).then(([avail, v]) => {
-                    var m;
-                    var prefix = p + ' @ ' + (v || 'unknown');
-                    switch (avail) {
-                    case 'install-failed':
-                        m = prefix + '; current did not install, and thus its version cannot be determined';
-                        break;
-                    case 'version-failed':
-                        m = prefix + '; current version script failed, and thus its version cannot be determined';
-                        break;
-                    case 'version-empty':
-                        m = prefix + '; current version script failed to return a version, and thus its version cannot be determined';
-                        break;
-                    default:
-                        if (!v || v === 'broken' || semver.gt(avail, v)) {
-                            m = prefix + ' could be updated to: ' + avail;
-                        }
-                    }
-                    if (m) {
-                        platformsText.push(m);
-                    }
-                    d.resolve(m);
-                }).catch(function () {
-                    d.resolve(p + ' ?');
-                }).done();
+function getPlatformUpdateMessage (platform, h, projectRoot, scratch) {
+    const availableVersionPromise = require('.').add(h, scratch, [platform], {spawnoutput: {stdio: 'ignore'}})
+        .then(function () {
+            return getPlatformVersion(scratch, platform).then(
+                avail => avail || 'version-empty',
+                _ => 'version-failed'
+            );
+        }, function () {
+            /* If a platform doesn't install, then we can't realistically suggest updating */
+            return 'install-failed';
+        });
 
-                return d.promise;
-            })).then(function () {
-                var results = '';
-                var resultQ = Q.defer();
-                events._events = listeners;
-                fs.removeSync(scratch);
-                updateCordova.promise.then(function (versions) {
-                    var message = '';
-                    if (versions && semver.gt(versions[0], versions[1])) {
-                        message = 'An update of cordova is available: ' + versions[0] + '\n';
-                    }
-                    resultQ.promise.then(function (output) {
-                        var results = message + output;
-                        events.emit('results', results);
-                        result.resolve();
-                    });
-                });
-                if (platformsText) {
-                    results = platformsText.filter(function (p) { return !!p; }).sort().join('\n');
+    const currentVersionPromise = getPlatformVersion(projectRoot, platform)
+        .then(
+            v => v || '',
+            _ => 'broken'
+        );
+
+    return Promise.all([availableVersionPromise, currentVersionPromise])
+        .then(([avail, v]) => {
+            var prefix = platform + ' @ ' + (v || 'unknown');
+            switch (avail) {
+            case 'install-failed':
+                return prefix + '; current did not install, and thus its version cannot be determined';
+            case 'version-failed':
+                return prefix + '; current version script failed, and thus its version cannot be determined';
+            case 'version-empty':
+                return prefix + '; current version script failed to return a version, and thus its version cannot be determined';
+            default:
+                if (!v || v === 'broken' || semver.gt(avail, v)) {
+                    return prefix + ' could be updated to: ' + avail;
                 }
-                if (!results) {
-                    results = 'No platforms can be updated at this time.';
-                }
-                resultQ.resolve(results);
-            }).done();
-        }).catch(function () {
-            events._events = listeners;
-            fs.removeSync(scratch);
-        }).done();
-    return result.promise;
+            }
+        })
+        .catch(function () {});
+}
+
+function getPlatformVersion (projectRoot, platform) {
+    const bin = path.join(projectRoot, 'platforms', platform, 'cordova/version');
+    return superspawn.maybeSpawn(bin, [], { chmod: true });
 }
