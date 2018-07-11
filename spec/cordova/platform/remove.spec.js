@@ -106,10 +106,10 @@ describe('cordova/platform/remove', function () {
 
         it('fetch should be called', function () {
             spyOn(promiseutil, 'Q_chainmap').and.returnValue(true);
-            return platform_remove(hooks_mock, projectRoot, ['atari'], {fetch: true})
+            return platform_remove(hooks_mock, projectRoot, ['atari'], {})
                 .then(function () {
                     expect(promiseutil.Q_chainmap).toHaveBeenCalled();
-                    expect(hooks_mock.fire).toHaveBeenCalledWith('after_platform_rm', Object({ fetch: true }));
+                    expect(hooks_mock.fire).toHaveBeenCalledWith('after_platform_rm', {});
                 });
         });
 

@@ -83,16 +83,14 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                 events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
             });
         }).then(function () {
-            // Remove from node_modules if it exists and --fetch was used.
-            if (opts.fetch) {
-                return promiseutil.Q_chainmap(targets, function (target) {
-                    if (target in platforms) {
-                        target = 'cordova-' + target;
-                    }
-                    // Edits package.json.
-                    return npmUninstall(target, projectRoot, opts);
-                });
-            }
+            // Remove from node_modules if it exists
+            return promiseutil.Q_chainmap(targets, function (target) {
+                if (target in platforms) {
+                    target = 'cordova-' + target;
+                }
+                // Edits package.json.
+                return npmUninstall(target, projectRoot, opts);
+            });
         }).then(function () {
             return hooksRunner.fire('after_platform_rm', opts);
         });

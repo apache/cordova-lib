@@ -408,7 +408,6 @@ function installPluginsFromConfigXML (args) {
         var options = {
             cli_variables: pluginEntry.variables,
             searchpath: args.searchpath,
-            fetch: args.fetch || false,
             save: args.save || false
         };
         var plugin = require('./plugin');

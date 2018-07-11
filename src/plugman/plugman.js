@@ -79,7 +79,6 @@ plugman.commands = {
         var opts = {
             subdir: '.',
             cli_variables: cli_variables,
-            fetch: true,
             save: cli_opts.save || false,
             www_dir: cli_opts.www,
             searchpath: cli_opts.searchpath,
@@ -111,7 +110,6 @@ plugman.commands = {
             var opts = {
                 www_dir: cli_opts.www,
                 save: cli_opts.save || false,
-                fetch: cli_opts.fetch || false,
                 projectRoot: cli_opts.project
             };
             p = p.then(function () {

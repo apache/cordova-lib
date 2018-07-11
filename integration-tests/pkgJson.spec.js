@@ -78,7 +78,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', pluginId + '@1.1.2', {'save': true, 'fetch': true})
+        return cordova.plugin('add', pluginId + '@1.1.2', {'save': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -95,7 +95,7 @@ describe('plugin end-to-end', function () {
                 expect(configPlugin).toEqual({ name: 'cordova-plugin-device', spec: '^1.1.2', variables: {} });
             }).then(function () {
                 // And now remove it with --save.
-                return cordova.plugin('rm', pluginId, {'save': true, 'fetch': true});
+                return cordova.plugin('rm', pluginId, {'save': true});
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -112,10 +112,10 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the geolocation plugin with --save.
-        return cordova.plugin('add', 'cordova-plugin-geolocation', {'save': true, 'fetch': true})
+        return cordova.plugin('add', 'cordova-plugin-geolocation', {'save': true})
             .then(function () {
                 // Add a second plugin without save.
-                return cordova.plugin('add', pluginId, {'fetch': true});
+                return cordova.plugin('add', pluginId);
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -134,7 +134,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', pluginId, {'save': true, 'fetch': true})
+        return cordova.plugin('add', pluginId, {'save': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -161,7 +161,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', pluginId, {'fetch': true, 'save': true, 'cli_variables': {'someKey': 'someValue'}})
+        return cordova.plugin('add', pluginId, {'save': true, 'cli_variables': {'someKey': 'someValue'}})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -190,7 +190,7 @@ describe('plugin end-to-end', function () {
         expect(pkgJsonPath).toExist();
 
         // Add the plugin with --save.
-        return cordova.plugin('add', [pluginId, 'cordova-plugin-device-motion'], {'save': true, 'fetch': true})
+        return cordova.plugin('add', [pluginId, 'cordova-plugin-device-motion'], {'save': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -203,7 +203,7 @@ describe('plugin end-to-end', function () {
                 expect(pkgJson.dependencies['cordova-plugin-device-motion']).toBeDefined();
             }).then(function () {
                 // And now remove it with --save.
-                return cordova.plugin('rm', [pluginId, 'cordova-plugin-device-motion'], {'save': true, 'fetch': true});
+                return cordova.plugin('rm', [pluginId, 'cordova-plugin-device-motion'], {'save': true});
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -240,7 +240,7 @@ describe('plugin end-to-end', function () {
         // Config.xml has no platform or plugin or specs.
         expect(engines.length).toEqual(0);
         // Add ios without version.
-        return cordova.platform('add', ['ios'], {'save': true, 'fetch': true})
+        return cordova.platform('add', ['ios'], {'save': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -264,7 +264,7 @@ describe('plugin end-to-end', function () {
                 });
             }).then(function () {
                 // Add geolocation plugin with --save --fetch.
-                return cordova.plugin('add', 'cordova-plugin-geolocation', {'save': true, 'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-geolocation', {'save': true});
             }).then(function () {
                 var iosJson = cordova_util.requireNoCache(iosJsonPath);
                 expect(iosJson.installed_plugins['cordova-plugin-geolocation']).toBeDefined();
@@ -300,7 +300,7 @@ describe('plugin end-to-end', function () {
 
         cordova_util.requireNoCache(pkgJsonPath);
         // Run cordova platform add local path --save --fetch.
-        return cordova.platform('add', platformPath, {'save': true, 'fetch': true})
+        return cordova.platform('add', platformPath, {'save': true})
             .then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -324,7 +324,7 @@ describe('plugin end-to-end', function () {
                 });
             }).then(function () {
                 // Run cordova plugin add local path --save --fetch.
-                return cordova.plugin('add', pluginPath, {'save': true, 'fetch': true});
+                return cordova.plugin('add', pluginPath, {'save': true});
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -399,7 +399,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
+            return cordova.platform('add', [helpers.testPlatform], {'save': true});
         }).then(function () {
             // Check the platform add was successful.
             pkgJson = require(pkgJsonPath);
@@ -424,7 +424,7 @@ describe('platform end-to-end with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
+            return cordova.platform('add', [helpers.testPlatform], {'save': true});
         }).then(function () {
             // Check the platform add was successful.
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -450,7 +450,7 @@ describe('platform end-to-end with --save', function () {
         // Pkg.json "platforms" should be empty and helpers.testPlatform should not exist in pkg.json.
         expect(pkgJson.cordova).toBeUndefined();
         // Add platform without --save.
-        return cordova.platform('add', [helpers.testPlatform], {'fetch': true})
+        return cordova.platform('add', [helpers.testPlatform])
             .then(function () {
                 // Check the platform add was successful, reload, skipping cache.
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -466,10 +466,10 @@ describe('platform end-to-end with --save', function () {
         expect(pkgJsonPath).toExist();
 
         // Add a platform without --save.
-        return cordova.platform('add', platformNotToAdd, {'fetch': true})
+        return cordova.platform('add', platformNotToAdd)
             .then(function () {
                 // And now add another platform with --save.
-                return cordova.platform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
+                return cordova.platform('add', [helpers.testPlatform], {'save': true});
             }).then(function () {
                 // Check the platform add was successful, reload, skipping cache.
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -502,7 +502,7 @@ describe('platform end-to-end with --save', function () {
         // Check there are no platforms yet.
         return emptyPlatformList().then(function () {
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.platform('add', ['android@7.0.0', 'browser@5.0.1'], {'save': true, 'fetch': true});
+            return cordova.platform('add', ['android@7.0.0', 'browser@5.0.1'], {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -529,7 +529,7 @@ describe('platform end-to-end with --save', function () {
         }).then(fullPlatformList) // Platform should still be in platform ls.
             .then(function () {
                 // And now remove it with --save.
-                return cordova.platform('rm', ['android', 'browser'], {'save': true, 'fetch': true});
+                return cordova.platform('rm', ['android', 'browser'], {'save': true});
             }).then(function () {
                 // Delete any previous caches of require(package.json).
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -614,7 +614,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
 
         return emptyPlatformList().then(function () {
             // Add ios with --save and --fetch.
-            return cordova.platform('add', [iosPlatform], {'save': true, 'fetch': true});
+            return cordova.platform('add', [iosPlatform], {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             // ios has been added.
@@ -642,7 +642,7 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
             expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function () {
             // Add splashscreen plugin with --save --fetch.
-            return cordova.plugin('add', 'cordova-plugin-splashscreen', {'save': true, 'fetch': true});
+            return cordova.plugin('add', 'cordova-plugin-splashscreen', {'save': true});
         }).then(function () {
             pluginPkgJsonVersion = cordova_util.requireNoCache(pluginPkgJsonDir);
             // Check that pkg.json version and plugin pkg.json version "satisfy" each other.
@@ -711,7 +711,7 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
         cordova.platform('rm', [iosPlatform], {'save': true});
         return emptyPlatformList().then(function () {
             // Add ios with --save and --fetch.
-            return cordova.platform('add', [iosPlatform], {'save': true, 'fetch': true});
+            return cordova.platform('add', [iosPlatform], {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -734,7 +734,7 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
             });
         }).then(function () {
             // Add splashscreen with --save --fetch.
-            return cordova.plugin('add', 'cordova-plugin-splashscreen', {'save': true, 'fetch': true});
+            return cordova.plugin('add', 'cordova-plugin-splashscreen', {'save': true});
         }).then(function () {
             var cfg3 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
@@ -811,7 +811,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
         expect(engines).toEqual([ { name: 'ios', spec: '~4.2.1' } ]);
         return emptyPlatformList().then(function () {
             // Add ios with --save and --fetch.
-            return cordova.platform('add', ['ios@4.5.4'], {'save': true, 'fetch': true});
+            return cordova.platform('add', ['ios@4.5.4'], {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -833,7 +833,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
             expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function () {
             // Add splashscreen with --save --fetch.
-            return cordova.plugin('add', 'cordova-plugin-splashscreen@4.0.0', {'save': true, 'fetch': true});
+            return cordova.plugin('add', 'cordova-plugin-splashscreen@4.0.0', {'save': true});
         }).then(function () {
             var cfg3 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
@@ -888,7 +888,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var platformPath = path.join(testRunRoot, 'spec', 'cordova/fixtures/platforms/cordova-browser');
 
         // Run cordova platform add local path --save --fetch.
-        return cordova.platform('add', platformPath, {'save': true, 'fetch': true})
+        return cordova.platform('add', platformPath, {'save': true})
             .then(function () {
                 var cfg2 = new ConfigParser(configXmlPath);
                 engines = cfg2.getEngines();
@@ -914,7 +914,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var configPlugins = cfg.getPluginIdList();
         var configPlugin = cfg.getPlugin(configPlugins);
         // Run platform add with local path.
-        return cordova.plugin('add', pluginPath, {'save': true, 'fetch': true})
+        return cordova.plugin('add', pluginPath, {'save': true})
             .then(function () {
                 var cfg2 = new ConfigParser(configXmlPath);
                 // Check config.xml for plugins and spec.

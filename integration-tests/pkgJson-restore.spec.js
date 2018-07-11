@@ -83,7 +83,7 @@ describe('tests platform/spec restore with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add platform with save, fetch
-            return cordovaPlatform('add', androidPlatform, {'save': true, 'fetch': true});
+            return cordovaPlatform('add', androidPlatform, {'save': true});
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Added platform properly to pkg.json
@@ -149,7 +149,7 @@ describe('tests platform/spec restore with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add platform with save and fetch
-            return cordovaPlatform('add', 'https://github.com/apache/cordova-browser', {'save': true, 'fetch': true});
+            return cordovaPlatform('add', 'https://github.com/apache/cordova-browser', {'save': true});
         }).then(function () {
             // Check that platform was added to config.xml successfully.
             var cfg = new ConfigParser(configXmlPath);
@@ -168,7 +168,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
         }).then(function () {
             // Remove platform without --save.
-            return cordovaPlatform('rm', bPlatform, {'fetch': true});
+            return cordovaPlatform('rm', bPlatform);
         }).then(function () {
             // Platform in pkg.json should still be there.
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -176,7 +176,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
         }).then(function () {
             // Run cordova prepare
-            return prepare({'fetch': true});
+            return prepare();
         }).then(function () {
             // Check config.xml for spec modification.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -212,7 +212,7 @@ describe('tests platform/spec restore with --save', function () {
         var configPlugin;
         return emptyPlatformList().then(function () {
             // Add plugin with save and fetch.
-            return cordovaPlugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save': true, 'fetch': true});
+            return cordovaPlugin('add', ['https://github.com/apache/cordova-plugin-splashscreen'], {'save': true});
         }).then(function () {
             // Plugin id and spec were added to config.xml successfully.
             var cfg = new ConfigParser(configXmlPath);
@@ -228,7 +228,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).toExist();
         }).then(function () {
             // Remove plugin without --save.
-            return cordovaPlugin('rm', 'cordova-plugin-splashscreen', {'fetch': true});
+            return cordovaPlugin('rm', 'cordova-plugin-splashscreen');
         }).then(function () {
             // Plugin id and spec are still in config.xml.
             var cfg2 = new ConfigParser(configXmlPath);
@@ -244,10 +244,10 @@ describe('tests platform/spec restore with --save', function () {
             expect(path.join(pluginsFolderPath, 'cordova-plugin-splashscreen')).not.toExist();
         }).then(function () {
             // Add platform (so that prepare can run).
-            return cordovaPlatform('add', 'browser', {'save': true, 'fetch': true});
+            return cordovaPlatform('add', 'browser', {'save': true});
         }).then(function () {
             // Run cordova prepare with fetch.
-            return prepare({'save': true, 'fetch': true});
+            return prepare({'save': true});
         }).then(function () {
             // Config.xml spec is modified.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -320,10 +320,10 @@ describe('tests platform/spec restore with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add 'browser' platform to project without --save
-            return cordovaPlatform('add', secondPlatformAdded, {'fetch': true});
+            return cordovaPlatform('add', secondPlatformAdded);
         }).then(function () {
             // Add helpers.testPlatform to project with --save
-            return cordovaPlatform('add', ['browser'], {'save': true, 'fetch': true});
+            return cordovaPlatform('add', ['browser'], {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json) and (platformsJson)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -345,7 +345,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(pkgJson.cordova.platforms.indexOf('browser')).toBeGreaterThan(-1);
             }).then(function () {
                 // Run cordova prepare
-                return prepare({'fetch': true});
+                return prepare();
             });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
@@ -402,7 +402,7 @@ describe('files should not be modified if their platforms are identical', functi
         // Pkg.json and config.xml contain only android at this point (basePkgJson6).
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare();
         }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -485,7 +485,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
         expect(pkgJson.dependencies[browserPlatform]).toBeUndefined();
         expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
         return emptyPlatformList().then(function () {
-            return prepare({'fetch': true});
+            return prepare();
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Expect 'browser' to be added to pkg.json.
@@ -563,7 +563,7 @@ describe('update empty package.json to match config.xml', function () {
         expect(configEngArray.length === 1);
 
         return emptyPlatformList().then(function () {
-            return prepare({ fetch: true });
+            return prepare();
         }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -643,7 +643,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.3' });
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({ 'fetch': true });
+            return prepare();
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -732,7 +732,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
 
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true, 'save': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -817,7 +817,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true, 'save': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -919,7 +919,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
 
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true, 'save': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1049,7 +1049,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
         return emptyPlatformList().then(function () {
             // Run cordova prepare
-            return prepare({'save': true, 'fetch': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1169,7 +1169,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         return emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true, 'save': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1264,7 +1264,7 @@ describe('platforms and plugins should be restored with config.xml even without 
 
         return emptyPlatformList().then(function () {
             // Run platform add.
-            return cordovaPlatform('add', browserPlatform, {'save': true, 'fetch': true});
+            return cordovaPlatform('add', browserPlatform, {'save': true});
         }).then(function () {
             // Android and browser are in config.xml.
             var cfg3 = new ConfigParser(configXmlPath);
@@ -1288,7 +1288,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             return cordovaPlatform('rm', [browserPlatform]);
         }).then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare();
         }).then(function () {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -1330,7 +1330,7 @@ describe('platforms and plugins should be restored with config.xml even without 
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).not.toExist();
         }).then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare();
         }).then(function () {
             // Plugin should be restored and returned to the installed list.
             expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
@@ -1394,7 +1394,7 @@ describe('tests platform/spec restore with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordovaPlatform('add', 'android', {'save': true, 'fetch': true});
+            return cordovaPlatform('add', 'android', {'save': true});
         }).then(function () {
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             // Check the platform add was successful in package.json.
@@ -1411,7 +1411,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
             }).then(function () {
                 // Run cordova prepare.
-                return prepare({'fetch': true});
+                return prepare();
             });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);
@@ -1429,10 +1429,10 @@ describe('tests platform/spec restore with --save', function () {
 
         return emptyPlatformList().then(function () {
             // Add the testing platform with --save.
-            return cordovaPlatform('add', [helpers.testPlatform], {'save': true, 'fetch': true});
+            return cordovaPlatform('add', [helpers.testPlatform], {'save': true});
         }).then(function () {
             // Add the 'browser' platform with --save
-            return cordovaPlatform('add', secondPlatformAdded, {'save': true, 'fetch': true});
+            return cordovaPlatform('add', secondPlatformAdded, {'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json) and (platforms.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1455,7 +1455,7 @@ describe('tests platform/spec restore with --save', function () {
                 expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
             }).then(function () {
                 // Run cordova prepare.
-                return prepare({'fetch': true});
+                return prepare();
             });
     // Cordova prepare needs extra wait time to complete.
     }, TIMEOUT);

@@ -127,9 +127,9 @@ describe('platform end-to-end', function () {
     });
 
     xit('Test 002 : should install plugins correctly while adding platform', function () {
-        return cordova.plugin('add', path.join(pluginsDir, 'test'), {'fetch': true})
+        return cordova.plugin('add', path.join(pluginsDir, 'test'))
             .then(function () {
-                return cordova.platform('add', [helpers.testPlatform], {'fetch': true});
+                return cordova.platform('add', [helpers.testPlatform]);
             })
             .then(function () {
                 // Check the platform add was successful.
@@ -176,20 +176,20 @@ describe('platform add plugin rm end-to-end', function () {
         return cordova.create('hello')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'browser@latest', {'fetch': true});
+                return cordova.platform('add', 'browser@latest');
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-media', {'fetch': true});
-            })
-            .then(function () {
-                expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-                expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-media');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('rm', 'cordova-plugin-media', {'fetch': true});
+                return cordova.platform('add', 'android');
+            })
+            .then(function () {
+                expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
+                expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+                return cordova.plugin('rm', 'cordova-plugin-media');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
@@ -219,24 +219,24 @@ describe('platform add and remove --fetch', function () {
         return cordova.create('helloFetch')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'browser', {'fetch': true, 'save': true});
+                return cordova.platform('add', 'browser', {'save': true});
             })
             .then(function () {
                 expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
                 expect(path.join(platformsDir, 'browser')).toExist();
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
                 expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
                 expect(path.join(platformsDir, 'android')).toExist();
                 // Tests finish before this command finishes resolving
-                // return cordova.platform('rm', 'ios', {'fetch':true});
+                // return cordova.platform('rm', 'ios');
             })
             .then(function () {
                 // expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
                 // expect(path.join(platformsDir, 'ios')).not.toExist();
                 // Tests finish before this command finishes resolving
-                // return cordova.platform('rm', 'android', {'fetch':true});
+                // return cordova.platform('rm', 'android');
             })
             .then(function () {
                 // expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
@@ -265,17 +265,17 @@ describe('plugin add and rm end-to-end --fetch', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'browser', {'fetch': true});
+                return cordova.platform('add', 'browser');
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-media', {'fetch': true, 'save': true});
+                return cordova.plugin('add', 'cordova-plugin-media', {'save': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
                 expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
@@ -315,10 +315,10 @@ describe('non-core platform add and rm end-to-end --fetch', function () {
             .then(function () {
                 process.chdir(project);
                 // add cordova-android instead of android
-                return cordova.platform('add', 'cordova-android', {'fetch': true});
+                return cordova.platform('add', 'cordova-android');
             }).then(function () {
                 // 3rd party platform from npm
-                return cordova.platform('add', 'cordova-platform-test', {'fetch': true});
+                return cordova.platform('add', 'cordova-platform-test');
             }).then(function () {
                 expect(path.join(project, 'platforms', 'android')).toExist();
                 expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();

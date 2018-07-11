@@ -81,7 +81,6 @@ function add (projectRoot, hooksRunner, opts) {
                     var fetchOptions = {
                         searchpath: searchPath,
                         noregistry: opts.noregistry,
-                        fetch: opts.fetch || false,
                         save: opts.save,
                         nohooks: opts.nohooks,
                         link: opts.link,
@@ -111,7 +110,6 @@ function add (projectRoot, hooksRunner, opts) {
                         var options = {
                             cli_variables: opts.cli_variables || {},
                             browserify: opts.browserify || false,
-                            fetch: opts.fetch || false,
                             save: opts.save,
                             searchpath: searchPath,
                             noregistry: opts.noregistry,
