@@ -138,8 +138,9 @@ describe('cordova/platform/addHelper', function () {
 
         describe('platform spec inference', function () {
             it('should retrieve platform details from directories-specified-as-platforms using getPlatformDetailsFromDir', function () {
-                cordova_util.isDirectory.and.returnValue(true);
                 var directory_to_platform = '/path/to/cordova-atari';
+                cordova_util.isDirectory.and.returnValue(true);
+                fetch_mock.and.returnValue(Promise.resolve(directory_to_platform));
                 return platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], {restoring: true}).then(function () {
                     expect(platform_module.getPlatformDetailsFromDir).toHaveBeenCalledWith(directory_to_platform, null);
                     expect(platform_addHelper.downloadPlatform).not.toHaveBeenCalled();

@@ -43,6 +43,7 @@ describe('cordova/platform/remove', function () {
         platform_remove = rewire('../../../src/cordova/platform/remove');
         platform_remove.__set__({
             HooksRunner: _ => _,
+            npmUninstall: _ => Promise.resolve(''),
             ConfigParser: cfg_parser_mock
         });
 

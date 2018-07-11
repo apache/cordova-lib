@@ -17,7 +17,6 @@
     under the License.
 */
 
-var uninstall = require('../src/plugman/uninstall');
 var install = require('../src/plugman/install');
 var actions = require('cordova-common').ActionStack;
 var PluginInfo = require('cordova-common').PluginInfo;
@@ -30,6 +29,7 @@ var fs = require('fs');
 var path = require('path');
 var shell = require('shelljs');
 var Q = require('q');
+var rewire = require('rewire');
 var spec = path.join(__dirname, '..', 'spec', 'plugman');
 var srcProject = path.join(spec, 'projects', 'android');
 var project = path.join(spec, 'projects', 'android_uninstall.test');
@@ -65,6 +65,13 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '    <content src="index.html" />\n' +
     '    <access origin="*" />\n' +
     '</widget>\n';
+
+var uninstall;
+
+beforeEach(() => {
+    uninstall = rewire('../src/plugman/uninstall');
+    uninstall.__set__('npmUninstall', jasmine.createSpy());
+});
 
 describe('plugman uninstall start', function () {
     beforeEach(function () {
