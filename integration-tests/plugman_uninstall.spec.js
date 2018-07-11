@@ -159,11 +159,8 @@ describe('uninstallPlatform', function () {
                 });
         });
 
-        describe('with dependencies', function () {
-            var emit;
-            beforeEach(function () {
-                emit = spyOn(events, 'emit');
-            });
+        it('Test 014 : should uninstall dependent plugins', function () {
+            var emit = spyOn(events, 'emit');
             return uninstall.uninstallPlatform('android', project, 'A')
                 .then(function (result) {
                     expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
