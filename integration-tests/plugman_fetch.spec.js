@@ -83,7 +83,7 @@ describe('fetch', function () {
         });
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
-            return fetch(test_plugin, temp, { fetch: true }).then(function () {
+            return fetch(test_plugin, temp).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
             });
         });
@@ -93,13 +93,13 @@ describe('fetch', function () {
             });
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
-            return fetch(test_plugin, temp, { fetch: true, link: true }).then(function () {
+            return fetch(test_plugin, temp, { link: true }).then(function () {
                 expect(sym).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), 'dir');
             });
         });
 
         it('Test 004 : should fail when the expected ID doesn\'t match', function () {
-            return fetch(test_plugin, temp, { expected_id: 'wrongID', fetch: true })
+            return fetch(test_plugin, temp, { expected_id: 'wrongID' })
                 .then(function () {
                     expect('this call').toBe('fail');
                 }, function (err) {
@@ -108,12 +108,12 @@ describe('fetch', function () {
         });
 
         it('Test 005 : should succeed when the expected ID is correct', function () {
-            return fetch(test_plugin, temp, { expected_id: test_plugin_id, fetch: true }).then(function () {
+            return fetch(test_plugin, temp, { expected_id: test_plugin_id }).then(function () {
                 expect().nothing();
             });
         });
         it('Test 006 : should fail when the expected ID with version specified doesn\'t match', function () {
-            return fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion', fetch: true })
+            return fetch(test_plugin, temp, { expected_id: test_plugin_id + '@wrongVersion' })
                 .then(function () {
                     expect('this call').toBe('fail');
                 }, function (err) {
@@ -122,19 +122,19 @@ describe('fetch', function () {
         });
         it('Test 007 : should succeed when the plugin version specified is correct', function () {
             var exp_id = test_plugin_id + '@' + test_plugin_version;
-            return fetch(test_plugin, temp, { expected_id: exp_id, fetch: true }).then(function () {
+            return fetch(test_plugin, temp, { expected_id: exp_id }).then(function () {
                 expect().nothing();
             });
         });
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
-            return fetch(test_pkgjson_plugin, temp, {fetch: true}).then(function () {
+            return fetch(test_pkgjson_plugin, temp).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_pkgjson_plugin, '*'), path.join(temp, 'pkgjson-test-plugin'));
                 expect(fetchCalls).toBe(1);
             });
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {
             test_plugin = path.join(plugins_dir, 'org.test.androidonly');
-            return fetch(test_plugin, temp, {fetch: true})
+            return fetch(test_plugin, temp)
                 .then(function () {
                     fail();
                 }, function (err) {
@@ -155,7 +155,7 @@ describe('fetch', function () {
         if (/^win/.test(process.platform)) {
             it('Test 020 : should copy all but the /demo/ folder', function () {
                 var cp = spyOn(shell, 'cp');
-                return fetch(srcDir, appDir, {fetch: true}).then(function () {
+                return fetch(srcDir, appDir).then(function () {
                     expect(cp).toHaveBeenCalledWith('-R', path.join(srcDir, 'asset.txt'), path.join(appDir, 'test-recursive'));
                     expect(cp).not.toHaveBeenCalledWith('-R', srcDir, path.join(appDir, 'test-recursive'));
                 });
@@ -165,7 +165,7 @@ describe('fetch', function () {
 
                 var cp = spyOn(shell, 'cp').and.callFake(function () {});
 
-                return fetch(srcDir, appDir, {fetch: true}).then(function () {
+                return fetch(srcDir, appDir).then(function () {
                     expect(cp).not.toHaveBeenCalled();
                 });
             });

@@ -63,22 +63,10 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         if (result) {
             if (result[1]) { options.git_ref = result[1]; }
             if (result[2]) { options.subdir = result[2]; }
-            // if --fetch was used, throw error for subdirectories
 
+            // throw error for subdirectories
             if (options.subdir && options.subdir !== '.') {
-                events.emit('warn', 'support for subdirectories is deprecated and will be removed in Cordova@7');
-                if (options.fetch) {
-                    return Q.reject(new CordovaError('--fetch does not support subdirectories'));
-                }
-            }
-
-            // Recurse and exit with the new options and truncated URL.
-            var new_dir = plugin_src.substring(0, plugin_src.indexOf('#'));
-
-            // skip the return if user asked for --fetch
-            // cordova-fetch doesn't need to strip out git-ref
-            if (!options.fetch) {
-                return fetchPlugin(new_dir, plugins_dir, options);
+                return Q.reject(new CordovaError('Cordova does not support subdirectories'));
             }
         }
     }
@@ -87,31 +75,29 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         return Q.when().then(function () {
             // check if it is a local path
             if (fs.existsSync(plugin_dir)) {
-                if (options.fetch) {
-                    if (!fs.existsSync(path.join(plugin_dir, 'package.json'))) {
-                        return Q.reject(new CordovaError('Invalid Plugin! ' + plugin_dir + ' needs a valid package.json'));
-                    }
-
-                    projectRoot = path.join(plugins_dir, '..');
-                    // Plugman projects need to go up two directories to reach project root.
-                    // Plugman projects have an options.projectRoot variable
-                    if (options.projectRoot) {
-                        projectRoot = options.projectRoot;
-                    }
-                    return fetch(path.resolve(plugin_dir), projectRoot, options)
-                        .then(function (directory) {
-                            return {
-                                pinfo: pluginInfoProvider.get(directory),
-                                fetchJsonSource: {
-                                    type: 'local',
-                                    path: directory
-                                }
-                            };
-                        }).fail(function (error) {
-                            // something went wrong with cordova-fetch
-                            return Q.reject(new CordovaError(error.message));
-                        });
+                if (!fs.existsSync(path.join(plugin_dir, 'package.json'))) {
+                    return Q.reject(new CordovaError('Invalid Plugin! ' + plugin_dir + ' needs a valid package.json'));
                 }
+
+                projectRoot = path.join(plugins_dir, '..');
+                // Plugman projects need to go up two directories to reach project root.
+                // Plugman projects have an options.projectRoot variable
+                if (options.projectRoot) {
+                    projectRoot = options.projectRoot;
+                }
+                return fetch(path.resolve(plugin_dir), projectRoot, options)
+                    .then(function (directory) {
+                        return {
+                            pinfo: pluginInfoProvider.get(directory),
+                            fetchJsonSource: {
+                                type: 'local',
+                                path: directory
+                            }
+                        };
+                    }).fail(function (error) {
+                        // something went wrong with cordova-fetch
+                        return Q.reject(new CordovaError(error.message));
+                    });
             }
             // If there is no such local path or it's a git URL, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
@@ -142,26 +128,24 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                 P = Q(plugin_dir);
                 skipCopyingPlugin = true;
             } else {
-                // use cordova-fetch if --fetch was passed in
-                if (options.fetch) {
-                    projectRoot = path.join(plugins_dir, '..');
-                    // Plugman projects need to go up two directories to reach project root.
-                    // Plugman projects have an options.projectRoot variable
-                    if (options.projectRoot) {
-                        projectRoot = options.projectRoot;
-                    }
-
-                    if (process.platform === 'win32' && parsedSpec.version) {
-                        var windowsShellSpecialCharacters = ['&', '\\', '<', '>', '^', '|'];
-                        specContainsSpecialCharacters = windowsShellSpecialCharacters.some(function (character) {
-                            return parsedSpec.version.indexOf(character);
-                        });
-                    }
-
-                    var fetchPluginSrc = specContainsSpecialCharacters ?
-                        parsedSpec.package + '@"' + parsedSpec.version + '"' : plugin_src;
-                    P = fetch(fetchPluginSrc, projectRoot, options);
+                // use cordova-fetch
+                projectRoot = path.join(plugins_dir, '..');
+                // Plugman projects need to go up two directories to reach project root.
+                // Plugman projects have an options.projectRoot variable
+                if (options.projectRoot) {
+                    projectRoot = options.projectRoot;
                 }
+
+                if (process.platform === 'win32' && parsedSpec.version) {
+                    var windowsShellSpecialCharacters = ['&', '\\', '<', '>', '^', '|'];
+                    specContainsSpecialCharacters = windowsShellSpecialCharacters.some(function (character) {
+                        return parsedSpec.version.indexOf(character);
+                    });
+                }
+
+                var fetchPluginSrc = specContainsSpecialCharacters ?
+                    parsedSpec.package + '@"' + parsedSpec.version + '"' : plugin_src;
+                P = fetch(fetchPluginSrc, projectRoot, options);
                 skipCopyingPlugin = false;
             }
             return P

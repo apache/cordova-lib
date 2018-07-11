@@ -114,8 +114,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     }
 
     /*
-     * Deletes plugin from plugins directory and
-     * node_modules directory if --fetch was supplied.
+     * Deletes plugin from plugins directory and node_modules directory.
      *
      * @param {String} id   the id of the plugin being removed
      *
@@ -131,13 +130,8 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
         shell.rm('-rf', plugin_dir);
         events.emit('verbose', 'Deleted "' + id + '"');
 
-        if (options.fetch) {
-            // remove plugin from node_modules directory
-            return npmUninstall(id, options.projectRoot, options);
-        }
-
-        return Q();
-
+        // remove plugin from node_modules directory
+        return npmUninstall(id, options.projectRoot, options);
     };
 
     // We've now lost the metadata for the plugins that have been uninstalled, so we can't use that info.

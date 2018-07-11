@@ -228,7 +228,7 @@ describe('HooksRunner', function () {
 
                 return Promise.resolve()
                     .then(_ => cordova.plugin('rm', testPlugin))
-                    .then(_ => cordova.plugin('add', testPluginFixture, {fetch: true}))
+                    .then(_ => cordova.plugin('add', testPluginFixture))
                     .then(_ => {
                         fire.calls.all()
                             .filter(call => hooksToTest.includes(call.args[0]))

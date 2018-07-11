@@ -51,12 +51,12 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             }).then(function () {
-                return cordova.plugin('add', 'cordova-plugin-file', {'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-file');
             }).then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test1']);
             }).fail(function (err) {
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
             });
@@ -66,14 +66,14 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-file', {'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-file');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], {'fetch': true, 'force': true});
+                return cordova.plugin('add', plugins['Test1'], {'force': true});
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
@@ -85,14 +85,14 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
-                return cordova.plugin('add', 'cordova-plugin-file@2.1.0', {'fetch': true});
+                return cordova.plugin('add', 'cordova-plugin-file@2.1.0');
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test1']);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
@@ -105,18 +105,18 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
-                return cordova.plugin('add', plugins['Test1'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test1']);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(pluginsDir, 'Test1')).toExist();
-                return cordova.plugin('add', plugins['Test2'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test2']);
             })
             .then(function () {
-                return cordova.plugin('add', plugins['Test3'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test3']);
             })
             .fail(function (err) {
                 expect(path.join(pluginsDir, 'Test2')).toExist();
@@ -131,13 +131,13 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create('hello3')
             .then(function () {
                 process.chdir(project);
-                return cordova.platform('add', 'android', {'fetch': true});
+                return cordova.platform('add', 'android');
             })
             .then(function () {
-                return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file', {'fetch': true});
+                return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file');
             })
             .then(function () {
-                return cordova.plugin('add', plugins['Test4'], {'fetch': true});
+                return cordova.plugin('add', plugins['Test4']);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();

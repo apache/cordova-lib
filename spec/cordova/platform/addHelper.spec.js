@@ -138,8 +138,9 @@ describe('cordova/platform/addHelper', function () {
 
         describe('platform spec inference', function () {
             it('should retrieve platform details from directories-specified-as-platforms using getPlatformDetailsFromDir', function () {
-                cordova_util.isDirectory.and.returnValue(true);
                 var directory_to_platform = '/path/to/cordova-atari';
+                cordova_util.isDirectory.and.returnValue(true);
+                fetch_mock.and.returnValue(Promise.resolve(directory_to_platform));
                 return platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], {restoring: true}).then(function () {
                     expect(platform_module.getPlatformDetailsFromDir).toHaveBeenCalledWith(directory_to_platform, null);
                     expect(platform_addHelper.downloadPlatform).not.toHaveBeenCalled();
@@ -182,7 +183,7 @@ describe('cordova/platform/addHelper', function () {
                 cordova_util.isDirectory.and.returnValue(projectRoot);
                 cordova_util.fixRelativePath.and.returnValue(projectRoot);
                 spyOn(path, 'resolve').and.callThrough();
-                return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, fetch: true, restoring: true}).then(function () {
+                return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function () {
                     expect(fetch_mock).toHaveBeenCalled();
                 });
             });
@@ -191,7 +192,7 @@ describe('cordova/platform/addHelper', function () {
         describe('platform api invocation', function () {
 
             it('should invoke the createPlatform platform API method when adding a platform, providing destination location, parsed config file and platform detail options as arguments', function () {
-                return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, fetch: true, restoring: true}).then(function (result) {
+                return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], {save: true, restoring: true}).then(function (result) {
                     expect(platform_api_mock.createPlatform).toHaveBeenCalled();
                 });
             });
@@ -210,14 +211,14 @@ describe('cordova/platform/addHelper', function () {
             describe('when the restoring option is not provided', function () {
                 // test is commented out b/c preparePlatforms can't be spied on as it is dynamically required due to circular references.
                 xit('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
-                    return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true}).then(function (result) {
+                    return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true}).then(function (result) {
                         expect(prepare.preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', Object({ searchpath: undefined }));
                     });
                 });
             });
 
             it('should invoke the installPluginsForNewPlatforms method in the platform-add case', function () {
-                return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, fetch: true, restoring: true}).then(function (result) {
+                return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], {save: true, restoring: true}).then(function (result) {
                     expect(platform_addHelper.installPluginsForNewPlatform).toHaveBeenCalled();
                 });
             });
@@ -286,7 +287,7 @@ describe('cordova/platform/addHelper', function () {
         describe('errors', function () {
             it('should reject the promise should fetch fail', function () {
                 fetch_mock.and.returnValue(Q.reject('fetch has failed, rejecting promise'));
-                return platform_addHelper.downloadPlatform(projectRoot, 'android', '67', {fetch: true}).then(function () {
+                return platform_addHelper.downloadPlatform(projectRoot, 'android', '67').then(function () {
                     fail('success handler unexpectedly invoked');
                 }, function (e) {
                     expect(e.message).toContain('fetch has failed, rejecting promise');
@@ -296,8 +297,8 @@ describe('cordova/platform/addHelper', function () {
         describe('happy path', function () {
             it('should invoke cordova-fetch if fetch was provided as an option', function () {
                 fetch_mock.and.returnValue(true);
-                return platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0', {fetch: true}).then(function () {
-                    expect(fetch_mock).toHaveBeenCalledWith('cordova-android@6.0.0', projectRoot, Object({ fetch: true }));
+                return platform_addHelper.downloadPlatform(projectRoot, 'android', '6.0.0').then(function () {
+                    expect(fetch_mock).toHaveBeenCalledWith('cordova-android@6.0.0', projectRoot, undefined);
                 });
             });
             it('should pass along a libDir argument to getPlatformDetailsFromDir on a successful platform download', function () {
@@ -324,7 +325,7 @@ describe('cordova/platform/addHelper', function () {
         it('should invoke plugman.install, giving correct platform, plugin and other arguments', function () {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-whitelist']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ });
-            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
+            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true}).then(function () {
                 expect(plugman.install).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', 'Installing plugin "cordova-plugin-whitelist" following successful platform add of browser');
             });
@@ -333,7 +334,7 @@ describe('cordova/platform/addHelper', function () {
         it('should include any plugin variables as options when invoking plugman install', function () {
             spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-camera']);
             fetch_metadata.get_fetch_metadata.and.returnValue({ source: {}, variables: {} });
-            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true, fetch: true}).then(function () {
+            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, {save: true}).then(function () {
                 expect(plugman.install).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', 'Found variables for "cordova-plugin-camera". Processing as cli_variables.');
             });

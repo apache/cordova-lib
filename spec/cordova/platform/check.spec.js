@@ -21,6 +21,7 @@ var events = require('cordova-common').events;
 var superspawn = require('cordova-common').superspawn;
 var rewire = require('rewire');
 var platform_check = rewire('../../../src/cordova/platform/check');
+var platform = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
 
 describe('cordova/platform/check', function () {
@@ -32,9 +33,11 @@ describe('cordova/platform/check', function () {
         spyOn(superspawn, 'spawn').and.callThrough();
         spyOn(shell, 'rm');
         spyOn(cordova_util, 'listPlatforms');
+        spyOn(platform, 'add').and.returnValue(Q());
     });
 
     it('If no results, platforms cannot be updated', function () {
+        platform.add.and.returnValue(Q.reject());
         cordova_util.listPlatforms.and.callThrough();
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
@@ -44,6 +47,7 @@ describe('cordova/platform/check', function () {
     });
 
     it('Should warn if install failed', function () {
+        platform.add.and.returnValue(Q.reject());
         cordova_util.listPlatforms.and.returnValue(['ios']);
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current did not install/));
@@ -52,7 +56,6 @@ describe('cordova/platform/check', function () {
 
     it('Should warn if version-empty', function () {
         cordova_util.listPlatforms.and.returnValue(['ios']);
-        spyOn(require('../../../src/cordova/platform/index'), 'add').and.returnValue(Q());
         superspawn.spawn.and.returnValue(Q());
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current version script failed to return a version/));
@@ -61,7 +64,6 @@ describe('cordova/platform/check', function () {
 
     it('Should warn if version-failed', function () {
         cordova_util.listPlatforms.and.returnValue(['ios']);
-        spyOn(require('../../../src/cordova/platform/index'), 'add').and.returnValue(Q());
         spyOn(superspawn, 'maybeSpawn').and.returnValue(Q('version-failed'));
         spyOn(Q.defer(), 'resolve').and.returnValue('version-failed');
         return platform_check(hooks_mock, projectRoot).then(function () {

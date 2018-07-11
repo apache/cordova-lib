@@ -132,7 +132,7 @@ describe('plugin end-to-end', function () {
     });
 
     it('Test 001 : should successfully add and remove a plugin with no options', function () {
-        return addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {'fetch': true})
+        return addPlugin(path.join(pluginsDir, 'fake1'), pluginId)
             .then(function () {
                 expect(install.runInstall).toHaveBeenCalled();
                 expect(platforms.getPlatformApi.calls.count()).toEqual(1);
@@ -155,7 +155,7 @@ describe('plugin end-to-end', function () {
         shell.cd(subdir);
 
         // Add plugin using relative path
-        return addPlugin(path.relative(subdir, plugindir), pluginId, {'fetch': true})
+        return addPlugin(path.relative(subdir, plugindir), pluginId)
             .then(function () {
                 return removePlugin(pluginId);
             });
@@ -164,7 +164,7 @@ describe('plugin end-to-end', function () {
     it('Test 005 : should respect preference default values', function () {
         var plugin_util = require('../src/cordova/plugin/util');
         spyOn(plugin_util, 'mergeVariables').and.returnValue({ REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' });
-        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, { cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' }, 'fetch': true })
+        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, { cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' } })
             .then(function () {
                 var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
                 var installed_plugins = require(platformJsonPath).installed_plugins;
@@ -179,7 +179,7 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 006 : should successfully add a plugin when specifying CLI variables', function () {
-        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }, 'fetch': true});
+        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }});
     }, 30000);
 
     it('Test 007 : should not check npm info when using the searchpath flag', function () {
@@ -208,7 +208,7 @@ describe('plugin end-to-end', function () {
 
     it('Test 009 : should not check npm info when fetching from a Git repository', function () {
         spyOn(plugin_util, 'info');
-        return addPlugin(testGitPluginRepository, testGitPluginId, {'fetch': true})
+        return addPlugin(testGitPluginRepository, testGitPluginId)
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
             });
@@ -218,7 +218,7 @@ describe('plugin end-to-end', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(plugin_util, 'info').and.callThrough();
-        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {'fetch': true})
+        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin)
             .then(function () {
                 expect(plugin_util.info).toHaveBeenCalled();
 

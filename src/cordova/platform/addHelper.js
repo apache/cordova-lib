@@ -127,14 +127,10 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     if (spec) {
                         var maybeDir = cordova_util.fixRelativePath(spec);
                         if (cordova_util.isDirectory(maybeDir)) {
-                            if (opts.fetch) {
-                                return fetch(path.resolve(maybeDir), projectRoot, opts)
-                                    .then(function (directory) {
-                                        return require('./index').getPlatformDetailsFromDir(directory, platform);
-                                    });
-                            } else {
-                                return require('./index').getPlatformDetailsFromDir(maybeDir, platform);
-                            }
+                            return fetch(path.resolve(maybeDir), projectRoot, opts)
+                                .then(function (directory) {
+                                    return require('./index').getPlatformDetailsFromDir(directory, platform);
+                                });
                         }
                     }
                     return module.exports.downloadPlatform(projectRoot, platform, spec, opts);
@@ -207,7 +203,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                                 var prepOpts = {
                                     platforms: [platform],
                                     searchpath: opts.searchpath,
-                                    fetch: opts.fetch || false,
                                     save: opts.save || false
                                 };
                                 // delete require.cache[require.resolve('../cordova')]
@@ -291,19 +286,17 @@ function getVersionFromConfigFile (platform, cfg) {
 function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Q().then(function () {
-        if (opts.fetch) {
-            // append cordova to platform
-            if (platform in platforms) {
-                target = 'cordova-' + target;
-            }
-
-            // gitURLs don't supply a platform, it equals null
-            if (!platform) {
-                target = version;
-            }
-            events.emit('log', 'Using cordova-fetch for ' + target);
-            return fetch(target, projectRoot, opts);
+        // append cordova to platform
+        if (platform in platforms) {
+            target = 'cordova-' + target;
         }
+
+        // gitURLs don't supply a platform, it equals null
+        if (!platform) {
+            target = version;
+        }
+        events.emit('log', 'Using cordova-fetch for ' + target);
+        return fetch(target, projectRoot, opts);
     }).fail(function (error) {
         var message = 'Failed to fetch platform ' + target +
             '\nProbably this is either a connection problem, or platform spec is incorrect.' +
@@ -355,7 +348,6 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
                 usePlatformWww: true,
                 is_top_level: pluginMetadata.is_top_level,
                 force: opts.force,
-                fetch: opts.fetch || false,
                 save: opts.save || false
             };
 
