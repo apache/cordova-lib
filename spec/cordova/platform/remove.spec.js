@@ -20,7 +20,6 @@ var fs = require('fs');
 var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
-var platform_remove = rewire('../../../src/cordova/platform/remove');
 var cordova_util = require('../../../src/cordova/util');
 var promiseutil = require('../../../src/util/promise-util');
 var fail;
@@ -28,31 +27,32 @@ var fail;
 describe('cordova/platform/remove', function () {
     var projectRoot = '/some/path';
     var cfg_parser_mock = function () {};
-    var cfg_parser_revert_mock;
     var hooks_mock;
     var package_json_mock;
     package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
 
-    var hooksRunnerRevert;
+    var platform_remove;
 
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
         hooks_mock.fire.and.returnValue(Q());
-        hooksRunnerRevert = platform_remove.__set__('HooksRunner', function () {});
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine']);
-        cfg_parser_revert_mock = platform_remove.__set__('ConfigParser', cfg_parser_mock);
+
+        platform_remove = rewire('../../../src/cordova/platform/remove');
+        platform_remove.__set__({
+            HooksRunner: _ => _,
+            ConfigParser: cfg_parser_mock
+        });
+
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'writeFileSync');
         spyOn(cordova_util, 'removePlatformPluginsJson');
         spyOn(events, 'emit');
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
     });
-    afterEach(function () {
-        cfg_parser_revert_mock();
-        hooksRunnerRevert();
-    });
+
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function () {
             return platform_remove('remove', hooks_mock).then(function () {
