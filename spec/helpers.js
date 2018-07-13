@@ -146,25 +146,15 @@ module.exports.writeConfigContent = function (appPath, configContent) {
     fs.writeFileSync(configFile, configContent, 'utf-8');
 };
 
-// Add the toExist matcher.
-beforeEach(function () {
-    jasmine.addMatchers({
-        'toExist': function () {
-            return {
-                compare: function (actual, expected) {
-                    var result = {};
+const customMatchers = {
+    toExist: () => ({ compare (file) {
+        const pass = fs.existsSync(file);
+        const expectation = (pass ? 'not ' : '') + 'to exist';
+        return {
+            pass, message: `expected ${file} ${expectation}`
+        };
+    }})
+};
 
-                    result.pass = fs.existsSync(actual);
-
-                    if (result.pass) {
-                        result.message = 'expected ' + actual + ' to not exist';
-                    } else {
-                        result.message = 'expected ' + actual + ' to exist';
-                    }
-
-                    return result;
-                }
-            };
-        }
-    });
-});
+// Add our custom matchers
+beforeEach(() => jasmine.addMatchers(customMatchers));
