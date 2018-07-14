@@ -183,6 +183,9 @@ describe('restore', function () {
                 expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
             }).then(function () {
                 return prepare();
+            }).then(function () {
+                // Check that the platform was properly restored
+                expect(installedPlatforms()).toEqual([testPlatform]);
             });
         });
 
@@ -192,9 +195,9 @@ describe('restore', function () {
         *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
         */
         it('Test#002 : should NOT restore platform that was removed with --save', function () {
-            const secondPlatformAdded = 'browser';
+            const savedPlatform = 'browser';
             const testPlatforms = Object.freeze([
-                testPlatform, secondPlatformAdded
+                testPlatform, savedPlatform
             ]);
 
             expect(installedPlatforms()).toEqual([]);
@@ -212,12 +215,15 @@ describe('restore', function () {
                 return cordovaPlatform('rm', testPlatform, {save: true});
             }).then(function () {
                 // Remove secondPlatformAdded without --save.
-                return cordovaPlatform('rm', secondPlatformAdded);
+                return cordovaPlatform('rm', savedPlatform);
             }).then(function () {
                 // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
-                expect(getPkgJson('cordova.platforms')).toEqual([secondPlatformAdded]);
+                expect(getPkgJson('cordova.platforms')).toEqual([savedPlatform]);
             }).then(function () {
                 return prepare();
+            }).then(function () {
+                // Check that the platform was properly restored
+                expect(installedPlatforms()).toEqual([savedPlatform]);
             });
         });
 
@@ -357,6 +363,9 @@ describe('restore', function () {
                 expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM_2]);
             }).then(function () {
                 return prepare();
+            }).then(function () {
+                // Check that the platform was properly restored
+                expect(installedPlatforms()).toEqual([PLATFORM_2]);
             });
         });
     });
@@ -371,13 +380,14 @@ describe('restore', function () {
             setupProject('basePkgJson6');
             expect(installedPlatforms()).toEqual([]);
 
-            // Pkg.json and config.xml contain only android at this point (basePkgJson6).
-            return Promise.resolve().then(function () {
-                return prepare();
-            }).then(function () {
-                // Expect pkg.json and config.xml to both include only android.
-                expect(getCfgEngineNames()).toEqual(['android']);
-                expect(getPkgJson('cordova.platforms')).toEqual(['android']);
+            const getModTimes = _ => ({
+                cfg: fs.statSync(configXmlPath).mtime,
+                pkg: fs.statSync(pkgJsonPath).mtime
+            });
+            const modTimes = getModTimes();
+
+            return prepare().then(function () {
+                expect(getModTimes()).toEqual(modTimes);
             });
         });
 
@@ -471,22 +481,24 @@ describe('restore', function () {
             setupProject('basePkgJson13');
 
             const PLUGIN_ID = 'cordova-plugin-device';
-            var PLATFORM_1 = 'android';
-            var PLATFORM_2 = 'windows';
+            const PLATFORM_1 = 'android';
 
             { // Block is to limit variable scope
                 const cfg = getCfg();
 
                 expect(pkgJsonPath).not.toExist();
+                expect(installedPlatforms()).toEqual([]);
                 expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
                 expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-                expect(installedPlatforms()).toEqual([]);
             }
 
-            return cordovaPlatform('add', PLATFORM_2, {save: true}).then(function () {
+            return prepare().then(function () {
                 const cfg = getCfg();
+                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
+                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
 
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
+                expect(installedPlatforms()).toEqual([PLATFORM_1]);
+                expect(pluginPath(PLUGIN_ID)).toExist();
 
                 // Package.json should be auto-created using values from config.xml
                 expect(getPkgJson()).toEqual(jasmine.objectContaining({
@@ -494,29 +506,6 @@ describe('restore', function () {
                     version: cfg.version(),
                     displayName: cfg.name()
                 }));
-            }).then(function () {
-                // TODO the remaining operations should be already covered by existing tests
-                // Remove android without --save.
-                return cordovaPlatform('rm', PLATFORM_2);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                const cfg = getCfg();
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
-                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-                expect(pluginPath(PLUGIN_ID)).toExist();
-            }).then(function () {
-                // Remove plugin without save.
-                return cordovaPlugin('rm', PLUGIN_ID);
-            }).then(function () {
-                expect(getCfg().getPluginIdList()).toEqual([PLUGIN_ID]);
-                // Plugin should be removed from the installed list.
-                expect(pluginPath(PLUGIN_ID)).not.toExist();
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                // Plugin should be restored and returned to the installed list.
-                expect(pluginPath(PLUGIN_ID)).toExist();
             });
         });
     });
