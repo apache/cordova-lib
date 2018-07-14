@@ -367,7 +367,7 @@ describe('restore', function () {
         *   When both files contain the same platforms and cordova prepare is run,
         *   neither file is modified.
         */
-        it('Test#004 : if pkg.json and config.xml have the same platforms, do not modify either file', function () {
+        it('Test#004 : should not modify either file if pkg.json and config.xml have the same platforms', function () {
             setupProject('basePkgJson6');
             expect(installedPlatforms()).toEqual([]);
 
@@ -387,7 +387,7 @@ describe('restore', function () {
         *   is updated with the correct spec/dependencies when restored. Checks that specs are
         *   added properly, too.
         */
-        it('Test#005 : if config.xml has android & browser platforms and pkg.json has android, update pkg.json to also include browser with spec', function () {
+        it('Test#005 : should update pkg.json to include platforms from config.xml', function () {
             setupProject('basePkgJson5');
 
             const PLATFORM_1 = 'android';
@@ -421,7 +421,7 @@ describe('restore', function () {
          *   If it does not and config.xml has a platform(s) installed already, run cordova prepare
          *   and it will add a cordova key and the platform(s) from config.xml to package.json.
          */
-        it('Test#006 : if pkg.json exists without cordova key, create one with same platforms in config.xml ', function () {
+        it('Test#006 : should update a package.json without cordova key to include platforms from config.xml', function () {
             setupProject('basePkgJson3');
 
             expect(installedPlatforms()).toEqual([]);
@@ -442,7 +442,7 @@ describe('restore', function () {
         *   and config.xml is updated to include 'browser'. Also, if there is a specified spec in pkg.json,
         *   it should be added to config.xml during restore.
         */
-        it('Test#007 : if pkgJson has android & browser platforms and config.xml has android, update config to also include browser and spec', function () {
+        it('Test#007 : should update config.xml to include platforms from pkg.json', function () {
             setupProject('basePkgJson4');
 
             expect(installedPlatforms()).toEqual([]);
@@ -467,7 +467,7 @@ describe('restore', function () {
         /** Test#016 will check that cordova prepare will still restore the correct
         *   platforms and plugins even without package.json file.
         */
-        it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function () {
+        it('Test#016 : should restore platforms & plugins and create a missing pkg.json', function () {
             setupProject('basePkgJson13');
 
             const PLUGIN_ID = 'cordova-plugin-device';
@@ -528,7 +528,7 @@ describe('restore', function () {
         *   When pkg.json and config.xml define different values for a plugin variable,
         *   pkg.json should win and that value will be used to replace config's value.
         */
-        it('Test#011 : if pkg.Json has 1 plugin and 1 variable, update config.xml to include these variables', function () {
+        it('Test#011 : updates config.xml to use the variable found in pkg.json', function () {
             setupProject('basePkgJson8');
 
             expect(getCfg().getPlugins()).toEqual([
@@ -556,7 +556,7 @@ describe('restore', function () {
         *   When config.xml and pkg.json share a common plugin but pkg.json defines no variables for it,
         *   prepare will update pkg.json to match config.xml's plugins/variables.
         */
-        it('Test#012 : if pkg.Json has 1 plugin and 2 variables, update config.xml to include these plugins/variables', function () {
+        it('Test#012 : update pkg.json to include plugin and variable found in config.xml', function () {
             setupProject('basePkgJson9');
 
             expect(getCfg().getPlugins()).toEqual([
