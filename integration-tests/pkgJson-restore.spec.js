@@ -159,6 +159,68 @@ describe('restore', function () {
             });
         }, 300000);
 
+        /** Test#001 will add a platform to package.json with the 'save' flag.
+        *   It will remove it from platforms.json without the save flag.
+        *   After running cordova prepare, that platform should be restored in the
+        *   installed platform list in platforms.json.
+        */
+        it('Test#001 : should restore platform that has been removed from project', function () {
+            expect(installedPlatforms()).toEqual([]);
+
+            return Promise.resolve().then(function () {
+                // Add the testing platform with --save.
+                return cordovaPlatform('add', testPlatform, {save: true});
+            }).then(function () {
+                // Check the platform add was successful in package.json.
+                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
+                // Check that the platform was actually installed
+                expect(installedPlatforms()).toEqual([testPlatform]);
+            }).then(function () {
+                // And now remove testPlatform without --save.
+                return cordovaPlatform('rm', testPlatform);
+            }).then(function () {
+                // Check that the platform removed without --save is still in platforms key.
+                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
+            }).then(function () {
+                return prepare();
+            });
+        });
+
+        /** Test#002 will add two platforms to package.json with the 'save' flag.
+        *   It will remove one platform from pkg.json without the 'save' flag and remove
+        *   the other platform with the 'save' flag. After running cordova prepare,
+        *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
+        */
+        it('Test#002 : should NOT restore platform that was removed with --save', function () {
+            const secondPlatformAdded = 'browser';
+            const testPlatforms = Object.freeze([
+                testPlatform, secondPlatformAdded
+            ]);
+
+            expect(installedPlatforms()).toEqual([]);
+
+            return Promise.resolve().then(function () {
+                // Add the test platforms with --save.
+                return cordovaPlatform('add', testPlatforms, {save: true});
+            }).then(function () {
+                // Check the platform add of both platforms (to pkg.Json) was successful.
+                expect(getPkgJson('cordova.platforms')).toEqual(testPlatforms);
+                // Check that the platforms were actually installed
+                expect(installedPlatforms()).toEqual(testPlatforms);
+            }).then(function () {
+                // Remove testPlatform with --save.
+                return cordovaPlatform('rm', testPlatform, {save: true});
+            }).then(function () {
+                // Remove secondPlatformAdded without --save.
+                return cordovaPlatform('rm', secondPlatformAdded);
+            }).then(function () {
+                // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
+                expect(getPkgJson('cordova.platforms')).toEqual([secondPlatformAdded]);
+            }).then(function () {
+                return prepare();
+            });
+        });
+
         /** Test#017
         *   When platform is added with url and fetch and restored with fetch,
         *   pkg.json and config.xml would add it to their files properly.
@@ -401,6 +463,62 @@ describe('restore', function () {
                 });
             });
         });
+
+        /** Test#016 will check that cordova prepare will still restore the correct
+        *   platforms and plugins even without package.json file.
+        */
+        it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function () {
+            setupProject('basePkgJson13');
+
+            const PLUGIN_ID = 'cordova-plugin-device';
+            var PLATFORM_1 = 'android';
+            var PLATFORM_2 = 'windows';
+
+            { // Block is to limit variable scope
+                const cfg = getCfg();
+
+                expect(pkgJsonPath).not.toExist();
+                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
+                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
+                expect(installedPlatforms()).toEqual([]);
+            }
+
+            return cordovaPlatform('add', PLATFORM_2, {save: true}).then(function () {
+                const cfg = getCfg();
+
+                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
+
+                // Package.json should be auto-created using values from config.xml
+                expect(getPkgJson()).toEqual(jasmine.objectContaining({
+                    name: cfg.packageName().toLowerCase(),
+                    version: cfg.version(),
+                    displayName: cfg.name()
+                }));
+            }).then(function () {
+                // TODO the remaining operations should be already covered by existing tests
+                // Remove android without --save.
+                return cordovaPlatform('rm', PLATFORM_2);
+            }).then(function () {
+                return prepare();
+            }).then(function () {
+                const cfg = getCfg();
+                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
+                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
+                expect(pluginPath(PLUGIN_ID)).toExist();
+            }).then(function () {
+                // Remove plugin without save.
+                return cordovaPlugin('rm', PLUGIN_ID);
+            }).then(function () {
+                expect(getCfg().getPluginIdList()).toEqual([PLUGIN_ID]);
+                // Plugin should be removed from the installed list.
+                expect(pluginPath(PLUGIN_ID)).not.toExist();
+            }).then(function () {
+                return prepare();
+            }).then(function () {
+                // Plugin should be restored and returned to the installed list.
+                expect(pluginPath(PLUGIN_ID)).toExist();
+            });
+        });
     });
 
     // These tests will check the plugin/variable list in package.json and config.xml.
@@ -572,132 +690,6 @@ describe('restore', function () {
                     spec: '^2.4.1',
                     variables: { variable_1: 'value_1' }
                 }]);
-            });
-        });
-    });
-
-    describe('platforms and plugins should be restored with config.xml even without a pkg.json', function () {
-
-        /** Test#016 will check that cordova prepare will still restore the correct
-        *   platforms and plugins even without package.json file.
-        */
-        it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function () {
-            setupProject('basePkgJson13');
-
-            const PLUGIN_ID = 'cordova-plugin-device';
-            var PLATFORM_1 = 'android';
-            var PLATFORM_2 = 'windows';
-
-            { // Block is to limit variable scope
-                const cfg = getCfg();
-
-                expect(pkgJsonPath).not.toExist();
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
-                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-                expect(installedPlatforms()).toEqual([]);
-            }
-
-            return cordovaPlatform('add', PLATFORM_2, {save: true}).then(function () {
-                const cfg = getCfg();
-
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
-
-                // Package.json should be auto-created using values from config.xml
-                expect(getPkgJson()).toEqual(jasmine.objectContaining({
-                    name: cfg.packageName().toLowerCase(),
-                    version: cfg.version(),
-                    displayName: cfg.name()
-                }));
-            }).then(function () {
-                // TODO the remaining operations should be already covered by existing tests
-                // Remove android without --save.
-                return cordovaPlatform('rm', PLATFORM_2);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                const cfg = getCfg();
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1, PLATFORM_2]);
-                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-                expect(pluginPath(PLUGIN_ID)).toExist();
-            }).then(function () {
-                // Remove plugin without save.
-                return cordovaPlugin('rm', PLUGIN_ID);
-            }).then(function () {
-                expect(getCfg().getPluginIdList()).toEqual([PLUGIN_ID]);
-                // Plugin should be removed from the installed list.
-                expect(pluginPath(PLUGIN_ID)).not.toExist();
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                // Plugin should be restored and returned to the installed list.
-                expect(pluginPath(PLUGIN_ID)).toExist();
-            });
-        });
-    });
-
-    // Use basePkgJson
-    describe('with --save', function () {
-        beforeEach(() => setupProject('basePkgJson'));
-
-        /** Test#001 will add a platform to package.json with the 'save' flag.
-        *   It will remove it from platforms.json without the save flag.
-        *   After running cordova prepare, that platform should be restored in the
-        *   installed platform list in platforms.json.
-        */
-        it('Test#001 : should restore platform that has been removed from project', function () {
-            expect(installedPlatforms()).toEqual([]);
-
-            return Promise.resolve().then(function () {
-                // Add the testing platform with --save.
-                return cordovaPlatform('add', testPlatform, {save: true});
-            }).then(function () {
-                // Check the platform add was successful in package.json.
-                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
-                // Check that the platform was actually installed
-                expect(installedPlatforms()).toEqual([testPlatform]);
-            }).then(function () {
-                // And now remove testPlatform without --save.
-                return cordovaPlatform('rm', testPlatform);
-            }).then(function () {
-                // Check that the platform removed without --save is still in platforms key.
-                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
-            }).then(function () {
-                return prepare();
-            });
-        });
-
-        /** Test#002 will add two platforms to package.json with the 'save' flag.
-        *   It will remove one platform from pkg.json without the 'save' flag and remove
-        *   the other platform with the 'save' flag. After running cordova prepare,
-        *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
-        */
-        it('Test#002 : should NOT restore platform that was removed with --save', function () {
-            const secondPlatformAdded = 'browser';
-            const testPlatforms = Object.freeze([
-                testPlatform, secondPlatformAdded
-            ]);
-
-            expect(installedPlatforms()).toEqual([]);
-
-            return Promise.resolve().then(function () {
-                // Add the test platforms with --save.
-                return cordovaPlatform('add', testPlatforms, {save: true});
-            }).then(function () {
-                // Check the platform add of both platforms (to pkg.Json) was successful.
-                expect(getPkgJson('cordova.platforms')).toEqual(testPlatforms);
-                // Check that the platforms were actually installed
-                expect(installedPlatforms()).toEqual(testPlatforms);
-            }).then(function () {
-                // Remove testPlatform with --save.
-                return cordovaPlatform('rm', testPlatform, {save: true});
-            }).then(function () {
-                // Remove secondPlatformAdded without --save.
-                return cordovaPlatform('rm', secondPlatformAdded);
-            }).then(function () {
-                // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
-                expect(getPkgJson('cordova.platforms')).toEqual([secondPlatformAdded]);
-            }).then(function () {
-                return prepare();
             });
         });
     });
