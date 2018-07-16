@@ -120,7 +120,6 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             var parsedSpec = pluginSpec.parse(plugin_src);
             var P;
             var skipCopyingPlugin;
-            var specContainsSpecialCharacters = false;
             plugin_dir = path.join(plugins_dir, parsedSpec.id);
             // if the plugin has already been fetched, use it.
             if (fs.existsSync(plugin_dir)) {
@@ -135,16 +134,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                     projectRoot = options.projectRoot;
                 }
 
-                if (process.platform === 'win32' && parsedSpec.version) {
-                    var windowsShellSpecialCharacters = ['&', '\\', '<', '>', '^', '|'];
-                    specContainsSpecialCharacters = windowsShellSpecialCharacters.some(function (character) {
-                        return parsedSpec.version.indexOf(character);
-                    });
-                }
-
-                var fetchPluginSrc = specContainsSpecialCharacters ?
-                    parsedSpec.package + '@"' + parsedSpec.version + '"' : plugin_src;
-                P = fetch(fetchPluginSrc, projectRoot, options);
+                P = fetch(plugin_src, projectRoot, options);
                 skipCopyingPlugin = false;
             }
             return P
