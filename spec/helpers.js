@@ -19,7 +19,6 @@
 
 var path = require('path');
 var fs = require('fs');
-var shell = require('shelljs');
 var os = require('os');
 var ConfigParser = require('cordova-common').ConfigParser;
 
@@ -35,16 +34,9 @@ function getConfigPath (dir) {
     return path.join(dir, 'config.xml');
 }
 
-module.exports.tmpDir = function (subdir) {
-    var dir = path.join(os.tmpdir(), 'e2e-test');
-    if (subdir) {
-        dir = path.join(dir, subdir);
-    }
-    if (fs.existsSync(dir)) {
-        shell.rm('-rf', dir);
-    }
-    shell.mkdir('-p', dir);
-    return dir;
+module.exports.tmpDir = function (suffix = 'test') {
+    const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
+    return fs.mkdtempSync(dir);
 };
 
 module.exports.setDefaultTimeout = timeout => {
