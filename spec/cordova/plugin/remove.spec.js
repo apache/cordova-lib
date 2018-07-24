@@ -129,6 +129,25 @@ describe('cordova/plugin/remove', function () {
             });
         });
 
+        it('should call uninstallPlugin in order and only finish once all plugins are done', function () {
+            const plugins = ['cordova-plugin-ice-cream', 'cordova-plugin-hot-steam'];
+
+            // We delay the uninstall of the first plugin to give the second
+            // one the chance to finish early if Promises are handled wrong.
+            const observedOrder = [];
+            const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+            plugman.uninstall.uninstallPlugin.and.callFake(target => {
+                return delay(target.endsWith('cream') ? 100 : 0)
+                    .then(_ => observedOrder.push(target));
+            });
+
+            spyOn(plugin_util, 'mergeVariables');
+            remove.validatePluginId.and.returnValues(...plugins);
+
+            return remove(projectRoot, plugins, hook_mock, { plugins })
+                .then(_ => expect(observedOrder).toEqual(plugins));
+        });
+
         describe('when save option is provided or autosave config is on', function () {
             beforeEach(function () {
                 spyOn(plugin_util, 'mergeVariables');
