@@ -62,7 +62,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                 // If this is a web-only or dependency-only plugin, then
                 // there may be nothing to do here except remove the
                 // reference from the platform's plugin config JSON.
-                return platformList.reduce(function (soFar, platform) {
+                return soFar.then(_ => platformList.reduce(function (soFar, platform) {
                     return soFar.then(function () {
                         platformRoot = path.join(projectRoot, 'platforms', platform);
                         var directory = path.join(pluginPath, target);
@@ -81,7 +81,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                                 if (!didPrepare) shouldRunPrepare = true;
                             });
                     });
-                }, Q())
+                }, Q()))
                     .then(function () {
                         // TODO: Should only uninstallPlugin when no platforms have it.
                         return plugman.uninstall.uninstallPlugin(target, pluginPath, opts);
