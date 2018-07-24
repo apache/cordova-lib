@@ -51,6 +51,7 @@
     "globby": "^8.0.1",
     "istanbul": "^0.4.5",
     "jasmine": "^3.0.1",
+    "jasmine-spec-reporter": "^4.2.1",
     "rewire": "^4.0.1"
   },
   "scripts": {
