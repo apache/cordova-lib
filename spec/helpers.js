@@ -47,6 +47,16 @@ module.exports.tmpDir = function (subdir) {
     return dir;
 };
 
+module.exports.setDefaultTimeout = timeout => {
+    const originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    beforeEach(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
+    });
+    afterEach(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+    });
+};
+
 // Returns the platform that should be used for testing on this host platform.
 /*
 var host = os.platform();
