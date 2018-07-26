@@ -49,16 +49,16 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
     "globby": "^8.0.1",
-    "istanbul": "^0.4.5",
     "jasmine": "^3.0.1",
     "jasmine-spec-reporter": "^4.2.1",
+    "nyc": "^12.0.2",
     "rewire": "^4.0.1"
   },
   "scripts": {
     "test": "npm run eslint && npm run unit-tests && npm run e2e-tests",
     "eslint": "eslint src spec integration-tests",
     "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
-    "cover": "istanbul cover --root src --print detail jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
+    "cover": "nyc -x spec/ -x integration-tests/ npm test",
     "e2e-tests": "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
   },
   "contributors": [
