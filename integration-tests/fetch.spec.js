@@ -18,11 +18,11 @@
 */
 
 var path = require('path');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var helpers = require('../spec/helpers');
 var cordova = require('../src/cordova/cordova');
 
-var TIMEOUT = 90000;
+const TIMEOUT = 60 * 1000;
 var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
 
 var plugins = {
@@ -33,41 +33,53 @@ var plugins = {
 };
 
 describe('end-to-end plugin dependency tests', function () {
-    var tmpDir, project, pluginsDir;
+    helpers.setDefaultTimeout(TIMEOUT);
 
+    // This prepares a project that we will copy and use for all tests
+    const preparedProject = helpers.tmpDir('plugin_dependency_test_project');
+    beforeAll(function () {
+        return cordova.create(preparedProject)
+            .then(function () {
+                process.chdir(preparedProject);
+                return cordova.platform('add', 'android');
+            });
+    });
+
+    afterAll(function () {
+        process.chdir(__dirname); // Needed to rm the dir on Windows.
+        fs.removeSync(preparedProject);
+    });
+
+    var tmpDir, project, pluginsDir;
     beforeEach(function () {
         tmpDir = helpers.tmpDir('plugin_dependency_test');
-        project = path.join(tmpDir, 'hello3');
+        project = path.join(tmpDir, 'project');
         pluginsDir = path.join(project, 'plugins');
-        process.chdir(tmpDir);
+
+        fs.copySync(preparedProject, project);
+        process.chdir(project);
+        delete process.env.PWD;
     });
 
     afterEach(function () {
-        process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        process.chdir(__dirname); // Needed to rm the dir on Windows.
+        fs.removeSync(tmpDir);
     });
 
     it('Test 029 : should fail if dependency already installed is wrong version', function () {
-        return cordova.create('hello3')
+        return Promise.resolve()
             .then(function () {
-                process.chdir(project);
-                return cordova.platform('add', 'android');
-            }).then(function () {
                 return cordova.plugin('add', 'cordova-plugin-file');
             }).then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 return cordova.plugin('add', plugins['Test1']);
-            }).fail(function (err) {
+            }).catch(function (err) {
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
             });
-    }, TIMEOUT);
+    });
 
     it('Test 030 : should pass if dependency already installed is wrong version with --force', function () {
-        return cordova.create('hello3')
-            .then(function () {
-                process.chdir(project);
-                return cordova.platform('add', 'android');
-            })
+        return Promise.resolve()
             .then(function () {
                 return cordova.plugin('add', 'cordova-plugin-file');
             })
@@ -78,15 +90,11 @@ describe('end-to-end plugin dependency tests', function () {
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
             });
-    }, TIMEOUT);
+    });
 
     it('Test 031 : should pass if dependency already installed is same major version (if specific version is specified)', function () {
         // Test1 requires cordova-plugin-file version 2.0.0 (which should automatically turn into ^2.0.0); we'll install version 2.1.0
-        return cordova.create('hello3')
-            .then(function () {
-                process.chdir(project);
-                return cordova.platform('add', 'android');
-            })
+        return Promise.resolve()
             .then(function () {
                 return cordova.plugin('add', 'cordova-plugin-file@2.1.0');
             })
@@ -97,16 +105,12 @@ describe('end-to-end plugin dependency tests', function () {
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
             });
-    }, TIMEOUT);
+    });
 
     it('Test 032 : should handle two plugins with same dependent plugin', function () {
         // Test1 and Test2 have compatible dependencies on cordova-plugin-file
         // Test1 and Test3 have incompatible dependencies on cordova-plugin-file
-        return cordova.create('hello3')
-            .then(function () {
-                process.chdir(project);
-                return cordova.platform('add', 'android');
-            })
+        return Promise.resolve()
             .then(function () {
                 return cordova.plugin('add', plugins['Test1']);
             })
@@ -118,21 +122,17 @@ describe('end-to-end plugin dependency tests', function () {
             .then(function () {
                 return cordova.plugin('add', plugins['Test3']);
             })
-            .fail(function (err) {
+            .catch(function (err) {
                 expect(path.join(pluginsDir, 'Test2')).toExist();
                 expect(path.join(pluginsDir, 'Test3')).not.toExist();
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
-            }, TIMEOUT);
-    }, TIMEOUT);
+            });
+    });
 
     it('Test 033 : should use a dev version of a dependent plugin if it is already installed', function () {
         // Test4 has this dependency in its plugin.xml:
         // <dependency id="cordova-plugin-file" url="https://github.com/apache/cordova-plugin-file" />
-        return cordova.create('hello3')
-            .then(function () {
-                process.chdir(project);
-                return cordova.platform('add', 'android');
-            })
+        return Promise.resolve()
             .then(function () {
                 return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file');
             })
@@ -143,5 +143,5 @@ describe('end-to-end plugin dependency tests', function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(pluginsDir, 'Test4')).toExist();
             });
-    }, TIMEOUT);
+    });
 });
