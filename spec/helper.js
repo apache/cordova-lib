@@ -27,6 +27,7 @@ jasmine.getEnv().addReporter(new SpecReporter({
         displayDuration: true
     },
     summary: {
-        displayDuration: true
+        displayDuration: true,
+        displayStacktrace: true
     }
 }));
