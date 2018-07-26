@@ -42,6 +42,8 @@ describe('restore', function () {
         pkgJsonPath = path.join(project, 'package.json');
         configXmlPath = path.join(project, 'config.xml');
         delete process.env.PWD;
+
+        setupBaseProject();
     });
 
     afterEach(() => {
@@ -49,14 +51,31 @@ describe('restore', function () {
         fs.removeSync(tmpDir);
     });
 
-    function setupProject (name) {
-        fs.copySync(path.join(fixturesPath, name), project);
+    function setupBaseProject () {
+        fs.copySync(path.join(fixturesPath, 'basePkgJson'), project);
         process.chdir(project);
+
+        // It's quite bland, I assure you
+        expect(getCfg().getPlugins()).toEqual([]);
+        expect(getCfg().getEngines()).toEqual([]);
+        expect(getPkgJson('cordova')).toBeUndefined();
+        expect(getPkgJson('dependencies')).toBeUndefined();
+        expect(installedPlatforms()).toEqual([]);
     }
 
+    // TODO remove this once apache/cordova-common#38
+    // and apache/cordova-common#39 are resolved
+    class TestConfigParser extends ConfigParser {
+        addPlugin (plugin) {
+            return (super.addPlugin(plugin, plugin.variables), this);
+        }
+        addEngine (...args) {
+            return (super.addEngine(...args), this);
+        }
+    }
     function getCfg () {
         expect(configXmlPath).toExist();
-        return new ConfigParser(configXmlPath);
+        return new TestConfigParser(configXmlPath);
     }
 
     function getCfgEngineNames (cfg = getCfg()) {
@@ -70,6 +89,18 @@ describe('restore', function () {
             expect(obj).toBeDefined();
             return obj[key];
         }, requireNoCache(pkgJsonPath));
+    }
+
+    function setPkgJson (propPath, value) {
+        expect(pkgJsonPath).toExist();
+        const keys = propPath.split('.');
+        const target = keys.pop();
+        const pkgJsonObj = fs.readJsonSync(pkgJsonPath);
+        const parentObj = keys.reduce((obj, key) => {
+            return obj[key] || (obj[key] = {});
+        }, pkgJsonObj);
+        parentObj[target] = value;
+        fs.writeJsonSync(pkgJsonPath, pkgJsonObj);
     }
 
     function platformPkgName (platformName) {
@@ -119,9 +150,7 @@ describe('restore', function () {
         pluginNames.forEach(name => expect(pluginPath(name)).toExist());
     }
 
-    // Use basePkgJson
     describe('with --save', function () {
-        beforeEach(() => setupProject('basePkgJson'));
 
         /** Test#000 will check that when a platform is added with a spec, it will
         *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
@@ -129,8 +158,6 @@ describe('restore', function () {
         */
         it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function () {
             const PLATFORM = 'android';
-
-            expect(installedPlatforms()).toEqual([]);
 
             return cordovaPlatform('add', PLATFORM, {save: true}).then(function () {
                 // When spec is added to pkg.json, first char is '^'.
@@ -165,8 +192,6 @@ describe('restore', function () {
         *   installed platform list in platforms.json.
         */
         it('Test#001 : should restore platform that has been removed from project', function () {
-            expect(installedPlatforms()).toEqual([]);
-
             return Promise.resolve().then(function () {
                 // Add the testing platform with --save.
                 return cordovaPlatform('add', testPlatform, {save: true});
@@ -199,8 +224,6 @@ describe('restore', function () {
             const testPlatforms = Object.freeze([
                 testPlatform, savedPlatform
             ]);
-
-            expect(installedPlatforms()).toEqual([]);
 
             return Promise.resolve().then(function () {
                 // Add the test platforms with --save.
@@ -235,8 +258,6 @@ describe('restore', function () {
         it('Test#017 : test to make sure that platform url is added and restored properly', function () {
             const PLATFORM = 'browser';
             const PLATFORM_URL = 'https://github.com/apache/cordova-browser';
-
-            expect(installedPlatforms()).toEqual([]);
 
             return Promise.resolve().then(function () {
                 // Add platform with save and fetch
@@ -283,8 +304,6 @@ describe('restore', function () {
         it('Test#018 : test to make sure that plugin url is added and restored properly', function () {
             const PLUGIN_ID = 'cordova-plugin-splashscreen';
             const PLUGIN_URL = 'https://github.com/apache/cordova-plugin-splashscreen';
-
-            expect(installedPlatforms()).toEqual([]);
 
             return Promise.resolve().then(function () {
                 // Add plugin with save and fetch.
@@ -343,8 +362,6 @@ describe('restore', function () {
             const PLATFORM_1 = 'ios';
             const PLATFORM_2 = 'browser';
 
-            expect(installedPlatforms()).toEqual([]);
-
             return Promise.resolve().then(function () {
                 // Add PLATFORM_1 platform to project without --save
                 return cordovaPlatform('add', PLATFORM_1);
@@ -377,8 +394,10 @@ describe('restore', function () {
         *   neither file is modified.
         */
         it('Test#004 : should not modify either file if pkg.json and config.xml have the same platforms', function () {
-            setupProject('basePkgJson6');
-            expect(installedPlatforms()).toEqual([]);
+            getCfg()
+                .addEngine(testPlatform)
+                .write();
+            setPkgJson('cordova.platforms', [testPlatform]);
 
             const getModTimes = _ => ({
                 cfg: fs.statSync(configXmlPath).mtime,
@@ -398,21 +417,14 @@ describe('restore', function () {
         *   added properly, too.
         */
         it('Test#005 : should update pkg.json to include platforms from config.xml', function () {
-            setupProject('basePkgJson5');
-
             const PLATFORM_1 = 'android';
             const PLATFORM_2 = 'browser';
 
-            { // Block is to limit variable scope
-                const pkgJson = getPkgJson();
-
-                // Config.xml contains(android & browser) and pkg.json contains android (basePkgJson5).
-                expect(installedPlatforms()).toEqual([]);
-                expect(getCfgEngineNames()).toEqual([PLATFORM_1, PLATFORM_2]);
-                expect(pkgJson.cordova.platforms).toEqual([PLATFORM_1]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM_1)]).toBeUndefined();
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM_2)]).toBeUndefined();
-            }
+            getCfg()
+                .addEngine(PLATFORM_1, '7.0.0')
+                .addEngine(PLATFORM_2, '^5.0.3')
+                .write();
+            setPkgJson('cordova.platforms', [testPlatform]);
 
             return prepare().then(function () {
                 const pkgJson = getPkgJson();
@@ -432,12 +444,9 @@ describe('restore', function () {
          *   and it will add a cordova key and the platform(s) from config.xml to package.json.
          */
         it('Test#006 : should update a package.json without cordova key to include platforms from config.xml', function () {
-            setupProject('basePkgJson3');
-
-            expect(installedPlatforms()).toEqual([]);
-            expect(getCfgEngineNames()).toEqual(['android']);
-            // Expect that pkg.json exists without a cordova key.
-            expect(getPkgJson('cordova')).toBeUndefined();
+            getCfg()
+                .addEngine('android')
+                .write();
 
             return prepare().then(function () {
                 // Expect no change to config.xml.
@@ -453,13 +462,13 @@ describe('restore', function () {
         *   it should be added to config.xml during restore.
         */
         it('Test#007 : should update config.xml to include platforms from pkg.json', function () {
-            setupProject('basePkgJson4');
-
-            expect(installedPlatforms()).toEqual([]);
-            expect(getCfgEngineNames()).toEqual(['ios']);
-            expect(getPkgJson('dependencies')).toEqual({
+            getCfg()
+                .addEngine('ios', '6.0.0')
+                .write();
+            setPkgJson('dependencies', {
                 'cordova-ios': '^4.5.4', 'cordova-browser': '^5.0.3'
             });
+            setPkgJson('cordova.platforms', ['ios', 'browser']);
 
             return prepare().then(function () {
                 // Check to make sure that 'browser' spec was added properly.
@@ -478,19 +487,14 @@ describe('restore', function () {
         *   platforms and plugins even without package.json file.
         */
         it('Test#016 : should restore platforms & plugins and create a missing pkg.json', function () {
-            setupProject('basePkgJson13');
-
             const PLUGIN_ID = 'cordova-plugin-device';
             const PLATFORM_1 = 'android';
 
-            { // Block is to limit variable scope
-                const cfg = getCfg();
-
-                expect(pkgJsonPath).not.toExist();
-                expect(installedPlatforms()).toEqual([]);
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
-                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-            }
+            getCfg()
+                .addEngine(PLATFORM_1)
+                .addPlugin({ name: PLUGIN_ID })
+                .write();
+            fs.removeSync(pkgJsonPath);
 
             return prepare().then(function () {
                 const cfg = getCfg();
@@ -512,24 +516,28 @@ describe('restore', function () {
 
     // These tests will check the plugin/variable list in package.json and config.xml.
     describe('plugins', function () {
+        beforeEach(() => {
+            // Add some platform to test the plugins with
+            getCfg()
+                .addEngine(testPlatform)
+                .write();
+            setPkgJson('cordova.platforms', [testPlatform]);
+        });
 
         /**
         *   When pkg.json and config.xml define different values for a plugin variable,
         *   pkg.json should win and that value will be used to replace config's value.
         */
         it('Test#011 : updates config.xml to use the variable found in pkg.json', function () {
-            setupProject('basePkgJson8');
-
-            expect(getCfg().getPlugins()).toEqual([
-                jasmine.objectContaining({
+            getCfg()
+                .addPlugin({
                     name: 'cordova-plugin-camera',
                     variables: { variable_1: 'config' }
                 })
-            ]);
-            expect(getPkgJson('cordova.plugins')).toEqual({
+                .write();
+            setPkgJson('cordova.plugins', {
                 'cordova-plugin-camera': { variable_1: 'json' }
             });
-            expect(installedPlatforms()).toEqual([]);
 
             return prepare({save: true}).then(function () {
                 expectConsistentPlugins([
@@ -546,18 +554,15 @@ describe('restore', function () {
         *   prepare will update pkg.json to match config.xml's plugins/variables.
         */
         it('Test#012 : update pkg.json to include plugin and variable found in config.xml', function () {
-            setupProject('basePkgJson9');
-
-            expect(getCfg().getPlugins()).toEqual([
-                jasmine.objectContaining({
+            getCfg()
+                .addPlugin({
                     name: 'cordova-plugin-camera',
                     variables: { variable_1: 'value_1' }
                 })
-            ]);
-            expect(getPkgJson('cordova.plugins')).toEqual({
+                .write();
+            setPkgJson('cordova.plugins', {
                 'cordova-plugin-camera': {}
             });
-            expect(installedPlatforms()).toEqual([]);
 
             return prepare({save: true}).then(function () {
                 expectConsistentPlugins([
@@ -575,24 +580,21 @@ describe('restore', function () {
         *   Config.xml and pkg.json will have identical plugins and variables after cordova prepare.
         */
         it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', function () {
-            setupProject('basePkgJson10');
-
-            expect(getCfg().getPlugins()).toEqual([
-                jasmine.objectContaining({
+            getCfg()
+                .addPlugin({
                     name: 'cordova-plugin-camera',
                     variables: { variable_3: 'value_3' }
-                }),
-                jasmine.objectContaining({
+                })
+                .addPlugin({
                     name: 'cordova-plugin-splashscreen',
                     variables: {}
                 })
-            ]);
-            expect(getPkgJson('cordova.plugins')).toEqual({
+                .write();
+            setPkgJson('cordova.plugins', {
                 'cordova-plugin-splashscreen': {},
                 'cordova-plugin-camera': { variable_1: ' ', variable_2: ' ' },
                 'cordova-plugin-device': { variable_1: 'value_1' }
             });
-            expect(installedPlatforms()).toEqual([]);
 
             return prepare({save: true}).then(function () {
                 expectConsistentPlugins([
@@ -618,26 +620,25 @@ describe('restore', function () {
         *   to config and pkg.json.
         */
         it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', function () {
-            setupProject('basePkgJson11');
-
-            expect(getCfg().getPlugins()).toEqual([{
-                name: 'cordova-plugin-camera',
-                spec: '~2.2.0',
-                variables: { variable_1: 'value_1', variable_2: 'value_2' }
-            }, {
-                name: 'cordova-plugin-device',
-                spec: '~1.0.0',
-                variables: {}
-            }]);
-            expectPluginsInPkgJson([{
-                name: 'cordova-plugin-camera',
-                spec: '^2.3.0',
-                variables: { variable_1: 'value_1', variable_3: 'value_3' }
-            }, {
-                name: 'cordova-plugin-splashscreen',
-                variables: {}
-            }]);
-            expect(installedPlatforms()).toEqual([]);
+            getCfg()
+                .addPlugin({
+                    name: 'cordova-plugin-camera',
+                    spec: '~2.2.0',
+                    variables: { variable_1: 'value_1', variable_2: 'value_2' }
+                })
+                .addPlugin({
+                    name: 'cordova-plugin-device',
+                    spec: '~1.0.0',
+                    variables: {}
+                })
+                .write();
+            setPkgJson('dependencies', {
+                'cordova-plugin-camera': '^2.3.0'
+            });
+            setPkgJson('cordova.plugins', {
+                'cordova-plugin-splashscreen': {},
+                'cordova-plugin-camera': { variable_1: 'value_1', variable_3: 'value_3' }
+            });
 
             return prepare({save: true}).then(function () {
                 expectConsistentPlugins([{
@@ -661,17 +662,12 @@ describe('restore', function () {
         *   pkg.json plugins and with the spec from pkg.json dependencies.
         */
         it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function () {
-            setupProject('basePkgJson12');
-
-            // config.xml is initially empty and has no plugins.
-            expect(getCfg().getPlugins()).toEqual([]);
-
-            expectPluginsInPkgJson([{
-                name: 'cordova-plugin-camera',
-                spec: '^2.3.0',
-                variables: { variable_1: 'value_1' }
-            }]);
-            expect(installedPlatforms()).toEqual([]);
+            setPkgJson('dependencies', {
+                'cordova-plugin-camera': '^2.3.0'
+            });
+            setPkgJson('cordova.plugins', {
+                'cordova-plugin-camera': { variable_1: 'value_1' }
+            });
 
             return prepare({save: true}).then(function () {
                 expectConsistentPlugins([{
