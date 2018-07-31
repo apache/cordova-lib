@@ -181,7 +181,7 @@ describe('uninstallPlatform', function () {
                 .then(function (result) {
                     fail();
                 }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('atari not supported.');
+                    expect(errMsg.toString()).toContain('Platform "atari" not supported.');
                 });
         }, 6000);
 
@@ -217,9 +217,9 @@ describe('uninstallPlugin', function () {
                 .then(function (result) {
                     var del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
-                        'Deleted "C"',
-                        'Deleted "D"',
-                        'Deleted "A"'
+                        'Deleted plugin "C"',
+                        'Deleted plugin "D"',
+                        'Deleted plugin "A"'
                     ]);
                 });
         });
@@ -229,7 +229,7 @@ describe('uninstallPlugin', function () {
                 .then(function (result) {
                     fail();
                 }, function err (errMsg) {
-                    expect(errMsg.toString()).toEqual('"C" is required by (A) and cannot be removed (hint: use -f or --force)');
+                    expect(errMsg.toString()).toEqual('Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)');
                 });
         }, 6000);
 
@@ -237,7 +237,7 @@ describe('uninstallPlugin', function () {
             return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
                 .then(function () {
                     var del = common.spy.getDeleted(emit);
-                    expect(del).toEqual(['Deleted "C"']);
+                    expect(del).toEqual(['Deleted plugin "C"']);
                 });
         });
 
@@ -246,8 +246,8 @@ describe('uninstallPlugin', function () {
                 .then(function () {
                     var del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
-                        'Deleted "D"',
-                        'Deleted "A"'
+                        'Deleted plugin "D"',
+                        'Deleted plugin "A"'
                     ]);
                 });
         });
@@ -257,8 +257,8 @@ describe('uninstallPlugin', function () {
                 .then(function () {
                     var del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
-                        'Deleted "D"',
-                        'Deleted "A"'
+                        'Deleted plugin "D"',
+                        'Deleted plugin "A"'
                     ]);
                 });
         });
@@ -282,7 +282,7 @@ describe('uninstall', function () {
                 .then(function (result) {
                     fail();
                 }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('atari not supported.');
+                    expect(errMsg.toString()).toContain('Platform "atari" not supported.');
                 });
         }, 6000);
 

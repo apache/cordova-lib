@@ -73,7 +73,7 @@ module.exports.uninstallPlatform = function (platform, project_dir, id, plugins_
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError(platform + ' not supported.'));
+        return Q.reject(new CordovaError('Platform "' + platform + '" not supported.'));
     }
 
     var plugin_dir = path.join(plugins_dir, id);
@@ -128,7 +128,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
         }
 
         shell.rm('-rf', plugin_dir);
-        events.emit('verbose', 'Deleted "' + id + '"');
+        events.emit('verbose', 'Deleted plugin "' + id + '"');
 
         // remove plugin from node_modules directory
         return npmUninstall(id, options.projectRoot, options);
@@ -200,7 +200,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
         return dependList[plugin_id];
     });
     var createMsg = function (plugin_id) {
-        return '"' + plugin_id + '" is required by (' + dependList[plugin_id] + ')';
+        return 'Plugin "' + plugin_id + '" is required by (' + dependList[plugin_id] + ')';
     };
     var createMsg2 = function (plugin_id) {
         return createMsg(plugin_id) + ' and cannot be removed (hint: use -f or --force)';
