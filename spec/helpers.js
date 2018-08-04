@@ -19,7 +19,6 @@
 
 var path = require('path');
 var fs = require('fs');
-var shell = require('shelljs');
 var os = require('os');
 var ConfigParser = require('cordova-common').ConfigParser;
 
@@ -35,16 +34,19 @@ function getConfigPath (dir) {
     return path.join(dir, 'config.xml');
 }
 
-module.exports.tmpDir = function (subdir) {
-    var dir = path.join(os.tmpdir(), 'e2e-test');
-    if (subdir) {
-        dir = path.join(dir, subdir);
-    }
-    if (fs.existsSync(dir)) {
-        shell.rm('-rf', dir);
-    }
-    shell.mkdir('-p', dir);
-    return dir;
+module.exports.tmpDir = function (suffix = 'test') {
+    const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
+    return fs.mkdtempSync(dir);
+};
+
+module.exports.setDefaultTimeout = timeout => {
+    const originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    beforeEach(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
+    });
+    afterEach(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+    });
 };
 
 // Returns the platform that should be used for testing on this host platform.
@@ -146,25 +148,15 @@ module.exports.writeConfigContent = function (appPath, configContent) {
     fs.writeFileSync(configFile, configContent, 'utf-8');
 };
 
-// Add the toExist matcher.
-beforeEach(function () {
-    jasmine.addMatchers({
-        'toExist': function () {
-            return {
-                compare: function (actual, expected) {
-                    var result = {};
+const customMatchers = {
+    toExist: () => ({ compare (file) {
+        const pass = fs.existsSync(file);
+        const expectation = (pass ? 'not ' : '') + 'to exist';
+        return {
+            pass, message: `expected ${file} ${expectation}`
+        };
+    }})
+};
 
-                    result.pass = fs.existsSync(actual);
-
-                    if (result.pass) {
-                        result.message = 'expected ' + actual + ' to not exist';
-                    } else {
-                        result.message = 'expected ' + actual + ' to exist';
-                    }
-
-                    return result;
-                }
-            };
-        }
-    });
-});
+// Add our custom matchers
+beforeEach(() => jasmine.addMatchers(customMatchers));
