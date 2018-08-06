@@ -22,7 +22,7 @@ var HooksRunner = require('../../src/hooks/HooksRunner');
 var Q = require('q');
 var util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
+var supported_platforms = Object.keys(platforms);
 
 describe('build command', function () {
     var is_cordova;
