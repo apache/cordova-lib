@@ -31,7 +31,9 @@ var path = require('path');
 var config = require('./config');
 var _ = require('underscore');
 
-exports = module.exports = prepare;
+// Add indirection to be able to spy on prepare
+exports = module.exports = (...args) => exports.prepare(...args);
+module.exports.prepare = prepare;
 module.exports.preparePlatforms = preparePlatforms;
 module.exports.restoreMissingPluginsForPlatform = restoreMissingPluginsForPlatform;
 

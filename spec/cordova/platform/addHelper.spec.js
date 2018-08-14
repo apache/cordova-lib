@@ -44,8 +44,6 @@ describe('cordova/platform/addHelper', function () {
     var platform_api_mock;
     var fetch_mock;
     var fetch_revert_mock;
-    var prepare_mock;
-    var prepare_revert_mock;
     var fake_platform = {
         'platform': 'atari'
     };
@@ -61,9 +59,8 @@ describe('cordova/platform/addHelper', function () {
         cfg_parser_revert_mock = platform_addHelper.__set__('ConfigParser', cfg_parser_mock);
         fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Q());
         fetch_revert_mock = platform_addHelper.__set__('fetch', fetch_mock);
-        prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
-        prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
-        prepare_revert_mock = platform_addHelper.__set__('prepare', prepare_mock);
+        spyOn(prepare, 'prepare').and.returnValue(Q());
+        spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
         spyOn(shell, 'mkdir');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'readFileSync');
@@ -92,7 +89,6 @@ describe('cordova/platform/addHelper', function () {
     afterEach(function () {
         cfg_parser_revert_mock();
         fetch_revert_mock();
-        prepare_revert_mock();
     });
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function () {
