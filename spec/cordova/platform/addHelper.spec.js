@@ -132,8 +132,9 @@ describe('cordova/platform/addHelper', function () {
     });
     describe('happy path (success conditions)', function () {
         it('should fire the before_platform_* hook', function () {
-            platform_addHelper('add', hooks_mock, projectRoot, ['atari']);
-            expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(_ => {
+                expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            });
         });
 
         describe('platform spec inference', function () {
