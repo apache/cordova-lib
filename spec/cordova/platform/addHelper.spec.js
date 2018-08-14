@@ -101,8 +101,6 @@ describe('cordova/platform/addHelper', function () {
         it('should log if host OS does not support the specified platform', function () {
             cordova_util.hostSupports.and.returnValue(false);
             return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
                 expect(cordova_util.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             });
