@@ -29,7 +29,6 @@ var cordova_config = require('../../../src/cordova/config');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
 var prepare = require('../../../src/cordova/prepare');
-var fail;
 
 describe('cordova/platform/addHelper', function () {
     var projectRoot = '/some/path';
@@ -44,8 +43,6 @@ describe('cordova/platform/addHelper', function () {
     var platform_api_mock;
     var fetch_mock;
     var fetch_revert_mock;
-    var prepare_mock;
-    var prepare_revert_mock;
     var fake_platform = {
         'platform': 'atari'
     };
@@ -61,9 +58,8 @@ describe('cordova/platform/addHelper', function () {
         cfg_parser_revert_mock = platform_addHelper.__set__('ConfigParser', cfg_parser_mock);
         fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Q());
         fetch_revert_mock = platform_addHelper.__set__('fetch', fetch_mock);
-        prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
-        prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
-        prepare_revert_mock = platform_addHelper.__set__('prepare', prepare_mock);
+        spyOn(prepare, 'prepare').and.returnValue(Q());
+        spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
         spyOn(shell, 'mkdir');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'readFileSync');
@@ -92,7 +88,6 @@ describe('cordova/platform/addHelper', function () {
     afterEach(function () {
         cfg_parser_revert_mock();
         fetch_revert_mock();
-        prepare_revert_mock();
     });
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function () {
@@ -106,8 +101,6 @@ describe('cordova/platform/addHelper', function () {
         it('should log if host OS does not support the specified platform', function () {
             cordova_util.hostSupports.and.returnValue(false);
             return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
                 expect(cordova_util.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             });
@@ -132,8 +125,9 @@ describe('cordova/platform/addHelper', function () {
     });
     describe('happy path (success conditions)', function () {
         it('should fire the before_platform_* hook', function () {
-            platform_addHelper('add', hooks_mock, projectRoot, ['atari']);
-            expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(_ => {
+                expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            });
         });
 
         describe('platform spec inference', function () {

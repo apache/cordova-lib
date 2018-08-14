@@ -19,8 +19,7 @@ var Q = require('q');
 var shell = require('shelljs');
 var events = require('cordova-common').events;
 var superspawn = require('cordova-common').superspawn;
-var rewire = require('rewire');
-var platform_check = rewire('../../../src/cordova/platform/check');
+var platform_check = require('../../../src/cordova/platform/check');
 var platform = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
 
@@ -37,7 +36,6 @@ describe('cordova/platform/check', function () {
     });
 
     it('If no results, platforms cannot be updated', function () {
-        platform.add.and.returnValue(Q.reject());
         cordova_util.listPlatforms.and.callThrough();
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
@@ -47,7 +45,7 @@ describe('cordova/platform/check', function () {
     });
 
     it('Should warn if install failed', function () {
-        platform.add.and.returnValue(Q.reject());
+        platform.add.and.returnValue(Promise.reject());
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current did not install/));
         });
