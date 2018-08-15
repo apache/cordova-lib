@@ -21,7 +21,7 @@ const prepare = require('../src/cordova/prepare');
 const cordovaPlugin = require('../src/cordova/plugin');
 const cordovaPlatform = require('../src/cordova/platform');
 const { ConfigParser } = require('cordova-common');
-const { listPlatforms, requireNoCache } = require('../src/cordova/util');
+const { listPlatforms } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
 
 const TIMEOUT = 240 * 1000;
@@ -69,7 +69,7 @@ describe('restore', function () {
         return keys.reduce((obj, key) => {
             expect(obj).toBeDefined();
             return obj[key];
-        }, requireNoCache(pkgJsonPath));
+        }, fs.readJsonSync(pkgJsonPath));
     }
 
     function platformPkgName (platformName) {
