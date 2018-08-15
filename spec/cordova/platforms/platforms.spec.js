@@ -32,6 +32,19 @@ var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
 shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
+describe('platforms object', function () {
+    it('should have getPlatformApi function as a property', function () {
+        expect(platforms.getPlatformApi).toBeDefined();
+        expect(typeof platforms.getPlatformApi).toBe('function');
+    });
+
+    it('should have all and only the supported platforms', function () {
+        expect(Object.keys(platforms)).toEqual(jasmine.arrayWithExactContents([
+            'android', 'browser', 'ios', 'osx', 'windows'
+        ]));
+    });
+});
+
 describe('getPlatformApi method', function () {
     var isCordova;
 
@@ -94,5 +107,9 @@ describe('getPlatformApi method', function () {
 
     it('should throw for unknown platform', function () {
         expect(function () { platforms.getPlatformApi('invalid_platform'); }).toThrow();
+    });
+
+    it('should throw for nonsense www platform', function () {
+        expect(function () { platforms.getPlatformApi('www'); }).toThrow();
     });
 });

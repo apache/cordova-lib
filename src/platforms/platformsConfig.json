@@ -19,13 +19,6 @@
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
-    "www": {
-        "hostos": [],
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git",
-        "source": "git",
-        "version": "^3.12.0",
-        "deprecated": false
-    },
     "windows": {
         "hostos": ["win32"],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
