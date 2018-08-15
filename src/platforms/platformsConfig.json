@@ -15,7 +15,7 @@
     },
     "android": {
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-android.git",
-        "version": "~7.0.0",
+        "version": "~7.1.1",
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
