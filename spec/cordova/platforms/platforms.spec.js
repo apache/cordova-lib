@@ -38,20 +38,10 @@ describe('platforms object', function () {
         expect(typeof platforms.getPlatformApi).toBe('function');
     });
 
-    it('should have correct number of platform properties', function () {
-        expect(Object.keys(platforms).length).toBe(5);
-    });
-
-    it('should include the supported platforms', function () {
-        expect(platforms.android).toBeDefined();
-        expect(platforms.browser).toBeDefined();
-        expect(platforms.ios).toBeDefined();
-        expect(platforms.osx).toBeDefined();
-        expect(platforms.windows).toBeDefined();
-    });
-
-    it('should *not* include nonsense "www" platform (CB-14148)', function () {
-        expect(platforms.www).not.toBeDefined();
+    it('should have all and only the supported platforms', function () {
+        expect(Object.keys(platforms)).toEqual(jasmine.arrayWithExactContents([
+            'android', 'browser', 'ios', 'osx', 'windows'
+        ]));
     });
 });
 
