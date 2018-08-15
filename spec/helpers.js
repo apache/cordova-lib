@@ -39,12 +39,31 @@ module.exports.tmpDir = function (suffix = 'test') {
     return fs.mkdtempSync(dir);
 };
 
+/**
+ * Sets the default timeout for the current suite.
+ *
+ * Restores the previous timeout after the suite has finished. The timeout
+ * applies to all `before*`, `after*` and `it` blocks within the suite.
+ *
+ * Must be called before defining any of the aforementioned blocks.
+ *
+ * @param {Number} timeout The desired default timeout in ms
+ */
 module.exports.setDefaultTimeout = timeout => {
     const originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+
+    // Ensure new default timeout applies to beforeAll blocks
+    beforeAll(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
+    });
+
+    // Refresh setting before every test, just to be safe
     beforeEach(() => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
     });
-    afterEach(() => {
+
+    // Revert to original setting after the last afterAll
+    afterAll(() => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
     });
 };
