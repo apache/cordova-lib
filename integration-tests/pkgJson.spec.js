@@ -72,7 +72,7 @@ describe('pkgJson', function () {
     function pluginVersion (pluginName) {
         const p = path.join(project, 'plugins', pluginName, 'package.json');
         expect(p).toExist();
-        return requireNoCache(p).version;
+        return fs.readJsonSync(p).version;
     }
 
     function getPkgJson (propPath) {
@@ -81,7 +81,7 @@ describe('pkgJson', function () {
         return keys.reduce((obj, key) => {
             expect(obj).toBeDefined();
             return obj[key];
-        }, requireNoCache(pkgJsonPath));
+        }, fs.readJsonSync(pkgJsonPath));
     }
 
     function getCfg () {
@@ -260,7 +260,7 @@ describe('pkgJson', function () {
                 }).then(function () {
                     return cordova.plugin('add', PLUGIN, {save: true});
                 }).then(function () {
-                    const iosJson = requireNoCache(path.join(project, 'platforms/ios/ios.json'));
+                    const iosJson = fs.readJsonSync(path.join(project, 'platforms/ios/ios.json'));
                     expect(iosJson.installed_plugins[PLUGIN]).toBeDefined();
 
                     // Check that installed version satisfies the dependency spec
