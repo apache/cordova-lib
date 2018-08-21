@@ -15,18 +15,17 @@
  under the License.
  */
 
-var cordovaUtil = require('../cordova/util');
-var events = require('cordova-common').events;
-var Q = require('q');
-var scriptsFinder = require('./scriptsFinder');
-var Context = require('./Context');
-var CordovaError = require('cordova-common').CordovaError;
-var path = require('path');
-var fs = require('fs');
-var os = require('os');
-var superspawn = require('cordova-common').superspawn;
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const Q = require('q');
 
-var isWindows = os.platform().slice(0, 3) === 'win';
+const cordovaUtil = require('../cordova/util');
+const scriptsFinder = require('./scriptsFinder');
+const Context = require('./Context');
+const { CordovaError, events, superspawn } = require('cordova-common');
+
+const isWindows = os.platform().slice(0, 3) === 'win';
 
 /**
  * Tries to create a HooksRunner for passed project root.
