@@ -20,6 +20,7 @@ const os = require('os');
 const path = require('path');
 const Q = require('q');
 const readChunk = require('read-chunk');
+const shebangCommand = require('shebang-command');
 
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
@@ -240,17 +241,11 @@ function extractSheBangInterpreter (fullpath) {
     const chunkSize = 4096;
     const fileData = readChunk.sync(fullpath, 0, chunkSize);
     const fileChunk = fileData.toString();
+    const hookCmd = shebangCommand(fileChunk);
 
-    var hookCmd, shMatch;
-    // Filter out /usr/bin/env so that "/usr/bin/env node" works like "node".
-    var shebangMatch = fileChunk.match(/^#!(?:\/usr\/bin\/env )?([^\r\n]+)/m);
     if (fileData.length === chunkSize && !fileChunk.match(/[\r\n]/)) {
         events.emit('warn', 'shebang is too long for "' + fullpath + '"');
     }
-    if (shebangMatch) { hookCmd = shebangMatch[1]; }
-    // Likewise, make /usr/bin/bash work like "bash".
-    if (hookCmd) { shMatch = hookCmd.match(/bin\/((?:ba)?sh)$/); }
-    if (shMatch) { hookCmd = shMatch[1]; }
     return hookCmd;
 }
 
