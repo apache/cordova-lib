@@ -243,7 +243,7 @@ function extractSheBangInterpreter (fullpath) {
     const fileChunk = fileData.toString();
     const hookCmd = shebangCommand(fileChunk);
 
-    if (fileData.length === chunkSize && !fileChunk.match(/[\r\n]/)) {
+    if (hookCmd && fileData.length === chunkSize && !fileChunk.match(/[\r\n]/)) {
         events.emit('warn', 'shebang is too long for "' + fullpath + '"');
     }
     return hookCmd;
