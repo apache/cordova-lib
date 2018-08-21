@@ -389,4 +389,18 @@ describe('HooksRunner', function () {
             return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions);
         });
     });
+
+    describe('extractSheBangInterpreter', () => {
+        const rewire = require('rewire');
+        const HooksRunner = rewire('../src/hooks/HooksRunner');
+        const extractSheBangInterpreter = HooksRunner.__get__('extractSheBangInterpreter');
+
+        it('Test 025 : should not read uninitialized buffer contents', () => {
+            spyOn(require('fs'), 'readSync').and.callFake((fd, buf) => {
+                buf.write('#!/usr/bin/env XXX\n# foo');
+                return 0;
+            });
+            expect(extractSheBangInterpreter(__filename)).toBeFalsy();
+        });
+    });
 });
