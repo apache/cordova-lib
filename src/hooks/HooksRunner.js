@@ -19,6 +19,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const Q = require('q');
+const readChunk = require('read-chunk');
 
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
@@ -235,23 +236,17 @@ function runScriptViaChildProcessSpawn (script, context) {
 /**
  * Extracts shebang interpreter from script' source. */
 function extractSheBangInterpreter (fullpath) {
-    var fileChunk;
-    var octetsRead;
-    var fileData;
-    var hookFd = fs.openSync(fullpath, 'r');
-    try {
-        // this is a modern cluster size. no need to read less
-        fileData = new Buffer(4096); // eslint-disable-line
-        octetsRead = fs.readSync(hookFd, fileData, 0, 4096, 0);
-        fileChunk = fileData.toString();
-    } finally {
-        fs.closeSync(hookFd);
-    }
+    // this is a modern cluster size. no need to read less
+    const chunkSize = 4096;
+    const fileData = readChunk.sync(fullpath, 0, chunkSize);
+    const fileChunk = fileData.toString();
 
     var hookCmd, shMatch;
     // Filter out /usr/bin/env so that "/usr/bin/env node" works like "node".
     var shebangMatch = fileChunk.match(/^#!(?:\/usr\/bin\/env )?([^\r\n]+)/m);
-    if (octetsRead == 4096 && !fileChunk.match(/[\r\n]/)) { events.emit('warn', 'shebang is too long for "' + fullpath + '"'); } // eslint-disable-line eqeqeq
+    if (fileData.length === chunkSize && !fileChunk.match(/[\r\n]/)) {
+        events.emit('warn', 'shebang is too long for "' + fullpath + '"');
+    }
     if (shebangMatch) { hookCmd = shebangMatch[1]; }
     // Likewise, make /usr/bin/bash work like "bash".
     if (hookCmd) { shMatch = hookCmd.match(/bin\/((?:ba)?sh)$/); }
