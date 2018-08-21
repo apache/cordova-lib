@@ -245,7 +245,7 @@ describe('HooksRunner', function () {
                                 expect(context).toEqual(expectedContext);
                             });
                     });
-            });
+            }, 20 * 1000);
         });
 
         describe('plugin hooks', function () {
