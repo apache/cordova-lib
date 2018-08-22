@@ -21,7 +21,7 @@ var cordova = require('../../src/cordova/cordova');
 var path = require('path');
 
 describe('retrieval of project metadata', function () {
-    var projectRoot = path.resolve(__dirname, 'Projects/ProjectMetadata');
+    var projectRoot = path.resolve(__dirname, 'fixtures/projects/ProjectMetadata');
 
     it('Test 001 : retrieve platforms saved in config.xml', function () {
         var androidVersion = '3.7.1';

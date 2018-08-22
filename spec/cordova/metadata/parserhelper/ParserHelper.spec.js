@@ -22,7 +22,7 @@ var ParserHelper = require('../../../../src/cordova/metadata/parserhelper/Parser
 var ConfigParser = require('cordova-common').ConfigParser;
 
 // Create a real config object before mocking out everything.
-var xml = path.join(__dirname, '..', '..', 'test-config.xml');
+var xml = path.join(__dirname, '../../fixtures/test-config.xml');
 var cfg = new ConfigParser(xml);
 
 describe('ParserHelper', function () {
