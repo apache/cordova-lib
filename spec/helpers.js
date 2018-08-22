@@ -68,18 +68,6 @@ module.exports.setDefaultTimeout = timeout => {
     });
 };
 
-// Returns the platform that should be used for testing on this host platform.
-/*
-var host = os.platform();
-if (host.match(/win/)) {
-    module.exports.testPlatform = 'wp8';
-} else if (host.match(/darwin/)) {
-    module.exports.testPlatform = 'ios';
-} else {
-    module.exports.testPlatform = 'android';
-}
-*/
-
 module.exports.setEngineSpec = function (appPath, engine, spec) {
     appPath = getConfigPath(appPath);
     var parser = new ConfigParser(appPath);
