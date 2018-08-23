@@ -66,7 +66,7 @@ function cordovaVersionInfo () {
         .filter(name => name.startsWith('cordova-'))
         .map(name => `${name}@${versionFor(name)}`)
         .join('\n');
-    return `Cordova version ${pkg.version} with:\n${indent(deps)}`;
+    return `cordova-lib@${pkg.version} with:\n${indent(deps)}`;
 }
 
 function environmentInformation () {
