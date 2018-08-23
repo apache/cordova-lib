@@ -17,11 +17,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-/*
-A utility funciton to help output the information needed
-when submitting a help request.
-Outputs to a file
- */
 var cordova_util = require('./util');
 var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
@@ -29,81 +24,97 @@ var path = require('path');
 var fs = require('fs');
 var Q = require('q');
 
-// Execute using a child_process exec, for any async command
-function execSpawn (command, args, resultMsg, errorMsg) {
-    return superspawn.spawn(command, args).then(function (result) {
-        return resultMsg + result;
-    }, function (error) {
-        return errorMsg + error;
-    });
-}
+const indent = s => require('indent-string')(s, 2);
 
-function getPlatformInfo (platform, projectRoot) {
-    switch (platform) {
-    case 'ios':
-        return execSpawn('xcodebuild', ['-version'], 'iOS platform:\n\n', 'Error retrieving iOS platform information: ');
-    case 'android':
-        return execSpawn('android', ['list', 'target'], 'Android platform:\n\n', 'Error retrieving Android platform information: \nAndroid SDK is not set up properly. Make sure that the Android SDK \'tools\' and \'platform-tools\' directories are in the PATH variable. \n\n');
-    }
-}
-
+/**
+ * Outputs information about your system, your Cordova installation and
+ * the Cordova project this is called in, if applicable.
+ *
+ * Useful when submitting bug reports and asking for help.
+ *
+ * @return {Promise} resolved when info has been dumped
+ */
 module.exports = function info () {
-    // Get projectRoot
-    var projectRoot = cordova_util.cdProjectRoot();
-    var output = '';
-    if (!projectRoot) {
-        return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
-    }
+    const basicInfo = [
+        // Get versions for cordova and all direct cordova dependencies
+        cordovaVersionInfo(),
+        // Get information on the current environment
+        environmentInformation()
+    ];
 
-    // Array of functions, Q.allSettled
-    console.log('Collecting Data...\n\n');
-    return Q.allSettled([
-        // Get Node version
-        Q('Node version: ' + process.version),
-        // Get Cordova version
-        Q('Cordova version: ' + pkg.version),
-        // Get project config.xml file using ano
-        getProjectConfig(projectRoot),
+    const projectRoot = cordova_util.isCordova();
+    const projectInfo = !projectRoot ? [] : [
         // Get list of plugins
         listPlugins(projectRoot),
         // Get Platforms information
-        getPlatforms(projectRoot)
-    ]).then(function (promises) {
-        promises.forEach(function (p) {
-            output += p.state === 'fulfilled' ? p.value + '\n\n' : p.reason + '\n\n';
-        });
-        console.info(output);
-        fs.writeFile(path.join(projectRoot, 'info.txt'), output, 'utf-8', function (err) {
-            if (err) throw err;
-        });
-    });
+        getPlatforms(projectRoot),
+        // Display project config.xml file
+        displayFileContents(cordova_util.projectConfig(projectRoot)),
+        // Display project package.json file
+        displayFileContents(path.join(projectRoot, 'package.json'))
+    ];
+
+    const infoPromises = [].concat(basicInfo, projectInfo);
+    const failSafePromises = infoPromises.map(p => Q(p).catch(err => err));
+    return Q.all(failSafePromises)
+        .then(results => console.info(results.join('\n\n')));
 };
 
-function getPlatforms (projectRoot) {
-    var platforms = cordova_util.listPlatforms(projectRoot);
-    if (platforms.length) {
-        return Q.all(platforms.map(function (p) {
-            return getPlatformInfo(p, projectRoot);
-        })).then(function (outs) {
-            return outs.join('\n\n');
-        });
-    }
-    return Q.reject('No Platforms Currently Installed');
+function cordovaVersionInfo () {
+    const versionFor = name => require(`${name}/package`).version;
+    const deps = Object.keys(pkg.dependencies)
+        .filter(name => name.startsWith('cordova-'))
+        .map(name => `${name}@${versionFor(name)}`)
+        .join('\n');
+    return `cordova-lib@${pkg.version} with:\n${indent(deps)}`;
+}
+
+function environmentInformation () {
+    return Q.all([
+        'OS: ' + process.platform,
+        'Node: ' + process.version,
+        failSafeSpawn('npm', ['-v']).then(out => 'npm: ' + out)
+    ])
+        .then(env => env.join('\n'))
+        .then(env => 'Environment: \n' + indent(env));
 }
 
 function listPlugins (projectRoot) {
     var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath);
-
-    if (!plugins.length) {
-        return Q.reject('No Plugins Currently Installed');
-    }
-    return Q('Plugins: \n\n' + plugins);
+    var plugins = cordova_util.findPlugins(pluginPath).join('\n');
+    return 'Plugins:' + (plugins.length ? '\n' + indent(plugins) : ' []');
 }
 
-function getProjectConfig (projectRoot) {
-    if (!fs.existsSync(projectRoot)) {
-        return Q.reject('Config.xml file not found');
+function getPlatforms (projectRoot) {
+    var platforms = cordova_util.listPlatforms(projectRoot);
+    if (!platforms.length) {
+        return 'No Platforms Currently Installed';
     }
-    return Q('Config.xml file: \n\n' + (fs.readFileSync(cordova_util.projectConfig(projectRoot), 'utf-8')));
+    return Q.all(platforms.map(getPlatformInfo))
+        .then(outs => outs.join('\n\n'));
+}
+
+function getPlatformInfo (platform) {
+    switch (platform) {
+    case 'ios':
+        return failSafeSpawn('xcodebuild', ['-version'])
+            .then(out => 'iOS platform:\n' + indent(out));
+    case 'android':
+        return failSafeSpawn('android', ['list', 'target'])
+            .then(out => 'Android platform:\n' + indent(out));
+    }
+}
+
+function failSafeSpawn (command, args) {
+    return superspawn.spawn(command, args)
+        .catch(err => `ERROR: ${err.message}`);
+}
+
+function displayFileContents (filePath) {
+    const fileName = path.basename(filePath);
+    if (!fs.existsSync(filePath)) {
+        return fileName + ' file not found';
+    }
+    const contents = fs.readFileSync(filePath, 'utf-8');
+    return `${fileName} <<EOF\n${contents}\nEOF`;
 }
