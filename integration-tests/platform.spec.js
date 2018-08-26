@@ -25,7 +25,6 @@ var Q = require('q');
 var events = require('cordova-common').events;
 var cordova = require('../src/cordova/cordova');
 var rewire = require('rewire');
-var prepare = require('../src/cordova/prepare'); // eslint-disable-line no-unused-vars
 var plugman = require('../src/plugman/plugman');
 var platform = rewire('../src/cordova/platform');
 var addHelper = rewire('../src/cordova/platform/addHelper');
@@ -141,7 +140,6 @@ describe('platform end-to-end', function () {
 
     xit('Test 003 : should call prepare after plugins were installed into platform', function () {
         var order = '';
-        var fail = jasmine.createSpy(fail); // eslint-disable-line no-use-before-define
         spyOn(plugman, 'install').and.callFake(function () { order += 'I'; });
         // below line won't work since prepare is inline require in addHelper, not global
         var x = addHelper.__set__('prepare', function () { order += 'P'; }); // eslint-disable-line no-unused-vars

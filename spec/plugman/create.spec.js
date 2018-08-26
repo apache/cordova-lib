@@ -31,18 +31,12 @@ describe('create', function () {
 });
 
 describe('create plugin', function () {
-    /* eslint-disable no-unused-vars */
-    var done = false;
-    var existsSync;
-    var mkdir;
     var writeFileSync;
-    /* eslint-enable no-unused-vars */
 
     beforeEach(function () {
-        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
-        mkdir = spyOn(shell, 'mkdir').and.returnValue(true);
+        spyOn(fs, 'existsSync').and.returnValue(false);
+        spyOn(shell, 'mkdir').and.returnValue(true);
         writeFileSync = spyOn(fs, 'writeFileSync');
-        done = false;
     });
 
     it('Test 002 : should be successful', function () {
@@ -54,14 +48,8 @@ describe('create plugin', function () {
 });
 
 describe('create plugin in existing plugin', function () {
-    /* eslint-disable no-unused-vars */
-    var done = false;
-    var existsSync;
-    /* eslint-enable no-unused-vars */
-
     beforeEach(function () {
-        existsSync = spyOn(fs, 'existsSync').and.returnValue(true); // eslint-disable-line  no-unused-vars
-        done = false; // eslint-disable-line  no-unused-vars
+        spyOn(fs, 'existsSync').and.returnValue(true);
     });
 
     it('Test 003 : should fail due to an existing plugin.xml', function () {

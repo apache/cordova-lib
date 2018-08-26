@@ -23,11 +23,10 @@ var ParserHelper = require('../../../src/cordova/metadata/parserhelper/ParserHel
 
 describe('base parser', function () {
 
-    var exists; // eslint-disable-line no-unused-vars
     var parser;
 
     beforeEach(function () {
-        exists = spyOn(fs, 'existsSync');
+        spyOn(fs, 'existsSync');
         parser = new Parser();
     });
 

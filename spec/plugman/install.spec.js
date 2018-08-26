@@ -107,14 +107,13 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
 
 describe('plugman install start', function () {
     var config_queue_add;
-    var proc; // eslint-disable-line no-unused-vars
     var actions_push;
     var ca;
     var emit;
 
     beforeEach(function () {
         config_queue_add = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
-        proc = spyOn(actions.prototype, 'process').and.returnValue(Q(true));
+        spyOn(actions.prototype, 'process').and.returnValue(Q(true));
         actions_push = spyOn(actions.prototype, 'push');
         ca = spyOn(actions.prototype, 'createAction');
 
@@ -170,32 +169,23 @@ describe('plugman install start', function () {
 });
 
 describe('install', function () {
-    /* eslint-disable no-unused-vars */
-    var chmod;
-    var exec;
-    var add_to_queue;
-    var cp;
-    var rm;
-    var fetchSpy;
-    var spawnSpy;
-    /* eslint-enable no-unused-vars */
+    var exec, fetchSpy;
 
     beforeEach(function () {
-
         exec = spyOn(child_process, 'exec').and.callFake(function (cmd, cb) {
             cb(false, '', ''); // eslint-disable-line standard/no-callback-literal
         });
-        spawnSpy = spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
+        spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
         spyOn(fs, 'mkdirSync').and.returnValue(true);
         spyOn(shell, 'mkdir').and.returnValue(true);
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
         fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Q(plugins['com.cordova.engine']));
-        chmod = spyOn(fs, 'chmodSync').and.returnValue(true);
+        spyOn(fs, 'chmodSync').and.returnValue(true);
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        cp = spyOn(shell, 'cp').and.returnValue(true);
-        rm = spyOn(shell, 'rm').and.returnValue(true);
-        add_to_queue = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
+        spyOn(shell, 'cp').and.returnValue(true);
+        spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
     });
 
     describe('success', function () {
