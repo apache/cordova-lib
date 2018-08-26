@@ -32,14 +32,8 @@ describe('platform add/remove', function () {
 });
 
 describe('platform add', function () {
-    /* eslint-disable no-unused-vars */
-    var done = false;
-    var existsSync;
-    /* eslint-enable no-unused-vars */
-
     beforeEach(function () {
-        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
-        done = false;
+        spyOn(fs, 'existsSync').and.returnValue(false);
     });
     it('Test 002 : should error on non existing plugin.xml', function () {
         return platform.add().then(function () {
@@ -52,14 +46,8 @@ describe('platform add', function () {
 });
 
 describe('platform remove', function () {
-    /* eslint-disable no-unused-vars */
-    var done = false;
-    var existsSync;
-    /* eslint-enable no-unused-vars */
-
     beforeEach(function () {
-        existsSync = spyOn(fs, 'existsSync').and.returnValue(false);
-        done = false;
+        spyOn(fs, 'existsSync').and.returnValue(false);
     });
     it('Test 003 : should error on non existing plugin.xml', function () {
         return platform.remove().then(function () {

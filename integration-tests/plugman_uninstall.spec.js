@@ -106,16 +106,10 @@ describe('plugman uninstall start', function () {
 });
 
 describe('uninstallPlatform', function () {
-    /* eslint-disable no-unused-vars */
-    var proc;
-    var rm;
-    var fsWrite;
-    /* eslint-enable no-unused-vars */
-
     beforeEach(function () {
-        proc = spyOn(actions.prototype, 'process').and.returnValue(Q());
-        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
-        rm = spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(actions.prototype, 'process').and.returnValue(Q());
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        spyOn(shell, 'rm').and.returnValue(true);
         spyOn(shell, 'cp').and.returnValue(true);
     });
     describe('success', function () {
@@ -197,16 +191,12 @@ describe('uninstallPlatform', function () {
 });
 
 describe('uninstallPlugin', function () {
-    /* eslint-disable no-unused-vars */
-    var rm;
-    var fsWrite;
     var rmstack = [];
     var emit;
-    /* eslint-enable no-unused-vars */
 
     beforeEach(function () {
-        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
-        rm = spyOn(shell, 'rm').and.callFake(function (f, p) { rmstack.push(p); return true; });
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        spyOn(shell, 'rm').and.callFake(function (f, p) { rmstack.push(p); return true; });
         rmstack = [];
         emit = spyOn(events, 'emit');
     });
@@ -266,14 +256,10 @@ describe('uninstallPlugin', function () {
 });
 
 describe('uninstall', function () {
-    /* eslint-disable no-unused-vars */
-    var fsWrite;
-    var rm;
-    /* eslint-enable no-unused-vars */
 
     beforeEach(function () {
-        fsWrite = spyOn(fs, 'writeFileSync').and.returnValue(true);
-        rm = spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        spyOn(shell, 'rm').and.returnValue(true);
     });
 
     describe('failure', function () {

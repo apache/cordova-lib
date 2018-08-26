@@ -91,9 +91,6 @@ describe('create basic test (see more in cordova-create)', function () {
         // expect(configXml.name()).toEqual('TestBase');
     }
 
-    var results; // eslint-disable-line no-unused-vars
-    events.on('results', function (res) { results = res; });
-
     it('Test 003 : should successfully run', function () {
         return Q()
             .then(function () {

@@ -24,11 +24,10 @@ var cordova_util = require('../../../src/cordova/util');
 describe('cordova/plugin', function () {
     var projectRoot = '/some/path';
     var hook_mock = function () {};
-    var hook_revert_mock; // eslint-disable-line no-unused-vars
 
     beforeEach(function () {
         spyOn(cordova_util, 'cdProjectRoot').and.returnValue(projectRoot);
-        hook_revert_mock = plugin.__set__('HooksRunner', hook_mock);
+        plugin.__set__('HooksRunner', hook_mock);
     });
 
     describe('error conditions', function () {

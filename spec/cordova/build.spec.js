@@ -26,7 +26,6 @@ var supported_platforms = Object.keys(platforms);
 
 describe('build command', function () {
     var is_cordova;
-    var cd_project_root; // eslint-disable-line no-unused-vars
     var list_platforms;
     var fire;
     var project_dir = '/some/path';
@@ -34,7 +33,7 @@ describe('build command', function () {
 
     beforeEach(function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
         prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());

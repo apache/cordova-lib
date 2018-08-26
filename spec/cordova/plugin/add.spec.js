@@ -42,12 +42,6 @@ describe('cordova/plugin/add', function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Q());
         Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin', 'removePlugin', 'addPlugin', 'write']);
-        /* eslint-disable */
-        Cfg_parser_mock.prototype.getPlugin;
-        Cfg_parser_mock.prototype.removePlugin;
-        Cfg_parser_mock.prototype.addPlugin;
-        Cfg_parser_mock.prototype.write;
-        /* eslint-enable */
         cfg_parser_revert_mock = add.__set__('ConfigParser', Cfg_parser_mock);
         plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
         plugin_info.getPreferences.and.returnValue({});
