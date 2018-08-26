@@ -16,7 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* eslint-env jasmine */
 
 var rewire = require('rewire');
 var plugin_util = rewire('../../../src/cordova/plugin/util');

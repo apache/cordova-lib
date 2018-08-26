@@ -16,7 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* globals fail */
 
 var Q = require('q');
 var rewire = require('rewire');

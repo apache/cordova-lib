@@ -17,9 +17,6 @@
     under the License.
 */
 
-/* eslint-env jasmine */
-/* global fail */
-
 var path = require('path');
 var rewire = require('rewire');
 var util = require('../../src/cordova/util');

@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* eslint-env jasmine */
+
 var path = require('path');
 var fs = require('fs');
 var Plugin_parser = require('../../src/cordova/plugin_parser');

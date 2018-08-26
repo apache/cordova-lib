@@ -14,7 +14,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* globals fail */
 
 var rewire = require('rewire');
 var platform = rewire('../../../src/cordova/platform');
