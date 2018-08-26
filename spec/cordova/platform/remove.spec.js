@@ -22,7 +22,6 @@ var events = require('cordova-common').events;
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
 var promiseutil = require('../../../src/util/promise-util');
-var fail;
 
 describe('cordova/platform/remove', function () {
     var projectRoot = '/some/path';

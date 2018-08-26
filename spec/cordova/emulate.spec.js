@@ -28,7 +28,6 @@ describe('emulate command', function () {
     var is_cordova;
     var list_platforms;
     var fire;
-    var fail;
     var project_dir = '/some/path';
     var prepare_spy, platformApi, getPlatformApi;
 
@@ -38,7 +37,6 @@ describe('emulate command', function () {
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
         prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
-        fail = function (err) { expect(err.stack).not.toBeDefined(); };
         platformApi = {
             run: jasmine.createSpy('run').and.returnValue(Q()),
             build: jasmine.createSpy('build').and.returnValue(Q())
