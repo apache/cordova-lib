@@ -59,7 +59,7 @@
   },
   "scripts": {
     "test": "npm run eslint && npm run unit-tests && npm run e2e-tests",
-    "eslint": "eslint src spec integration-tests",
+    "eslint": "eslint .",
     "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "cover": "nyc -x spec/ -x integration-tests/ npm test",
     "report-coverage": "nyc report -r text-lcov > coverage.lcov && codecov",
