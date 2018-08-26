@@ -17,5 +17,9 @@
     under the License.
 */
 
-// Verify that cordova-lib.js can be loaded
-var cordovaLib = require('../../cordova-lib'); // eslint-disable-line no-unused-vars
+describe('cordova lib main export', () => {
+    it('should be available', function () {
+        // Verify that cordova-lib.js can be loaded
+        expect(require('../../cordova-lib')).toBeDefined();
+    });
+});
