@@ -16,7 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* eslint-env jasmine */
 
 var pluginSpec = require('../../../src/cordova/plugin/plugin_spec_parser');
 

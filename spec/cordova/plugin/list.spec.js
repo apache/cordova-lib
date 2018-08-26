@@ -16,9 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-// TODO: remove once eslint lands
-/* eslint-env jasmine */
-/* globals fail */
 
 var Q = require('q');
 var list = require('../../../src/cordova/plugin/list');
