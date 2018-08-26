@@ -14,7 +14,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* eslint-env jasmine */
 
 var os = require('os');
 var Q = require('q');
