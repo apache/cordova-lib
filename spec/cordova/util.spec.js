@@ -271,7 +271,6 @@ describe('util module', function () {
             });
 
             it('Test 024 : should convert known options (platform-agnostic) into resultant object\'s fields', function () {
-                /* eslint-disable no-useless-escape */
                 var expectedResult = {
                     'debug': true,
                     'release': true,
@@ -281,9 +280,8 @@ describe('util module', function () {
                     'list': true,
                     'buildConfig': '/fake/path/build.json',
                     'target': 'foo',
-                    'archs': '\"x86 x64\"'
+                    'archs': '"x86 x64"'
                 };
-                /* eslint-disable no-useless-escape */
 
                 expect(util.preProcessOptions({options: validOptions}).options)
                     .toEqual(jasmine.objectContaining(expectedResult));
