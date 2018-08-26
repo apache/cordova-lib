@@ -17,9 +17,8 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const prepare = require('../src/cordova/prepare');
+const rewire = require('rewire');
 const { ConfigParser } = require('cordova-common');
-const { listPlatforms } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
 
 const TIMEOUT = 240 * 1000;
@@ -33,6 +32,7 @@ describe('restore', function () {
 
     const fixturesPath = path.join(__dirname, '../spec/cordova/fixtures');
     var tmpDir, project, pkgJsonPath, configXmlPath;
+    var restore, cordovaPlatform, cordovaPlugin;
 
     beforeEach(() => {
         tmpDir = getTmpDir('pkgJson');
@@ -40,6 +40,15 @@ describe('restore', function () {
         pkgJsonPath = path.join(project, 'package.json');
         configXmlPath = path.join(project, 'config.xml');
         delete process.env.PWD;
+
+        cordovaPlugin = require('../src/cordova/plugin');
+        spyOn(cordovaPlugin, 'add')
+            .and.returnValue(Promise.resolve());
+
+        cordovaPlatform = jasmine.createSpy('cordovaPlatform')
+            .and.returnValue(Promise.resolve());
+        restore = rewire('../src/cordova/restore-util');
+        restore.__set__({ cordovaPlatform });
 
         setupBaseProject();
     });
@@ -58,7 +67,6 @@ describe('restore', function () {
         expect(getCfg().getEngines()).toEqual([]);
         expect(getPkgJson('cordova')).toBeUndefined();
         expect(getPkgJson('dependencies')).toBeUndefined();
-        expect(installedPlatforms()).toEqual([]);
     }
 
     // TODO remove this once apache/cordova-common#38
@@ -105,15 +113,6 @@ describe('restore', function () {
         return platformName.replace(/^(?:cordova-)?/, 'cordova-');
     }
 
-    function pluginPath (pluginName) {
-        return path.join(project, 'plugins', pluginName);
-    }
-
-    function installedPlatforms () {
-        // Sort platform list to allow for easy pseudo set equality
-        return listPlatforms(project).sort();
-    }
-
     function expectPluginsInPkgJson (plugins) {
         const pkgJson = getPkgJson();
         expect(pkgJson).toBeDefined();
@@ -138,14 +137,29 @@ describe('restore', function () {
         }
     }
 
+    function expectPlatformAdded (platform) {
+        expect(cordovaPlatform).toHaveBeenCalledWith('add', platform, undefined);
+    }
+
+    function expectPluginAdded (plugin) {
+        expect(cordovaPlugin.add).toHaveBeenCalledWith(
+            jasmine.any(String), jasmine.anything(),
+            jasmine.objectContaining({
+                plugins: jasmine.arrayContaining([
+                    jasmine.stringMatching(plugin)
+                ])
+            })
+        );
+    }
+
     function expectConsistentPlugins (plugins) {
-        expect(getCfg().getPlugins()).toEqual(plugins);
+        expect(getCfg().getPlugins()).toEqual(jasmine.arrayWithExactContents(plugins));
 
         const unwrappedPlugins = plugins.map(p => p.sample || p);
         expectPluginsInPkgJson(unwrappedPlugins);
 
         const pluginNames = unwrappedPlugins.map(({ name }) => name);
-        pluginNames.forEach(name => expect(pluginPath(name)).toExist());
+        pluginNames.forEach(expectPluginAdded);
     }
 
     describe('with --save', function () {
@@ -167,7 +181,7 @@ describe('restore', function () {
                 [platformPkgName(PLATFORM)]: '^7.1.1'
             });
 
-            return prepare().then(() => {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // No changes to pkg.json spec for android.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
@@ -179,7 +193,7 @@ describe('restore', function () {
                     spec: jasmine.stringMatching(/^\^/)
                 })]);
             });
-        }, 300000);
+        });
 
         /** Test#001 will add a platform to package.json with the 'save' flag.
         *   It will remove it from platforms.json without the save flag.
@@ -189,9 +203,9 @@ describe('restore', function () {
         it('Test#001 : should restore platform that has been removed from project', function () {
             setPkgJson('cordova.platforms', [testPlatform]);
 
-            return prepare().then(() => {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // Check that the platform was properly restored
-                expect(installedPlatforms()).toEqual([testPlatform]);
+                expectPlatformAdded(testPlatform);
             });
         });
 
@@ -209,7 +223,7 @@ describe('restore', function () {
             });
             setPkgJson('cordova.platforms', [PLATFORM]);
 
-            return prepare().then(() => {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // Check config.xml for spec modification.
                 expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
                     name: PLATFORM,
@@ -241,9 +255,7 @@ describe('restore', function () {
             });
             setPkgJson('cordova.plugins', { [PLUGIN_ID]: {} });
 
-            expect(pluginPath(PLUGIN_ID)).not.toExist();
-
-            return prepare({ save: true }).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 // Config.xml spec now matches the one in pkg.json.
                 expectConsistentPlugins([{
                     name: PLUGIN_ID,
@@ -272,7 +284,7 @@ describe('restore', function () {
             });
             const modTimes = getModTimes();
 
-            return prepare().then(function () {
+            return restore.installPlatformsFromConfigXML().then(function () {
                 expect(getModTimes()).toEqual(modTimes);
             });
         });
@@ -293,7 +305,7 @@ describe('restore', function () {
                 .write();
             setPkgJson('cordova.platforms', [testPlatform]);
 
-            return prepare().then(function () {
+            return restore.installPlatformsFromConfigXML().then(function () {
                 const pkgJson = getPkgJson();
                 // Expect both pkg.json and config.xml to each have both platforms in their arrays.
                 expect(getCfgEngineNames()).toEqual([PLATFORM_1, PLATFORM_2]);
@@ -315,7 +327,7 @@ describe('restore', function () {
                 .addEngine('android')
                 .write();
 
-            return prepare().then(function () {
+            return restore.installPlatformsFromConfigXML().then(function () {
                 // Expect no change to config.xml.
                 expect(getCfgEngineNames()).toEqual(['android']);
                 // Expect cordova key and 'android' platform to be added to pkg.json.
@@ -337,7 +349,7 @@ describe('restore', function () {
             });
             setPkgJson('cordova.platforms', ['ios', 'browser']);
 
-            return prepare().then(function () {
+            return restore.installPlatformsFromConfigXML().then(function () {
                 // Check to make sure that 'browser' spec was added properly.
                 expect(getCfg().getEngines()).toEqual([
                     { name: 'ios', spec: '^4.5.4' },
@@ -363,15 +375,16 @@ describe('restore', function () {
                 .write();
             fs.removeSync(pkgJsonPath);
 
-            return prepare().then(function () {
-                const cfg = getCfg();
-                expect(getCfgEngineNames(cfg)).toEqual([PLATFORM_1]);
-                expect(cfg.getPluginIdList()).toEqual([PLUGIN_ID]);
-
-                expect(installedPlatforms()).toEqual([PLATFORM_1]);
-                expect(pluginPath(PLUGIN_ID)).toExist();
+            return Promise.resolve().then(function () {
+                return restore.installPlatformsFromConfigXML();
+            }).then(function () {
+                return restore.installPluginsFromConfigXML({});
+            }).then(function () {
+                expectPlatformAdded(PLATFORM_1);
+                expectPluginAdded(PLUGIN_ID);
 
                 // Package.json should be auto-created using values from config.xml
+                const cfg = getCfg();
                 expect(getPkgJson()).toEqual(jasmine.objectContaining({
                     name: cfg.packageName().toLowerCase(),
                     version: cfg.version(),
@@ -406,7 +419,7 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'json' }
             });
 
-            return prepare({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(function () {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -431,7 +444,7 @@ describe('restore', function () {
                 'cordova-plugin-camera': {}
             });
 
-            return prepare({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(function () {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -463,7 +476,7 @@ describe('restore', function () {
                 'cordova-plugin-device': { variable_1: 'value_1' }
             });
 
-            return prepare({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(function () {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -507,18 +520,18 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'value_1', variable_3: 'value_3' }
             });
 
-            return prepare({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(function () {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
-                    spec: '^2.4.1',
+                    spec: '^2.3.0',
                     variables: { variable_1: 'value_1', variable_2: 'value_2', variable_3: 'value_3' }
                 }, {
                     name: 'cordova-plugin-device',
-                    spec: '^1.0.1',
+                    spec: '~1.0.0',
                     variables: {}
                 }, {
                     name: 'cordova-plugin-splashscreen',
-                    spec: jasmine.any(String),
+                    spec: undefined,
                     variables: {}
                 }]);
             });
@@ -536,10 +549,10 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'value_1' }
             });
 
-            return prepare({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(function () {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
-                    spec: '^2.4.1',
+                    spec: '^2.3.0',
                     variables: { variable_1: 'value_1' }
                 }]);
             });
