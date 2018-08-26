@@ -18,8 +18,6 @@
 const path = require('path');
 const fs = require('fs-extra');
 const prepare = require('../src/cordova/prepare');
-const cordovaPlugin = require('../src/cordova/plugin');
-const cordovaPlatform = require('../src/cordova/platform');
 const { ConfigParser } = require('cordova-common');
 const { listPlatforms } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
@@ -159,20 +157,17 @@ describe('restore', function () {
         it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function () {
             const PLATFORM = 'android';
 
-            return cordovaPlatform('add', PLATFORM, {save: true}).then(function () {
-                // When spec is added to pkg.json, first char is '^'.
-                const pkgJson = getPkgJson();
-                expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toMatch(/^\^/);
+            // When spec is added to config.xml, first char is '~'.
+            getCfg()
+                .addEngine(PLATFORM, '~7.1.1')
+                .write();
 
-                // When spec is added to config.xml, first char is '~'.
-                expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
-                    name: PLATFORM,
-                    spec: jasmine.stringMatching(/^~/)
-                })]);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
+            // When spec is added to pkg.json, first char is '^'.
+            setPkgJson('dependencies', {
+                [platformPkgName(PLATFORM)]: '^7.1.1'
+            });
+
+            return prepare().then(() => {
                 // No changes to pkg.json spec for android.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
@@ -192,61 +187,11 @@ describe('restore', function () {
         *   installed platform list in platforms.json.
         */
         it('Test#001 : should restore platform that has been removed from project', function () {
-            return Promise.resolve().then(function () {
-                // Add the testing platform with --save.
-                return cordovaPlatform('add', testPlatform, {save: true});
-            }).then(function () {
-                // Check the platform add was successful in package.json.
-                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
-                // Check that the platform was actually installed
-                expect(installedPlatforms()).toEqual([testPlatform]);
-            }).then(function () {
-                // And now remove testPlatform without --save.
-                return cordovaPlatform('rm', testPlatform);
-            }).then(function () {
-                // Check that the platform removed without --save is still in platforms key.
-                expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
+            setPkgJson('cordova.platforms', [testPlatform]);
+
+            return prepare().then(() => {
                 // Check that the platform was properly restored
                 expect(installedPlatforms()).toEqual([testPlatform]);
-            });
-        });
-
-        /** Test#002 will add two platforms to package.json with the 'save' flag.
-        *   It will remove one platform from pkg.json without the 'save' flag and remove
-        *   the other platform with the 'save' flag. After running cordova prepare,
-        *   the platform removed with the 'save' flag should NOT be restored in platforms.json.
-        */
-        it('Test#002 : should NOT restore platform that was removed with --save', function () {
-            const savedPlatform = 'browser';
-            const testPlatforms = Object.freeze([
-                testPlatform, savedPlatform
-            ]);
-
-            return Promise.resolve().then(function () {
-                // Add the test platforms with --save.
-                return cordovaPlatform('add', testPlatforms, {save: true});
-            }).then(function () {
-                // Check the platform add of both platforms (to pkg.Json) was successful.
-                expect(getPkgJson('cordova.platforms')).toEqual(testPlatforms);
-                // Check that the platforms were actually installed
-                expect(installedPlatforms()).toEqual(testPlatforms);
-            }).then(function () {
-                // Remove testPlatform with --save.
-                return cordovaPlatform('rm', testPlatform, {save: true});
-            }).then(function () {
-                // Remove secondPlatformAdded without --save.
-                return cordovaPlatform('rm', savedPlatform);
-            }).then(function () {
-                // Check that ONLY the platform removed without --save is still in (pkg.json) platforms key.
-                expect(getPkgJson('cordova.platforms')).toEqual([savedPlatform]);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                // Check that the platform was properly restored
-                expect(installedPlatforms()).toEqual([savedPlatform]);
             });
         });
 
@@ -259,31 +204,12 @@ describe('restore', function () {
             const PLATFORM = 'browser';
             const PLATFORM_URL = 'https://github.com/apache/cordova-browser';
 
-            return Promise.resolve().then(function () {
-                // Add platform with save and fetch
-                return cordovaPlatform('add', PLATFORM_URL, {save: true});
-            }).then(function () {
-                // Check that platform was added to config.xml successfully.
-                expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
-                    name: PLATFORM,
-                    spec: PLATFORM_URL
-                })]);
+            setPkgJson('dependencies', {
+                [platformPkgName(PLATFORM)]: `git+${PLATFORM_URL}.git`
+            });
+            setPkgJson('cordova.platforms', [PLATFORM]);
 
-                // Check that platform was added to pkg.json successfully.
-                const pkgJson = getPkgJson();
-                expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
-            }).then(function () {
-                // Remove platform without --save.
-                return cordovaPlatform('rm', PLATFORM);
-            }).then(function () {
-                // Platform in pkg.json should still be there.
-                const pkgJson = getPkgJson();
-                expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
+            return prepare().then(() => {
                 // Check config.xml for spec modification.
                 expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
                     name: PLATFORM,
@@ -305,84 +231,25 @@ describe('restore', function () {
             const PLUGIN_ID = 'cordova-plugin-splashscreen';
             const PLUGIN_URL = 'https://github.com/apache/cordova-plugin-splashscreen';
 
-            return Promise.resolve().then(function () {
-                // Add plugin with save and fetch.
-                return cordovaPlugin('add', PLUGIN_URL, {save: true});
-            }).then(function () {
-                // Plugin was installed and added to config.xml and pkg.json
-                expect(getCfg().getPlugins()).toEqual([{
-                    name: PLUGIN_ID,
-                    spec: PLUGIN_URL,
-                    variables: jasmine.any(Object)
-                }]);
-                expectPluginsInPkgJson([{
-                    name: PLUGIN_ID,
-                    spec: `git+${PLUGIN_URL}.git`,
-                    variables: jasmine.any(Object)
-                }]);
-                expect(pluginPath(PLUGIN_ID)).toExist();
-            }).then(function () {
-                // Remove plugin without --save.
-                return cordovaPlugin('rm', PLUGIN_ID);
-            }).then(function () {
-                // config.xml and pkg.json remain unchanged
-                expect(getCfg().getPlugins()).toEqual([{
-                    name: PLUGIN_ID,
-                    spec: PLUGIN_URL,
-                    variables: jasmine.any(Object)
-                }]);
-                expectPluginsInPkgJson([{
-                    name: PLUGIN_ID,
-                    spec: `git+${PLUGIN_URL}.git`,
-                    variables: jasmine.any(Object)
-                }]);
-                // Plugin was removed from the installed plugin list successfully.
-                expect(pluginPath(PLUGIN_ID)).not.toExist();
-            }).then(function () {
-                // Add platform (so that prepare can run).
-                return cordovaPlatform('add', 'browser', {save: true});
-            }).then(function () {
-                return prepare({save: true});
-            }).then(function () {
+            getCfg()
+                .addEngine(testPlatform)
+                .addPlugin({ name: PLUGIN_ID, spec: PLUGIN_URL })
+                .write();
+
+            setPkgJson('dependencies', {
+                [PLUGIN_ID]: `git+${PLUGIN_URL}.git`
+            });
+            setPkgJson('cordova.plugins', { [PLUGIN_ID]: {} });
+
+            expect(pluginPath(PLUGIN_ID)).not.toExist();
+
+            return prepare({ save: true }).then(() => {
                 // Config.xml spec now matches the one in pkg.json.
                 expectConsistentPlugins([{
                     name: PLUGIN_ID,
                     spec: `git+${PLUGIN_URL}.git`,
                     variables: jasmine.any(Object)
                 }]);
-            });
-        });
-
-        /** Test#003 will add two platforms to package.json - one with the 'save' flag and one
-        *   without the 'save' flag. It will remove both platforms without a 'save' flag.
-        *   After running cordova prepare, only the platform added with the 'save' flag is restored
-        *   in platforms.json.
-        */
-        it('Test#003 : should NOT restore platform that was not saved and removed', function () {
-            const PLATFORM_1 = 'ios';
-            const PLATFORM_2 = 'browser';
-
-            return Promise.resolve().then(function () {
-                // Add PLATFORM_1 platform to project without --save
-                return cordovaPlatform('add', PLATFORM_1);
-            }).then(function () {
-                // Add PLATFORM_2 to project with --save
-                return cordovaPlatform('add', PLATFORM_2, {save: true});
-            }).then(function () {
-                // Both platforms are installed but only PLATFORM_2 is in pkg.json
-                expect(installedPlatforms()).toEqual([PLATFORM_2, PLATFORM_1]);
-                expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM_2]);
-            }).then(function () {
-                // Remove all platforms without --save.
-                return cordovaPlatform('rm', [PLATFORM_1, PLATFORM_2]);
-            }).then(function () {
-                // Check that the platform that was added with --save is still in package.json.
-                expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM_2]);
-            }).then(function () {
-                return prepare();
-            }).then(function () {
-                // Check that the platform was properly restored
-                expect(installedPlatforms()).toEqual([PLATFORM_2]);
             });
         });
     });
