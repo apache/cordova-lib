@@ -178,10 +178,10 @@ describe('cordova/restore-util', () => {
                 expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toMatch(/^\^/);
 
                 // config.xml spec should change from '~' to '^'.
-                expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
+                expect(getCfg().getEngines()).toEqual([{
                     name: PLATFORM,
                     spec: jasmine.stringMatching(/^\^/)
-                })]);
+                }]);
             });
         });
 
@@ -205,10 +205,10 @@ describe('cordova/restore-util', () => {
 
             return restore.installPlatformsFromConfigXML().then(() => {
                 // Check config.xml for spec modification.
-                expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
+                expect(getCfg().getEngines()).toEqual([{
                     name: PLATFORM,
                     spec: `git+${PLATFORM_URL}.git`
-                })]);
+                }]);
                 // No change to pkg.json.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
@@ -249,10 +249,10 @@ describe('cordova/restore-util', () => {
                 expect(getCfgEngineNames()).toEqual([PLATFORM_1, PLATFORM_2]);
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM_1, PLATFORM_2]);
                 // Platform specs from config.xml have been added to pkg.json.
-                expect(pkgJson.dependencies).toEqual(jasmine.objectContaining({
+                expect(pkgJson.dependencies).toEqual({
                     [platformPkgName(PLATFORM_1)]: '7.0.0',
                     [platformPkgName(PLATFORM_2)]: '^5.0.3'
-                }));
+                });
             });
         });
 
