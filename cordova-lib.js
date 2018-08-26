@@ -20,10 +20,10 @@
 var common = require('cordova-common');
 
 exports = module.exports = {
-    set binname(name) {
+    set binname (name) {
         this.cordova.binname = name;
     },
-    get binname() {
+    get binname () {
         return this.cordova.binname;
     },
     events: common.events,
