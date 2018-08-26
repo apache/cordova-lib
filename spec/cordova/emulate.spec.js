@@ -26,7 +26,6 @@ var supported_platforms = Object.keys(platforms).filter(function (p) { return p 
 
 describe('emulate command', function () {
     var is_cordova;
-    var cd_project_root; // eslint-disable-line no-unused-vars
     var list_platforms;
     var fire;
     var project_dir = '/some/path';
@@ -34,7 +33,7 @@ describe('emulate command', function () {
 
     beforeEach(function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
-        cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
+        spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
         prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
@@ -70,7 +69,7 @@ describe('emulate command', function () {
     describe('success', function () {
         it('Test 003 : should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function () {
             return cordova.emulate(['android', 'ios'])
-                .then(function (err) { // eslint-disable-line handle-callback-err
+                .then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['android', 'ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('android');
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
@@ -80,7 +79,7 @@ describe('emulate command', function () {
         });
         it('Test 004 : should pass down options', function () {
             return cordova.emulate({platforms: ['ios'], options: { optionTastic: true }})
-                .then(function (err) { // eslint-disable-line handle-callback-err
+                .then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({platforms: ['ios']}));
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });

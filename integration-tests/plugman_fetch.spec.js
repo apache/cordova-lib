@@ -54,20 +54,16 @@ describe('fetch', function () {
     });
 */
     describe('local plugins', function () {
-        /* eslint-disable no-unused-vars */
-        var rm;
         var sym;
         var cp;
-        var save_metadata;
         var revertLocal;
         var revertFetch;
         var fetchCalls = 0;
-        /* eslint-enable no-unused-vars */
         beforeEach(function () {
-            rm = spyOn(shell, 'rm');
+            spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             cp = spyOn(shell, 'cp').and.callThrough();
-            save_metadata = spyOn(metadata, 'save_fetch_metadata');
+            spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
             revertLocal = fetch.__set__('localPlugins', null);
             revertFetch = fetch.__set__('fetch', function (pluginDir) {
