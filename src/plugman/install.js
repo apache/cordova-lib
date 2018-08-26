@@ -19,8 +19,8 @@
 
 var path = require('path');
 var fs = require('fs');
-var action_stack = require('cordova-common').ActionStack;
-var dep_graph = require('dep-graph');
+var ActionStack = require('cordova-common').ActionStack;
+var DepGraph = require('dep-graph');
 var child_process = require('child_process');
 var semver = require('semver');
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -73,8 +73,8 @@ module.exports = function installPlugin (platform, project_dir, id, plugins_dir,
 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
-    var current_stack = new action_stack(); // eslint-disable-line new-cap
-    return possiblyFetch(id, plugins_dir, options) // eslint-disable-line new-cap
+    var current_stack = new ActionStack();
+    return possiblyFetch(id, plugins_dir, options)
         .then(function (plugin_dir) {
             return module.exports.runInstall(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
         });
@@ -264,7 +264,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
     plugin_dir = cordovaUtil.convertToRealPathSafe(plugin_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
     options = options || {};
-    options.graph = options.graph || new dep_graph(); // eslint-disable-line new-cap
+    options.graph = options.graph || new DepGraph();
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
 
     var pluginInfoProvider = options.pluginInfoProvider;

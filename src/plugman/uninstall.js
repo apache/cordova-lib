@@ -21,7 +21,7 @@ var path = require('path');
 var fs = require('fs');
 var semver = require('semver');
 var shell = require('shelljs');
-var action_stack = require('cordova-common').ActionStack;
+var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
 var CordovaError = require('cordova-common').CordovaError;
 var underscore = require('underscore');
@@ -81,7 +81,7 @@ module.exports.uninstallPlatform = function (platform, project_dir, id, plugins_
         return Q.reject(new CordovaError('Plugin "' + id + '" not found. Already uninstalled?'));
     }
 
-    var current_stack = new action_stack(); // eslint-disable-line new-cap
+    var current_stack = new ActionStack();
 
     return Q().then(function () {
         if (options.platformVersion) {
@@ -245,7 +245,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     var plugin_id = pluginInfo.id;
 
     // Merge cli_variables and plugin.xml variables
-    var variables = variableMerge.mergeVariables(plugin_dir, platform, options); // eslint-disable-line
+    var variables = variableMerge.mergeVariables(plugin_dir, platform, options);
 
     // Deps info can be passed recusively
     var platformJson = PlatformJson.load(plugins_dir, platform);
