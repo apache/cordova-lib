@@ -22,7 +22,6 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var shell = require('shelljs');
-var realrm = shell.rm;
 // xml_helpers = require('../src/util/xml-helpers'),
 var metadata = require('../src/plugman/util/metadata');
 var temp = path.join(os.tmpdir(), 'plugman', 'fetch');
@@ -59,12 +58,15 @@ describe('fetch', function () {
         var revertLocal;
         var revertFetch;
         var fetchCalls = 0;
+
         beforeEach(function () {
+            shell.rm('-rf', temp);
+
             spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             cp = spyOn(shell, 'cp').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
-            realrm('-rf', temp);
+
             revertLocal = fetch.__set__('localPlugins', null);
             revertFetch = fetch.__set__('fetch', function (pluginDir) {
                 fetchCalls++;
