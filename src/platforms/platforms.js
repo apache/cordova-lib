@@ -52,8 +52,8 @@ function getPlatformApi (platform, platformRootDir) {
     if (cached && cached.platform === platform) {
         platformApi = cached;
     } else {
-        var pApi = util.getPlatformApiFunction(libDir, platform);
-        platformApi = new pApi(platform, platformRootDir, events); // eslint-disable-line new-cap
+        var PlatformApi = util.getPlatformApiFunction(libDir, platform);
+        platformApi = new PlatformApi(platform, platformRootDir, events);
         cachedApis[platformRootDir] = platformApi;
     }
     return platformApi;

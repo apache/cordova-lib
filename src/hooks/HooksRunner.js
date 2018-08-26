@@ -142,7 +142,7 @@ function runScript (script, context) {
     if (typeof script.useModuleLoader === 'undefined') {
         // if it is not explicitly defined whether we should use modeule loader or not
         // we assume we should use module loader for .js files
-        script.useModuleLoader = path.extname(script.path).toLowerCase() == '.js'; // eslint-disable-line eqeqeq
+        script.useModuleLoader = path.extname(script.path).toLowerCase() === '.js';
     }
 
     var source;
@@ -226,7 +226,7 @@ function runScriptViaChildProcessSpawn (script, context) {
     return superspawn.spawn(command, args, execOpts)
         .catch(function (err) {
             // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
-            if (!isWindows && err.code == 'EACCES') { // eslint-disable-line eqeqeq
+            if (!isWindows && err.code === 'EACCES') {
                 events.emit('verbose', 'Skipped non-executable file: ' + script.fullPath);
             } else {
                 throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);

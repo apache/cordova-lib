@@ -218,7 +218,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
             }
             // If the platform is already installed, no need to re-install it.
             if (!fs.existsSync(platformsInstalled) && (installAllPlatforms || platforms.indexOf(platformName) > -1)) {
-                events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project'); // eslint-disable-line no-useless-escape
+                events.emit('log', 'Discovered platform "' + target + '" in config.xml or package.json. Adding it to the project');
                 return cordovaPlatform('add', target, opts);
             }
         }
@@ -414,7 +414,7 @@ function installPluginsFromConfigXML (args) {
         return plugin('add', installFrom, options);
     }, function (error) {
         // CB-10921 emit a warning in case of error
-        var msg = 'Failed to restore plugin \"' + pluginName + '\" from config.xml. ' + // eslint-disable-line no-useless-escape
+        var msg = 'Failed to restore plugin "' + pluginName + '" from config.xml. ' +
             'You might need to try adding it again. Error: ' + error;
         process.exitCode = 1;
         events.emit('warn', msg);
