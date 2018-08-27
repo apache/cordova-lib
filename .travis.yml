@@ -17,4 +17,5 @@ install:
   #- (cd cordova-fetch && npm install && npm link ../cordova-common)
 
 script:
-  - "npm test"
+  - npm run cover
+  - npm run report-coverage
