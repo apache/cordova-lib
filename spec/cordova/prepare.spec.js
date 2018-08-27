@@ -170,11 +170,6 @@ describe('cordova/prepare', function () {
                 expect(platform_api_prepare_mock).toHaveBeenCalled();
             });
         });
-        it('should fire a pre_package hook for the windows', function () {
-            return prepare.preparePlatforms(['windows'], project_dir, {}).then(function () {
-                expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('pre_package', jasmine.any(Object));
-            });
-        });
         // TODO: xit'ed the one below as dynamic requires make it difficult to spy on
         // Can we refactor the relevant code to make it testable?
         xit('should invoke browserify if the browserify option is provided');
