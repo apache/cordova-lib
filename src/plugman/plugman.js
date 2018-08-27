@@ -20,7 +20,6 @@
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
 var events = require('cordova-common').events;
-var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 var Q = require('q');
 
 var plugman = {
@@ -35,20 +34,8 @@ var plugman = {
     help: require('./help'),
     create: require('./create'),
     platform: require('./platform_operation'),
-    createpackagejson: require('./createpackagejson'),
-    raw: {}
+    createpackagejson: require('./createpackagejson')
 };
-
-// Add the below top-level plugman methods/modules as "aliases" to the
-// plugman.raw object. It will emit a warning deprecation notice about the
-// impending removal of plugman.raw.
-var modulesToAlias = ['install', 'uninstall', 'fetch', 'browserify', 'help',
-    'config', 'owner', 'search', 'info', 'create', 'platform',
-    'createpackagejson'];
-
-modulesToAlias.forEach(function (mod) {
-    aliasMethodToRawWithDeprecationNotice(mod, plugman, 'plugman');
-});
 
 plugman.commands = {
     'config': function (cli_opts) {

@@ -19,7 +19,6 @@
 
 var cordova_events = require('cordova-common').events;
 var cordova_util = require('./util');
-var aliasMethodToRawWithDeprecationNotice = require('../util/alias');
 
 var off = function () {
     cordova_events.removeListener.apply(cordova_events, arguments);
@@ -61,17 +60,5 @@ exports = module.exports = {
     targets: require('./targets'),
     requirements: require('./requirements'),
     projectMetadata: require('./project_metadata'),
-    clean: require('./clean'),
-    raw: {}
+    clean: require('./clean')
 };
-
-// Add the below top-level cordova methods/modules as "aliases" to the
-// cordova.raw object. It will emit a warning deprecation notice about the
-// impending removal of cordova.raw.
-var modulesToAlias = ['prepare', 'build', 'config', 'emulate', 'plugin',
-    'plugins', 'serve', 'platform', 'platforms', 'compile', 'run', 'info',
-    'targets', 'requirements', 'projectMetadata', 'clean'];
-
-modulesToAlias.forEach(function (mod) {
-    aliasMethodToRawWithDeprecationNotice(mod, module.exports, 'cordova');
-});

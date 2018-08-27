@@ -53,8 +53,6 @@ Object.defineProperty(exports, 'libDirectory', {
     }
 });
 
-exports.raw = {};
-
 exports.isCordova = isCordova;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
