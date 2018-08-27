@@ -26,7 +26,6 @@ var url = require('url');
 var nopt = require('nopt');
 var Q = require('q');
 var semver = require('semver');
-var aliasMethod = require('../util/alias');
 var platforms = require('../platforms/platforms');
 
 // Global configuration paths
@@ -54,12 +53,8 @@ Object.defineProperty(exports, 'libDirectory', {
     }
 });
 
-// TODO: this is no longer used. we should deprecate and remove.
-exports.plugin_parser = require('./plugin_parser');
 exports.raw = {};
-// Alias the plugin_parser method to the raw:{} object above.
-// Emits a deprecation warning if utilized, in prep for removal of `raw`.
-aliasMethod('plugin_parser', exports, 'cordova_util');
+
 exports.isCordova = isCordova;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
