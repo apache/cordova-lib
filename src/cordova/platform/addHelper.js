@@ -27,6 +27,7 @@ var cordova_util = require('../util');
 var promiseutil = require('../../util/promise-util');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
+var getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
 
 module.exports = addHelper;
 module.exports.getVersionFromConfigFile = getVersionFromConfigFile;
@@ -122,7 +123,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         if (cordova_util.isDirectory(maybeDir)) {
                             return fetch(path.resolve(maybeDir), projectRoot, opts)
                                 .then(function (directory) {
-                                    return require('./index').getPlatformDetailsFromDir(directory, platform);
+                                    return getPlatformDetailsFromDir(directory, platform);
                                 });
                         }
                     }
@@ -285,7 +286,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             '\n' + error;
         return Promise.reject(new CordovaError(message));
     }).then(function (libDir) {
-        return require('./index').getPlatformDetailsFromDir(libDir, platform);
+        return getPlatformDetailsFromDir(libDir, platform);
     });
 }
 
