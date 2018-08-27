@@ -62,6 +62,7 @@
     "eslint": "eslint src spec integration-tests",
     "unit-tests": "jasmine JASMINE_CONFIG_PATH=spec/jasmine.json",
     "cover": "nyc -x spec/ -x integration-tests/ npm test",
+    "report-coverage": "nyc report -r text-lcov > coverage.lcov && codecov",
     "e2e-tests": "jasmine JASMINE_CONFIG_PATH=integration-tests/jasmine.json"
   },
   "contributors": [
