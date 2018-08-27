@@ -69,14 +69,6 @@ describe('getPlatformApi method', function () {
         expect(util.requireNoCache.calls.argsFor(0)[0]).toEqual(path.join(CORDOVA_ROOT, 'platforms/windows/cordova/Api.js'));
     });
 
-    it('should throw error if using deprecated platform', function () {
-        try {
-            platforms.getPlatformApi('android', path.join(CORDOVA_ROOT, 'platforms/android'));
-        } catch (error) {
-            expect(error.toString()).toContain('Using this version of Cordova with older version of cordova-android is deprecated. Upgrade to cordova-android@5.0.0 or newer.');
-        }
-    });
-
     it('should cache PlatformApi instance for further calls', function () {
         var platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
         expect(platformApi.fakeProperty).not.toBeDefined();

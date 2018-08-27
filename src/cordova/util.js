@@ -481,17 +481,8 @@ function getPlatformApiFunction (libDir, platform) {
     } catch (err) {
         // Emit the err, someone might care ...
         events.emit('warn', 'Unable to load PlatformApi from platform. ' + err);
-        // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
-        // checkPlatformApiCompatible(platform);
-        if (platforms[platform] && platforms[platform].apiCompatibleSince) {
-            events.emit('error', ' Using this version of Cordova with older version of cordova-' + platform +
-                    ' is deprecated. Upgrade to cordova-' + platform + '@' +
-                    platforms[platform].apiCompatibleSince + ' or newer.');
-        } else if (!platforms[platform]) {
-            // Throw error because polyfill doesn't support non core platforms
+        if (!platforms[platform]) {
             events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. ' + platform + ' not supported.');
-        } else {
-            events.emit('verbose', 'Platform not found or needs polyfill.');
         }
     }
 
