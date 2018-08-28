@@ -17,7 +17,7 @@
     under the License.
 */
 
-var dep_graph = require('dep-graph');
+var DepGraph = require('dep-graph');
 var path = require('path');
 var fs = require('fs');
 var underscore = require('underscore');
@@ -32,7 +32,7 @@ module.exports = pkg = {
         // TODO: store whole dependency tree in plugins/[platform].json
         // in case plugins are forcefully removed...
         var tlps = [];
-        var graph = new dep_graph(); // eslint-disable-line new-cap
+        var graph = new DepGraph();
         Object.keys(json.installed_plugins).forEach(function (plugin_id) {
             tlps.push(plugin_id);
 

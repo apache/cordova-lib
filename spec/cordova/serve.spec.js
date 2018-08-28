@@ -17,8 +17,6 @@
     under the License.
 */
 
-/* global xdescribe */
-
 var cordova = require('../../src/cordova/cordova');
 var console = require('console');
 var path = require('path');

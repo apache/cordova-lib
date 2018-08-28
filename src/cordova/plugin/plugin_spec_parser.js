@@ -18,7 +18,7 @@
 */
 
 // npm packages follow the pattern of (@scope/)?package(@spec)? where scope and tag are optional
-var NPM_SPEC_REGEX = /^(@[^\/]+\/)?([^@\/]+)(?:@(.+))?$/; // eslint-disable-line no-useless-escape
+var NPM_SPEC_REGEX = /^(@[^/]+\/)?([^@/]+)(?:@(.+))?$/;
 
 module.exports.parse = parse;
 
