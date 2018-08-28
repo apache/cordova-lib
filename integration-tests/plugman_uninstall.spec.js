@@ -20,10 +20,9 @@
 const Q = require('q');
 const fs = require('fs-extra');
 const path = require('path');
-const et = require('elementtree');
 const rewire = require('rewire');
 
-const { ActionStack, PluginInfo, events, xmlHelpers } = require('cordova-common');
+const { ActionStack, PluginInfo, events } = require('cordova-common');
 const common = require('../spec/common');
 const install = require('../src/plugman/install');
 const platforms = require('../src/platforms/platforms');
@@ -49,22 +48,6 @@ const dummy_id = 'org.test.plugins.dummyplugin';
 
 const dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
 
-const TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
-    '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
-    '        id        = "io.cordova.hellocordova"\n' +
-    '        version   = "0.0.1">\n' +
-    '    <name>Hello Cordova</name>\n' +
-    '    <description>\n' +
-    '        A sample Apache Cordova application that responds to the deviceready event.\n' +
-    '    </description>\n' +
-    '    <author href="http://cordova.io" email="dev@cordova.apache.org">\n' +
-    '        Apache Cordova Team\n' +
-    '    </author>\n' +
-    '    <content src="index.html" />\n' +
-    '    <access origin="*" />\n' +
-    '</widget>\n';
-
 describe('plugman/uninstall', () => {
     let uninstall, emit;
 
@@ -84,13 +67,6 @@ describe('plugman/uninstall', () => {
     });
 
     describe('start', function () {
-        beforeEach(function () {
-            const origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
-            spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (path) {
-                if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
-                return origParseElementtreeSync(path);
-            });
-        });
 
         it('Test 001 : plugman uninstall start', function () {
             for (const p of projects) {
