@@ -45,7 +45,7 @@ function pluginDir (pluginId) {
 }
 
 const results = {};
-const TIMEOUT = 90000;
+const TIMEOUT = 9000;
 
 const existsSync = fs.existsSync;
 
