@@ -192,13 +192,11 @@ describe('uninstallPlatform', function () {
 });
 
 describe('uninstallPlugin', function () {
-    var rmstack = [];
     var emit;
 
     beforeEach(function () {
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.callFake(function (f, p) { rmstack.push(p); return true; });
-        rmstack = [];
+        spyOn(fs, 'removeSync');
         emit = spyOn(events, 'emit');
     });
     describe('with dependencies', function () {
