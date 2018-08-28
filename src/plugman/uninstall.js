@@ -19,7 +19,6 @@
 
 var path = require('path');
 var fs = require('fs');
-var semver = require('semver');
 var shell = require('shelljs');
 var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
@@ -336,26 +335,6 @@ function handleUninstall (actions, platform, pluginInfo, project_dir, www_dir, p
             PlatformJson.load(plugins_dir, platform)
                 .removePlugin(pluginInfo.id, is_top_level)
                 .save();
-
-            if (platform === 'android' &&
-                    semver.gte(options.platformVersion, '4.0.0-dev') &&
-                    // CB-10533 since 5.2.0-dev prepBuildFiles is now called internally by android platform and
-                    // no more exported from build module
-                    // TODO: This might be removed once we deprecate non-PlatformApi compatible platforms support
-                    semver.lte(options.platformVersion, '5.2.0-dev') &&
-                    pluginInfo.getFrameworks(platform).length > 0) {
-
-                events.emit('verbose', 'Updating build files since android plugin contained <framework>');
-                var buildModule;
-                try {
-                    buildModule = require(path.join(project_dir, 'cordova', 'lib', 'build'));
-                } catch (e) {
-                    // Should occur only in unit tests.
-                }
-                if (buildModule && buildModule.prepBuildFiles) {
-                    buildModule.prepBuildFiles();
-                }
-            }
 
             // CB-11022 propagate `removePlugin` result to the caller
             return Q(result);

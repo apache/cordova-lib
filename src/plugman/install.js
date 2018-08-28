@@ -600,26 +600,6 @@ function handleInstall (actions, pluginInfo, platform, project_dir, plugins_dir,
                 .addPlugin(pluginInfo.id, filtered_variables, options.is_top_level)
                 .save();
 
-            if (platform === 'android' &&
-                semver.gte(options.platformVersion, '4.0.0-dev') &&
-                // CB-10533 since 5.2.0-dev prepBuildFiles is now called internally by android platform and
-                // no more exported from build module
-                // TODO: This might be removed once we deprecate non-PlatformApi compatible platforms support
-                semver.lte(options.platformVersion, '5.2.0-dev') &&
-                pluginInfo.getFrameworks(platform).length > 0) {
-
-                events.emit('verbose', 'Updating build files since android plugin contained <framework>');
-                var buildModule;
-                try {
-                    buildModule = require(path.join(project_dir, 'cordova', 'lib', 'build'));
-                } catch (e) {
-                    // Should occur only in unit tests.
-                }
-                if (buildModule && buildModule.prepBuildFiles) {
-                    buildModule.prepBuildFiles();
-                }
-            }
-
             // WIN!
             // Log out plugin INFO element contents in case additional install steps are necessary
             var info_strings = pluginInfo.getInfo(platform) || [];

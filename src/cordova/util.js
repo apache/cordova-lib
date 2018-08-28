@@ -26,7 +26,6 @@ var url = require('url');
 var nopt = require('nopt');
 var Q = require('q');
 var semver = require('semver');
-var aliasMethod = require('../util/alias');
 var platforms = require('../platforms/platforms');
 
 // Global configuration paths
@@ -54,12 +53,6 @@ Object.defineProperty(exports, 'libDirectory', {
     }
 });
 
-// TODO: this is no longer used. we should deprecate and remove.
-exports.plugin_parser = require('./plugin_parser');
-exports.raw = {};
-// Alias the plugin_parser method to the raw:{} object above.
-// Emits a deprecation warning if utilized, in prep for removal of `raw`.
-aliasMethod('plugin_parser', exports, 'cordova_util');
 exports.isCordova = isCordova;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
@@ -488,17 +481,8 @@ function getPlatformApiFunction (libDir, platform) {
     } catch (err) {
         // Emit the err, someone might care ...
         events.emit('warn', 'Unable to load PlatformApi from platform. ' + err);
-        // Check if platform already compatible w/ PlatformApi and show deprecation warning if not
-        // checkPlatformApiCompatible(platform);
-        if (platforms[platform] && platforms[platform].apiCompatibleSince) {
-            events.emit('error', ' Using this version of Cordova with older version of cordova-' + platform +
-                    ' is deprecated. Upgrade to cordova-' + platform + '@' +
-                    platforms[platform].apiCompatibleSince + ' or newer.');
-        } else if (!platforms[platform]) {
-            // Throw error because polyfill doesn't support non core platforms
+        if (!platforms[platform]) {
             events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. ' + platform + ' not supported.');
-        } else {
-            events.emit('verbose', 'Platform not found or needs polyfill.');
         }
     }
 

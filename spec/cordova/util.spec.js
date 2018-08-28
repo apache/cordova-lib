@@ -309,11 +309,6 @@ describe('util module', function () {
         });
 
         describe('getPlatformApiFunction', function () {
-            it('Test 027 : should throw error informing user to update platform', function () {
-                expect(function () { util.getPlatformApiFunction('some/path', 'android'); }).toThrowError(
-                    /\( Using this version of Cordova with older version of cordova-android is deprecated\. Upgrade to cordova-android@5\.0\.0 or newer.\)/
-                );
-            });
 
             it('Test 030 : successfully find platform Api', function () {
                 spyOn(events, 'emit').and.returnValue(true);

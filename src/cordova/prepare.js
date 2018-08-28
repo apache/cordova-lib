@@ -104,16 +104,6 @@ function preparePlatforms (platformList, projectRoot, options) {
                 var platformApi = platforms.getPlatformApi(platform);
                 return platformApi.prepare(project, _.clone(options))
                     .then(function () {
-                        if (platform === 'windows') {
-                            // Windows Api doesn't fire 'pre_package' hook, so we fire it here
-                            return new HooksRunner(projectRoot).fire('pre_package', {
-                                wwwPath: platformApi.getPlatformInfo().locations.www,
-                                platforms: ['windows'],
-                                nohooks: options.nohooks
-                            });
-                        }
-                    })
-                    .then(function () {
                         if (options.browserify) {
                             // TODO: dynamic require here makes it difficult to test this code branch.
                             var browserify = require('../plugman/browserify');

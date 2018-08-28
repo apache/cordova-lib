@@ -54,14 +54,7 @@ HooksRunner.prototype.fire = function fire (hook, opts) {
     }
     opts = this.prepareOptions(opts);
 
-    var handlers = events.listeners(hook);
     var scripts = scriptsFinder.getHookScripts(hook, opts);
-
-    // CB-10193 Emit warning if there is any handlers subscribed to 'pre_package'
-    if (hook === 'pre_package' && (handlers.length > 0 || scripts.length > 0)) {
-        events.emit('warn', '"pre_package" hook is deprecated and will be removed in next Windows platform versions. ' +
-            'Please use "after_prepare" if you want to manipulate files in www before app will be packaged.');
-    }
 
     // execute hook event listeners first
     return executeEventHandlersSerially(hook, opts).then(function () {
