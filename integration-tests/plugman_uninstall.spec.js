@@ -29,6 +29,7 @@ const platforms = require('../src/platforms/platforms');
 
 const spec = path.join(__dirname, '..', 'spec', 'plugman');
 const srcProject = path.join(spec, 'projects', 'android');
+
 const project = path.join(spec, 'projects', 'android_uninstall.test');
 const project2 = path.join(spec, 'projects', 'android_uninstall.test2');
 const project3 = path.join(spec, 'projects', 'android_uninstall.test3');
@@ -44,9 +45,6 @@ const plugins = {
     'A': path.join(plugins_dir, 'dependencies', 'A'),
     'C': path.join(plugins_dir, 'dependencies', 'C')
 };
-const dummy_id = 'org.test.plugins.dummyplugin';
-
-const dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
 
 describe('plugman/uninstall', () => {
     let uninstall, emit;
@@ -88,10 +86,13 @@ describe('plugman/uninstall', () => {
     }, 60000);
 
     describe('uninstallPlatform', function () {
+        const dummy_id = 'org.test.plugins.dummyplugin';
+
         beforeEach(function () {
             spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
             spyOn(fs, 'copySync').and.returnValue(true);
         });
+
         describe('success', function () {
 
             it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
@@ -116,6 +117,7 @@ describe('plugman/uninstall', () => {
                 });
 
                 const fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
+                const dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
                 fakeProvider.get.and.returnValue(dummyPluginInfo);
 
                 function validateReturnedResultFor (values, expectedResult) {
