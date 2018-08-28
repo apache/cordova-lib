@@ -66,29 +66,26 @@ describe('plugman/uninstall', () => {
         }
     });
 
-    describe('start', function () {
+    beforeAll(() => {
+        for (const p of projects) {
+            fs.copySync(srcProject, p);
+        }
 
-        it('Test 001 : plugman uninstall start', function () {
-            for (const p of projects) {
-                fs.copySync(srcProject, p);
-            }
-
-            return install('android', project, plugins['org.test.plugins.dummyplugin'])
-                .then(function (result) {
-                    return install('android', project, plugins['A']);
-                }).then(function () {
-                    return install('android', project2, plugins['C']);
-                }).then(function () {
-                    return install('android', project2, plugins['A']);
-                }).then(function () {
-                    return install('android', project3, plugins['A']);
-                }).then(function () {
-                    return install('android', project3, plugins['C']);
-                }).then(function (result) {
-                    expect(result).toEqual(true);
-                });
-        }, 60000);
-    });
+        return install('android', project, plugins['org.test.plugins.dummyplugin'])
+            .then(function (result) {
+                return install('android', project, plugins['A']);
+            }).then(function () {
+                return install('android', project2, plugins['C']);
+            }).then(function () {
+                return install('android', project2, plugins['A']);
+            }).then(function () {
+                return install('android', project3, plugins['A']);
+            }).then(function () {
+                return install('android', project3, plugins['C']);
+            }).then(function (result) {
+                expect(result).toEqual(true);
+            });
+    }, 60000);
 
     describe('uninstallPlatform', function () {
         beforeEach(function () {
