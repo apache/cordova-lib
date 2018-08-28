@@ -66,11 +66,15 @@ const TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '</widget>\n';
 
 describe('plugman/uninstall', () => {
-    var uninstall;
+    let uninstall, emit;
 
     beforeEach(() => {
         uninstall = rewire('../src/plugman/uninstall');
         uninstall.__set__('npmUninstall', jasmine.createSpy());
+
+        emit = spyOn(events, 'emit');
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        spyOn(fs, 'removeSync').and.returnValue(true);
     });
 
     afterAll(() => {
@@ -113,8 +117,6 @@ describe('plugman/uninstall', () => {
     describe('uninstallPlatform', function () {
         beforeEach(function () {
             spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
-            spyOn(fs, 'writeFileSync').and.returnValue(true);
-            spyOn(fs, 'removeSync').and.returnValue(true);
             spyOn(fs, 'copySync').and.returnValue(true);
         });
         describe('success', function () {
@@ -168,7 +170,6 @@ describe('plugman/uninstall', () => {
             // FIXME this test messes up the project somehow so that 007 fails
             // Re-enable once project setup is done beforeEach test
             xit('Test 014 : should uninstall dependent plugins', function () {
-                const emit = spyOn(events, 'emit');
                 return uninstall.uninstallPlatform('android', project, 'A')
                     .then(function (result) {
                         expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
@@ -198,13 +199,7 @@ describe('plugman/uninstall', () => {
     });
 
     describe('uninstallPlugin', function () {
-        var emit;
 
-        beforeEach(function () {
-            spyOn(fs, 'writeFileSync').and.returnValue(true);
-            spyOn(fs, 'removeSync');
-            emit = spyOn(events, 'emit');
-        });
         describe('with dependencies', function () {
 
             it('Test 006 : should delete all dependent plugins', function () {
@@ -261,11 +256,6 @@ describe('plugman/uninstall', () => {
     });
 
     describe('uninstall', function () {
-
-        beforeEach(function () {
-            spyOn(fs, 'writeFileSync').and.returnValue(true);
-            spyOn(fs, 'removeSync').and.returnValue(true);
-        });
 
         describe('failure', function () {
             it('Test 011 : should throw if platform is unrecognized', function () {
