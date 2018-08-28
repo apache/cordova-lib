@@ -14,7 +14,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-/* eslint-env jasmine */
 
 var path = require('path');
 var fs = require('fs');
@@ -29,7 +28,6 @@ var cordova_config = require('../../../src/cordova/config');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
 var prepare = require('../../../src/cordova/prepare');
-var fail;
 
 describe('cordova/platform/addHelper', function () {
     var projectRoot = '/some/path';

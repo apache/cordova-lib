@@ -16,9 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-// TODO: remove this once eslint lands
-/* eslint-env jasmine */
-/* globals fail */
 
 var rewire = require('rewire');
 var fs = require('fs');
