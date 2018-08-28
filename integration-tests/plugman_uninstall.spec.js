@@ -17,18 +17,17 @@
     under the License.
 */
 
-var install = require('../src/plugman/install');
-var actions = require('cordova-common').ActionStack;
-var PluginInfo = require('cordova-common').PluginInfo;
-var events = require('cordova-common').events;
-var common = require('../spec/common');
-var platforms = require('../src/platforms/platforms');
-var xmlHelpers = require('cordova-common').xmlHelpers;
-var et = require('elementtree');
-var fs = require('fs-extra');
-var path = require('path');
-var Q = require('q');
-var rewire = require('rewire');
+const Q = require('q');
+const fs = require('fs-extra');
+const path = require('path');
+const et = require('elementtree');
+const rewire = require('rewire');
+
+const { ActionStack, PluginInfo, events, xmlHelpers } = require('cordova-common');
+const common = require('../spec/common');
+const install = require('../src/plugman/install');
+const platforms = require('../src/platforms/platforms');
+
 var spec = path.join(__dirname, '..', 'spec', 'plugman');
 var srcProject = path.join(spec, 'projects', 'android');
 var project = path.join(spec, 'projects', 'android_uninstall.test');
@@ -106,7 +105,7 @@ describe('plugman uninstall start', function () {
 
 describe('uninstallPlatform', function () {
     beforeEach(function () {
-        spyOn(actions.prototype, 'process').and.returnValue(Q());
+        spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
         spyOn(fs, 'writeFileSync').and.returnValue(true);
         spyOn(fs, 'removeSync').and.returnValue(true);
         spyOn(fs, 'copySync').and.returnValue(true);
