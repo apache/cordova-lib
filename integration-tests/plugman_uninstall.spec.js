@@ -73,6 +73,12 @@ describe('plugman/uninstall', () => {
         uninstall.__set__('npmUninstall', jasmine.createSpy());
     });
 
+    afterAll(() => {
+        for (const p of projects) {
+            fs.removeSync(p);
+        }
+    });
+
     describe('start', function () {
         beforeEach(function () {
             const origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
@@ -283,13 +289,8 @@ describe('plugman/uninstall', () => {
     });
 
     describe('end', function () {
-
-        afterEach(function () {
-            for (const p of projects) {
-                fs.removeSync(p);
-            }
-        });
-
+        // TODO this was some test/teardown hybrid.
+        // We should either add more expectations or get rid of it
         it('Test 013 : end', function () {
             return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
                 .then(function () {
