@@ -28,28 +28,28 @@ const common = require('../spec/common');
 const install = require('../src/plugman/install');
 const platforms = require('../src/platforms/platforms');
 
-var spec = path.join(__dirname, '..', 'spec', 'plugman');
-var srcProject = path.join(spec, 'projects', 'android');
-var project = path.join(spec, 'projects', 'android_uninstall.test');
-var project2 = path.join(spec, 'projects', 'android_uninstall.test2');
-var project3 = path.join(spec, 'projects', 'android_uninstall.test3');
+const spec = path.join(__dirname, '..', 'spec', 'plugman');
+const srcProject = path.join(spec, 'projects', 'android');
+const project = path.join(spec, 'projects', 'android_uninstall.test');
+const project2 = path.join(spec, 'projects', 'android_uninstall.test2');
+const project3 = path.join(spec, 'projects', 'android_uninstall.test3');
 const projects = [project, project2, project3];
 
-var plugins_dir = path.join(spec, 'plugins');
-var plugins_install_dir = path.join(project, 'cordova', 'plugins');
-var plugins_install_dir2 = path.join(project2, 'cordova', 'plugins');
-var plugins_install_dir3 = path.join(project3, 'cordova', 'plugins');
+const plugins_dir = path.join(spec, 'plugins');
+const plugins_install_dir = path.join(project, 'cordova', 'plugins');
+const plugins_install_dir2 = path.join(project2, 'cordova', 'plugins');
+const plugins_install_dir3 = path.join(project3, 'cordova', 'plugins');
 
-var plugins = {
+const plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
     'A': path.join(plugins_dir, 'dependencies', 'A'),
     'C': path.join(plugins_dir, 'dependencies', 'C')
 };
-var dummy_id = 'org.test.plugins.dummyplugin';
+const dummy_id = 'org.test.plugins.dummyplugin';
 
-var dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
+const dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
 
-var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+const TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
     '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
     '        id        = "io.cordova.hellocordova"\n' +
@@ -74,7 +74,7 @@ beforeEach(() => {
 
 describe('plugman uninstall start', function () {
     beforeEach(function () {
-        var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
+        const origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
         spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (path) {
             if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
             return origParseElementtreeSync(path);
@@ -113,8 +113,8 @@ describe('uninstallPlatform', function () {
     describe('success', function () {
 
         it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
-            var platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
-            var getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
+            const platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
+            const getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
 
             return uninstall.uninstallPlatform('android', project, dummy_id)
                 .then(function () {
@@ -124,16 +124,16 @@ describe('uninstallPlatform', function () {
         }, 6000);
 
         it('Test 003 : should return propagate value returned by PlatformApi removePlugin method', function () {
-            var platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
+            const platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
             spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
 
-            var existsSyncOrig = fs.existsSync;
+            const existsSyncOrig = fs.existsSync;
             spyOn(fs, 'existsSync').and.callFake(function (file) {
                 if (file.indexOf(dummy_id) >= 0) return true;
                 return existsSyncOrig.call(fs, file);
             });
 
-            var fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
+            const fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
             fakeProvider.get.and.returnValue(dummyPluginInfo);
 
             function validateReturnedResultFor (values, expectedResult) {
@@ -161,7 +161,7 @@ describe('uninstallPlatform', function () {
         // FIXME this test messes up the project somehow so that 007 fails
         // Re-enable once project setup is done beforeEach test
         xit('Test 014 : should uninstall dependent plugins', function () {
-            var emit = spyOn(events, 'emit');
+            const emit = spyOn(events, 'emit');
             return uninstall.uninstallPlatform('android', project, 'A')
                 .then(function (result) {
                     expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
@@ -203,7 +203,7 @@ describe('uninstallPlugin', function () {
         it('Test 006 : should delete all dependent plugins', function () {
             return uninstall.uninstallPlugin('A', plugins_install_dir)
                 .then(function (result) {
-                    var del = common.spy.getDeleted(emit);
+                    const del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
                         'Deleted plugin "C"',
                         'Deleted plugin "D"',
@@ -224,7 +224,7 @@ describe('uninstallPlugin', function () {
         it('Test 008 : allow forcefully removing a plugin', function () {
             return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
                 .then(function () {
-                    var del = common.spy.getDeleted(emit);
+                    const del = common.spy.getDeleted(emit);
                     expect(del).toEqual(['Deleted plugin "C"']);
                 });
         });
@@ -232,7 +232,7 @@ describe('uninstallPlugin', function () {
         it('Test 009 : never remove top level plugins if they are a dependency', function () {
             return uninstall.uninstallPlugin('A', plugins_install_dir2)
                 .then(function () {
-                    var del = common.spy.getDeleted(emit);
+                    const del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
                         'Deleted plugin "D"',
                         'Deleted plugin "A"'
@@ -243,7 +243,7 @@ describe('uninstallPlugin', function () {
         it('Test 010 : should not remove dependent plugin if it was installed after as top-level', function () {
             return uninstall.uninstallPlugin('A', plugins_install_dir3)
                 .then(function () {
-                    var del = common.spy.getDeleted(emit);
+                    const del = common.spy.getDeleted(emit);
                     expect(del).toEqual([
                         'Deleted plugin "D"',
                         'Deleted plugin "A"'
