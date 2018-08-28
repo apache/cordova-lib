@@ -22,49 +22,56 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var shell = require('shelljs');
-var realrm = shell.rm;
-// xml_helpers = require('../src/util/xml-helpers'),
 var metadata = require('../src/plugman/util/metadata');
 var temp = path.join(os.tmpdir(), 'plugman', 'fetch');
 var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
 var test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
 var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
 var test_plugin_searchpath = path.join(test_plugin, '..');
-// test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser'),
-// test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml')),
 var test_plugin_id = 'org.test.plugins.childbrowser';
 var test_plugin_version = '0.6.0';
 var Q = require('q');
 
 describe('fetch', function () {
-    /*
-     * Taking out the following test. Fetch has a copyPlugin method that uses existsSync to see if a plugin already exists in the plugins folder. If the plugin exists in the plugins directory for the cordova project, it won't be copied over. This test fails now due it always returning true for existsSync.
-    describe('plugin in a dir with spaces', function() {
-        it('should copy locally-available plugin to plugins directory when spaces in path', function(done) {
+
+    // Taking out the following test. Fetch has a copyPlugin method that uses
+    // existsSync to see if a plugin already exists in the plugins folder. If
+    // the plugin exists in the plugins directory for the cordova project, it
+    // won't be copied over. This test fails now due it always returning true
+    // for existsSync.
+    xdescribe('plugin in a dir with spaces', function () {
+        var xml_helpers = require('cordova-common').xmlHelpers;
+        var test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser');
+        var test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml'));
+
+        it('should copy locally-available plugin to plugins directory when spaces in path', function (done) {
             // XXX: added this because plugman tries to fetch from registry when plugin folder does not exist
-            spyOn(fs,'existsSync').andReturn(true);
-            spyOn(xml_helpers, 'parseElementtreeSync').andReturn(test_plugin_xml);
+            spyOn(fs, 'existsSync').and.returnValue(true);
+            spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue(test_plugin_xml);
             spyOn(shell, 'rm');
             spyOn(metadata, 'save_fetch_metadata');
             var cp = spyOn(shell, 'cp');
-            fetch(test_plugin_with_space, temp).then(function() {
+            return fetch(test_plugin_with_space, temp).then(function () {
                 expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin_with_space, '*'), path.join(temp, test_plugin_id));
             });
         });
     });
-*/
+
     describe('local plugins', function () {
         var sym;
         var cp;
         var revertLocal;
         var revertFetch;
         var fetchCalls = 0;
+
         beforeEach(function () {
+            shell.rm('-rf', temp);
+
             spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             cp = spyOn(shell, 'cp').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
-            realrm('-rf', temp);
+
             revertLocal = fetch.__set__('localPlugins', null);
             revertFetch = fetch.__set__('fetch', function (pluginDir) {
                 fetchCalls++;

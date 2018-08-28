@@ -211,9 +211,8 @@ describe('install', function () {
         });
 
         describe('engine versions', function () {
-            var fail, satisfies;
+            var satisfies;
             beforeEach(function () {
-                fail = jasmine.createSpy('fail');
                 satisfies = spyOn(semver, 'satisfies').and.returnValue(true);
                 spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
             });
@@ -271,19 +270,13 @@ describe('install', function () {
             }, TIMEOUT);
             it('Test 012 : should not check custom engine version that is not supported for platform', function () {
                 return install('blackberry10', project, plugins['com.cordova.engine'])
-                    .then(fail, function () {
-                        expect(satisfies).not.toHaveBeenCalledWith('', '>=3.0.0', true);
+                    .then(function () {
+                        // Version >=3.0.0 of `mega-boring-plugin` is specified with platform="ios|android"
+                        expect(satisfies.calls.count()).toBe(3);
+                        expect(satisfies).not.toHaveBeenCalledWith(jasmine.anything(), '>=3.0.0', true);
                     });
             }, TIMEOUT);
         });
-
-        it('Test 014 : should not check custom engine version that is not supported for platform', function () {
-            var spy = spyOn(semver, 'satisfies').and.returnValue(true);
-            return install('blackberry10', project, plugins['com.cordova.engine'])
-                .then(function () {
-                    expect(spy).not.toHaveBeenCalledWith('', '>=3.0.0');
-                });
-        }, TIMEOUT);
 
         describe('with dependencies', function () {
             var emit;

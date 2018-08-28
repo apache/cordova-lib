@@ -17,34 +17,6 @@
     under the License.
 */
 
-//     nopt = require('nopt');
-
-// var known_opts = {
-//     'verbose' : Boolean,
-//     'debug' : Number
-// }, shortHands = { 'd' : ['--debug'] };
-
-// var opt = nopt(known_opts, shortHands);
-// var mapNames = {
-//     'verbose' : 7,
-//     'info'    : 6,
-//     'notice'  : 5,
-//     'warn'    : 4,
-//     'error'   : 3
-// }
-
-// if(opt.verbose)
-//     opt.debug = 7;
-
-// if(opt.debug) {
-//     for(var i in mapNames) {
-//         if(mapNames[i] <= opt.debug)
-//             plugman.on(i, console.log);
-//     }
-
-//     if(opt.debug >= 6)
-//         plugman.on('log', console.log);
-// }
 var common = {};
 
 module.exports = common = {
@@ -58,19 +30,13 @@ module.exports = common = {
         },
 
         startsWith: function (emitSpy, string) {
-            var match = [];
-            emitSpy.calls.all().forEach(function (val, i) {
-                if (emitSpy.calls.argsFor(i)[1].substr(0, string.length) === string) { match.push(emitSpy.calls.argsFor(i)[1]); }
-            });
-            return match;
+            return common.spy.getReceivedMessages(emitSpy)
+                .filter(msg => msg.startsWith(string));
         },
 
-        contains: function (emitSpy, string) {
-            var match = [];
-            emitSpy.calls.all().forEach(function (val, i) {
-                if (emitSpy.calls.argsFor(i)[1].indexOf(string) >= 0) { match.push(emitSpy.calls.argsFor(i)[1]); }
-            });
-            return match;
+        getReceivedMessages (emitSpy) {
+            return emitSpy.calls.allArgs()
+                .map(([, msg]) => msg);
         }
     }
 };
