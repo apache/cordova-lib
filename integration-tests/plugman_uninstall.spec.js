@@ -26,52 +26,45 @@ const { ActionStack, PluginInfo, events } = require('cordova-common');
 const common = require('../spec/common');
 const install = require('../src/plugman/install');
 const platforms = require('../src/platforms/platforms');
+const { tmpDir: getTmpDir } = require('../spec/helpers.js');
 
 const spec = path.join(__dirname, '..', 'spec', 'plugman');
 const srcProject = path.join(spec, 'projects', 'android');
 
-const project = path.join(spec, 'projects', 'android_uninstall.test');
-const project2 = path.join(spec, 'projects', 'android_uninstall.test2');
-const project3 = path.join(spec, 'projects', 'android_uninstall.test3');
-const projects = [project, project2, project3];
+const tmpDir = getTmpDir('plugman_uninstall_test');
+const projectsPath = path.join(tmpDir, 'projects');
+const project = path.join(tmpDir, 'project');
+const plugins_install_dir = path.join(project, 'cordova/plugins');
 
 const plugins_dir = path.join(spec, 'plugins');
-const plugins_install_dir = path.join(project, 'cordova', 'plugins');
-const plugins_install_dir2 = path.join(project2, 'cordova', 'plugins');
-const plugins_install_dir3 = path.join(project3, 'cordova', 'plugins');
-
 const plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
     'A': path.join(plugins_dir, 'dependencies', 'A'),
     'C': path.join(plugins_dir, 'dependencies', 'C')
 };
 
+// Grab a reference to the original, before someone stubs it
+const { copySync } = fs;
+function setupProject (name) {
+    const projectPath = path.join(projectsPath, name);
+    copySync(projectPath, project);
+}
+
 describe('plugman/uninstall', () => {
     let uninstall, emit;
 
-    beforeEach(() => {
-        uninstall = rewire('../src/plugman/uninstall');
-        uninstall.__set__('npmUninstall', jasmine.createSpy());
-
-        emit = spyOn(events, 'emit');
-        spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.returnValue(true);
-    });
-
-    afterAll(() => {
-        for (const p of projects) {
-            fs.removeSync(p);
-        }
-    });
-
     beforeAll(() => {
-        for (const p of projects) {
+        const project1 = path.join(projectsPath, 'uninstall.test');
+        const project2 = path.join(projectsPath, 'uninstall.test2');
+        const project3 = path.join(projectsPath, 'uninstall.test3');
+
+        for (const p of [project1, project2, project3]) {
             fs.copySync(srcProject, p);
         }
 
-        return install('android', project, plugins['org.test.plugins.dummyplugin'])
+        return install('android', project1, plugins['org.test.plugins.dummyplugin'])
             .then(function (result) {
-                return install('android', project, plugins['A']);
+                return install('android', project1, plugins['A']);
             }).then(function () {
                 return install('android', project2, plugins['C']);
             }).then(function () {
@@ -85,10 +78,30 @@ describe('plugman/uninstall', () => {
             });
     }, 60000);
 
+    beforeEach(() => {
+        uninstall = rewire('../src/plugman/uninstall');
+        uninstall.__set__('npmUninstall', jasmine.createSpy());
+
+        emit = spyOn(events, 'emit');
+        spyOn(fs, 'writeFileSync').and.returnValue(true);
+        spyOn(fs, 'removeSync').and.returnValue(true);
+    });
+
+    afterEach(() => {
+        // Just so everything fails if someone does not setup their project
+        fs.removeSync(project);
+    });
+
+    afterAll(() => {
+        fs.removeSync(tmpDir);
+    });
+
     describe('uninstallPlatform', function () {
         const dummy_id = 'org.test.plugins.dummyplugin';
 
         beforeEach(function () {
+            setupProject('uninstall.test');
+
             spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
             spyOn(fs, 'copySync').and.returnValue(true);
         });
@@ -142,9 +155,7 @@ describe('plugman/uninstall', () => {
                     });
             });
 
-            // FIXME this test messes up the project somehow so that 007 fails
-            // Re-enable once project setup is done beforeEach test
-            xit('Test 014 : should uninstall dependent plugins', function () {
+            it('Test 014 : should uninstall dependent plugins', function () {
                 return uninstall.uninstallPlatform('android', project, 'A')
                     .then(function (result) {
                         expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
@@ -178,6 +189,8 @@ describe('plugman/uninstall', () => {
         describe('with dependencies', function () {
 
             it('Test 006 : should delete all dependent plugins', function () {
+                setupProject('uninstall.test');
+
                 return uninstall.uninstallPlugin('A', plugins_install_dir)
                     .then(function (result) {
                         const del = common.spy.getDeleted(emit);
@@ -190,6 +203,8 @@ describe('plugman/uninstall', () => {
             });
 
             it('Test 007 : should fail if plugin is a required dependency', function () {
+                setupProject('uninstall.test');
+
                 return uninstall.uninstallPlugin('C', plugins_install_dir)
                     .then(function (result) {
                         fail();
@@ -199,6 +214,8 @@ describe('plugman/uninstall', () => {
             }, 6000);
 
             it('Test 008 : allow forcefully removing a plugin', function () {
+                setupProject('uninstall.test');
+
                 return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
                     .then(function () {
                         const del = common.spy.getDeleted(emit);
@@ -207,7 +224,9 @@ describe('plugman/uninstall', () => {
             });
 
             it('Test 009 : never remove top level plugins if they are a dependency', function () {
-                return uninstall.uninstallPlugin('A', plugins_install_dir2)
+                setupProject('uninstall.test2');
+
+                return uninstall.uninstallPlugin('A', plugins_install_dir)
                     .then(function () {
                         const del = common.spy.getDeleted(emit);
                         expect(del).toEqual([
@@ -218,7 +237,9 @@ describe('plugman/uninstall', () => {
             });
 
             it('Test 010 : should not remove dependent plugin if it was installed after as top-level', function () {
-                return uninstall.uninstallPlugin('A', plugins_install_dir3)
+                setupProject('uninstall.test3');
+
+                return uninstall.uninstallPlugin('A', plugins_install_dir)
                     .then(function () {
                         const del = common.spy.getDeleted(emit);
                         expect(del).toEqual([
@@ -231,6 +252,10 @@ describe('plugman/uninstall', () => {
     });
 
     describe('uninstall', function () {
+
+        beforeEach(() => {
+            setupProject('uninstall.test');
+        });
 
         describe('failure', function () {
             it('Test 011 : should throw if platform is unrecognized', function () {
@@ -257,6 +282,8 @@ describe('plugman/uninstall', () => {
         // TODO this was some test/teardown hybrid.
         // We should either add more expectations or get rid of it
         it('Test 013 : end', function () {
+            setupProject('uninstall.test');
+
             return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
                 .then(function () {
                     // Fails... A depends on
