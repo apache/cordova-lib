@@ -76,7 +76,7 @@ describe('plugman/uninstall', () => {
             }).then(function (result) {
                 expect(result).toEqual(true);
             });
-    }, 60000);
+    });
 
     beforeEach(() => {
         uninstall = rewire('../src/plugman/uninstall');
@@ -117,7 +117,7 @@ describe('plugman/uninstall', () => {
                         expect(getPlatformApi).toHaveBeenCalledWith('android', project);
                         expect(platformApi.removePlugin).toHaveBeenCalled();
                     });
-            }, 6000);
+            });
 
             it('Test 003 : should return propagate value returned by PlatformApi removePlugin method', function () {
                 const platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
@@ -171,7 +171,7 @@ describe('plugman/uninstall', () => {
                     }, function err (errMsg) {
                         expect(errMsg.toString()).toContain('Platform "atari" not supported.');
                     });
-            }, 6000);
+            });
 
             it('Test 005 : should throw if plugin is missing', function () {
                 return uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist')
@@ -180,7 +180,7 @@ describe('plugman/uninstall', () => {
                     }, function err (errMsg) {
                         expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
                     });
-            }, 6000);
+            });
         });
     });
 
@@ -211,7 +211,7 @@ describe('plugman/uninstall', () => {
                     }, function err (errMsg) {
                         expect(errMsg.toString()).toEqual('Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)');
                     });
-            }, 6000);
+            });
 
             it('Test 008 : allow forcefully removing a plugin', function () {
                 setupProject('uninstall.test');
@@ -265,7 +265,7 @@ describe('plugman/uninstall', () => {
                     }, function err (errMsg) {
                         expect(errMsg.toString()).toContain('Platform "atari" not supported.');
                     });
-            }, 6000);
+            });
 
             it('Test 012 : should throw if plugin is missing', function () {
                 return uninstall('android', project, 'SomePluginThatDoesntExist')
@@ -274,7 +274,7 @@ describe('plugman/uninstall', () => {
                     }, function err (errMsg) {
                         expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
                     });
-            }, 6000);
+            });
         });
     });
 
