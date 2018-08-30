@@ -47,7 +47,7 @@ module.exports.listUnmetRequirements = listUnmetRequirements;
 
 function add (projectRoot, hooksRunner, opts) {
     if (!opts.plugins || !opts.plugins.length) {
-        return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add. See `' + cordova_util.binname + ' plugin search`.'));
+        return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add.'));
     }
     var pluginInfo;
     var shouldRunPrepare = false;
