@@ -27,7 +27,6 @@ module.exports.add = require('./add');
 module.exports.remove = require('./remove');
 module.exports.list = require('./list');
 module.exports.save = require('./save');
-module.exports.search = require('./search');
 
 function plugin (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
@@ -85,8 +84,6 @@ function plugin (command, targets, opts) {
         case 'rm':
         case 'remove':
             return module.exports.remove(projectRoot, targets, hooksRunner, opts);
-        case 'search':
-            return module.exports.search(hooksRunner, opts);
         case 'save':
             // save the versions/folders/git-urls of currently installed plugins into config.xml
             return module.exports.save(projectRoot, opts);

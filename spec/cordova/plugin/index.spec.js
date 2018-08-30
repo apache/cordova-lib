@@ -31,7 +31,6 @@ describe('cordova/plugin', function () {
     });
 
     describe('error conditions', function () {
-        // TODO: what about search cmd?
         it('should require at least one target for add and rm commands', function () {
             return plugin('add', null).then(function () {
                 fail('Expected promise to be rejected');
@@ -97,14 +96,6 @@ describe('cordova/plugin', function () {
             return plugin('remove', ['cordova-plugin-splashscreen'])
                 .then(function () {
                     expect(plugin.remove).toHaveBeenCalled();
-                });
-        });
-
-        it('should direct "search" command to the "search" submodule', function () {
-            spyOn(plugin, 'search').and.returnValue(true);
-            return plugin('search')
-                .then(function () {
-                    expect(plugin.search).toHaveBeenCalled();
                 });
         });
 
