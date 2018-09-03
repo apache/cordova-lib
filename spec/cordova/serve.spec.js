@@ -20,7 +20,7 @@
 var cordova = require('../../src/cordova/cordova');
 var console = require('console');
 var path = require('path');
-var shell = require('shelljs');
+// var shell = require('shelljs');
 var fs = require('fs-extra');
 var Q = require('q');
 var tempDir;
@@ -73,7 +73,7 @@ xdescribe('serve command', function () {
             return xit;
         }
         function itifapps (apps) {
-            return cit(apps.every(function (bin) { return shell.which(bin); }));
+            return cit(apps.every(function (bin) { /* return shell.which(bin); */ }));
         }
 
         function test_serve (platform, ref, expectedContents, opts) {
