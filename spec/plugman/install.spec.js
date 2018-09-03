@@ -17,22 +17,21 @@
     under the License.
 */
 
-var path = require('path');
-var install = require('../../src/plugman/install');
-var actions = require('cordova-common').ActionStack;
-var xmlHelpers = require('cordova-common').xmlHelpers;
-var et = require('elementtree');
-var PlatformJson = require('cordova-common').PlatformJson;
-var events = require('cordova-common').events;
-var plugman = require('../../src/plugman/plugman');
-var platforms = require('../../src/plugman/platforms/common');
-var knownPlatforms = require('../../src/platforms/platforms');
-var common = require('../common');
-var fs = require('fs-extra');
-var os = require('os');
-var child_process = require('child_process');
-var semver = require('semver');
-var Q = require('q');
+const child_process = require('child_process');
+const et = require('elementtree');
+const fs = require('fs-extra');
+const os = require('os');
+const path = require('path');
+const Q = require('q');
+const semver = require('semver');
+
+const { ActionStack, events, PlatformJson, superspawn, xmlHelpers } = require('cordova-common');
+const common = require('../common');
+const install = require('../../src/plugman/install');
+const knownPlatforms = require('../../src/platforms/platforms');
+const platforms = require('../../src/plugman/platforms/common');
+const plugman = require('../../src/plugman/plugman');
+
 var spec = __dirname;
 var srcProject = path.join(spec, 'projects', 'android');
 var temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
@@ -59,7 +58,6 @@ var plugins = {
 };
 var results = {};
 var TIMEOUT = 90000;
-var superspawn = require('cordova-common').superspawn;
 
 // Pre-crete the temp dir, without it the test fails.
 fs.ensureDirSync(temp_dir);
@@ -112,9 +110,9 @@ describe('plugman install start', function () {
 
     beforeEach(function () {
         config_queue_add = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
-        spyOn(actions.prototype, 'process').and.returnValue(Q(true));
-        actions_push = spyOn(actions.prototype, 'push');
-        ca = spyOn(actions.prototype, 'createAction');
+        spyOn(ActionStack.prototype, 'process').and.returnValue(Q(true));
+        actions_push = spyOn(ActionStack.prototype, 'push');
+        ca = spyOn(ActionStack.prototype, 'createAction');
 
         var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
         spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (path) {
