@@ -108,6 +108,10 @@ describe('plugman install start', function () {
 describe('install', function () {
     var exec, fetchSpy;
 
+    afterAll(() => {
+        fs.removeSync(temp_dir);
+    });
+
     beforeEach(function () {
         exec = spyOn(child_process, 'exec').and.callFake(function (cmd, cb) {
             cb(false, '', ''); // eslint-disable-line standard/no-callback-literal
@@ -387,11 +391,4 @@ describe('install', function () {
                 });
         }, TIMEOUT);
     });
-});
-
-describe('end', function () {
-
-    it('Test 034 : end', function () {
-        fs.removeSync(temp_dir);
-    }, TIMEOUT);
 });
