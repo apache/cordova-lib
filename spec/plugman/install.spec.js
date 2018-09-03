@@ -69,9 +69,10 @@ var fake = {
     }
 };
 
-describe('plugman install start', function () {
+describe('plugman/install', () => {
+    var exec, fetchSpy;
 
-    it('Test 001 : plugman install start', function () {
+    beforeAll(() => {
         results['emit_results'] = [];
         events.on('results', result => results['emit_results'].push(result));
 
@@ -101,12 +102,10 @@ describe('plugman install start', function () {
                 return install('android', project, pluginDir('org.test.defaultvariables'), plugins_install_dir, { cli_variables: {API_KEY: 'batman'} });
             }).then(function (result) {
                 expect(result).toBeTruthy();
+                api.addPlugin.and.callThrough();
+                events.removeAllListeners('results');
             });
     }, TIMEOUT);
-});
-
-describe('install', function () {
-    var exec, fetchSpy;
 
     afterAll(() => {
         fs.removeSync(temp_dir);
