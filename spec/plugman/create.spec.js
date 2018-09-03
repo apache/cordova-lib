@@ -17,17 +17,7 @@
     under the License.
 */
 var create = require('../../src/plugman/create');
-var Q = require('q');
 var fs = require('fs-extra');
-var plugman = require('../../src/plugman/plugman');
-
-describe('create', function () {
-    it('Test 001 : should call create', function () {
-        var sCreate = spyOn(plugman, 'create').and.returnValue(Q());
-        plugman.create();
-        expect(sCreate).toHaveBeenCalled();
-    });
-});
 
 describe('create plugin', function () {
     var writeFileSync;

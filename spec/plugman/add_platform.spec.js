@@ -17,19 +17,7 @@
     under the License.
 */
 var platform = require('../../src/plugman/platform');
-var Q = require('q');
 var fs = require('fs-extra');
-
-describe('platform add/remove', function () {
-    it('Test 001 : should call platform add', function () {
-        var sPlatformA = spyOn(platform, 'add').and.returnValue(Q());
-        var sPlatformR = spyOn(platform, 'remove').and.returnValue(Q());
-        platform.add();
-        expect(sPlatformA).toHaveBeenCalled();
-        platform.remove();
-        expect(sPlatformR).toHaveBeenCalled();
-    });
-});
 
 describe('platform add', function () {
     beforeEach(function () {
