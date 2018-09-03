@@ -31,11 +31,11 @@ const knownPlatforms = require('../../src/platforms/platforms');
 const platforms = require('../../src/plugman/platforms/common');
 const plugman = require('../../src/plugman/plugman');
 
-var srcProject = path.join(__dirname, 'projects', 'android');
-var temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
-var project = path.join(temp_dir, 'android_install');
-var plugins_dir = path.join(__dirname, 'plugins');
-var plugins_install_dir = path.join(project, 'cordova', 'plugins');
+const srcProject = path.join(__dirname, 'projects', 'android');
+const temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
+const project = path.join(temp_dir, 'android_install');
+const plugins_dir = path.join(__dirname, 'plugins');
+const plugins_install_dir = path.join(project, 'cordova', 'plugins');
 
 function pluginDir (pluginId) {
     const base = pluginId.length === 1
@@ -44,13 +44,13 @@ function pluginDir (pluginId) {
     return path.join(base, pluginId);
 }
 
-var results = {};
-var TIMEOUT = 90000;
+const results = {};
+const TIMEOUT = 90000;
 
-var existsSync = fs.existsSync;
+const existsSync = fs.existsSync;
 
 // Mocked functions for tests
-var fake = {
+const fake = {
     existsSync: {
         noPlugins (path) {
             // fake installed plugin directories as 'not found'
@@ -70,7 +70,7 @@ var fake = {
 };
 
 describe('plugman/install', () => {
-    var exec, fetchSpy;
+    let exec, fetchSpy;
 
     beforeAll(() => {
         results['emit_results'] = [];
@@ -79,9 +79,9 @@ describe('plugman/install', () => {
         fs.copySync(srcProject, project);
 
         // Every time when addPlugin is called it will return some truthy value
-        var returnValues = [true, {}, [], 'foo', function () {}][Symbol.iterator]();
-        var api = knownPlatforms.getPlatformApi('android', project);
-        var addPluginOrig = api.addPlugin;
+        const returnValues = [true, {}, [], 'foo', function () {}][Symbol.iterator]();
+        const api = knownPlatforms.getPlatformApi('android', project);
+        const addPluginOrig = api.addPlugin;
         spyOn(api, 'addPlugin').and.callFake(function () {
             return addPluginOrig.apply(api, arguments)
                 .then(_ => returnValues.next());
@@ -149,7 +149,7 @@ describe('plugman/install', () => {
         });
 
         describe('engine versions', function () {
-            var satisfies;
+            let satisfies;
             beforeEach(function () {
                 satisfies = spyOn(semver, 'satisfies').and.returnValue(true);
                 spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
@@ -177,7 +177,7 @@ describe('plugman/install', () => {
                     });
             }, TIMEOUT);
             it('Test 010 : should check platform sdk version if specified', function () {
-                var cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                const cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
                 exec.and.callFake(function (cmd, cb) { cb(null, '18\n'); });
                 return install('android', project, pluginDir('com.cordova.engine-android'))
                     .then(function () {
@@ -193,8 +193,8 @@ describe('plugman/install', () => {
             it('Test 011 : should check engine versions', function () {
                 return install('android', project, pluginDir('com.cordova.engine'))
                     .then(function () {
-                        var plugmanVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
-                        var cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                        const plugmanVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                        const cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
                         expect(satisfies.calls.count()).toBe(4);
                         // <engine name="cordova" version=">=2.3.0"/>
                         expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=2.3.0', true ]);
@@ -217,7 +217,7 @@ describe('plugman/install', () => {
         });
 
         describe('with dependencies', function () {
-            var emit;
+            let emit;
             beforeEach(function () {
                 spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
                 spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
@@ -239,7 +239,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('I'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(fetchSpy).toHaveBeenCalledWith('C@1.0.0', jasmine.any(String), jasmine.any(Object));
                         expect(install).toEqual([
                             'Install start for "C" on android.',
@@ -252,7 +252,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('A'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(install).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
@@ -265,7 +265,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('A'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(install).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
@@ -279,7 +279,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('F'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(install).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
@@ -302,7 +302,7 @@ describe('plugman/install', () => {
             it('Test 020 : install subdir relative to top level plugin if no fetch meta', function () {
                 return install('android', project, pluginDir('B'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(install).toEqual([
                             'Install start for "D" on android.',
                             'Install start for "E" on android.',
@@ -313,7 +313,7 @@ describe('plugman/install', () => {
 
             it('Test 021 : install uses meta data (if available) of top level plugin source', function () {
                 // Fake metadata so plugin 'B' appears from 'meta/B'
-                var meta = require('../../src/plugman/util/metadata');
+                const meta = require('../../src/plugman/util/metadata');
                 spyOn(meta, 'get_fetch_metadata').and.callFake(function () {
                     return {
                         source: {type: 'dir', url: path.join(pluginDir('B'), '..', 'meta')}
@@ -322,14 +322,14 @@ describe('plugman/install', () => {
 
                 return install('android', project, pluginDir('B'))
                     .then(function () {
-                        var install = common.spy.getInstall(emit);
+                        const install = common.spy.getInstall(emit);
                         expect(install).toEqual([
                             'Install start for "D" on android.',
                             'Install start for "E" on android.',
                             'Install start for "B" on android.'
                         ]);
 
-                        var copy = common.spy.startsWith(emit, 'Copying from');
+                        const copy = common.spy.startsWith(emit, 'Copying from');
                         expect(copy.length).toBe(3);
                         expect(copy[0].indexOf(path.normalize('meta/D')) > 0).toBe(true);
                         expect(copy[1].indexOf(path.normalize('meta/subdir/E')) > 0).toBe(true);
