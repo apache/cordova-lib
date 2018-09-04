@@ -31,11 +31,10 @@ const knownPlatforms = require('../../src/platforms/platforms');
 const platforms = require('../../src/plugman/platforms/common');
 const plugman = require('../../src/plugman/plugman');
 
-var spec = __dirname;
-var srcProject = path.join(spec, 'projects', 'android');
+var srcProject = path.join(__dirname, 'projects', 'android');
 var temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
 var project = path.join(temp_dir, 'android_install');
-var plugins_dir = path.join(spec, 'plugins');
+var plugins_dir = path.join(__dirname, 'plugins');
 var plugins_install_dir = path.join(project, 'cordova', 'plugins');
 var plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
@@ -62,8 +61,8 @@ var existsSync = fs.existsSync;
 
 // Mocked functions for tests
 var fake = {
-    'existsSync': {
-        'noPlugins': function (path) {
+    existsSync: {
+        noPlugins (path) {
             // fake installed plugin directories as 'not found'
             if (path.slice(-5) !== '.json' && path.indexOf(plugins_install_dir) >= 0) {
                 return false;
@@ -72,8 +71,8 @@ var fake = {
             return existsSync(path);
         }
     },
-    'fetch': {
-        'dependencies': function (id, dir) {
+    fetch: {
+        dependencies (id, dir) {
             if (id === plugins['A']) { return Q(id); } // full path to plugin
             return Q(path.join(plugins_dir, 'dependencies', id));
         }
@@ -86,13 +85,12 @@ describe('plugman install start', function () {
         fs.copySync(srcProject, project);
 
         // Every time when addPlugin is called it will return some truthy value
-        var returnValueIndex = 0;
-        var returnValues = [true, {}, [], 'foo', function () {}];
+        var returnValues = [true, {}, [], 'foo', function () {}][Symbol.iterator]();
         var api = knownPlatforms.getPlatformApi('android', project);
         var addPluginOrig = api.addPlugin;
         spyOn(api, 'addPlugin').and.callFake(function () {
             return addPluginOrig.apply(api, arguments)
-                .then(_ => returnValues[returnValueIndex++]);
+                .then(_ => returnValues.next());
         });
 
         return install('android', project, plugins['org.test.plugins.dummyplugin'])
