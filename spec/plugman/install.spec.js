@@ -116,13 +116,13 @@ describe('plugman/install', () => {
             cb(null, '', '');
         });
         spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
-        spyOn(fs, 'ensureDirSync').and.returnValue(true);
+        spyOn(fs, 'ensureDirSync');
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
         fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Q(pluginDir('com.cordova.engine')));
-        spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'copySync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.returnValue(true);
+        spyOn(fs, 'writeFileSync');
+        spyOn(fs, 'copySync');
+        spyOn(fs, 'removeSync');
         spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
     });
 
