@@ -19,18 +19,14 @@ const path = require('path');
 const fs = require('fs-extra');
 const rewire = require('rewire');
 const { ConfigParser } = require('cordova-common');
-const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+const { tmpDir: getTmpDir, testPlatform } = require('../helpers');
 
-const TIMEOUT = 240 * 1000;
-
-/** Testing will check if "cordova prepare" is restoring platforms and plugins as expected.
-*   Uses different basePkgJson files depending on testing expecations of what (platforms/plugins/variables)
-*   should initially be in pkg.json and/or config.xml.
+/**
+ * Checks if "cordova/restore-util" is restoring platforms and plugins as
+ * expected given different configurations of package.json and/or config.xml.
 */
-describe('restore', function () {
-    setDefaultTimeout(TIMEOUT);
-
-    const fixturesPath = path.join(__dirname, '../spec/cordova/fixtures');
+describe('cordova/restore-util', () => {
+    const fixturesPath = path.join(__dirname, './fixtures');
     var tmpDir, project, pkgJsonPath, configXmlPath;
     var restore, cordovaPlatform, cordovaPlugin;
 
@@ -41,13 +37,13 @@ describe('restore', function () {
         configXmlPath = path.join(project, 'config.xml');
         delete process.env.PWD;
 
-        cordovaPlugin = require('../src/cordova/plugin');
+        cordovaPlugin = require('../../src/cordova/plugin');
         spyOn(cordovaPlugin, 'add')
             .and.returnValue(Promise.resolve());
 
         cordovaPlatform = jasmine.createSpy('cordovaPlatform')
             .and.returnValue(Promise.resolve());
-        restore = rewire('../src/cordova/restore-util');
+        restore = rewire('../../src/cordova/restore-util');
         restore.__set__({ cordovaPlatform });
 
         setupBaseProject();
@@ -162,21 +158,15 @@ describe('restore', function () {
         pluginNames.forEach(expectPluginAdded);
     }
 
-    describe('with --save', function () {
+    describe('installPlatformsFromConfigXML', () => {
 
-        /** Test#000 will check that when a platform is added with a spec, it will
-        *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
-        *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
-        */
-        it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function () {
+        it('Test#000 : should change specs in config.xml from using ~ to using ^', () => {
             const PLATFORM = 'android';
 
-            // When spec is added to config.xml, first char is '~'.
             getCfg()
                 .addEngine(PLATFORM, '~7.1.1')
                 .write();
 
-            // When spec is added to pkg.json, first char is '^'.
             setPkgJson('dependencies', {
                 [platformPkgName(PLATFORM)]: '^7.1.1'
             });
@@ -195,12 +185,7 @@ describe('restore', function () {
             });
         });
 
-        /** Test#001 will add a platform to package.json with the 'save' flag.
-        *   It will remove it from platforms.json without the save flag.
-        *   After running cordova prepare, that platform should be restored in the
-        *   installed platform list in platforms.json.
-        */
-        it('Test#001 : should restore platform that has been removed from project', function () {
+        it('Test#001 : should restore saved platform from package.json', () => {
             setPkgJson('cordova.platforms', [testPlatform]);
 
             return restore.installPlatformsFromConfigXML().then(() => {
@@ -209,12 +194,7 @@ describe('restore', function () {
             });
         });
 
-        /** Test#017
-        *   When platform is added with url and fetch and restored with fetch,
-        *   pkg.json and config.xml would add it to their files properly.
-        *   When prepare is run with fetch, platform should be installed.
-        */
-        it('Test#017 : test to make sure that platform url is added and restored properly', function () {
+        it('Test#017 : should restore saved platform from package.json using an URL spec', () => {
             const PLATFORM = 'browser';
             const PLATFORM_URL = 'https://github.com/apache/cordova-browser';
 
@@ -236,43 +216,7 @@ describe('restore', function () {
             });
         });
 
-        /** Test#018
-        *   When plugin is added with url and fetch and restored with fetch,
-        *   pkg.json and config.xml would add it to their files properly.
-        *   When prepare is run with fetch, plugin should be installed.
-        */
-        it('Test#018 : test to make sure that plugin url is added and restored properly', function () {
-            const PLUGIN_ID = 'cordova-plugin-splashscreen';
-            const PLUGIN_URL = 'https://github.com/apache/cordova-plugin-splashscreen';
-
-            getCfg()
-                .addEngine(testPlatform)
-                .addPlugin({ name: PLUGIN_ID, spec: PLUGIN_URL })
-                .write();
-
-            setPkgJson('dependencies', {
-                [PLUGIN_ID]: `git+${PLUGIN_URL}.git`
-            });
-            setPkgJson('cordova.plugins', { [PLUGIN_ID]: {} });
-
-            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                // Config.xml spec now matches the one in pkg.json.
-                expectConsistentPlugins([{
-                    name: PLUGIN_ID,
-                    spec: `git+${PLUGIN_URL}.git`,
-                    variables: jasmine.any(Object)
-                }]);
-            });
-        });
-    });
-
-    describe('without --save', function () {
-
-        /** Test#004 will check the platform list in package.json and config.xml.
-        *   When both files contain the same platforms and cordova prepare is run,
-        *   neither file is modified.
-        */
-        it('Test#004 : should not modify either file if pkg.json and config.xml have the same platforms', function () {
+        it('Test#004 : should not modify either file if both have the same platforms', () => {
             getCfg()
                 .addEngine(testPlatform)
                 .write();
@@ -284,18 +228,12 @@ describe('restore', function () {
             });
             const modTimes = getModTimes();
 
-            return restore.installPlatformsFromConfigXML().then(function () {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 expect(getModTimes()).toEqual(modTimes);
             });
         });
 
-        /** Test#005 will check the platform list in package.json and config.xml.
-        *   When config.xml has 'android and browser' and pkg.json only contains 'android', run cordova
-        *   and pkg.json is updated to include 'browser'. This test will also check that pkg.json
-        *   is updated with the correct spec/dependencies when restored. Checks that specs are
-        *   added properly, too.
-        */
-        it('Test#005 : should update pkg.json to include platforms from config.xml', function () {
+        it('Test#005 : should update package.json to include platforms from config.xml', () => {
             const PLATFORM_1 = 'android';
             const PLATFORM_2 = 'browser';
 
@@ -305,7 +243,7 @@ describe('restore', function () {
                 .write();
             setPkgJson('cordova.platforms', [testPlatform]);
 
-            return restore.installPlatformsFromConfigXML().then(function () {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 const pkgJson = getPkgJson();
                 // Expect both pkg.json and config.xml to each have both platforms in their arrays.
                 expect(getCfgEngineNames()).toEqual([PLATFORM_1, PLATFORM_2]);
@@ -318,16 +256,12 @@ describe('restore', function () {
             });
         });
 
-        /** Test#006 will check if pkg.json has a cordova key and platforms installed already.
-         *   If it does not and config.xml has a platform(s) installed already, run cordova prepare
-         *   and it will add a cordova key and the platform(s) from config.xml to package.json.
-         */
-        it('Test#006 : should update a package.json without cordova key to include platforms from config.xml', function () {
+        it('Test#006 : should update a package.json without `cordova` key to match platforms from config.xml', () => {
             getCfg()
                 .addEngine('android')
                 .write();
 
-            return restore.installPlatformsFromConfigXML().then(function () {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // Expect no change to config.xml.
                 expect(getCfgEngineNames()).toEqual(['android']);
                 // Expect cordova key and 'android' platform to be added to pkg.json.
@@ -335,12 +269,7 @@ describe('restore', function () {
             });
         });
 
-        /** Test#007 will check the platform list in package.json and config.xml.
-        *   When package.json has 'android and browser' and config.xml only contains 'android', run cordova
-        *   and config.xml is updated to include 'browser'. Also, if there is a specified spec in pkg.json,
-        *   it should be added to config.xml during restore.
-        */
-        it('Test#007 : should update config.xml to include platforms from pkg.json', function () {
+        it('Test#007 : should update config.xml to include platforms from package.json', () => {
             getCfg()
                 .addEngine('ios', '6.0.0')
                 .write();
@@ -349,7 +278,7 @@ describe('restore', function () {
             });
             setPkgJson('cordova.platforms', ['ios', 'browser']);
 
-            return restore.installPlatformsFromConfigXML().then(function () {
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // Check to make sure that 'browser' spec was added properly.
                 expect(getCfg().getEngines()).toEqual([
                     { name: 'ios', spec: '^4.5.4' },
@@ -362,27 +291,13 @@ describe('restore', function () {
             });
         });
 
-        /** Test#016 will check that cordova prepare will still restore the correct
-        *   platforms and plugins even without package.json file.
-        */
-        it('Test#016 : should restore platforms & plugins and create a missing pkg.json', function () {
-            const PLUGIN_ID = 'cordova-plugin-device';
-            const PLATFORM_1 = 'android';
-
+        it('Test#016 : should restore platforms & plugins and create a missing package.json', () => {
             getCfg()
-                .addEngine(PLATFORM_1)
-                .addPlugin({ name: PLUGIN_ID })
+                .addEngine(testPlatform)
                 .write();
             fs.removeSync(pkgJsonPath);
 
-            return Promise.resolve().then(function () {
-                return restore.installPlatformsFromConfigXML();
-            }).then(function () {
-                return restore.installPluginsFromConfigXML({});
-            }).then(function () {
-                expectPlatformAdded(PLATFORM_1);
-                expectPluginAdded(PLUGIN_ID);
-
+            return restore.installPlatformsFromConfigXML().then(() => {
                 // Package.json should be auto-created using values from config.xml
                 const cfg = getCfg();
                 expect(getPkgJson()).toEqual(jasmine.objectContaining({
@@ -395,7 +310,7 @@ describe('restore', function () {
     });
 
     // These tests will check the plugin/variable list in package.json and config.xml.
-    describe('plugins', function () {
+    describe('installPluginsFromConfigXML', () => {
         beforeEach(() => {
             // Add some platform to test the plugins with
             getCfg()
@@ -408,7 +323,7 @@ describe('restore', function () {
         *   When pkg.json and config.xml define different values for a plugin variable,
         *   pkg.json should win and that value will be used to replace config's value.
         */
-        it('Test#011 : updates config.xml to use the variable found in pkg.json', function () {
+        it('Test#011 : updates config.xml to use the variable found in pkg.json', () => {
             getCfg()
                 .addPlugin({
                     name: 'cordova-plugin-camera',
@@ -419,7 +334,7 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'json' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -433,7 +348,7 @@ describe('restore', function () {
         *   When config.xml and pkg.json share a common plugin but pkg.json defines no variables for it,
         *   prepare will update pkg.json to match config.xml's plugins/variables.
         */
-        it('Test#012 : update pkg.json to include plugin and variable found in config.xml', function () {
+        it('Test#012 : update pkg.json to include plugin and variable found in config.xml', () => {
             getCfg()
                 .addPlugin({
                     name: 'cordova-plugin-camera',
@@ -444,7 +359,7 @@ describe('restore', function () {
                 'cordova-plugin-camera': {}
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -459,7 +374,7 @@ describe('restore', function () {
         *   Plugins that are unique to that file, will be copied over to the file that is missing it.
         *   Config.xml and pkg.json will have identical plugins and variables after cordova prepare.
         */
-        it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', function () {
+        it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', () => {
             getCfg()
                 .addPlugin({
                     name: 'cordova-plugin-camera',
@@ -476,7 +391,7 @@ describe('restore', function () {
                 'cordova-plugin-device': { variable_1: 'value_1' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -499,7 +414,7 @@ describe('restore', function () {
         *   If there is a matching plugin name, the variables will be merged and then added
         *   to config and pkg.json.
         */
-        it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', function () {
+        it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', () => {
             getCfg()
                 .addPlugin({
                     name: 'cordova-plugin-camera',
@@ -520,7 +435,7 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'value_1', variable_3: 'value_3' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(() => {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
@@ -541,7 +456,7 @@ describe('restore', function () {
         *   When config has no plugins and is restored, the plugins will be restored with the
         *   pkg.json plugins and with the spec from pkg.json dependencies.
         */
-        it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function () {
+        it('Test#015 : update config.xml to include all plugins/variables from pkg.json', () => {
             setPkgJson('dependencies', {
                 'cordova-plugin-camera': '^2.3.0'
             });
@@ -549,11 +464,34 @@ describe('restore', function () {
                 'cordova-plugin-camera': { variable_1: 'value_1' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(function () {
+            return restore.installPluginsFromConfigXML({save: true}).then(() => {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
                     variables: { variable_1: 'value_1' }
+                }]);
+            });
+        });
+
+        it('Test#018 : should restore saved plugin using an URL spec', () => {
+            const PLUGIN_ID = 'cordova-plugin-splashscreen';
+            const PLUGIN_URL = 'https://github.com/apache/cordova-plugin-splashscreen';
+
+            getCfg()
+                .addPlugin({ name: PLUGIN_ID, spec: PLUGIN_URL })
+                .write();
+
+            setPkgJson('dependencies', {
+                [PLUGIN_ID]: `git+${PLUGIN_URL}.git`
+            });
+            setPkgJson('cordova.plugins', { [PLUGIN_ID]: {} });
+
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
+                // Config.xml spec now matches the one in pkg.json.
+                expectConsistentPlugins([{
+                    name: PLUGIN_ID,
+                    spec: `git+${PLUGIN_URL}.git`,
+                    variables: jasmine.any(Object)
                 }]);
             });
         });
