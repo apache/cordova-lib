@@ -25,7 +25,7 @@ const Q = require('q');
 const semver = require('semver');
 
 const { events, PlatformJson, superspawn } = require('cordova-common');
-const common = require('../common');
+const { spy: emitSpyHelper } = require('../common');
 const install = require('../../src/plugman/install');
 const knownPlatforms = require('../../src/platforms/platforms');
 const platforms = require('../../src/plugman/platforms/common');
@@ -238,9 +238,8 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('I'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
                         expect(fetchSpy).toHaveBeenCalledWith('C@1.0.0', jasmine.any(String), jasmine.any(Object));
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "I" on android.'
                         ]);
@@ -251,8 +250,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('A'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
                             'Install start for "A" on android.'
@@ -264,8 +262,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('A'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
                             'Install start for "A" on android.'
@@ -278,8 +275,7 @@ describe('plugman/install', () => {
                 emit.calls.reset();
                 return install('android', project, pluginDir('F'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "C" on android.',
                             'Install start for "D" on android.',
                             'Install start for "A" on android.',
@@ -301,8 +297,7 @@ describe('plugman/install', () => {
             it('Test 020 : install subdir relative to top level plugin if no fetch meta', () => {
                 return install('android', project, pluginDir('B'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "D" on android.',
                             'Install start for "E" on android.',
                             'Install start for "B" on android.'
@@ -321,14 +316,13 @@ describe('plugman/install', () => {
 
                 return install('android', project, pluginDir('B'))
                     .then(() => {
-                        const install = common.spy.getInstall(emit);
-                        expect(install).toEqual([
+                        expect(emitSpyHelper.getInstall(emit)).toEqual([
                             'Install start for "D" on android.',
                             'Install start for "E" on android.',
                             'Install start for "B" on android.'
                         ]);
 
-                        const copy = common.spy.startsWith(emit, 'Copying from');
+                        const copy = emitSpyHelper.startsWith(emit, 'Copying from');
                         expect(copy.length).toBe(3);
                         expect(copy[0].indexOf(path.normalize('meta/D')) > 0).toBe(true);
                         expect(copy[1].indexOf(path.normalize('meta/subdir/E')) > 0).toBe(true);
