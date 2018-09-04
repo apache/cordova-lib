@@ -113,7 +113,7 @@ describe('plugman/install', () => {
 
     beforeEach(() => {
         exec = spyOn(child_process, 'exec').and.callFake((cmd, cb) => {
-            cb(false, '', ''); // eslint-disable-line standard/no-callback-literal
+            cb(null, '', '');
         });
         spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
         spyOn(fs, 'ensureDirSync').and.returnValue(true);
