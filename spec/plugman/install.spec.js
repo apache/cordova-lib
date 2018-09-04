@@ -18,14 +18,13 @@
 */
 
 const child_process = require('child_process');
-const et = require('elementtree');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 const Q = require('q');
 const semver = require('semver');
 
-const { ActionStack, events, PlatformJson, superspawn, xmlHelpers } = require('cordova-common');
+const { events, PlatformJson, superspawn } = require('cordova-common');
 const common = require('../common');
 const install = require('../../src/plugman/install');
 const knownPlatforms = require('../../src/platforms/platforms');
@@ -59,9 +58,6 @@ var plugins = {
 var results = {};
 var TIMEOUT = 90000;
 
-// Pre-crete the temp dir, without it the test fails.
-fs.ensureDirSync(temp_dir);
-
 var existsSync = fs.existsSync;
 
 // Mocked functions for tests
@@ -84,42 +80,7 @@ var fake = {
     }
 };
 
-var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
-    '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
-    '        id        = "io.cordova.hellocordova"\n' +
-    '        version   = "0.0.1">\n' +
-    '    <name>Hello Cordova</name>\n' +
-    '    <description>\n' +
-    '        A sample Apache Cordova application that responds to the deviceready event.\n' +
-    '    </description>\n' +
-    '    <author href="http://cordova.io" email="dev@cordova.apache.org">\n' +
-    '        Apache Cordova Team\n' +
-    '    </author>\n' +
-    '    <content src="index.html" />\n' +
-    '    <access origin="*" />\n' +
-    '    <preference name="fullscreen" value="true" />\n' +
-    '    <preference name="webviewbounce" value="true" />\n' +
-    '</widget>\n';
-
 describe('plugman install start', function () {
-    var config_queue_add;
-    var actions_push;
-    var ca;
-    var emit;
-
-    beforeEach(function () {
-        config_queue_add = spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
-        spyOn(ActionStack.prototype, 'process').and.returnValue(Q(true));
-        actions_push = spyOn(ActionStack.prototype, 'push');
-        ca = spyOn(ActionStack.prototype, 'createAction');
-
-        var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
-        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (path) {
-            if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
-            return origParseElementtreeSync(path);
-        });
-    });
 
     it('Test 001 : plugman install start', function () {
         fs.copySync(srcProject, project);
@@ -137,11 +98,6 @@ describe('plugman install start', function () {
         return install('android', project, plugins['org.test.plugins.dummyplugin'])
             .then(function (result) {
                 expect(result).toBeTruthy();
-                results['actions_callCount'] = actions_push.calls.count();
-                results['actions_create'] = ca.calls.argsFor[0];
-                results['config_add'] = config_queue_add.calls.argsFor[0];
-                return result;
-            }).then(function () {
                 return install('android', project, plugins['com.cordova.engine']);
             }).then(function (result) {
                 expect(result).toBeTruthy();
