@@ -82,6 +82,9 @@ var fake = {
 describe('plugman install start', function () {
 
     it('Test 001 : plugman install start', function () {
+        results['emit_results'] = [];
+        events.on('results', result => results['emit_results'].push(result));
+
         fs.copySync(srcProject, project);
 
         // Every time when addPlugin is called it will return some truthy value
@@ -99,7 +102,6 @@ describe('plugman install start', function () {
                 return install('android', project, plugins['com.cordova.engine']);
             }).then(function (result) {
                 expect(result).toBeTruthy();
-                emit = spyOn(events, 'emit');
                 return install('android', project, plugins['org.test.plugins.childbrowser']);
             }).then(function (result) {
                 expect(result).toBeTruthy();
@@ -109,11 +111,6 @@ describe('plugman install start', function () {
                 return install('android', project, plugins['org.test.defaultvariables'], plugins_install_dir, { cli_variables: {API_KEY: 'batman'} });
             }).then(function (result) {
                 expect(result).toBeTruthy();
-                results['emit_results'] = [];
-                emit.calls.all().forEach(function (val, i) {
-                    if (emit.calls.argsFor(i)[0] === 'results') { results['emit_results'].push(emit.calls.argsFor(i)[1]); }
-                });
-                events.emit('verbose', '***** DONE START *****');
             });
     }, TIMEOUT);
 });
