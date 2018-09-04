@@ -22,7 +22,7 @@ var pluginSpec = require('./plugin_spec_parser');
 var ConfigParser = require('cordova-common').ConfigParser;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var Q = require('q');
 var semver = require('semver');
 

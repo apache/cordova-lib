@@ -19,8 +19,8 @@
 
 var os = require('os');
 var path = require('path');
+var fs = require('fs-extra');
 var rewire = require('rewire');
-var shell = require('shelljs');
 var events = require('cordova-common').events;
 
 var util = require('../../../src/cordova/util');
@@ -30,7 +30,8 @@ var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
 var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
-shell.ln('-sf', PLATFORM_WITH_API, PLATFORM_SYMLINK);
+fs.removeSync(PLATFORM_SYMLINK);
+fs.ensureSymlinkSync(PLATFORM_WITH_API, PLATFORM_SYMLINK);
 
 describe('platforms object', function () {
     it('should have getPlatformApi function as a property', function () {

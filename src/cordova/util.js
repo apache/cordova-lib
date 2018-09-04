@@ -17,11 +17,10 @@
     under the License.
 */
 
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
-var shell = require('shelljs');
 var url = require('url');
 var nopt = require('nopt');
 var Q = require('q');
@@ -47,7 +46,7 @@ exports.globalConfig = global_config_path;
 Object.defineProperty(exports, 'libDirectory', {
     configurable: true,
     get: function () {
-        shell.mkdir('-p', lib_path);
+        fs.ensureDirSync(lib_path);
         exports.libDirectory = lib_path;
         return lib_path;
     }
@@ -79,7 +78,7 @@ exports.removePlatformPluginsJson = removePlatformPluginsJson;
 // Remove <platform>.json file from plugins directory.
 function removePlatformPluginsJson (projectRoot, target) {
     var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
-    shell.rm('-f', plugins_json);
+    fs.removeSync(plugins_json);
 }
 
 // Used to prevent attempts of installing platforms that are not supported on
@@ -207,7 +206,7 @@ function deleteSvnFolders (dir) {
         var fullpath = path.join(dir, entry);
         if (isDirectory(fullpath)) {
             if (entry === '.svn') {
-                shell.rm('-rf', fullpath);
+                fs.removeSync(fullpath);
             } else module.exports.deleteSvnFolders(fullpath);
         }
     });

@@ -16,10 +16,10 @@
 */
 
 var Q = require('q');
+var fs = require('fs-extra');
 var path = require('path');
 var os = require('os');
 var semver = require('semver');
-var shell = require('shelljs');
 var events = require('cordova-common').events;
 var superspawn = require('cordova-common').superspawn;
 var cordova_util = require('../util');
@@ -123,7 +123,7 @@ function check (hooksRunner, projectRoot) {
                 var results = '';
                 var resultQ = Q.defer();
                 events._events = listeners;
-                shell.rm('-rf', scratch);
+                fs.removeSync(scratch);
                 updateCordova.promise.then(function (versions) {
                     var message = '';
                     if (versions && semver.gt(versions[0], versions[1])) {
@@ -145,7 +145,7 @@ function check (hooksRunner, projectRoot) {
             }).done();
         }).catch(function () {
             events._events = listeners;
-            shell.rm('-rf', scratch);
+            fs.removeSync(scratch);
         }).done();
     return result.promise;
 }

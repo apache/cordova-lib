@@ -18,8 +18,7 @@
 */
 var create = require('../../src/plugman/create');
 var Q = require('q');
-var fs = require('fs');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var plugman = require('../../src/plugman/plugman');
 
 describe('create', function () {
@@ -35,7 +34,7 @@ describe('create plugin', function () {
 
     beforeEach(function () {
         spyOn(fs, 'existsSync').and.returnValue(false);
-        spyOn(shell, 'mkdir').and.returnValue(true);
+        spyOn(fs, 'ensureDirSync').and.returnValue(true);
         writeFileSync = spyOn(fs, 'writeFileSync');
     });
 

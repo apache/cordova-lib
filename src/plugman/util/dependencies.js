@@ -19,7 +19,7 @@
 
 var DepGraph = require('dep-graph');
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var underscore = require('underscore');
 var events = require('cordova-common').events;
 var pkg;

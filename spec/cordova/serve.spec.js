@@ -20,8 +20,8 @@
 var cordova = require('../../src/cordova/cordova');
 var console = require('console');
 var path = require('path');
-var shell = require('shelljs');
-var fs = require('fs');
+// var shell = require('shelljs');
+var fs = require('fs-extra');
 var Q = require('q');
 var tempDir;
 var http = require('http');
@@ -35,14 +35,13 @@ xdescribe('serve command', function () {
     beforeEach(function () {
         // Make a temp directory
         tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
-        shell.rm('-rf', tempDir);
-        shell.mkdir('-p', tempDir);
+        fs.emptyDirSync(tempDir);
         consoleSpy = spyOn(console, 'log');
     });
     afterEach(function () {
         process.chdir(cwd);
         process.env.PWD = cwd;
-        shell.rm('-rf', tempDir);
+        fs.removeSync(tempDir);
     });
     it('Test 001 : should not run outside of a Cordova-based project', function () {
         process.chdir(tempDir);
@@ -74,7 +73,7 @@ xdescribe('serve command', function () {
             return xit;
         }
         function itifapps (apps) {
-            return cit(apps.every(function (bin) { return shell.which(bin); }));
+            return cit(apps.every(function (bin) { /* return shell.which(bin); */ }));
         }
 
         function test_serve (platform, ref, expectedContents, opts) {
@@ -91,9 +90,8 @@ xdescribe('serve command', function () {
                             plats.push(d.promise);
                             cordova.platform('add', plat, {spawnoutput: 'ignore'}).then(function () {
                                 var dir = path.join(tempDir, 'merges', plat);
-                                shell.mkdir('-p', dir);
                                 // Write testing HTML files into the directory.
-                                fs.writeFileSync(path.join(dir, 'test.html'), payloads[plat]);
+                                fs.outputFileSync(path.join(dir, 'test.html'), payloads[plat]);
                                 d.resolve();
                             }).catch(function (e) {
                                 expect(e).toBeUndefined();

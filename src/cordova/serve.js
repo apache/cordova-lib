@@ -20,13 +20,13 @@
 var cordova_util = require('./util');
 var crypto = require('crypto');
 var path = require('path');
-var shell = require('shelljs');
+var globby = require('globby');
 var url = require('url');
 var platforms = require('../platforms/platforms');
 var ConfigParser = require('cordova-common').ConfigParser;
 var HooksRunner = require('../hooks/HooksRunner');
 var Q = require('q');
-var fs = require('fs');
+var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var serve = require('cordova-serve');
 
@@ -81,9 +81,10 @@ function getPlatformHandler (platform, wwwDir, configXml) {
             response.send({
                 'configPath': '/' + platform + '/config.xml',
                 'wwwPath': '/' + platform + '/www',
-                'wwwFileList': shell.find(wwwDir)
-                    .filter(function (a) { return !fs.statSync(a).isDirectory() && !/(^\.)|(\/\.)/.test(a); })
-                    .map(function (a) { return {'path': a.slice(wwwDir.length), 'etag': '' + calculateMd5(a)}; })
+                'wwwFileList': globby('**', { cwd: wwwDir }).map(p => ({
+                    path: p,
+                    etag: '' + calculateMd5(path.join(wwwDir, p))
+                }))
             });
             break;
 

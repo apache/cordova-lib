@@ -18,7 +18,7 @@
  */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var cordovaUtil = require('../cordova/util');
 var events = require('cordova-common').events;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;

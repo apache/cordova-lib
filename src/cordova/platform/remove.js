@@ -17,8 +17,7 @@
 
 var Q = require('q');
 var path = require('path');
-var fs = require('fs');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var CordovaError = require('cordova-common').CordovaError;
 var ConfigParser = require('cordova-common').ConfigParser;
 var events = require('cordova-common').events;
@@ -38,7 +37,7 @@ function remove (hooksRunner, projectRoot, targets, opts) {
     return hooksRunner.fire('before_platform_rm', opts)
         .then(function () {
             targets.forEach(function (target) {
-                shell.rm('-rf', path.join(projectRoot, 'platforms', target));
+                fs.removeSync(path.join(projectRoot, 'platforms', target));
                 cordova_util.removePlatformPluginsJson(projectRoot, target);
             });
         }).then(function () {
