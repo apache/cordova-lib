@@ -292,9 +292,9 @@ describe('plugman/install', () => {
             it('Test 019 : should throw if there is a cyclic dependency', () => {
                 return install('android', project, pluginDir('G'))
                     .then(() => {
-                        common.spy.getInstall(emit);
-                    }).catch(function err (errMsg) {
-                        expect(errMsg.toString()).toContain('Cyclic dependency from G to H');
+                        fail('Expected promise to be rejected');
+                    }, err => {
+                        expect(err.toString()).toContain('Cyclic dependency from G to H');
                     });
             }, TIMEOUT);
 
