@@ -227,10 +227,9 @@ describe('plugman/install', () => {
                     cb(null, '9.0.0\n');
                 });
 
-                function PlatformApiMock () {}
-                PlatformApiMock.addPlugin = function () {
-                    return Q();
-                };
+                class PlatformApiMock {
+                    static addPlugin () { return Q(); }
+                }
                 spyOn(knownPlatforms, 'getPlatformApi').and.returnValue(PlatformApiMock);
             });
 
