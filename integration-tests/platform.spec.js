@@ -99,28 +99,36 @@ describe('cordova/platform', () => {
         xit('Test 001 : should successfully run', function () {
 
             // Check there are no platforms yet.
-            return emptyPlatformList().then(function () {
-                // Add the testing platform.
-                return cordova.platform('add', [helpers.testPlatform]);
-            }).then(function () {
-                // Check the platform add was successful.
-                expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
-                expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
-            }).then(fullPlatformList) // Check for it in platform ls.
+            return emptyPlatformList()
+                .then(function () {
+                    // Add the testing platform.
+                    return cordova.platform('add', [helpers.testPlatform]);
+                })
+                .then(function () {
+                    // Check the platform add was successful.
+                    expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
+                    expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
+                })
+                .then(fullPlatformList) // Check for it in platform ls.
                 .then(function () {
                     // Try to update the platform.
                     return cordova.platform('update', [helpers.testPlatform]);
-                }).then(function () {
+                })
+                .then(function () {
                     // Our fake update script in the exec mock above creates this dummy file.
                     expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toExist();
-                }).then(fullPlatformList) // Platform should still be in platform ls.
+                })
+                .then(fullPlatformList) // Platform should still be in platform ls.
                 .then(function () {
                     // And now remove it.
                     return cordova.platform('rm', [helpers.testPlatform]);
-                }).then(function () {
+                })
+                .then(function () {
                     // It should be gone.
                     expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
-                }).then(emptyPlatformList); // platform ls should be empty too.;
+                })
+                .then(emptyPlatformList); // platform ls should be empty too.;
+
         });
 
         xit('Test 002 : should install plugins correctly while adding platform', function () {
@@ -312,10 +320,12 @@ describe('cordova/platform', () => {
                     process.chdir(project);
                     // add cordova-android instead of android
                     return cordova.platform('add', 'cordova-android');
-                }).then(function () {
+                })
+                .then(function () {
                     // 3rd party platform from npm
                     return cordova.platform('add', 'cordova-platform-test');
-                }).then(function () {
+                })
+                .then(function () {
                     expect(path.join(project, 'platforms', 'android')).toExist();
                     expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();
                     return cordova.platform('ls');
