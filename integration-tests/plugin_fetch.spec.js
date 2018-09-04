@@ -19,11 +19,11 @@
 
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
+var fs = require('fs-extra');
 var plugin = require('../src/cordova/plugin/add');
 var helpers = require('../spec/helpers');
 var path = require('path');
 var events = require('cordova-common').events;
-var shell = require('shelljs');
 
 var testPluginVersions = [
     '0.0.2',
@@ -136,20 +136,19 @@ var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 
 function createTestProject () {
     // Get the base project
-    shell.cp('-R', path.join(fixtures, 'base'), tempDir);
-    shell.mv(path.join(tempDir, 'base'), project);
+    fs.copySync(path.join(fixtures, 'base'), project);
 
     // Copy a platform and a plugin to our sample project
-    shell.cp('-R',
+    fs.copySync(
         path.join(fixtures, 'platforms', helpers.testPlatform),
-        path.join(project, 'platforms'));
-    shell.cp('-R',
-        path.join(fixtures, 'plugins', 'android'),
-        path.join(project, 'plugins'));
+        path.join(project, 'platforms', helpers.testPlatform));
+    fs.copySync(
+        path.join(fixtures, 'plugins/android'),
+        path.join(project, 'plugins/android'));
 }
 
 function removeTestProject () {
-    shell.rm('-rf', tempDir);
+    fs.removeSync(tempDir);
 }
 
 describe('plugin fetching version selection', function () {

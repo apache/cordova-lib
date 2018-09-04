@@ -18,7 +18,7 @@
 */
 
 var Q = require('q');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var PluginInfo = require('cordova-common').PluginInfo;
 var events = require('cordova-common').events;

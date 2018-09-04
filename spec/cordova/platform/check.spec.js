@@ -16,7 +16,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 */
 
 var Q = require('q');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var superspawn = require('cordova-common').superspawn;
 var rewire = require('rewire');
@@ -31,7 +31,7 @@ describe('cordova/platform/check', function () {
     beforeEach(function () {
         spyOn(events, 'emit');
         spyOn(superspawn, 'spawn').and.callThrough();
-        spyOn(shell, 'rm');
+        spyOn(fs, 'removeSync');
         spyOn(cordova_util, 'listPlatforms').and.returnValue(['ios']);
         spyOn(platform, 'add').and.returnValue(Q());
     });
@@ -42,7 +42,7 @@ describe('cordova/platform/check', function () {
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
             expect(superspawn.spawn).toHaveBeenCalledWith('npm', ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'], jasmine.any(Object));
-            expect(shell.rm).toHaveBeenCalledWith('-rf', jasmine.any(String));
+            expect(fs.removeSync).toHaveBeenCalledWith(jasmine.any(String));
         });
     });
 

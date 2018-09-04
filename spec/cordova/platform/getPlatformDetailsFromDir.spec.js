@@ -16,7 +16,7 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
 var platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');

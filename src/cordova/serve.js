@@ -26,7 +26,7 @@ var platforms = require('../platforms/platforms');
 var ConfigParser = require('cordova-common').ConfigParser;
 var HooksRunner = require('../hooks/HooksRunner');
 var Q = require('q');
-var fs = require('fs');
+var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var serve = require('cordova-serve');
 

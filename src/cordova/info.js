@@ -26,7 +26,7 @@ var cordova_util = require('./util');
 var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var Q = require('q');
 
 // Execute using a child_process exec, for any async command

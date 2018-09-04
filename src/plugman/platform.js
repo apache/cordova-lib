@@ -19,8 +19,7 @@
 
 var Q = require('q');
 var et = require('elementtree');
-var fs = require('fs');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var path = require('path');
 var stripLicense = require('./util/strip-license');
 
@@ -79,7 +78,7 @@ module.exports = {
         fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', {indent: 4}), 'utf-8');
 
         // Remove the src/"platform"
-        shell.rm('-rf', 'src/' + platformName);
+        fs.removeSync('src/' + platformName);
 
         return Q();
     }
@@ -140,7 +139,7 @@ function doPlatformBase (templatesDir, platformName, pluginName, pluginID, plugi
         );
     }
 
-    shell.mkdir('-p', 'src/' + platformName);
+    fs.ensureDirSync('src/' + platformName);
 
     for (i; i < baseFiles.length; i++) {
         fs.writeFileSync('src/' + platformName + '/' + pluginName + '.' + baseFiles[ i ].extension, baseFiles[ i ].file, 'utf-8');

@@ -18,9 +18,8 @@
 */
 
 var Q = require('q');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
-var shell = require('shelljs');
 var et = require('elementtree');
 var CordovaError = require('cordova-common').CordovaError;
 var stripLicense = require('./util/strip-license');
@@ -59,8 +58,8 @@ module.exports = function create (name, id, version, pluginPath, options) {
     }
 
     // Setup the directory structure
-    shell.mkdir('-p', cwd + 'www');
-    shell.mkdir('-p', cwd + 'src');
+    fs.ensureDirSync(cwd + 'www');
+    fs.ensureDirSync(cwd + 'src');
 
     // Create a base plugin.js file
     baseJS = stripLicense.fromCode(fs.readFileSync(templatesDir + 'base.js', 'utf-8').replace(/%pluginName%/g, name));

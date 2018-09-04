@@ -17,10 +17,10 @@
     under the License.
 */
 
+var fs = require('fs-extra');
 var helpers = require('../spec/helpers');
 var path = require('path');
 var Q = require('q');
-var shell = require('shelljs');
 var events = require('cordova-common').events;
 var cordova = require('../src/cordova/cordova');
 var platforms = require('../src/platforms/platforms');
@@ -94,10 +94,8 @@ var errorHandler = {
 function mockPluginFetch (id, dir) {
     spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, fetchOptions) {
         var dest = path.join(project, 'plugins', id);
-        var src = path.join(dir, 'plugin.xml');
 
-        shell.mkdir(dest);
-        shell.cp(src, dest);
+        fs.copySync(path.join(dir, 'plugin.xml'), path.join(dest, 'plugin.xml'));
         return Q(dest);
     });
 }
@@ -106,14 +104,12 @@ describe('plugin end-to-end', function () {
     events.on('results', function (res) { results = res; });
 
     beforeEach(function () {
-        shell.rm('-rf', project);
+        fs.copySync(path.join(fixturesDir, 'base'), project);
 
-        // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
-        // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(fixturesDir, 'base'), tmpDir);
-        shell.mv(path.join(tmpDir, 'base'), project);
         // Copy some platform to avoid working on a project with no platforms.
-        shell.cp('-R', path.join(__dirname, '..', 'spec', 'plugman', 'projects', helpers.testPlatform), path.join(project, 'platforms'));
+        fs.copySync(
+            path.join(__dirname, '../spec/plugman/projects', helpers.testPlatform),
+            path.join(project, 'platforms', helpers.testPlatform));
         process.chdir(project);
 
         // Reset origCwd before each spec to respect chdirs
@@ -127,7 +123,7 @@ describe('plugin end-to-end', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
+        fs.removeSync(tmpDir);
         expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
@@ -146,13 +142,12 @@ describe('plugin end-to-end', function () {
         // Copy plugin to subdir inside of the project. This is required since path.relative
         // returns an absolute path when source and dest are on different drives
         var plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
-        shell.mkdir('-p', plugindir);
-        shell.cp('-r', path.join(pluginsDir, 'fake1/*'), plugindir);
+        fs.copySync(path.join(pluginsDir, 'fake1'), plugindir);
 
         // Create a subdir, where we're going to run cordova from
         var subdir = path.join(project, 'bin');
-        shell.mkdir('-p', subdir);
-        shell.cd(subdir);
+        fs.ensureDirSync(subdir);
+        process.chdir(subdir);
 
         // Add plugin using relative path
         return addPlugin(path.relative(subdir, plugindir), pluginId)

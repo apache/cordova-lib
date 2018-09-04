@@ -17,8 +17,7 @@
 
 var Q = require('q');
 var path = require('path');
-var fs = require('fs');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var semver = require('semver');
 var fetch = require('cordova-fetch');
 var _ = require('underscore');
@@ -63,7 +62,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
     var platformsDir = path.join(projectRoot, 'platforms');
-    shell.mkdir('-p', platformsDir);
+    fs.ensureDirSync(platformsDir);
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
         .then(function () {

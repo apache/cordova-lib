@@ -28,9 +28,8 @@ var plugman = require('../../src/plugman/plugman');
 var platforms = require('../../src/plugman/platforms/common');
 var knownPlatforms = require('../../src/platforms/platforms');
 var common = require('../common');
-var fs = require('fs');
+var fs = require('fs-extra');
 var os = require('os');
-var shell = require('shelljs');
 var child_process = require('child_process');
 var semver = require('semver');
 var Q = require('q');
@@ -63,7 +62,7 @@ var TIMEOUT = 90000;
 var superspawn = require('cordova-common').superspawn;
 
 // Pre-crete the temp dir, without it the test fails.
-shell.mkdir('-p', temp_dir);
+fs.ensureDirSync(temp_dir);
 
 var existsSync = fs.existsSync;
 
@@ -125,8 +124,7 @@ describe('plugman install start', function () {
     });
 
     it('Test 001 : plugman install start', function () {
-        shell.rm('-rf', project);
-        shell.cp('-R', path.join(srcProject, '*'), project);
+        fs.copySync(srcProject, project);
 
         // Every time when addPlugin is called it will return some truthy value
         var returnValueIndex = 0;
@@ -176,15 +174,13 @@ describe('install', function () {
             cb(false, '', ''); // eslint-disable-line standard/no-callback-literal
         });
         spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
-        spyOn(fs, 'mkdirSync').and.returnValue(true);
-        spyOn(shell, 'mkdir').and.returnValue(true);
+        spyOn(fs, 'ensureDirSync').and.returnValue(true);
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
         fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Q(plugins['com.cordova.engine']));
-        spyOn(fs, 'chmodSync').and.returnValue(true);
         spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(shell, 'cp').and.returnValue(true);
-        spyOn(shell, 'rm').and.returnValue(true);
+        spyOn(fs, 'copySync').and.returnValue(true);
+        spyOn(fs, 'removeSync').and.returnValue(true);
         spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
     });
 
@@ -281,6 +277,7 @@ describe('install', function () {
         describe('with dependencies', function () {
             var emit;
             beforeEach(function () {
+                spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
                 spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
                 fetchSpy.and.callFake(fake['fetch']['dependencies']);
                 emit = spyOn(events, 'emit');
@@ -456,6 +453,6 @@ describe('install', function () {
 describe('end', function () {
 
     it('Test 034 : end', function () {
-        shell.rm('-rf', temp_dir);
+        fs.removeSync(temp_dir);
     }, TIMEOUT);
 });

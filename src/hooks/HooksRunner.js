@@ -17,7 +17,7 @@
 
 'use strict';
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 const Q = require('q');

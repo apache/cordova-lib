@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var doc_txt = path.join(__dirname, 'help.txt');
 

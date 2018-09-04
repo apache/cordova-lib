@@ -19,7 +19,7 @@
 
 var rewire = require('rewire');
 var plugin_util = rewire('../../../src/cordova/plugin/util');
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var events = require('cordova-common').events;
 
 describe('cordova/plugin/util', function () {
@@ -28,7 +28,7 @@ describe('cordova/plugin/util', function () {
     var cfg_parser_revert_mock;
     var cfg_parser_mock = function () {};
     beforeEach(function () {
-        spyOn(shell, 'rm');
+        spyOn(fs, 'removeSync');
         spyOn(events, 'emit');
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser protytpe mock', ['getPlugin']);
         cfg_parser_revert_mock = plugin_util.__set__('ConfigParser', cfg_parser_mock);
@@ -96,7 +96,7 @@ describe('cordova/plugin/util', function () {
             plugin_info_mock.prototype.getPreferences.and.returnValue({key: 'FCM_VERSION', value: undefined});
             var opts = { cli_variables: {} };
             expect(function () { plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts); }).toThrow();
-            expect(shell.rm).toHaveBeenCalledWith('-rf', undefined);
+            expect(fs.removeSync).toHaveBeenCalledWith(undefined);
             expect(events.emit).toHaveBeenCalledWith('verbose', 'Removing undefined because mandatory plugin variables were missing.');
         });
     });

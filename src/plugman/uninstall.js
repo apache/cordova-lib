@@ -18,9 +18,8 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var semver = require('semver');
-var shell = require('shelljs');
 var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
 var CordovaError = require('cordova-common').CordovaError;
@@ -127,7 +126,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
             return Q();
         }
 
-        shell.rm('-rf', plugin_dir);
+        fs.removeSync(plugin_dir);
         events.emit('verbose', 'Deleted plugin "' + id + '"');
 
         // remove plugin from node_modules directory

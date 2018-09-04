@@ -18,7 +18,7 @@
 */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var util = require('../cordova/util');
 var platforms = require('./platformsConfig.json');
 var events = require('cordova-common').events;

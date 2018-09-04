@@ -19,7 +19,7 @@
 
 var path = require('path');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var shell = require('shelljs');
+var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var fetch = require('cordova-fetch');
@@ -72,7 +72,7 @@ function mergeVariables (pluginInfo, cfg, opts) {
 
     if (missingVariables.length) {
         events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
-        shell.rm('-rf', pluginInfo.dir);
+        fs.removeSync(pluginInfo.dir);
         var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
         throw new CordovaError(msg);
     }

@@ -18,7 +18,7 @@
 */
 
 var rewire = require('rewire');
-var fs = require('fs');
+var fs = require('fs-extra');
 var save = rewire('../../../src/cordova/plugin/save');
 var cordova_util = require('../../../src/cordova/util');
 var semver = require('semver');

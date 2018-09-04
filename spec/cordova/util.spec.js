@@ -17,9 +17,8 @@
     under the License.
 */
 
-var shell = require('shelljs');
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var util = require('../../src/cordova/util');
 var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
@@ -36,12 +35,12 @@ describe('util module', function () {
             process.chdir(cwd);
         });
         function removeDir (directory) {
-            shell.rm('-rf', directory);
+            fs.removeSync(directory);
         }
         it('Test 001 : should return false if it hits the home directory', function () {
             var somedir = path.join(home, 'somedir');
             removeDir(somedir);
-            shell.mkdir(somedir);
+            fs.ensureDirSync(somedir);
             expect(util.isCordova(somedir)).toEqual(false);
         });
         it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function () {
@@ -52,8 +51,8 @@ describe('util module', function () {
             var somedir = path.join(home, 'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             removeDir(somedir);
-            shell.mkdir('-p', anotherdir);
-            shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
+            fs.ensureDirSync(anotherdir);
+            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
         it('Test 004 : should ignore PWD when its undefined', function () {
@@ -61,9 +60,9 @@ describe('util module', function () {
             var somedir = path.join(home, 'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             removeDir(somedir);
-            shell.mkdir('-p', anotherdir);
-            shell.mkdir('-p', path.join(somedir, 'www'));
-            shell.mkdir('-p', path.join(somedir, 'config.xml'));
+            fs.ensureDirSync(anotherdir);
+            fs.ensureDirSync(path.join(somedir, 'www'));
+            fs.ensureDirSync(path.join(somedir, 'config.xml'));
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
@@ -71,8 +70,8 @@ describe('util module', function () {
             var somedir = path.join(home, 'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             removeDir(somedir);
-            shell.mkdir('-p', anotherdir);
-            shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
+            fs.ensureDirSync(anotherdir);
+            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = anotherdir;
             process.chdir(path.sep);
             expect(util.isCordova()).toEqual(somedir);
@@ -81,8 +80,8 @@ describe('util module', function () {
             var somedir = path.join(home, 'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             removeDir(somedir);
-            shell.mkdir('-p', anotherdir);
-            shell.mkdir('-p', path.join(somedir, 'www', 'config.xml'));
+            fs.ensureDirSync(anotherdir);
+            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = path.sep;
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
@@ -91,24 +90,24 @@ describe('util module', function () {
             var somedir = path.join(home, 'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             removeDir(somedir);
-            shell.mkdir('-p', anotherdir);
-            shell.mkdir('-p', path.join(anotherdir, 'www', 'config.xml'));
-            shell.mkdir('-p', path.join(somedir, 'www'));
-            shell.mkdir('-p', path.join(somedir, 'config.xml'));
+            fs.ensureDirSync(anotherdir);
+            fs.ensureDirSync(path.join(anotherdir, 'www', 'config.xml'));
+            fs.ensureDirSync(path.join(somedir, 'www'));
+            fs.ensureDirSync(path.join(somedir, 'config.xml'));
             expect(util.isCordova(anotherdir)).toEqual(somedir);
         });
     });
     describe('deleteSvnFolders method', function () {
         afterEach(function () {
-            shell.rm('-rf', temp);
+            fs.removeSync(temp);
         });
         it('Test 008 : should delete .svn folders in any subdirectory of specified dir', function () {
             var one = path.join(temp, 'one');
             var two = path.join(temp, 'two');
             var one_svn = path.join(one, '.svn');
             var two_svn = path.join(two, '.svn');
-            shell.mkdir('-p', one_svn);
-            shell.mkdir('-p', two_svn);
+            fs.ensureDirSync(one_svn);
+            fs.ensureDirSync(two_svn);
             util.deleteSvnFolders(temp);
             expect(fs.existsSync(one_svn)).toEqual(false);
             expect(fs.existsSync(two_svn)).toEqual(false);
@@ -116,18 +115,18 @@ describe('util module', function () {
     });
     describe('listPlatforms method', function () {
         afterEach(function () {
-            shell.rm('-rf', temp);
+            fs.removeSync(temp);
         });
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             var platforms = path.join(temp, 'platforms');
 
-            shell.mkdir('-p', path.join(platforms, 'android'));
-            shell.mkdir('-p', path.join(platforms, 'ios'));
-            shell.mkdir('-p', path.join(platforms, 'wp8'));
-            shell.mkdir('-p', path.join(platforms, 'atari'));
+            fs.ensureDirSync(path.join(platforms, 'android'));
+            fs.ensureDirSync(path.join(platforms, 'ios'));
+            fs.ensureDirSync(path.join(platforms, 'wp8'));
+            fs.ensureDirSync(path.join(platforms, 'atari'));
 
             // create a typical platforms.json file, it should not be returned as a platform
-            shell.exec('touch ' + path.join(platforms, 'platforms.json'));
+            fs.ensureFileSync(path.join(platforms, 'platforms.json'));
 
             var res = util.listPlatforms(temp);
             expect(res.length).toEqual(4);
@@ -135,16 +134,15 @@ describe('util module', function () {
     });
     describe('getInstalledPlatformsWithVersions method', function () {
         afterEach(function () {
-            shell.rm('-rf', temp);
+            fs.removeSync(temp);
         });
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
 
-            shell.mkdir('-p', android);
+            fs.ensureDirSync(android);
 
-            shell.cp('-R',
-                path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), platforms);
+            fs.copySync(path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(platforms, helpers.testPlatform));
             return util.getInstalledPlatformsWithVersions(temp)
                 .then(function (platformMap) {
                     expect(platformMap['android']).toBe('3.1.0');
@@ -153,7 +151,7 @@ describe('util module', function () {
     });
     describe('findPlugins method', function () {
         afterEach(function () {
-            shell.rm('-rf', temp);
+            fs.removeSync(temp);
         });
         it('Test 011 : should only return plugin directories present in a cordova project dir', function () {
             var plugins = path.join(temp, 'plugins');
@@ -161,10 +159,10 @@ describe('util module', function () {
             var ios = path.join(plugins, 'ios');
             var wp8_dir = path.join(plugins, 'wp8');
             var atari = path.join(plugins, 'atari');
-            shell.mkdir('-p', android);
-            shell.mkdir('-p', ios);
-            shell.mkdir('-p', wp8_dir);
-            shell.mkdir('-p', atari);
+            fs.ensureDirSync(android);
+            fs.ensureDirSync(ios);
+            fs.ensureDirSync(wp8_dir);
+            fs.ensureDirSync(atari);
             var res = util.findPlugins(plugins);
             expect(res.length).toEqual(4);
         });
@@ -173,9 +171,9 @@ describe('util module', function () {
             var android = path.join(plugins, 'android');
             var ios = path.join(plugins, 'ios');
             var svn = path.join(plugins, '.svn');
-            shell.mkdir('-p', android);
-            shell.mkdir('-p', ios);
-            shell.mkdir('-p', svn);
+            fs.ensureDirSync(android);
+            fs.ensureDirSync(ios);
+            fs.ensureDirSync(svn);
             var res = util.findPlugins(plugins);
             expect(res.length).toEqual(2);
             expect(res.indexOf('.svn')).toEqual(-1);
@@ -185,9 +183,9 @@ describe('util module', function () {
             var android = path.join(plugins, 'android');
             var ios = path.join(plugins, 'ios');
             var cvs = path.join(plugins, 'CVS');
-            shell.mkdir('-p', android);
-            shell.mkdir('-p', ios);
-            shell.mkdir('-p', cvs);
+            fs.ensureDirSync(android);
+            fs.ensureDirSync(ios);
+            fs.ensureDirSync(cvs);
             var res = util.findPlugins(plugins);
             expect(res.length).toEqual(2);
             expect(res.indexOf('CVS')).toEqual(-1);

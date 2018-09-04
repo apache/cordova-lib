@@ -17,8 +17,7 @@
     under the License.
 */
 
-var shell = require('shelljs');
-var fs = require('fs');
+var fs = require('fs-extra');
 var which = require('which');
 var url = require('url');
 var underscore = require('underscore');
@@ -43,7 +42,7 @@ var localPlugins = null;
 module.exports = fetchPlugin;
 function fetchPlugin (plugin_src, plugins_dir, options) {
     // Ensure the containing directory exists.
-    shell.mkdir('-p', plugins_dir);
+    fs.ensureDirSync(plugins_dir);
     options = options || {};
     options.subdir = options.subdir || '.';
     options.searchpath = options.searchpath || [];
@@ -280,7 +279,7 @@ function copyPlugin (pinfo, plugins_dir, link) {
     var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
 
-    shell.rm('-rf', dest);
+    fs.removeSync(dest);
 
     if (!link && dest.indexOf(path.resolve(plugin_dir) + path.sep) === 0) {
         events.emit('verbose', 'Copy plugin destination is child of src. Forcing --link mode.');
@@ -293,9 +292,8 @@ function copyPlugin (pinfo, plugins_dir, link) {
         events.emit('verbose', 'Linking "' + dest + '" => "' + fixedPath + '"');
         fs.symlinkSync(fixedPath, dest, 'junction');
     } else {
-        shell.mkdir('-p', dest);
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
-        shell.cp('-R', path.join(plugin_dir, '*'), dest);
+        fs.copySync(plugin_dir, dest);
     }
     return dest;
 }

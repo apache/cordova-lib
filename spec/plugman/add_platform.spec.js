@@ -18,7 +18,7 @@
 */
 var platform = require('../../src/plugman/platform');
 var Q = require('q');
-var fs = require('fs');
+var fs = require('fs-extra');
 
 describe('platform add/remove', function () {
     it('Test 001 : should call platform add', function () {

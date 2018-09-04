@@ -18,10 +18,9 @@
 */
 var rewire = require('rewire');
 var fetch = rewire('../src/plugman/fetch');
-var fs = require('fs');
+var fs = require('fs-extra');
 var os = require('os');
 var path = require('path');
-var shell = require('shelljs');
 var metadata = require('../src/plugman/util/metadata');
 var temp = path.join(os.tmpdir(), 'plugman', 'fetch');
 var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
@@ -48,28 +47,27 @@ describe('fetch', function () {
             // XXX: added this because plugman tries to fetch from registry when plugin folder does not exist
             spyOn(fs, 'existsSync').and.returnValue(true);
             spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue(test_plugin_xml);
-            spyOn(shell, 'rm');
+            spyOn(fs, 'removeSync');
             spyOn(metadata, 'save_fetch_metadata');
-            var cp = spyOn(shell, 'cp');
+            spyOn(fs, 'copySync');
             return fetch(test_plugin_with_space, temp).then(function () {
-                expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin_with_space, '*'), path.join(temp, test_plugin_id));
+                expect(fs.copySync).toHaveBeenCalledWith('-R', path.join(test_plugin_with_space, '*'), path.join(temp, test_plugin_id));
             });
         });
     });
 
     describe('local plugins', function () {
         var sym;
-        var cp;
         var revertLocal;
         var revertFetch;
         var fetchCalls = 0;
 
         beforeEach(function () {
-            shell.rm('-rf', temp);
+            fs.removeSync(temp);
 
-            spyOn(shell, 'rm');
+            spyOn(fs, 'removeSync');
             sym = spyOn(fs, 'symlinkSync');
-            cp = spyOn(shell, 'cp').and.callThrough();
+            spyOn(fs, 'copySync').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
 
             revertLocal = fetch.__set__('localPlugins', null);
@@ -87,12 +85,12 @@ describe('fetch', function () {
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_plugin, temp).then(function () {
-                expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id));
             });
         });
         it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
             return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
-                expect(cp).toHaveBeenCalledWith('-R', path.join(test_plugin, '*'), path.join(temp, test_plugin_id));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id));
             });
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
@@ -131,7 +129,7 @@ describe('fetch', function () {
         });
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_pkgjson_plugin, temp).then(function () {
-                expect(cp).toHaveBeenCalledWith('-R', path.join(test_pkgjson_plugin, '*'), path.join(temp, 'pkgjson-test-plugin'));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_pkgjson_plugin), path.join(temp, 'pkgjson-test-plugin'));
                 expect(fetchCalls).toBe(1);
             });
         });
@@ -156,11 +154,10 @@ describe('fetch', function () {
         });
 
         it('Test 021 : should skip copy to avoid recursive error', function () {
-
-            var cp = spyOn(shell, 'cp').and.callFake(function () {});
+            spyOn(fs, 'copySync');
 
             return fetch(srcDir, appDir).then(function () {
-                expect(cp).not.toHaveBeenCalled();
+                expect(fs.copySync).not.toHaveBeenCalled();
             });
         });
     });
