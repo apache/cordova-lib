@@ -20,8 +20,9 @@ const path = require('path');
 const fs = require('fs-extra');
 const rewire = require('rewire');
 
-const { events, superspawn } = require('cordova-common');
+const { superspawn } = require('cordova-common');
 const { tmpDir: getTmpDir, testPlatform } = require('../spec/helpers');
+const { listPlatforms } = require('../src/cordova/util');
 const config = require('../src/cordova/config');
 const cordova = require('../src/cordova/cordova');
 const plugman = require('../src/plugman/plugman');
@@ -48,8 +49,11 @@ describe('cordova/platform', () => {
         fs.removeSync(tmpDir);
     });
 
+    function installedPlatforms () {
+        return listPlatforms(project);
+    }
+
     describe('platform end-to-end', () => {
-        let results;
 
         beforeEach(() => {
             fs.copySync(path.join(fixturesDir, 'base'), project);
@@ -74,25 +78,7 @@ describe('cordova/platform', () => {
                 }
                 return Q();
             });
-
-            events.on('results', res => { results = res; });
         });
-
-        // Factoring out some repeated checks.
-        function emptyPlatformList () {
-            return cordova.platform('list').then(() => {
-                const installed = results.match(/Installed platforms:\n {2}(.*)/);
-                expect(installed).toBeDefined();
-                expect(installed[1].indexOf(testPlatform)).toBe(-1);
-            });
-        }
-        function fullPlatformList () {
-            return cordova.platform('list').then(() => {
-                const installed = results.match(/Installed platforms:\n {2}(.*)/);
-                expect(installed).toBeDefined();
-                expect(installed[1].indexOf(testPlatform)).toBeGreaterThan(-1);
-            });
-        }
 
         // The flows we want to test are add, rm, list, and upgrade.
         // They should run the appropriate hooks.
@@ -104,7 +90,9 @@ describe('cordova/platform', () => {
         xit('Test 001 : should successfully run', () => {
 
             // Check there are no platforms yet.
-            return emptyPlatformList()
+            expect(installedPlatforms()).toEqual([]);
+
+            return Promise.resolve()
                 .then(() => {
                     // Add the testing platform.
                     return cordova.platform('add', [testPlatform]);
@@ -113,8 +101,8 @@ describe('cordova/platform', () => {
                     // Check the platform add was successful.
                     expect(path.join(project, 'platforms', testPlatform)).toExist();
                     expect(path.join(project, 'platforms', testPlatform, 'cordova')).toExist();
+                    expect(installedPlatforms()).toEqual([testPlatform]);
                 })
-                .then(fullPlatformList) // Check for it in platform ls.
                 .then(() => {
                     // Try to update the platform.
                     return cordova.platform('update', [testPlatform]);
@@ -122,8 +110,9 @@ describe('cordova/platform', () => {
                 .then(() => {
                     // Our fake update script in the exec mock above creates this dummy file.
                     expect(path.join(project, 'platforms', testPlatform, 'updated')).toExist();
+                    // Platform should still be in platform ls.
+                    expect(installedPlatforms()).toEqual([testPlatform]);
                 })
-                .then(fullPlatformList) // Platform should still be in platform ls.
                 .then(() => {
                     // And now remove it.
                     return cordova.platform('rm', [testPlatform]);
@@ -131,8 +120,8 @@ describe('cordova/platform', () => {
                 .then(() => {
                     // It should be gone.
                     expect(path.join(project, 'platforms', testPlatform)).not.toExist();
-                })
-                .then(emptyPlatformList); // platform ls should be empty too.;
+                    expect(installedPlatforms()).toEqual([]);
+                });
 
         });
 
@@ -262,14 +251,8 @@ describe('cordova/platform', () => {
     });
 
     describe('non-core platform add and rm end-to-end --fetch', () => {
-        let results;
-
-        beforeEach(() => {
-            events.on('results', res => { results = res; });
-        });
 
         it('Test 009 : should add and remove 3rd party platforms', () => {
-            let installed;
             return cordova.create(path.basename(project))
                 .then(() => {
                     process.chdir(project);
@@ -283,14 +266,9 @@ describe('cordova/platform', () => {
                 .then(() => {
                     expect(path.join(project, 'platforms', 'android')).toExist();
                     expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();
-                    return cordova.platform('ls');
-                })
-                .then(() => {
-                    // use regex to grab installed platforms
-                    installed = results.match(/Installed platforms:\n {2}(.*)\n {2}(.*)/);
-                    expect(installed).toBeDefined();
-                    expect(installed[1].indexOf('android')).toBeGreaterThan(-1);
-                    expect(installed[2].indexOf('cordova-platform-test')).toBeGreaterThan(-1);
+                    expect(installedPlatforms()).toEqual(jasmine.arrayWithExactContents([
+                        'android', 'cordova-platform-test'
+                    ]));
                 });
         }, 90000);
     });
