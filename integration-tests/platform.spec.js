@@ -15,19 +15,14 @@
     under the License.
 */
 
-const Q = require('q');
 const path = require('path');
 const fs = require('fs-extra');
 const rewire = require('rewire');
 
-const { superspawn } = require('cordova-common');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
 const { listPlatforms } = require('../src/cordova/util');
-const config = require('../src/cordova/config');
 const cordova = require('../src/cordova/cordova');
 const plugman = require('../src/plugman/plugman');
-const platform = rewire('../src/cordova/platform');
-const addHelper = rewire('../src/cordova/platform/addHelper');
 
 const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 const pluginFixturesDir = path.join(fixturesDir, 'plugins');
@@ -58,45 +53,12 @@ describe('cordova/platform', () => {
 
     describe('platform end-to-end', () => {
 
-        beforeEach(() => {
-            fs.copySync(path.join(fixturesDir, 'base'), project);
-            process.chdir(project);
-
-            // Now we load the config.json in the newly created project and edit the target platform's lib entry
-            // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
-            const c = config.read(project);
-            c.lib[testPlatform].url = path.join(fixturesDir, 'platforms', testPlatform + '-lib');
-            config.write(project, c);
-
-            // The config.json in the fixture project points at fake "local" paths.
-            // Since it's not a URL, the lazy-loader will just return the junk path.
-            spyOn(superspawn, 'spawn').and.callFake(cmd => {
-                if (cmd.match(/create\b/)) {
-                    // This is a call to the bin/create script, so do the copy ourselves.
-                    fs.copySync(path.join(fixturesDir, 'platforms/android'), path.join(project, 'platforms/android'));
-                } else if (cmd.match(/version\b/)) {
-                    return Q('3.3.0');
-                } else if (cmd.match(/update\b/)) {
-                    fs.writeFileSync(path.join(project, 'platforms', testPlatform, 'updated'), 'I was updated!', 'utf-8');
-                }
-                return Q();
-            });
-        });
-
-        // The flows we want to test are add, rm, list, and upgrade.
-        // They should run the appropriate hooks.
-        // They should fail when not inside a Cordova project.
-        // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-        //
-        // This test was designed to use a older version of android before API.js
-        // It is not valid anymore.
-        xit('Test 001 : should successfully run', () => {
-
-            // Check there are no platforms yet.
-            expect(installedPlatforms()).toEqual([]);
-
-            return Promise.resolve()
+        it('Test 001 : should successfully run', () => {
+            return cordova.create(path.basename(project))
                 .then(() => {
+                    process.chdir(project);
+                    // Check there are no platforms yet.
+                    expect(installedPlatforms()).toEqual([]);
                     // Add the testing platform.
                     return cordova.platform('add', [testPlatform]);
                 })
@@ -106,16 +68,16 @@ describe('cordova/platform', () => {
                     expect(path.join(project, 'platforms', testPlatform, 'cordova')).toExist();
                     expect(installedPlatforms()).toEqual([testPlatform]);
                 })
-                .then(() => {
-                    // Try to update the platform.
-                    return cordova.platform('update', [testPlatform]);
-                })
-                .then(() => {
-                    // Our fake update script in the exec mock above creates this dummy file.
-                    expect(path.join(project, 'platforms', testPlatform, 'updated')).toExist();
-                    // Platform should still be in platform ls.
-                    expect(installedPlatforms()).toEqual([testPlatform]);
-                })
+                // .then(() => {
+                //     // Try to update the platform.
+                //     return cordova.platform('update', [testPlatform]);
+                // })
+                // .then(() => {
+                //     // Our fake update script in the exec mock above creates this dummy file.
+                //     expect(path.join(project, 'platforms', testPlatform, 'updated')).toExist();
+                //     // Platform should still be in platform ls.
+                //     expect(installedPlatforms()).toEqual([testPlatform]);
+                // })
                 .then(() => {
                     // And now remove it.
                     return cordova.platform('rm', [testPlatform]);
@@ -128,8 +90,12 @@ describe('cordova/platform', () => {
 
         });
 
-        xit('Test 002 : should install plugins correctly while adding platform', () => {
-            return cordova.plugin('add', path.join(pluginFixturesDir, 'test'))
+        it('Test 002 : should install plugins correctly while adding platform', () => {
+            return cordova.create(path.basename(project))
+                .then(() => {
+                    process.chdir(project);
+                    return cordova.plugin('add', path.join(pluginFixturesDir, 'test'));
+                })
                 .then(() => {
                     return cordova.platform('add', [testPlatform]);
                 })
@@ -137,22 +103,34 @@ describe('cordova/platform', () => {
                     // Check the platform add was successful.
                     expect(path.join(project, 'platforms', testPlatform)).toExist();
                     // Check that plugin files exists in www dir
-                    expect(path.join(project, 'platforms', testPlatform, 'assets/www/test.js')).toExist();
+                    expect(path.join(project, 'platforms', testPlatform, 'platform_www/test.js')).toExist();
                 });
         });
 
-        xit('Test 003 : should call prepare after plugins were installed into platform', () => {
-            let order = '';
-            spyOn(plugman, 'install').and.callFake(() => { order += 'I'; });
-            // below line won't work since prepare is inline require in addHelper, not global
-            const x = addHelper.__set__('prepare', () => { order += 'P'; }); // eslint-disable-line no-unused-vars
-            // spyOn(prepare).and.callFake(function() { console.log('prepare'); order += 'P'; });
-            return cordova.plugin('add', path.join(pluginFixturesDir, 'test'))
+        it('Test 003 : should call prepare after plugins were installed into platform', () => {
+            spyOn(plugman, 'install').and.returnValue(Promise.resolve());
+            const prepareSpy = jasmine.createSpy('prepare').and.returnValue(Promise.resolve());
+            prepareSpy.preparePlatforms = jasmine.createSpy('preparePlatforms').and.returnValue(Promise.resolve());
+
+            // This is all just to get the prepareSpy to be used by `platform.add`
+            const platform = rewire('../src/cordova/platform');
+            const addHelper = rewire('../src/cordova/platform/addHelper');
+            const requireFake = jasmine.createSpy('require', addHelper.__get__('require')).and.callThrough();
+            requireFake.withArgs('../prepare').and.returnValue(prepareSpy);
+            addHelper.__set__({ require: requireFake });
+            platform.__set__({ addHelper });
+
+            return cordova.create(path.basename(project))
+                .then(() => {
+                    process.chdir(project);
+                    return cordova.plugin('add', path.join(pluginFixturesDir, 'test'));
+                })
                 .then(() => {
                     return platform('add', [testPlatform]);
                 })
                 .then(() => {
-                    expect(order).toBe('IP'); // Install first, then prepare
+                    // Install first, then prepare
+                    expect(plugman.install).toHaveBeenCalledBefore(prepareSpy);
                 });
         });
     });
