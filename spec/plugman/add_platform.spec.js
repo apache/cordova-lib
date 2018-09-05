@@ -17,44 +17,35 @@
     under the License.
 */
 var platform = require('../../src/plugman/platform');
-var Q = require('q');
 var fs = require('fs-extra');
 
-describe('platform add/remove', function () {
-    it('Test 001 : should call platform add', function () {
-        var sPlatformA = spyOn(platform, 'add').and.returnValue(Q());
-        var sPlatformR = spyOn(platform, 'remove').and.returnValue(Q());
-        platform.add();
-        expect(sPlatformA).toHaveBeenCalled();
-        platform.remove();
-        expect(sPlatformR).toHaveBeenCalled();
-    });
-});
+describe('plugman/platform', () => {
 
-describe('platform add', function () {
-    beforeEach(function () {
-        spyOn(fs, 'existsSync').and.returnValue(false);
-    });
-    it('Test 002 : should error on non existing plugin.xml', function () {
-        return platform.add().then(function () {
-            fail('Expected promise to be rejected');
-        }, function (err) {
-            expect(err).toEqual(jasmine.any(Error));
-            expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
+    describe('add', function () {
+        beforeEach(function () {
+            spyOn(fs, 'existsSync').and.returnValue(false);
         });
-    }, 6000);
-});
+        it('Test 002 : should error on non existing plugin.xml', function () {
+            return platform.add().then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
+            });
+        }, 6000);
+    });
 
-describe('platform remove', function () {
-    beforeEach(function () {
-        spyOn(fs, 'existsSync').and.returnValue(false);
-    });
-    it('Test 003 : should error on non existing plugin.xml', function () {
-        return platform.remove().then(function () {
-            fail('Expected promise to be rejected');
-        }, function (err) {
-            expect(err).toEqual(jasmine.any(Error));
-            expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
+    describe('remove', function () {
+        beforeEach(function () {
+            spyOn(fs, 'existsSync').and.returnValue(false);
         });
-    }, 6000);
+        it('Test 003 : should error on non existing plugin.xml', function () {
+            return platform.remove().then(function () {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
+            });
+        }, 6000);
+    });
 });

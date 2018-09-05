@@ -17,41 +17,24 @@
     under the License.
 */
 var create = require('../../src/plugman/create');
-var Q = require('q');
 var fs = require('fs-extra');
-var plugman = require('../../src/plugman/plugman');
 
-describe('create', function () {
-    it('Test 001 : should call create', function () {
-        var sCreate = spyOn(plugman, 'create').and.returnValue(Q());
-        plugman.create();
-        expect(sCreate).toHaveBeenCalled();
-    });
-});
-
-describe('create plugin', function () {
-    var writeFileSync;
-
-    beforeEach(function () {
-        spyOn(fs, 'existsSync').and.returnValue(false);
-        spyOn(fs, 'ensureDirSync').and.returnValue(true);
-        writeFileSync = spyOn(fs, 'writeFileSync');
-    });
+describe('plugman/create', () => {
 
     it('Test 002 : should be successful', function () {
+        spyOn(fs, 'existsSync').and.returnValue(false);
+        spyOn(fs, 'ensureDirSync').and.returnValue(true);
+        spyOn(fs, 'writeFileSync');
+
         return create('name', 'org.plugin.id', '0.0.0', '.', [])
             .then(function (result) {
-                expect(writeFileSync.calls.count()).toEqual(2);
+                expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
             });
     }, 6000);
-});
-
-describe('create plugin in existing plugin', function () {
-    beforeEach(function () {
-        spyOn(fs, 'existsSync').and.returnValue(true);
-    });
 
     it('Test 003 : should fail due to an existing plugin.xml', function () {
+        spyOn(fs, 'existsSync').and.returnValue(true);
+
         return create()
             .then(function () {
                 fail('Expected promise to be rejected');

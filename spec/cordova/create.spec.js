@@ -20,9 +20,7 @@
 var fs = require('fs-extra');
 var helpers = require('../helpers');
 var path = require('path');
-var Q = require('q');
 var events = require('cordova-common').events;
-var ConfigParser = require('cordova-common').ConfigParser;
 var cordova = require('../../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('create_test');
@@ -38,29 +36,7 @@ var configBasic = {
     }
 };
 
-describe('cordova create checks for valid-identifier', function () {
-    it('Test 001 : should reject reserved words from start of id', function () {
-        return cordova.create('projectPath', 'int.bob', 'appName', {}, events)
-            .then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-            });
-    });
-
-    it('Test 002 : should reject reserved words from end of id', function () {
-        return cordova.create('projectPath', 'bob.class', 'appName', {}, events)
-            .then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err.message).toBe('App id contains a reserved word, or is not a valid identifier.');
-            });
-    });
-});
-
 describe('create basic test (see more in cordova-create)', function () {
-    // this.timeout(240000);
-
     beforeEach(function () {
         fs.emptyDirSync(tmpDir);
     });
@@ -70,33 +46,8 @@ describe('create basic test (see more in cordova-create)', function () {
         fs.removeSync(tmpDir);
     });
 
-    function checkProject () {
-        // Check if top level dirs exist.
-        var dirs = ['hooks', 'platforms', 'plugins', 'www'];
-        dirs.forEach(function (d) {
-            expect(path.join(project, d)).toExist();
-        });
-
-        expect(path.join(project, 'hooks', 'README.md')).toExist();
-
-        // Check if www files exist.
-        expect(path.join(project, 'www', 'index.html')).toExist();
-
-        // Check that config.xml was updated.
-        var configXml = new ConfigParser(path.join(project, 'config.xml'));
-        expect(configXml.packageName()).toEqual(appId);
-
-        // TODO (kamrik): check somehow that we got the right config.xml from the fixture and not some place else.
-        // expect(configXml.name()).toEqual('TestBase');
-    }
-
     it('Test 003 : should successfully run', function () {
-        return Q()
-            .then(function () {
-                // Create a real project
-                return cordova.create(project, appId, appName, configBasic, events);
-            })
-            .then(checkProject);
-    }, 60000);
+        return cordova.create(project, appId, appName, configBasic, events);
+    });
 
 });
