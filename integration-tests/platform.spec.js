@@ -41,6 +41,8 @@ describe('cordova/platform', () => {
         nodeModulesDir = path.join(project, 'node_modules');
         testPlatformDir = path.join(platformsDir, testPlatform);
         process.chdir(tmpDir);
+        return cordova.create(path.basename(project))
+            .then(() => process.chdir(project));
     });
 
     afterEach(() => {
@@ -55,11 +57,11 @@ describe('cordova/platform', () => {
     describe('platform end-to-end', () => {
 
         it('Test 001 : should successfully run', () => {
-            return cordova.create(path.basename(project))
+            // Check there are no platforms yet.
+            expect(installedPlatforms()).toEqual([]);
+
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
-                    // Check there are no platforms yet.
-                    expect(installedPlatforms()).toEqual([]);
                     // Add the testing platform.
                     return cordova.platform('add', [testPlatform]);
                 })
@@ -92,9 +94,8 @@ describe('cordova/platform', () => {
         });
 
         it('Test 002 : should install plugins correctly while adding platform', () => {
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     return cordova.plugin('add', path.join(pluginFixturesDir, 'test'));
                 })
                 .then(() => {
@@ -121,9 +122,8 @@ describe('cordova/platform', () => {
             addHelper.__set__({ require: requireFake });
             platform.__set__({ addHelper });
 
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     return cordova.plugin('add', path.join(pluginFixturesDir, 'test'));
                 })
                 .then(() => {
@@ -139,9 +139,8 @@ describe('cordova/platform', () => {
     describe('platform add plugin rm end-to-end', () => {
 
         it('Test 006 : should remove dependency when removing parent plugin', () => {
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     return cordova.platform('add', 'browser@latest');
                 })
                 .then(() => {
@@ -167,10 +166,8 @@ describe('cordova/platform', () => {
     describe('platform add and remove --fetch', () => {
 
         it('Test 007 : should add and remove platform from node_modules directory', () => {
-
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     return cordova.platform('add', 'browser', {'save': true});
                 })
                 .then(() => {
@@ -198,10 +195,8 @@ describe('cordova/platform', () => {
     describe('plugin add and rm end-to-end --fetch', () => {
 
         it('Test 008 : should remove dependency when removing parent plugin', () => {
-
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     return cordova.platform('add', 'browser');
                 })
                 .then(() => {
@@ -233,9 +228,8 @@ describe('cordova/platform', () => {
     describe('non-core platform add and rm end-to-end --fetch', () => {
 
         it('Test 009 : should add and remove 3rd party platforms', () => {
-            return cordova.create(path.basename(project))
+            return Promise.resolve()
                 .then(() => {
-                    process.chdir(project);
                     // add cordova-android instead of android
                     return cordova.platform('add', 'cordova-android');
                 })
