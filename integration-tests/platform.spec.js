@@ -32,14 +32,14 @@ var pluginsDir = path.join(fixturesDir, 'plugins');
 
 describe('cordova/platform', () => {
 
-    describe('platform end-to-end', function () {
+    describe('platform end-to-end', () => {
 
         var tmpDir = helpers.tmpDir('platform_test');
         var project = path.join(tmpDir, 'project');
 
         var results;
 
-        beforeEach(function () {
+        beforeEach(() => {
             fs.removeSync(tmpDir);
 
             fs.copySync(path.join(fixturesDir, 'base'), project);
@@ -53,7 +53,7 @@ describe('cordova/platform', () => {
 
             // The config.json in the fixture project points at fake "local" paths.
             // Since it's not a URL, the lazy-loader will just return the junk path.
-            spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
+            spyOn(superspawn, 'spawn').and.callFake(cmd => {
                 if (cmd.match(/create\b/)) {
                     // This is a call to the bin/create script, so do the copy ourselves.
                     fs.copySync(path.join(fixturesDir, 'platforms/android'), path.join(project, 'platforms/android'));
@@ -65,24 +65,24 @@ describe('cordova/platform', () => {
                 return Q();
             });
 
-            events.on('results', function (res) { results = res; });
+            events.on('results', res => { results = res; });
         });
 
-        afterEach(function () {
+        afterEach(() => {
             process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
             fs.removeSync(tmpDir);
         });
 
         // Factoring out some repeated checks.
         function emptyPlatformList () {
-            return cordova.platform('list').then(function () {
+            return cordova.platform('list').then(() => {
                 var installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
                 expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
             });
         }
         function fullPlatformList () {
-            return cordova.platform('list').then(function () {
+            return cordova.platform('list').then(() => {
                 var installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
                 expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
@@ -96,34 +96,34 @@ describe('cordova/platform', () => {
         //
         // This test was designed to use a older version of android before API.js
         // It is not valid anymore.
-        xit('Test 001 : should successfully run', function () {
+        xit('Test 001 : should successfully run', () => {
 
             // Check there are no platforms yet.
             return emptyPlatformList()
-                .then(function () {
+                .then(() => {
                     // Add the testing platform.
                     return cordova.platform('add', [helpers.testPlatform]);
                 })
-                .then(function () {
+                .then(() => {
                     // Check the platform add was successful.
                     expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
                     expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
                 })
                 .then(fullPlatformList) // Check for it in platform ls.
-                .then(function () {
+                .then(() => {
                     // Try to update the platform.
                     return cordova.platform('update', [helpers.testPlatform]);
                 })
-                .then(function () {
+                .then(() => {
                     // Our fake update script in the exec mock above creates this dummy file.
                     expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toExist();
                 })
                 .then(fullPlatformList) // Platform should still be in platform ls.
-                .then(function () {
+                .then(() => {
                     // And now remove it.
                     return cordova.platform('rm', [helpers.testPlatform]);
                 })
-                .then(function () {
+                .then(() => {
                     // It should be gone.
                     expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
                 })
@@ -131,12 +131,12 @@ describe('cordova/platform', () => {
 
         });
 
-        xit('Test 002 : should install plugins correctly while adding platform', function () {
+        xit('Test 002 : should install plugins correctly while adding platform', () => {
             return cordova.plugin('add', path.join(pluginsDir, 'test'))
-                .then(function () {
+                .then(() => {
                     return cordova.platform('add', [helpers.testPlatform]);
                 })
-                .then(function () {
+                .then(() => {
                     // Check the platform add was successful.
                     expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
                     // Check that plugin files exists in www dir
@@ -144,149 +144,149 @@ describe('cordova/platform', () => {
                 });
         }, 60000);
 
-        xit('Test 003 : should call prepare after plugins were installed into platform', function () {
+        xit('Test 003 : should call prepare after plugins were installed into platform', () => {
             var order = '';
-            spyOn(plugman, 'install').and.callFake(function () { order += 'I'; });
+            spyOn(plugman, 'install').and.callFake(() => { order += 'I'; });
             // below line won't work since prepare is inline require in addHelper, not global
-            var x = addHelper.__set__('prepare', function () { order += 'P'; }); // eslint-disable-line no-unused-vars
+            var x = addHelper.__set__('prepare', () => { order += 'P'; }); // eslint-disable-line no-unused-vars
             // spyOn(prepare).and.callFake(function() { console.log('prepare'); order += 'P'; });
             return cordova.plugin('add', path.join(pluginsDir, 'test'))
-                .then(function () {
+                .then(() => {
                     return platform('add', [helpers.testPlatform]);
                 })
-                .then(function () {
+                .then(() => {
                     expect(order).toBe('IP'); // Install first, then prepare
                 });
         });
     });
 
-    describe('platform add plugin rm end-to-end', function () {
+    describe('platform add plugin rm end-to-end', () => {
 
         var tmpDir = helpers.tmpDir('plugin_rm_test');
         var project = path.join(tmpDir, 'hello');
         var pluginsDir = path.join(project, 'plugins');
 
-        beforeEach(function () {
+        beforeEach(() => {
             process.chdir(tmpDir);
         });
 
-        afterEach(function () {
+        afterEach(() => {
             process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
             fs.removeSync(tmpDir);
         });
 
-        it('Test 006 : should remove dependency when removing parent plugin', function () {
+        it('Test 006 : should remove dependency when removing parent plugin', () => {
 
             return cordova.create('hello')
-                .then(function () {
+                .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser@latest');
                 })
-                .then(function () {
+                .then(() => {
                     return cordova.plugin('add', 'cordova-plugin-media');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                     return cordova.platform('add', 'android');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                     return cordova.plugin('rm', 'cordova-plugin-media');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
                 });
         }, 100000);
     });
 
-    describe('platform add and remove --fetch', function () {
+    describe('platform add and remove --fetch', () => {
 
         var tmpDir = helpers.tmpDir('plat_add_remove_fetch_test');
         var project = path.join(tmpDir, 'helloFetch');
         var platformsDir = path.join(project, 'platforms');
         var nodeModulesDir = path.join(project, 'node_modules');
 
-        beforeEach(function () {
+        beforeEach(() => {
             process.chdir(tmpDir);
         });
 
-        afterEach(function () {
+        afterEach(() => {
             process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
             fs.removeSync(tmpDir);
         });
 
-        it('Test 007 : should add and remove platform from node_modules directory', function () {
+        it('Test 007 : should add and remove platform from node_modules directory', () => {
 
             return cordova.create('helloFetch')
-                .then(function () {
+                .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser', {'save': true});
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
                     expect(path.join(platformsDir, 'browser')).toExist();
                     return cordova.platform('add', 'android');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
                     expect(path.join(platformsDir, 'android')).toExist();
                     // Tests finish before this command finishes resolving
                     // return cordova.platform('rm', 'ios');
                 })
-                .then(function () {
+                .then(() => {
                     // expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
                     // expect(path.join(platformsDir, 'ios')).not.toExist();
                     // Tests finish before this command finishes resolving
                     // return cordova.platform('rm', 'android');
                 })
-                .then(function () {
+                .then(() => {
                     // expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
                     // expect(path.join(platformsDir, 'android')).not.toExist();
                 });
         }, 100000);
     });
 
-    describe('plugin add and rm end-to-end --fetch', function () {
+    describe('plugin add and rm end-to-end --fetch', () => {
 
         var tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
         var project = path.join(tmpDir, 'hello3');
         var pluginsDir = path.join(project, 'plugins');
 
-        beforeEach(function () {
+        beforeEach(() => {
             process.chdir(tmpDir);
         });
 
-        afterEach(function () {
+        afterEach(() => {
             process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
             fs.removeSync(tmpDir);
         });
 
-        it('Test 008 : should remove dependency when removing parent plugin', function () {
+        it('Test 008 : should remove dependency when removing parent plugin', () => {
 
             return cordova.create('hello3')
-                .then(function () {
+                .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser');
                 })
-                .then(function () {
+                .then(() => {
                     return cordova.plugin('add', 'cordova-plugin-media', {'save': true});
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                     expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
                     expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
                     return cordova.platform('add', 'android');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                     return cordova.plugin('rm', 'cordova-plugin-media');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
                     // These don't work yet due to the tests finishing before the promise resolves.
@@ -297,40 +297,40 @@ describe('cordova/platform', () => {
         }, 60000);
     });
 
-    describe('non-core platform add and rm end-to-end --fetch', function () {
+    describe('non-core platform add and rm end-to-end --fetch', () => {
 
         var tmpDir = helpers.tmpDir('non-core-platform-test');
         var project = path.join(tmpDir, 'hello');
         var results;
 
-        beforeEach(function () {
+        beforeEach(() => {
             process.chdir(tmpDir);
-            events.on('results', function (res) { results = res; });
+            events.on('results', res => { results = res; });
         });
 
-        afterEach(function () {
+        afterEach(() => {
             process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
             fs.removeSync(tmpDir);
         });
 
-        it('Test 009 : should add and remove 3rd party platforms', function () {
+        it('Test 009 : should add and remove 3rd party platforms', () => {
             var installed;
             return cordova.create('hello')
-                .then(function () {
+                .then(() => {
                     process.chdir(project);
                     // add cordova-android instead of android
                     return cordova.platform('add', 'cordova-android');
                 })
-                .then(function () {
+                .then(() => {
                     // 3rd party platform from npm
                     return cordova.platform('add', 'cordova-platform-test');
                 })
-                .then(function () {
+                .then(() => {
                     expect(path.join(project, 'platforms', 'android')).toExist();
                     expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();
                     return cordova.platform('ls');
                 })
-                .then(function () {
+                .then(() => {
                     // use regex to grab installed platforms
                     installed = results.match(/Installed platforms:\n {2}(.*)\n {2}(.*)/);
                     expect(installed).toBeDefined();
