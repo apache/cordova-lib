@@ -29,20 +29,29 @@ const platform = rewire('../src/cordova/platform');
 const addHelper = rewire('../src/cordova/platform/addHelper');
 
 const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
-const pluginsDir = path.join(fixturesDir, 'plugins');
+const pluginFixturesDir = path.join(fixturesDir, 'plugins');
 
 describe('cordova/platform', () => {
+    let tmpDir, project, pluginsDir, platformsDir, nodeModulesDir;
+
+    beforeEach(() => {
+        tmpDir = getTmpDir('cordova-platform-e2e-test');
+        project = path.join(tmpDir, 'project');
+        pluginsDir = path.join(project, 'plugins');
+        platformsDir = path.join(project, 'platforms');
+        nodeModulesDir = path.join(project, 'node_modules');
+        process.chdir(tmpDir);
+    });
+
+    afterEach(() => {
+        process.chdir(__dirname); // Needed to rm the dir on Windows.
+        fs.removeSync(tmpDir);
+    });
 
     describe('platform end-to-end', () => {
-
-        const tmpDir = getTmpDir('platform_test');
-        const project = path.join(tmpDir, 'project');
-
         let results;
 
         beforeEach(() => {
-            fs.removeSync(tmpDir);
-
             fs.copySync(path.join(fixturesDir, 'base'), project);
             process.chdir(project);
 
@@ -67,11 +76,6 @@ describe('cordova/platform', () => {
             });
 
             events.on('results', res => { results = res; });
-        });
-
-        afterEach(() => {
-            process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-            fs.removeSync(tmpDir);
         });
 
         // Factoring out some repeated checks.
@@ -133,7 +137,7 @@ describe('cordova/platform', () => {
         });
 
         xit('Test 002 : should install plugins correctly while adding platform', () => {
-            return cordova.plugin('add', path.join(pluginsDir, 'test'))
+            return cordova.plugin('add', path.join(pluginFixturesDir, 'test'))
                 .then(() => {
                     return cordova.platform('add', [testPlatform]);
                 })
@@ -151,7 +155,7 @@ describe('cordova/platform', () => {
             // below line won't work since prepare is inline require in addHelper, not global
             const x = addHelper.__set__('prepare', () => { order += 'P'; }); // eslint-disable-line no-unused-vars
             // spyOn(prepare).and.callFake(function() { console.log('prepare'); order += 'P'; });
-            return cordova.plugin('add', path.join(pluginsDir, 'test'))
+            return cordova.plugin('add', path.join(pluginFixturesDir, 'test'))
                 .then(() => {
                     return platform('add', [testPlatform]);
                 })
@@ -163,22 +167,8 @@ describe('cordova/platform', () => {
 
     describe('platform add plugin rm end-to-end', () => {
 
-        const tmpDir = getTmpDir('plugin_rm_test');
-        const project = path.join(tmpDir, 'hello');
-        const pluginsDir = path.join(project, 'plugins');
-
-        beforeEach(() => {
-            process.chdir(tmpDir);
-        });
-
-        afterEach(() => {
-            process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-            fs.removeSync(tmpDir);
-        });
-
         it('Test 006 : should remove dependency when removing parent plugin', () => {
-
-            return cordova.create('hello')
+            return cordova.create(path.basename(project))
                 .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser@latest');
@@ -205,23 +195,9 @@ describe('cordova/platform', () => {
 
     describe('platform add and remove --fetch', () => {
 
-        const tmpDir = getTmpDir('plat_add_remove_fetch_test');
-        const project = path.join(tmpDir, 'helloFetch');
-        const platformsDir = path.join(project, 'platforms');
-        const nodeModulesDir = path.join(project, 'node_modules');
-
-        beforeEach(() => {
-            process.chdir(tmpDir);
-        });
-
-        afterEach(() => {
-            process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-            fs.removeSync(tmpDir);
-        });
-
         it('Test 007 : should add and remove platform from node_modules directory', () => {
 
-            return cordova.create('helloFetch')
+            return cordova.create(path.basename(project))
                 .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser', {'save': true});
@@ -252,22 +228,9 @@ describe('cordova/platform', () => {
 
     describe('plugin add and rm end-to-end --fetch', () => {
 
-        const tmpDir = getTmpDir('plugin_rm_fetch_test');
-        const project = path.join(tmpDir, 'hello3');
-        const pluginsDir = path.join(project, 'plugins');
-
-        beforeEach(() => {
-            process.chdir(tmpDir);
-        });
-
-        afterEach(() => {
-            process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-            fs.removeSync(tmpDir);
-        });
-
         it('Test 008 : should remove dependency when removing parent plugin', () => {
 
-            return cordova.create('hello3')
+            return cordova.create(path.basename(project))
                 .then(() => {
                     process.chdir(project);
                     return cordova.platform('add', 'browser');
@@ -299,24 +262,15 @@ describe('cordova/platform', () => {
     });
 
     describe('non-core platform add and rm end-to-end --fetch', () => {
-
-        const tmpDir = getTmpDir('non-core-platform-test');
-        const project = path.join(tmpDir, 'hello');
         let results;
 
         beforeEach(() => {
-            process.chdir(tmpDir);
             events.on('results', res => { results = res; });
-        });
-
-        afterEach(() => {
-            process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-            fs.removeSync(tmpDir);
         });
 
         it('Test 009 : should add and remove 3rd party platforms', () => {
             let installed;
-            return cordova.create('hello')
+            return cordova.create(path.basename(project))
                 .then(() => {
                     process.chdir(project);
                     // add cordova-android instead of android
