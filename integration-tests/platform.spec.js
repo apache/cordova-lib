@@ -31,7 +31,7 @@ describe('cordova/platform', () => {
     const TIMEOUT = 120 * 1000;
     setDefaultTimeout(TIMEOUT);
 
-    let tmpDir, project, pluginsDir, platformsDir, nodeModulesDir;
+    let tmpDir, project, pluginsDir, platformsDir, nodeModulesDir, testPlatformDir;
 
     beforeEach(() => {
         tmpDir = getTmpDir('cordova-platform-e2e-test');
@@ -39,6 +39,7 @@ describe('cordova/platform', () => {
         pluginsDir = path.join(project, 'plugins');
         platformsDir = path.join(project, 'platforms');
         nodeModulesDir = path.join(project, 'node_modules');
+        testPlatformDir = path.join(platformsDir, testPlatform);
         process.chdir(tmpDir);
     });
 
@@ -64,8 +65,8 @@ describe('cordova/platform', () => {
                 })
                 .then(() => {
                     // Check the platform add was successful.
-                    expect(path.join(project, 'platforms', testPlatform)).toExist();
-                    expect(path.join(project, 'platforms', testPlatform, 'cordova')).toExist();
+                    expect(testPlatformDir).toExist();
+                    expect(path.join(testPlatformDir, 'cordova')).toExist();
                     expect(installedPlatforms()).toEqual([testPlatform]);
                 })
                 // .then(() => {
@@ -74,7 +75,7 @@ describe('cordova/platform', () => {
                 // })
                 // .then(() => {
                 //     // Our fake update script in the exec mock above creates this dummy file.
-                //     expect(path.join(project, 'platforms', testPlatform, 'updated')).toExist();
+                //     expect(path.join(testPlatformDir, 'updated')).toExist();
                 //     // Platform should still be in platform ls.
                 //     expect(installedPlatforms()).toEqual([testPlatform]);
                 // })
@@ -84,7 +85,7 @@ describe('cordova/platform', () => {
                 })
                 .then(() => {
                     // It should be gone.
-                    expect(path.join(project, 'platforms', testPlatform)).not.toExist();
+                    expect(testPlatformDir).not.toExist();
                     expect(installedPlatforms()).toEqual([]);
                 });
 
@@ -101,9 +102,9 @@ describe('cordova/platform', () => {
                 })
                 .then(() => {
                     // Check the platform add was successful.
-                    expect(path.join(project, 'platforms', testPlatform)).toExist();
+                    expect(testPlatformDir).toExist();
                     // Check that plugin files exists in www dir
-                    expect(path.join(project, 'platforms', testPlatform, 'platform_www/test.js')).toExist();
+                    expect(path.join(testPlatformDir, 'platform_www/test.js')).toExist();
                 });
         });
 
@@ -211,8 +212,8 @@ describe('cordova/platform', () => {
                 .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                    expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
-                    expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
+                    expect(path.join(nodeModulesDir, 'cordova-plugin-media')).toExist();
+                    expect(path.join(nodeModulesDir, 'cordova-plugin-file')).toExist();
                     return cordova.platform('add', 'android');
                 })
                 .then(() => {
@@ -224,9 +225,9 @@ describe('cordova/platform', () => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
                     // These don't work yet due to the tests finishing before the promise resolves.
-                    // expect(path.join(project, 'node_modules', 'cordova-plugin-media')).not.toExist();
-                    // expect(path.join(project, 'node_modules', 'cordova-plugin-file')).not.toExist();
-                    // expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).not.toExist();
+                    // expect(path.join(nodeModulesDir, 'cordova-plugin-media')).not.toExist();
+                    // expect(path.join(nodeModulesDir, 'cordova-plugin-file')).not.toExist();
+                    // expect(path.join(nodeModulesDir, 'cordova-plugin-compat')).not.toExist();
                 });
         });
     });
@@ -245,8 +246,8 @@ describe('cordova/platform', () => {
                     return cordova.platform('add', 'cordova-platform-test');
                 })
                 .then(() => {
-                    expect(path.join(project, 'platforms', 'android')).toExist();
-                    expect(path.join(project, 'platforms', 'cordova-platform-test')).toExist();
+                    expect(path.join(platformsDir, 'android')).toExist();
+                    expect(path.join(platformsDir, 'cordova-platform-test')).toExist();
                     expect(installedPlatforms()).toEqual(jasmine.arrayWithExactContents([
                         'android', 'cordova-platform-test'
                     ]));
