@@ -15,29 +15,29 @@
     under the License.
 */
 
-var helpers = require('../spec/helpers');
-var path = require('path');
-var fs = require('fs-extra');
-var superspawn = require('cordova-common').superspawn;
-var config = require('../src/cordova/config');
-var Q = require('q');
-var events = require('cordova-common').events;
-var cordova = require('../src/cordova/cordova');
-var rewire = require('rewire');
-var plugman = require('../src/plugman/plugman');
-var platform = rewire('../src/cordova/platform');
-var addHelper = rewire('../src/cordova/platform/addHelper');
-var fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
-var pluginsDir = path.join(fixturesDir, 'plugins');
+const helpers = require('../spec/helpers');
+const path = require('path');
+const fs = require('fs-extra');
+const superspawn = require('cordova-common').superspawn;
+const config = require('../src/cordova/config');
+const Q = require('q');
+const events = require('cordova-common').events;
+const cordova = require('../src/cordova/cordova');
+const rewire = require('rewire');
+const plugman = require('../src/plugman/plugman');
+const platform = rewire('../src/cordova/platform');
+const addHelper = rewire('../src/cordova/platform/addHelper');
+const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
+const pluginsDir = path.join(fixturesDir, 'plugins');
 
 describe('cordova/platform', () => {
 
     describe('platform end-to-end', () => {
 
-        var tmpDir = helpers.tmpDir('platform_test');
-        var project = path.join(tmpDir, 'project');
+        const tmpDir = helpers.tmpDir('platform_test');
+        const project = path.join(tmpDir, 'project');
 
-        var results;
+        let results;
 
         beforeEach(() => {
             fs.removeSync(tmpDir);
@@ -47,7 +47,7 @@ describe('cordova/platform', () => {
 
             // Now we load the config.json in the newly created project and edit the target platform's lib entry
             // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
-            var c = config.read(project);
+            const c = config.read(project);
             c.lib[helpers.testPlatform].url = path.join(fixturesDir, 'platforms', helpers.testPlatform + '-lib');
             config.write(project, c);
 
@@ -76,14 +76,14 @@ describe('cordova/platform', () => {
         // Factoring out some repeated checks.
         function emptyPlatformList () {
             return cordova.platform('list').then(() => {
-                var installed = results.match(/Installed platforms:\n {2}(.*)/);
+                const installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
                 expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
             });
         }
         function fullPlatformList () {
             return cordova.platform('list').then(() => {
-                var installed = results.match(/Installed platforms:\n {2}(.*)/);
+                const installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
                 expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
             });
@@ -145,10 +145,10 @@ describe('cordova/platform', () => {
         }, 60000);
 
         xit('Test 003 : should call prepare after plugins were installed into platform', () => {
-            var order = '';
+            let order = '';
             spyOn(plugman, 'install').and.callFake(() => { order += 'I'; });
             // below line won't work since prepare is inline require in addHelper, not global
-            var x = addHelper.__set__('prepare', () => { order += 'P'; }); // eslint-disable-line no-unused-vars
+            const x = addHelper.__set__('prepare', () => { order += 'P'; }); // eslint-disable-line no-unused-vars
             // spyOn(prepare).and.callFake(function() { console.log('prepare'); order += 'P'; });
             return cordova.plugin('add', path.join(pluginsDir, 'test'))
                 .then(() => {
@@ -162,9 +162,9 @@ describe('cordova/platform', () => {
 
     describe('platform add plugin rm end-to-end', () => {
 
-        var tmpDir = helpers.tmpDir('plugin_rm_test');
-        var project = path.join(tmpDir, 'hello');
-        var pluginsDir = path.join(project, 'plugins');
+        const tmpDir = helpers.tmpDir('plugin_rm_test');
+        const project = path.join(tmpDir, 'hello');
+        const pluginsDir = path.join(project, 'plugins');
 
         beforeEach(() => {
             process.chdir(tmpDir);
@@ -204,10 +204,10 @@ describe('cordova/platform', () => {
 
     describe('platform add and remove --fetch', () => {
 
-        var tmpDir = helpers.tmpDir('plat_add_remove_fetch_test');
-        var project = path.join(tmpDir, 'helloFetch');
-        var platformsDir = path.join(project, 'platforms');
-        var nodeModulesDir = path.join(project, 'node_modules');
+        const tmpDir = helpers.tmpDir('plat_add_remove_fetch_test');
+        const project = path.join(tmpDir, 'helloFetch');
+        const platformsDir = path.join(project, 'platforms');
+        const nodeModulesDir = path.join(project, 'node_modules');
 
         beforeEach(() => {
             process.chdir(tmpDir);
@@ -251,9 +251,9 @@ describe('cordova/platform', () => {
 
     describe('plugin add and rm end-to-end --fetch', () => {
 
-        var tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
-        var project = path.join(tmpDir, 'hello3');
-        var pluginsDir = path.join(project, 'plugins');
+        const tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
+        const project = path.join(tmpDir, 'hello3');
+        const pluginsDir = path.join(project, 'plugins');
 
         beforeEach(() => {
             process.chdir(tmpDir);
@@ -299,9 +299,9 @@ describe('cordova/platform', () => {
 
     describe('non-core platform add and rm end-to-end --fetch', () => {
 
-        var tmpDir = helpers.tmpDir('non-core-platform-test');
-        var project = path.join(tmpDir, 'hello');
-        var results;
+        const tmpDir = helpers.tmpDir('non-core-platform-test');
+        const project = path.join(tmpDir, 'hello');
+        let results;
 
         beforeEach(() => {
             process.chdir(tmpDir);
@@ -314,7 +314,7 @@ describe('cordova/platform', () => {
         });
 
         it('Test 009 : should add and remove 3rd party platforms', () => {
-            var installed;
+            let installed;
             return cordova.create('hello')
                 .then(() => {
                     process.chdir(project);
