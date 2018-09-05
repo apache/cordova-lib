@@ -141,7 +141,7 @@ describe('cordova/platform', () => {
         it('Test 006 : should remove dependency when removing parent plugin', () => {
             return Promise.resolve()
                 .then(() => {
-                    return cordova.platform('add', 'browser@latest');
+                    return cordova.platform('add', 'ios');
                 })
                 .then(() => {
                     return cordova.plugin('add', 'cordova-plugin-media');
@@ -197,7 +197,7 @@ describe('cordova/platform', () => {
         it('Test 008 : should remove dependency when removing parent plugin', () => {
             return Promise.resolve()
                 .then(() => {
-                    return cordova.platform('add', 'browser');
+                    return cordova.platform('add', 'ios');
                 })
                 .then(() => {
                     return cordova.plugin('add', 'cordova-plugin-media', {'save': true});
