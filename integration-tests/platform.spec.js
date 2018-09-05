@@ -181,18 +181,16 @@ describe('cordova/platform', () => {
                 .then(() => {
                     expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
                     expect(path.join(platformsDir, 'android')).toExist();
-                    // Tests finish before this command finishes resolving
-                    // return cordova.platform('rm', 'ios');
+                    return cordova.platform('rm', 'browser');
                 })
                 .then(() => {
-                    // expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
-                    // expect(path.join(platformsDir, 'ios')).not.toExist();
-                    // Tests finish before this command finishes resolving
-                    // return cordova.platform('rm', 'android');
+                    expect(path.join(nodeModulesDir, 'cordova-browser')).not.toExist();
+                    expect(path.join(platformsDir, 'browser')).not.toExist();
+                    return cordova.platform('rm', 'android');
                 })
                 .then(() => {
-                    // expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
-                    // expect(path.join(platformsDir, 'android')).not.toExist();
+                    expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
+                    expect(path.join(platformsDir, 'android')).not.toExist();
                 });
         });
     });
