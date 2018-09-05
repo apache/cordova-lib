@@ -52,11 +52,16 @@ describe('cordova/platform/addHelper', function () {
         prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
         prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
 
+        // `cordova.prepare` is never saved to a variable, so we need to fake `require`
         platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
+        const testSubjectRequire = platform_addHelper.__get__('require');
+        const requireFake = jasmine.createSpy('require', testSubjectRequire).and.callThrough();
+        requireFake.withArgs('../prepare').and.returnValue(prepare_mock);
+
         platform_addHelper.__set__({
             ConfigParser: cfg_parser_mock,
             fetch: fetch_mock,
-            prepare: prepare_mock
+            require: requireFake
         });
 
         spyOn(fs, 'ensureDirSync');
