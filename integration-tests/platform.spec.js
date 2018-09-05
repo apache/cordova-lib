@@ -21,7 +21,7 @@ const fs = require('fs-extra');
 const rewire = require('rewire');
 
 const { superspawn } = require('cordova-common');
-const { tmpDir: getTmpDir, testPlatform } = require('../spec/helpers');
+const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
 const { listPlatforms } = require('../src/cordova/util');
 const config = require('../src/cordova/config');
 const cordova = require('../src/cordova/cordova');
@@ -33,6 +33,9 @@ const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 const pluginFixturesDir = path.join(fixturesDir, 'plugins');
 
 describe('cordova/platform', () => {
+    const TIMEOUT = 120 * 1000;
+    setDefaultTimeout(TIMEOUT);
+
     let tmpDir, project, pluginsDir, platformsDir, nodeModulesDir;
 
     beforeEach(() => {
@@ -136,7 +139,7 @@ describe('cordova/platform', () => {
                     // Check that plugin files exists in www dir
                     expect(path.join(project, 'platforms', testPlatform, 'assets/www/test.js')).toExist();
                 });
-        }, 60000);
+        });
 
         xit('Test 003 : should call prepare after plugins were installed into platform', () => {
             let order = '';
@@ -179,7 +182,7 @@ describe('cordova/platform', () => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
                 });
-        }, 100000);
+        });
     });
 
     describe('platform add and remove --fetch', () => {
@@ -212,7 +215,7 @@ describe('cordova/platform', () => {
                     // expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
                     // expect(path.join(platformsDir, 'android')).not.toExist();
                 });
-        }, 100000);
+        });
     });
 
     describe('plugin add and rm end-to-end --fetch', () => {
@@ -247,7 +250,7 @@ describe('cordova/platform', () => {
                     // expect(path.join(project, 'node_modules', 'cordova-plugin-file')).not.toExist();
                     // expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).not.toExist();
                 });
-        }, 60000);
+        });
     });
 
     describe('non-core platform add and rm end-to-end --fetch', () => {
@@ -270,6 +273,6 @@ describe('cordova/platform', () => {
                         'android', 'cordova-platform-test'
                     ]));
                 });
-        }, 90000);
+        });
     });
 });
