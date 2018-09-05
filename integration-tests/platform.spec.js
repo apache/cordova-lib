@@ -15,18 +15,19 @@
     under the License.
 */
 
-const helpers = require('../spec/helpers');
+const Q = require('q');
 const path = require('path');
 const fs = require('fs-extra');
-const superspawn = require('cordova-common').superspawn;
-const config = require('../src/cordova/config');
-const Q = require('q');
-const events = require('cordova-common').events;
-const cordova = require('../src/cordova/cordova');
 const rewire = require('rewire');
+
+const { events, superspawn } = require('cordova-common');
+const helpers = require('../spec/helpers');
+const config = require('../src/cordova/config');
+const cordova = require('../src/cordova/cordova');
 const plugman = require('../src/plugman/plugman');
 const platform = rewire('../src/cordova/platform');
 const addHelper = rewire('../src/cordova/platform/addHelper');
+
 const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 const pluginsDir = path.join(fixturesDir, 'plugins');
 
