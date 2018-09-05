@@ -21,7 +21,7 @@ const fs = require('fs-extra');
 const rewire = require('rewire');
 
 const { events, superspawn } = require('cordova-common');
-const helpers = require('../spec/helpers');
+const { tmpDir: getTmpDir, testPlatform } = require('../spec/helpers');
 const config = require('../src/cordova/config');
 const cordova = require('../src/cordova/cordova');
 const plugman = require('../src/plugman/plugman');
@@ -35,7 +35,7 @@ describe('cordova/platform', () => {
 
     describe('platform end-to-end', () => {
 
-        const tmpDir = helpers.tmpDir('platform_test');
+        const tmpDir = getTmpDir('platform_test');
         const project = path.join(tmpDir, 'project');
 
         let results;
@@ -49,7 +49,7 @@ describe('cordova/platform', () => {
             // Now we load the config.json in the newly created project and edit the target platform's lib entry
             // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
             const c = config.read(project);
-            c.lib[helpers.testPlatform].url = path.join(fixturesDir, 'platforms', helpers.testPlatform + '-lib');
+            c.lib[testPlatform].url = path.join(fixturesDir, 'platforms', testPlatform + '-lib');
             config.write(project, c);
 
             // The config.json in the fixture project points at fake "local" paths.
@@ -61,7 +61,7 @@ describe('cordova/platform', () => {
                 } else if (cmd.match(/version\b/)) {
                     return Q('3.3.0');
                 } else if (cmd.match(/update\b/)) {
-                    fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
+                    fs.writeFileSync(path.join(project, 'platforms', testPlatform, 'updated'), 'I was updated!', 'utf-8');
                 }
                 return Q();
             });
@@ -79,14 +79,14 @@ describe('cordova/platform', () => {
             return cordova.platform('list').then(() => {
                 const installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
-                expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+                expect(installed[1].indexOf(testPlatform)).toBe(-1);
             });
         }
         function fullPlatformList () {
             return cordova.platform('list').then(() => {
                 const installed = results.match(/Installed platforms:\n {2}(.*)/);
                 expect(installed).toBeDefined();
-                expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+                expect(installed[1].indexOf(testPlatform)).toBeGreaterThan(-1);
             });
         }
 
@@ -103,30 +103,30 @@ describe('cordova/platform', () => {
             return emptyPlatformList()
                 .then(() => {
                     // Add the testing platform.
-                    return cordova.platform('add', [helpers.testPlatform]);
+                    return cordova.platform('add', [testPlatform]);
                 })
                 .then(() => {
                     // Check the platform add was successful.
-                    expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
-                    expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
+                    expect(path.join(project, 'platforms', testPlatform)).toExist();
+                    expect(path.join(project, 'platforms', testPlatform, 'cordova')).toExist();
                 })
                 .then(fullPlatformList) // Check for it in platform ls.
                 .then(() => {
                     // Try to update the platform.
-                    return cordova.platform('update', [helpers.testPlatform]);
+                    return cordova.platform('update', [testPlatform]);
                 })
                 .then(() => {
                     // Our fake update script in the exec mock above creates this dummy file.
-                    expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toExist();
+                    expect(path.join(project, 'platforms', testPlatform, 'updated')).toExist();
                 })
                 .then(fullPlatformList) // Platform should still be in platform ls.
                 .then(() => {
                     // And now remove it.
-                    return cordova.platform('rm', [helpers.testPlatform]);
+                    return cordova.platform('rm', [testPlatform]);
                 })
                 .then(() => {
                     // It should be gone.
-                    expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
+                    expect(path.join(project, 'platforms', testPlatform)).not.toExist();
                 })
                 .then(emptyPlatformList); // platform ls should be empty too.;
 
@@ -135,13 +135,13 @@ describe('cordova/platform', () => {
         xit('Test 002 : should install plugins correctly while adding platform', () => {
             return cordova.plugin('add', path.join(pluginsDir, 'test'))
                 .then(() => {
-                    return cordova.platform('add', [helpers.testPlatform]);
+                    return cordova.platform('add', [testPlatform]);
                 })
                 .then(() => {
                     // Check the platform add was successful.
-                    expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
+                    expect(path.join(project, 'platforms', testPlatform)).toExist();
                     // Check that plugin files exists in www dir
-                    expect(path.join(project, 'platforms', helpers.testPlatform, 'assets/www/test.js')).toExist();
+                    expect(path.join(project, 'platforms', testPlatform, 'assets/www/test.js')).toExist();
                 });
         }, 60000);
 
@@ -153,7 +153,7 @@ describe('cordova/platform', () => {
             // spyOn(prepare).and.callFake(function() { console.log('prepare'); order += 'P'; });
             return cordova.plugin('add', path.join(pluginsDir, 'test'))
                 .then(() => {
-                    return platform('add', [helpers.testPlatform]);
+                    return platform('add', [testPlatform]);
                 })
                 .then(() => {
                     expect(order).toBe('IP'); // Install first, then prepare
@@ -163,7 +163,7 @@ describe('cordova/platform', () => {
 
     describe('platform add plugin rm end-to-end', () => {
 
-        const tmpDir = helpers.tmpDir('plugin_rm_test');
+        const tmpDir = getTmpDir('plugin_rm_test');
         const project = path.join(tmpDir, 'hello');
         const pluginsDir = path.join(project, 'plugins');
 
@@ -205,7 +205,7 @@ describe('cordova/platform', () => {
 
     describe('platform add and remove --fetch', () => {
 
-        const tmpDir = helpers.tmpDir('plat_add_remove_fetch_test');
+        const tmpDir = getTmpDir('plat_add_remove_fetch_test');
         const project = path.join(tmpDir, 'helloFetch');
         const platformsDir = path.join(project, 'platforms');
         const nodeModulesDir = path.join(project, 'node_modules');
@@ -252,7 +252,7 @@ describe('cordova/platform', () => {
 
     describe('plugin add and rm end-to-end --fetch', () => {
 
-        const tmpDir = helpers.tmpDir('plugin_rm_fetch_test');
+        const tmpDir = getTmpDir('plugin_rm_fetch_test');
         const project = path.join(tmpDir, 'hello3');
         const pluginsDir = path.join(project, 'plugins');
 
@@ -300,7 +300,7 @@ describe('cordova/platform', () => {
 
     describe('non-core platform add and rm end-to-end --fetch', () => {
 
-        const tmpDir = helpers.tmpDir('non-core-platform-test');
+        const tmpDir = getTmpDir('non-core-platform-test');
         const project = path.join(tmpDir, 'hello');
         let results;
 
