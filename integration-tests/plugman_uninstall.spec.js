@@ -17,79 +17,54 @@
     under the License.
 */
 
-var install = require('../src/plugman/install');
-var actions = require('cordova-common').ActionStack;
-var PluginInfo = require('cordova-common').PluginInfo;
-var events = require('cordova-common').events;
-var common = require('../spec/common');
-var platforms = require('../src/platforms/platforms');
-var xmlHelpers = require('cordova-common').xmlHelpers;
-var et = require('elementtree');
-var fs = require('fs-extra');
-var path = require('path');
-var Q = require('q');
-var rewire = require('rewire');
-var spec = path.join(__dirname, '..', 'spec', 'plugman');
-var srcProject = path.join(spec, 'projects', 'android');
-var project = path.join(spec, 'projects', 'android_uninstall.test');
-var project2 = path.join(spec, 'projects', 'android_uninstall.test2');
-var project3 = path.join(spec, 'projects', 'android_uninstall.test3');
-const projects = [project, project2, project3];
+const Q = require('q');
+const fs = require('fs-extra');
+const path = require('path');
+const rewire = require('rewire');
 
-var plugins_dir = path.join(spec, 'plugins');
-var plugins_install_dir = path.join(project, 'cordova', 'plugins');
-var plugins_install_dir2 = path.join(project2, 'cordova', 'plugins');
-var plugins_install_dir3 = path.join(project3, 'cordova', 'plugins');
+const { ActionStack, PluginInfo, events } = require('cordova-common');
+const common = require('../spec/common');
+const install = require('../src/plugman/install');
+const platforms = require('../src/platforms/platforms');
+const { tmpDir: getTmpDir } = require('../spec/helpers.js');
 
-var plugins = {
+const spec = path.join(__dirname, '..', 'spec', 'plugman');
+const srcProject = path.join(spec, 'projects', 'android');
+
+const tmpDir = getTmpDir('plugman_uninstall_test');
+const projectsPath = path.join(tmpDir, 'projects');
+const project = path.join(tmpDir, 'project');
+const plugins_install_dir = path.join(project, 'cordova/plugins');
+
+const plugins_dir = path.join(spec, 'plugins');
+const plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
     'A': path.join(plugins_dir, 'dependencies', 'A'),
     'C': path.join(plugins_dir, 'dependencies', 'C')
 };
-var dummy_id = 'org.test.plugins.dummyplugin';
 
-var dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
+// Grab a reference to the original, before someone stubs it
+const { copySync } = fs;
+function setupProject (name) {
+    const projectPath = path.join(projectsPath, name);
+    copySync(projectPath, project);
+}
 
-var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    '<widget xmlns     = "http://www.w3.org/ns/widgets"\n' +
-    '        xmlns:cdv = "http://cordova.apache.org/ns/1.0"\n' +
-    '        id        = "io.cordova.hellocordova"\n' +
-    '        version   = "0.0.1">\n' +
-    '    <name>Hello Cordova</name>\n' +
-    '    <description>\n' +
-    '        A sample Apache Cordova application that responds to the deviceready event.\n' +
-    '    </description>\n' +
-    '    <author href="http://cordova.io" email="dev@cordova.apache.org">\n' +
-    '        Apache Cordova Team\n' +
-    '    </author>\n' +
-    '    <content src="index.html" />\n' +
-    '    <access origin="*" />\n' +
-    '</widget>\n';
+describe('plugman/uninstall', () => {
+    let uninstall, emit;
 
-var uninstall;
+    beforeAll(() => {
+        const project1 = path.join(projectsPath, 'uninstall.test');
+        const project2 = path.join(projectsPath, 'uninstall.test2');
+        const project3 = path.join(projectsPath, 'uninstall.test3');
 
-beforeEach(() => {
-    uninstall = rewire('../src/plugman/uninstall');
-    uninstall.__set__('npmUninstall', jasmine.createSpy());
-});
-
-describe('plugman uninstall start', function () {
-    beforeEach(function () {
-        var origParseElementtreeSync = xmlHelpers.parseElementtreeSync.bind(xmlHelpers);
-        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function (path) {
-            if (/config.xml$/.test(path)) return new et.ElementTree(et.XML(TEST_XML));
-            return origParseElementtreeSync(path);
-        });
-    });
-
-    it('Test 001 : plugman uninstall start', function () {
-        for (const p of projects) {
+        for (const p of [project1, project2, project3]) {
             fs.copySync(srcProject, p);
         }
 
-        return install('android', project, plugins['org.test.plugins.dummyplugin'])
+        return install('android', project1, plugins['org.test.plugins.dummyplugin'])
             .then(function (result) {
-                return install('android', project, plugins['A']);
+                return install('android', project1, plugins['A']);
             }).then(function () {
                 return install('android', project2, plugins['C']);
             }).then(function () {
@@ -101,207 +76,224 @@ describe('plugman uninstall start', function () {
             }).then(function (result) {
                 expect(result).toEqual(true);
             });
-    }, 60000);
-});
-
-describe('uninstallPlatform', function () {
-    beforeEach(function () {
-        spyOn(actions.prototype, 'process').and.returnValue(Q());
-        spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.returnValue(true);
-        spyOn(fs, 'copySync').and.returnValue(true);
-    });
-    describe('success', function () {
-
-        it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
-            var platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
-            var getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
-
-            return uninstall.uninstallPlatform('android', project, dummy_id)
-                .then(function () {
-                    expect(getPlatformApi).toHaveBeenCalledWith('android', project);
-                    expect(platformApi.removePlugin).toHaveBeenCalled();
-                });
-        }, 6000);
-
-        it('Test 003 : should return propagate value returned by PlatformApi removePlugin method', function () {
-            var platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
-            spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
-
-            var existsSyncOrig = fs.existsSync;
-            spyOn(fs, 'existsSync').and.callFake(function (file) {
-                if (file.indexOf(dummy_id) >= 0) return true;
-                return existsSyncOrig.call(fs, file);
-            });
-
-            var fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
-            fakeProvider.get.and.returnValue(dummyPluginInfo);
-
-            function validateReturnedResultFor (values, expectedResult) {
-                return values.reduce(function (promise, value) {
-                    return promise
-                        .then(function () {
-                            platformApi.removePlugin.and.returnValue(Q(value));
-                            return uninstall.uninstallPlatform('android', project, dummy_id, null,
-                                { pluginInfoProvider: fakeProvider, platformVersion: '9.9.9' });
-                        })
-                        .then(function (result) {
-                            expect(!!result).toEqual(expectedResult);
-                        }, function (err) {
-                            expect(err).toBeUndefined();
-                        });
-                }, Q());
-            }
-
-            return validateReturnedResultFor([ true, {}, [], 'foo', function () {} ], true)
-                .then(function () {
-                    return validateReturnedResultFor([ false, null, undefined, '' ], false);
-                });
-        });
-
-        // FIXME this test messes up the project somehow so that 007 fails
-        // Re-enable once project setup is done beforeEach test
-        xit('Test 014 : should uninstall dependent plugins', function () {
-            var emit = spyOn(events, 'emit');
-            return uninstall.uninstallPlatform('android', project, 'A')
-                .then(function (result) {
-                    expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
-                });
-        });
     });
 
-    describe('failure ', function () {
-        it('Test 004 : should throw if platform is unrecognized', function () {
-            return uninstall.uninstallPlatform('atari', project, 'SomePlugin')
-                .then(function (result) {
-                    fail();
-                }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('Platform "atari" not supported.');
-                });
-        }, 6000);
+    beforeEach(() => {
+        uninstall = rewire('../src/plugman/uninstall');
+        uninstall.__set__('npmUninstall', jasmine.createSpy());
 
-        it('Test 005 : should throw if plugin is missing', function () {
-            return uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist')
-                .then(function (result) {
-                    fail();
-                }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-                });
-        }, 6000);
-    });
-});
-
-describe('uninstallPlugin', function () {
-    var rmstack = [];
-    var emit;
-
-    beforeEach(function () {
-        spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.callFake(function (f, p) { rmstack.push(p); return true; });
-        rmstack = [];
         emit = spyOn(events, 'emit');
-    });
-    describe('with dependencies', function () {
-
-        it('Test 006 : should delete all dependent plugins', function () {
-            return uninstall.uninstallPlugin('A', plugins_install_dir)
-                .then(function (result) {
-                    var del = common.spy.getDeleted(emit);
-                    expect(del).toEqual([
-                        'Deleted plugin "C"',
-                        'Deleted plugin "D"',
-                        'Deleted plugin "A"'
-                    ]);
-                });
-        });
-
-        it('Test 007 : should fail if plugin is a required dependency', function () {
-            return uninstall.uninstallPlugin('C', plugins_install_dir)
-                .then(function (result) {
-                    fail();
-                }, function err (errMsg) {
-                    expect(errMsg.toString()).toEqual('Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)');
-                });
-        }, 6000);
-
-        it('Test 008 : allow forcefully removing a plugin', function () {
-            return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
-                .then(function () {
-                    var del = common.spy.getDeleted(emit);
-                    expect(del).toEqual(['Deleted plugin "C"']);
-                });
-        });
-
-        it('Test 009 : never remove top level plugins if they are a dependency', function () {
-            return uninstall.uninstallPlugin('A', plugins_install_dir2)
-                .then(function () {
-                    var del = common.spy.getDeleted(emit);
-                    expect(del).toEqual([
-                        'Deleted plugin "D"',
-                        'Deleted plugin "A"'
-                    ]);
-                });
-        });
-
-        it('Test 010 : should not remove dependent plugin if it was installed after as top-level', function () {
-            return uninstall.uninstallPlugin('A', plugins_install_dir3)
-                .then(function () {
-                    var del = common.spy.getDeleted(emit);
-                    expect(del).toEqual([
-                        'Deleted plugin "D"',
-                        'Deleted plugin "A"'
-                    ]);
-                });
-        });
-    });
-});
-
-describe('uninstall', function () {
-
-    beforeEach(function () {
         spyOn(fs, 'writeFileSync').and.returnValue(true);
         spyOn(fs, 'removeSync').and.returnValue(true);
     });
 
-    describe('failure', function () {
-        it('Test 011 : should throw if platform is unrecognized', function () {
-            return uninstall('atari', project, 'SomePlugin')
-                .then(function (result) {
-                    fail();
-                }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('Platform "atari" not supported.');
-                });
-        }, 6000);
-
-        it('Test 012 : should throw if plugin is missing', function () {
-            return uninstall('android', project, 'SomePluginThatDoesntExist')
-                .then(function (result) {
-                    fail();
-                }, function err (errMsg) {
-                    expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-                });
-        }, 6000);
-    });
-});
-
-describe('end', function () {
-
-    afterEach(function () {
-        for (const p of projects) {
-            fs.removeSync(p);
-        }
+    afterEach(() => {
+        // Just so everything fails if someone does not setup their project
+        fs.removeSync(project);
     });
 
-    it('Test 013 : end', function () {
-        return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
-            .then(function () {
-                // Fails... A depends on
-                return uninstall('android', project, plugins['C']);
-            }).catch(function (err) {
-                expect(err.stack).toMatch(/The plugin 'C' is required by \(A\), skipping uninstallation./);
-            }).then(function () {
-                // dependencies on C,D ... should this only work with --recursive? prompt user..?
-                return uninstall('android', project, plugins['A']);
+    afterAll(() => {
+        fs.removeSync(tmpDir);
+    });
+
+    describe('uninstallPlatform', function () {
+        const dummy_id = 'org.test.plugins.dummyplugin';
+
+        beforeEach(function () {
+            setupProject('uninstall.test');
+
+            spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
+            spyOn(fs, 'copySync').and.returnValue(true);
+        });
+
+        describe('success', function () {
+
+            it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
+                const platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
+                const getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
+
+                return uninstall.uninstallPlatform('android', project, dummy_id)
+                    .then(function () {
+                        expect(getPlatformApi).toHaveBeenCalledWith('android', project);
+                        expect(platformApi.removePlugin).toHaveBeenCalled();
+                    });
             });
+
+            it('Test 003 : should return propagate value returned by PlatformApi removePlugin method', function () {
+                const platformApi = { removePlugin: jasmine.createSpy('removePlugin') };
+                spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
+
+                const existsSyncOrig = fs.existsSync;
+                spyOn(fs, 'existsSync').and.callFake(function (file) {
+                    if (file.indexOf(dummy_id) >= 0) return true;
+                    return existsSyncOrig.call(fs, file);
+                });
+
+                const fakeProvider = jasmine.createSpyObj('fakeProvider', ['get']);
+                const dummyPluginInfo = new PluginInfo(plugins['org.test.plugins.dummyplugin']);
+                fakeProvider.get.and.returnValue(dummyPluginInfo);
+
+                function validateReturnedResultFor (values, expectedResult) {
+                    return values.reduce(function (promise, value) {
+                        return promise
+                            .then(function () {
+                                platformApi.removePlugin.and.returnValue(Q(value));
+                                return uninstall.uninstallPlatform('android', project, dummy_id, null,
+                                    { pluginInfoProvider: fakeProvider, platformVersion: '9.9.9' });
+                            })
+                            .then(function (result) {
+                                expect(!!result).toEqual(expectedResult);
+                            }, function (err) {
+                                expect(err).toBeUndefined();
+                            });
+                    }, Q());
+                }
+
+                return validateReturnedResultFor([ true, {}, [], 'foo', function () {} ], true)
+                    .then(function () {
+                        return validateReturnedResultFor([ false, null, undefined, '' ], false);
+                    });
+            });
+
+            it('Test 014 : should uninstall dependent plugins', function () {
+                return uninstall.uninstallPlatform('android', project, 'A')
+                    .then(function (result) {
+                        expect(emit).toHaveBeenCalledWith('log', 'Uninstalling 2 dependent plugins.');
+                    });
+            });
+        });
+
+        describe('failure ', function () {
+            it('Test 004 : should throw if platform is unrecognized', function () {
+                return uninstall.uninstallPlatform('atari', project, 'SomePlugin')
+                    .then(function (result) {
+                        fail('Expected promise to be rejected');
+                    }, function err (errMsg) {
+                        expect(errMsg.toString()).toContain('Platform "atari" not supported.');
+                    });
+            });
+
+            it('Test 005 : should throw if plugin is missing', function () {
+                return uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist')
+                    .then(function (result) {
+                        fail('Expected promise to be rejected');
+                    }, function err (errMsg) {
+                        expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
+                    });
+            });
+        });
+    });
+
+    describe('uninstallPlugin', function () {
+
+        describe('with dependencies', function () {
+
+            it('Test 006 : should delete all dependent plugins', function () {
+                setupProject('uninstall.test');
+
+                return uninstall.uninstallPlugin('A', plugins_install_dir)
+                    .then(function (result) {
+                        const del = common.spy.getDeleted(emit);
+                        expect(del).toEqual([
+                            'Deleted plugin "C"',
+                            'Deleted plugin "D"',
+                            'Deleted plugin "A"'
+                        ]);
+                    });
+            });
+
+            it('Test 007 : should fail if plugin is a required dependency', function () {
+                setupProject('uninstall.test');
+
+                return uninstall.uninstallPlugin('C', plugins_install_dir)
+                    .then(function (result) {
+                        fail('Expected promise to be rejected');
+                    }, function err (errMsg) {
+                        expect(errMsg.toString()).toEqual('Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)');
+                    });
+            });
+
+            it('Test 008 : allow forcefully removing a plugin', function () {
+                setupProject('uninstall.test');
+
+                return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
+                    .then(function () {
+                        const del = common.spy.getDeleted(emit);
+                        expect(del).toEqual(['Deleted plugin "C"']);
+                    });
+            });
+
+            it('Test 009 : never remove top level plugins if they are a dependency', function () {
+                setupProject('uninstall.test2');
+
+                return uninstall.uninstallPlugin('A', plugins_install_dir)
+                    .then(function () {
+                        const del = common.spy.getDeleted(emit);
+                        expect(del).toEqual([
+                            'Deleted plugin "D"',
+                            'Deleted plugin "A"'
+                        ]);
+                    });
+            });
+
+            it('Test 010 : should not remove dependent plugin if it was installed after as top-level', function () {
+                setupProject('uninstall.test3');
+
+                return uninstall.uninstallPlugin('A', plugins_install_dir)
+                    .then(function () {
+                        const del = common.spy.getDeleted(emit);
+                        expect(del).toEqual([
+                            'Deleted plugin "D"',
+                            'Deleted plugin "A"'
+                        ]);
+                    });
+            });
+        });
+    });
+
+    describe('uninstall', function () {
+
+        beforeEach(() => {
+            setupProject('uninstall.test');
+        });
+
+        describe('failure', function () {
+            it('Test 011 : should throw if platform is unrecognized', function () {
+                return uninstall('atari', project, 'SomePlugin')
+                    .then(function (result) {
+                        fail('Expected promise to be rejected');
+                    }, function err (errMsg) {
+                        expect(errMsg.toString()).toContain('Platform "atari" not supported.');
+                    });
+            });
+
+            it('Test 012 : should throw if plugin is missing', function () {
+                return uninstall('android', project, 'SomePluginThatDoesntExist')
+                    .then(function (result) {
+                        fail('Expected promise to be rejected');
+                    }, function err (errMsg) {
+                        expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
+                    });
+            });
+        });
+    });
+
+    describe('end', function () {
+        // TODO this was some test/teardown hybrid.
+        // We should either add more expectations or get rid of it
+        it('Test 013 : end', function () {
+            setupProject('uninstall.test');
+
+            return uninstall('android', project, plugins['org.test.plugins.dummyplugin'])
+                .then(function () {
+                    // Fails... A depends on
+                    return uninstall('android', project, plugins['C']);
+                }).catch(function (err) {
+                    expect(err.stack).toMatch(/The plugin 'C' is required by \(A\), skipping uninstallation./);
+                }).then(function () {
+                    // dependencies on C,D ... should this only work with --recursive? prompt user..?
+                    return uninstall('android', project, plugins['A']);
+                });
+        });
     });
 });
