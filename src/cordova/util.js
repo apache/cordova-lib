@@ -24,7 +24,6 @@ var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
 var nopt = require('nopt');
 var Q = require('q');
-var semver = require('semver');
 var platforms = require('../platforms/platforms');
 
 // Global configuration paths
@@ -67,8 +66,6 @@ exports.fixRelativePath = fixRelativePath;
 exports.convertToRealPathSafe = convertToRealPathSafe;
 exports.isDirectory = isDirectory;
 exports.isUrl = isUrl;
-exports.getLatestMatchingNpmVersion = getLatestMatchingNpmVersion;
-exports.getAvailableNpmVersions = getAvailableNpmVersions;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
 exports.getPlatformApiFunction = getPlatformApiFunction;
@@ -385,70 +382,6 @@ function isSymbolicLink (dir) {
     } catch (e) {
         return false;
     }
-}
-
-/**
- * Returns the latest version of the specified module on npm that matches the specified version or range.
- * @param {string} module_name - npm module name.
- * @param {string} version - semver version or range (loose allowed).
- * @returns {Promise} Promise for version (a valid semver version if one is found, otherwise whatever was provided).
- */
-function getLatestMatchingNpmVersion (module_name, version) {
-    if (!version) {
-        // If no version specified, get the latest
-        return getLatestNpmVersion(module_name);
-    }
-
-    var validVersion = semver.valid(version, /* loose */ true);
-    if (validVersion) {
-        // This method is really intended to work with ranges, so if a version rather than a range is specified, we just
-        // assume it is available and return it, bypassing the need for the npm call.
-        return Q(validVersion);
-    }
-
-    var validRange = semver.validRange(version, /* loose */ true);
-    if (!validRange) {
-        // Just return what we were passed
-        return Q(version);
-    }
-
-    return getAvailableNpmVersions(module_name).then(function (versions) {
-        return semver.maxSatisfying(versions, validRange) || version;
-    });
-}
-
-/**
- * Returns a promise for an array of versions available for the specified npm module.
- * @param {string} module_name - npm module name.
- * @returns {Promise} Promise for an array of versions.
- */
-function getAvailableNpmVersions (module_name) {
-    var npm = require('npm');
-    return Q.nfcall(npm.load).then(function () {
-        return Q.ninvoke(npm.commands, 'view', [module_name, 'versions'], /* silent = */ true).then(function (result) {
-            // result is an object in the form:
-            //     {'<version>': {versions: ['1.2.3', '1.2.4', ...]}}
-            // (where <version> is the latest version)
-            return result[Object.keys(result)[0]].versions;
-        });
-    });
-}
-
-/**
- * Returns a promise for the latest version available for the specified npm module.
- * @param {string} module_name - npm module name.
- * @returns {Promise} Promise for an array of versions.
- */
-function getLatestNpmVersion (module_name) {
-    var npm = require('npm');
-    return Q.nfcall(npm.load).then(function () {
-        return Q.ninvoke(npm.commands, 'view', [module_name, 'version'], /* silent = */ true).then(function (result) {
-            // result is an object in the form:
-            //     {'<version>': {version: '<version>'}}
-            // (where <version> is the latest version)
-            return Object.keys(result)[0];
-        });
-    });
 }
 
 // Takes a libDir (root of platform where pkgJson is expected) & a platform name.
