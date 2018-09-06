@@ -25,7 +25,6 @@ build: off
 test_script:
   # Workaround for https://github.com/appveyor/ci/issues/2420
   - set "PATH=%PATH%;C:\Program Files\Git\mingw64\libexec\git-core"
-  - npm config set save-exact --global
   - node --version
   - npm --version
   - "npm test"

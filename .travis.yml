@@ -17,7 +17,6 @@ install:
   #- (cd cordova-fetch && npm install && npm link ../cordova-common)
 
 script:
-  - npm config set save-exact --global
   - npm run cover
 
 after_success:
