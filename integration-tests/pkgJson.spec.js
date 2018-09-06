@@ -96,6 +96,15 @@ describe('pkgJson', function () {
         };
     }
 
+    function specWithMinSatisfyingVersion (version) {
+        return {
+            asymmetricMatch: spec =>
+                !semver.intersects(spec, `<${version}`) &&
+                semver.intersects(spec, `>=${version}`),
+            jasmineToString: _ => `<specWithMinSatisfyingVersion(${version})>`
+        };
+    }
+
     function stringContaining (substring) {
         return {
             asymmetricMatch: s => typeof s === 'string' && s.includes(substring),
@@ -109,6 +118,13 @@ describe('pkgJson', function () {
             const expectation = (pass ? 'not ' : '') + 'to satisfy';
             return {
                 pass, message: `expected ${version} ${expectation} ${spec}`
+            };
+        }}),
+        tohaveMinSatisfyingVersion: () => ({ compare (spec, version) {
+            const pass = specWithMinSatisfyingVersion(version).asymmetricMatch(spec);
+            const expectation = (pass ? 'not ' : '') + 'to have minimal satisfying version';
+            return {
+                pass, message: `expected ${spec} ${expectation} ${version}`
             };
         }})
     };
@@ -138,10 +154,10 @@ describe('pkgJson', function () {
                 .then(function () {
                     // Check that the plugin and spec add was successful to pkg.json.
                     expect(getPkgJson('cordova.plugins')[pluginId]).toBeDefined();
-                    expect(getPkgJson('dependencies')[pluginId]).toEqual('^1.1.2');
+                    expect(getPkgJson('dependencies')[pluginId]).tohaveMinSatisfyingVersion('1.1.2');
                     // Check that the plugin and spec add was successful to config.xml.
                     expect(getCfg().getPlugins()).toEqual([
-                        { name: pluginId, spec: '^1.1.2', variables: {} }
+                        { name: pluginId, spec: specWithMinSatisfyingVersion('1.1.2'), variables: {} }
                     ]);
                 }).then(function () {
                     // And now remove it with --save.
@@ -389,8 +405,8 @@ describe('pkgJson', function () {
                 // dependencies should have specific version from add.
                 expect(getPkgJson('cordova.platforms')).toEqual(['android', 'browser']);
                 expect(getPkgJson('dependencies')).toEqual({
-                    'cordova-android': '^7.0.0',
-                    'cordova-browser': '^5.0.1'
+                    'cordova-android': specWithMinSatisfyingVersion('7.0.0'),
+                    'cordova-browser': specWithMinSatisfyingVersion('5.0.1')
                 });
 
                 // Check that android and browser were added to config.xml with the correct spec.
