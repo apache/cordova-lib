@@ -104,13 +104,6 @@ function preparePlatforms (platformList, projectRoot, options) {
                 var platformApi = platforms.getPlatformApi(platform);
                 return platformApi.prepare(project, _.clone(options))
                     .then(function () {
-                        if (options.browserify) {
-                            // TODO: dynamic require here makes it difficult to test this code branch.
-                            var browserify = require('../plugman/browserify');
-                            return browserify(project, platformApi);
-                        }
-                    })
-                    .then(function () {
                         // Handle edit-config in config.xml
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
                         var platformJson = PlatformJson.load(platformRoot, platform);

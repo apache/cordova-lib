@@ -30,7 +30,6 @@ var plugman = {
     install: require('./install'),
     uninstall: require('./uninstall'),
     fetch: require('./fetch'),
-    browserify: require('./browserify'),
     help: require('./help'),
     create: require('./create'),
     platform: require('./platform_operation'),
@@ -50,9 +49,6 @@ plugman.commands = {
     'install': function (cli_opts) {
         if (!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
             return console.log(plugman.help());
-        }
-        if (cli_opts.browserify === true) {
-            plugman.prepare = require('./prepare-browserify');
         }
         var cli_variables = {};
 
@@ -86,10 +82,6 @@ plugman.commands = {
     'uninstall': function (cli_opts) {
         if (!cli_opts.platform || !cli_opts.project || !cli_opts.plugin) {
             return console.log(plugman.help());
-        }
-
-        if (cli_opts.browserify === true) {
-            plugman.prepare = require('./prepare-browserify');
         }
 
         var p = Q();
