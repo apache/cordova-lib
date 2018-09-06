@@ -278,7 +278,6 @@ describe('cordova/platform/addHelper', function () {
     });
     describe('downloadPlatform', function () {
         beforeEach(function () {
-            spyOn(Q, 'reject').and.callThrough();
             platform_addHelper.downloadPlatform.and.callThrough();
         });
         describe('errors', function () {
