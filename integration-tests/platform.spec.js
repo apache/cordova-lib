@@ -71,16 +71,19 @@ describe('cordova/platform', () => {
                     expect(path.join(testPlatformDir, 'cordova')).toExist();
                     expect(installedPlatforms()).toEqual([testPlatform]);
                 })
-                // .then(() => {
-                //     // Try to update the platform.
-                //     return cordova.platform('update', [testPlatform]);
-                // })
-                // .then(() => {
-                //     // Our fake update script in the exec mock above creates this dummy file.
-                //     expect(path.join(testPlatformDir, 'updated')).toExist();
-                //     // Platform should still be in platform ls.
-                //     expect(installedPlatforms()).toEqual([testPlatform]);
-                // })
+                .then(() => {
+                    // Spy on Api.updatePlatform since it always rejects otherwise
+                    const Api = require(path.join(nodeModulesDir, 'cordova-android'));
+                    spyOn(Api, 'updatePlatform').and.returnValue(Promise.resolve());
+                    spyOn(require('../src/cordova/util'), 'getPlatformApiFunction').and.returnValue(Api);
+
+                    return cordova.platform('update', [testPlatform]).then(_ => Api);
+                })
+                .then(Api => {
+                    expect(Api.updatePlatform).toHaveBeenCalled();
+                    // Platform should still be in platform ls.
+                    expect(installedPlatforms()).toEqual([testPlatform]);
+                })
                 .then(() => {
                     // And now remove it.
                     return cordova.platform('rm', [testPlatform]);
