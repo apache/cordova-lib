@@ -170,9 +170,6 @@ describe('cordova/prepare', function () {
                 expect(platform_api_prepare_mock).toHaveBeenCalled();
             });
         });
-        // TODO: xit'ed the one below as dynamic requires make it difficult to spy on
-        // Can we refactor the relevant code to make it testable?
-        xit('should invoke browserify if the browserify option is provided');
         it('should handle config changes by invoking add_config_changes and save_all', function () {
             return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
                 expect(platform_munger_mock.prototype.add_config_changes).toHaveBeenCalled();

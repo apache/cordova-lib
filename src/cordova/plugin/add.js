@@ -109,7 +109,6 @@ function add (projectRoot, hooksRunner, opts) {
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
                         var options = {
                             cli_variables: opts.cli_variables || {},
-                            browserify: opts.browserify || false,
                             save: opts.save,
                             searchpath: searchPath,
                             noregistry: opts.noregistry,
