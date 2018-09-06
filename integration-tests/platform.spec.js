@@ -40,9 +40,9 @@ describe('cordova/platform', () => {
         platformsDir = path.join(project, 'platforms');
         nodeModulesDir = path.join(project, 'node_modules');
         testPlatformDir = path.join(platformsDir, testPlatform);
-        process.chdir(tmpDir);
-        return cordova.create(path.basename(project))
-            .then(() => process.chdir(project));
+
+        fs.copySync(path.join(fixturesDir, 'basePkgJson'), project);
+        process.chdir(project);
     });
 
     afterEach(() => {
