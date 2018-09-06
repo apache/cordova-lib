@@ -192,7 +192,7 @@ describe('cordova/platform', () => {
                     return cordova.platform('add', 'ios');
                 })
                 .then(() => {
-                    return cordova.plugin('add', 'cordova-plugin-media', {'save': true});
+                    return cordova.plugin('add', 'cordova-plugin-media', {save: true});
                 })
                 .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
@@ -204,15 +204,13 @@ describe('cordova/platform', () => {
                 .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                    return cordova.plugin('rm', 'cordova-plugin-media');
+                    return cordova.plugin('rm', 'cordova-plugin-media', {save: true});
                 })
                 .then(() => {
                     expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
                     expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
-                    // These don't work yet due to the tests finishing before the promise resolves.
-                    // expect(path.join(nodeModulesDir, 'cordova-plugin-media')).not.toExist();
-                    // expect(path.join(nodeModulesDir, 'cordova-plugin-file')).not.toExist();
-                    // expect(path.join(nodeModulesDir, 'cordova-plugin-compat')).not.toExist();
+                    expect(path.join(nodeModulesDir, 'cordova-plugin-media')).not.toExist();
+                    expect(path.join(nodeModulesDir, 'cordova-plugin-file')).not.toExist();
                 });
         });
     });
