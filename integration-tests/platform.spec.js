@@ -128,33 +128,6 @@ describe('cordova/platform', () => {
         });
     });
 
-    describe('platform add plugin rm end-to-end', () => {
-
-        it('Test 006 : should remove dependency when removing parent plugin', () => {
-            return Promise.resolve()
-                .then(() => {
-                    return cordova.platform('add', 'ios');
-                })
-                .then(() => {
-                    return cordova.plugin('add', 'cordova-plugin-media');
-                })
-                .then(() => {
-                    expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-                    expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                    return cordova.platform('add', 'android');
-                })
-                .then(() => {
-                    expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-                    expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                    return cordova.plugin('rm', 'cordova-plugin-media');
-                })
-                .then(() => {
-                    expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
-                    expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
-                });
-        });
-    });
-
     describe('platform add and remove --fetch', () => {
 
         it('Test 007 : should add and remove platform from node_modules directory', () => {
