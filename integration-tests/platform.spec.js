@@ -94,25 +94,10 @@ describe('cordova/platform', () => {
         });
 
         it('Test 002 : should install plugins correctly while adding platform', () => {
-            return Promise.resolve()
-                .then(() => {
-                    return cordova.plugin('add', path.join(pluginFixturesDir, 'test'));
-                })
-                .then(() => {
-                    return cordova.platform('add', [testPlatform]);
-                })
-                .then(() => {
-                    // Check the platform add was successful.
-                    expect(testPlatformDir).toExist();
-                    // Check that plugin files exists in www dir
-                    expect(path.join(testPlatformDir, 'platform_www/test.js')).toExist();
-                });
-        });
-
-        it('Test 003 : should call prepare after plugins were installed into platform', () => {
-            spyOn(plugman, 'install').and.returnValue(Promise.resolve());
-            const prepareSpy = jasmine.createSpy('prepare').and.returnValue(Promise.resolve());
-            prepareSpy.preparePlatforms = jasmine.createSpy('preparePlatforms').and.returnValue(Promise.resolve());
+            spyOn(plugman, 'install').and.callThrough();
+            const prepare = require('../src/cordova/prepare');
+            const prepareSpy = jasmine.createSpy('prepare', prepare).and.callThrough();
+            Object.assign(prepareSpy, prepare);
 
             // This is all just to get the prepareSpy to be used by `platform.add`
             const platform = rewire('../src/cordova/platform');
@@ -130,7 +115,11 @@ describe('cordova/platform', () => {
                     return platform('add', [testPlatform]);
                 })
                 .then(() => {
-                    // Install first, then prepare
+                    // Check the platform add was successful.
+                    expect(testPlatformDir).toExist();
+                    // Check that plugin files exists in www dir
+                    expect(path.join(testPlatformDir, 'platform_www/test.js')).toExist();
+                    // should call prepare after plugins were installed into platform
                     expect(plugman.install).toHaveBeenCalledBefore(prepareSpy);
                 });
         });
