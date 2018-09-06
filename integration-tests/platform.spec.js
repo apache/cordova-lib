@@ -154,7 +154,7 @@ describe('cordova/platform end-to-end', () => {
     it('Test 008 : should remove dependency when removing parent plugin', () => {
         return Promise.resolve()
             .then(() => {
-                return cordova.platform('add', 'ios');
+                return cordova.platform('add', testPlatform);
             })
             .then(() => {
                 return cordova.plugin('add', 'cordova-plugin-media', {save: true});
@@ -164,11 +164,6 @@ describe('cordova/platform end-to-end', () => {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(nodeModulesDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(nodeModulesDir, 'cordova-plugin-file')).toExist();
-                return cordova.platform('add', 'android');
-            })
-            .then(() => {
-                expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-                expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 return cordova.plugin('rm', 'cordova-plugin-media', {save: true});
             })
             .then(() => {
