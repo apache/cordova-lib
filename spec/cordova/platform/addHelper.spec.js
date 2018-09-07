@@ -20,7 +20,6 @@ var fs = require('fs-extra');
 var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
-var platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
 var platform_module = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
 var cordova_config = require('../../../src/cordova/config');
@@ -29,38 +28,42 @@ var fetch_metadata = require('../../../src/plugman/util/metadata');
 var prepare = require('../../../src/cordova/prepare');
 
 describe('cordova/platform/addHelper', function () {
-    var projectRoot = '/some/path';
-    // These _mock and _revert_mock objects use rewire as the modules these mocks replace
-    // during testing all return functions, which we cannot spy on using jasmine.
-    // Thus, we replace these modules inside the scope of addHelper.js using rewire, and shim
-    // in these _mock test dummies. The test dummies themselves are constructed using
-    // jasmine.createSpy inside the first beforeEach.
-    var cfg_parser_mock = function () {};
-    var cfg_parser_revert_mock;
-    var hooks_mock;
-    var platform_api_mock;
-    var fetch_mock;
-    var fetch_revert_mock;
-    var prepare_mock;
-    var prepare_revert_mock;
-    var fake_platform = {
-        'platform': 'atari'
-    };
-    var package_json_mock;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies', 'devDependencies']);
-    package_json_mock.dependencies = {};
-    package_json_mock.cordova = {};
+    const projectRoot = '/some/path';
+    var cfg_parser_mock, fake_platform, fetch_mock, hooks_mock,
+        package_json_mock, platform_addHelper, platform_api_mock, prepare_mock;
 
     beforeEach(function () {
+        fake_platform = {
+            'platform': 'atari'
+        };
+        package_json_mock = {
+            cordova: {},
+            dependencies: {},
+            devDependencies: {}
+        };
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
         hooks_mock.fire.and.returnValue(Q());
-        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine', 'addEngine', 'getHookScripts']);
-        cfg_parser_revert_mock = platform_addHelper.__set__('ConfigParser', cfg_parser_mock);
+
+        cfg_parser_mock = function () {};
+        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', [
+            'write', 'removeEngine', 'addEngine', 'getHookScripts'
+        ]);
         fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Q());
-        fetch_revert_mock = platform_addHelper.__set__('fetch', fetch_mock);
         prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
         prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
-        prepare_revert_mock = platform_addHelper.__set__('prepare', prepare_mock);
+
+        // `cordova.prepare` is never saved to a variable, so we need to fake `require`
+        platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
+        const testSubjectRequire = platform_addHelper.__get__('require');
+        const requireFake = jasmine.createSpy('require', testSubjectRequire).and.callThrough();
+        requireFake.withArgs('../prepare').and.returnValue(prepare_mock);
+
+        platform_addHelper.__set__({
+            ConfigParser: cfg_parser_mock,
+            fetch: fetch_mock,
+            require: requireFake
+        });
+
         spyOn(fs, 'ensureDirSync');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'readFileSync');
@@ -86,11 +89,7 @@ describe('cordova/platform/addHelper', function () {
         spyOn(cordova_util, 'getPlatformApiFunction').and.returnValue(platform_api_mock);
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
     });
-    afterEach(function () {
-        cfg_parser_revert_mock();
-        fetch_revert_mock();
-        prepare_revert_mock();
-    });
+
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function () {
             return platform_addHelper('add', hooks_mock).then(function () {
@@ -103,8 +102,6 @@ describe('cordova/platform/addHelper', function () {
         it('should log if host OS does not support the specified platform', function () {
             cordova_util.hostSupports.and.returnValue(false);
             return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
                 expect(cordova_util.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             });
@@ -129,8 +126,9 @@ describe('cordova/platform/addHelper', function () {
     });
     describe('happy path (success conditions)', function () {
         it('should fire the before_platform_* hook', function () {
-            platform_addHelper('add', hooks_mock, projectRoot, ['atari']);
-            expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(_ => {
+                expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', jasmine.any(Object));
+            });
         });
 
         describe('platform spec inference', function () {
