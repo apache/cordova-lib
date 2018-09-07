@@ -59,13 +59,14 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
-    // The "platforms" dir is safe to delete, it's almost equivalent to
-    // cordova platform rm <list of all platforms>
+    // make sure /platforms exists
     var platformsDir = path.join(projectRoot, 'platforms');
     fs.ensureDirSync(platformsDir);
 
+    // fire before_platform_add|update hook
     return hooksRunner.fire('before_platform_' + cmd, opts)
         .then(function () {
+            // iterate over platforms
             var platformsToSave = [];
 
             return promiseutil.Q_chainmap(targets, function (target) {
@@ -83,20 +84,19 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     spec = parts[1];
                 }
                 return Q.when().then(function () {
-                    // if platform is a local path or url, it should be assigned
-                    // to spec
+                    // platform spec, then download
+
+                    // if platform is a local path or url, it should be assigned to spec
                     if (cordova_util.isDirectory(path.resolve(platform)) ||
                         cordova_util.isUrl(platform)) {
                         spec = platform;
                         platform = null;
                     }
 
+                    // If there is no spec specified, try to get spec from package.json
                     if (fs.existsSync(path.join(projectRoot, 'package.json'))) {
                         pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
                     }
-
-                    // If there is no spec specified, try to get spec from package.json
-                    // else, if there is no spec specified, try to get spec from config.xml
                     if (spec === undefined && pkgJson && pkgJson.dependencies && cmd === 'add') {
                         if (pkgJson.dependencies['cordova-' + platform]) {
                             spec = pkgJson.dependencies['cordova-' + platform];
@@ -111,6 +111,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         }
                     }
 
+                    // If there is no spec specified, try to get spec from config.xml
                     if (platform && spec === undefined && cmd === 'add') {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                         spec = module.exports.getVersionFromConfigFile(platform, cfg);
@@ -132,8 +133,13 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                                 });
                         }
                     }
+
+                    // download platform
                     return module.exports.downloadPlatform(projectRoot, platform, spec, opts);
-                }).then(function (platDetails) {
+                })
+                .then(function (platDetails) {
+                    // execute platform script
+
                     platform = platDetails.platform;
                     var platformPath = path.join(projectRoot, 'platforms', platform);
                     var platformAlreadyAdded = fs.existsSync(platformPath);
@@ -156,6 +162,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         }
                     }
 
+                    // -nightly|-dev warning message
                     if (/-nightly|-dev$/.exec(platDetails.version)) {
                         msg = 'Warning: using prerelease platform ' + platform +
                               '@' + platDetails.version +
@@ -179,23 +186,32 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
 
                     events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
+
                     var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                     var destination = path.resolve(projectRoot, 'platforms', platform);
+                    
+                    // platform script promise
                     var promise = cmd === 'add' ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
                         : PlatformApi.updatePlatform.bind(null, destination, options, events);
                     // TODO: if we return the promise immediately, can we not unindent the promise .then()s by one indent?
                     return promise()
                         .then(function () {
+                            // prepare platform
+
                             if (!opts.restoring) {
                                 return require('../prepare').preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
                             }
                         })
                         .then(function () {
+                            // install plugins
+
                             if (cmd === 'add') {
                                 return module.exports.installPluginsForNewPlatform(platform, projectRoot, opts);
                             }
                         })
                         .then(function () {
+                            // prepare project (which prepares _all_ platforms)
+
                             // TODO: didnt we just do this two promise then's ago?
                             if (!opts.restoring) {
                                 // Call prepare for the current platform if we're not restoring from config.xml.
@@ -209,13 +225,17 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             }
                         })
                         .then(function () {
+                            // save installed platform information
+
                             var saveVersion = !spec || semver.validRange(spec, true);
                             // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                             // source location was specified, we always save that. Otherwise we save the version that was
                             // actually installed.
                             var versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
+                            // TODO: Where is this actually _saved_?
 
+                            // .. into config.xml
                             if (opts.save || autosave) {
                                 // Similarly here, we save the source location if that was specified, otherwise the version that
                                 // was installed. However, we save it with the "~" attribute (this allows for patch updates).
@@ -228,7 +248,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                                 cfg.addEngine(platform, spec);
                                 cfg.write();
 
-                                // Save to add to pacakge.json's cordova.platforms array in the next then.
+                                // Save to add to package.json's cordova.platforms array in the next then.
                                 platformsToSave.push(platform);
                             }
                         });
@@ -259,7 +279,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         modifiedPkgJson = true;
                     }
                 });
-                // Save to package.json.
+                // Write to package.json
                 if (modifiedPkgJson === true) {
                     var file = fs.readFileSync(pkgJsonPath, 'utf8');
                     var indent = detectIndent(file).indent || '  ';
@@ -267,6 +287,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 }
             });
         }).then(function () {
+            // fire before_platform_add|update hook
             return hooksRunner.fire('after_platform_' + cmd, opts);
         });
 }
@@ -280,7 +301,7 @@ function getVersionFromConfigFile (platform, cfg) {
     return engine && engine.spec;
 }
 
-// Downloads via npm or via git clone (tries both)
+// Downloads platform via cordova-fetch
 // Returns a Promise
 function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
