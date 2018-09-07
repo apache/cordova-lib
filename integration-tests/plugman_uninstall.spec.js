@@ -83,8 +83,8 @@ describe('plugman/uninstall', () => {
         uninstall.__set__('npmUninstall', jasmine.createSpy());
 
         emit = spyOn(events, 'emit');
-        spyOn(fs, 'writeFileSync').and.returnValue(true);
-        spyOn(fs, 'removeSync').and.returnValue(true);
+        spyOn(fs, 'writeFileSync');
+        spyOn(fs, 'removeSync');
     });
 
     afterEach(() => {
@@ -103,7 +103,7 @@ describe('plugman/uninstall', () => {
             setupProject('uninstall.test');
 
             spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
-            spyOn(fs, 'copySync').and.returnValue(true);
+            spyOn(fs, 'copySync');
         });
 
         describe('success', function () {

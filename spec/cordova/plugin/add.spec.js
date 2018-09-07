@@ -55,7 +55,7 @@ describe('cordova/plugin/add', function () {
         };
         plugin_info_provider_revert_mock = add.__set__('PluginInfoProvider', plugin_info_provider_mock);
         spyOn(fs, 'existsSync').and.returnValue(false);
-        spyOn(fs, 'writeFileSync').and.returnValue(false);
+        spyOn(fs, 'writeFileSync');
         package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies', 'devDependencies']);
         package_json_mock.cordova = {};
         package_json_mock.dependencies = {};

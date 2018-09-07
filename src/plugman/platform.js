@@ -78,7 +78,7 @@ module.exports = {
         fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', {indent: 4}), 'utf-8');
 
         // Remove the src/"platform"
-        fs.removeSync('src/' + platformName);
+        fs.removeSync(path.join('src', platformName));
 
         return Q();
     }
@@ -107,7 +107,6 @@ function doPlatform (platformName, pluginName, pluginID, pluginVersion) {
 function doPlatformBase (templatesDir, platformName, pluginName, pluginID, pluginVersion) {
     // Create the default plugin file
     var baseFiles = [];
-    var i = 0;
 
     switch (platformName) {
     case 'android':
@@ -139,10 +138,12 @@ function doPlatformBase (templatesDir, platformName, pluginName, pluginID, plugi
         );
     }
 
-    fs.ensureDirSync('src/' + platformName);
+    const baseDir = path.join('src', platformName);
+    fs.ensureDirSync(baseDir);
 
-    for (i; i < baseFiles.length; i++) {
-        fs.writeFileSync('src/' + platformName + '/' + pluginName + '.' + baseFiles[ i ].extension, baseFiles[ i ].file, 'utf-8');
+    for (const { extension, file } of baseFiles) {
+        const filePath = path.join(baseDir, `${pluginName}.${extension}`);
+        fs.writeFileSync(filePath, file, 'utf-8');
     }
 
 }

@@ -23,7 +23,7 @@ describe('plugman/create', () => {
 
     it('Test 002 : should be successful', function () {
         spyOn(fs, 'existsSync').and.returnValue(false);
-        spyOn(fs, 'ensureDirSync').and.returnValue(true);
+        spyOn(fs, 'ensureDirSync');
         spyOn(fs, 'writeFileSync');
 
         return create('name', 'org.plugin.id', '0.0.0', '.', [])

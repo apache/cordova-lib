@@ -66,7 +66,7 @@ describe('cordova/prepare', function () {
                 var platforms = options.platforms || [];
                 return {'platforms': platforms};
             });
-            spyOn(prepare, 'preparePlatforms').and.returnValue(Q);
+            spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
         });
         describe('failure', function () {
             it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection and only fire the before_prepare hook', function () {
