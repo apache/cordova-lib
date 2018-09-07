@@ -83,14 +83,6 @@ describe('build command', function () {
                 expect(compile_spy).toHaveBeenCalledWith(opts);
             });
         });
-
-        it('Test 005 : should convert options from old format', function () {
-            return cordova.build({platforms: ['android'], options: ['--release', '--cdvBuildOpt=opt']}).then(function () {
-                var opts = {platforms: ['android'], options: jasmine.objectContaining({release: true, argv: ['--cdvBuildOpt=opt']}), verbose: false};
-                expect(prepare_spy).toHaveBeenCalledWith(opts);
-                expect(compile_spy).toHaveBeenCalledWith(opts);
-            });
-        });
     });
 
     describe('hooks', function () {

@@ -79,14 +79,6 @@ describe('compile command', function () {
                     expect(platformApi.build).toHaveBeenCalledWith({release: true});
                 });
         });
-
-        it('Test 005 : should convert options from old format', function () {
-            return cordova.compile({platforms: ['blackberry10'], options: ['--release']})
-                .then(function () {
-                    expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
-                    expect(platformApi.build).toHaveBeenCalledWith({release: true, argv: []});
-                });
-        });
     });
 
     describe('hooks', function () {
