@@ -123,6 +123,16 @@ describe('cordova/serve', () => {
                 });
             });
         });
+
+        it('should fail when prepare fails', () => {
+            const fakeError = new Error();
+            cordova.prepare.and.returnValue(Promise.reject(fakeError));
+
+            return serve(port, opts).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
     });
 
     describe('handleRoot', () => {
