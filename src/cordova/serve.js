@@ -28,9 +28,54 @@ var Q = require('q');
 var events = require('cordova-common').events;
 var serve = require('cordova-serve');
 var md5File = require('md5-file');
+var { template, object: zipObject } = require('underscore');
 
 var projectRoot;
 var installedPlatforms;
+
+const INDEX_TEMPLATE = `
+<!doctype html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>{{ metaData.name }}</title>
+</head>
+<body>
+    <h3>Package Metadata</h3>
+    <table style="text-align: left">
+        {% for (const key in metaData) { %}
+            <tr>
+                <th>{{ key }}</th><td>{{ metaData[key] }}</td>
+            </tr>
+        {% } %}
+    </table>
+
+    <h3>Platforms</h3>
+    <ul>
+        {% for (const platform of platforms) { %}
+            <li>
+                {% if (platform.url) { %}
+                    <a href="{{ platform.url }}">{{ platform.name }}</a>
+                {% } else { %}
+                    <em>{{ platform.name }}</em>
+                {% } %}
+            </li>
+        {% } %}
+    </ul>
+
+    <h3>Plugins</h3>
+    <ul>
+        {% for (const plugin of plugins) { %}
+            <li>{{ plugin }}</li>
+        {% } %}
+    </ul>
+</body>
+</html>
+`;
+const renderIndex = template(INDEX_TEMPLATE, {
+    escape: /\{\{(.+?)\}\}/g,
+    evaluate: /\{%(.+?)%\}/g
+});
 
 function handleRoot (request, response, next) {
     if (url.parse(request.url).pathname !== '/') {
@@ -38,35 +83,20 @@ function handleRoot (request, response, next) {
         return;
     }
 
-    response.writeHead(200, {'Content-Type': 'text/html'});
-    var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
-    var contentNode = config.doc.find('content');
-    var contentSrc = (contentNode && contentNode.attrib.src) || ('index.html');
+    const config = new ConfigParser(cordova_util.projectConfig(projectRoot));
+    const contentNode = config.doc.find('content');
+    const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
+    const metaDataKeys = ['name', 'packageName', 'version'];
+    const platformUrl = name => installedPlatforms.includes(name) ?
+        `${name}/www/${contentSrc}` : null;
 
-    response.write('<html><head><title>' + config.name() + '</title></head><body>');
-    response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
-    ['name', 'packageName', 'version'].forEach(function (c) {
-        response.write('<tr><th>' + c + '</th><td>' + config[c]() + '</td></tr>');
-    });
-    response.write('</tbody></table>');
-    response.write('<h3>Platforms</h3><ul>');
-    Object.keys(platforms).forEach(function (platform) {
-        if (installedPlatforms.indexOf(platform) >= 0) {
-            response.write('<li><a href="' + platform + '/www/' + contentSrc + '">' + platform + '</a></li>\n');
-        } else {
-            response.write('<li><em>' + platform + '</em></li>\n');
-        }
-    });
-    response.write('</ul>');
-    response.write('<h3>Plugins</h3><ul>');
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath);
-    Object.keys(plugins).forEach(function (plugin) {
-        response.write('<li>' + plugins[plugin] + '</li>\n');
-    });
-    response.write('</ul>');
-    response.write('</body></html>');
-    response.end();
+    response.send(renderIndex({
+        metaData: zipObject(metaDataKeys, metaDataKeys.map(k => config[k]())),
+        plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')),
+        platforms: Object.keys(platforms).map(name => ({
+            name, url: platformUrl(name)
+        }))
+    }));
 }
 
 // https://issues.apache.org/jira/browse/CB-11274

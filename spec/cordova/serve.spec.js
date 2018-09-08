@@ -156,9 +156,7 @@ describe('cordova/serve', () => {
                 'cordova-plugin-beer'
             ]);
 
-            response = jasmine.createSpyObj('response', [
-                'sendStatus', 'writeHead', 'write', 'end'
-            ]);
+            response = jasmine.createSpyObj('response', ['send', 'sendStatus']);
         });
 
         it('should return a status of 404 for anything but /', () => {
@@ -168,11 +166,16 @@ describe('cordova/serve', () => {
 
         it('should return an index of available platforms and plugins on /', () => {
             handleRoot({ url: '/' }, response);
-            expect(response.writeHead).toHaveBeenCalledWith(200, {
-                'Content-Type': 'text/html'
-            });
-            expect(response.write).toHaveBeenCalled();
-            expect(response.end).toHaveBeenCalled();
+            expect(response.send).toHaveBeenCalledTimes(1);
+
+            const [ document ] = response.send.calls.argsFor(0);
+            expect(document).toContain('cordova-plugin-beer');
+            expect(document).toContain('foo');
+            expect(document).toContain('bar');
+
+            // Contains links to installed platforms only
+            expect(document).toContain('"foo/www/index.html"');
+            expect(document).not.toContain('"bar/www/index.html"');
         });
     });
 
