@@ -75,7 +75,7 @@ describe('cordova/serve', () => {
             serve.__set__({
                 platformRouter: _ => _ => _,
                 HooksRunner: HooksRunnerMock,
-                serve: jasmine.createSpy('serve').and.returnValue(serverSpy)
+                cordovaServe: jasmine.createSpy('cordovaServe').and.returnValue(serverSpy)
             });
         });
 

@@ -17,7 +17,7 @@
     under the License.
 */
 
-var cordova_util = require('./util');
+var cordovaUtil = require('./util');
 var path = require('path');
 var globby = require('globby');
 var url = require('url');
@@ -26,7 +26,7 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var HooksRunner = require('../hooks/HooksRunner');
 var Q = require('q');
 var events = require('cordova-common').events;
-var serve = require('cordova-serve');
+var cordovaServe = require('cordova-serve');
 var md5File = require('md5-file');
 var { template, object: zipObject } = require('underscore');
 
@@ -78,7 +78,7 @@ const renderIndex = template(INDEX_TEMPLATE, {
 });
 
 function handleRoot (request, response) {
-    const config = new ConfigParser(cordova_util.projectConfig(projectRoot));
+    const config = new ConfigParser(cordovaUtil.projectConfig(projectRoot));
     const contentNode = config.doc.find('content');
     const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
     const metaDataKeys = ['name', 'packageName', 'version'];
@@ -87,7 +87,7 @@ function handleRoot (request, response) {
 
     response.send(renderIndex({
         metaData: zipObject(metaDataKeys, metaDataKeys.map(k => config[k]())),
-        plugins: cordova_util.findPlugins(path.join(projectRoot, 'plugins')),
+        plugins: cordovaUtil.findPlugins(path.join(projectRoot, 'plugins')),
         platforms: Object.keys(platforms).map(name => ({
             name, url: platformUrl(name)
         }))
@@ -113,8 +113,8 @@ function absolutePathHandler (request, response, next) {
 
 function platformRouter (platform) {
     const { configXml, www } = platforms.getPlatformApi(platform).getPlatformInfo().locations;
-    const router = serve.Router();
-    router.use('/www', serve.static(www));
+    const router = cordovaServe.Router();
+    router.use('/www', cordovaServe.static(www));
     router.get('/config.xml', (req, res) => res.sendFile(configXml));
     router.get('/project.json', (req, res) => res.send({
         configPath: `/${platform}/config.xml`,
@@ -131,30 +131,40 @@ function generateWwwFileList (www) {
     }));
 }
 
-module.exports = function server (port, opts) {
-    return Q().then(() => {
+function registerRoutes (app) {
+    installedPlatforms = cordovaUtil.listPlatforms(projectRoot);
+    installedPlatforms.forEach(platform =>
+        app.use(`/${platform}`, platformRouter(platform))
+    );
+
+    app.get('/*', absolutePathHandler);
+    app.get('/', handleRoot);
+}
+
+function serve (port) {
+    return Promise.resolve().then(() => {
         port = +port || 8000;
-        projectRoot = cordova_util.cdProjectRoot();
 
-        var hooksRunner = new HooksRunner(projectRoot);
-        return hooksRunner.fire('before_serve', opts).then(() => {
-            // Run a prepare first!
-            return require('./cordova').prepare([]);
-        }).then(function () {
-            var server = serve();
-
-            installedPlatforms = cordova_util.listPlatforms(projectRoot);
-            installedPlatforms.forEach(platform =>
-                server.app.use(`/${platform}`, platformRouter(platform))
-            );
-
-            server.app.get('/*', absolutePathHandler);
-            server.app.get('/', handleRoot);
-
-            server.launchServer({port: port, events: events});
-            return hooksRunner.fire('after_serve', opts).then(() => {
-                return server.server;
-            });
+        // Run a prepare first!
+        return require('./cordova').prepare([]).then(() => {
+            const server = cordovaServe();
+            registerRoutes(server.app);
+            server.launchServer({ port, events });
+            return server.server;
         });
+    });
+}
+
+module.exports = (port, hookOpts) => {
+    return Q().then(_ => {
+        projectRoot = cordovaUtil.cdProjectRoot();
+        const hooksRunner = new HooksRunner(projectRoot);
+        return Promise.resolve()
+            .then(_ => hooksRunner.fire('before_serve', hookOpts))
+            .then(_ => serve(port))
+            .then(result => {
+                return hooksRunner.fire('after_serve', hookOpts)
+                    .then(_ => result);
+            });
     });
 };
