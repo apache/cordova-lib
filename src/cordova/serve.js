@@ -138,13 +138,12 @@ function calculateMd5 (fileName) {
 }
 
 module.exports = function server (port, opts) {
-    port = +port || 8000;
-
-    return Q.promise(function (resolve) {
+    return Q().then(() => {
+        port = +port || 8000;
         projectRoot = cordova_util.cdProjectRoot();
 
         var hooksRunner = new HooksRunner(projectRoot);
-        hooksRunner.fire('before_serve', opts).then(function () {
+        return hooksRunner.fire('before_serve', opts).then(() => {
             // Run a prepare first!
             return require('./cordova').prepare([]);
         }).then(function () {
@@ -161,8 +160,8 @@ module.exports = function server (port, opts) {
             server.app.get('*', handleRoot);
 
             server.launchServer({port: port, events: events});
-            hooksRunner.fire('after_serve', opts).then(function () {
-                resolve(server.server);
+            return hooksRunner.fire('after_serve', opts).then(() => {
+                return server.server;
             });
         });
     });
