@@ -17,9 +17,11 @@
     under the License.
 */
 
+const path = require('path');
+const fs = require('fs-extra');
 const rewire = require('rewire');
 const cordovaServe = require('cordova-serve');
-const { omniStub } = require('../helpers');
+const { tmpDir: getTmpDir, omniStub } = require('../helpers');
 const cordova = require('../../src/cordova/cordova');
 const cordovaUtil = require('../../src/cordova/util');
 const platforms = require('../../src/platforms/platforms');
@@ -66,15 +68,15 @@ describe('cordova/serve', () => {
                 return pushAndResolve('launchServer');
             });
 
-            const serveSpy = jasmine.createSpy('cordova-serve').and.returnValue(serverSpy);
-            serveSpy.static = jasmine.createSpy('static').and.returnValue(_ => _);
-
             spyOn(cordova, 'prepare').and.callFake(_ => pushAndResolve('prepare'));
             spyOn(cordovaUtil, 'cdProjectRoot').and.returnValue(PROJECT_ROOT);
             spyOn(cordovaUtil, 'listPlatforms').and.returnValue(testPlatforms);
-            spyOn(platforms, 'getPlatformApi').and.returnValue(omniStub());
 
-            serve.__set__({ serve: serveSpy, HooksRunner: HooksRunnerMock });
+            serve.__set__({
+                platformRouter: _ => _ => _,
+                HooksRunner: HooksRunnerMock,
+                serve: jasmine.createSpy('serve').and.returnValue(serverSpy)
+            });
         });
 
         function checkBasicOperation (result) {
@@ -218,6 +220,85 @@ describe('cordova/serve', () => {
             absolutePathHandler(request, response, next);
             expect(next).not.toHaveBeenCalled();
             expect(response.redirect).toHaveBeenCalledWith('/foo/www/style.css');
+        });
+    });
+
+    describe('platformRouter', () => {
+        const PLATFORM = 'atari';
+        let platformRouter;
+
+        beforeEach(() => {
+            platformRouter = serve.__get__('platformRouter');
+            spyOn(platforms, 'getPlatformApi').and.returnValue({
+                getPlatformInfo: _ => ({
+                    locations: { configXml: 'CONFIG', www: 'WWW_DIR' }
+                })
+            });
+        });
+
+        it('should serve static from www', () => {
+            const staticSpy = jasmine.createSpy('static');
+            spyOn(cordovaServe, 'static').and.returnValue(staticSpy);
+
+            const router = platformRouter(PLATFORM);
+            expect(cordovaServe.static).toHaveBeenCalledWith('WWW_DIR');
+
+            router({ method: 'GET', url: '/www/foo' }, null);
+            expect(staticSpy).toHaveBeenCalled();
+        });
+
+        it('should serve the platform config.xml', () => {
+            const router = platformRouter(PLATFORM);
+            const sendFile = jasmine.createSpy('sendFile');
+
+            router({ method: 'GET', url: '/config.xml' }, { sendFile });
+            expect(sendFile).toHaveBeenCalledWith('CONFIG');
+        });
+
+        it('should serve generated information under /project.json', () => {
+            serve.__set__({ generateWwwFileList: x => x });
+            const router = platformRouter(PLATFORM);
+            const send = jasmine.createSpy('send');
+
+            router({ method: 'GET', url: '/project.json' }, { send });
+            expect(send).toHaveBeenCalledWith({
+                configPath: `/${PLATFORM}/config.xml`,
+                wwwPath: `/${PLATFORM}/www`,
+                wwwFileList: 'WWW_DIR'
+            });
+        });
+    });
+
+    describe('generateWwwFileList', () => {
+        const emptyStringMd5 = 'd41d8cd98f00b204e9800998ecf8427e';
+        let generateWwwFileList, tmpDir;
+
+        beforeEach(() => {
+            generateWwwFileList = serve.__get__('generateWwwFileList');
+            tmpDir = getTmpDir('serve-test');
+        });
+
+        afterEach(() => {
+            return fs.remove(tmpDir);
+        });
+
+        it('should generate a list of files with MD5 sums', () => {
+            for (const f of ['a', 'b/c']) {
+                fs.ensureFileSync(path.join(tmpDir, f));
+            }
+            expect(generateWwwFileList(tmpDir)).toEqual([
+                { path: 'a', etag: emptyStringMd5 },
+                { path: 'b/c', etag: emptyStringMd5 }
+            ]);
+        });
+
+        it('should not include hidden files or directories', () => {
+            for (const f of ['a', '.b/c', '.d']) {
+                fs.ensureFileSync(path.join(tmpDir, f));
+            }
+            expect(generateWwwFileList(tmpDir)).toEqual([
+                { path: 'a', etag: emptyStringMd5 }
+            ]);
         });
     });
 });

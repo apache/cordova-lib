@@ -69,30 +69,6 @@ function handleRoot (request, response, next) {
     response.end();
 }
 
-function getPlatformHandler (platform, wwwDir, configXml) {
-    return function (request, response, next) {
-        switch (url.parse(request.url).pathname) {
-        case '/' + platform + '/config.xml':
-            response.sendFile(configXml);
-            break;
-
-        case '/' + platform + '/project.json':
-            response.send({
-                'configPath': '/' + platform + '/config.xml',
-                'wwwPath': '/' + platform + '/www',
-                'wwwFileList': globby.sync('**', { cwd: wwwDir }).map(p => ({
-                    path: p,
-                    etag: md5File.sync(path.join(wwwDir, p))
-                }))
-            });
-            break;
-
-        default:
-            next();
-        }
-    };
-}
-
 // https://issues.apache.org/jira/browse/CB-11274
 // Use referer url to redirect absolute urls to the requested platform resources
 // so that an URL is resolved against that platform www directory.
@@ -115,6 +91,26 @@ function getAbsolutePathHandler () {
     };
 }
 
+function platformRouter (platform) {
+    const { configXml, www } = platforms.getPlatformApi(platform).getPlatformInfo().locations;
+    const router = serve.Router();
+    router.use('/www', serve.static(www));
+    router.get('/config.xml', (req, res) => res.sendFile(configXml));
+    router.get('/project.json', (req, res) => res.send({
+        configPath: `/${platform}/config.xml`,
+        wwwPath: `/${platform}/www`,
+        wwwFileList: generateWwwFileList(www)
+    }));
+    return router;
+}
+
+function generateWwwFileList (www) {
+    return globby.sync('**', { cwd: www }).map(p => ({
+        path: p,
+        etag: md5File.sync(path.join(www, p))
+    }));
+}
+
 module.exports = function server (port, opts) {
     return Q().then(() => {
         port = +port || 8000;
@@ -128,11 +124,9 @@ module.exports = function server (port, opts) {
             var server = serve();
 
             installedPlatforms = cordova_util.listPlatforms(projectRoot);
-            installedPlatforms.forEach(function (platform) {
-                var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
-                server.app.use('/' + platform + '/www', serve.static(locations.www));
-                server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
-            });
+            installedPlatforms.forEach(platform =>
+                server.app.use(`/${platform}`, platformRouter(platform))
+            );
 
             server.app.get('/*', getAbsolutePathHandler());
             server.app.get('*', handleRoot);
