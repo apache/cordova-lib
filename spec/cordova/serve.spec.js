@@ -156,16 +156,11 @@ describe('cordova/serve', () => {
                 'cordova-plugin-beer'
             ]);
 
-            response = jasmine.createSpyObj('response', ['send', 'sendStatus']);
+            response = jasmine.createSpyObj('response', ['send']);
         });
 
-        it('should return a status of 404 for anything but /', () => {
-            handleRoot({ url: '/foo' }, response);
-            expect(response.sendStatus).toHaveBeenCalledWith(404);
-        });
-
-        it('should return an index of available platforms and plugins on /', () => {
-            handleRoot({ url: '/' }, response);
+        it('should return an index of available platforms and plugins', () => {
+            handleRoot(null, response);
             expect(response.send).toHaveBeenCalledTimes(1);
 
             const [ document ] = response.send.calls.argsFor(0);

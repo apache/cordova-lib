@@ -77,12 +77,7 @@ const renderIndex = template(INDEX_TEMPLATE, {
     evaluate: /\{%(.+?)%\}/g
 });
 
-function handleRoot (request, response, next) {
-    if (url.parse(request.url).pathname !== '/') {
-        response.sendStatus(404);
-        return;
-    }
-
+function handleRoot (request, response) {
     const config = new ConfigParser(cordova_util.projectConfig(projectRoot));
     const contentNode = config.doc.find('content');
     const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
@@ -154,7 +149,7 @@ module.exports = function server (port, opts) {
             );
 
             server.app.get('/*', absolutePathHandler);
-            server.app.get('*', handleRoot);
+            server.app.get('/', handleRoot);
 
             server.launchServer({port: port, events: events});
             return hooksRunner.fire('after_serve', opts).then(() => {
