@@ -136,8 +136,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                     // download platform
                     return module.exports.downloadPlatform(projectRoot, platform, spec, opts);
-                })
-                .then(function (platDetails) {
+                }).then(function (platDetails) {
                     // execute platform script
 
                     platform = platDetails.platform;
@@ -189,7 +188,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                     var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                     var destination = path.resolve(projectRoot, 'platforms', platform);
-                    
+
                     // platform script promise
                     var promise = cmd === 'add' ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
                         : PlatformApi.updatePlatform.bind(null, destination, options, events);
