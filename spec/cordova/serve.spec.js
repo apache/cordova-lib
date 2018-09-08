@@ -149,6 +149,16 @@ describe('cordova/serve', () => {
                 err => expect(err).toBe(fakeError)
             );
         }, 100);
+
+        it('should fail if launching the server fails', () => {
+            const fakeError = new Error();
+            serverSpy.launchServer.and.returnValue(Promise.reject(fakeError));
+
+            return privateServe(1234567, {}).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
     });
 
     describe('registerRoutes', () => {
