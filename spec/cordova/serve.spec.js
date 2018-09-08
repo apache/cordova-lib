@@ -180,7 +180,7 @@ describe('cordova/serve', () => {
         let absolutePathHandler, next;
 
         beforeEach(() => {
-            absolutePathHandler = serve.__get__('getAbsolutePathHandler')();
+            absolutePathHandler = serve.__get__('absolutePathHandler');
             serve.__set__({ installedPlatforms: ['foo'] });
 
             next = jasmine.createSpy('next');

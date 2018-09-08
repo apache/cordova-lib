@@ -72,23 +72,18 @@ function handleRoot (request, response, next) {
 // https://issues.apache.org/jira/browse/CB-11274
 // Use referer url to redirect absolute urls to the requested platform resources
 // so that an URL is resolved against that platform www directory.
-function getAbsolutePathHandler () {
-    return function (request, response, next) {
-        if (!request.headers.referer) {
-            next();
-            return;
-        }
+function absolutePathHandler (request, response, next) {
+    if (!request.headers.referer) return next();
 
-        var pathname = url.parse(request.headers.referer).pathname;
-        var platform = pathname.split('/')[1];
+    const { pathname } = url.parse(request.headers.referer);
+    const platform = pathname.split('/')[1];
 
-        if (installedPlatforms.indexOf(platform) >= 0 &&
-            request.originalUrl.indexOf(platform) === -1) {
-            response.redirect('/' + platform + '/www' + request.originalUrl);
-        } else {
-            next();
-        }
-    };
+    if (installedPlatforms.includes(platform) &&
+        !request.originalUrl.includes(platform)) {
+        response.redirect(`/${platform}/www` + request.originalUrl);
+    } else {
+        next();
+    }
 }
 
 function platformRouter (platform) {
@@ -128,7 +123,7 @@ module.exports = function server (port, opts) {
                 server.app.use(`/${platform}`, platformRouter(platform))
             );
 
-            server.app.get('/*', getAbsolutePathHandler());
+            server.app.get('/*', absolutePathHandler);
             server.app.get('*', handleRoot);
 
             server.launchServer({port: port, events: events});
