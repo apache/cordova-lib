@@ -33,66 +33,55 @@ describe('cordova/serve', () => {
         serve = rewire('../../src/cordova/serve');
     });
 
-    describe('serve command', () => {
-        let port, opts, calls, testPlatforms, serverSpy, HooksRunnerMock;
+    describe('main export', () => {
+        const PROJECT_ROOT = '/root';
+
+        class HooksRunnerMock {
+            constructor (dir) { expect(dir).toBe(PROJECT_ROOT); }
+            fire (hook, fireOpts) { return Promise.resolve(); }
+        }
 
         beforeEach(() => {
-            port = 42;
-            opts = Object.freeze({});
-            testPlatforms = Object.freeze(['foo', 'bar']);
+            spyOn(cordovaUtil, 'cdProjectRoot').and.returnValue(PROJECT_ROOT);
+            serve.__set__({
+                HooksRunner: HooksRunnerMock,
+                serve: jasmine.createSpy('serve', _ => Promise.resolve())
+            });
+        });
+
+        it('should call hooks and `serve` in proper order', () => {
+            const PORT = 1234567;
+            const OPTS = {};
 
             // Records order of some spy calls since jasmine has no support for
             // checking interleaved calls.
-            calls = [];
-
-            const PROJECT_ROOT = '/root';
+            const calls = [];
             const pushAndResolve = tag => {
                 calls.push(tag);
                 return Promise.resolve(tag);
             };
-
-            HooksRunnerMock = class {
-                constructor (dir) {
-                    expect(dir).toBe(PROJECT_ROOT);
-                }
-                fire (hook, fireOpts) {
-                    expect(fireOpts).toBe(opts);
-                    return pushAndResolve(hook);
-                }
-            };
-
-            serverSpy = cordovaServe();
-            serverSpy.server = Symbol('server.server');
-            spyOn(serverSpy, 'launchServer').and.callFake(launchOpts => {
-                expect(launchOpts).toEqual(jasmine.objectContaining({ port }));
-                return pushAndResolve('launchServer');
+            serve.__get__('serve').and.callFake(port => {
+                expect(port).toBe(PORT);
+                return pushAndResolve('serve');
+            });
+            spyOn(HooksRunnerMock.prototype, 'fire').and.callFake((hook, opts) => {
+                expect(opts).toBe(OPTS);
+                return pushAndResolve(hook);
             });
 
-            spyOn(cordova, 'prepare').and.callFake(_ => pushAndResolve('prepare'));
-            spyOn(cordovaUtil, 'cdProjectRoot').and.returnValue(PROJECT_ROOT);
-            spyOn(cordovaUtil, 'listPlatforms').and.returnValue(testPlatforms);
-
-            serve.__set__({
-                platformRouter: _ => _ => _,
-                HooksRunner: HooksRunnerMock,
-                cordovaServe: jasmine.createSpy('cordovaServe').and.returnValue(serverSpy)
+            return serve(PORT, OPTS).then(result => {
+                expect(result).toBe('serve');
+                expect(calls).toEqual([
+                    'before_serve', 'serve', 'after_serve'
+                ]);
             });
         });
 
-        function checkBasicOperation (result) {
-            expect(result).toBe(serverSpy.server);
-
-            // Check order of some calls
-            expect(calls).toEqual([
-                'before_serve', 'prepare', 'launchServer', 'after_serve'
-            ]);
-        }
-
-        it('should not run outside of a Cordova-based project', () => {
+        it('should fail if run outside of a Cordova project', () => {
             const fakeMessage = 'CAN I HAZ CORDOVA PLZ?';
             cordovaUtil.cdProjectRoot.and.throwError(fakeMessage);
 
-            return serve(port, opts).then(() => {
+            return serve(1234567, {}).then(() => {
                 fail('Expected promise to be rejected');
             }, function (err) {
                 expect(err).toEqual(jasmine.any(Error));
@@ -101,40 +90,117 @@ describe('cordova/serve', () => {
             });
         });
 
-        it('should serve with no platforms installed', () => {
-            cordovaUtil.listPlatforms.and.returnValue([]);
-            return serve(port, opts).then(checkBasicOperation);
-        });
-
-        it('should work without arguments', () => {
-            port = 8000;
-            opts = undefined;
-
-            return serve().then(checkBasicOperation);
-        });
-
-        it('should serve all installed platforms', () => {
-            spyOn(serverSpy.app, 'use');
-
-            return serve(port, opts).then(_ => {
-                testPlatforms.forEach(platform => {
-                    expect(serverSpy.app.use).toHaveBeenCalledWith(
-                        jasmine.stringMatching(`^/${platform}`),
-                        jasmine.any(Function)
-                    );
-                });
-            });
-        });
-
-        it('should fail when prepare fails', () => {
+        it('should fail if serve fails', () => {
             const fakeError = new Error();
-            cordova.prepare.and.returnValue(Promise.reject(fakeError));
+            serve.__get__('serve').and.returnValue(Promise.reject(fakeError));
 
-            return serve(port, opts).then(
+            return serve(1234567, {}).then(
                 _ => fail('Expected promise to be rejected'),
                 err => expect(err).toBe(fakeError)
             );
         }, 100);
+    });
+
+    describe('serve', () => {
+        let privateServe, serverSpy;
+
+        beforeEach(() => {
+            serverSpy = jasmine.createSpyObj('server', ['launchServer']);
+            serverSpy.app = Symbol('server.app');
+            serverSpy.server = Symbol('server.server');
+
+            spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
+
+            serve.__set__({
+                cordovaServe: jasmine.createSpy('cordova-serve').and.returnValue(serverSpy),
+                registerRoutes: jasmine.createSpy('registerRoutes')
+            });
+            privateServe = serve.__get__('serve');
+        });
+
+        it('should launch a server after preparing the project', () => {
+            const PORT = 1234567;
+            const registerRoutes = serve.__get__('registerRoutes');
+
+            return privateServe(PORT).then(result => {
+                expect(result).toBe(serverSpy.server);
+                expect(registerRoutes).toHaveBeenCalledWith(serverSpy.app);
+                expect(serverSpy.launchServer).toHaveBeenCalledWith(
+                    jasmine.objectContaining({ port: PORT })
+                );
+                expect(cordova.prepare).toHaveBeenCalledBefore(serverSpy.launchServer);
+            });
+        });
+
+        it('should work without arguments', () => {
+            return privateServe().then(result => {
+                expect(serverSpy.launchServer).toHaveBeenCalledWith(
+                    jasmine.objectContaining({ port: 8000 })
+                );
+            });
+        });
+
+        it('should fail if prepare fails', () => {
+            const fakeError = new Error();
+            cordova.prepare.and.returnValue(Promise.reject(fakeError));
+
+            return privateServe(1234567, {}).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
+    });
+
+    describe('registerRoutes', () => {
+        let registerRoutes, app;
+
+        beforeEach(() => {
+            spyOn(cordovaUtil, 'listPlatforms').and.returnValue([ 'foo' ]);
+            serve.__set__({
+                handleRoot: jasmine.createSpy('handleRoot'),
+                absolutePathHandler: jasmine.createSpy('absolutePathHandler'),
+                platformRouter: jasmine.createSpy('platformRouter')
+                    .and.returnValue(_ => _)
+            });
+            registerRoutes = serve.__get__('registerRoutes');
+            app = new cordovaServe.Router();
+        });
+
+        it('should register a route for absolute paths', () => {
+            const absolutePathHandler = serve.__get__('absolutePathHandler');
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/config.xml' }, null);
+            expect(absolutePathHandler).toHaveBeenCalled();
+        });
+
+        it('should register a fallback root route', () => {
+            const absolutePathHandler = serve.__get__('absolutePathHandler');
+            absolutePathHandler.and.callFake((req, res, next) => next());
+            const handleRoot = serve.__get__('handleRoot');
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/' }, null);
+            expect(handleRoot).toHaveBeenCalled();
+        });
+
+        it('should register platform routes', () => {
+            cordovaUtil.listPlatforms.and.returnValue([ 'foo', 'bar' ]);
+            const platformRouter = serve.__get__('platformRouter');
+            platformRouter
+                .withArgs('foo').and.returnValue(jasmine.createSpy('fooHandler'))
+                .withArgs('bar').and.returnValue(jasmine.createSpy('barHandler'));
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/foo/index.html' }, null);
+            expect(platformRouter('foo')).toHaveBeenCalled();
+            expect(platformRouter('bar')).not.toHaveBeenCalled();
+
+            platformRouter('foo').calls.reset();
+            app({ method: 'GET', url: '/bar/index.html' }, null);
+            expect(platformRouter('bar')).toHaveBeenCalled();
+            expect(platformRouter('foo')).not.toHaveBeenCalled();
+        });
     });
 
     describe('handleRoot', () => {
