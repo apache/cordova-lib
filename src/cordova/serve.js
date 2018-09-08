@@ -143,14 +143,15 @@ function registerRoutes (app) {
 function serve (port) {
     return Promise.resolve().then(() => {
         port = +port || 8000;
+        const server = cordovaServe();
 
         // Run a prepare first!
-        return require('./cordova').prepare([]).then(() => {
-            const server = cordovaServe();
-            registerRoutes(server.app);
-            server.launchServer({ port, events });
-            return server.server;
-        });
+        return require('./cordova').prepare([])
+            .then(() => {
+                registerRoutes(server.app);
+                return server.launchServer({ port, events });
+            })
+            .then(() => server.server);
     });
 }
 
