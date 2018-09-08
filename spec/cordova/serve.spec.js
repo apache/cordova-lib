@@ -17,171 +17,197 @@
     under the License.
 */
 
-var cordova = require('../../src/cordova/cordova');
-var console = require('console');
-var path = require('path');
-// var shell = require('shelljs');
-var fs = require('fs-extra');
-var Q = require('q');
-var tempDir;
-var http = require('http');
+const rewire = require('rewire');
+const cordovaServe = require('cordova-serve');
+const { omniStub } = require('../helpers');
+const cordova = require('../../src/cordova/cordova');
+const cordovaUtil = require('../../src/cordova/util');
+const platforms = require('../../src/platforms/platforms');
 
-var cwd = process.cwd();
+describe('cordova/serve', () => {
+    let serve;
 
-// skipped because of CB-7078
-xdescribe('serve command', function () {
-    var payloads = {};
-    var consoleSpy; // eslint-disable-line  no-unused-vars
-    beforeEach(function () {
-        // Make a temp directory
-        tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
-        fs.emptyDirSync(tempDir);
-        consoleSpy = spyOn(console, 'log');
-    });
-    afterEach(function () {
-        process.chdir(cwd);
-        process.env.PWD = cwd;
-        fs.removeSync(tempDir);
-    });
-    it('Test 001 : should not run outside of a Cordova-based project', function () {
-        process.chdir(tempDir);
-
-        expect(function () {
-            cordova.serve().then(function (server) {
-                expect(server).toBe(null);
-                server.close();
-            });
-        }).toThrow('Current working directory is not a Cordova-based project.');
+    beforeEach(() => {
+        serve = rewire('../../src/cordova/serve');
     });
 
-    describe('`serve`', function () {
-        var done = false; // eslint-disable-line  no-unused-vars
-        var failed = false;
-        beforeEach(function () {
-            done = false;
-            failed = false;
-        });
+    describe('serve command', () => {
+        let port, opts, calls, testPlatforms, serverSpy, HooksRunnerMock;
 
-        afterEach(function () {
-            payloads = {};
-        });
+        beforeEach(() => {
+            port = 42;
+            opts = Object.freeze({});
+            testPlatforms = Object.freeze(['foo', 'bar']);
 
-        function cit (cond) {
-            if (cond) {
-                return it;
-            }
-            return xit;
-        }
-        function itifapps (apps) {
-            return cit(apps.every(function (bin) { /* return shell.which(bin); */ }));
-        }
+            // Records order of some spy calls since jasmine has no support for
+            // checking interleaved calls.
+            calls = [];
 
-        function test_serve (platform, ref, expectedContents, opts) {
-            var timeout = (opts && 'timeout' in opts && opts.timeout) || (1000);
-            return function () {
-                var server;
-                runs(function () {
-                    cordova.create(tempDir).then(function () {
-                        process.chdir(tempDir);
-                        process.env.PWD = tempDir;
-                        var plats = [];
-                        Object.getOwnPropertyNames(payloads).forEach(function (plat) {
-                            var d = Q.defer();
-                            plats.push(d.promise);
-                            cordova.platform('add', plat, {spawnoutput: 'ignore'}).then(function () {
-                                var dir = path.join(tempDir, 'merges', plat);
-                                // Write testing HTML files into the directory.
-                                fs.outputFileSync(path.join(dir, 'test.html'), payloads[plat]);
-                                d.resolve();
-                            }).catch(function (e) {
-                                expect(e).toBeUndefined();
-                                failed = true;
-                            });
-                        });
-                        Q.allSettled(plats).then(function () {
-                            opts && 'setup' in opts && opts.setup();
-                            cordova.serve(opts && 'port' in opts && opts.port).then(function (srv) {
-                                server = srv;
-                            });
-                        }).catch(function (e) {
-                            expect(e).toBeUndefined();
-                            failed = true;
-                        });
-                    }).catch(function (e) {
-                        expect(e).toBeUndefined();
-                        failed = true;
-                    });
-                });
-
-                waitsFor(function () {
-                    return server || failed;
-                }, 'the server should start', timeout);
-
-                var done, errorCB;
-                runs(function () {
-                    if (failed) {
-                        return;
-                    }
-                    expect(server).toBeDefined();
-                    errorCB = jasmine.createSpy();
-                    http.get({
-                        host: 'localhost',
-                        port: opts && 'port' in opts ? opts.port : 8000,
-                        path: '/' + platform + '/www' + ref,
-                        connection: 'Close'
-                    }).on('response', function (res) {
-                        var response = '';
-                        res.on('data', function (data) {
-                            response += data;
-                        });
-                        res.on('end', function () {
-                            expect(response).toEqual(expectedContents);
-                            if (response === expectedContents) {
-                                expect(res.statusCode).toEqual(200);
-                            }
-                            done = true;
-                        });
-                    }).on('error', errorCB);
-                });
-
-                waitsFor(function () {
-                    return done || failed;
-                }, 'the HTTP request should complete', timeout);
-
-                runs(function () {
-                    if (!failed) {
-                        expect(done).toBeTruthy();
-                        expect(errorCB).not.toHaveBeenCalled();
-                    }
-                    opts && 'cleanup' in opts && opts.cleanup();
-                    server && server.close();
-                });
+            const PROJECT_ROOT = '/root';
+            const pushAndResolve = tag => {
+                calls.push(tag);
+                return Promise.resolve(tag);
             };
+
+            HooksRunnerMock = class {
+                constructor (dir) {
+                    expect(dir).toBe(PROJECT_ROOT);
+                }
+                fire (hook, fireOpts) {
+                    expect(fireOpts).toBe(opts);
+                    return pushAndResolve(hook);
+                }
+            };
+
+            serverSpy = cordovaServe();
+            serverSpy.server = Symbol('server.server');
+            spyOn(serverSpy, 'launchServer').and.callFake(launchOpts => {
+                expect(launchOpts).toEqual(jasmine.objectContaining({ port }));
+                return pushAndResolve('launchServer');
+            });
+
+            const serveSpy = jasmine.createSpy('cordova-serve').and.returnValue(serverSpy);
+            serveSpy.static = jasmine.createSpy('static').and.returnValue(_ => _);
+
+            spyOn(cordova, 'prepare').and.callFake(_ => pushAndResolve('prepare'));
+            spyOn(cordovaUtil, 'cdProjectRoot').and.returnValue(PROJECT_ROOT);
+            spyOn(cordovaUtil, 'listPlatforms').and.returnValue(testPlatforms);
+            spyOn(platforms, 'getPlatformApi').and.returnValue(omniStub());
+
+            serve.__set__({ serve: serveSpy, HooksRunner: HooksRunnerMock });
+        });
+
+        function checkBasicOperation (result) {
+            expect(result).toBe(serverSpy.server);
+
+            // Check order of some calls
+            expect(calls).toEqual([
+                'before_serve', 'prepare', 'launchServer', 'after_serve'
+            ]);
         }
 
-        itifapps([
-            'android',
-            'ant'
-        ])('should fall back to assets/www on Android', function () {
-            payloads.android = 'This is the Android test file.';
-            test_serve('android', '/test.html', payloads.android, {timeout: 20000})();
+        it('should not run outside of a Cordova-based project', () => {
+            const fakeMessage = 'CAN I HAZ CORDOVA PLZ?';
+            cordovaUtil.cdProjectRoot.and.throwError(fakeMessage);
+
+            return serve(port, opts).then(() => {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toBe(fakeMessage);
+                expect(cordovaUtil.cdProjectRoot).toHaveBeenCalled();
+            });
         });
 
-        itifapps([
-            'blackberry-nativepackager',
-            'blackberry-deploy',
-            'blackberry-signer',
-            'blackberry-debugtokenrequest'
-        ])('should fall back to www on BlackBerry10', function () {
-            payloads.blackberry10 = 'This is the BlackBerry10 test file.';
-            test_serve('blackberry10', '/test.html', payloads.blackberry10, {timeout: 10000})();
+        it('should serve with no platforms installed', () => {
+            cordovaUtil.listPlatforms.and.returnValue([]);
+            return serve(port, opts).then(checkBasicOperation);
         });
 
-        itifapps([
-            'xcodebuild'
-        ])('should fall back to www on iOS', function () {
-            payloads.ios = 'This is the iOS test file.';
-            test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
+        it('should work without arguments', () => {
+            port = 8000;
+            opts = undefined;
+
+            return serve().then(checkBasicOperation);
+        });
+
+        it('should serve all installed platforms', () => {
+            spyOn(serverSpy.app, 'use');
+
+            return serve(port, opts).then(_ => {
+                testPlatforms.forEach(platform => {
+                    expect(serverSpy.app.use).toHaveBeenCalledWith(
+                        jasmine.stringMatching(`^/${platform}`),
+                        jasmine.any(Function)
+                    );
+                });
+            });
+        });
+    });
+
+    describe('handleRoot', () => {
+        let handleRoot, response;
+
+        beforeEach(() => {
+            handleRoot = serve.__get__('handleRoot');
+            serve.__set__({
+                platforms: { foo: 0, bar: 0 },
+                installedPlatforms: ['foo'],
+                projectRoot: '',
+                ConfigParser: function () {
+                    return omniStub({ src: undefined });
+                }
+            });
+
+            spyOn(cordovaUtil, 'projectConfig');
+            spyOn(cordovaUtil, 'findPlugins').and.returnValue([
+                'cordova-plugin-beer'
+            ]);
+
+            response = jasmine.createSpyObj('response', [
+                'sendStatus', 'writeHead', 'write', 'end'
+            ]);
+        });
+
+        it('should return a status of 404 for anything but /', () => {
+            handleRoot({ url: '/foo' }, response);
+            expect(response.sendStatus).toHaveBeenCalledWith(404);
+        });
+
+        it('should return an index of available platforms and plugins on /', () => {
+            handleRoot({ url: '/' }, response);
+            expect(response.writeHead).toHaveBeenCalledWith(200, {
+                'Content-Type': 'text/html'
+            });
+            expect(response.write).toHaveBeenCalled();
+            expect(response.end).toHaveBeenCalled();
+        });
+    });
+
+    describe('absolutePathHandler', () => {
+        let absolutePathHandler, next;
+
+        beforeEach(() => {
+            absolutePathHandler = serve.__get__('getAbsolutePathHandler')();
+            serve.__set__({ installedPlatforms: ['foo'] });
+
+            next = jasmine.createSpy('next');
+        });
+
+        it('should do nothing if `referer` is not set', () => {
+            const request = { headers: {} };
+
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
+        });
+
+        it('should do nothing if `referer` is not a platform URL', () => {
+            const request = { headers: { referer: '/www/index.html' } };
+
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
+        });
+
+        it('should do nothing if requested URL is a platform URL', () => {
+            const request = {
+                headers: { referer: '/foo/www/index.html' },
+                originalUrl: '/foo/www/style.css'
+            };
+
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
+        });
+
+        it('should redirect all other requests relative to /platform/www', () => {
+            const request = {
+                headers: { referer: '/foo/index.html' },
+                originalUrl: '/style.css'
+            };
+            const response = jasmine.createSpyObj('response', ['redirect']);
+
+            absolutePathHandler(request, response, next);
+            expect(next).not.toHaveBeenCalled();
+            expect(response.redirect).toHaveBeenCalledWith('/foo/www/style.css');
         });
     });
 });
