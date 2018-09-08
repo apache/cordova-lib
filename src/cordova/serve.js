@@ -18,7 +18,6 @@
 */
 
 var cordova_util = require('./util');
-var crypto = require('crypto');
 var path = require('path');
 var globby = require('globby');
 var url = require('url');
@@ -26,9 +25,9 @@ var platforms = require('../platforms/platforms');
 var ConfigParser = require('cordova-common').ConfigParser;
 var HooksRunner = require('../hooks/HooksRunner');
 var Q = require('q');
-var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var serve = require('cordova-serve');
+var md5File = require('md5-file');
 
 var projectRoot;
 var installedPlatforms;
@@ -83,7 +82,7 @@ function getPlatformHandler (platform, wwwDir, configXml) {
                 'wwwPath': '/' + platform + '/www',
                 'wwwFileList': globby.sync('**', { cwd: wwwDir }).map(p => ({
                     path: p,
-                    etag: '' + calculateMd5(path.join(wwwDir, p))
+                    etag: md5File.sync(path.join(wwwDir, p))
                 }))
             });
             break;
@@ -114,27 +113,6 @@ function getAbsolutePathHandler () {
             next();
         }
     };
-}
-
-function calculateMd5 (fileName) {
-    var md5sum;
-    var BUF_LENGTH = 64 * 1024;
-    var buf = Buffer.from(BUF_LENGTH);
-    var bytesRead = BUF_LENGTH;
-    var pos = 0;
-    var fdr = fs.openSync(fileName, 'r');
-
-    try {
-        md5sum = crypto.createHash('md5');
-        while (bytesRead === BUF_LENGTH) {
-            bytesRead = fs.readSync(fdr, buf, 0, BUF_LENGTH, pos);
-            pos += bytesRead;
-            md5sum.update(buf.slice(0, bytesRead));
-        }
-    } finally {
-        fs.closeSync(fdr);
-    }
-    return md5sum.digest('hex');
 }
 
 module.exports = function server (port, opts) {
