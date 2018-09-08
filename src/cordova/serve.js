@@ -81,7 +81,7 @@ function getPlatformHandler (platform, wwwDir, configXml) {
             response.send({
                 'configPath': '/' + platform + '/config.xml',
                 'wwwPath': '/' + platform + '/www',
-                'wwwFileList': globby('**', { cwd: wwwDir }).map(p => ({
+                'wwwFileList': globby.sync('**', { cwd: wwwDir }).map(p => ({
                     path: p,
                     etag: '' + calculateMd5(path.join(wwwDir, p))
                 }))
