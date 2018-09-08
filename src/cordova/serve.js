@@ -17,21 +17,20 @@
     under the License.
 */
 
-var cordovaUtil = require('./util');
-var path = require('path');
-var globby = require('globby');
-var url = require('url');
-var platforms = require('../platforms/platforms');
-var ConfigParser = require('cordova-common').ConfigParser;
-var HooksRunner = require('../hooks/HooksRunner');
-var Q = require('q');
-var events = require('cordova-common').events;
-var cordovaServe = require('cordova-serve');
-var md5File = require('md5-file');
-var { template, object: zipObject } = require('underscore');
+const Q = require('q');
+const url = require('url');
+const path = require('path');
+const globby = require('globby');
+const md5File = require('md5-file');
+const { template, object: zipObject } = require('underscore');
 
-var projectRoot;
-var installedPlatforms;
+const { ConfigParser, events } = require('cordova-common');
+const cordovaServe = require('cordova-serve');
+const cordovaUtil = require('./util');
+const platforms = require('../platforms/platforms');
+const HooksRunner = require('../hooks/HooksRunner');
+
+let projectRoot, installedPlatforms;
 
 const INDEX_TEMPLATE = `
 <!doctype html>
