@@ -17,7 +17,7 @@
 
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
-var platforms = require('../../platforms/platforms');
+var platforms = require('../../platforms');
 
 module.exports = list;
 module.exports.addDeprecatedInformationToPlatforms = addDeprecatedInformationToPlatforms;
@@ -34,14 +34,14 @@ function list (hooksRunner, projectRoot, opts) {
 
             platformsText = addDeprecatedInformationToPlatforms(platformsText);
             var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
-            var available = Object.keys(platforms).filter(cordova_util.hostSupports);
+            var available = platforms.list.filter(platforms.hostSupports);
 
             available = available.filter(function (p) {
                 return !platformMap[p]; // Only those not already installed.
             });
 
             available = available.map(function (p) {
-                return p.concat(' ', platforms[p].version);
+                return p.concat(' ', platforms.info[p].version);
             });
 
             available = addDeprecatedInformationToPlatforms(available);
@@ -57,7 +57,7 @@ function addDeprecatedInformationToPlatforms (platformsList) {
     platformsList = platformsList.map(function (p) {
         var platformKey = p.split(' ')[0]; // Remove Version Information
         // allow for 'unknown' platforms, which will not exist in platforms
-        if (platforms[platformKey] && platforms[platformKey].deprecated) {
+        if ((platforms.info[platformKey] || {}).deprecated) {
             p = p.concat(' ', '(deprecated)');
         }
         return p;

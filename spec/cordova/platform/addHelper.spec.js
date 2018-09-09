@@ -20,6 +20,7 @@ var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
+var platforms = require('../../../src/platforms');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
 
@@ -73,8 +74,8 @@ describe('cordova/platform/addHelper', function () {
         spyOn(cordova_util, 'isDirectory').and.returnValue(false);
         spyOn(cordova_util, 'fixRelativePath').and.callFake(function (input) { return input; });
         spyOn(cordova_util, 'isUrl').and.returnValue(false);
-        spyOn(cordova_util, 'hostSupports').and.returnValue(true);
         spyOn(cordova_util, 'removePlatformPluginsJson');
+        spyOn(platforms, 'hostSupports').and.returnValue(true);
         spyOn(events, 'emit');
         // Fake platform details we will use for our mocks, returned by either
         // getPlatfromDetailsFromDir (in the local-directory case), or
@@ -99,9 +100,9 @@ describe('cordova/platform/addHelper', function () {
         });
 
         it('should log if host OS does not support the specified platform', function () {
-            cordova_util.hostSupports.and.returnValue(false);
+            platforms.hostSupports.and.returnValue(false);
             return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
-                expect(cordova_util.hostSupports).toHaveBeenCalled();
+                expect(platforms.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             });
         });
