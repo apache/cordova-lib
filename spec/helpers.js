@@ -34,7 +34,8 @@ function getConfigPath (dir) {
     return path.join(dir, 'config.xml');
 }
 
-module.exports.tmpDir = function (suffix = 'test') {
+module.exports.tmpDir = function (suffix) {
+    suffix = suffix || 'test';
     const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
     return fs.mkdtempSync(dir);
 };
