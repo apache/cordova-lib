@@ -3,7 +3,7 @@
   "name": "cordova-lib",
   "license": "Apache-2.0",
   "description": "Apache Cordova tools core lib and API",
-  "version": "8.0.0",
+  "version": "8.1.0-dev",
   "repository": {
     "type": "git",
     "url": "https://github.com/apache/cordova-lib"
@@ -34,7 +34,6 @@
     "plist": "2.0.1",
     "properties-parser": "0.3.1",
     "q": "1.0.1",
-    "request": "2.79.0",
     "semver": "^5.3.0",
     "shelljs": "0.3.0",
     "tar": "2.2.1",
@@ -44,7 +43,7 @@
     "xcode": "^1.0.0"
   },
   "devDependencies": {
-    "codecov": "^2.1.0",
+    "codecov": "^3.1.0",
     "eslint": "^4.2.0",
     "eslint-config-semistandard": "^11.0.0",
     "eslint-config-standard": "^10.2.1",
