@@ -126,7 +126,8 @@ describe('cordova/plugin/remove', function () {
             });
         });
 
-        it('should call uninstallPlugin in order and only finish once all plugins are done', function () {
+        it('should call uninstallPlugin in order and only finish once all plugins are done, for exactly 2 plugins', function () {
+            // for exactly 2 plugins (see below)
             const plugins = ['cordova-plugin-ice-cream', 'cordova-plugin-hot-steam'];
 
             // We delay the uninstall of the first plugin to give the second
@@ -139,7 +140,9 @@ describe('cordova/plugin/remove', function () {
             });
 
             spyOn(plugin_util, 'mergeVariables');
-            remove.validatePluginId.and.returnValues(...plugins);
+            // for exactly 2 plugins:
+            // remove.validatePluginId.and.returnValues(...plugins);
+            remove.validatePluginId.and.returnValues(plugins[0], plugins[1]);
 
             return remove(projectRoot, plugins, hook_mock, { plugins })
                 .then(_ => expect(observedOrder).toEqual(plugins));
