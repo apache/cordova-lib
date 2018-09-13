@@ -17,6 +17,8 @@
  under the License.
  **/
 
+'use strict';
+
 const Q = require('q');
 const path = require('path');
 const fs = require('fs-extra');
@@ -25,9 +27,14 @@ const globby = require('globby');
 const HooksRunner = require('../src/hooks/HooksRunner');
 const cordovaUtil = require('../src/cordova/util');
 const cordova = require('../src/cordova/cordova');
-const { tmpDir, testPlatform } = require('../spec/helpers');
-const { PluginInfo, superspawn } = require('cordova-common');
-const { Q_chainmap } = require('../src/util/promise-util');
+
+const tmpDir = require('../spec/helpers').tmpDir;
+const testPlatform = require('../spec/helpers').testPlatform;
+
+const PluginInfo = require('cordova-common').PluginInfo;
+const superspawn = require('cordova-common').superspawn;
+
+const Q_chainmap = require('../src/util/promise-util').Q_chainmap;
 
 const tmp = tmpDir('hooks_test');
 const project = path.join(tmp, 'project');
@@ -231,7 +238,7 @@ describe('HooksRunner', function () {
                     .then(_ => cordova.plugin('add', testPluginFixture))
                     .then(_ => {
                         fire.calls.all()
-                            .filter(call => hooksToTest.includes(call.args[0]))
+                            .filter(call => hooksToTest.indexOf(call.args[0]) !== -1)
                             .forEach(call => {
                                 const context = toPlainObject(call.args[1]);
 
