@@ -22,7 +22,7 @@
     "windows": {
         "hostos": ["win32"],
         "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git",
-        "version": "~5.0.0",
+        "version": "~6.0.0",
         "apiCompatibleSince": "4.3.0",
         "deprecated": false
     },
