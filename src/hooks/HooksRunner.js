@@ -15,6 +15,8 @@
  under the License.
  */
 
+'use strict';
+
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -25,7 +27,12 @@ const shebangCommand = require('shebang-command');
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
 const Context = require('./Context');
-const { CordovaError, events, superspawn } = require('cordova-common');
+
+const cordovaCommon = require('cordova-common');
+
+const CordovaError = cordovaCommon.CordovaError;
+const events = cordovaCommon.events;
+const superspawn = cordovaCommon.superspawn;
 
 const isWindows = os.platform().slice(0, 3) === 'win';
 
