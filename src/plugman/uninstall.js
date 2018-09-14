@@ -205,7 +205,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     var createMsg2 = function (plugin_id) {
         return createMsg(plugin_id) + ' and cannot be removed (hint: use -f or --force)';
     };
-    if (!options.force && dependPluginIds.includes(top_plugin_id)) {
+    if (!options.force && (dependPluginIds.indexOf(top_plugin_id) !== -1)) {
         var msg = createMsg2(top_plugin_id);
         return Q.reject(new CordovaError(msg));
     }
