@@ -20,10 +20,17 @@
 const path = require('path');
 const fs = require('fs-extra');
 const semver = require('semver');
-const { ConfigParser } = require('cordova-common');
-const { listPlatforms, requireNoCache } = require('../src/cordova/util');
-const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+
+const ConfigParser = require('cordova-common').ConfigParser;
+const listPlatforms = require('../src/cordova/util').listPlatforms;
+const requireNoCache = require('../src/cordova/util').requireNoCache;
+
 const cordova = require('../src/cordova/cordova');
+
+const helpers = require('../spec/helpers');
+const getTmpDir = helpers.tmpDir;
+const testPlatform = helpers.testPlatform;
+const setDefaultTimeout = helpers.setDefaultTimeout;
 
 describe('pkgJson', function () {
     const TIMEOUT = 150 * 1000;
