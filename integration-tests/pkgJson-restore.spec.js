@@ -265,22 +265,23 @@ describe('restore', function () {
         */
         it('Test#017 : test to make sure that platform url is added and restored properly', function () {
             const PLATFORM = 'browser';
+            const PLATFORM_VERSION = '5.0.4'; // EXTRA workaround to pass on Node.js 4
             const PLATFORM_URL = 'https://github.com/apache/cordova-browser';
 
             return Promise.resolve().then(function () {
                 // Add platform with save and fetch
-                return cordovaPlatform('add', PLATFORM_URL, {save: true});
+                return cordovaPlatform('add', `${PLATFORM_URL}#${PLATFORM_VERSION}`, {save: true});
             }).then(function () {
                 // Check that platform was added to config.xml successfully.
                 expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
                     name: PLATFORM,
-                    spec: PLATFORM_URL
+                    spec: PLATFORM_URL + '#' + PLATFORM_VERSION
                 })]);
 
                 // Check that platform was added to pkg.json successfully.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
+                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git#${PLATFORM_VERSION}`);
             }).then(function () {
                 // Remove platform without --save.
                 return cordovaPlatform('rm', PLATFORM);
@@ -288,19 +289,19 @@ describe('restore', function () {
                 // Platform in pkg.json should still be there.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
+                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git#${PLATFORM_VERSION}`);
             }).then(function () {
                 return prepare();
             }).then(function () {
                 // Check config.xml for spec modification.
                 expect(getCfg().getEngines()).toEqual([jasmine.objectContaining({
                     name: PLATFORM,
-                    spec: `git+${PLATFORM_URL}.git`
+                    spec: `git+${PLATFORM_URL}.git#${PLATFORM_VERSION}`
                 })]);
                 // No change to pkg.json.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
+                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git#${PLATFORM_VERSION}`);
             });
         });
 
