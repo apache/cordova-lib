@@ -15,14 +15,21 @@
     under the License.
 */
 
+'use strict';
+
 const path = require('path');
 const fs = require('fs-extra');
 const prepare = require('../src/cordova/prepare');
 const cordovaPlugin = require('../src/cordova/plugin');
 const cordovaPlatform = require('../src/cordova/platform');
-const { ConfigParser } = require('cordova-common');
-const { listPlatforms } = require('../src/cordova/util');
-const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+
+const ConfigParser = require('cordova-common').ConfigParser;
+const listPlatforms = require('../src/cordova/util').listPlatforms;
+
+const helpers = require('../spec/helpers');
+const getTmpDir = helpers.tmpDir;
+const testPlatform = helpers.testPlatform;
+const setDefaultTimeout = helpers.setDefaultTimeout;
 
 const TIMEOUT = 240 * 1000;
 
@@ -69,8 +76,8 @@ describe('restore', function () {
         addPlugin (plugin) {
             return (super.addPlugin(plugin, plugin.variables), this);
         }
-        addEngine (...args) {
-            return (super.addEngine(...args), this);
+        addEngine (name, spec) {
+            return (super.addEngine(name, spec), this);
         }
     }
     function getCfg () {
@@ -78,8 +85,9 @@ describe('restore', function () {
         return new TestConfigParser(configXmlPath);
     }
 
-    function getCfgEngineNames (cfg = getCfg()) {
-        return cfg.getEngines().map(({ name }) => name);
+    function getCfgEngineNames (cfg) {
+        cfg = cfg || getCfg();
+        return cfg.getEngines().map(_ => _.name);
     }
 
     function getPkgJson (propPath) {
@@ -122,8 +130,8 @@ describe('restore', function () {
 
         // Check that cordova.plugins key in package.json contains the expected
         // variables and ONLY them
-        const variables = plugins.reduce((o, {name, variables}) => {
-            o[name] = variables;
+        const variables = plugins.reduce((o, _) => {
+            o[_.name] = _.variables;
             return o;
         }, {});
         expect(pkgJson.cordova).toBeDefined();
@@ -131,8 +139,8 @@ describe('restore', function () {
 
         // Check that dependencies key in package.json contains the expected specs
         // We only check the specs for plugins where an expected spec was given
-        const specs = plugins.reduce((o, {name, spec}) => {
-            if (spec) o[name] = spec;
+        const specs = plugins.reduce((o, _) => {
+            if (_.spec) o[_.name] = _.spec;
             return o;
         }, {});
         if (Object.keys(specs).length > 0) {
@@ -146,7 +154,7 @@ describe('restore', function () {
         const unwrappedPlugins = plugins.map(p => p.sample || p);
         expectPluginsInPkgJson(unwrappedPlugins);
 
-        const pluginNames = unwrappedPlugins.map(({ name }) => name);
+        const pluginNames = unwrappedPlugins.map(_ => _.name);
         pluginNames.forEach(name => expect(pluginPath(name)).toExist());
     }
 
