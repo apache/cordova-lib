@@ -45,6 +45,7 @@ exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
 exports.getPlatformApiFunction = getPlatformApiFunction;
 exports.removePlatformPluginsJson = removePlatformPluginsJson;
+exports.getPlatformVersion = getPlatformVersionOrNull;
 
 // Remove <platform>.json file from plugins directory.
 function removePlatformPluginsJson (projectRoot, target) {
@@ -186,20 +187,28 @@ function listPlatforms (project_dir) {
 }
 
 function getInstalledPlatformsWithVersions (project_dir) {
-    var result = {};
-    var platforms_on_fs = listPlatforms(project_dir);
-
-    return Promise.all(platforms_on_fs.map(function (p) {
-        var superspawn = require('cordova-common').superspawn;
-        return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-            .then(function (v) {
-                result[p] = v || null;
-            }, function (v) {
-                result[p] = 'broken';
-            });
-    })).then(function () {
+    return Promise.resolve(listPlatforms(project_dir).reduce((result, p) => {
+        try {
+            const platformPath = path.join(project_dir, 'platforms', p);
+            result[p] = getPlatformVersion(platformPath) || null;
+        } catch (e) {
+            result[p] = 'broken';
+        }
         return result;
-    });
+    }, {}));
+}
+
+function getPlatformVersion (platformPath) {
+    const versionPath = path.join(platformPath, 'cordova/version');
+    return requireNoCache(versionPath).version;
+}
+
+function getPlatformVersionOrNull (platformPath) {
+    try {
+        return getPlatformVersion(platformPath);
+    } catch (e) {
+        return null;
+    }
 }
 
 // list the directories in the path, ignoring any files
