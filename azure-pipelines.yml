@@ -5,11 +5,11 @@ jobs:
   strategy:
     maxParallel: 3
     matrix:
-      node_6_x:
+      Node.js 6:
         node_version: 6.x
-      node_8_x:
+      Node.js 8:
         node_version: 8.x
-      node_10_x:
+      Node.js 10:
         node_version: 10.x
 
   steps:
@@ -37,11 +37,11 @@ jobs:
   strategy:
     maxParallel: 3
     matrix:
-      node_6_x:
+      Node.js 6:
         node_version: 6.x
-      node_8_x:
+      Node.js 8:
         node_version: 8.x
-      node_10_x:
+      Node.js 10:
         node_version: 10.x
 
   steps:
