@@ -1,0 +1,64 @@
+jobs:
+- job: Ubuntu
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    maxParallel: 3
+    matrix:
+      node_6_x:
+        node_version: 6.x
+      node_8_x:
+        node_version: 8.x
+      node_10_x:
+        node_version: 10.x
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      version: $(node_version)
+    displayName: 'Install Node.js $(node_version)'  
+
+  - script: |
+      npm install
+    displayName: 'npm install'
+
+  - script: |
+      node --version
+      npm --version
+    displayName: 'Output node and npm version'
+
+  - script: |
+      npm run cover
+    displayName: 'npm run cover'
+
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    maxParallel: 3
+    matrix:
+      node_6_x:
+        node_version: 6.x
+      node_8_x:
+        node_version: 8.x
+      node_10_x:
+        node_version: 10.x
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      version: $(node_version)
+    displayName: 'Install Node.js $(node_version)'  
+
+  - script: |
+      npm install
+    displayName: 'npm install'
+
+  - script: |
+      node --version
+      npm --version
+    displayName: 'Output node and npm version'
+
+  - script: |
+      npm test
+    displayName: 'npm test'
