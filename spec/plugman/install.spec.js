@@ -105,7 +105,7 @@ describe('plugman/install', () => {
                 api.addPlugin.and.callThrough();
                 events.removeAllListeners('results');
             });
-    }, TIMEOUT);
+    }, 2 * TIMEOUT);
 
     afterAll(() => {
         fs.removeSync(temp_dir);
