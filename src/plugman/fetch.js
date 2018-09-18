@@ -19,6 +19,7 @@
 
 var shell = require('shelljs');
 var fs = require('fs');
+var which = require('which');
 var url = require('url');
 var underscore = require('underscore');
 var semver = require('semver');
@@ -137,10 +138,13 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                 }
 
                 if (process.platform === 'win32' && parsedSpec.version) {
-                    var windowsShellSpecialCharacters = ['&', '\\', '<', '>', '^', '|'];
-                    specContainsSpecialCharacters = windowsShellSpecialCharacters.some(function (character) {
-                        return parsedSpec.version.indexOf(character);
-                    });
+                    var npmExtension = path.extname(which.sync('npm'));
+                    if (npmExtension && npmExtension.toUpperCase() !== '.EXE') {
+                        var windowsShellSpecialCharacters = ['&', '\\', '<', '>', '^', '|'];
+                        specContainsSpecialCharacters = windowsShellSpecialCharacters.some(function (character) {
+                            return parsedSpec.version.indexOf(character) >= 0;
+                        });
+                    }
                 }
 
                 var fetchPluginSrc = specContainsSpecialCharacters ?
