@@ -28,7 +28,7 @@ const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 const pluginFixturesDir = path.join(fixturesDir, 'plugins');
 
 describe('cordova/platform end-to-end', () => {
-    const TIMEOUT = 120 * 1000;
+    const TIMEOUT = 240 * 1000;
     setDefaultTimeout(TIMEOUT);
 
     let tmpDir, project, pluginsDir, platformsDir, nodeModulesDir, testPlatformDir;
