@@ -20,6 +20,26 @@
 -->
 # Cordova-lib Release Notes
 
+### 8.1.0 (Sep 17, 2018)
+* [GH-691](https://github.com/apache/cordova-lib/pull/691) update to use cordova-windows@~6.0.x by default
+* [GH-693](https://github.com/apache/cordova-lib/pull/693) minor workaround fixes needed to work on deprecated Node.js 4 version
+* [GH-653](https://github.com/apache/cordova-lib/issues/653) Use shebang-command module to extract shebang
+* [GH-653](https://github.com/apache/cordova-lib/issues/653) Fix reading garbage shebang in HooksRunner.spec
+* [GH-646](https://github.com/apache/cordova-lib/pull/646) Update **Android** platform to latest release
+* [CB-14148](https://issues.apache.org/jira/browse/CB-14148) remove nonsense "www" platform from Cordova listing (#620)
+* [CB-14243](https://issues.apache.org/jira/browse/CB-14243) change dash to underscore for save-exact key reference ([GH-631](https://github.com/apache/cordova-lib/pull/631))
+* [GH-630](https://github.com/apache/cordova-lib/pull/630) Improve plugman/uninstall.js messages
+* ([GH-628](https://github.com/apache/cordova-lib/pull/621)) Fix promise handling when removing multiple plugins
+* [CB-14033](https://issues.apache.org/jira/browse/CB-14033) Support symbolic dir links on **Windows** ([GH-621](https://github.com/apache/cordova-lib/pull/621))
+* [CB-13055](https://issues.apache.org/jira/browse/CB-13055) Fold all fetch options to `true` ([GH-624](https://github.com/apache/cordova-lib/pull/624))
+* [GH-617](https://github.com/apache/cordova-lib/pull/617) Set the fetch option to true in plugman
+* [CB-14140](https://issues.apache.org/jira/browse/CB-14140) Add fs-extra to allow for incremental adoption
+* [CB-13532](https://issues.apache.org/jira/browse/CB-13532) Find plugins in devDependencies
+* [CB-14065](https://issues.apache.org/jira/browse/CB-14065) Drop support for Node 4 and add Node 10 to CI
+* [GH-611](https://github.com/apache/cordova-lib/pull/611) Fix ElementTree error about unclosed XML tag
+* [GH-611](https://github.com/apache/cordova-lib/pull/611) Dependency cleanup - update and remove several dependencies
+* [GH-693](https://github.com/apache/cordova-lib/pull/693) Add **browser** default engine
+
 ### 8.0.0 (Dec 14, 2017)
 * [CB-13057](https://issues.apache.org/jira/browse/CB-13057): removed `cordova save` command
 * [CB-13056](https://issues.apache.org/jira/browse/CB-13056): removed support for **WebOS**, **BlackBerry10**, and **Ubuntu**
