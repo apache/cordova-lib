@@ -289,7 +289,7 @@ function copyPlugin (pinfo, plugins_dir, link) {
         fs.symlinkSync(fixedPath, dest, 'junction');
     } else {
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
-        fs.copySync(plugin_dir, dest);
+        fs.copySync(plugin_dir, dest, {dereference: true});
     }
     return dest;
 }
