@@ -85,12 +85,12 @@ describe('fetch', function () {
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id), jasmine.objectContaining({dereference: true}));
             });
         });
         it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
             return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id), jasmine.objectContaining({dereference: true}));
             });
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
@@ -129,7 +129,7 @@ describe('fetch', function () {
         });
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_pkgjson_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_pkgjson_plugin), path.join(temp, 'pkgjson-test-plugin'));
+                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_pkgjson_plugin), path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({dereference: true}));
                 expect(fetchCalls).toBe(1);
             });
         });
