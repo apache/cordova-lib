@@ -18,7 +18,6 @@
  */
 
 var path = require('path');
-var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 
 /**
@@ -36,17 +35,6 @@ function Context (hook, opts) {
     this.cmdLine = process.argv.join(' ');
     this.cordova = require('../cordova/cordova');
 }
-
-// As per CB-9834 we need to maintain backward compatibility and provide a compat layer
-// for plugins that still require modules, factored to cordova-common.
-var compatMap = {
-    '../configparser/ConfigParser': function () {
-        return require('cordova-common').ConfigParser;
-    },
-    '../util/xml-helpers': function () {
-        return require('cordova-common').xmlHelpers;
-    }
-};
 
 /**
  * Requires the specified Cordova module.
@@ -69,24 +57,13 @@ Context.prototype.requireCordovaModule = function (modulePath) {
         );
     }
 
-    if (pkg !== 'cordova-lib') return require(modulePath);
-
     // We can only resolve `cordova-lib` by name if this module is installed as
     // a dependency of the current main module (e.g. when running `cordova`).
     // To handle `cordova-lib` paths correctly in all other cases too, we
-    // resolve them to real paths before requiring them.
-    var resolvedPath = path.resolve(__dirname, '../..', ...pkgPath);
-    var relativePath = path.relative(__dirname, resolvedPath).replace(/\\/g, '/');
-    events.emit('verbose', 'Resolving module name for ' + modulePath + ' => ' + relativePath);
-
-    var compatRequire = compatMap[relativePath];
-    if (compatRequire) {
-        events.emit('warn', 'The module "' + path.basename(relativePath) + '" has been factored ' +
-            'into "cordova-common". Consider update your plugin hooks.');
-        return compatRequire();
-    }
-
-    return require(relativePath);
+    // require them using relative paths.
+    return pkg === 'cordova-lib'
+        ? require(path.posix.join('../..', ...pkgPath))
+        : require(modulePath);
 };
 
 module.exports = Context;

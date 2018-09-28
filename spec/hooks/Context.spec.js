@@ -67,18 +67,6 @@ describe('hooks/Context', () => {
                 Context.__set__({ require: requireSpy });
             });
 
-            it('maps some old paths to their new equivalent', () => {
-                const ConfigParser = Symbol('ConfigParser');
-                const xmlHelpers = Symbol('xmlHelpers');
-                requireSpy.and.returnValue({ ConfigParser, xmlHelpers });
-
-                expect(requireCordovaModule('cordova-lib/src/configparser/ConfigParser')).toBe(ConfigParser);
-                expect(requireCordovaModule('cordova-lib/src/util/xml-helpers')).toBe(xmlHelpers);
-                expect(requireSpy.calls.allArgs()).toEqual([
-                    ['cordova-common'], ['cordova-common']
-                ]);
-            });
-
             it('correctly handles module names that start with "cordova-lib"', () => {
                 requireCordovaModule('cordova-libre');
                 expect(requireSpy).toHaveBeenCalledWith('cordova-libre');
