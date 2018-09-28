@@ -17,6 +17,8 @@
  under the License.
  */
 
+'use strict';
+
 var path = require('path');
 var events = require('cordova-common').events;
 
