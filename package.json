@@ -39,7 +39,7 @@
     "semver": "^5.3.0",
     "shebang-command": "^1.2.0",
     "shelljs": "0.3.0",
-    "tar": "^4.4.1",
+    "tar": "^2.2.1",
     "underscore": "^1.9.0",
     "unorm": "^1.4.1",
     "valid-identifier": "0.0.1",
