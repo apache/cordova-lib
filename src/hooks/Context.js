@@ -17,8 +17,8 @@
  under the License.
  */
 
-var path = require('path');
-var CordovaError = require('cordova-common').CordovaError;
+const path = require('path');
+const { CordovaError } = require('cordova-common');
 
 /**
  * Creates hook script context
