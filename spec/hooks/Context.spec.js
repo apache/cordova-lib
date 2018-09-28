@@ -27,6 +27,27 @@ describe('hooks/Context', () => {
         Context = rewire('../../src/hooks/Context');
     });
 
+    describe('cordova', () => {
+        let context;
+
+        beforeEach(() => {
+            spyOn(Context.prototype, 'requireCordovaModule');
+            context = new Context();
+        });
+
+        it('is only loaded when accessed', () => {
+            expect(context.requireCordovaModule).not.toHaveBeenCalled();
+        });
+
+        it('is set to require("cordova-lib").cordova', () => {
+            const cordova = Symbol('cordova');
+            context.requireCordovaModule.and.returnValue({ cordova });
+
+            expect(context.cordova).toBe(cordova);
+            expect(context.requireCordovaModule).toHaveBeenCalledWith('cordova-lib');
+        });
+    });
+
     describe('requireCordovaModule', () => {
         let requireCordovaModule;
 

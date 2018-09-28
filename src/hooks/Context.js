@@ -33,7 +33,11 @@ function Context (hook, opts) {
     // For example context.opts.plugin = Object is done, then it affects by reference
     this.opts = Object.assign({}, opts);
     this.cmdLine = process.argv.join(' ');
-    this.cordova = require('../cordova/cordova');
+
+    // Lazy-load cordova to avoid cyclical dependency
+    Object.defineProperty(this, 'cordova', {
+        get () { return this.requireCordovaModule('cordova-lib').cordova; }
+    });
 }
 
 /**
