@@ -58,6 +58,10 @@ var compatMap = {
  * @param {String} modulePath Module path
  * @returns {Object} */
 Context.prototype.requireCordovaModule = function (modulePath) {
+    const pkg = modulePath.split('/')[0];
+
+    if (pkg !== 'cordova-lib') return require(modulePath);
+
     // There is a very common mistake, when hook requires some cordova functionality
     // using 'cordova-lib/...' path.
     // This path will be resolved only when running cordova from 'normal' installation
