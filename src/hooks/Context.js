@@ -52,12 +52,16 @@ var compatMap = {
  * @param {String} modulePath Module path
  * @returns {Object} */
 Context.prototype.requireCordovaModule = function (modulePath) {
+    const [pkg, ...pkgPath] = modulePath.split('/');
+
+    if (pkg !== 'cordova-lib') return require(modulePath);
+
     // There is a very common mistake, when hook requires some cordova functionality
     // using 'cordova-lib/...' path.
     // This path will be resolved only when running cordova from 'normal' installation
     // (without symlinked modules). If cordova-lib linked to cordova-cli this path is
     // never resolved, so hook fails with 'Error: Cannot find module 'cordova-lib''
-    var resolvedPath = path.resolve(__dirname, modulePath.replace(/^cordova-lib/, '../../../cordova-lib'));
+    var resolvedPath = path.resolve(__dirname, '../..', ...pkgPath);
     var relativePath = path.relative(__dirname, resolvedPath).replace(/\\/g, '/');
     events.emit('verbose', 'Resolving module name for ' + modulePath + ' => ' + relativePath);
 
