@@ -91,6 +91,19 @@ describe('hooks/Context', () => {
                 requireCordovaModule('cordova-libre');
                 expect(requireSpy).toHaveBeenCalledWith('cordova-libre');
             });
+
+            it('emits a warning if non-cordova module is requested', () => {
+                requireCordovaModule('q');
+
+                expect(requireSpy).toHaveBeenCalledWith('q');
+                expect(warnSpy).toHaveBeenCalledTimes(1);
+
+                const message = warnSpy.calls.argsFor(0)[0];
+                expect(message).toContain('requireCordovaModule');
+                expect(message).toContain('non-cordova module');
+                expect(message).toContain('deprecated');
+                expect(message).toContain('"q"');
+            });
         });
 
     });
