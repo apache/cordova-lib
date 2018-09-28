@@ -48,16 +48,33 @@ var compatMap = {
 };
 
 /**
- * Returns a required module
- * @param {String} modulePath Module path
- * @returns {Object} */
+ * Requires the specified Cordova module.
+ *
+ * This method should only be used to require packages named `cordova-*`.
+ * Public modules of such a Cordova module can be required by giving their
+ * full package path: `cordova-foo/bar` for example.
+ *
+ * @param {String} modulePath   Module path as specified above
+ * @returns {*}                 The required Cordova module
+ */
 Context.prototype.requireCordovaModule = function (modulePath) {
-    // There is a very common mistake, when hook requires some cordova functionality
-    // using 'cordova-lib/...' path.
-    // This path will be resolved only when running cordova from 'normal' installation
-    // (without symlinked modules). If cordova-lib linked to cordova-cli this path is
-    // never resolved, so hook fails with 'Error: Cannot find module 'cordova-lib''
-    var resolvedPath = path.resolve(__dirname, modulePath.replace(/^cordova-lib/, '../../../cordova-lib'));
+    const [pkg, ...pkgPath] = modulePath.split('/');
+
+    if (!pkg.match(/^cordova-[^/]+/)) {
+        events.emit('warn',
+            `Using "requireCordovaModule" to load non-cordova module ` +
+            `"${modulePath}" is deprecated. Instead, add this module to ` +
+            `your dependencies and use regular "require" to load it.`
+        );
+    }
+
+    if (pkg !== 'cordova-lib') return require(modulePath);
+
+    // We can only resolve `cordova-lib` by name if this module is installed as
+    // a dependency of the current main module (e.g. when running `cordova`).
+    // To handle `cordova-lib` paths correctly in all other cases too, we
+    // resolve them to real paths before requiring them.
+    var resolvedPath = path.resolve(__dirname, '../..', ...pkgPath);
     var relativePath = path.relative(__dirname, resolvedPath).replace(/\\/g, '/');
     events.emit('verbose', 'Resolving module name for ' + modulePath + ' => ' + relativePath);
 
