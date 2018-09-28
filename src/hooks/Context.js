@@ -19,6 +19,7 @@
 
 var path = require('path');
 var events = require('cordova-common').events;
+var CordovaError = require('cordova-common').CordovaError;
 
 /**
  * Creates hook script context
@@ -61,9 +62,9 @@ Context.prototype.requireCordovaModule = function (modulePath) {
     const [pkg, ...pkgPath] = modulePath.split('/');
 
     if (!pkg.match(/^cordova-[^/]+/)) {
-        events.emit('warn',
+        throw new CordovaError(
             `Using "requireCordovaModule" to load non-cordova module ` +
-            `"${modulePath}" is deprecated. Instead, add this module to ` +
+            `"${modulePath}" is not supported. Instead, add this module to ` +
             `your dependencies and use regular "require" to load it.`
         );
     }
