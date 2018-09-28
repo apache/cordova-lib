@@ -54,6 +54,14 @@ var compatMap = {
 Context.prototype.requireCordovaModule = function (modulePath) {
     const [pkg, ...pkgPath] = modulePath.split('/');
 
+    if (!pkg.match(/^cordova-[^/]+/)) {
+        events.emit('warn',
+            `Using "requireCordovaModule" to load non-cordova module ` +
+            `"${modulePath}" is deprecated. Instead, add this module to ` +
+            `your dependencies and use regular "require" to load it.`
+        );
+    }
+
     if (pkg !== 'cordova-lib') return require(modulePath);
 
     // There is a very common mistake, when hook requires some cordova functionality
