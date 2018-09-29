@@ -17,9 +17,9 @@
  under the License.
  **/
 
-const Q = require('q');
 const path = require('path');
 const fs = require('fs-extra');
+const delay = require('delay');
 const globby = require('globby');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
@@ -352,7 +352,7 @@ describe('HooksRunner', function () {
                 const order = [];
                 // Delay 100 ms here to check that h2 is not executed until after
                 // the promise returned by h1 is resolved.
-                const h1 = _ => Q.delay(100).then(_ => order.push(1));
+                const h1 = _ => delay(100).then(_ => order.push(1));
                 const h2 = _ => Promise.resolve().then(_ => order.push(2));
 
                 cordova.on(test_event, h1);
