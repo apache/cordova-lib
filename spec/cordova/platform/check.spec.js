@@ -35,9 +35,8 @@ describe('cordova/platform/check', function () {
         spyOn(platform, 'add').and.returnValue(Promise.resolve());
     });
 
-    it('If no results, platforms cannot be updated', function () {
-        platform.add.and.returnValue(Promise.reject());
-        cordova_util.listPlatforms.and.callThrough();
+    it('If no platforms, platforms cannot be updated', function () {
+        cordova_util.listPlatforms.and.returnValue([]);
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
             expect(superspawn.spawn).toHaveBeenCalledWith('npm', ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'], jasmine.any(Object));
