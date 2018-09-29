@@ -262,7 +262,7 @@ describe('HooksRunner', function () {
                     } else if (cmd.match(/version/)) {
                         return '3.6.0';
                     }
-                    return Q();
+                    return Promise.resolve();
                 });
             });
 
@@ -319,7 +319,7 @@ describe('HooksRunner', function () {
         });
 
         describe('module-level hooks (event handlers)', function () {
-            var handler = jasmine.createSpy().and.returnValue(Q());
+            var handler = jasmine.createSpy().and.returnValue(Promise.resolve());
 
             afterEach(function () {
                 cordova.removeAllListeners(test_event);
@@ -353,7 +353,7 @@ describe('HooksRunner', function () {
                 // Delay 100 ms here to check that h2 is not executed until after
                 // the promise returned by h1 is resolved.
                 const h1 = _ => Q.delay(100).then(_ => order.push(1));
-                const h2 = _ => Q().then(_ => order.push(2));
+                const h2 = _ => Promise.resolve().then(_ => order.push(2));
 
                 cordova.on(test_event, h1);
                 cordova.on(test_event, h2);
@@ -365,7 +365,7 @@ describe('HooksRunner', function () {
             it('Test 021 : should pass data object that fire calls into async handlers', function () {
                 var asyncHandler = function (opts) {
                     expect(opts).toEqual(hookOptions);
-                    return Q();
+                    return Promise.resolve();
                 };
                 cordova.on(test_event, asyncHandler);
                 return hooksRunner.fire(test_event, hookOptions);

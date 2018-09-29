@@ -25,7 +25,6 @@ var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
 var events = require('cordova-common').events;
 var platforms = require('../platforms/platforms');
 var HooksRunner = require('../hooks/HooksRunner');
-var Q = require('q');
 var restore = require('./restore-util');
 var path = require('path');
 var config = require('./config');
@@ -36,7 +35,7 @@ module.exports.preparePlatforms = preparePlatforms;
 module.exports.restoreMissingPluginsForPlatform = restoreMissingPluginsForPlatform;
 
 function prepare (options) {
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
         var config_json = config.read(projectRoot);
         options = options || { verbose: false, platforms: [], options: {} };
@@ -79,7 +78,7 @@ function prepare (options) {
  * @return  {Promise}
  */
 function preparePlatforms (platformList, projectRoot, options) {
-    return Q.all(platformList.map(function (platform) {
+    return Promise.all(platformList.map(function (platform) {
         // TODO: this need to be replaced by real projectInfo
         // instance for current project.
         var project = {
@@ -154,7 +153,7 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
     if (missingPlugins.length === 0) {
         events.emit('verbose', 'No differences found between plugins added to project and installed in ' +
             platform + ' platform. Continuing...');
-        return Q.resolve();
+        return Promise.resolve();
     }
     var api = platforms.getPlatformApi(platform);
     var provider = new PluginInfoProvider();
@@ -170,5 +169,5 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
                     return api.addPlugin(pluginInfo, pluginOptions);
                 });
         });
-    }, Q());
+    }, Promise.resolve());
 }

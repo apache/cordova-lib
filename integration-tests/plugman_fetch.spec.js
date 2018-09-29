@@ -29,7 +29,6 @@ var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
 var test_plugin_searchpath = path.join(test_plugin, '..');
 var test_plugin_id = 'org.test.plugins.childbrowser';
 var test_plugin_version = '0.6.0';
-var Q = require('q');
 
 describe('fetch', function () {
 
@@ -73,7 +72,7 @@ describe('fetch', function () {
             revertLocal = fetch.__set__('localPlugins', null);
             revertFetch = fetch.__set__('fetch', function (pluginDir) {
                 fetchCalls++;
-                return Q(pluginDir);
+                return Promise.resolve(pluginDir);
             });
         });
 
@@ -150,7 +149,7 @@ describe('fetch', function () {
         var srcDir = path.join(plugins_dir, 'recursivePlug');
         var appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
         fetch.__set__('fetch', function (pluginDir) {
-            return Q(pluginDir);
+            return Promise.resolve(pluginDir);
         });
 
         it('Test 021 : should skip copy to avoid recursive error', function () {

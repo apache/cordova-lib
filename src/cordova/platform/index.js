@@ -15,7 +15,6 @@
     under the License.
 */
 
-var Q = require('q');
 var cordova_util = require('../util');
 var HooksRunner = require('../../hooks/HooksRunner');
 var CordovaError = require('cordova-common').CordovaError;
@@ -50,7 +49,7 @@ for (var p in platforms) {
 function platform (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
     // would result in promise rejection instead of uncaught exception
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var msg;
         var projectRoot = cordova_util.cdProjectRoot();
         var hooksRunner = new HooksRunner(projectRoot);
@@ -62,7 +61,7 @@ function platform (command, targets, opts) {
         // TODO: wouldn't update need a platform, too? what about save?
         if ((command === 'add' || command === 'rm' || command === 'remove') && (!targets || (targets instanceof Array && targets.length === 0))) {
             msg = 'You need to qualify `' + command + '` with one or more platforms!';
-            return Q.reject(new CordovaError(msg));
+            return Promise.reject(new CordovaError(msg));
         }
 
         opts = opts || {};

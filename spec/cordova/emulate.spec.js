@@ -19,7 +19,6 @@
 var cordova = require('../../src/cordova/cordova');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
-var Q = require('q');
 var util = require('../../src/cordova/util');
 
 var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
@@ -35,11 +34,11 @@ describe('emulate command', function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
         platformApi = {
-            run: jasmine.createSpy('run').and.returnValue(Q()),
-            build: jasmine.createSpy('build').and.returnValue(Q())
+            run: jasmine.createSpy('run').and.returnValue(Promise.resolve()),
+            build: jasmine.createSpy('build').and.returnValue(Promise.resolve())
         };
 
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
@@ -93,7 +92,7 @@ describe('emulate command', function () {
                 originalBuildSpy = platformApi.build;
                 platformApi.build = jasmine.createSpy('build').and.callFake(function (opts) {
                     opts.couldBeModified = 'insideBuild';
-                    return Q();
+                    return Promise.resolve();
                 });
             });
             afterEach(function () {
@@ -149,7 +148,7 @@ describe('emulate command', function () {
         describe('with no platforms added', function () {
             it('Test 011 : should not fire the hooker', function () {
                 list_platforms.and.returnValue([]);
-                return Q().then(cordova.emulate).then(function () {
+                return Promise.resolve().then(cordova.emulate).then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
                     expect(err).toEqual(jasmine.any(Error));

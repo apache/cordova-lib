@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var fs = require('fs-extra');
 var path = require('path');
 var et = require('elementtree');
@@ -35,7 +34,7 @@ module.exports = function create (name, id, version, pluginPath, options) {
 
     // Check we are not already in a plugin
     if (fs.existsSync(cwd + 'plugin.xml')) {
-        return Q.reject(new CordovaError('plugin.xml already exists. Are you already in a plugin?'));
+        return Promise.reject(new CordovaError('plugin.xml already exists. Are you already in a plugin?'));
     }
 
     // Create a plugin.xml file
@@ -78,5 +77,5 @@ module.exports = function create (name, id, version, pluginPath, options) {
     // Write out the plugin.xml file
     fs.writeFileSync(cwd + 'plugin.xml', new et.ElementTree(root).write({indent: 4}), 'utf-8');
 
-    return Q();
+    return Promise.resolve();
 };

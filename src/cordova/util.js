@@ -22,7 +22,6 @@ var path = require('path');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
-var Q = require('q');
 var platforms = require('../platforms/platforms');
 
 // Global configuration paths
@@ -225,7 +224,7 @@ function getInstalledPlatformsWithVersions (project_dir) {
     var result = {};
     var platforms_on_fs = listPlatforms(project_dir);
 
-    return Q.all(platforms_on_fs.map(function (p) {
+    return Promise.all(platforms_on_fs.map(function (p) {
         var superspawn = require('cordova-common').superspawn;
         return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
             .then(function (v) {

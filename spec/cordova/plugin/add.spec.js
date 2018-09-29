@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var rewire = require('rewire');
 var add = rewire('../../../src/cordova/plugin/add');
 var plugman = require('../../../src/plugman/plugman');
@@ -40,7 +39,7 @@ describe('cordova/plugin/add', function () {
 
     beforeEach(function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
-        hook_mock.fire.and.returnValue(Q());
+        hook_mock.fire.and.returnValue(Promise.resolve());
         Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin', 'removePlugin', 'addPlugin', 'write']);
         cfg_parser_revert_mock = add.__set__('ConfigParser', Cfg_parser_mock);
         plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
@@ -63,8 +62,8 @@ describe('cordova/plugin/add', function () {
         // requireNoCache is used to require package.json
         spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
         spyOn(events, 'emit');
-        spyOn(plugin_util, 'info').and.returnValue(Q());
-        spyOn(add, 'getFetchVersion').and.returnValue(Q());
+        spyOn(plugin_util, 'info').and.returnValue(Promise.resolve());
+        spyOn(add, 'getFetchVersion').and.returnValue(Promise.resolve());
         spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
     afterEach(function () {
@@ -75,12 +74,12 @@ describe('cordova/plugin/add', function () {
 
         beforeEach(function () {
             spyOn(add, 'determinePluginTarget').and.callFake(function (projRoot, cfg, target, opts) {
-                return Q(target);
+                return Promise.resolve(target);
             });
             spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, opts) {
-                return Q(target);
+                return Promise.resolve(target);
             });
-            spyOn(plugman, 'install').and.returnValue(Q(true));
+            spyOn(plugman, 'install').and.returnValue(Promise.resolve(true));
             spyOn(cordova_util, 'listPlatforms').and.callFake(function () {
                 return ['android'];
             });
@@ -319,7 +318,7 @@ describe('cordova/plugin/add', function () {
                         });
                 });
                 it('should feed registry.info plugin information into getFetchVersion', function () {
-                    plugin_util.info.and.returnValue(Q({'plugin': 'info'}));
+                    plugin_util.info.and.returnValue(Promise.resolve({'plugin': 'info'}));
                     return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
                             expect(plugin_util.info).toHaveBeenCalled();
@@ -329,7 +328,7 @@ describe('cordova/plugin/add', function () {
                         });
                 });
                 it('should return the target as plugin-id@fetched-version', function () {
-                    add.getFetchVersion.and.returnValue(Q('1.0.0'));
+                    add.getFetchVersion.and.returnValue(Promise.resolve('1.0.0'));
                     return add.determinePluginTarget(projectRoot, Cfg_parser_mock, 'cordova-plugin-device', {})
                         .then(function (target) {
                             expect(plugin_util.info).toHaveBeenCalled();
@@ -376,7 +375,7 @@ describe('cordova/plugin/add', function () {
                 add.getFetchVersion.and.callThrough();
                 pluginInfo = {};
                 spyOn(plugin_util, 'getInstalledPlugins').and.returnValue([]);
-                spyOn(cordova_util, 'getInstalledPlatformsWithVersions').and.returnValue(Q({}));
+                spyOn(cordova_util, 'getInstalledPlatformsWithVersions').and.returnValue(Promise.resolve({}));
                 spyOn(add, 'determinePluginVersionToFetch');
             });
             it('should resolve with null if plugin info does not contain engines and engines.cordovaDependencies properties', function () {
@@ -387,7 +386,7 @@ describe('cordova/plugin/add', function () {
             });
             it('should retrieve installed plugins and installed platforms version and feed that information into determinePluginVersionToFetch', function () {
                 plugin_util.getInstalledPlugins.and.returnValue([{'id': 'cordova-plugin-camera', 'version': '2.0.0'}]);
-                cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Q({'android': '6.0.0'}));
+                cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Promise.resolve({'android': '6.0.0'}));
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = {'^1.0.0': {'cordova': '>7.0.0'}};
                 return add.getFetchVersion(projectRoot, pluginInfo, '7.0.0')

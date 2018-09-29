@@ -17,7 +17,6 @@
 
 var path = require('path');
 var fs = require('fs-extra');
-var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
@@ -36,7 +35,7 @@ describe('cordova/platform/remove', function () {
 
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
-        hooks_mock.fire.and.returnValue(Q());
+        hooks_mock.fire.and.returnValue(Promise.resolve());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine']);
 
         platform_remove = rewire('../../../src/cordova/platform/remove');

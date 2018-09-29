@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var et = require('elementtree');
 var fs = require('fs-extra');
 var path = require('path');
@@ -33,7 +32,7 @@ module.exports = {
 
         // Check to make sure we are in the plugin first
         if (!fs.existsSync('plugin.xml')) {
-            return Q.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
+            return Promise.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
         }
 
         // Get the current plugin.xml file
@@ -41,7 +40,7 @@ module.exports = {
 
         // Check if this platform exists
         if (pluginxml.find("./platform/[@name='" + platformName + "']")) {
-            return Q.reject(new Error('platform: ' + platformName + ' already added'));
+            return Promise.reject(new Error('platform: ' + platformName + ' already added'));
         }
 
         // Get the platform specific elements
@@ -49,18 +48,18 @@ module.exports = {
 
         // Make sure we support it
         if (!platform) {
-            return Q.reject(new Error('platform: ' + platformName + ' not yet supported'));
+            return Promise.reject(new Error('platform: ' + platformName + ' not yet supported'));
         }
 
         pluginxml.getroot().append(platform.getroot());
 
         fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', {indent: 4}), 'utf-8');
-        return Q();
+        return Promise.resolve();
     },
     remove: function (platformName) {
         // Check to make sure we are in the plugin first
         if (!fs.existsSync('plugin.xml')) {
-            return Q.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
+            return Promise.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
         }
 
         // Get the current plugin.xml file
@@ -68,7 +67,7 @@ module.exports = {
 
         // Check if this platform exists
         if (!pluginxml.find("./platform/[@name='" + platformName + "']")) {
-            return Q.reject(new Error('platform: ' + platformName + " hasn't been added"));
+            return Promise.reject(new Error('platform: ' + platformName + " hasn't been added"));
         }
 
         // Remove the Platform in question
@@ -80,7 +79,7 @@ module.exports = {
         // Remove the src/"platform"
         fs.removeSync(path.join('src', platformName));
 
-        return Q();
+        return Promise.resolve();
     }
 };
 

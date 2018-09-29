@@ -17,7 +17,6 @@
     under the License.
 */
 
-const Q = require('q');
 const fs = require('fs-extra');
 const path = require('path');
 const rewire = require('rewire');
@@ -102,14 +101,14 @@ describe('plugman/uninstall', () => {
         beforeEach(function () {
             setupProject('uninstall.test');
 
-            spyOn(ActionStack.prototype, 'process').and.returnValue(Q());
+            spyOn(ActionStack.prototype, 'process').and.returnValue(Promise.resolve());
             spyOn(fs, 'copySync');
         });
 
         describe('success', function () {
 
             it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
-                const platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Q()) };
+                const platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Promise.resolve()) };
                 const getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
 
                 return uninstall.uninstallPlatform('android', project, dummy_id)
@@ -137,7 +136,7 @@ describe('plugman/uninstall', () => {
                     return values.reduce(function (promise, value) {
                         return promise
                             .then(function () {
-                                platformApi.removePlugin.and.returnValue(Q(value));
+                                platformApi.removePlugin.and.returnValue(Promise.resolve(value));
                                 return uninstall.uninstallPlatform('android', project, dummy_id, null,
                                     { pluginInfoProvider: fakeProvider, platformVersion: '9.9.9' });
                             })
@@ -146,7 +145,7 @@ describe('plugman/uninstall', () => {
                             }, function (err) {
                                 expect(err).toBeUndefined();
                             });
-                    }, Q());
+                    }, Promise.resolve());
                 }
 
                 return validateReturnedResultFor([ true, {}, [], 'foo', function () {} ], true)

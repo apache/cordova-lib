@@ -22,7 +22,6 @@ var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
 var path = require('path');
 var fs = require('fs-extra');
-var Q = require('q');
 
 const indent = s => require('indent-string')(s, 2);
 
@@ -55,8 +54,8 @@ module.exports = function info () {
     ];
 
     const infoPromises = [].concat(basicInfo, projectInfo);
-    const failSafePromises = infoPromises.map(p => Q(p).catch(err => err));
-    return Q.all(failSafePromises)
+    const failSafePromises = infoPromises.map(p => Promise.resolve(p).catch(err => err));
+    return Promise.all(failSafePromises)
         .then(results => console.info(results.join('\n\n')));
 };
 
@@ -70,7 +69,7 @@ function cordovaVersionInfo () {
 }
 
 function environmentInformation () {
-    return Q.all([
+    return Promise.all([
         'OS: ' + process.platform,
         'Node: ' + process.version,
         failSafeSpawn('npm', ['-v']).then(out => 'npm: ' + out)
@@ -90,7 +89,7 @@ function getPlatforms (projectRoot) {
     if (!platforms.length) {
         return 'No Platforms Currently Installed';
     }
-    return Q.all(platforms.map(getPlatformInfo))
+    return Promise.all(platforms.map(getPlatformInfo))
         .then(outs => outs.join('\n\n'));
 }
 

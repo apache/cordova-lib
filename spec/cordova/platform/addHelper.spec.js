@@ -17,7 +17,6 @@
 
 var path = require('path');
 var fs = require('fs-extra');
-var Q = require('q');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var platform_module = require('../../../src/cordova/platform');
@@ -42,15 +41,15 @@ describe('cordova/platform/addHelper', function () {
             devDependencies: {}
         };
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
-        hooks_mock.fire.and.returnValue(Q());
+        hooks_mock.fire.and.returnValue(Promise.resolve());
 
         cfg_parser_mock = function () {};
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', [
             'write', 'removeEngine', 'addEngine', 'getHookScripts'
         ]);
-        fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Q());
-        prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Q());
-        prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Q());
+        fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Promise.resolve());
+        prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Promise.resolve());
+        prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Promise.resolve());
 
         // `cordova.prepare` is never saved to a variable, so we need to fake `require`
         platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
@@ -79,13 +78,13 @@ describe('cordova/platform/addHelper', function () {
         // Fake platform details we will use for our mocks, returned by either
         // getPlatfromDetailsFromDir (in the local-directory case), or
         // downloadPlatform (in every other case)
-        spyOn(platform_module, 'getPlatformDetailsFromDir').and.returnValue(Q(fake_platform));
-        spyOn(platform_addHelper, 'downloadPlatform').and.returnValue(Q(fake_platform));
+        spyOn(platform_module, 'getPlatformDetailsFromDir').and.returnValue(Promise.resolve(fake_platform));
+        spyOn(platform_addHelper, 'downloadPlatform').and.returnValue(Promise.resolve(fake_platform));
         spyOn(platform_addHelper, 'getVersionFromConfigFile').and.returnValue(false);
-        spyOn(platform_addHelper, 'installPluginsForNewPlatform').and.returnValue(Q());
+        spyOn(platform_addHelper, 'installPluginsForNewPlatform').and.returnValue(Promise.resolve());
         platform_api_mock = jasmine.createSpyObj('platform api mock', ['createPlatform', 'updatePlatform']);
-        platform_api_mock.createPlatform.and.returnValue(Q());
-        platform_api_mock.updatePlatform.and.returnValue(Q());
+        platform_api_mock.createPlatform.and.returnValue(Promise.resolve());
+        platform_api_mock.updatePlatform.and.returnValue(Promise.resolve());
         spyOn(cordova_util, 'getPlatformApiFunction').and.returnValue(platform_api_mock);
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
     });
@@ -280,7 +279,7 @@ describe('cordova/platform/addHelper', function () {
         });
         describe('errors', function () {
             it('should reject the promise should fetch fail', function () {
-                fetch_mock.and.returnValue(Q.reject('fetch has failed, rejecting promise'));
+                fetch_mock.and.returnValue(Promise.reject('fetch has failed, rejecting promise'));
                 return platform_addHelper.downloadPlatform(projectRoot, 'android', '67').then(function () {
                     fail('success handler unexpectedly invoked');
                 }, function (e) {
@@ -306,7 +305,7 @@ describe('cordova/platform/addHelper', function () {
     describe('installPluginsForNewPlatform', function () {
         beforeEach(function () {
             spyOn(fetch_metadata, 'get_fetch_metadata');
-            spyOn(plugman, 'install').and.returnValue(Q());
+            spyOn(plugman, 'install').and.returnValue(Promise.resolve());
             platform_addHelper.installPluginsForNewPlatform.and.callThrough();
         });
 

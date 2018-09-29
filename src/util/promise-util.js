@@ -17,26 +17,24 @@
     under the License.
 */
 
-var Q = require('q');
-
 // Given a function and an array of values, creates a chain of promises that
 // will sequentially execute func(args[i]).
 // Returns a promise.
 //
 function Q_chainmap (args, func) {
-    return Q.when().then(function (inValue) {
+    return Promise.resolve().then(function (inValue) {
         return args.reduce(function (soFar, arg) {
             return soFar.then(function (val) {
                 return func(arg, val);
             });
-        }, Q(inValue));
+        }, Promise.resolve(inValue));
     });
 }
 
 // Behaves similar to Q_chainmap but gracefully handles failures.
 // When a promise in the chain is rejected, it will call the failureCallback and then continue the processing, instead of stopping
 function Q_chainmap_graceful (args, func, failureCallback) {
-    return Q.when().then(function (inValue) {
+    return Promise.resolve().then(function (inValue) {
         return args.reduce(function (soFar, arg) {
             return soFar.then(function (val) {
                 return func(arg, val);
@@ -45,7 +43,7 @@ function Q_chainmap_graceful (args, func, failureCallback) {
                     failureCallback(err);
                 }
             });
-        }, Q(inValue));
+        }, Promise.resolve(inValue));
     });
 }
 

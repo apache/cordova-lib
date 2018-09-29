@@ -17,13 +17,12 @@
     under the License.
 */
 
-var Q = require('q');
 var cordovaUtil = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 
 // Returns a promise.
 module.exports = function build (options) {
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var projectRoot = cordovaUtil.cdProjectRoot();
         options = cordovaUtil.preProcessOptions(options);
 

@@ -19,7 +19,6 @@
 
 var cordova_util = require('./util');
 var ConfigParser = require('cordova-common').ConfigParser;
-var Q = require('q');
 var semver = require('semver');
 
 /** Returns all the platforms that are currently saved into config.xml
@@ -45,7 +44,7 @@ function getPlatforms (projectRoot) {
         return result;
     });
 
-    return Q(engines);
+    return Promise.resolve(engines);
 }
 
 /** Returns all the plugins that are currently saved into config.xml
@@ -82,7 +81,7 @@ function getPlugins (projectRoot) {
         return result;
     });
 
-    return Q(plugins);
+    return Promise.resolve(plugins);
 }
 
 module.exports = {

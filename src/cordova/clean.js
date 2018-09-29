@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var events = require('cordova-common').events;
@@ -26,7 +25,7 @@ var platform_lib = require('../platforms/platforms');
 
 // Returns a promise.
 module.exports = function clean (options) {
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
         options = cordova_util.preProcessOptions(options);
 

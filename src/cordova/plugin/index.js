@@ -18,7 +18,6 @@
 */
 
 var cordova_util = require('../util');
-var Q = require('q');
 var CordovaError = require('cordova-common').CordovaError;
 var HooksRunner = require('../../hooks/HooksRunner');
 
@@ -31,7 +30,7 @@ module.exports.save = require('./save');
 function plugin (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
     // would result in promise rejection instead of uncaught exception
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
 
         // Dance with all the possible call signatures we've come up over the time. They can be:
@@ -61,7 +60,7 @@ function plugin (command, targets, opts) {
         if (!targets || !targets.length) {
             // TODO: what if command provided is 'remove' ? shouldnt search need a target too?
             if (command === 'add' || command === 'rm') {
-                return Q.reject(new CordovaError('You need to qualify `' + cordova_util.binname + ' plugin add` or `' + cordova_util.binname + ' plugin remove` with one or more plugins!'));
+                return Promise.reject(new CordovaError('You need to qualify `' + cordova_util.binname + ' plugin add` or `' + cordova_util.binname + ' plugin remove` with one or more plugins!'));
             } else {
                 targets = [];
             }

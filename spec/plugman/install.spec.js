@@ -21,7 +21,6 @@ const child_process = require('child_process');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
-const Q = require('q');
 const semver = require('semver');
 
 const { events, PlatformJson, superspawn } = require('cordova-common');
@@ -63,8 +62,8 @@ const fake = {
     },
     fetch: {
         dependencies (id, dir) {
-            if (id === pluginDir('A')) { return Q(id); } // full path to plugin
-            return Q(path.join(plugins_dir, 'dependencies', id));
+            if (id === pluginDir('A')) { return Promise.resolve(id); } // full path to plugin
+            return Promise.resolve(path.join(plugins_dir, 'dependencies', id));
         }
     }
 };
@@ -115,11 +114,11 @@ describe('plugman/install', () => {
         exec = spyOn(child_process, 'exec').and.callFake((cmd, cb) => {
             cb(null, '', '');
         });
-        spyOn(superspawn, 'spawn').and.returnValue(Q('3.1.0'));
+        spyOn(superspawn, 'spawn').and.returnValue(Promise.resolve('3.1.0'));
         spyOn(fs, 'ensureDirSync');
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
-        fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Q(pluginDir('com.cordova.engine')));
+        fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Promise.resolve(pluginDir('com.cordova.engine')));
         spyOn(fs, 'writeFileSync');
         spyOn(fs, 'copySync');
         spyOn(fs, 'removeSync');
@@ -140,7 +139,7 @@ describe('plugman/install', () => {
             expect(results['emit_results'][2]).toBe('Remember that your api key is batman!');
         }, TIMEOUT);
         it('Test 005 : should call fetch if provided plugin cannot be resolved locally', () => {
-            fetchSpy.and.returnValue(Q(pluginDir('org.test.plugins.dummyplugin')));
+            fetchSpy.and.returnValue(Promise.resolve(pluginDir('org.test.plugins.dummyplugin')));
             spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
             return install('android', project, 'CLEANYOURSHORTS')
                 .then(() => {
@@ -228,7 +227,7 @@ describe('plugman/install', () => {
                 });
 
                 class PlatformApiMock {
-                    static addPlugin () { return Q(); }
+                    static addPlugin () { return Promise.resolve(); }
                 }
                 spyOn(knownPlatforms, 'getPlatformApi').and.returnValue(PlatformApiMock);
             });

@@ -20,7 +20,6 @@
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
 var events = require('cordova-common').events;
-var Q = require('q');
 
 var plugman = {
     on: events.on.bind(events),
@@ -70,7 +69,7 @@ plugman.commands = {
             force: cli_opts.force || false,
             nohooks: cli_opts.nohooks || false
         };
-        var p = Q();
+        var p = Promise.resolve();
         cli_opts.plugin.forEach(function (pluginSrc) {
             p = p.then(function () {
                 return plugman.install(cli_opts.platform, cli_opts.project, pluginSrc, cli_opts.plugins_dir, opts);
@@ -84,7 +83,7 @@ plugman.commands = {
             return console.log(plugman.help());
         }
 
-        var p = Q();
+        var p = Promise.resolve();
         cli_opts.plugin.forEach(function (pluginSrc) {
             var opts = {
                 www_dir: cli_opts.www,

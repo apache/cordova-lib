@@ -28,7 +28,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var CordovaError = require('cordova-common').CordovaError;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var events = require('cordova-common').events;
-var Q = require('q');
 var path = require('path');
 var fs = require('fs-extra');
 var semver = require('semver');
@@ -47,7 +46,7 @@ module.exports.listUnmetRequirements = listUnmetRequirements;
 
 function add (projectRoot, hooksRunner, opts) {
     if (!opts.plugins || !opts.plugins.length) {
-        return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to add.'));
+        return Promise.reject(new CordovaError('No plugin specified. Please specify a plugin to add.'));
     }
     var pluginInfo;
     var shouldRunPrepare = false;
@@ -193,11 +192,11 @@ function add (projectRoot, hooksRunner, opts) {
                         events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
                     }
                 });
-            }, Q());
+            }, Promise.resolve());
         }).then(function () {
             // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
             if (!shouldRunPrepare) {
-                return Q();
+                return Promise.resolve();
             }
             // Need to require right here instead of doing this at the beginning of file
             // otherwise tests are failing without any real reason.
@@ -215,7 +214,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // CB-10975 We need to resolve relative path to plugin dir from app's root before checking whether if it exists
     var maybeDir = cordova_util.fixRelativePath(id);
     if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(maybeDir)) {
-        return Q(target);
+        return Promise.resolve(target);
     }
     // Require project pkgJson.
     var pkgJson;
@@ -268,12 +267,12 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     } */
 
     if (cordova_util.isUrl(parsedSpec.version) || cordova_util.isDirectory(parsedSpec.version) || pluginSpec.parse(parsedSpec.version).scope) {
-        return Q(parsedSpec.version);
+        return Promise.resolve(parsedSpec.version);
     }
 
     // If version exists in pkg.json or config.xml, use that.
     if (parsedSpec.version) {
-        return Q(id + '@' + parsedSpec.version);
+        return Promise.resolve(id + '@' + parsedSpec.version);
     }
     // If no version is given at all and we are fetching from npm, we
     // can attempt to use the Cordova dependencies the plugin lists in
@@ -291,7 +290,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     return (shouldUseNpmInfo ? plugin_util.info([id])
         .then(function (pluginInfo) {
             return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
-        }) : Q(null))
+        }) : Promise.resolve(null))
         .then(function (fetchVersion) {
             return fetchVersion ? (id + '@' + fetchVersion) : target;
         });
@@ -358,7 +357,7 @@ function getFetchVersion (projectRoot, pluginInfo, cordovaVersion) {
     } else {
         // If we have no engine, we want to fall back to the default behavior
         events.emit('verbose', 'npm info for ' + pluginInfo.name + ' did not contain any engine info. Fetching latest release');
-        return Q(null);
+        return Promise.resolve(null);
     }
 }
 

@@ -32,7 +32,7 @@ var knownPlatforms = require('../platforms/platforms');
  *   requirements check results for each platform.
  */
 module.exports = function check_reqs (platforms) {
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var platforms = cordova_util.preProcessOptions(platforms).platforms; // eslint-disable-line no-use-before-define
 
         return Q.allSettled(platforms.map(function (platform) {
