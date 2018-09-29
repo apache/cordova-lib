@@ -21,11 +21,9 @@ var path = require('path');
 var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
 var DepGraph = require('dep-graph');
-var child_process = require('child_process');
 var semver = require('semver');
 var PlatformJson = require('cordova-common').PlatformJson;
 var CordovaError = require('cordova-common').CordovaError;
-var Q = require('q');
 var platform_modules = require('../platforms/platforms');
 var os = require('os');
 var underscore = require('underscore');
@@ -170,26 +168,21 @@ function callEngineScripts (engines, project_dir) {
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
             if (scriptPath && (isWindows || fs.existsSync(engine.scriptSrc))) {
 
-                var d = Q.defer();
                 if (!isWindows) { // not required on Windows
                     fs.chmodSync(engine.scriptSrc, '755');
                 }
-                child_process.exec(scriptPath, function (error, stdout, stderr) {
-                    if (error) {
-                        events.emit('warn', engine.name + ' version check failed (' + scriptPath + '), continuing anyways.');
-                        engine.currentVersion = null;
-                    } else {
+                return superspawn.spawn(scriptPath)
+                    .then(stdout => {
                         engine.currentVersion = cleanVersionOutput(stdout, engine.name);
                         if (engine.currentVersion === '') {
                             events.emit('warn', engine.name + ' version check returned nothing (' + scriptPath + '), continuing anyways.');
                             engine.currentVersion = null;
                         }
-                    }
-
-                    d.resolve(engine);
-                });
-                return d.promise;
-
+                    }, () => {
+                        events.emit('warn', engine.name + ' version check failed (' + scriptPath + '), continuing anyways.');
+                        engine.currentVersion = null;
+                    })
+                    .then(_ => engine);
             } else {
 
                 if (engine.currentVersion) {
@@ -437,31 +430,26 @@ function tryFetchDependency (dep, install, options) {
         }
 
         // Now there are two cases here: local directory, and git URL.
-        var d = Q.defer();
-
         if (fetchdata.source.type === 'local') {
 
             dep.url = fetchdata.source.path;
 
-            child_process.exec('git rev-parse --show-toplevel', { cwd: dep.url }, function (err, stdout, stderr) {
-                if (err) {
+            return superspawn.spawn('git rev-parse --show-toplevel', { cwd: dep.url })
+                .catch(err => {
                     if (err.code === 128) {
-                        return d.reject(new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.'));
+                        throw new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.');
                     } else {
-                        return d.reject(new Error('Failed to locate git repository for ' + dep.id + ' plugin.'));
+                        throw new Error('Failed to locate git repository for ' + dep.id + ' plugin.');
                     }
-                }
-                return d.resolve(stdout.trim());
-            });
-
-            return d.promise.then(function (git_repo) {
-                // Clear out the subdir since the url now contains it
-                var url = path.join(git_repo, dep.subdir);
-                dep.subdir = '';
-                return Promise.resolve(url);
-            }).catch(function () {
-                return Promise.resolve(dep.url);
-            });
+                })
+                .then(function (git_repo) {
+                    // Clear out the subdir since the url now contains it
+                    var url = path.join(git_repo, dep.subdir);
+                    dep.subdir = '';
+                    return Promise.resolve(url);
+                }).catch(function () {
+                    return Promise.resolve(dep.url);
+                });
 
         } else if (fetchdata.source.type === 'git') {
             return Promise.resolve(fetchdata.source.url);
