@@ -11,3 +11,4 @@ rules:
   linebreak-style:
     - error
     - unix
+  promise/catch-or-return: error
