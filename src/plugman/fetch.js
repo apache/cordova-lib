@@ -93,7 +93,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                                 path: directory
                             }
                         };
-                    }).fail(function (error) {
+                    }).catch(function (error) {
                         // something went wrong with cordova-fetch
                         return Q.reject(new CordovaError(error.message));
                     });
