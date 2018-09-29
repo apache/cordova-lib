@@ -119,7 +119,7 @@ function checkEngines (engines) {
                       engine.name + ': ' + engine.currentVersion +
                       ', failed version requirement: ' + engine.minVersion;
             events.emit('warn', msg);
-            return Promise.reject('skip');
+            return Promise.reject(Object.assign(new Error(), { skip: true }));
         }
     }
 
@@ -366,7 +366,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
     ).catch(
         function (error) {
 
-            if (error === 'skip') {
+            if (error.skip) {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
                 events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\': ' + error.stack);
