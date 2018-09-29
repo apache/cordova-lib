@@ -17,171 +17,362 @@
     under the License.
 */
 
-var cordova = require('../../src/cordova/cordova');
-var console = require('console');
-var path = require('path');
-// var shell = require('shelljs');
-var fs = require('fs-extra');
-var Q = require('q');
-var tempDir;
-var http = require('http');
+const path = require('path');
+const fs = require('fs-extra');
+const rewire = require('rewire');
+const cordovaServe = require('cordova-serve');
+const { tmpDir: getTmpDir, omniStub } = require('../helpers');
+const cordova = require('../../src/cordova/cordova');
+const cordovaUtil = require('../../src/cordova/util');
+const platforms = require('../../src/platforms/platforms');
 
-var cwd = process.cwd();
+describe('cordova/serve', () => {
+    let serve;
 
-// skipped because of CB-7078
-xdescribe('serve command', function () {
-    var payloads = {};
-    var consoleSpy; // eslint-disable-line  no-unused-vars
-    beforeEach(function () {
-        // Make a temp directory
-        tempDir = path.join(__dirname, '..', 'temp-' + Date.now());
-        fs.emptyDirSync(tempDir);
-        consoleSpy = spyOn(console, 'log');
+    beforeEach(() => {
+        serve = rewire('../../src/cordova/serve');
     });
-    afterEach(function () {
-        process.chdir(cwd);
-        process.env.PWD = cwd;
-        fs.removeSync(tempDir);
-    });
-    it('Test 001 : should not run outside of a Cordova-based project', function () {
-        process.chdir(tempDir);
 
-        expect(function () {
-            cordova.serve().then(function (server) {
-                expect(server).toBe(null);
-                server.close();
+    describe('main export', () => {
+        const PROJECT_ROOT = '/root';
+
+        class HooksRunnerMock {
+            constructor (dir) { expect(dir).toBe(PROJECT_ROOT); }
+            fire (hook, fireOpts) { return Promise.resolve(); }
+        }
+
+        beforeEach(() => {
+            spyOn(cordovaUtil, 'cdProjectRoot').and.returnValue(PROJECT_ROOT);
+            serve.__set__({
+                HooksRunner: HooksRunnerMock,
+                serve: jasmine.createSpy('serve', _ => Promise.resolve())
             });
-        }).toThrow('Current working directory is not a Cordova-based project.');
+        });
+
+        it('should call hooks and `serve` in proper order', () => {
+            const PORT = 1234567;
+            const OPTS = {};
+
+            // Records order of some spy calls since jasmine has no support for
+            // checking interleaved calls.
+            const calls = [];
+            const pushAndResolve = tag => {
+                calls.push(tag);
+                return Promise.resolve(tag);
+            };
+            serve.__get__('serve').and.callFake(port => {
+                expect(port).toBe(PORT);
+                return pushAndResolve('serve');
+            });
+            spyOn(HooksRunnerMock.prototype, 'fire').and.callFake((hook, opts) => {
+                expect(opts).toBe(OPTS);
+                return pushAndResolve(hook);
+            });
+
+            return serve(PORT, OPTS).then(result => {
+                expect(result).toBe('serve');
+                expect(calls).toEqual([
+                    'before_serve', 'serve', 'after_serve'
+                ]);
+            });
+        });
+
+        it('should fail if run outside of a Cordova project', () => {
+            const fakeMessage = 'CAN I HAZ CORDOVA PLZ?';
+            cordovaUtil.cdProjectRoot.and.throwError(fakeMessage);
+
+            return serve(1234567, {}).then(() => {
+                fail('Expected promise to be rejected');
+            }, function (err) {
+                expect(err).toEqual(jasmine.any(Error));
+                expect(err.message).toBe(fakeMessage);
+                expect(cordovaUtil.cdProjectRoot).toHaveBeenCalled();
+            });
+        });
+
+        it('should fail if serve fails', () => {
+            const fakeError = new Error();
+            serve.__get__('serve').and.returnValue(Promise.reject(fakeError));
+
+            return serve(1234567, {}).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
     });
 
-    describe('`serve`', function () {
-        var done = false; // eslint-disable-line  no-unused-vars
-        var failed = false;
-        beforeEach(function () {
-            done = false;
-            failed = false;
+    describe('serve', () => {
+        let privateServe, serverSpy;
+
+        beforeEach(() => {
+            serverSpy = jasmine.createSpyObj('server', ['launchServer']);
+            serverSpy.app = Symbol('server.app');
+            serverSpy.server = Symbol('server.server');
+
+            spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
+
+            serve.__set__({
+                cordovaServe: jasmine.createSpy('cordova-serve').and.returnValue(serverSpy),
+                registerRoutes: jasmine.createSpy('registerRoutes')
+            });
+            privateServe = serve.__get__('serve');
         });
 
-        afterEach(function () {
-            payloads = {};
+        it('should launch a server after preparing the project', () => {
+            const PORT = 1234567;
+            const registerRoutes = serve.__get__('registerRoutes');
+
+            return privateServe(PORT).then(result => {
+                expect(result).toBe(serverSpy.server);
+                expect(registerRoutes).toHaveBeenCalledWith(serverSpy.app);
+                expect(serverSpy.launchServer).toHaveBeenCalledWith(
+                    jasmine.objectContaining({ port: PORT })
+                );
+                expect(cordova.prepare).toHaveBeenCalledBefore(serverSpy.launchServer);
+            });
         });
 
-        function cit (cond) {
-            if (cond) {
-                return it;
-            }
-            return xit;
-        }
-        function itifapps (apps) {
-            return cit(apps.every(function (bin) { /* return shell.which(bin); */ }));
-        }
+        it('should work without arguments', () => {
+            return privateServe().then(result => {
+                expect(serverSpy.launchServer).toHaveBeenCalledWith(
+                    jasmine.objectContaining({ port: 8000 })
+                );
+            });
+        });
 
-        function test_serve (platform, ref, expectedContents, opts) {
-            var timeout = (opts && 'timeout' in opts && opts.timeout) || (1000);
-            return function () {
-                var server;
-                runs(function () {
-                    cordova.create(tempDir).then(function () {
-                        process.chdir(tempDir);
-                        process.env.PWD = tempDir;
-                        var plats = [];
-                        Object.getOwnPropertyNames(payloads).forEach(function (plat) {
-                            var d = Q.defer();
-                            plats.push(d.promise);
-                            cordova.platform('add', plat, {spawnoutput: 'ignore'}).then(function () {
-                                var dir = path.join(tempDir, 'merges', plat);
-                                // Write testing HTML files into the directory.
-                                fs.outputFileSync(path.join(dir, 'test.html'), payloads[plat]);
-                                d.resolve();
-                            }).catch(function (e) {
-                                expect(e).toBeUndefined();
-                                failed = true;
-                            });
-                        });
-                        Q.allSettled(plats).then(function () {
-                            opts && 'setup' in opts && opts.setup();
-                            cordova.serve(opts && 'port' in opts && opts.port).then(function (srv) {
-                                server = srv;
-                            });
-                        }).catch(function (e) {
-                            expect(e).toBeUndefined();
-                            failed = true;
-                        });
-                    }).catch(function (e) {
-                        expect(e).toBeUndefined();
-                        failed = true;
-                    });
-                });
+        it('should fail if prepare fails', () => {
+            const fakeError = new Error();
+            cordova.prepare.and.returnValue(Promise.reject(fakeError));
 
-                waitsFor(function () {
-                    return server || failed;
-                }, 'the server should start', timeout);
+            return privateServe(1234567, {}).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
 
-                var done, errorCB;
-                runs(function () {
-                    if (failed) {
-                        return;
-                    }
-                    expect(server).toBeDefined();
-                    errorCB = jasmine.createSpy();
-                    http.get({
-                        host: 'localhost',
-                        port: opts && 'port' in opts ? opts.port : 8000,
-                        path: '/' + platform + '/www' + ref,
-                        connection: 'Close'
-                    }).on('response', function (res) {
-                        var response = '';
-                        res.on('data', function (data) {
-                            response += data;
-                        });
-                        res.on('end', function () {
-                            expect(response).toEqual(expectedContents);
-                            if (response === expectedContents) {
-                                expect(res.statusCode).toEqual(200);
-                            }
-                            done = true;
-                        });
-                    }).on('error', errorCB);
-                });
+        it('should fail if launching the server fails', () => {
+            const fakeError = new Error();
+            serverSpy.launchServer.and.returnValue(Promise.reject(fakeError));
 
-                waitsFor(function () {
-                    return done || failed;
-                }, 'the HTTP request should complete', timeout);
+            return privateServe(1234567, {}).then(
+                _ => fail('Expected promise to be rejected'),
+                err => expect(err).toBe(fakeError)
+            );
+        }, 100);
+    });
 
-                runs(function () {
-                    if (!failed) {
-                        expect(done).toBeTruthy();
-                        expect(errorCB).not.toHaveBeenCalled();
-                    }
-                    opts && 'cleanup' in opts && opts.cleanup();
-                    server && server.close();
-                });
+    describe('registerRoutes', () => {
+        let registerRoutes, app;
+
+        beforeEach(() => {
+            spyOn(cordovaUtil, 'listPlatforms').and.returnValue([ 'foo' ]);
+            serve.__set__({
+                handleRoot: jasmine.createSpy('handleRoot'),
+                absolutePathHandler: jasmine.createSpy('absolutePathHandler'),
+                platformRouter: jasmine.createSpy('platformRouter')
+                    .and.returnValue(_ => _)
+            });
+            registerRoutes = serve.__get__('registerRoutes');
+            app = new cordovaServe.Router();
+        });
+
+        it('should register a route for absolute paths', () => {
+            const absolutePathHandler = serve.__get__('absolutePathHandler');
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/config.xml' }, null);
+            expect(absolutePathHandler).toHaveBeenCalled();
+        });
+
+        it('should register a fallback root route', () => {
+            const absolutePathHandler = serve.__get__('absolutePathHandler');
+            absolutePathHandler.and.callFake((req, res, next) => next());
+            const handleRoot = serve.__get__('handleRoot');
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/' }, null);
+            expect(handleRoot).toHaveBeenCalled();
+        });
+
+        it('should register platform routes', () => {
+            cordovaUtil.listPlatforms.and.returnValue([ 'foo', 'bar' ]);
+            const platformRouter = serve.__get__('platformRouter');
+            platformRouter
+                .withArgs('foo').and.returnValue(jasmine.createSpy('fooHandler'))
+                .withArgs('bar').and.returnValue(jasmine.createSpy('barHandler'));
+
+            registerRoutes(app);
+            app({ method: 'GET', url: '/foo/index.html' }, null);
+            expect(platformRouter('foo')).toHaveBeenCalled();
+            expect(platformRouter('bar')).not.toHaveBeenCalled();
+
+            platformRouter('foo').calls.reset();
+            app({ method: 'GET', url: '/bar/index.html' }, null);
+            expect(platformRouter('bar')).toHaveBeenCalled();
+            expect(platformRouter('foo')).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('handleRoot', () => {
+        let handleRoot, response;
+
+        beforeEach(() => {
+            handleRoot = serve.__get__('handleRoot');
+            serve.__set__({
+                platforms: { foo: 0, bar: 0 },
+                installedPlatforms: ['foo'],
+                projectRoot: '',
+                ConfigParser: function () {
+                    return omniStub({ src: undefined });
+                }
+            });
+
+            spyOn(cordovaUtil, 'projectConfig');
+            spyOn(cordovaUtil, 'findPlugins').and.returnValue([
+                'cordova-plugin-beer'
+            ]);
+
+            response = jasmine.createSpyObj('response', ['send']);
+        });
+
+        it('should return an index of available platforms and plugins', () => {
+            handleRoot(null, response);
+            expect(response.send).toHaveBeenCalledTimes(1);
+
+            const [ document ] = response.send.calls.argsFor(0);
+            expect(document).toContain('cordova-plugin-beer');
+            expect(document).toContain('foo');
+            expect(document).toContain('bar');
+
+            // Contains links to installed platforms only
+            expect(document).toContain('"foo/www/index.html"');
+            expect(document).not.toContain('"bar/www/index.html"');
+        });
+    });
+
+    describe('absolutePathHandler', () => {
+        let absolutePathHandler, next;
+
+        beforeEach(() => {
+            absolutePathHandler = serve.__get__('absolutePathHandler');
+            serve.__set__({ installedPlatforms: ['foo'] });
+
+            next = jasmine.createSpy('next');
+        });
+
+        it('should do nothing if `referer` is not set', () => {
+            const request = { headers: {} };
+
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
+        });
+
+        it('should do nothing if `referer` is not a platform URL', () => {
+            const request = { headers: { referer: '/www/index.html' } };
+
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
+        });
+
+        it('should do nothing if requested URL is a platform URL', () => {
+            const request = {
+                headers: { referer: '/foo/www/index.html' },
+                originalUrl: '/foo/www/style.css'
             };
-        }
 
-        itifapps([
-            'android',
-            'ant'
-        ])('should fall back to assets/www on Android', function () {
-            payloads.android = 'This is the Android test file.';
-            test_serve('android', '/test.html', payloads.android, {timeout: 20000})();
+            absolutePathHandler(request, null, next);
+            expect(next).toHaveBeenCalled();
         });
 
-        itifapps([
-            'blackberry-nativepackager',
-            'blackberry-deploy',
-            'blackberry-signer',
-            'blackberry-debugtokenrequest'
-        ])('should fall back to www on BlackBerry10', function () {
-            payloads.blackberry10 = 'This is the BlackBerry10 test file.';
-            test_serve('blackberry10', '/test.html', payloads.blackberry10, {timeout: 10000})();
+        it('should redirect all other requests relative to /platform/www', () => {
+            const request = {
+                headers: { referer: '/foo/index.html' },
+                originalUrl: '/style.css'
+            };
+            const response = jasmine.createSpyObj('response', ['redirect']);
+
+            absolutePathHandler(request, response, next);
+            expect(next).not.toHaveBeenCalled();
+            expect(response.redirect).toHaveBeenCalledWith('/foo/www/style.css');
+        });
+    });
+
+    describe('platformRouter', () => {
+        const PLATFORM = 'atari';
+        let platformRouter;
+
+        beforeEach(() => {
+            platformRouter = serve.__get__('platformRouter');
+            spyOn(platforms, 'getPlatformApi').and.returnValue({
+                getPlatformInfo: _ => ({
+                    locations: { configXml: 'CONFIG', www: 'WWW_DIR' }
+                })
+            });
         });
 
-        itifapps([
-            'xcodebuild'
-        ])('should fall back to www on iOS', function () {
-            payloads.ios = 'This is the iOS test file.';
-            test_serve('ios', '/test.html', payloads.ios, {timeout: 10000})();
+        it('should serve static from www', () => {
+            const staticSpy = jasmine.createSpy('static');
+            spyOn(cordovaServe, 'static').and.returnValue(staticSpy);
+
+            const router = platformRouter(PLATFORM);
+            expect(cordovaServe.static).toHaveBeenCalledWith('WWW_DIR');
+
+            router({ method: 'GET', url: '/www/foo' }, null);
+            expect(staticSpy).toHaveBeenCalled();
+        });
+
+        it('should serve the platform config.xml', () => {
+            const router = platformRouter(PLATFORM);
+            const sendFile = jasmine.createSpy('sendFile');
+
+            router({ method: 'GET', url: '/config.xml' }, { sendFile });
+            expect(sendFile).toHaveBeenCalledWith('CONFIG');
+        });
+
+        it('should serve generated information under /project.json', () => {
+            serve.__set__({ generateWwwFileList: x => x });
+            const router = platformRouter(PLATFORM);
+            const send = jasmine.createSpy('send');
+
+            router({ method: 'GET', url: '/project.json' }, { send });
+            expect(send).toHaveBeenCalledWith({
+                configPath: `/${PLATFORM}/config.xml`,
+                wwwPath: `/${PLATFORM}/www`,
+                wwwFileList: 'WWW_DIR'
+            });
+        });
+    });
+
+    describe('generateWwwFileList', () => {
+        const emptyStringMd5 = 'd41d8cd98f00b204e9800998ecf8427e';
+        let generateWwwFileList, tmpDir;
+
+        beforeEach(() => {
+            generateWwwFileList = serve.__get__('generateWwwFileList');
+            tmpDir = getTmpDir('serve-test');
+        });
+
+        afterEach(() => {
+            return fs.remove(tmpDir);
+        });
+
+        it('should generate a list of files with MD5 sums', () => {
+            for (const f of ['a', 'b/c']) {
+                fs.ensureFileSync(path.join(tmpDir, f));
+            }
+            expect(generateWwwFileList(tmpDir)).toEqual([
+                { path: 'a', etag: emptyStringMd5 },
+                { path: 'b/c', etag: emptyStringMd5 }
+            ]);
+        });
+
+        it('should not include hidden files or directories', () => {
+            for (const f of ['a', '.b/c', '.d']) {
+                fs.ensureFileSync(path.join(tmpDir, f));
+            }
+            expect(generateWwwFileList(tmpDir)).toEqual([
+                { path: 'a', etag: emptyStringMd5 }
+            ]);
         });
     });
 });

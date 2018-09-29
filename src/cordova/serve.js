@@ -17,153 +17,154 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var crypto = require('crypto');
-var path = require('path');
-var globby = require('globby');
-var url = require('url');
-var platforms = require('../platforms/platforms');
-var ConfigParser = require('cordova-common').ConfigParser;
-var HooksRunner = require('../hooks/HooksRunner');
-var Q = require('q');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var serve = require('cordova-serve');
+const Q = require('q');
+const url = require('url');
+const path = require('path');
+const globby = require('globby');
+const md5File = require('md5-file');
+const { template, object: zipObject } = require('underscore');
 
-var projectRoot;
-var installedPlatforms;
+const { ConfigParser, events } = require('cordova-common');
+const cordovaServe = require('cordova-serve');
+const cordovaUtil = require('./util');
+const platforms = require('../platforms/platforms');
+const HooksRunner = require('../hooks/HooksRunner');
 
-function handleRoot (request, response, next) {
-    if (url.parse(request.url).pathname !== '/') {
-        response.sendStatus(404);
-        return;
-    }
+let projectRoot, installedPlatforms;
 
-    response.writeHead(200, {'Content-Type': 'text/html'});
-    var config = new ConfigParser(cordova_util.projectConfig(projectRoot));
-    var contentNode = config.doc.find('content');
-    var contentSrc = (contentNode && contentNode.attrib.src) || ('index.html');
+const INDEX_TEMPLATE = `
+<!doctype html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>{{ metaData.name }}</title>
+</head>
+<body>
+    <h3>Package Metadata</h3>
+    <table style="text-align: left">
+        {% for (const key in metaData) { %}
+            <tr>
+                <th>{{ key }}</th><td>{{ metaData[key] }}</td>
+            </tr>
+        {% } %}
+    </table>
 
-    response.write('<html><head><title>' + config.name() + '</title></head><body>');
-    response.write('<table border cellspacing=0><thead><caption><h3>Package Metadata</h3></caption></thead><tbody>');
-    ['name', 'packageName', 'version'].forEach(function (c) {
-        response.write('<tr><th>' + c + '</th><td>' + config[c]() + '</td></tr>');
-    });
-    response.write('</tbody></table>');
-    response.write('<h3>Platforms</h3><ul>');
-    Object.keys(platforms).forEach(function (platform) {
-        if (installedPlatforms.indexOf(platform) >= 0) {
-            response.write('<li><a href="' + platform + '/www/' + contentSrc + '">' + platform + '</a></li>\n');
-        } else {
-            response.write('<li><em>' + platform + '</em></li>\n');
-        }
-    });
-    response.write('</ul>');
-    response.write('<h3>Plugins</h3><ul>');
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath);
-    Object.keys(plugins).forEach(function (plugin) {
-        response.write('<li>' + plugins[plugin] + '</li>\n');
-    });
-    response.write('</ul>');
-    response.write('</body></html>');
-    response.end();
-}
+    <h3>Platforms</h3>
+    <ul>
+        {% for (const platform of platforms) { %}
+            <li>
+                {% if (platform.url) { %}
+                    <a href="{{ platform.url }}">{{ platform.name }}</a>
+                {% } else { %}
+                    <em>{{ platform.name }}</em>
+                {% } %}
+            </li>
+        {% } %}
+    </ul>
 
-function getPlatformHandler (platform, wwwDir, configXml) {
-    return function (request, response, next) {
-        switch (url.parse(request.url).pathname) {
-        case '/' + platform + '/config.xml':
-            response.sendFile(configXml);
-            break;
+    <h3>Plugins</h3>
+    <ul>
+        {% for (const plugin of plugins) { %}
+            <li>{{ plugin }}</li>
+        {% } %}
+    </ul>
+</body>
+</html>
+`;
+const renderIndex = template(INDEX_TEMPLATE, {
+    escape: /\{\{(.+?)\}\}/g,
+    evaluate: /\{%(.+?)%\}/g
+});
 
-        case '/' + platform + '/project.json':
-            response.send({
-                'configPath': '/' + platform + '/config.xml',
-                'wwwPath': '/' + platform + '/www',
-                'wwwFileList': globby('**', { cwd: wwwDir }).map(p => ({
-                    path: p,
-                    etag: '' + calculateMd5(path.join(wwwDir, p))
-                }))
-            });
-            break;
+function handleRoot (request, response) {
+    const config = new ConfigParser(cordovaUtil.projectConfig(projectRoot));
+    const contentNode = config.doc.find('content');
+    const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
+    const metaDataKeys = ['name', 'packageName', 'version'];
+    const platformUrl = name => installedPlatforms.includes(name) ?
+        `${name}/www/${contentSrc}` : null;
 
-        default:
-            next();
-        }
-    };
+    response.send(renderIndex({
+        metaData: zipObject(metaDataKeys, metaDataKeys.map(k => config[k]())),
+        plugins: cordovaUtil.findPlugins(path.join(projectRoot, 'plugins')),
+        platforms: Object.keys(platforms).map(name => ({
+            name, url: platformUrl(name)
+        }))
+    }));
 }
 
 // https://issues.apache.org/jira/browse/CB-11274
 // Use referer url to redirect absolute urls to the requested platform resources
 // so that an URL is resolved against that platform www directory.
-function getAbsolutePathHandler () {
-    return function (request, response, next) {
-        if (!request.headers.referer) {
-            next();
-            return;
-        }
+function absolutePathHandler (request, response, next) {
+    if (!request.headers.referer) return next();
 
-        var pathname = url.parse(request.headers.referer).pathname;
-        var platform = pathname.split('/')[1];
+    const { pathname } = url.parse(request.headers.referer);
+    const platform = pathname.split('/')[1];
 
-        if (installedPlatforms.indexOf(platform) >= 0 &&
-            request.originalUrl.indexOf(platform) === -1) {
-            response.redirect('/' + platform + '/www' + request.originalUrl);
-        } else {
-            next();
-        }
-    };
-}
-
-function calculateMd5 (fileName) {
-    var md5sum;
-    var BUF_LENGTH = 64 * 1024;
-    var buf = Buffer.from(BUF_LENGTH);
-    var bytesRead = BUF_LENGTH;
-    var pos = 0;
-    var fdr = fs.openSync(fileName, 'r');
-
-    try {
-        md5sum = crypto.createHash('md5');
-        while (bytesRead === BUF_LENGTH) {
-            bytesRead = fs.readSync(fdr, buf, 0, BUF_LENGTH, pos);
-            pos += bytesRead;
-            md5sum.update(buf.slice(0, bytesRead));
-        }
-    } finally {
-        fs.closeSync(fdr);
+    if (installedPlatforms.includes(platform) &&
+        !request.originalUrl.includes(platform)) {
+        response.redirect(`/${platform}/www` + request.originalUrl);
+    } else {
+        next();
     }
-    return md5sum.digest('hex');
 }
 
-module.exports = function server (port, opts) {
-    port = +port || 8000;
+function platformRouter (platform) {
+    const { configXml, www } = platforms.getPlatformApi(platform).getPlatformInfo().locations;
+    const router = cordovaServe.Router();
+    router.use('/www', cordovaServe.static(www));
+    router.get('/config.xml', (req, res) => res.sendFile(configXml));
+    router.get('/project.json', (req, res) => res.send({
+        configPath: `/${platform}/config.xml`,
+        wwwPath: `/${platform}/www`,
+        wwwFileList: generateWwwFileList(www)
+    }));
+    return router;
+}
 
-    return Q.promise(function (resolve) {
-        projectRoot = cordova_util.cdProjectRoot();
+function generateWwwFileList (www) {
+    return globby.sync('**', { cwd: www }).map(p => ({
+        path: p,
+        etag: md5File.sync(path.join(www, p))
+    }));
+}
 
-        var hooksRunner = new HooksRunner(projectRoot);
-        hooksRunner.fire('before_serve', opts).then(function () {
-            // Run a prepare first!
-            return require('./cordova').prepare([]);
-        }).then(function () {
-            var server = serve();
+function registerRoutes (app) {
+    installedPlatforms = cordovaUtil.listPlatforms(projectRoot);
+    installedPlatforms.forEach(platform =>
+        app.use(`/${platform}`, platformRouter(platform))
+    );
 
-            installedPlatforms = cordova_util.listPlatforms(projectRoot);
-            installedPlatforms.forEach(function (platform) {
-                var locations = platforms.getPlatformApi(platform).getPlatformInfo().locations;
-                server.app.use('/' + platform + '/www', serve.static(locations.www));
-                server.app.get('/' + platform + '/*', getPlatformHandler(platform, locations.www, locations.configXml));
+    app.get('/*', absolutePathHandler);
+    app.get('/', handleRoot);
+}
+
+function serve (port) {
+    return Promise.resolve().then(() => {
+        port = +port || 8000;
+        const server = cordovaServe();
+
+        // Run a prepare first!
+        return require('./cordova').prepare([])
+            .then(() => {
+                registerRoutes(server.app);
+                return server.launchServer({ port, events });
+            })
+            .then(() => server.server);
+    });
+}
+
+module.exports = (port, hookOpts) => {
+    return Q().then(_ => {
+        projectRoot = cordovaUtil.cdProjectRoot();
+        const hooksRunner = new HooksRunner(projectRoot);
+        return Promise.resolve()
+            .then(_ => hooksRunner.fire('before_serve', hookOpts))
+            .then(_ => serve(port))
+            .then(result => {
+                return hooksRunner.fire('after_serve', hookOpts)
+                    .then(_ => result);
             });
-
-            server.app.get('/*', getAbsolutePathHandler());
-            server.app.get('*', handleRoot);
-
-            server.launchServer({port: port, events: events});
-            hooksRunner.fire('after_serve', opts).then(function () {
-                resolve(server.server);
-            });
-        });
     });
 };
