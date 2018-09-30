@@ -36,7 +36,7 @@ module.exports = common = {
 
         getReceivedMessages (emitSpy) {
             return emitSpy.calls.allArgs()
-                .map(([, msg]) => msg);
+                .map(msgArray => msgArray[1]);
         }
     }
 };
