@@ -36,7 +36,7 @@ function getConfigPath (dir) {
 
 module.exports.tmpDir = function (suffix = 'test') {
     const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
-    return fs.mkdtempSync(dir);
+    return fs.realpathSync(fs.mkdtempSync(dir));
 };
 
 /**
