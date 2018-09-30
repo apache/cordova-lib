@@ -15,7 +15,6 @@
     under the License.
 */
 
-var Q = require('q');
 var path = require('path');
 var fs = require('fs-extra');
 var CordovaError = require('cordova-common').CordovaError;
@@ -32,7 +31,7 @@ module.exports = remove;
 
 function remove (hooksRunner, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No platform(s) specified. Please specify platform(s) to remove. See `' + cordova_util.binname + ' platform list`.'));
+        return Promise.reject(new CordovaError('No platform(s) specified. Please specify platform(s) to remove. See `' + cordova_util.binname + ' platform list`.'));
     }
     return hooksRunner.fire('before_platform_rm', opts)
         .then(function () {

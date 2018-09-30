@@ -20,7 +20,6 @@ var cordova = require('../../src/cordova/cordova');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var util = require('../../src/cordova/util');
-var Q = require('q');
 
 var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
 
@@ -36,8 +35,8 @@ describe('compile command', function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        platformApi = { build: jasmine.createSpy('build').and.returnValue(Q()) };
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        platformApi = { build: jasmine.createSpy('build').and.returnValue(Promise.resolve()) };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function () {
@@ -100,7 +99,7 @@ describe('compile command', function () {
         describe('with no platforms added', function () {
             it('Test 008 : should not fire the hooker', function () {
                 list_platforms.and.returnValue([]);
-                return Q().then(cordova.compile)
+                return Promise.resolve().then(cordova.compile)
                     .then(function () {
                         fail('Expected promise to be rejected');
                     }, function (err) {

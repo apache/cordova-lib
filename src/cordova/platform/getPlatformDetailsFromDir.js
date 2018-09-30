@@ -16,7 +16,6 @@
 */
 
 var path = require('path');
-var Q = require('q');
 var CordovaError = require('cordova-common').CordovaError;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
@@ -39,16 +38,16 @@ function getPlatformDetailsFromDir (dir, platformIfKnown) {
         platform = module.exports.platformFromName(pkg.name);
         version = pkg.version;
     } catch (e) {
-        return Q.reject(new CordovaError('The provided path does not seem to contain a valid package.json or a valid Cordova platform: ' + libDir));
+        return Promise.reject(new CordovaError('The provided path does not seem to contain a valid package.json or a valid Cordova platform: ' + libDir));
     }
 
     // platform does NOT have to exist in 'platforms', but it should have a name, and a version
     if (!version || !platform) {
-        return Q.reject(new CordovaError('The provided path does not seem to contain a ' +
+        return Promise.reject(new CordovaError('The provided path does not seem to contain a ' +
             'Cordova platform: ' + libDir));
     }
 
-    return Q({
+    return Promise.resolve({
         libDir: libDir,
         platform: platform,
         version: version

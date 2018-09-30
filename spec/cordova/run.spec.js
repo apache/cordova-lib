@@ -19,7 +19,6 @@
 var cordova = require('../../src/cordova/cordova');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
-var Q = require('q');
 var util = require('../../src/cordova/util');
 
 var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
@@ -33,18 +32,18 @@ describe('run command', function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
         platformApi = {
-            run: jasmine.createSpy('run').and.returnValue(Q()),
-            build: jasmine.createSpy('build').and.returnValue(Q())
+            run: jasmine.createSpy('run').and.returnValue(Promise.resolve()),
+            build: jasmine.createSpy('build').and.returnValue(Promise.resolve())
         };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function () {
         it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function () {
             list_platforms.and.returnValue([]);
-            return Q().then(cordova.run)
+            return Promise.resolve().then(cordova.run)
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -56,7 +55,7 @@ describe('run command', function () {
             var msg = 'Dummy message about not being in a cordova dir.';
             cd_project_root.and.throwError(new Error(msg));
             is_cordova.and.returnValue(false);
-            return Q().then(cordova.run)
+            return Promise.resolve().then(cordova.run)
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -112,7 +111,7 @@ describe('run command', function () {
                 originalBuildSpy = platformApi.build;
                 platformApi.build = jasmine.createSpy('build').and.callFake(function (opts) {
                     opts.couldBeModified = 'insideBuild';
-                    return Q();
+                    return Promise.resolve();
                 });
             });
             afterEach(function () {
@@ -145,7 +144,7 @@ describe('run command', function () {
         describe('with no platforms added', function () {
             it('Test 012 : should not fire the hooker', function () {
                 list_platforms.and.returnValue([]);
-                return Q().then(cordova.run)
+                return Promise.resolve().then(cordova.run)
                     .then(function () {
                         fail('Expected promise to be rejected');
                     }, function (err) {

@@ -20,7 +20,6 @@
 var cordova_util = require('./util');
 var ConfigParser = require('cordova-common').ConfigParser;
 var path = require('path');
-var Q = require('q');
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var cordovaPlatform = require('./platform');
@@ -111,7 +110,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
 
         // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
-            return Q('No platforms found in config.xml or package.json. Nothing to restore');
+            return Promise.resolve('No platforms found in config.xml or package.json. Nothing to restore');
         }
 
         // If no package.json, don't continue.
@@ -196,7 +195,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
             cfg.write();
         }
         if (!comboArray || !comboArray.length) {
-            return Q('No platforms found in config.xml and/or package.json that haven\'t been added to the project');
+            return Promise.resolve('No platforms found in config.xml and/or package.json that haven\'t been added to the project');
         }
     }
     // Run `platform add` for all the platforms separately
@@ -222,7 +221,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
                 return cordovaPlatform('add', target, opts);
             }
         }
-        return Q();
+        return Promise.resolve();
     }, function (err) {
         events.emit('warn', err);
     });
@@ -388,7 +387,7 @@ function installPluginsFromConfigXML (args) {
         var pluginPath = path.join(plugins_dir, featureId);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
-            return Q();
+            return Promise.resolve();
         }
         events.emit('log', 'Discovered plugin "' + featureId + '" in config.xml. Adding it to the project');
         var pluginEntry = cfg.getPlugin(featureId);

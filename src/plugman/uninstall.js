@@ -23,7 +23,6 @@ var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
 var CordovaError = require('cordova-common').CordovaError;
 var underscore = require('underscore');
-var Q = require('q');
 var events = require('cordova-common').events;
 var platform_modules = require('../platforms/platforms');
 var promiseutil = require('../util/promise-util');
@@ -71,21 +70,21 @@ module.exports.uninstallPlatform = function (platform, project_dir, id, plugins_
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     if (!platform_modules[platform]) {
-        return Q.reject(new CordovaError('Platform "' + platform + '" not supported.'));
+        return Promise.reject(new CordovaError('Platform "' + platform + '" not supported.'));
     }
 
     var plugin_dir = path.join(plugins_dir, id);
     if (!fs.existsSync(plugin_dir)) {
-        return Q.reject(new CordovaError('Plugin "' + id + '" not found. Already uninstalled?'));
+        return Promise.reject(new CordovaError('Plugin "' + id + '" not found. Already uninstalled?'));
     }
 
     var current_stack = new ActionStack();
 
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         if (options.platformVersion) {
-            return Q(options.platformVersion);
+            return Promise.resolve(options.platformVersion);
         }
-        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
+        return Promise.resolve(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function (platformVersion) {
         options.platformVersion = platformVersion;
         return runUninstallPlatform(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -108,7 +107,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     // If already removed, skip.
     if (!fs.existsSync(plugin_dir)) {
         events.emit('verbose', 'Plugin "' + id + '" already removed (' + plugin_dir + ')');
-        return Q();
+        return Promise.resolve();
     }
 
     /*
@@ -122,7 +121,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
         var plugin_dir = path.join(plugins_dir, id);
         if (!fs.existsSync(plugin_dir)) {
             events.emit('verbose', 'Plugin "' + id + '" already removed (' + plugin_dir + ')');
-            return Q();
+            return Promise.resolve();
         }
 
         fs.removeSync(plugin_dir);
@@ -205,7 +204,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     };
     if (!options.force && dependPluginIds.includes(top_plugin_id)) {
         var msg = createMsg2(top_plugin_id);
-        return Q.reject(new CordovaError(msg));
+        return Promise.reject(new CordovaError(msg));
     }
 
     // action emmiting events.
@@ -226,7 +225,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     });
     return deleteExecList.reduce(function (acc, deleteExec) {
         return acc.then(deleteExec);
-    }, Q());
+    }, Promise.resolve());
 
 };
 
@@ -236,7 +235,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     var pluginInfoProvider = options.pluginInfoProvider;
     // If this plugin is not really installed, return (CB-7004).
     if (!fs.existsSync(plugin_dir)) {
-        return Q(true);
+        return Promise.resolve(true);
     }
 
     var pluginInfo = pluginInfoProvider.get(plugin_dir);
@@ -257,7 +256,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
         if (options.force) {
             events.emit('warn', msg + ' but forcing removal');
         } else {
-            return Q.reject(new CordovaError(msg + ', skipping uninstallation. (try --force if trying to update)'));
+            return Promise.reject(new CordovaError(msg + ', skipping uninstallation. (try --force if trying to update)'));
         }
     }
 
@@ -280,7 +279,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
             return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);
         });
     } else {
-        promise = Q();
+        promise = Promise.resolve();
     }
 
     var projectRoot = cordovaUtil.isCordova();
@@ -336,6 +335,6 @@ function handleUninstall (actions, platform, pluginInfo, project_dir, www_dir, p
                 .save();
 
             // CB-11022 propagate `removePlugin` result to the caller
-            return Q(result);
+            return Promise.resolve(result);
         });
 }

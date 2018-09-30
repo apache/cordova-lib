@@ -26,7 +26,6 @@ var CordovaError = require('cordova-common').CordovaError;
 var events = require('cordova-common').events;
 var metadata = require('./util/metadata');
 var path = require('path');
-var Q = require('q');
 var pluginSpec = require('../cordova/plugin/plugin_spec_parser');
 var fetch = require('cordova-fetch');
 var cordovaUtil = require('../cordova/util');
@@ -65,17 +64,17 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
 
             // throw error for subdirectories
             if (options.subdir && options.subdir !== '.') {
-                return Q.reject(new CordovaError('Cordova does not support subdirectories'));
+                return Promise.reject(new CordovaError('Cordova does not support subdirectories'));
             }
         }
     }
-    return Q.when().then(function () {
+    return Promise.resolve().then(function () {
         var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
-        return Q.when().then(function () {
+        return Promise.resolve().then(function () {
             // check if it is a local path
             if (fs.existsSync(plugin_dir)) {
                 if (!fs.existsSync(path.join(plugin_dir, 'package.json'))) {
-                    return Q.reject(new CordovaError('Invalid Plugin! ' + plugin_dir + ' needs a valid package.json'));
+                    return Promise.reject(new CordovaError('Invalid Plugin! ' + plugin_dir + ' needs a valid package.json'));
                 }
 
                 projectRoot = path.join(plugins_dir, '..');
@@ -93,9 +92,9 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                                 path: directory
                             }
                         };
-                    }).fail(function (error) {
+                    }).catch(function (error) {
                         // something went wrong with cordova-fetch
-                        return Q.reject(new CordovaError(error.message));
+                        return Promise.reject(new CordovaError(error.message));
                     });
             }
             // If there is no such local path or it's a git URL, it's a plugin id or id@versionspec.
@@ -111,7 +110,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                     }
                 };
             } else if (options.noregistry) {
-                return Q.reject(new CordovaError(
+                return Promise.reject(new CordovaError(
                     'Plugin ' + plugin_src + ' not found locally. ' +
                     'Note, plugin registry was disabled by --noregistry flag.'
                 ));
@@ -124,7 +123,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             plugin_dir = path.join(plugins_dir, parsedSpec.id);
             // if the plugin has already been fetched, use it.
             if (fs.existsSync(plugin_dir)) {
-                P = Q(plugin_dir);
+                P = Promise.resolve(plugin_dir);
                 skipCopyingPlugin = true;
             } else {
                 // use cordova-fetch
@@ -153,7 +152,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                         '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
                         '\nCheck your connection and plugin name/version/URL.' +
                         '\n' + error;
-                    return Q.reject(new CordovaError(message));
+                    return Promise.reject(new CordovaError(message));
                 })
                 .then(function (dir) {
                     return {
@@ -169,9 +168,9 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             options.plugin_src_dir = result.pinfo.dir;
             var P;
             if (result.skipCopyingPlugin) {
-                P = Q(options.plugin_src_dir);
+                P = Promise.resolve(options.plugin_src_dir);
             } else {
-                P = Q.when(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type === 'local'));
+                P = Promise.resolve(copyPlugin(result.pinfo, plugins_dir, options.link && result.fetchJsonSource.type === 'local'));
             }
             return P.then(function (dir) {
                 result.dest = dir;

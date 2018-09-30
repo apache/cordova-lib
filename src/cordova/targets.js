@@ -18,7 +18,6 @@
 */
 
 var cordova_util = require('./util');
-var Q = require('q');
 var superspawn = require('cordova-common').superspawn;
 var path = require('path');
 var events = require('cordova-common').events;
@@ -50,7 +49,7 @@ module.exports = function targets (options) {
     var projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
-    var result = Q();
+    var result = Promise.resolve();
     options.platforms.forEach(function (platform) {
         if (options.options.device) {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options));

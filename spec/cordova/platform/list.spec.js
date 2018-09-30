@@ -16,7 +16,6 @@
 */
 
 var events = require('cordova-common').events;
-var Q = require('q');
 var platform_list = require('../../../src/cordova/platform/list');
 var cordova_util = require('../../../src/cordova/util');
 
@@ -26,7 +25,7 @@ describe('cordova/platform/list', function () {
 
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
-        hooks_mock.fire.and.returnValue(Q());
+        hooks_mock.fire.and.returnValue(Promise.resolve());
         spyOn(cordova_util, 'getInstalledPlatformsWithVersions').and.callThrough();
         spyOn(events, 'emit');
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});

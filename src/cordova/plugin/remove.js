@@ -25,7 +25,6 @@ var config = require('../config');
 var plugin_util = require('./util');
 var plugman = require('../../plugman/plugman');
 var metadata = require('../../plugman/util/metadata');
-var Q = require('q');
 var path = require('path');
 var fs = require('fs-extra');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
@@ -37,7 +36,7 @@ module.exports.validatePluginId = validatePluginId;
 
 function remove (projectRoot, targets, hooksRunner, opts) {
     if (!targets || !targets.length) {
-        return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See: ' + cordova_util.binname + ' plugin list.'));
+        return Promise.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See: ' + cordova_util.binname + ' plugin list.'));
     }
     var config_json = config.read(projectRoot);
     var pluginPath = path.join(projectRoot, 'plugins');
@@ -54,7 +53,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
         }).then(function () {
             // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
             if (!shouldRunPrepare) {
-                return Q();
+                return Promise.resolve();
             }
             return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
         }).then(function () {

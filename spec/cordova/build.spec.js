@@ -19,7 +19,6 @@
 var cordova = require('../../src/cordova/cordova');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
-var Q = require('q');
 var util = require('../../src/cordova/util');
 
 var supported_platforms = Object.keys(platforms);
@@ -35,9 +34,9 @@ describe('build command', function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
-        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Q());
-        compile_spy = spyOn(cordova, 'compile').and.returnValue(Q());
+        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
+        compile_spy = spyOn(cordova, 'compile').and.returnValue(Promise.resolve());
     });
     describe('failure', function () {
         it('Test 001 : should not run inside a project with no platforms', function () {
@@ -102,7 +101,7 @@ describe('build command', function () {
         describe('with no platforms added', function () {
             it('Test 008 : should not fire the hooker', function () {
                 list_platforms.and.returnValue([]);
-                return Q().then(cordova.build).then(function () {
+                return Promise.resolve().then(cordova.build).then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
                     expect(err).toEqual(jasmine.any(Error));

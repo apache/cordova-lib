@@ -19,13 +19,12 @@
 
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
-var Q = require('q');
 var platform_lib = require('../platforms/platforms');
 var _ = require('underscore');
 
 // Returns a promise.
 module.exports = function emulate (options) {
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
         options = cordova_util.preProcessOptions(options);
         options.options.device = false;
@@ -44,9 +43,9 @@ module.exports = function emulate (options) {
                 }
             }).then(function () {
                 // Deploy in parallel (output gets intermixed though...)
-                return Q.all(options.platforms.map(function (platform) {
+                return Promise.all(options.platforms.map(function (platform) {
 
-                    var buildPromise = options.options.nobuild ? Q() :
+                    var buildPromise = options.options.nobuild ? Promise.resolve() :
                         platform_lib.getPlatformApi(platform).build(options.options);
 
                     return buildPromise

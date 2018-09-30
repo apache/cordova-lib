@@ -21,11 +21,9 @@ var path = require('path');
 var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
 var DepGraph = require('dep-graph');
-var child_process = require('child_process');
 var semver = require('semver');
 var PlatformJson = require('cordova-common').PlatformJson;
 var CordovaError = require('cordova-common').CordovaError;
-var Q = require('q');
 var platform_modules = require('../platforms/platforms');
 var os = require('os');
 var underscore = require('underscore');
@@ -89,7 +87,7 @@ function possiblyFetch (id, plugins_dir, options) {
 
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
-        return Q(plugin_src_dir);
+        return Promise.resolve(plugin_src_dir);
     }
 
     var opts = underscore.extend({}, options, {
@@ -119,11 +117,11 @@ function checkEngines (engines) {
                       engine.name + ': ' + engine.currentVersion +
                       ', failed version requirement: ' + engine.minVersion;
             events.emit('warn', msg);
-            return Q.reject('skip');
+            return Promise.reject(Object.assign(new Error(), { skip: true }));
         }
     }
 
-    return Q(true);
+    return Promise.resolve(true);
 }
 
 function cleanVersionOutput (version, name) {
@@ -164,32 +162,27 @@ function cleanVersionOutput (version, name) {
 // Returns a promise for the array of engines.
 function callEngineScripts (engines, project_dir) {
 
-    return Q.all(
+    return Promise.all(
         engines.map(function (engine) {
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
             if (scriptPath && (isWindows || fs.existsSync(engine.scriptSrc))) {
 
-                var d = Q.defer();
                 if (!isWindows) { // not required on Windows
                     fs.chmodSync(engine.scriptSrc, '755');
                 }
-                child_process.exec(scriptPath, function (error, stdout, stderr) {
-                    if (error) {
-                        events.emit('warn', engine.name + ' version check failed (' + scriptPath + '), continuing anyways.');
-                        engine.currentVersion = null;
-                    } else {
+                return superspawn.spawn(scriptPath)
+                    .then(stdout => {
                         engine.currentVersion = cleanVersionOutput(stdout, engine.name);
                         if (engine.currentVersion === '') {
                             events.emit('warn', engine.name + ' version check returned nothing (' + scriptPath + '), continuing anyways.');
                             engine.currentVersion = null;
                         }
-                    }
-
-                    d.resolve(engine);
-                });
-                return d.promise;
-
+                    }, () => {
+                        events.emit('warn', engine.name + ' version check failed (' + scriptPath + '), continuing anyways.');
+                        engine.currentVersion = null;
+                    })
+                    .then(_ => engine);
             } else {
 
                 if (engine.currentVersion) {
@@ -198,7 +191,7 @@ function callEngineScripts (engines, project_dir) {
                     events.emit('warn', engine.name + ' version not detected (lacks script ' + scriptPath + ' ), continuing.');
                 }
 
-                return Q(engine);
+                return Promise.resolve(engine);
             }
         })
     );
@@ -285,7 +278,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
 
         // CB-11022 return true always in this case since if the plugin is installed
         // we don't need to call prepare in any way
-        return Q(true);
+        return Promise.resolve(true);
     }
     events.emit('log', 'Installing "' + pluginInfo.id + '" for ' + platform);
 
@@ -300,11 +293,11 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         top_plugin_dir: plugin_dir
     };
 
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         if (options.platformVersion) {
-            return Q(options.platformVersion);
+            return Promise.resolve(options.platformVersion);
         }
-        return Q(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
+        return Promise.resolve(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
     }).then(function (platformVersion) {
         options.platformVersion = platformVersion;
         return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
@@ -319,7 +312,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         if (dependencies.length) {
             return installDependencies(install, dependencies, options);
         }
-        return Q(true);
+        return Promise.resolve(true);
     }
     ).then(
         function () {
@@ -366,7 +359,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
     ).catch(
         function (error) {
 
-            if (error === 'skip') {
+            if (error.skip) {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
                 events.emit('warn', 'Failed to install \'' + pluginInfo.id + '\': ' + error.stack);
@@ -413,7 +406,7 @@ function installDependencies (install, dependencies, options) {
             }
         );
 
-    }, Q(true));
+    }, Promise.resolve(true));
 }
 
 function tryFetchDependency (dep, install, options) {
@@ -433,38 +426,33 @@ function tryFetchDependency (dep, install, options) {
 
             events.emit('warn', 'No fetch metadata found for plugin ' + install.top_plugin_id + '. checking for ' + relativePath + ' in ' + options.searchpath.join(','));
 
-            return Q(relativePath);
+            return Promise.resolve(relativePath);
         }
 
         // Now there are two cases here: local directory, and git URL.
-        var d = Q.defer();
-
         if (fetchdata.source.type === 'local') {
 
             dep.url = fetchdata.source.path;
 
-            child_process.exec('git rev-parse --show-toplevel', { cwd: dep.url }, function (err, stdout, stderr) {
-                if (err) {
+            return superspawn.spawn('git rev-parse --show-toplevel', { cwd: dep.url })
+                .catch(err => {
                     if (err.code === 128) {
-                        return d.reject(new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.'));
+                        throw new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.');
                     } else {
-                        return d.reject(new Error('Failed to locate git repository for ' + dep.id + ' plugin.'));
+                        throw new Error('Failed to locate git repository for ' + dep.id + ' plugin.');
                     }
-                }
-                return d.resolve(stdout.trim());
-            });
-
-            return d.promise.then(function (git_repo) {
-                // Clear out the subdir since the url now contains it
-                var url = path.join(git_repo, dep.subdir);
-                dep.subdir = '';
-                return Q(url);
-            }).catch(function () {
-                return Q(dep.url);
-            });
+                })
+                .then(function (git_repo) {
+                    // Clear out the subdir since the url now contains it
+                    var url = path.join(git_repo, dep.subdir);
+                    dep.subdir = '';
+                    return Promise.resolve(url);
+                }).catch(function () {
+                    return Promise.resolve(dep.url);
+                });
 
         } else if (fetchdata.source.type === 'git') {
-            return Q(fetchdata.source.url);
+            return Promise.resolve(fetchdata.source.url);
         } else if (fetchdata.source.type === 'dir') {
 
             // Note: With fetch() independant from install()
@@ -490,7 +478,7 @@ function tryFetchDependency (dep, install, options) {
                 if (options.searchpath.indexOf(tmpDir) === -1) { options.searchpath.unshift(tmpDir); } // place at top of search
             }
 
-            return Q(pluginSrc);
+            return Promise.resolve(pluginSrc);
         }
     }
 
@@ -508,7 +496,7 @@ function tryFetchDependency (dep, install, options) {
         dep.url = dep.id;
     }
 
-    return Q(dep.url);
+    return Promise.resolve(dep.url);
 }
 
 function installDependency (dep, install, options) {
@@ -547,13 +535,13 @@ function installDependency (dep, install, options) {
                 '" does not satisfy dependency plugin requirement "' +
                 dep.id + '@' + version_required +
                  '". Try --force to use installed plugin as dependency.';
-            return Q()
+            return Promise.resolve()
                 .then(function () {
                     // Remove plugin
                     return fs.removeSync(path.join(install.plugins_dir, install.top_plugin_id));
                 }).then(function () {
                     // Return promise chain and finally reject
-                    return Q.reject(new CordovaError(msg));
+                    return Promise.reject(new CordovaError(msg));
                 });
         }
         opts = underscore.extend({}, options, {
@@ -607,7 +595,7 @@ function handleInstall (actions, pluginInfo, platform, project_dir, plugins_dir,
             });
 
             // Propagate value, returned by platform's addPlugin method to caller
-            return Q(result);
+            return Promise.resolve(result);
         });
 }
 

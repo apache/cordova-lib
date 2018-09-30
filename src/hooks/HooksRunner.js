@@ -18,7 +18,6 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
-const Q = require('q');
 const readChunk = require('read-chunk');
 const shebangCommand = require('shebang-command');
 
@@ -45,7 +44,7 @@ function HooksRunner (projectRoot) {
  */
 HooksRunner.prototype.fire = function fire (hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        return Q('hook ' + hook + ' is disabled.');
+        return Promise.resolve('hook ' + hook + ' is disabled.');
     }
 
     // args check
@@ -93,7 +92,7 @@ module.exports = HooksRunner;
 module.exports.fire = globalFire;
 function globalFire (hook, opts) {
     if (isHookDisabled(opts, hook)) {
-        return Q('hook ' + hook + ' is disabled.');
+        return Promise.resolve('hook ' + hook + ' is disabled.');
     }
 
     opts = opts || {};
@@ -107,14 +106,14 @@ function executeEventHandlersSerially (hook, opts) {
         // Chain the handlers in series.
         return handlers.reduce(function (soFar, f) {
             return soFar.then(function () { return f(opts); });
-        }, Q());
+        }, Promise.resolve());
     } else {
-        return Q(); // Nothing to do.
+        return Promise.resolve(); // Nothing to do.
     }
 }
 
 /**
- * Serially fires scripts either via Q(require(pathToScript)(context)) or via child_process.spawn.
+ * Serially fires scripts either via Promise.resolve(require(pathToScript)(context)) or via child_process.spawn.
  * Returns promise.
  */
 function runScriptsSerially (scripts, context) {
@@ -125,7 +124,7 @@ function runScriptsSerially (scripts, context) {
         return prevScriptPromise.then(function () {
             return runScript(nextScript, context);
         });
-    }, Q());
+    }, Promise.resolve());
 }
 
 /**
@@ -167,7 +166,7 @@ function runScript (script, context) {
 function runScriptViaModuleLoader (script, context) {
     if (!fs.existsSync(script.fullPath)) {
         events.emit('warn', 'Script file does\'t exist and will be skipped: ' + script.fullPath);
-        return Q();
+        return Promise.resolve();
     }
     var scriptFn = require(script.fullPath);
     context.scriptLocation = script.fullPath;
@@ -179,9 +178,9 @@ function runScriptViaModuleLoader (script, context) {
     // This is not a desired case as we want to pass context, but added for compatibility.
     if (scriptFn instanceof Function) {
         // If hook is async it can return promise instance and we will handle it.
-        return Q(scriptFn(context));
+        return Promise.resolve(scriptFn(context));
     } else {
-        return Q();
+        return Promise.resolve();
     }
 }
 
@@ -195,7 +194,7 @@ function runScriptViaChildProcessSpawn (script, context) {
 
     if (fs.statSync(script.fullPath).isDirectory()) {
         events.emit('verbose', 'Skipped directory "' + script.fullPath + '" within hook directory');
-        return Q();
+        return Promise.resolve();
     }
 
     if (isWindows) {

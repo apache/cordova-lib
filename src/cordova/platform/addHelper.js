@@ -15,7 +15,6 @@
     under the License.
 */
 
-var Q = require('q');
 var path = require('path');
 var fs = require('fs-extra');
 var semver = require('semver');
@@ -41,7 +40,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     if (!targets || !targets.length) {
         msg = 'No platform specified. Please specify a platform to ' + cmd + '. ' +
               'See `' + cordova_util.binname + ' platform list`.';
-        return Q.reject(new CordovaError(msg));
+        return Promise.reject(new CordovaError(msg));
     }
 
     for (var i = 0; i < targets.length; i++) {
@@ -82,7 +81,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     platform = parts[0];
                     spec = parts[1];
                 }
-                return Q.when().then(function () {
+                return Promise.resolve().then(function () {
                     // if platform is a local path or url, it should be assigned
                     // to spec
                     if (cordova_util.isDirectory(path.resolve(platform)) ||
@@ -284,7 +283,7 @@ function getVersionFromConfigFile (platform, cfg) {
 // Returns a Promise
 function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
-    return Q().then(function () {
+    return Promise.resolve().then(function () {
         // append cordova to platform
         if (platform in platforms) {
             target = 'cordova-' + target;
@@ -301,7 +300,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             '\nProbably this is either a connection problem, or platform spec is incorrect.' +
             '\nCheck your connection and platform name/version/URL.' +
             '\n' + error;
-        return Q.reject(new CordovaError(message));
+        return Promise.reject(new CordovaError(message));
     }).then(function (libDir) {
         return require('./index').getPlatformDetailsFromDir(libDir, platform);
     });
@@ -318,7 +317,7 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
         return !platformJson.isPluginInstalled(plugin);
     });
     if (plugins.length === 0) {
-        return Q();
+        return Promise.resolve();
     }
 
     var output = path.join(projectRoot, 'platforms', platform);
@@ -357,5 +356,5 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
             }
             return plugman.install(platform, output, plugin, plugins_dir, options);
         });
-    }, Q());
+    }, Promise.resolve());
 }

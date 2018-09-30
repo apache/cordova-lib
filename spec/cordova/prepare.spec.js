@@ -25,7 +25,6 @@ var prepare = rewire('../../src/cordova/prepare');
 var restore = require('../../src/cordova/restore-util');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
-var Q = require('q');
 var PlatformJson = require('cordova-common').PlatformJson;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
@@ -36,9 +35,9 @@ describe('cordova/prepare', function () {
     var platform_api_add_mock;
     var platform_api_remove_mock;
     beforeEach(function () {
-        platform_api_prepare_mock = jasmine.createSpy('prepare').and.returnValue(Q());
-        platform_api_add_mock = jasmine.createSpy('add').and.returnValue(Q());
-        platform_api_remove_mock = jasmine.createSpy('remove').and.returnValue(Q());
+        platform_api_prepare_mock = jasmine.createSpy('prepare').and.returnValue(Promise.resolve());
+        platform_api_add_mock = jasmine.createSpy('add').and.returnValue(Promise.resolve());
+        platform_api_remove_mock = jasmine.createSpy('remove').and.returnValue(Promise.resolve());
         spyOn(platforms, 'getPlatformApi').and.callFake(function (platform, rootDir) {
             return {
                 prepare: platform_api_prepare_mock,
@@ -52,21 +51,21 @@ describe('cordova/prepare', function () {
             };
         });
         spyOn(PlatformJson, 'load');
-        spyOn(HooksRunner.prototype, 'fire').and.returnValue(Q());
+        spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
         spyOn(util, 'isCordova').and.returnValue(true);
     });
 
     describe('main method', function () {
         beforeEach(function () {
             spyOn(cordova_config, 'read').and.returnValue({});
-            spyOn(restore, 'installPlatformsFromConfigXML').and.returnValue(Q());
-            spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Q());
+            spyOn(restore, 'installPlatformsFromConfigXML').and.returnValue(Promise.resolve());
+            spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Promise.resolve());
             spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
             spyOn(util, 'preProcessOptions').and.callFake(function (options) {
                 var platforms = options.platforms || [];
                 return {'platforms': platforms};
             });
-            spyOn(prepare, 'preparePlatforms').and.returnValue(Q());
+            spyOn(prepare, 'preparePlatforms').and.returnValue(Promise.resolve());
         });
         describe('failure', function () {
             it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection and only fire the before_prepare hook', function () {
@@ -143,7 +142,7 @@ describe('cordova/prepare', function () {
         var platform_munger_revert_mock;
         var platform_munger_save_mock;
         beforeEach(function () {
-            spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Q());
+            spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Promise.resolve());
             cfg_parser_revert_mock = prepare.__set__('ConfigParser', cfg_parser_mock);
             platform_munger_save_mock = jasmine.createSpy('platform munger save mock');
             platform_munger_mock.prototype = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);

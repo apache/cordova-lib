@@ -15,7 +15,6 @@
     under the License.
 */
 
-var Q = require('q');
 var fs = require('fs-extra');
 var path = require('path');
 var os = require('os');
@@ -25,8 +24,7 @@ var superspawn = require('cordova-common').superspawn;
 var cordova_util = require('../util');
 var HooksRunner = require('../../hooks/HooksRunner');
 
-// Wrap in a Q promise to avoid breaking any users of this function
-module.exports = (...args) => Q(check(...args));
+module.exports = check;
 
 function check (hooksRunner, projectRoot) {
     return Promise.all([

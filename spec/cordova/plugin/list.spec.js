@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var list = require('../../../src/cordova/plugin/list');
 var plugin_util = require('../../../src/cordova/plugin/util');
 var events = require('cordova-common').events;
@@ -29,8 +28,8 @@ describe('cordova/plugin/list', function () {
     var fake_plugins_list = [{id: 'VRPlugin', version: '1.0.0', name: 'VR'}, {id: 'MastodonSocialPlugin', version: '2.0.0', name: 'Mastodon'}];
     beforeEach(function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
-        hook_mock.fire.and.returnValue(Q());
-        spyOn(plugin_util, 'getInstalledPlugins').and.returnValue(Q.resolve(fake_plugins_list));
+        hook_mock.fire.and.returnValue(Promise.resolve());
+        spyOn(plugin_util, 'getInstalledPlugins').and.returnValue(Promise.resolve(fake_plugins_list));
         spyOn(events, 'emit');
     });
     it('should fire the before_plugin_ls hook', function () {
@@ -47,7 +46,7 @@ describe('cordova/plugin/list', function () {
     });
     it('should warn if plugin list contains dependencies that are missing', function () {
         var fake_plugins_list = [{id: 'VRPlugin', deps: '1'}];
-        plugin_util.getInstalledPlugins.and.returnValue(Q.resolve(fake_plugins_list));
+        plugin_util.getInstalledPlugins.and.returnValue(Promise.resolve(fake_plugins_list));
         return list(projectRoot, hook_mock).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/WARNING, missing dependency/));
         });
@@ -55,7 +54,7 @@ describe('cordova/plugin/list', function () {
     xit('should warn if plugin list contains a plugin dependency that does not have a version satisfied', function () {
         spyOn(semver, 'satisfies').and.returnValue(false);
         var fake_plugins_list = [{id: 'VRPlugin', version: '1', deps: '1'}];
-        plugin_util.getInstalledPlugins.and.returnValue(Q.resolve(fake_plugins_list));
+        plugin_util.getInstalledPlugins.and.returnValue(Promise.resolve(fake_plugins_list));
         return list(projectRoot, hook_mock).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/WARNING, broken dependency/));
         });

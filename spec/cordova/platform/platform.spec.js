@@ -16,7 +16,6 @@
 */
 
 var os = require('os');
-var Q = require('q');
 var platform = require('../../../src/cordova/platform');
 
 describe('cordova.platform', function () {
@@ -32,7 +31,7 @@ describe('cordova.platform', function () {
             opts = {};
             hooksRunnerMock = {
                 fire: function () {
-                    return Q();
+                    return Promise.resolve();
                 }
             };
         });

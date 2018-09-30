@@ -486,7 +486,7 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Remove for testing purposes so platform is not pre-installed.
-            cordova.platform('rm', PLATFORM, {save: true}).then(function () {
+            return cordova.platform('rm', PLATFORM, {save: true}).then(function () {
                 return cordova.platform('add', PLATFORM, {save: true});
             }).then(function () {
                 // pkg.json has new platform.

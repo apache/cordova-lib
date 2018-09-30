@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var promiseUtil = require('../util/promise-util');
@@ -26,7 +25,7 @@ var _ = require('underscore');
 
 // Returns a promise.
 module.exports = function compile (options) {
-    return Q()
+    return Promise.resolve()
         .then(function () {
             var projectRoot = cordova_util.cdProjectRoot();
             options = cordova_util.preProcessOptions(options);

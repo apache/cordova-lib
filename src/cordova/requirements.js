@@ -17,10 +17,10 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var Q = require('q');
-var CordovaError = require('cordova-common').CordovaError;
-var knownPlatforms = require('../platforms/platforms');
+const { object: zipObject } = require('underscore');
+const { preProcessOptions } = require('./util');
+const { CordovaError } = require('cordova-common');
+const knownPlatforms = require('../platforms/platforms');
 
 /**
  * Runs requirements check against platforms specified in 'platfoms' argument
@@ -32,21 +32,18 @@ var knownPlatforms = require('../platforms/platforms');
  *   requirements check results for each platform.
  */
 module.exports = function check_reqs (platforms) {
-    return Q().then(function () {
-        var platforms = cordova_util.preProcessOptions(platforms).platforms; // eslint-disable-line no-use-before-define
+    return Promise.resolve().then(() => {
+        const normalizedPlatforms = preProcessOptions(platforms).platforms;
 
-        return Q.allSettled(platforms.map(function (platform) {
-            return knownPlatforms.getPlatformApi(platform).requirements();
-        })).then(function (settledChecks) {
-            var res = {};
-            settledChecks.reduce(function (result, settledCheck, idx) {
-                var platformName = platforms[idx];
-                result[platformName] = settledCheck.state === 'fulfilled' ?
-                    settledCheck.value :
-                    new CordovaError(settledCheck.reason);
-                return result;
-            }, res);
-            return res;
-        });
+        return Promise.all(
+            normalizedPlatforms.map(getPlatformRequirementsOrError)
+        ).then(results => zipObject(normalizedPlatforms, results));
     });
 };
+
+function getPlatformRequirementsOrError (platform) {
+    return knownPlatforms
+        .getPlatformApi(platform)
+        .requirements()
+        .catch(err => new CordovaError(err));
+}

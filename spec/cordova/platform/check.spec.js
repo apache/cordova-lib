@@ -15,7 +15,6 @@ http://www.apache.org/licenses/LICENSE-2.0
     under the License.
 */
 
-var Q = require('q');
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var superspawn = require('cordova-common').superspawn;
@@ -33,12 +32,11 @@ describe('cordova/platform/check', function () {
         spyOn(superspawn, 'spawn').and.callThrough();
         spyOn(fs, 'removeSync');
         spyOn(cordova_util, 'listPlatforms').and.returnValue(['ios']);
-        spyOn(platform, 'add').and.returnValue(Q());
+        spyOn(platform, 'add').and.returnValue(Promise.resolve());
     });
 
-    it('If no results, platforms cannot be updated', function () {
-        platform.add.and.returnValue(Q.reject());
-        cordova_util.listPlatforms.and.callThrough();
+    it('If no platforms, platforms cannot be updated', function () {
+        cordova_util.listPlatforms.and.returnValue([]);
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/No platforms can be updated/));
             expect(superspawn.spawn).toHaveBeenCalledWith('npm', ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'], jasmine.any(Object));
@@ -47,21 +45,21 @@ describe('cordova/platform/check', function () {
     });
 
     it('Should warn if install failed', function () {
-        platform.add.and.returnValue(Q.reject());
+        platform.add.and.returnValue(Promise.reject());
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current did not install/));
         });
     });
 
     it('Should warn if version-empty', function () {
-        superspawn.spawn.and.returnValue(Q());
+        superspawn.spawn.and.returnValue(Promise.resolve());
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current version script failed to return a version/));
         });
     });
 
     it('Should warn if version-failed', function () {
-        spyOn(superspawn, 'maybeSpawn').and.returnValue(Q('version-failed'));
+        spyOn(superspawn, 'maybeSpawn').and.returnValue(Promise.resolve('version-failed'));
         return platform_check(hooks_mock, projectRoot).then(function () {
             expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/current version script failed, and/));
         });

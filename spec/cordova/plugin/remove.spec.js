@@ -19,7 +19,6 @@
 
 var rewire = require('rewire');
 var remove = rewire('../../../src/cordova/plugin/remove');
-var Q = require('q');
 var cordova_util = require('../../../src/cordova/util');
 var metadata = require('../../../src/plugman/util/metadata');
 var events = require('cordova-common').events;
@@ -48,11 +47,11 @@ describe('cordova/plugin/remove', function () {
         spyOn(fs, 'existsSync');
         spyOn(remove, 'validatePluginId');
         spyOn(cordova_util, 'listPlatforms').and.returnValue(['ios', 'android']);
-        spyOn(plugman.uninstall, 'uninstallPlatform').and.returnValue(Q());
-        spyOn(plugman.uninstall, 'uninstallPlugin').and.returnValue(Q());
+        spyOn(plugman.uninstall, 'uninstallPlatform').and.returnValue(Promise.resolve());
+        spyOn(plugman.uninstall, 'uninstallPlugin').and.returnValue(Promise.resolve());
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         spyOn(prepare, 'preparePlatforms').and.returnValue(true);
-        hook_mock.fire.and.returnValue(Q());
+        hook_mock.fire.and.returnValue(Promise.resolve());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine', 'addEngine', 'getHookScripts', 'removePlugin']);
         cfg_parser_revert_mock = remove.__set__('ConfigParser', cfg_parser_mock);
         plugin_info_provider_mock.prototype = jasmine.createSpyObj('plugin info provider mock', ['get', 'getPreferences']);
@@ -110,7 +109,7 @@ describe('cordova/plugin/remove', function () {
         it('should trigger a prepare if plugman.uninstall.uninstallPlatform returned something falsy', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-            plugman.uninstall.uninstallPlatform.and.returnValue(Q(false));
+            plugman.uninstall.uninstallPlatform.and.returnValue(Promise.resolve(false));
             var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlatform).toHaveBeenCalled();

@@ -17,7 +17,6 @@
     under the License.
 */
 
-var Q = require('q');
 var fs = require('fs-extra');
 var path = require('path');
 var PluginInfo = require('cordova-common').PluginInfo;
@@ -51,7 +50,7 @@ function createPackageJson (plugin_path) {
             events.emit('verbose', 'Package.json successfully created');
         });
     });
-    return Q();
+    return Promise.resolve();
 }
 
 module.exports = createPackageJson;

@@ -23,7 +23,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var path = require('path');
 var fs = require('fs-extra');
-var Q = require('q');
 var semver = require('semver');
 
 module.exports = save;
@@ -49,7 +48,7 @@ function save (projectRoot, opts) {
         // in that case, there's nothing to do except bubble up the error
         plugins = JSON.parse(fs.readFileSync(jsonFile, 'utf-8'));
     } catch (err) {
-        return Q.reject(err.message);
+        return Promise.reject(err.message);
     }
 
     Object.keys(plugins).forEach(function (pluginName) {
@@ -72,7 +71,7 @@ function save (projectRoot, opts) {
     });
     cfg.write();
 
-    return Q.resolve();
+    return Promise.resolve();
 }
 
 function getSpec (pluginSource, projectRoot, pluginName) {

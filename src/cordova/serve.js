@@ -17,7 +17,6 @@
     under the License.
 */
 
-const Q = require('q');
 const url = require('url');
 const path = require('path');
 const globby = require('globby');
@@ -156,7 +155,7 @@ function serve (port) {
 }
 
 module.exports = (port, hookOpts) => {
-    return Q().then(_ => {
+    return Promise.resolve().then(_ => {
         projectRoot = cordovaUtil.cdProjectRoot();
         const hooksRunner = new HooksRunner(projectRoot);
         return Promise.resolve()

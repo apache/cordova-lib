@@ -20,7 +20,6 @@
 var fs = require('fs-extra');
 var helpers = require('../spec/helpers');
 var path = require('path');
-var Q = require('q');
 var events = require('cordova-common').events;
 var cordova = require('../src/cordova/cordova');
 var platforms = require('../src/platforms/platforms');
@@ -96,7 +95,7 @@ function mockPluginFetch (id, dir) {
         var dest = path.join(project, 'plugins', id);
 
         fs.copySync(path.join(dir, 'plugin.xml'), path.join(dest, 'plugin.xml'));
-        return Q(dest);
+        return Promise.resolve(dest);
     });
 }
 
@@ -226,7 +225,7 @@ describe('plugin end-to-end', function () {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin;
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(plugin_util, 'info').and.returnValue(Q({}));
+        spyOn(plugin_util, 'info').and.returnValue(Promise.resolve({}));
         return addPlugin(scopedPackage, npmInfoTestPlugin, {})
             .then(function () {
                 // Check to make sure that we are at least trying to get the correct package.
