@@ -31,3 +31,18 @@ jobs:
   steps:
   - template: azure-pipelines/steps.yml
 
+- job: macOS
+  pool:
+    vmImage: 'macOS-10.13'
+  strategy:
+    maxParallel: 3
+    matrix:
+      Node.js 6:
+        node_version: 6.x
+      Node.js 8:
+        node_version: 8.x
+      Node.js 10:
+        node_version: 10.x
+
+  steps:
+  - template: azure-pipelines/steps.yml
