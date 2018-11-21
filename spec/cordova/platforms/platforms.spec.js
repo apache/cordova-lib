@@ -23,7 +23,7 @@ var fs = require('fs-extra');
 
 var rewire = require('rewire');
 
-const { events } = require('../../../cordova-lib');
+const { events } = require('../../../cordova-lib').common;
 
 var util = require('../../../src/cordova/util');
 

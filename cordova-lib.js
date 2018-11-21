@@ -26,6 +26,7 @@ exports = module.exports = {
     get binname () {
         return this.cordova.binname;
     },
+    common: common,
     events: common.events,
     configparser: common.ConfigParser,
     PluginInfo: common.PluginInfo,
