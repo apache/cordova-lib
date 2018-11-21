@@ -17,8 +17,11 @@
 
 const path = require('path');
 const fs = require('fs-extra');
+
 const rewire = require('rewire');
-const { ConfigParser } = require('cordova-common');
+
+const ConfigParser = require('../../../cordova-lib').configparser;
+
 const { tmpDir: getTmpDir, testPlatform } = require('../helpers');
 
 /**

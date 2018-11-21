@@ -19,8 +19,10 @@
 
 var rewire = require('rewire');
 var plugin_util = rewire('../../../src/cordova/plugin/util');
+
 var fs = require('fs-extra');
-var events = require('cordova-common').events;
+
+const events = require('../../../cordova-lib').events;
 
 describe('cordova/plugin/util', function () {
     var plugin_info_mock = function () {};

@@ -17,10 +17,14 @@
 
 var path = require('path');
 var fs = require('fs-extra');
+
 var rewire = require('rewire');
+
 var cordova_util = require('../../../src/cordova/util');
+
+const events = require('../../../cordova-lib').events;
+
 var platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');
-var events = require('cordova-common').events;
 
 describe('cordova/platform/getPlatformDetailsFromDir', function () {
     var package_json_mock;

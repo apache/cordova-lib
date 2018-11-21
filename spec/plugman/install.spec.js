@@ -22,7 +22,10 @@ const os = require('os');
 const path = require('path');
 const semver = require('semver');
 
-const { events, PlatformJson, superspawn } = require('cordova-common');
+const { events } = require('../../cordova-lib');
+
+const { PlatformJson, superspawn } = require('cordova-common');
+
 const { spy: emitSpyHelper } = require('../common');
 const install = require('../../src/plugman/install');
 const knownPlatforms = require('../../src/platforms/platforms');

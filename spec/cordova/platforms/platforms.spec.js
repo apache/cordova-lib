@@ -20,10 +20,13 @@
 var os = require('os');
 var path = require('path');
 var fs = require('fs-extra');
+
 var rewire = require('rewire');
-var events = require('cordova-common').events;
+
+const { events } = require('../../../cordova-lib');
 
 var util = require('../../../src/cordova/util');
+
 var platforms = rewire('../../../src/platforms/platforms');
 
 var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');

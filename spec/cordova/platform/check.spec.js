@@ -16,10 +16,14 @@ http://www.apache.org/licenses/LICENSE-2.0
 */
 
 var fs = require('fs-extra');
-var events = require('cordova-common').events;
+
+const events = require('../../../cordova-lib').events;
+
 var superspawn = require('cordova-common').superspawn;
+
 var rewire = require('rewire');
 var platform_check = rewire('../../../src/cordova/platform/check');
+
 var platform = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
 

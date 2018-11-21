@@ -19,7 +19,9 @@
 
 var list = require('../../../src/cordova/plugin/list');
 var plugin_util = require('../../../src/cordova/plugin/util');
-var events = require('cordova-common').events;
+
+const events = require('../../../cordova-lib').events;
+
 var semver = require('semver');
 
 describe('cordova/plugin/list', function () {

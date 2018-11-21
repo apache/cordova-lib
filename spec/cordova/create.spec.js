@@ -18,9 +18,13 @@
 */
 
 var fs = require('fs-extra');
+
 var helpers = require('../helpers');
+
 var path = require('path');
-var events = require('cordova-common').events;
+
+const events = require('../../cordova-lib').events;
+
 var cordova = require('../../src/cordova/cordova');
 
 var tmpDir = helpers.tmpDir('create_test');

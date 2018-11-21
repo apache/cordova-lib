@@ -17,8 +17,11 @@
 
 var path = require('path');
 var fs = require('fs-extra');
-var events = require('cordova-common').events;
+
+const events = require('../../../cordova-lib').events;
+
 var rewire = require('rewire');
+
 var cordova_util = require('../../../src/cordova/util');
 var promiseutil = require('../../../src/util/promise-util');
 

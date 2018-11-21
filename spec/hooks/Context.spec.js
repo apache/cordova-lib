@@ -18,7 +18,8 @@
 */
 
 const rewire = require('rewire');
-const events = require('cordova-common').events;
+
+const events = require('../../cordova-lib').events;
 
 describe('hooks/Context', () => {
     let Context;

@@ -20,7 +20,8 @@
 var path = require('path');
 var fs = require('fs-extra');
 var os = require('os');
-var ConfigParser = require('cordova-common').ConfigParser;
+
+const ConfigParser = require('../cordova-lib').configparser;
 
 // Just use Android everywhere; we're mocking out any calls to the `android` binary.
 module.exports.testPlatform = 'android';

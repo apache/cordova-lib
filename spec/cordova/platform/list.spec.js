@@ -15,7 +15,8 @@
     under the License.
 */
 
-var events = require('cordova-common').events;
+const events = require('../../../cordova-lib').events;
+
 var platform_list = require('../../../src/cordova/platform/list');
 var cordova_util = require('../../../src/cordova/util');
 

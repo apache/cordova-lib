@@ -19,12 +19,17 @@
 
 var rewire = require('rewire');
 var add = rewire('../../../src/cordova/plugin/add');
+
 var plugman = require('../../../src/plugman/plugman');
 var cordova_util = require('../../../src/cordova/util');
+
 var path = require('path');
 var fs = require('fs-extra');
+
 var config = require('../../../src/cordova/config');
-var events = require('cordova-common').events;
+
+const events = require('../../../cordova-lib').events;
+
 var plugin_util = require('../../../src/cordova/plugin/util');
 
 describe('cordova/plugin/add', function () {
