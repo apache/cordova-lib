@@ -18,7 +18,7 @@
 */
 
 const { object: zipObject } = require('underscore');
-const { preProcessOptions } = require('./util');
+const cordova_util = require('./util');
 const { CordovaError } = require('cordova-common');
 const knownPlatforms = require('../platforms/platforms');
 
@@ -33,7 +33,7 @@ const knownPlatforms = require('../platforms/platforms');
  */
 module.exports = function check_reqs (platforms) {
     return Promise.resolve().then(() => {
-        const normalizedPlatforms = preProcessOptions(platforms).platforms;
+        const normalizedPlatforms = cordova_util.preProcessOptions(platforms).platforms;
 
         return Promise.all(
             normalizedPlatforms.map(getPlatformRequirementsOrError)
