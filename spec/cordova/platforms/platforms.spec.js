@@ -38,7 +38,7 @@ describe('platforms/platforms', () => {
 
     it('should have all and only the supported platforms', function () {
         expect(Object.keys(platforms)).toEqual(jasmine.arrayWithExactContents([
-            'android', 'browser', 'ios', 'osx', 'windows'
+            'android', 'browser', 'ios', 'osx', 'windows', 'electron'
         ]));
     });
 

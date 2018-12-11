@@ -33,5 +33,11 @@
         "version": "~5.0.1",
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
+    },
+    "electron": {
+        "url": "https://github.com/apache/cordova-electron.git",
+        "version": "~1.0.0",
+        "apiCompatibleSince": "5.0.0",
+        "deprecated": false
     }
 }

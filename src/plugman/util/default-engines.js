@@ -35,6 +35,8 @@ module.exports = function (project_dir) {
             { 'platform': 'windows', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
         'cordova-browser':
             { 'platform': 'browser', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+        'cordova-electron':
+            { 'platform': 'electron', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
         'apple-xcode':
             { 'platform': 'ios', 'scriptSrc': path.join(project_dir, 'cordova', 'apple_xcode_version') },
         'apple-ios':
