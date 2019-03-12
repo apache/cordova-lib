@@ -72,10 +72,10 @@ describe('compile command', function () {
         });
 
         it('Test 004 : should pass down optional parameters', function () {
-            return cordova.compile({platforms: ['blackberry10'], options: {release: true}})
+            return cordova.compile({ platforms: ['blackberry10'], options: { release: true } })
                 .then(function () {
                     expect(getPlatformApi).toHaveBeenCalledWith('blackberry10');
-                    expect(platformApi.build).toHaveBeenCalledWith({release: true});
+                    expect(platformApi.build).toHaveBeenCalledWith({ release: true });
                 });
         });
     });
@@ -85,13 +85,13 @@ describe('compile command', function () {
             it('Test 006 : should fire before hooks through the hooker module', function () {
                 return cordova.compile(['android', 'ios'])
                     .then(function () {
-                        expect(fire.calls.argsFor(0)).toEqual(['before_compile', {verbose: false, platforms: ['android', 'ios'], options: {}}]);
+                        expect(fire.calls.argsFor(0)).toEqual(['before_compile', { verbose: false, platforms: ['android', 'ios'], options: {} }]);
                     });
             });
             it('Test 007 : should fire after hooks through the hooker module', function () {
                 return cordova.compile('android')
                     .then(function () {
-                        expect(fire.calls.argsFor(1)).toEqual(['after_compile', {verbose: false, platforms: ['android'], options: {}}]);
+                        expect(fire.calls.argsFor(1)).toEqual(['after_compile', { verbose: false, platforms: ['android'], options: {} }]);
                     });
             });
         });

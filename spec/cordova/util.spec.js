@@ -222,23 +222,23 @@ describe('util module', function () {
         });
 
         it('Test 017 : should accept single string argument as platform name', function () {
-            expect(util.preProcessOptions('ios')).toEqual(jasmine.objectContaining({platforms: ['ios']}));
+            expect(util.preProcessOptions('ios')).toEqual(jasmine.objectContaining({ platforms: ['ios'] }));
         });
 
         it('Test 018 : should accept array of strings as platform names', function () {
-            expect(util.preProcessOptions(['ios', 'windows'])).toEqual(jasmine.objectContaining({platforms: ['ios', 'windows']}));
+            expect(util.preProcessOptions(['ios', 'windows'])).toEqual(jasmine.objectContaining({ platforms: ['ios', 'windows'] }));
         });
 
         it('Test 019 : should fall back to installed platform if input doesn\'t contain platforms list', function () {
-            expect(util.preProcessOptions({verbose: true}))
-                .toEqual(jasmine.objectContaining({platforms: ['android'], verbose: true}));
+            expect(util.preProcessOptions({ verbose: true }))
+                .toEqual(jasmine.objectContaining({ platforms: ['android'], verbose: true }));
         });
 
         it('Test 020 : should pick buildConfig if no option is provided, but buildConfig.json exists', function () {
             spyOn(fs, 'existsSync').and.returnValue(true);
             // Using path.join below to normalize path separators
             expect(util.preProcessOptions())
-                .toEqual(jasmine.objectContaining({options: {buildConfig: path.join('/fake/path/build.json')}}));
+                .toEqual(jasmine.objectContaining({ options: { buildConfig: path.join('/fake/path/build.json') } }));
         });
 
         describe('getPlatformApiFunction', function () {

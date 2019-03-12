@@ -185,7 +185,7 @@ describe('HooksRunner', function () {
         describe('plugin hooks', function () {
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
                 // Make scripts executable
-                globby.sync('scripts/**', {cwd: testPluginInstalledPath, absolute: true})
+                globby.sync('scripts/**', { cwd: testPluginInstalledPath, absolute: true })
                     .forEach(f => fs.chmodSync(f, 0o755));
 
                 usePluginConfig('TwoPlatforms');

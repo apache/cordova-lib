@@ -37,7 +37,7 @@ function check (hooksRunner, projectRoot) {
 function getCordovaUpdateMessage () {
     return superspawn.spawn('npm',
         ['--loglevel=silent', '--json', 'outdated', 'cordova-lib'],
-        {cwd: path.dirname(require.main.filename)}
+        { cwd: path.dirname(require.main.filename) }
     ).then(function (output) {
         var vers;
         try {
@@ -97,7 +97,7 @@ function getPlatformUpdateMessages (projectRoot) {
 }
 
 function getPlatformUpdateMessage (platform, h, projectRoot, scratch) {
-    const availableVersionPromise = require('.').add(h, scratch, [platform], {spawnoutput: {stdio: 'ignore'}})
+    const availableVersionPromise = require('.').add(h, scratch, [platform], { spawnoutput: { stdio: 'ignore' } })
         .then(function () {
             return getPlatformVersion(scratch, platform).then(
                 avail => avail || 'version-empty',

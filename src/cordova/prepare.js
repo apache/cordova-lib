@@ -142,10 +142,10 @@ function restoreMissingPluginsForPlatform (platform, projectRoot, options) {
         .concat(Object.keys(oldPlatformJson.root.dependent_plugins))
         .reduce(function (result, candidate) {
             if (!platformJson.isPluginInstalled(candidate)) {
-                result.push({name: candidate,
+                result.push({ name: candidate,
                     // Note: isPluginInstalled is actually returns not a boolean,
                     // but object which corresponds to this particular plugin
-                    variables: oldPlatformJson.isPluginInstalled(candidate)});
+                    variables: oldPlatformJson.isPluginInstalled(candidate) });
             }
             return result;
         }, []);

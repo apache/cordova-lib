@@ -186,7 +186,7 @@ const customMatchers = {
         return {
             pass, message: `expected ${file} ${expectation}`
         };
-    }})
+    } })
 };
 
 // Add our custom matchers

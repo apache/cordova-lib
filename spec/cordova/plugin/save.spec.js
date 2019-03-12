@@ -28,7 +28,7 @@ describe('cordova/plugin/save', function () {
     var cfg_parser_mock = function () {};
     var cfg_parser_revert_mock;
     var fake_plugin_list = ['VRPlugin', 'MastodonSocialPlugin'];
-    var fake_fetch_json = {'VRPlugin': {}, 'MastodonSocialPlugin': {}};
+    var fake_fetch_json = { 'VRPlugin': {}, 'MastodonSocialPlugin': {} };
     var plugin_info_provider_mock = function () {};
     var plugin_info_provider_revert_mock;
 
@@ -68,7 +68,7 @@ describe('cordova/plugin/save', function () {
 
         it('plugins are being removed first and then only top level plugins are being restored', function () {
             var fake_fetch_json =
-                {'VRPlugin': {'source': {
+                { 'VRPlugin': { 'source': {
                     'type': 'registry',
                     'id': 'id'
                 },
@@ -78,7 +78,7 @@ describe('cordova/plugin/save', function () {
                     'type': 'registry',
                     'id': 'id'
                 },
-                'is_top_level': false }};
+                'is_top_level': false } };
 
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
             return save(projectRoot).then(function () {
@@ -92,11 +92,11 @@ describe('cordova/plugin/save', function () {
 
         it('should write individual plugin specs to config.xml', function () {
             var fake_fetch_json =
-                {'VRPlugin': {'source': {
+                { 'VRPlugin': { 'source': {
                     'type': 'registry',
                     'id': 'id'
                 },
-                'is_top_level': true }};
+                'is_top_level': true } };
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
             spyOn(save, 'getSpec').and.returnValue('1.0.0');
             return save(projectRoot).then(function () {
@@ -107,14 +107,14 @@ describe('cordova/plugin/save', function () {
 
         it('should write individual plugin variables to config.xml', function () {
             var fake_fetch_json =
-                {'VRPlugin': {'source': {
+                { 'VRPlugin': { 'source': {
                     'type': 'registry',
                     'id': 'id'
                 },
                 'is_top_level': true,
                 'variables': {
                     'var 1': ' '
-                }}};
+                } } };
             fs.readFileSync.and.returnValue(JSON.stringify(fake_fetch_json));
             return save(projectRoot).then(function () {
                 expect(cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(jasmine.any(Object), [ Object({ name: 'var 1', value: ' ' }) ]);
@@ -132,7 +132,7 @@ describe('cordova/plugin/save', function () {
 
         it('getSpec should return a version if a version was provided to plugin id', function () {
             save.versionString.and.callThrough();
-            expect(save.getSpec({id: 'cordova-plugin-camera@^1.1.0'}, '/some/path', 'cordova-plugin-camera')).toEqual('^1.1.0');
+            expect(save.getSpec({ id: 'cordova-plugin-camera@^1.1.0' }, '/some/path', 'cordova-plugin-camera')).toEqual('^1.1.0');
         });
 
         it('should return a version that includes scope if scope was part of plugin id', function () {

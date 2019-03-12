@@ -72,7 +72,7 @@ describe('cordova/plugin', function () {
         });
 
         it('should also include targets into a plugins property on options', function () {
-            var options = {save: true};
+            var options = { save: true };
             var targets = 'plugin1';
             return plugin(cmd, targets, options)
                 .then(function () {

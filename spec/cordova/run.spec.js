@@ -80,28 +80,28 @@ describe('run command', function () {
             });
         });
         it('Test 005 : should pass down parameters', function () {
-            return cordova.run({platforms: ['blackberry10'], options: {password: '1q1q'}}).then(function () {
+            return cordova.run({ platforms: ['blackberry10'], options: { password: '1q1q' } }).then(function () {
                 expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q' }, verbose: false });
-                expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q'});
-                expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
+                expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q' });
+                expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
             });
         });
 
         it('Test 007 : should call platform\'s build method', function () {
-            return cordova.run({platforms: ['blackberry10']})
+            return cordova.run({ platforms: ['blackberry10'] })
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalled();
                     expect(platformApi.build).toHaveBeenCalledWith({});
-                    expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+                    expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({ nobuild: true }));
                 });
         });
 
         it('Test 008 : should not call build if --nobuild option is passed', function () {
-            return cordova.run({platforms: ['blackberry10'], options: { nobuild: true }})
+            return cordova.run({ platforms: ['blackberry10'], options: { nobuild: true } })
                 .then(function () {
                     expect(prepare_spy).toHaveBeenCalled();
                     expect(platformApi.build).not.toHaveBeenCalled();
-                    expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({nobuild: true}));
+                    expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({ nobuild: true }));
                 });
         });
 
@@ -118,10 +118,10 @@ describe('run command', function () {
                 platformApi.build = originalBuildSpy;
             });
             it('Test 009 : should leave parameters unchanged', function () {
-                return cordova.run({platforms: ['blackberry10'], options: {password: '1q1q'}}).then(function () {
+                return cordova.run({ platforms: ['blackberry10'], options: { password: '1q1q' } }).then(function () {
                     expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
-                    expect(platformApi.build).toHaveBeenCalledWith({password: '1q1q', 'couldBeModified': 'insideBuild'});
-                    expect(platformApi.run).toHaveBeenCalledWith({password: '1q1q', nobuild: true});
+                    expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q', 'couldBeModified': 'insideBuild' });
+                    expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
                 });
             });
         });

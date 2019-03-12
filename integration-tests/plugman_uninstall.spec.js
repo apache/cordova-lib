@@ -215,7 +215,7 @@ describe('plugman/uninstall', () => {
             it('Test 008 : allow forcefully removing a plugin', function () {
                 setupProject('uninstall.test');
 
-                return uninstall.uninstallPlugin('C', plugins_install_dir, {force: true})
+                return uninstall.uninstallPlugin('C', plugins_install_dir, { force: true })
                     .then(function () {
                         const del = common.spy.getDeleted(emit);
                         expect(del).toEqual(['Deleted plugin "C"']);

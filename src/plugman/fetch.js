@@ -51,7 +51,8 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
     var pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
 
     // clone from git repository
-    var uri = url.parse(plugin_src);
+    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
+    var uri = url.parse(plugin_src); // eslint-disable-line
 
     // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
     // git-ref can be a commit SHA, a tag, or a branch
@@ -278,7 +279,7 @@ function copyPlugin (pinfo, plugins_dir, link) {
         fs.symlinkSync(fixedPath, dest, 'junction');
     } else {
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
-        fs.copySync(plugin_dir, dest, {dereference: true});
+        fs.copySync(plugin_dir, dest, { dereference: true });
     }
     return dest;
 }

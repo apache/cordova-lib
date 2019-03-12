@@ -75,7 +75,7 @@ module.exports = function create (name, id, version, pluginPath, options) {
     root.append(jsMod);
 
     // Write out the plugin.xml file
-    fs.writeFileSync(cwd + 'plugin.xml', new et.ElementTree(root).write({indent: 4}), 'utf-8');
+    fs.writeFileSync(cwd + 'plugin.xml', new et.ElementTree(root).write({ indent: 4 }), 'utf-8');
 
     return Promise.resolve();
 };

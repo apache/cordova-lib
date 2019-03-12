@@ -98,7 +98,7 @@ describe('cordova/plugin/remove', function () {
         it('should call plugman.uninstall.uninstallPlatform for each platform installed in the project and for each provided plugin', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-            var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+            var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlatform).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching('plugman.uninstall on plugin "cordova-plugin-splashscreen" for platform "ios"'));
@@ -110,7 +110,7 @@ describe('cordova/plugin/remove', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
             plugman.uninstall.uninstallPlatform.and.returnValue(Promise.resolve(false));
-            var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+            var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlatform).toHaveBeenCalled();
             });
@@ -119,7 +119,7 @@ describe('cordova/plugin/remove', function () {
         it('should call plugman.uninstall.uninstallPlugin once plugin has been uninstalled for each platform', function () {
             spyOn(plugin_util, 'mergeVariables');
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-            var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+            var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(plugman.uninstall.uninstallPlugin).toHaveBeenCalled();
             });
@@ -158,7 +158,7 @@ describe('cordova/plugin/remove', function () {
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(true);
                 fs.existsSync.and.returnValue(true);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-                var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+                var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
                 return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalled();
                     expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
@@ -171,7 +171,7 @@ describe('cordova/plugin/remove', function () {
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
                 fs.existsSync.and.returnValue(true);
-                var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+                var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
                 return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(fs.writeFileSync).toHaveBeenCalled();
                     expect(events.emit).toHaveBeenCalledWith('log', jasmine.stringMatching('Removing cordova-plugin-splashscreen from package.json'));
@@ -184,7 +184,7 @@ describe('cordova/plugin/remove', function () {
             spyOn(plugin_util, 'mergeVariables');
             spyOn(metadata, 'remove_fetch_metadata').and.callThrough();
             remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-            var opts = {important: 'options', plugins: ['cordova-plugin-splashscreen']};
+            var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(metadata.remove_fetch_metadata).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('verbose', jasmine.stringMatching('Removing plugin cordova-plugin-splashscreen from fetch.json'));
@@ -192,7 +192,7 @@ describe('cordova/plugin/remove', function () {
         });
 
         it('should fire the after_plugin_rm hook', function () {
-            var opts = {important: 'options', plugins: []};
+            var opts = { important: 'options', plugins: [] };
             return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                 expect(hook_mock.fire).toHaveBeenCalledWith('after_plugin_rm', opts);
             });

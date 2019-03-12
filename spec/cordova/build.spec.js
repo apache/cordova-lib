@@ -76,8 +76,8 @@ describe('build command', function () {
             });
         });
         it('Test 004 : should pass down options', function () {
-            return cordova.build({platforms: ['android'], options: {release: true}}).then(function () {
-                var opts = {platforms: ['android'], options: {release: true}, verbose: false};
+            return cordova.build({ platforms: ['android'], options: { release: true } }).then(function () {
+                var opts = { platforms: ['android'], options: { release: true }, verbose: false };
                 expect(prepare_spy).toHaveBeenCalledWith(opts);
                 expect(compile_spy).toHaveBeenCalledWith(opts);
             });
@@ -88,7 +88,7 @@ describe('build command', function () {
         describe('when platforms are added', function () {
             it('Test 006 : should fire before hooks through the hooker module', function () {
                 return cordova.build(['android', 'ios']).then(function () {
-                    expect(fire.calls.argsFor(0)).toEqual(['before_build', {verbose: false, platforms: ['android', 'ios'], options: {}}]);
+                    expect(fire.calls.argsFor(0)).toEqual(['before_build', { verbose: false, platforms: ['android', 'ios'], options: {} }]);
                 });
             });
             it('Test 007 : should fire after hooks through the hooker module', function () {

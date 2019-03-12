@@ -60,7 +60,7 @@ function save (projectRoot, opts) {
             return;
         }
 
-        var attribs = {name: pluginName};
+        var attribs = { name: pluginName };
         var spec = module.exports.getSpec(pluginSource, projectRoot, pluginName);
         if (spec) {
             attribs.spec = spec;
@@ -123,7 +123,7 @@ function getPluginVariables (variables) {
     }
 
     Object.keys(variables).forEach(function (pluginVar) {
-        result.push({name: pluginVar, value: variables[pluginVar]});
+        result.push({ name: pluginVar, value: variables[pluginVar] });
     });
 
     return result;

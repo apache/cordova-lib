@@ -115,7 +115,7 @@ describe('cordova/restore-util', () => {
 
         // Check that cordova.plugins key in package.json contains the expected
         // variables and ONLY them
-        const variables = plugins.reduce((o, {name, variables}) => {
+        const variables = plugins.reduce((o, { name, variables }) => {
             o[name] = variables;
             return o;
         }, {});
@@ -124,7 +124,7 @@ describe('cordova/restore-util', () => {
 
         // Check that dependencies key in package.json contains the expected specs
         // We only check the specs for plugins where an expected spec was given
-        const specs = plugins.reduce((o, {name, spec}) => {
+        const specs = plugins.reduce((o, { name, spec }) => {
             if (spec) o[name] = spec;
             return o;
         }, {});
@@ -334,7 +334,7 @@ describe('cordova/restore-util', () => {
                 'cordova-plugin-camera': { variable_1: 'json' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -359,7 +359,7 @@ describe('cordova/restore-util', () => {
                 'cordova-plugin-camera': {}
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -391,7 +391,7 @@ describe('cordova/restore-util', () => {
                 'cordova-plugin-device': { variable_1: 'value_1' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 expectConsistentPlugins([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
@@ -435,7 +435,7 @@ describe('cordova/restore-util', () => {
                 'cordova-plugin-camera': { variable_1: 'value_1', variable_3: 'value_3' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
@@ -464,7 +464,7 @@ describe('cordova/restore-util', () => {
                 'cordova-plugin-camera': { variable_1: 'value_1' }
             });
 
-            return restore.installPluginsFromConfigXML({save: true}).then(() => {
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
                 expectConsistentPlugins([{
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
