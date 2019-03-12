@@ -18,7 +18,7 @@
 */
 
 const rewire = require('rewire');
-const events = require('cordova-common').events;
+const { CordovaError } = require('cordova-common');
 
 describe('hooks/Context', () => {
     let Context;
@@ -27,17 +27,32 @@ describe('hooks/Context', () => {
         Context = rewire('../../src/hooks/Context');
     });
 
+    describe('cordova', () => {
+        let context;
+
+        beforeEach(() => {
+            spyOn(Context.prototype, 'requireCordovaModule');
+            context = new Context();
+        });
+
+        it('is only loaded when accessed', () => {
+            expect(context.requireCordovaModule).not.toHaveBeenCalled();
+        });
+
+        it('is set to require("cordova-lib").cordova', () => {
+            const cordova = Symbol('cordova');
+            context.requireCordovaModule.and.returnValue({ cordova });
+
+            expect(context.cordova).toBe(cordova);
+            expect(context.requireCordovaModule).toHaveBeenCalledWith('cordova-lib');
+        });
+    });
+
     describe('requireCordovaModule', () => {
-        let warnSpy, requireCordovaModule;
+        let requireCordovaModule;
 
         beforeEach(() => {
             requireCordovaModule = Context.prototype.requireCordovaModule;
-            warnSpy = jasmine.createSpy('warnSpy');
-            events.on('warn', warnSpy);
-        });
-
-        afterEach(() => {
-            events.removeListener('warn', warnSpy);
         });
 
         it('correctly resolves cordova-* dependencies', () => {
@@ -73,34 +88,22 @@ describe('hooks/Context', () => {
                 Context.__set__({ require: requireSpy });
             });
 
-            it('maps some old paths to their new equivalent', () => {
-                const ConfigParser = Symbol('ConfigParser');
-                const xmlHelpers = Symbol('xmlHelpers');
-                requireSpy.and.returnValue({ ConfigParser, xmlHelpers });
-
-                expect(requireCordovaModule('cordova-lib/src/configparser/ConfigParser')).toBe(ConfigParser);
-                expect(requireCordovaModule('cordova-lib/src/util/xml-helpers')).toBe(xmlHelpers);
-                expect(requireSpy.calls.allArgs()).toEqual([
-                    ['cordova-common'], ['cordova-common']
-                ]);
-            });
-
             it('correctly handles module names that start with "cordova-lib"', () => {
                 requireCordovaModule('cordova-libre');
                 expect(requireSpy).toHaveBeenCalledWith('cordova-libre');
             });
 
-            it('emits a warning if non-cordova module is requested', () => {
-                requireCordovaModule('q');
+            it('throws if non-cordova module is requested', () => {
+                const expectErrorOnRequire = m =>
+                    expect(() => requireCordovaModule(m))
+                        .toThrowError(CordovaError, /non-cordova module/);
 
-                expect(requireSpy).toHaveBeenCalledWith('q');
-                expect(warnSpy).toHaveBeenCalledTimes(1);
-
-                const message = warnSpy.calls.argsFor(0)[0];
-                expect(message).toContain('requireCordovaModule');
-                expect(message).toContain('non-cordova module');
-                expect(message).toContain('deprecated');
-                expect(message).toContain('"q"');
+                expectErrorOnRequire('q');
+                expectErrorOnRequire('.');
+                expectErrorOnRequire('..');
+                expectErrorOnRequire('./asd');
+                expectErrorOnRequire('../qwe');
+                expectErrorOnRequire('/foo');
             });
         });
 
