@@ -39,17 +39,7 @@ exports.get_fetch_metadata = function (plugin_dir) {
     var pluginId = path.basename(plugin_dir);
 
     var metadataJson = getJson(pluginsDir);
-    if (metadataJson[pluginId]) {
-        return metadataJson[pluginId];
-    }
-    var legacyPath = path.join(plugin_dir, '.fetch.json');
-    if (fs.existsSync(legacyPath)) {
-        var ret = JSON.parse(fs.readFileSync(legacyPath, 'utf-8'));
-        exports.save_fetch_metadata(pluginsDir, pluginId, ret);
-        fs.unlinkSync(legacyPath);
-        return ret;
-    }
-    return {};
+    return metadataJson[pluginId] || {};
 };
 
 exports.save_fetch_metadata = function (pluginsDir, pluginId, data) {
