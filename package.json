@@ -27,7 +27,7 @@
     "fs-extra": "^7.0.1",
     "globby": "^8.0.1",
     "indent-string": "^3.2.0",
-    "init-package-json": "^1.2.0",
+    "init-package-json": "^1.10.3",
     "md5-file": "^4.0.0",
     "read-chunk": "^3.0.0",
     "semver": "^5.3.0",
