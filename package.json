@@ -24,7 +24,7 @@
     "dep-graph": "1.1.0",
     "detect-indent": "^5.0.0",
     "elementtree": "^0.1.7",
-    "fs-extra": "^7.0.0",
+    "fs-extra": "^7.0.1",
     "globby": "^8.0.1",
     "indent-string": "^3.2.0",
     "init-package-json": "^1.2.0",
