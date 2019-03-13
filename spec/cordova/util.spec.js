@@ -145,6 +145,11 @@ describe('util module', function () {
             fs.ensureSymlinkSync(linkedPluginPath, pluginLinkPath);
             expectFindPluginsToReturn(plugins.concat('plugin-link'));
         });
+
+        it('Test 032 : should work with scoped plugins', () => {
+            fs.ensureDirSync(path.join(pluginsDir, '@baz/foo'));
+            expectFindPluginsToReturn(plugins.concat('@baz/foo'));
+        });
     });
 
     describe('preprocessOptions method', function () {
