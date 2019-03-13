@@ -41,7 +41,7 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create(preparedProject)
             .then(function () {
                 process.chdir(preparedProject);
-                return cordova.platform('add', 'android');
+                return cordova.platform('add', 'android', { save: true });
             });
     });
 
