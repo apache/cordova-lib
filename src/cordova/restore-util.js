@@ -44,7 +44,6 @@ function installPlatformsFromConfigXML (platforms, opts) {
     var comboArray = [];
     var configPlatforms = [];
     var modifiedPkgJson = false;
-    var modifiedConfigXML = false;
     var mergedPlatformSpecs = {};
     var key;
     var installAllPlatforms = !platforms || platforms.length === 0;
@@ -159,18 +158,6 @@ function installPlatformsFromConfigXML (platforms, opts) {
                     }
                     mergedPlatformSpecs[item] = pkgJson.dependencies[item];
                 }
-                // First remove the engine and then add missing engine and elements to config.xml.
-                // Remove to avoid duplicate engines.
-                if (mergedPlatformSpecs[item]) {
-                    cfg.removeEngine(item);
-                    cfg.addEngine(item, mergedPlatformSpecs[item]);
-                    modifiedConfigXML = true;
-                // If there is no spec, just remove and add the engine.
-                } else if (configPlatforms.indexOf(item) < 0) {
-                    cfg.removeEngine(item);
-                    cfg.addEngine(item);
-                    modifiedConfigXML = true;
-                }
             });
         }
 
@@ -190,9 +177,6 @@ function installPlatformsFromConfigXML (platforms, opts) {
                 pkgJson.dependencies[prefixKey] = mergedPlatformSpecs[key];
             }
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
-        }
-        if (modifiedConfigXML === true) {
-            cfg.write();
         }
         if (!comboArray || !comboArray.length) {
             return Promise.resolve('No platforms found in config.xml and/or package.json that haven\'t been added to the project');
@@ -238,7 +222,6 @@ function installPluginsFromConfigXML (args) {
     var pkgJsonPath = path.join(projectRoot, 'package.json');
     var pkgJson;
     var modifiedPkgJson = false;
-    var modifiedConfigXML = false;
     var comboObject;
     var mergedPluginSpecs = {};
     var comboPluginIdArray;
@@ -345,35 +328,6 @@ function installPluginsFromConfigXML (args) {
             var indent = detectIndent(file).indent || '  ';
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
         }
-    }
-    // Write to config.xml (only if it is different from package.json in content)
-    comboPluginIdArray.forEach(function (plugID) {
-        var configXMLPlugin = cfg.getPlugin(plugID);
-        if (pluginIdConfig.indexOf(plugID) < 0) {
-            pluginIdConfig.push(plugID);
-            if (mergedPluginSpecs[plugID]) {
-                cfg.removePlugin(plugID);
-                cfg.addPlugin({ name: plugID, spec: mergedPluginSpecs[plugID] }, comboObject[plugID]);
-                modifiedConfigXML = true;
-            } else {
-                cfg.removePlugin(plugID);
-                cfg.addPlugin({ name: plugID }, comboObject[plugID]);
-                modifiedConfigXML = true;
-            }
-
-        // Write only if the plugin variables or specs are different from pkgJson
-        } else if (((pluginIdConfig.indexOf(plugID) >= 0) && (mergedPluginSpecs[plugID]) &&
-            (configXMLPlugin.variables !== comboObject[plugID])) ||
-            ((mergedPluginSpecs[plugID] !== configXMLPlugin.spec) ||
-            (configXMLPlugin.variables !== comboObject[plugID]))) {
-            cfg.removePlugin(plugID);
-            cfg.addPlugin({ name: plugID, spec: mergedPluginSpecs[plugID] }, comboObject[plugID]);
-            modifiedConfigXML = true;
-        }
-    });
-
-    if (modifiedConfigXML === true && args.save !== false) {
-        cfg.write();
     }
 
     // Intermediate variable to store current installing plugin name

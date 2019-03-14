@@ -36,7 +36,7 @@ describe('cordova/platform/remove', function () {
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
         hooks_mock.fire.and.returnValue(Promise.resolve());
-        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine']);
+        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'getEngines', 'removeEngine']);
 
         platform_remove = rewire('../../../src/cordova/platform/remove');
         platform_remove.__set__({
@@ -50,6 +50,7 @@ describe('cordova/platform/remove', function () {
         spyOn(cordova_util, 'removePlatformPluginsJson');
         spyOn(events, 'emit');
         spyOn(cordova_util, 'requireNoCache').and.returnValue({});
+        cfg_parser_mock.prototype.getEngines.and.returnValue([{ name: 'atari', spec: '^0.0.1' }]);
     });
 
     describe('error/warning conditions', function () {

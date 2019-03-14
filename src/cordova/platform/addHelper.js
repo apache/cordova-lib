@@ -220,13 +220,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                                 // was installed. However, we save it with the "~" attribute (this allows for patch updates).
                                 spec = saveVersion ? '~' + platDetails.version : spec;
 
-                                // Save target into config.xml, overriding already existing settings.
-                                events.emit('log', '--save flag or autosave detected');
-                                events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
-                                cfg.removeEngine(platform);
-                                cfg.addEngine(platform, spec);
-                                cfg.write();
-
                                 // Save to add to pacakge.json's cordova.platforms array in the next then.
                                 platformsToSave.push(platform);
                             }

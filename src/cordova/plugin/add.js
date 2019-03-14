@@ -183,13 +183,6 @@ function add (projectRoot, hooksRunner, opts) {
                                 }
                             }
                         }
-                        xml = cordova_util.projectConfig(projectRoot);
-                        cfg = new ConfigParser(xml);
-                        cfg.removePlugin(pluginInfo.id);
-                        cfg.addPlugin(attributes, opts.cli_variables);
-                        cfg.write();
-
-                        events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
                     }
                 });
             }, Promise.resolve());

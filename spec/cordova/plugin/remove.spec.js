@@ -52,7 +52,7 @@ describe('cordova/plugin/remove', function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         spyOn(prepare, 'preparePlatforms').and.returnValue(true);
         hook_mock.fire.and.returnValue(Promise.resolve());
-        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'removeEngine', 'addEngine', 'getHookScripts', 'removePlugin']);
+        cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'getPlugin', 'removePlugin']);
         cfg_parser_revert_mock = remove.__set__('ConfigParser', cfg_parser_mock);
         plugin_info_provider_mock.prototype = jasmine.createSpyObj('plugin info provider mock', ['get', 'getPreferences']);
         plugin_info_provider_mock.prototype.get = function (directory) {
@@ -159,6 +159,7 @@ describe('cordova/plugin/remove', function () {
                 fs.existsSync.and.returnValue(true);
                 remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
                 var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
+                cfg_parser_mock.prototype.getPlugin.and.returnValue({});
                 return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalled();
                     expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();

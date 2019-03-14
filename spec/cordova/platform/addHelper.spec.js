@@ -217,14 +217,6 @@ describe('cordova/platform/addHelper', function () {
                 });
             });
 
-            it('should write out the version of platform just added/updated to config.xml if the save option is provided', function () {
-                return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function (result) {
-                    expect(cfg_parser_mock.prototype.removeEngine).toHaveBeenCalled();
-                    expect(cfg_parser_mock.prototype.addEngine).toHaveBeenCalled();
-                    expect(cfg_parser_mock.prototype.write).toHaveBeenCalled();
-                });
-            });
-
             describe('if the project contains a package.json', function () {
                 it('should write out the platform just added/updated to the cordova.platforms property of package.json', function () {
                     fs.readFileSync.and.returnValue('file');
