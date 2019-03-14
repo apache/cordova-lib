@@ -32,19 +32,19 @@ describe('cordova/platform/list', function () {
     });
 
     it('should fire the before_platform_ls hook', function () {
-        platform_list(hooks_mock, projectRoot, {save: true});
+        platform_list(hooks_mock, projectRoot, { save: true });
         expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_ls', Object({ save: true }));
     });
 
     it('should fire the after_platform_ls hook', function () {
-        return platform_list(hooks_mock, projectRoot, {save: true})
+        return platform_list(hooks_mock, projectRoot, { save: true })
             .then(function (result) {
                 expect(hooks_mock.fire).toHaveBeenCalledWith('after_platform_ls', Object({ save: true }));
             });
     });
 
     it('should print results of available platforms', function () {
-        return platform_list(hooks_mock, projectRoot, {save: true})
+        return platform_list(hooks_mock, projectRoot, { save: true })
             .then(function (result) {
                 expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:/));
             });

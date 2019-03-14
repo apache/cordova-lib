@@ -173,13 +173,13 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 006 : should successfully add a plugin when specifying CLI variables', function () {
-        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' }});
+        return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, { cli_variables: { REQUIRED: 'yes', REQUIRED_ANDROID: 'yes' } });
     }, 30000);
 
     it('Test 007 : should not check npm info when using the searchpath flag', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
         spyOn(plugin_util, 'info');
-        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir})
+        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, { searchpath: pluginsDir })
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
                 var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
@@ -191,7 +191,7 @@ describe('plugin end-to-end', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(plugin_util, 'info');
-        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {noregistry: true})
+        return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, { noregistry: true })
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
 

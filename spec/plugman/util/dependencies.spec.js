@@ -36,9 +36,9 @@ describe('dependency module', function () {
             });
             var pluginInfoProvider = new PluginInfoProvider();
             Object.keys(tlps).forEach(function (k) {
-                pluginInfoProvider.put({id: k, dir: path.join('plugins_dir', k), getDependencies: function () { return []; }});
+                pluginInfoProvider.put({ id: k, dir: path.join('plugins_dir', k), getDependencies: function () { return []; } });
             });
-            spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue({findall: function () {}});
+            spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue({ findall: function () {} });
             var obj = dependencies.generateDependencyInfo(platformJson, 'plugins_dir', pluginInfoProvider);
             expect(obj.top_level_plugins).toEqual(Object.keys(tlps));
         });

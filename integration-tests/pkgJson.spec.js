@@ -119,14 +119,14 @@ describe('pkgJson', function () {
             return {
                 pass, message: `expected ${version} ${expectation} ${spec}`
             };
-        }}),
+        } }),
         tohaveMinSatisfyingVersion: () => ({ compare (spec, version) {
             const pass = specWithMinSatisfyingVersion(version).asymmetricMatch(spec);
             const expectation = (pass ? 'not ' : '') + 'to have minimal satisfying version';
             return {
                 pass, message: `expected ${spec} ${expectation} ${version}`
             };
-        }})
+        } })
     };
 
     // Add our custom matchers
@@ -150,7 +150,7 @@ describe('pkgJson', function () {
             expect(getPkgJson('cordova')).toBeUndefined();
 
             // Add the plugin with --save.
-            return cordova.plugin('add', `${pluginId}@1.1.2`, {save: true})
+            return cordova.plugin('add', `${pluginId}@1.1.2`, { save: true })
                 .then(function () {
                     // Check that the plugin and spec add was successful to pkg.json.
                     expect(getPkgJson('cordova.plugins')[pluginId]).toBeDefined();
@@ -161,7 +161,7 @@ describe('pkgJson', function () {
                     ]);
                 }).then(function () {
                     // And now remove it with --save.
-                    return cordova.plugin('rm', pluginId, {save: true});
+                    return cordova.plugin('rm', pluginId, { save: true });
                 }).then(function () {
                     // Expect plugin to be removed from pkg.json.
                     expect(getPkgJson('cordova.plugins')[pluginId]).toBeUndefined();
@@ -174,7 +174,7 @@ describe('pkgJson', function () {
             expect(pkgJsonPath).toExist();
 
             // Add the geolocation plugin with --save.
-            return cordova.plugin('add', SAVED_PLUGIN, {save: true})
+            return cordova.plugin('add', SAVED_PLUGIN, { save: true })
                 .then(function () {
                     // Add a second plugin without save.
                     return cordova.plugin('add', pluginId);
@@ -190,7 +190,7 @@ describe('pkgJson', function () {
             expect(pkgJsonPath).toExist();
 
             // Add the plugin with --save.
-            return cordova.plugin('add', pluginId, {save: true})
+            return cordova.plugin('add', pluginId, { save: true })
                 .then(function () {
                     expect(getPkgJson('cordova.plugins')).toEqual({
                         [pluginId]: {}
@@ -210,15 +210,15 @@ describe('pkgJson', function () {
             expect(pkgJsonPath).toExist();
 
             // Add the plugin with --save.
-            return cordova.plugin('add', pluginId, {save: true, cli_variables: {someKey: 'someValue'}})
+            return cordova.plugin('add', pluginId, { save: true, cli_variables: { someKey: 'someValue' } })
                 .then(function () {
                     // Check the plugin add was successful and that variables have been added too.
                     expect(getPkgJson('cordova.plugins')).toEqual({
-                        [pluginId]: {someKey: 'someValue'}
+                        [pluginId]: { someKey: 'someValue' }
                     });
                 }).then(function () {
                     // And now remove it with --save.
-                    return cordova.plugin('rm', pluginId, {save: true});
+                    return cordova.plugin('rm', pluginId, { save: true });
                 }).then(function () {
                     // Checking that the plugin and variables were removed successfully.
                     expect(getPkgJson('cordova.plugins')).toEqual({});
@@ -230,7 +230,7 @@ describe('pkgJson', function () {
             expect(pkgJsonPath).toExist();
 
             // Add the plugin with --save.
-            return cordova.plugin('add', [pluginId, OTHER_PLUGIN], {save: true})
+            return cordova.plugin('add', [pluginId, OTHER_PLUGIN], { save: true })
                 .then(function () {
                     // Check that the plugin add was successful.
                     expect(getPkgJson('cordova.plugins')).toEqual({
@@ -242,7 +242,7 @@ describe('pkgJson', function () {
                     });
                 }).then(function () {
                     // And now remove it with --save.
-                    return cordova.plugin('rm', [pluginId, OTHER_PLUGIN], {save: true});
+                    return cordova.plugin('rm', [pluginId, OTHER_PLUGIN], { save: true });
                 }).then(function () {
                     // Checking that the plugin removed is in not in the platforms.
                     expect(getPkgJson('cordova.plugins')).toEqual({});
@@ -264,7 +264,7 @@ describe('pkgJson', function () {
             expect(getCfg().getEngines()).toEqual([]);
             expect(getCfg().getPluginIdList()).toEqual([]);
 
-            return cordova.platform('add', PLATFORM, {save: true})
+            return cordova.platform('add', PLATFORM, { save: true })
                 .then(function () {
                     expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
 
@@ -274,7 +274,7 @@ describe('pkgJson', function () {
                         spec: specSatisfiedBy(platformVersion(PLATFORM))
                     }]);
                 }).then(function () {
-                    return cordova.plugin('add', PLUGIN, {save: true});
+                    return cordova.plugin('add', PLUGIN, { save: true });
                 }).then(function () {
                     const iosJson = fs.readJsonSync(path.join(project, 'platforms/ios/ios.json'));
                     expect(iosJson.installed_plugins[PLUGIN]).toBeDefined();
@@ -294,7 +294,7 @@ describe('pkgJson', function () {
             const platformPath = copyFixture(`platforms/cordova-${PLATFORM}`);
             const pluginPath = copyFixture(path.join('plugins', PLUGIN));
 
-            return cordova.platform('add', platformPath, {save: true})
+            return cordova.platform('add', platformPath, { save: true })
                 .then(function () {
                     // Pkg.json has platform
                     expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
@@ -306,7 +306,7 @@ describe('pkgJson', function () {
                     ]);
                 }).then(function () {
                     // Run cordova plugin add local path --save --fetch.
-                    return cordova.plugin('add', pluginPath, {save: true});
+                    return cordova.plugin('add', pluginPath, { save: true });
                 }).then(function () {
                     // Pkg.json has test plugin.
                     expect(getPkgJson(`cordova.plugins.${PLUGIN}`)).toBeDefined();
@@ -331,13 +331,13 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Add the testing platform with --save.
-            return cordova.platform('add', testPlatform, {save: true}).then(function () {
+            return cordova.platform('add', testPlatform, { save: true }).then(function () {
                 // Check the platform add was successful.
                 expect(installedPlatforms()).toEqual([testPlatform]);
                 expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
             }).then(function () {
                 // And now remove it with --save.
-                return cordova.platform('rm', testPlatform, {save: true});
+                return cordova.platform('rm', testPlatform, { save: true });
             }).then(function () {
                 // Checking that the platform removed is in not in the platforms key.
                 expect(getPkgJson('cordova.platforms')).toEqual([]);
@@ -349,7 +349,7 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Add the testing platform with --save.
-            return cordova.platform('add', testPlatform, {save: true}).then(function () {
+            return cordova.platform('add', testPlatform, { save: true }).then(function () {
                 // Check the platform add was successful.
                 expect(installedPlatforms()).toEqual([testPlatform]);
                 expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
@@ -384,7 +384,7 @@ describe('pkgJson', function () {
             return cordova.platform('add', platformNotToAdd)
                 .then(function () {
                     // And now add another platform with --save.
-                    return cordova.platform('add', testPlatform, {save: true});
+                    return cordova.platform('add', testPlatform, { save: true });
                 }).then(function () {
                     // Check that only the platform added with --save was added to package.json.
                     expect(getPkgJson('cordova.platforms')).toEqual([testPlatform]);
@@ -398,7 +398,7 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.platform('add', ['android@7.0.0', 'browser@5.0.1'], {save: true}).then(function () {
+            return cordova.platform('add', ['android@7.0.0', 'browser@5.0.1'], { save: true }).then(function () {
                 expect(installedPlatforms()).toEqual(['android', 'browser']);
 
                 // Check the platform add was successful in platforms list and
@@ -416,7 +416,7 @@ describe('pkgJson', function () {
                 ]);
             }).then(function () {
                 // And now remove it with --save.
-                return cordova.platform('rm', ['android', 'browser'], {save: true});
+                return cordova.platform('rm', ['android', 'browser'], { save: true });
             }).then(function () {
                 // Expect platforms to be uninstalled & removed from config files
                 expect(getPkgJson('cordova.platforms')).toEqual([]);
@@ -451,19 +451,19 @@ describe('pkgJson', function () {
 
             expect(installedPlatforms()).toEqual([]);
 
-            return cordova.platform('add', PLATFORM, {save: true}).then(function () {
+            return cordova.platform('add', PLATFORM, { save: true }).then(function () {
                 // No change to pkg.json platforms or spec for ios.
                 expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
                 // Config.xml and ios/cordova/version check.
                 const version = platformVersion(PLATFORM);
                 expect(getCfg().getEngines()).toEqual([
-                    {name: PLATFORM, spec: specSatisfiedBy(version)}
+                    { name: PLATFORM, spec: specSatisfiedBy(version) }
                 ]);
                 // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
                 const pkgSpec = getPkgJson(`dependencies.cordova-${PLATFORM}`);
                 expect(version).toSatisfy(pkgSpec);
             }).then(function () {
-                return cordova.plugin('add', PLUGIN, {save: true});
+                return cordova.plugin('add', PLUGIN, { save: true });
             }).then(function () {
                 // Check that installed version satisfies the dependency spec
                 expect(pluginVersion(PLUGIN)).toSatisfy(getPkgJson(`dependencies.${PLUGIN}`));
@@ -486,8 +486,8 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Remove for testing purposes so platform is not pre-installed.
-            return cordova.platform('rm', PLATFORM, {save: true}).then(function () {
-                return cordova.platform('add', PLATFORM, {save: true});
+            return cordova.platform('rm', PLATFORM, { save: true }).then(function () {
+                return cordova.platform('add', PLATFORM, { save: true });
             }).then(function () {
                 // pkg.json has new platform.
                 expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
@@ -497,7 +497,7 @@ describe('pkgJson', function () {
                     spec: specSatisfiedBy(platformVersion(PLATFORM))
                 }]);
             }).then(function () {
-                return cordova.plugin('add', PLUGIN, {save: true});
+                return cordova.plugin('add', PLUGIN, { save: true });
             }).then(function () {
                 expect(getCfg().getPlugins()).toEqual([{
                     name: PLUGIN,
@@ -532,7 +532,7 @@ describe('pkgJson', function () {
 
             expect(installedPlatforms()).toEqual([]);
 
-            return cordova.platform('add', `${PLATFORM}@4.5.4`, {save: true}).then(function () {
+            return cordova.platform('add', `${PLATFORM}@4.5.4`, { save: true }).then(function () {
                 // Pkg.json has ios.
                 expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
                 // Config.xml and ios/cordova/version check.
@@ -541,7 +541,7 @@ describe('pkgJson', function () {
                     spec: specSatisfiedBy(platformVersion(PLATFORM))
                 }]);
             }).then(function () {
-                return cordova.plugin('add', `${PLUGIN}@4.0.0`, {save: true});
+                return cordova.plugin('add', `${PLUGIN}@4.0.0`, { save: true });
             }).then(function () {
                 // Check that installed version satisfies the dependency spec
                 const version = pluginVersion(PLUGIN);
@@ -560,7 +560,7 @@ describe('pkgJson', function () {
             const PLATFORM = 'browser';
             const platformPath = copyFixture(`platforms/cordova-${PLATFORM}`);
 
-            return cordova.platform('add', platformPath, {save: true})
+            return cordova.platform('add', platformPath, { save: true })
                 .then(function () {
                     expect(getCfg().getEngines()).toContain({
                         name: 'browser', spec: stringContaining(platformPath)
@@ -573,7 +573,7 @@ describe('pkgJson', function () {
             const PLUGIN = 'cordova-lib-test-plugin';
             const pluginPath = copyFixture(path.join('plugins', PLUGIN));
 
-            return cordova.plugin('add', pluginPath, {save: true})
+            return cordova.plugin('add', pluginPath, { save: true })
                 .then(function () {
                     expect(getCfg().getPlugins()).toContain({
                         name: PLUGIN,

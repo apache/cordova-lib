@@ -53,7 +53,7 @@ module.exports = {
 
         pluginxml.getroot().append(platform.getroot());
 
-        fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', {indent: 4}), 'utf-8');
+        fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', { indent: 4 }), 'utf-8');
         return Promise.resolve();
     },
     remove: function (platformName) {
@@ -74,7 +74,7 @@ module.exports = {
         pluginxml.getroot().remove(pluginxml.find("./platform/[@name='" + platformName + "']"));
 
         // Rewrite the plugin.xml file back out
-        fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', {indent: 4}), 'utf-8');
+        fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', { indent: 4 }), 'utf-8');
 
         // Remove the src/"platform"
         fs.removeSync(path.join('src', platformName));

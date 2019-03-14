@@ -40,14 +40,14 @@ describe('mergeVariables', function () {
         plugin_info_provider_revert_mock();
     });
     it('use plugin.xml if no cli/config variables', function () {
-        plugin_info.getPreferences.and.returnValue({FCM_VERSION: '11.0.1'});
+        plugin_info.getPreferences.and.returnValue({ FCM_VERSION: '11.0.1' });
         var opts = { cli_variables: { } };
-        expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({FCM_VERSION: '11.0.1'});
+        expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({ FCM_VERSION: '11.0.1' });
     });
     it('cli & config variables take precedence over plugin.xml ', function () {
-        plugin_info.getPreferences.and.returnValue({FCM_VERSION: '11.0.1'});
-        var opts = { cli_variables: {FCM_VERSION: '9.0.0'} };
-        expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({FCM_VERSION: '9.0.0'});
+        plugin_info.getPreferences.and.returnValue({ FCM_VERSION: '11.0.1' });
+        var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
+        expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({ FCM_VERSION: '9.0.0' });
     });
     it('should return no variables', function () {
         plugin_info.getPreferences.and.returnValue({});

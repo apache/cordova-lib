@@ -98,7 +98,8 @@ function handleRoot (request, response) {
 function absolutePathHandler (request, response, next) {
     if (!request.headers.referer) return next();
 
-    const { pathname } = url.parse(request.headers.referer);
+    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
+    const { pathname } = url.parse(request.headers.referer); // eslint-disable-line
     const platform = pathname.split('/')[1];
 
     if (installedPlatforms.includes(platform) &&

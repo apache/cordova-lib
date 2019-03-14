@@ -297,7 +297,8 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
 }
 
 function parseSource (target, opts) {
-    var uri = url.parse(target);
+    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
+    var uri = url.parse(target); // eslint-disable-line
     if (uri.protocol && uri.protocol !== 'file:' && uri.protocol[1] !== ':' && !target.match(/^\w+:\\/)) {
         return target;
     } else {

@@ -63,7 +63,7 @@ describe('cordova/plugin/util', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
             plugin_info_mock.prototype.getPreferences.and.returnValue({});
             var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
-            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({FCM_VERSION: '9.0.0'});
+            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '9.0.0' });
         });
         it('should return empty object if there are no config and no cli variables', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
@@ -78,8 +78,8 @@ describe('cordova/plugin/util', function () {
                 spec: '/Users/auso/cordova/phonegap-plugin-push',
                 variables: { FCM_VERSION: '11.0.1' }
             });
-            var opts = { cli_variables: {FCM_VERSION: '9.0.0'} };
-            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({FCM_VERSION: '9.0.0'});
+            var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
+            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '9.0.0' });
         });
         it('use config.xml variable if no cli variable is passed in', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue({
@@ -89,11 +89,11 @@ describe('cordova/plugin/util', function () {
             });
             plugin_info_mock.prototype.getPreferences.and.returnValue({});
             var opts = { cli_variables: {} };
-            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({FCM_VERSION: '11.0.1'});
+            expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '11.0.1' });
         });
         it('should get missed variables', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
-            plugin_info_mock.prototype.getPreferences.and.returnValue({key: 'FCM_VERSION', value: undefined});
+            plugin_info_mock.prototype.getPreferences.and.returnValue({ key: 'FCM_VERSION', value: undefined });
             var opts = { cli_variables: {} };
             expect(function () { plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts); }).toThrow();
             expect(fs.removeSync).toHaveBeenCalledWith(undefined);

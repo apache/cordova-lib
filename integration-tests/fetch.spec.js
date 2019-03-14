@@ -41,7 +41,7 @@ describe('end-to-end plugin dependency tests', function () {
         return cordova.create(preparedProject)
             .then(function () {
                 process.chdir(preparedProject);
-                return cordova.platform('add', 'android');
+                return cordova.platform('add', 'android', { save: true });
             });
     });
 
@@ -85,7 +85,7 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], {'force': true});
+                return cordova.plugin('add', plugins['Test1'], { 'force': true });
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();

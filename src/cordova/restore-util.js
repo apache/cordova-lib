@@ -353,11 +353,11 @@ function installPluginsFromConfigXML (args) {
             pluginIdConfig.push(plugID);
             if (mergedPluginSpecs[plugID]) {
                 cfg.removePlugin(plugID);
-                cfg.addPlugin({name: plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]);
+                cfg.addPlugin({ name: plugID, spec: mergedPluginSpecs[plugID] }, comboObject[plugID]);
                 modifiedConfigXML = true;
             } else {
                 cfg.removePlugin(plugID);
-                cfg.addPlugin({name: plugID}, comboObject[plugID]);
+                cfg.addPlugin({ name: plugID }, comboObject[plugID]);
                 modifiedConfigXML = true;
             }
 
@@ -367,7 +367,7 @@ function installPluginsFromConfigXML (args) {
             ((mergedPluginSpecs[plugID] !== configXMLPlugin.spec) ||
             (configXMLPlugin.variables !== comboObject[plugID]))) {
             cfg.removePlugin(plugID);
-            cfg.addPlugin({name: plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]);
+            cfg.addPlugin({ name: plugID, spec: mergedPluginSpecs[plugID] }, comboObject[plugID]);
             modifiedConfigXML = true;
         }
     });

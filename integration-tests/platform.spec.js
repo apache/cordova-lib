@@ -128,7 +128,7 @@ describe('cordova/platform end-to-end', () => {
     it('Test 007 : should add and remove platform from node_modules directory', () => {
         return Promise.resolve()
             .then(() => {
-                return cordova.platform('add', 'browser', {'save': true});
+                return cordova.platform('add', 'browser', { 'save': true });
             })
             .then(() => {
                 expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
@@ -157,14 +157,14 @@ describe('cordova/platform end-to-end', () => {
                 return cordova.platform('add', testPlatform);
             })
             .then(() => {
-                return cordova.plugin('add', 'cordova-plugin-media', {save: true});
+                return cordova.plugin('add', 'cordova-plugin-media', { save: true });
             })
             .then(() => {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(nodeModulesDir, 'cordova-plugin-media')).toExist();
                 expect(path.join(nodeModulesDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('rm', 'cordova-plugin-media', {save: true});
+                return cordova.plugin('rm', 'cordova-plugin-media', { save: true });
             })
             .then(() => {
                 expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();

@@ -95,7 +95,8 @@ function requireNoCache (pkgJsonPath) {
 }
 
 function isUrl (value) {
-    var u = value && url.parse(value);
+    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
+    var u = value && url.parse(value); // eslint-disable-line
     return !!(u && u.protocol && u.protocol.length > 2); // Account for windows c:/ paths
 }
 

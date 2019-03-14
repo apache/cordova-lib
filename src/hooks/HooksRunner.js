@@ -207,7 +207,7 @@ function runScriptViaChildProcessSpawn (script, context) {
         }
     }
 
-    var execOpts = {cwd: opts.projectRoot, printCommand: true, stdio: 'inherit'};
+    var execOpts = { cwd: opts.projectRoot, printCommand: true, stdio: 'inherit' };
     execOpts.env = {};
     execOpts.env.CORDOVA_VERSION = require('../../package').version;
     execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';

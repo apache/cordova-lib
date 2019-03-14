@@ -75,7 +75,8 @@ config.write = function set_config (project_root, json) {
 config.has_custom_path = function (project_root, platform) {
     var json = config.read(project_root);
     if (json.lib && json.lib[platform]) {
-        var uri = url.parse(json.lib[platform].url || json.lib[platform].uri);
+        // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
+        var uri = url.parse(json.lib[platform].url || json.lib[platform].uri);  // eslint-disable-line
         if (!(uri.protocol)) return uri.path;
         else if (uri.protocol && uri.protocol[1] === ':') return uri.href;
     }

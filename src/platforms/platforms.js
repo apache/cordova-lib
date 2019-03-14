@@ -64,5 +64,5 @@ module.exports = platforms;
 // We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the
 // platforms object to be platforms.
 Object.defineProperties(module.exports, {
-    'getPlatformApi': {value: getPlatformApi, configurable: true, writable: true}
+    'getPlatformApi': { value: getPlatformApi, configurable: true, writable: true }
 });

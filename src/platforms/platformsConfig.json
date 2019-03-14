@@ -2,42 +2,36 @@
     "ios": {
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-ios.git",
-        "version": "~4.5.4",
-        "apiCompatibleSince": "4.0.0",
+        "version": "^5.0.0",
         "deprecated": false
     },
     "osx": {
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-osx.git",
-        "version": "~4.0.1",
-        "apiCompatibleSince": "4.0.1",
+        "version": "^5.0.0",
         "deprecated": false
     },
     "android": {
         "url": "https://github.com/apache/cordova-android.git",
-        "version": "~7.1.1",
-        "apiCompatibleSince": "5.0.0",
+        "version": "^8.0.0",
         "deprecated": false
     },
     "windows": {
         "hostos": ["win32"],
         "url": "https://github.com/apache/cordova-windows.git",
-        "version": "~5.0.0",
-        "apiCompatibleSince": "4.3.0",
+        "version": "^7.0.0",
         "deprecated": false
     },
     "browser": {
         "parser_file": "../cordova/metadata/browser_parser",
         "handler_file": "../plugman/platforms/browser",
         "url": "https://github.com/apache/cordova-browser.git",
-        "version": "~5.0.1",
-        "apiCompatibleSince": "5.0.0",
+        "version": "^6.0.0",
         "deprecated": false
     },
     "electron": {
         "url": "https://github.com/apache/cordova-electron.git",
-        "version": "~1.0.0",
-        "apiCompatibleSince": "5.0.0",
+        "version": "^1.0.0",
         "deprecated": false
     }
 }

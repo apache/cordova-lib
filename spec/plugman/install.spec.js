@@ -94,10 +94,10 @@ describe('plugman/install', () => {
                 return install('android', project, pluginDir('org.test.plugins.childbrowser'));
             }).then(result => {
                 expect(result).toBeTruthy();
-                return install('android', project, pluginDir('com.adobe.vars'), plugins_install_dir, { cli_variables: {API_KEY: 'batman'} });
+                return install('android', project, pluginDir('com.adobe.vars'), plugins_install_dir, { cli_variables: { API_KEY: 'batman' } });
             }).then(result => {
                 expect(result).toBeTruthy();
-                return install('android', project, pluginDir('org.test.defaultvariables'), plugins_install_dir, { cli_variables: {API_KEY: 'batman'} });
+                return install('android', project, pluginDir('org.test.defaultvariables'), plugins_install_dir, { cli_variables: { API_KEY: 'batman' } });
             }).then(result => {
                 expect(result).toBeTruthy();
                 api.addPlugin.and.callThrough();
@@ -303,7 +303,7 @@ describe('plugman/install', () => {
                 const meta = require('../../src/plugman/util/metadata');
                 spyOn(meta, 'get_fetch_metadata').and.callFake(() => {
                     return {
-                        source: {type: 'dir', url: path.join(pluginDir('B'), '..', 'meta')}
+                        source: { type: 'dir', url: path.join(pluginDir('B'), '..', 'meta') }
                     };
                 });
 

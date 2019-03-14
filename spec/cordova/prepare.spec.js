@@ -63,7 +63,7 @@ describe('cordova/prepare', function () {
             spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
             spyOn(util, 'preProcessOptions').and.callFake(function (options) {
                 var platforms = options.platforms || [];
-                return {'platforms': platforms};
+                return { 'platforms': platforms };
             });
             spyOn(prepare, 'preparePlatforms').and.returnValue(Promise.resolve());
         });
@@ -107,7 +107,7 @@ describe('cordova/prepare', function () {
                 });
             });
             it('should retrieve PlatformApi instances for each platform provided', function () {
-                return prepare({'platforms': ['android', 'ios']}).then(function () {
+                return prepare({ 'platforms': ['android', 'ios'] }).then(function () {
                     expect(platforms.getPlatformApi).toHaveBeenCalledTimes(4);
                     // expect(platforms.getPlatformApi).toHaveBeenCalledWith(['android', path.join('some','path','platforms','android')], ['ios', path.join('some','path','platforms','ios')], ['android'], ['ios']);
                     expect(platforms.getPlatformApi).toHaveBeenCalledWith('android', path.join('/', 'some', 'path', 'platforms', 'android'));
@@ -117,18 +117,18 @@ describe('cordova/prepare', function () {
                 });
             });
             it('should invoke restore module\'s installPluginsFromConfigXML method', function () {
-                return prepare({platforms: []}).then(function () {
+                return prepare({ platforms: [] }).then(function () {
                     expect(restore.installPluginsFromConfigXML).toHaveBeenCalled();
                 });
             });
             it('should invoke preparePlatforms method, providing the appropriate platforms', function () {
-                return prepare({platforms: ['android']}).then(function () {
+                return prepare({ platforms: ['android'] }).then(function () {
                     expect(prepare.preparePlatforms).toHaveBeenCalledWith(['android'], '/some/path', jasmine.any(Object));
                 });
 
             });
             it('should fire the after_prepare hook and provide platform and path information as arguments', function () {
-                return prepare({platforms: ['android']}).then(function () {
+                return prepare({ platforms: ['android'] }).then(function () {
                     expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('after_prepare', jasmine.any(Object));
                 });
             });
@@ -205,9 +205,9 @@ describe('cordova/prepare', function () {
                 // set different installed plugins to simulate missing plugins
                 var missingPlugins;
                 if (platformJsonPath === '/some/path/platforms/android') {
-                    missingPlugins = {'cordova-plugin-device': {}};
+                    missingPlugins = { 'cordova-plugin-device': {} };
                 } else {
-                    missingPlugins = {'cordova-plugin-camera': {}};
+                    missingPlugins = { 'cordova-plugin-camera': {} };
                 }
                 return {
                     isPluginInstalled: is_plugin_installed_mock,
