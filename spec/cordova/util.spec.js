@@ -108,42 +108,42 @@ describe('util module', function () {
         });
     });
     describe('findPlugins method', function () {
+        let pluginsDir, plugins;
+
+        function expectFindPluginsToReturn (expectedPlugins) {
+            expect(util.findPlugins(pluginsDir))
+                .toEqual(jasmine.arrayWithExactContents(expectedPlugins));
+        }
+
+        beforeEach(function () {
+            pluginsDir = path.join(temp, 'plugins');
+            plugins = ['foo', 'bar', 'baz'];
+
+            plugins.forEach(plugin => {
+                fs.ensureDirSync(path.join(pluginsDir, plugin));
+            });
+        });
+
         it('Test 011 : should only return plugin directories present in a cordova project dir', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var wp8_dir = path.join(plugins, 'wp8');
-            var atari = path.join(plugins, 'atari');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(wp8_dir);
-            fs.ensureDirSync(atari);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(4);
+            expectFindPluginsToReturn(plugins);
         });
+
         it('Test 012 : should not return ".svn" directories', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var svn = path.join(plugins, '.svn');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(svn);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(2);
-            expect(res.indexOf('.svn')).toEqual(-1);
+            fs.ensureDirSync(path.join(pluginsDir, '.svn'));
+            expectFindPluginsToReturn(plugins);
         });
+
         it('Test 013 : should not return "CVS" directories', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var cvs = path.join(plugins, 'CVS');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(cvs);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(2);
-            expect(res.indexOf('CVS')).toEqual(-1);
+            fs.ensureDirSync(path.join(pluginsDir, 'CVS'));
+            expectFindPluginsToReturn(plugins);
+        });
+
+        it('Test 031 : should return plugin symlinks', function () {
+            const linkedPluginPath = path.join(temp, 'linked-plugin');
+            const pluginLinkPath = path.join(pluginsDir, 'plugin-link');
+            fs.ensureDirSync(linkedPluginPath);
+            fs.ensureSymlinkSync(linkedPluginPath, pluginLinkPath);
+            expectFindPluginsToReturn(plugins.concat('plugin-link'));
         });
     });
 
