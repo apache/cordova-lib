@@ -24,11 +24,51 @@ var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var fetch = require('cordova-fetch');
 var superspawn = require('cordova-common').superspawn;
+const globby = require('globby');
 
 module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
 module.exports.info = info;
+
+/*
+ * This block of code is supposed to be migrated into cordova-common at some point.
+ * We're overriding functionality of that module here to fix the discovery of scoped packages.
+ */
+PluginInfoProvider.prototype.getAllWithinSearchPath = function (dirName) {
+    var absPath = path.resolve(dirName);
+    if (!this._getAllCache[absPath]) {
+        this._getAllCache[absPath] = getAllHelper(absPath, this);
+    }
+    return this._getAllCache[absPath];
+};
+function getAllHelper (absPath, provider) {
+    if (!fs.existsSync(absPath)) {
+        return [];
+    }
+    // If dir itself is a plugin, return it in an array with one element.
+    if (fs.existsSync(path.join(absPath, 'plugin.xml'))) {
+        return [provider.get(absPath)];
+    }
+
+    const pluginXmlPaths = globby.sync([ '*/plugin.xml', '@*/*/plugin.xml' ], {
+        cwd: absPath,
+        onlyFiles: true,
+        absolute: true
+    });
+
+    const plugins = [];
+    pluginXmlPaths.forEach(pluginXmlPath => {
+        try {
+            plugins.push(provider.get(path.dirname(pluginXmlPath)));
+        } catch (e) {
+            console.log(e);
+            events.emit('warn', 'Error parsing ' + pluginXmlPath + '.\n' + e.stack);
+        }
+    });
+    return plugins;
+}
+// This marks the end of the block of code that should be migrated to cordova-common.
 
 function getInstalledPlugins (projectRoot) {
     var pluginsDir = path.join(projectRoot, 'plugins');
