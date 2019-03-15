@@ -262,7 +262,7 @@ function findLocalPlugin (plugin_src, searchpath, pluginInfoProvider) {
 // if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying
 function copyPlugin (pinfo, plugins_dir, link) {
 
-    var plugin_dir = pinfo.dir;
+    var plugin_dir = path.normalize(pinfo.dir);
     var dest = path.join(plugins_dir, pinfo.id);
 
     fs.removeSync(dest);
