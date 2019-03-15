@@ -7,6 +7,10 @@ environment:
   - nodejs_version: "8"
   - nodejs_version: "10"
 
+platform:
+  - CommandPrompt
+  - PowerShell
+
 install:
   - ps: Install-Product node $env:nodejs_version
   - npm install
@@ -27,4 +31,20 @@ test_script:
   - set "PATH=%PATH%;C:\Program Files\Git\mingw64\libexec\git-core"
   - node --version
   - npm --version
-  - "npm test"
+
+for:
+-
+  matrix:
+    only:
+      - platform: CommandPrompt
+
+  test_script:
+  - cmd: "npm test"
+
+-
+  matrix:
+    only:
+      - platform: PowerShell
+
+  test_script:
+  - ps: "npm test"
