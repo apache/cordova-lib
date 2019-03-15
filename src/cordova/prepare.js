@@ -86,7 +86,8 @@ function preparePlatforms (platformList, projectRoot, options) {
             projectConfig: new ConfigParser(cordova_util.projectConfig(projectRoot)),
             locations: {
                 plugins: path.join(projectRoot, 'plugins'),
-                www: cordova_util.projectWww(projectRoot)
+                www: cordova_util.projectWww(projectRoot),
+                rootConfigXml: cordova_util.projectConfig(projectRoot)
             }
         };
         // CB-9987 We need to reinstall the plugins for the platform it they were added by cordova@<5.4.0
