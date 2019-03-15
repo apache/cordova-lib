@@ -54,9 +54,11 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                     var platformName = target.split('@')[0];
                     var xml = cordova_util.projectConfig(projectRoot);
                     var cfg = new ConfigParser(xml);
-                    events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
-                    cfg.removeEngine(platformName);
-                    cfg.write();
+                    if (cfg.getEngines && cfg.getEngines().some(function (e) { return e.name === platformName; })) {
+                        events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
+                        cfg.removeEngine(platformName);
+                        cfg.write();
+                    }
                     // If package.json exists and contains a specified platform in cordova.platforms, it will be removed.
                     if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
                         var index = pkgJson.cordova.platforms.indexOf(platformName);

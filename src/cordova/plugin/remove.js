@@ -115,12 +115,15 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     }
 
     function persistRemovalToCfg (target) {
-        events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
         var configPath = cordova_util.projectConfig(projectRoot);
         if (fs.existsSync(configPath)) { // should not happen with real life but needed for tests
             var configXml = new ConfigParser(configPath);
-            configXml.removePlugin(target);
-            configXml.write();
+
+            if (configXml.getPlugin(target)) {
+                events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
+                configXml.removePlugin(target);
+                configXml.write();
+            }
         }
     }
 

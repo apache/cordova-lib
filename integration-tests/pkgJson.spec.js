@@ -105,13 +105,6 @@ describe('pkgJson', function () {
         };
     }
 
-    function stringContaining (substring) {
-        return {
-            asymmetricMatch: s => typeof s === 'string' && s.includes(substring),
-            jasmineToString: _ => `<stringContaining(${substring})>`
-        };
-    }
-
     const customMatchers = {
         toSatisfy: () => ({ compare (version, spec) {
             const pass = semver.satisfies(version, spec);
@@ -155,10 +148,8 @@ describe('pkgJson', function () {
                     // Check that the plugin and spec add was successful to pkg.json.
                     expect(getPkgJson('cordova.plugins')[pluginId]).toBeDefined();
                     expect(getPkgJson('dependencies')[pluginId]).tohaveMinSatisfyingVersion('1.1.2');
-                    // Check that the plugin and spec add was successful to config.xml.
-                    expect(getCfg().getPlugins()).toEqual([
-                        { name: pluginId, spec: specWithMinSatisfyingVersion('1.1.2'), variables: {} }
-                    ]);
+
+                    expect(getCfg().getPluginIdList()).toEqual([]);
                 }).then(function () {
                     // And now remove it with --save.
                     return cordova.plugin('rm', pluginId, { save: true });
@@ -267,12 +258,6 @@ describe('pkgJson', function () {
             return cordova.platform('add', PLATFORM, { save: true })
                 .then(function () {
                     expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
-
-                    // Config.xml and ios/cordova/version check.
-                    expect(getCfg().getEngines()).toEqual([{
-                        name: PLATFORM,
-                        spec: specSatisfiedBy(platformVersion(PLATFORM))
-                    }]);
                 }).then(function () {
                     return cordova.plugin('add', PLUGIN, { save: true });
                 }).then(function () {
@@ -281,7 +266,6 @@ describe('pkgJson', function () {
 
                     // Check that installed version satisfies the dependency spec
                     const version = pluginVersion(PLUGIN);
-                    expect(version).toSatisfy(getCfg().getPlugin(PLUGIN).spec);
                     expect(version).toSatisfy(getPkgJson(`dependencies.${PLUGIN}`));
                 });
         });
@@ -299,11 +283,6 @@ describe('pkgJson', function () {
                     // Pkg.json has platform
                     expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
                     expect(getPkgJson(`dependencies.cordova-${PLATFORM}`)).toBeDefined();
-
-                    // browser platform and spec have been added to config.xml.
-                    expect(getCfg().getEngines()).toEqual([
-                        { name: PLATFORM, spec: stringContaining(platformPath) }
-                    ]);
                 }).then(function () {
                     // Run cordova plugin add local path --save --fetch.
                     return cordova.plugin('add', pluginPath, { save: true });
@@ -311,13 +290,6 @@ describe('pkgJson', function () {
                     // Pkg.json has test plugin.
                     expect(getPkgJson(`cordova.plugins.${PLUGIN}`)).toBeDefined();
                     expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeDefined();
-
-                    // Check that plugin and spec have been added to config.xml
-                    expect(getCfg().getPlugins()).toEqual([{
-                        name: PLUGIN,
-                        spec: stringContaining(pluginPath),
-                        variables: {}
-                    }]);
                 });
         });
     });
@@ -409,11 +381,7 @@ describe('pkgJson', function () {
                     'cordova-browser': specWithMinSatisfyingVersion('5.0.1')
                 });
 
-                // Check that android and browser were added to config.xml with the correct spec.
-                expect(getCfg().getEngines()).toEqual([
-                    { name: 'android', spec: '~7.0.0' },
-                    { name: 'browser', spec: '~5.0.1' }
-                ]);
+                expect(getCfg().getEngines()).toEqual([]);
             }).then(function () {
                 // And now remove it with --save.
                 return cordova.platform('rm', ['android', 'browser'], { save: true });
@@ -456,9 +424,6 @@ describe('pkgJson', function () {
                 expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
                 // Config.xml and ios/cordova/version check.
                 const version = platformVersion(PLATFORM);
-                expect(getCfg().getEngines()).toEqual([
-                    { name: PLATFORM, spec: specSatisfiedBy(version) }
-                ]);
                 // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
                 const pkgSpec = getPkgJson(`dependencies.cordova-${PLATFORM}`);
                 expect(version).toSatisfy(pkgSpec);
@@ -491,11 +456,6 @@ describe('pkgJson', function () {
             }).then(function () {
                 // pkg.json has new platform.
                 expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
-                // Config.xml and ios/cordova/version check.
-                expect(getCfg().getEngines()).toEqual([{
-                    name: PLATFORM,
-                    spec: specSatisfiedBy(platformVersion(PLATFORM))
-                }]);
             }).then(function () {
                 return cordova.plugin('add', PLUGIN, { save: true });
             }).then(function () {
@@ -535,11 +495,6 @@ describe('pkgJson', function () {
             return cordova.platform('add', `${PLATFORM}@4.5.4`, { save: true }).then(function () {
                 // Pkg.json has ios.
                 expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
-                // Config.xml and ios/cordova/version check.
-                expect(getCfg().getEngines()).toEqual([{
-                    name: PLATFORM,
-                    spec: specSatisfiedBy(platformVersion(PLATFORM))
-                }]);
             }).then(function () {
                 return cordova.plugin('add', `${PLUGIN}@4.0.0`, { save: true });
             }).then(function () {
@@ -548,39 +503,6 @@ describe('pkgJson', function () {
                 expect(version).toSatisfy(getCfg().getPlugin(PLUGIN).spec);
                 expect(version).toSatisfy(getPkgJson(`dependencies.${PLUGIN}`));
             });
-        });
-    });
-
-    // No pkg.json included in test file.
-    describe('local path is added to config.xml without pkg.json', function () {
-        beforeEach(() => useProject('basePkgJson13'));
-
-        // Test#026: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-        it('Test#026 : if you add a platform with local path, config.xml gets updated', function () {
-            const PLATFORM = 'browser';
-            const platformPath = copyFixture(`platforms/cordova-${PLATFORM}`);
-
-            return cordova.platform('add', platformPath, { save: true })
-                .then(function () {
-                    expect(getCfg().getEngines()).toContain({
-                        name: 'browser', spec: stringContaining(platformPath)
-                    });
-                });
-        });
-
-        // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-        it('Test#027 : if you add a plugin with local path, config.xml gets updated', function () {
-            const PLUGIN = 'cordova-lib-test-plugin';
-            const pluginPath = copyFixture(path.join('plugins', PLUGIN));
-
-            return cordova.plugin('add', pluginPath, { save: true })
-                .then(function () {
-                    expect(getCfg().getPlugins()).toContain({
-                        name: PLUGIN,
-                        spec: stringContaining(pluginPath),
-                        variables: {}
-                    });
-                });
         });
     });
 });

@@ -40,7 +40,7 @@ describe('cordova/plugin/add', function () {
     beforeEach(function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Promise.resolve());
-        Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin', 'removePlugin', 'addPlugin', 'write']);
+        Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin']);
         cfg_parser_revert_mock = add.__set__('ConfigParser', Cfg_parser_mock);
         plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
         plugin_info.getPreferences.and.returnValue({});
@@ -164,9 +164,6 @@ describe('cordova/plugin/add', function () {
                     expect(add.determinePluginTarget).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({ 'variables': cli_plugin_variables }));
                     // check that the plugin variables from config.xml got added to cli_variables
                     expect(plugman.install).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({ 'cli_variables': cli_plugin_variables }));
-                    expect(Cfg_parser_mock.prototype.removePlugin).toHaveBeenCalledWith('cordova-plugin-device');
-                    expect(Cfg_parser_mock.prototype.addPlugin).toHaveBeenCalledWith(jasmine.any(Object), cli_plugin_variables);
-                    expect(Cfg_parser_mock.prototype.write).toHaveBeenCalled();
                 });
             });
             // can't test the following due to inline require of preparePlatforms
