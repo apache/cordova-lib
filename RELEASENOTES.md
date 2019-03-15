@@ -20,6 +20,79 @@
 -->
 # Cordova-lib Release Notes
 
+### 9.0.0 (Mar 15, 2019)
+
+* [GH-750](https://github.com/apache/cordova-lib/pull/750) Remove saving platforms/plugins to `config.xml`
+* [GH-751](https://github.com/apache/cordova-lib/pull/751) Pass project `config.xml` path to platform's prepare
+* [GH-749](https://github.com/apache/cordova-lib/pull/749) Cordova Lib Release Preparation (Cordova 9)
+  * Remove unused property `apiCompatibleSince` from `platformsConfig.json`
+  * Fix plugin dependency tests when using `npm >= 5`
+  * Bumped Platform Pinning and Support Minor SemVer
+    * `cordova-android@^8.0.0`
+    * `cordova-browser@^6.0.0`
+    * `cordova-electron@^1.0.0`
+    * `cordova-ios@^5.0.0`
+    * `cordova-osx@^5.0.0`
+    * `cordova-windows@^7.0.0`
+  * Bumped dependencies
+    * `jasmine@^3.3.1`
+    * `globby@^9.1.0`
+    * `underscore@^1.9.1`
+    * `semver@^5.6.0`
+    * `read-chunk@^3.1.0`
+    * `init-package-json@^1.10.3`
+    * `fs-extra@^7.0.1`
+  * Dev Dependencies
+    * Updated `nyc` Code Coverage
+    * Updated ESlint with lint corrections
+    * Added missing module `shelljs` to fix test failures
+  * Updated Package Cordova Dependencies
+    * `cordova-common@^3.1.0`
+    * `cordova-create@^2.0.0`
+    * `cordova-fetch@^2.0.0`
+    * `cordova-serve@^3.0.0`
+* [GH-748](https://github.com/apache/cordova-lib/pull/748) Remove handling of legacy `.fetch.json` files
+* [GH-709](https://github.com/apache/cordova-lib/pull/709) `hooks/Context` Improvements
+* [GH-622](https://github.com/apache/cordova-lib/pull/622) [CB-14166](https://issues.apache.org/jira/browse/CB-14166) (cli) Fixed issue when install plugins on **Windows**
+* [GH-744](https://github.com/apache/cordova-lib/pull/744) Add **Electron** Platform
+* [GH-743](https://github.com/apache/cordova-lib/pull/743) Updated Platform Config Git URL Paths
+* [GH-742](https://github.com/apache/cordova-lib/pull/742) Cleanup indentation spacing in `*/jasmine.json`
+* [GH-741](https://github.com/apache/cordova-lib/pull/741) Fix crash in `cordova requirements` due to an unbound function
+* [GH-711](https://github.com/apache/cordova-lib/pull/711) Fix 2 integration tests failures on **macOS**
+* [GH-710](https://github.com/apache/cordova-lib/pull/710) Drop `Q` Dependency and Use Native Promises
+* [GH-687](https://github.com/apache/cordova-lib/pull/687) Test, Fix and Cleanup `cordova serve`
+* [GH-707](https://github.com/apache/cordova-lib/pull/707) Deprecate `requireCordovaModule` for non-Cordova modules
+* [GH-705](https://github.com/apache/cordova-lib/pull/705) Dereference possible symlinks when copying plugin
+* [GH-699](https://github.com/apache/cordova-lib/pull/699) Increase timeout for `cordova.platform` e2e tests
+* [GH-698](https://github.com/apache/cordova-lib/pull/698) Increase plugman install test timeout
+* [GH-686](https://github.com/apache/cordova-lib/pull/686) Remove support for old option format
+* [GH-685](https://github.com/apache/cordova-lib/pull/685) Remove unused dependency `properties-parser`
+* [GH-677](https://github.com/apache/cordova-lib/pull/677) Fix `cordova/platform/addHelper` tests
+* [GH-679](https://github.com/apache/cordova-lib/pull/679) `platform.spec` Cleanup
+* [GH-684](https://github.com/apache/cordova-lib/pull/684) Code Cleanup and Refactor (Bits and pieces)
+* [GH-683](https://github.com/apache/cordova-lib/pull/683) Remove unused npm utility functions
+* [GH-682](https://github.com/apache/cordova-lib/pull/682) GH-676 Remove Browserify
+* [GH-652](https://github.com/apache/cordova-lib/pull/652) Make `plugin.remove` more easily understandable
+* [GH-650](https://github.com/apache/cordova-lib/pull/650) Make `cordova/platform/check` more approachable
+* [GH-678](https://github.com/apache/cordova-lib/pull/678) Fix tests that are failing with npm config 'save-exact' set
+* [GH-675](https://github.com/apache/cordova-lib/pull/675) One root `describe` per suite
+* [GH-674](https://github.com/apache/cordova-lib/pull/674) `plugman/install.spec` Cleanup
+* [GH-672](https://github.com/apache/cordova-lib/pull/672) `plugman_uninstall.spec` Cleanup
+* [GH-613](https://github.com/apache/cordova-lib/pull/613) Switch to using `fs-extra` in favour of `shelljs`
+* [GH-665](https://github.com/apache/cordova-lib/pull/665) Radically focused `restore.spec` finally fast and reliable
+* [GH-671](https://github.com/apache/cordova-lib/pull/671) Remove `cordova plugin search` command
+* [GH-670](https://github.com/apache/cordova-lib/pull/670) Various `spec` fixes and cleanup
+* [GH-666](https://github.com/apache/cordova-lib/pull/666) Remove deprecated and unused content
+* [GH-669](https://github.com/apache/cordova-lib/pull/669) Linting Improvements
+* [GH-668](https://github.com/apache/cordova-lib/pull/668) Only upload coverage when tests succeed
+* [GH-667](https://github.com/apache/cordova-lib/pull/667) Report Code Coverage to `codecov` on Travis CI
+* [GH-664](https://github.com/apache/cordova-lib/pull/664) Move some cordova test fixtures into fixtures folder
+* [GH-651](https://github.com/apache/cordova-lib/pull/651) Remove all usage of Q-specific methods on Promise instances
+* [GH-662](https://github.com/apache/cordova-lib/pull/662) Remove unused content
+* [GH-663](https://github.com/apache/cordova-lib/pull/663) Update `read-chunk` to properly close file descriptors on failure
+* [GH-658](https://github.com/apache/cordova-lib/pull/658) Remove deprecated platform support files
+* [GH-616](https://github.com/apache/cordova-lib/pull/616) Extend and improve `cordova info` output
+
 ### 8.0.0 (Dec 14, 2017)
 * [CB-13057](https://issues.apache.org/jira/browse/CB-13057): removed `cordova save` command
 * [CB-13056](https://issues.apache.org/jira/browse/CB-13056): removed support for **WebOS**, **BlackBerry10**, and **Ubuntu**
