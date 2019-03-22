@@ -213,157 +213,103 @@ function installPlatformsFromConfigXML (platforms, opts) {
 
 // Returns a promise.
 function installPluginsFromConfigXML (args) {
-    events.emit('verbose', 'Checking config.xml for saved plugins that haven\'t been added to the project');
-    // Install plugins that are listed in config.xml.
-    var projectRoot = cordova_util.cdProjectRoot();
-    var configPath = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(configPath);
-    var plugins_dir = path.join(projectRoot, 'plugins');
-    var pkgJsonPath = path.join(projectRoot, 'package.json');
-    var pkgJson;
-    var modifiedPkgJson = false;
-    var comboObject;
-    var mergedPluginSpecs = {};
-    var comboPluginIdArray;
-    var configPlugin;
-    var configPluginVariables;
-    var pkgJsonPluginVariables;
-    var key;
+    events.emit('verbose', 'Checking for saved plugins that haven\'t been added to the project');
 
-    // Check if path exists and require pkgJsonPath.
+    const projectRoot = cordova_util.getProjectRoot();
+    const pluginsRoot = path.join(projectRoot, 'plugins');
+    const pkgJsonPath = path.join(projectRoot, 'package.json');
+    const confXmlPath = cordova_util.projectConfig(projectRoot);
+
+    let pkgJson = {
+        devDependencies: {},
+        cordova: {
+            plugins: {}
+        }
+    };
+    let indent = '  ';
+
     if (fs.existsSync(pkgJsonPath)) {
-        pkgJson = require(pkgJsonPath);
+        let fileData = fs.readFileSync(pkgJsonPath, 'utf8');
+        indent = detectIndent(fileData).indent;
+
+        pkgJson = JSON.parse(fileData);
+        pkgJson.devDependencies = pkgJson.devDependencies || {};
+        pkgJson.cordova = pkgJson.cordova || {};
+        pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
     }
 
-    if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
-        comboPluginIdArray = Object.keys(pkgJson.cordova.plugins);
-        // Create a merged plugin data array (comboObject)
-        // and add all of the package.json plugins to comboObject.
-        comboObject = pkgJson.cordova.plugins;
-    } else {
-        comboObject = {};
-        comboPluginIdArray = [];
-    }
+    let pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
 
-    // Get all config.xml plugin ids (names).
-    var pluginIdConfig = cfg.getPluginIdList();
-    if (pluginIdConfig === undefined) {
-        pluginIdConfig = [];
-    }
+    // Check for plugins listed in config.xml
+    const cfg = new ConfigParser(confXmlPath);
+    const cfgPluginIDs = cfg.getPluginIdList();
 
-    if (pkgJson !== undefined) {
-        if (pkgJson.cordova === undefined) {
-            pkgJson.cordova = {};
+    cfgPluginIDs.forEach(plID => {
+        // If package.json includes the plugin, we use that config
+        // Otherwise, we need to add the plugin to package.json
+        if (!pkgPluginIDs.includes(plID)) {
+            events.emit('info', `Plugin '${plID}' found in config.xml... Migrating it to package.json`);
+
+            let cfgPlugin = cfg.getPlugin(plID);
+
+            if (cfgPlugin.spec) {
+                pkgJson.devDependencies[plID] = cfgPlugin.spec;
+            }
+
+            pkgJson.cordova.plugins[plID] = Object.assign({}, cfgPlugin.variables);
         }
-        if (pkgJson.cordova.plugins === undefined) {
-            pkgJson.cordova.plugins = {};
-        }
+    });
 
-        // Check to see which plugins are initially the same in pkg.json and config.xml.
-        // Add missing plugin variables in package.json from config.xml.
-        comboPluginIdArray.forEach(function (item) {
+    // Now that plugins have been updated, re-fetch them from package.json
+    let pluginIDs = Object.keys(pkgJson.cordova.plugins);
 
-            function includeFunc (container, value) {
-                var returnValue = false;
-                var pos = container.indexOf(value);
-                if (pos >= 0) {
-                    returnValue = true;
-                }
-                return returnValue;
-            }
-            var result = includeFunc(pluginIdConfig, item);
-
-            if (result === true) {
-                configPlugin = cfg.getPlugin(item);
-                configPluginVariables = configPlugin.variables;
-                pkgJsonPluginVariables = comboObject[item];
-                for (var key in configPluginVariables) {
-                    // Handle conflicts, package.json wins.
-                    // Only add the variable to package.json if it doesn't already exist.
-                    if (pkgJsonPluginVariables[key] === undefined) {
-                        pkgJsonPluginVariables[key] = configPluginVariables[key];
-                        comboObject[item][key] = configPluginVariables[key];
-                        modifiedPkgJson = true;
-                    }
-                }
-            }
-            // Get the spec from package.json and add it to mergedPluginSpecs.
-            if (pkgJson.dependencies && pkgJson.dependencies[item]) {
-                mergedPluginSpecs[item] = pkgJson.dependencies[item];
-            }
+    if (pluginIDs.length !== pkgPluginIDs.length) {
+        // We've modified package.json and need to save it
+        fs.outputJsonSync(pkgJsonPath, pkgJson, {
+            indent: indent,
+            encoding: 'utf8'
         });
-
-        // Check to see if pkg.json plugin(id) and config plugin(id) match.
-        if (comboPluginIdArray.toString() !== pluginIdConfig.toString()) {
-            // If there is a config plugin that does NOT already exist in
-            // comboPluginIdArray, add it and its variables.
-            pluginIdConfig.forEach(function (item) {
-                if (comboPluginIdArray.indexOf(item) < 0) {
-                    comboPluginIdArray.push(item);
-                    var configXMLPlugin = cfg.getPlugin(item);
-                    comboObject[item] = configXMLPlugin.variables;
-                    modifiedPkgJson = true;
-                }
-            });
-        }
-
-        // Add specs from config.xml to mergedPluginSpecs.
-        pluginIdConfig.forEach(function (item) {
-            var configXMLPlugin = cfg.getPlugin(item);
-            if (mergedPluginSpecs[item] === undefined && configXMLPlugin.spec) {
-                mergedPluginSpecs[item] = configXMLPlugin.spec;
-                modifiedPkgJson = true;
-            }
-        });
-        // If pkg.json plugins have been modified, write to it.
-        if (modifiedPkgJson === true && args.save !== false) {
-            pkgJson.cordova.plugins = comboObject;
-            if (pkgJson.dependencies === undefined) {
-                pkgJson.dependencies = {};
-            }
-            for (key in mergedPluginSpecs) {
-                pkgJson.dependencies[key] = mergedPluginSpecs[key];
-            }
-            var file = fs.readFileSync(pkgJsonPath, 'utf8');
-            var indent = detectIndent(file).indent || '  ';
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
-        }
     }
 
-    // Intermediate variable to store current installing plugin name
-    // to be able to create informative warning on plugin failure
-    var pluginName;
+    let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+
+    let plugins = pluginIDs.map(plID => {
+        return { name: plID, spec: specs[plID], variables: pkgJson.cordova.plugins[plID] || {} };
+    });
+
+    let pluginName = '';
+
     // CB-9560 : Run `plugin add` serially, one plugin after another
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
     // plugin dependencies installed twice which throws a nasty error.
-    return promiseutil.Q_chainmap_graceful(pluginIdConfig, function (featureId) {
-        var pluginPath = path.join(plugins_dir, featureId);
+    return promiseutil.Q_chainmap(plugins, function (pluginConfig) {
+        const pluginPath = path.join(pluginsRoot, pluginConfig.name);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
             return Promise.resolve();
         }
-        events.emit('log', 'Discovered plugin "' + featureId + '" in config.xml. Adding it to the project');
-        var pluginEntry = cfg.getPlugin(featureId);
+
+        pluginName = pluginConfig.name;
+
+        events.emit('log', `Discovered saved plugin "${pluginName}". Adding it to the project`);
 
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
-        var pluginSpec = pluginEntry.spec;
-        pluginName = pluginEntry.name;
-
         // CB-10761 If plugin spec is not specified, use plugin name
-        var installFrom = pluginSpec || pluginName;
-        if (pluginSpec && semver.validRange(pluginSpec, true)) {
-            installFrom = pluginName + '@' + pluginSpec;
+        var installFrom = pluginConfig.spec || pluginName;
+        if (pluginConfig.spec && semver.validRange(pluginConfig.spec, true)) {
+            installFrom = pluginName + '@' + pluginConfig.spec;
         }
 
         // Add feature preferences as CLI variables if have any
         var options = {
-            cli_variables: pluginEntry.variables,
+            cli_variables: pluginConfig.variables,
             searchpath: args.searchpath,
             save: args.save || false
         };
-        var plugin = require('./plugin');
+
+        const plugin = require('./plugin');
         return plugin('add', installFrom, options);
     }, function (error) {
         // CB-10921 emit a warning in case of error

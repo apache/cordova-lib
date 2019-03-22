@@ -129,7 +129,8 @@ describe('cordova/restore-util', () => {
             return o;
         }, {});
         if (Object.keys(specs).length > 0) {
-            expect(pkgJson.dependencies).toEqual(jasmine.objectContaining(specs));
+            let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+            expect(specs).toEqual(jasmine.objectContaining(specs));
         }
     }
 
@@ -295,36 +296,6 @@ describe('cordova/restore-util', () => {
             });
         });
 
-        /**
-        *   When config.xml and pkg.json share a common plugin but pkg.json defines no variables for it,
-        *   prepare will update pkg.json to match config.xml's plugins/variables.
-        */
-        it('Test#012 : update pkg.json to include plugin and variable found in config.xml', () => {
-            getCfg()
-                .addPlugin({
-                    name: 'cordova-plugin-camera',
-                    variables: { variable_1: 'value_1' }
-                })
-                .write();
-            setPkgJson('cordova.plugins', {
-                'cordova-plugin-camera': {}
-            });
-
-            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                expectConsistentPlugins([
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-camera',
-                        variables: { variable_1: 'value_1' }
-                    })
-                ]);
-            });
-        });
-
-        /**
-        *   For plugins that are the same, it will merge their variables together for the final list.
-        *   Plugins that are unique to that file, will be copied over to the file that is missing it.
-        *   Config.xml and pkg.json will have identical plugins and variables after cordova prepare.
-        */
         it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', () => {
             getCfg()
                 .addPlugin({
@@ -346,7 +317,7 @@ describe('cordova/restore-util', () => {
                 expectPluginsInPkgJson([
                     jasmine.objectContaining({
                         name: 'cordova-plugin-camera',
-                        variables: { variable_1: ' ', variable_2: ' ', variable_3: 'value_3' }
+                        variables: { variable_1: ' ', variable_2: ' ' }
                     }),
                     jasmine.objectContaining({
                         name: 'cordova-plugin-splashscreen',
@@ -360,12 +331,7 @@ describe('cordova/restore-util', () => {
             });
         });
 
-        /**
-        *   If either file is missing a plugin, it will be added with the correct variables.
-        *   If there is a matching plugin name, the variables will be merged and then added
-        *   to config and pkg.json.
-        */
-        it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', () => {
+        it('Test#014 : update pkg.json AND config.xml to include all plugins and use package.json variables', () => {
             getCfg()
                 .addPlugin({
                     name: 'cordova-plugin-camera',
@@ -390,7 +356,7 @@ describe('cordova/restore-util', () => {
                 expectPluginsInPkgJson([{
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
-                    variables: { variable_1: 'value_1', variable_2: 'value_2', variable_3: 'value_3' }
+                    variables: { variable_1: 'value_1', variable_3: 'value_3' }
                 }, {
                     name: 'cordova-plugin-device',
                     spec: '~1.0.0',

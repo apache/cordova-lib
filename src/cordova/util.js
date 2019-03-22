@@ -50,6 +50,7 @@ Object.defineProperty(exports, 'libDirectory', {
 });
 
 exports.isCordova = isCordova;
+exports.getProjectRoot = getProjectRoot;
 exports.cdProjectRoot = cdProjectRoot;
 exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
@@ -151,12 +152,24 @@ function isCordova (dir) {
     return false;
 }
 
-// Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
-function cdProjectRoot () {
-    var projectRoot = convertToRealPathSafe(this.isCordova());
+/**
+ * Returns the project root directory path.
+ *
+ * Throws a CordovaError if not in a Cordova project.
+ */
+function getProjectRoot () {
+    const projectRoot = convertToRealPathSafe(this.isCordova());
+
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
     }
+
+    return projectRoot;
+}
+
+// Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
+function cdProjectRoot () {
+    const projectRoot = this.getProjectRoot();
     if (!origCwd) {
         origCwd = process.env.PWD || process.cwd();
     }
