@@ -60,15 +60,13 @@ describe('HooksRunner', function () {
         }).forEach(f => fs.chmodSync(f, 0o755));
 
         // Add the testing platform and plugin to our project
-        fs.copySync(
-            path.join(__dirname, '../spec/plugman/projects', testPlatform),
-            path.join(preparedProject, 'platforms', testPlatform)
-        );
-        fs.copySync(
-            testPluginFixture,
-            path.join(preparedProject, 'plugins', testPlugin)
-        );
-    });
+        process.chdir(preparedProject);
+        return cordova.platform('add', testPlatform)
+            .then(() => fs.copy(
+                testPluginFixture,
+                path.join(preparedProject, 'plugins', testPlugin)
+            ));
+    }, 60 * 1000);
 
     beforeEach(function () {
         // Reset our test project
