@@ -18,7 +18,6 @@
 */
 
 const fs = require('fs-extra');
-const os = require('os');
 const path = require('path');
 const semver = require('semver');
 
@@ -29,8 +28,8 @@ const knownPlatforms = require('../../src/platforms/platforms');
 const platforms = require('../../src/plugman/platforms/common');
 const plugman = require('../../src/plugman/plugman');
 
-const srcProject = path.join(__dirname, 'projects', 'android');
-const temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
+const { tmpDir, getFixture } = require('../helpers');
+const temp_dir = tmpDir('plugman-install-test');
 const project = path.join(temp_dir, 'android_install');
 const plugins_dir = path.join(__dirname, 'plugins');
 const plugins_install_dir = path.join(project, 'cordova', 'plugins');
@@ -71,21 +70,24 @@ describe('plugman/install', () => {
     let fetchSpy;
 
     beforeAll(() => {
-        results['emit_results'] = [];
-        events.on('results', result => results['emit_results'].push(result));
+        let api;
 
-        fs.copySync(srcProject, project);
+        return getFixture('androidApp').copyTo(project)
+            .then(_ => {
+                results['emit_results'] = [];
+                events.on('results', result => results['emit_results'].push(result));
 
-        // Every time when addPlugin is called it will return some truthy value
-        const returnValues = [true, {}, [], 'foo', () => {}][Symbol.iterator]();
-        const api = knownPlatforms.getPlatformApi('android', project);
-        const addPluginOrig = api.addPlugin;
-        spyOn(api, 'addPlugin').and.callFake(function () {
-            return addPluginOrig.apply(api, arguments)
-                .then(_ => returnValues.next());
-        });
+                // Every time when addPlugin is called it will return some truthy value
+                const returnValues = [true, {}, [], 'foo', () => {}][Symbol.iterator]();
+                api = knownPlatforms.getPlatformApi('android', project);
+                const addPluginOrig = api.addPlugin;
+                spyOn(api, 'addPlugin').and.callFake(function () {
+                    return addPluginOrig.apply(api, arguments)
+                        .then(_ => returnValues.next());
+                });
 
-        return install('android', project, pluginDir('org.test.plugins.dummyplugin'))
+                return install('android', project, pluginDir('org.test.plugins.dummyplugin'));
+            })
             .then(result => {
                 expect(result).toBeTruthy();
                 return install('android', project, pluginDir('com.cordova.engine'));
