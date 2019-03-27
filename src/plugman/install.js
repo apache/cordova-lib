@@ -165,7 +165,7 @@ function callEngineScripts (engines, project_dir) {
     return Promise.all(
         engines.map(function (engine) {
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
-            var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
+            var scriptPath = engine.scriptSrc || null;
             if (scriptPath && (isWindows || fs.existsSync(engine.scriptSrc))) {
 
                 if (!isWindows) { // not required on Windows
