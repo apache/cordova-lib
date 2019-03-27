@@ -42,11 +42,9 @@ const plugins = {
     'C': path.join(plugins_dir, 'dependencies', 'C')
 };
 
-// Grab a reference to the original, before someone stubs it
-const { copySync } = fs;
 function setupProject (name) {
     const projectPath = path.join(projectsPath, name);
-    copySync(projectPath, project);
+    fs.copySync(projectPath, project);
 }
 
 describe('plugman/uninstall', () => {
@@ -82,8 +80,6 @@ describe('plugman/uninstall', () => {
         uninstall.__set__('npmUninstall', jasmine.createSpy().and.returnValue(Promise.resolve()));
 
         emit = spyOn(events, 'emit');
-        spyOn(fs, 'writeFileSync');
-        spyOn(fs, 'removeSync');
     });
 
     afterEach(() => {
@@ -102,7 +98,6 @@ describe('plugman/uninstall', () => {
             setupProject('uninstall.test');
 
             spyOn(ActionStack.prototype, 'process').and.returnValue(Promise.resolve());
-            spyOn(fs, 'copySync');
         });
 
         describe('success', function () {
