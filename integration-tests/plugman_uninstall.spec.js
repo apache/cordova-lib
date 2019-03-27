@@ -25,17 +25,14 @@ const { PluginInfo, events } = require('cordova-common');
 const common = require('../spec/common');
 const install = require('../src/plugman/install');
 const platforms = require('../src/platforms/platforms');
-const { tmpDir: getTmpDir } = require('../spec/helpers.js');
-
-const spec = path.join(__dirname, '..', 'spec', 'plugman');
-const srcProject = path.join(spec, 'projects', 'android');
+const { tmpDir: getTmpDir, getFixture } = require('../spec/helpers.js');
 
 const tmpDir = getTmpDir('plugman_uninstall_test');
 const projectsPath = path.join(tmpDir, 'projects');
 const project = path.join(tmpDir, 'project');
 const plugins_install_dir = path.join(project, 'cordova/plugins');
 
-const plugins_dir = path.join(spec, 'plugins');
+const plugins_dir = path.join(__dirname, '../spec/plugman/plugins');
 const plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
     'A': path.join(plugins_dir, 'dependencies', 'A'),
@@ -55,12 +52,13 @@ describe('plugman/uninstall', () => {
         const project2 = path.join(projectsPath, 'uninstall.test2');
         const project3 = path.join(projectsPath, 'uninstall.test3');
 
-        for (const p of [project1, project2, project3]) {
-            fs.copySync(srcProject, p);
-        }
-
-        return install('android', project1, plugins['org.test.plugins.dummyplugin'])
-            .then(function (result) {
+        return Promise.resolve()
+            .then(_ => getFixture('androidApp').copyTo(project1))
+            .then(_ => getFixture('androidApp').copyTo(project2))
+            .then(_ => getFixture('androidApp').copyTo(project3))
+            .then(function () {
+                return install('android', project1, plugins['org.test.plugins.dummyplugin']);
+            }).then(function () {
                 return install('android', project1, plugins['A']);
             }).then(function () {
                 return install('android', project2, plugins['C']);
@@ -73,7 +71,7 @@ describe('plugman/uninstall', () => {
             }).then(function (result) {
                 expect(result).toEqual(true);
             });
-    });
+    }, 20000);
 
     beforeEach(() => {
         uninstall = rewire('../src/plugman/uninstall');
