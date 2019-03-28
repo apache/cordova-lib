@@ -234,6 +234,7 @@ function installPluginsFromConfigXML (args) {
     pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
 
     const pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
+    const pkgSpecs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
 
     // Check for plugins listed in config.xml
     const cfg = new ConfigParser(confXmlPath);
@@ -247,7 +248,9 @@ function installPluginsFromConfigXML (args) {
 
             const cfgPlugin = cfg.getPlugin(plID);
 
-            if (cfgPlugin.spec) {
+            // If config.xml has a spec for the plugin and package.json has not,
+            // add the spec to devDependencies of package.json
+            if (cfgPlugin.spec && !(plID in pkgSpecs)) {
                 pkgJson.devDependencies[plID] = cfgPlugin.spec;
             }
 
