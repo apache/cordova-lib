@@ -224,7 +224,7 @@ function installPluginsFromConfigXML (args) {
     let indent = '  ';
 
     if (fs.existsSync(pkgJsonPath)) {
-        let fileData = fs.readFileSync(pkgJsonPath, 'utf8');
+        const fileData = fs.readFileSync(pkgJsonPath, 'utf8');
         indent = detectIndent(fileData).indent;
         pkgJson = JSON.parse(fileData);
     }
@@ -233,7 +233,7 @@ function installPluginsFromConfigXML (args) {
     pkgJson.cordova = pkgJson.cordova || {};
     pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
 
-    let pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
+    const pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
 
     // Check for plugins listed in config.xml
     const cfg = new ConfigParser(confXmlPath);
@@ -245,7 +245,7 @@ function installPluginsFromConfigXML (args) {
         if (!pkgPluginIDs.includes(plID)) {
             events.emit('info', `Plugin '${plID}' found in config.xml... Migrating it to package.json`);
 
-            let cfgPlugin = cfg.getPlugin(plID);
+            const cfgPlugin = cfg.getPlugin(plID);
 
             if (cfgPlugin.spec) {
                 pkgJson.devDependencies[plID] = cfgPlugin.spec;
@@ -256,7 +256,7 @@ function installPluginsFromConfigXML (args) {
     });
 
     // Now that plugins have been updated, re-fetch them from package.json
-    let pluginIDs = Object.keys(pkgJson.cordova.plugins);
+    const pluginIDs = Object.keys(pkgJson.cordova.plugins);
 
     if (pluginIDs.length !== pkgPluginIDs.length) {
         // We've modified package.json and need to save it
@@ -266,9 +266,9 @@ function installPluginsFromConfigXML (args) {
         });
     }
 
-    let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+    const specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
 
-    let plugins = pluginIDs.map(plID => ({
+    const plugins = pluginIDs.map(plID => ({
         name: plID,
         spec: specs[plID],
         variables: pkgJson.cordova.plugins[plID] || {}
