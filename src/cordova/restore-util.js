@@ -220,23 +220,18 @@ function installPluginsFromConfigXML (args) {
     const pkgJsonPath = path.join(projectRoot, 'package.json');
     const confXmlPath = cordova_util.projectConfig(projectRoot);
 
-    let pkgJson = {
-        devDependencies: {},
-        cordova: {
-            plugins: {}
-        }
-    };
+    let pkgJson = {};
     let indent = '  ';
 
     if (fs.existsSync(pkgJsonPath)) {
         let fileData = fs.readFileSync(pkgJsonPath, 'utf8');
         indent = detectIndent(fileData).indent;
-
         pkgJson = JSON.parse(fileData);
-        pkgJson.devDependencies = pkgJson.devDependencies || {};
-        pkgJson.cordova = pkgJson.cordova || {};
-        pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
     }
+
+    pkgJson.devDependencies = pkgJson.devDependencies || {};
+    pkgJson.cordova = pkgJson.cordova || {};
+    pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
 
     let pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
 
