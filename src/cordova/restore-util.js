@@ -268,9 +268,11 @@ function installPluginsFromConfigXML (args) {
 
     let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
 
-    let plugins = pluginIDs.map(plID => {
-        return { name: plID, spec: specs[plID], variables: pkgJson.cordova.plugins[plID] || {} };
-    });
+    let plugins = pluginIDs.map(plID => ({
+        name: plID,
+        spec: specs[plID],
+        variables: pkgJson.cordova.plugins[plID] || {}
+    }));
 
     let pluginName = '';
 
