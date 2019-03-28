@@ -281,13 +281,13 @@ function installPluginsFromConfigXML (args) {
     // before installing the next root plugin otherwise we can have common
     // plugin dependencies installed twice which throws a nasty error.
     return promiseutil.Q_chainmap_graceful(plugins, function (pluginConfig) {
-        const pluginPath = path.join(pluginsRoot, pluginConfig.name);
+        pluginName = pluginConfig.name;
+
+        const pluginPath = path.join(pluginsRoot, pluginName);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
             return Promise.resolve();
         }
-
-        pluginName = pluginConfig.name;
 
         events.emit('log', `Discovered saved plugin "${pluginName}". Adding it to the project`);
 
