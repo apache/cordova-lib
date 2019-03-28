@@ -280,7 +280,7 @@ function installPluginsFromConfigXML (args) {
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
     // plugin dependencies installed twice which throws a nasty error.
-    return promiseutil.Q_chainmap(plugins, function (pluginConfig) {
+    return promiseutil.Q_chainmap_graceful(plugins, function (pluginConfig) {
         const pluginPath = path.join(pluginsRoot, pluginConfig.name);
         if (fs.existsSync(pluginPath)) {
             // Plugin already exists
