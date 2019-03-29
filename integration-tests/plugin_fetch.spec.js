@@ -20,7 +20,7 @@
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
 var fs = require('fs-extra');
-var plugin = require('../src/cordova/plugin/add');
+var pluginAdd = require('../src/cordova/plugin/add');
 var helpers = require('../spec/helpers');
 var path = require('path');
 var events = require('cordova-common').events;
@@ -60,7 +60,7 @@ events.on('warn', function (warning) {
 // Tests a sample engine against the installed platforms/plugins in our test
 // project
 function testEngineWithProject (done, testEngine, testResult) {
-    return plugin.getFetchVersion(project,
+    return pluginAdd.getFetchVersion(project,
         {
             'version': '2.3.0',
             'name': 'test-plugin',
@@ -343,7 +343,7 @@ describe('plugin fetching version selection', function () {
     });
 
     it('Test 015 : should not fail if there is no engine in the npm info', function () {
-        return plugin.getFetchVersion(project, {
+        return pluginAdd.getFetchVersion(project, {
             version: '2.3.0',
             name: 'test-plugin',
             versions: testPluginVersions
@@ -356,7 +356,7 @@ describe('plugin fetching version selection', function () {
     it('Test 016 : should not fail if there is no cordovaDependencies in the engines', function () {
         var after = getWarningCheckCallback([]);
 
-        return plugin.getFetchVersion(project, {
+        return pluginAdd.getFetchVersion(project, {
             version: '2.3.0',
             name: 'test-plugin',
             versions: testPluginVersions,
