@@ -152,7 +152,13 @@ function removeTestProject () {
 }
 
 describe('plugin fetching version selection', function () {
-    createTestProject();
+    beforeAll(() => {
+        createTestProject();
+    });
+    afterAll(() => {
+        removeTestProject();
+    });
+
     beforeEach(function () {
         jasmine.addMatchers({
             'toContainArray': function () {
@@ -523,9 +529,5 @@ describe('plugin fetching version selection', function () {
         ]);
 
         return testEngineWithProject(after, testEngine, '1.3.0');
-    });
-
-    it('Test 025 : clean up after plugin fetch spec', function () {
-        removeTestProject();
     });
 });
