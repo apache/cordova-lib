@@ -27,13 +27,6 @@ var events = require('cordova-common').events;
 
 var cordovaVersion = '3.4.2';
 
-var tempDir = helpers.tmpDir('plugin_fetch_spec');
-var project = path.join(tempDir, 'project');
-
-function getFetchVersion (plugin) {
-    return pluginAdd.getFetchVersion(project, plugin, cordovaVersion);
-}
-
 // Used to extract the constraint, the installed version, and the required
 // semver range from a warning message
 var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) in project, (.+) required\)/;
@@ -84,8 +77,13 @@ function getPluginRequirement (requirement) {
 }
 
 describe('plugin fetching version selection', function () {
+    let tempDir, project, testPlugin;
+
     beforeAll(() => {
         const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
+
+        tempDir = helpers.tmpDir('plugin_fetch_spec');
+        project = path.join(tempDir, 'project');
 
         // Copy the base project as our test project
         fs.copySync(path.join(fixtures, 'base'), project);
@@ -104,7 +102,6 @@ describe('plugin fetching version selection', function () {
         fs.removeSync(tempDir);
     });
 
-    let testPlugin;
     beforeEach(function () {
         unmetRequirementsCollector.store = [];
 
@@ -136,6 +133,10 @@ describe('plugin fetching version selection', function () {
     afterEach(() => {
         events.removeListener('warn', unmetRequirementsCollector);
     });
+
+    function getFetchVersion (plugin) {
+        return pluginAdd.getFetchVersion(project, plugin, cordovaVersion);
+    }
 
     it('Test 001 : should handle a mix of upper bounds and single versions', function () {
         testPlugin.engines.cordovaDependencies = {
