@@ -17,12 +17,10 @@
     under the License.
 */
 
-// TODO: all of these tests should go as unit tests to src/cordova/plugin/add
-
 const { events } = require('cordova-common');
-const cordovaUtil = require('../src/cordova/util');
-const pluginUtil = require('../src/cordova/plugin/util');
-const pluginAdd = require('../src/cordova/plugin/add');
+const cordovaUtil = require('../../../src/cordova/util');
+const pluginUtil = require('../../../src/cordova/plugin/util');
+const pluginAdd = require('../../../src/cordova/plugin/add');
 
 const cordovaVersion = '3.4.2';
 
