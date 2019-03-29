@@ -96,7 +96,7 @@ function checkUnmetRequirements (requirements) {
             return extractedWarning.dependency === requirement.dependency.trim() &&
                     extractedWarning.installed === requirement.installed.trim() &&
                     extractedWarning.required === requirement.required.trim();
-        }, requirement);
+        });
     });
 }
 
