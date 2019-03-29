@@ -64,7 +64,7 @@ events.on('warn', function (warning) {
 // Checks the warnings that were printed by the CLI to ensure that the code is
 // listing the correct reasons for failure. Checks against the global warnings
 // object which is reset before each test
-function checkUnmetRequirements (requirements) {
+function expectUnmetRequirements (requirements) {
     var reqWarnings = [];
 
     warnings.forEach(function (warning) {
@@ -82,7 +82,7 @@ function checkUnmetRequirements (requirements) {
 }
 
 // Helper functions for creating the requirements objects taken by
-// checkUnmetRequirements()
+// expectUnmetRequirements()
 function getPlatformRequirement (requirement) {
     return {
         dependency: 'cordova-android',
@@ -153,7 +153,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.3.0');
-            checkUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
         });
     });
 
@@ -170,7 +170,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
         });
     });
 
@@ -183,7 +183,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            checkUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
         });
     });
 
@@ -194,7 +194,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('0.7.0');
-            checkUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
         });
     });
 
@@ -205,7 +205,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
         });
     });
 
@@ -216,7 +216,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.3.0');
-            checkUnmetRequirements([]);
+            expectUnmetRequirements([]);
         });
     });
 
@@ -228,7 +228,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([ getPlatformRequirement('<2.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('<2.0.0') ]);
         });
     });
 
@@ -240,7 +240,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.0.0');
-            checkUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
         });
     });
 
@@ -249,7 +249,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([]);
+            expectUnmetRequirements([]);
         });
     });
 
@@ -260,7 +260,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.3.0');
-            checkUnmetRequirements([]);
+            expectUnmetRequirements([]);
         });
     });
 
@@ -273,7 +273,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.1.0');
-            checkUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
         });
     });
 
@@ -286,7 +286,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.0.0');
-            checkUnmetRequirements([ getPluginRequirement('6.1.1') ]);
+            expectUnmetRequirements([ getPluginRequirement('6.1.1') ]);
         });
     });
 
@@ -299,7 +299,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.1.0');
-            checkUnmetRequirements([ getCordovaRequirement('6.1.1') ]);
+            expectUnmetRequirements([ getCordovaRequirement('6.1.1') ]);
         });
     });
 
@@ -312,7 +312,7 @@ describe('plugin fetching version selection', function () {
         // Should not return 2.0.0-rc.2
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            checkUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
         });
     });
 
@@ -340,7 +340,7 @@ describe('plugin fetching version selection', function () {
         }, cordovaVersion)
             .then(function (toFetch) {
                 expect(toFetch).toBe(null);
-                checkUnmetRequirements([]);
+                expectUnmetRequirements([]);
             });
     });
 
@@ -353,7 +353,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            checkUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
         });
     });
 
@@ -366,7 +366,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.3.0');
-            checkUnmetRequirements([]);
+            expectUnmetRequirements([]);
         });
     });
 
@@ -382,7 +382,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.3.0');
-            checkUnmetRequirements([]);
+            expectUnmetRequirements([]);
         });
     });
 
@@ -398,7 +398,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([ getPlatformRequirement('5.0.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('5.0.0') ]);
         });
     });
 
@@ -415,7 +415,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            checkUnmetRequirements([ getPlatformRequirement('5.1.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('5.1.0') ]);
         });
     });
 
@@ -430,7 +430,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.3.0');
-            checkUnmetRequirements([
+            expectUnmetRequirements([
                 getPlatformRequirement('>5.1.0'),
                 getPluginRequirement('3.1.0')
             ]);
@@ -448,7 +448,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            checkUnmetRequirements([
+            expectUnmetRequirements([
                 getPlatformRequirement('>5.1.0 AND >7.1.0'),
                 getPluginRequirement('3.1.0')
             ]);
@@ -466,7 +466,7 @@ describe('plugin fetching version selection', function () {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.3.0');
-            checkUnmetRequirements([ getPlatformRequirement('>5.1.0') ]);
+            expectUnmetRequirements([ getPlatformRequirement('>5.1.0') ]);
         });
     });
 });
