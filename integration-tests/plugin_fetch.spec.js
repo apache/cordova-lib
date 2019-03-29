@@ -89,15 +89,8 @@ function checkUnmetRequirements (requirements) {
             });
         }
     });
-    expect(reqWarnings.length).toEqual(requirements.length);
 
-    requirements.forEach(function (requirement) {
-        expect(reqWarnings).toContainArray(function (extractedWarning) {
-            return extractedWarning.dependency === requirement.dependency.trim() &&
-                    extractedWarning.installed === requirement.installed.trim() &&
-                    extractedWarning.required === requirement.required.trim();
-        });
-    });
+    expect(reqWarnings).toEqual(jasmine.arrayWithExactContents(requirements));
 }
 
 // Helper functions for creating the requirements objects taken by
@@ -155,24 +148,6 @@ describe('plugin fetching version selection', function () {
     });
 
     beforeEach(function () {
-        jasmine.addMatchers({
-            'toContainArray': function () {
-                return {
-                    compare: function (actual, expected) {
-                        var result = {};
-                        result.pass = false;
-                        for (var i = 0; i < actual.length; i++) {
-                            if (expected(actual[i])) {
-                                result.pass = true;
-                                break;
-                            }
-                        }
-                        return result;
-                    }
-                };
-            }
-        });
-
         warnings = [];
     });
 
