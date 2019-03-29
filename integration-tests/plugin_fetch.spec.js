@@ -19,17 +19,17 @@
 
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
-var fs = require('fs-extra');
-var pluginAdd = require('../src/cordova/plugin/add');
-var helpers = require('../spec/helpers');
-var path = require('path');
-var events = require('cordova-common').events;
+const fs = require('fs-extra');
+const pluginAdd = require('../src/cordova/plugin/add');
+const helpers = require('../spec/helpers');
+const path = require('path');
+const events = require('cordova-common').events;
 
-var cordovaVersion = '3.4.2';
+const cordovaVersion = '3.4.2';
 
 // Used to extract the constraint, the installed version, and the required
 // semver range from a warning message
-var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) in project, (.+) required\)/;
+const UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) in project, (.+) required\)/;
 
 function unmetRequirementsCollector (warning) {
     const match = UNMET_REQ_REGEX.exec(warning);
