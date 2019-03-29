@@ -20,10 +20,10 @@
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
 const fs = require('fs-extra');
-const pluginAdd = require('../src/cordova/plugin/add');
-const helpers = require('../spec/helpers');
 const path = require('path');
-const events = require('cordova-common').events;
+const { events } = require('cordova-common');
+const helpers = require('../spec/helpers');
+const pluginAdd = require('../src/cordova/plugin/add');
 
 const cordovaVersion = '3.4.2';
 
