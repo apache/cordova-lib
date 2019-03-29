@@ -166,7 +166,7 @@ describe('plugin fetching version selection', function () {
             getPlatformRequirement('6.1.1')
         ]);
         return testEngineWithProject(after, testEngine, '1.3.0');
-    }, 6000);
+    });
 
     it('Test 002 : should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function () {
         var testEngine = {
