@@ -76,7 +76,7 @@ function getPluginRequirement (requirement) {
     };
 }
 
-describe('plugin fetching version selection', function () {
+describe('plugin fetching version selection', () => {
     let tempDir, project, testPlugin;
 
     beforeAll(() => {
@@ -102,7 +102,7 @@ describe('plugin fetching version selection', function () {
         fs.removeSync(tempDir);
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
         unmetRequirementsCollector.store = [];
 
         // We generate warnings when we don't fetch latest. Collect them to make sure we
@@ -138,7 +138,7 @@ describe('plugin fetching version selection', function () {
         return pluginAdd.getFetchVersion(project, plugin, cordovaVersion);
     }
 
-    it('Test 001 : should handle a mix of upper bounds and single versions', function () {
+    it('Test 001 : should handle a mix of upper bounds and single versions', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': { 'cordova-android': '1.0.0' },
             '0.0.2': { 'cordova-android': '>1.0.0' },
@@ -155,7 +155,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 002 : should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', function () {
+    it('Test 002 : should apply upper bound engine constraints when there are no unspecified constraints above the upper bound', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.0.0': { 'cordova-android': '>2.0.0' },
             '1.7.0': { 'cordova-android': '>4.0.0' },
@@ -172,7 +172,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 003 : should apply upper bound engine constraints when there are unspecified constraints above the upper bound', function () {
+    it('Test 003 : should apply upper bound engine constraints when there are unspecified constraints above the upper bound', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': {},
             '2.0.0': { 'cordova-android': '~5.0.0' },
@@ -185,7 +185,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 004 : should handle the case where there are no constraints for earliest releases', function () {
+    it('Test 004 : should handle the case where there are no constraints for earliest releases', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.0.0': { 'cordova-android': '~5.0.0' }
         };
@@ -196,7 +196,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 005 : should handle the case where the lowest version is unsatisfied', function () {
+    it('Test 005 : should handle the case where the lowest version is unsatisfied', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.2': { 'cordova-android': '~5.0.0' }
         };
@@ -207,7 +207,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 006 : should handle upperbounds if no single version constraints are given', function () {
+    it('Test 006 : should handle upperbounds if no single version constraints are given', () => {
         testPlugin.engines.cordovaDependencies = {
             '<1.0.0': { 'cordova-android': '<2.0.0' }
         };
@@ -218,7 +218,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 007 : should apply upper bounds greater than highest version', function () {
+    it('Test 007 : should apply upper bounds greater than highest version', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': {},
             '<5.0.0': { 'cordova-android': '<2.0.0' }
@@ -230,7 +230,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 008 : should treat empty constraints as satisfied', function () {
+    it('Test 008 : should treat empty constraints as satisfied', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.0.0': {},
             '1.1.0': { 'cordova-android': '>5.0.0' }
@@ -242,7 +242,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 009 : should ignore an empty cordovaDependencies entry', function () {
+    it('Test 009 : should ignore an empty cordovaDependencies entry', () => {
         testPlugin.engines.cordovaDependencies = {};
 
         return getFetchVersion(testPlugin).then(version => {
@@ -251,7 +251,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 010 : should ignore a badly formatted semver range', function () {
+    it('Test 010 : should ignore a badly formatted semver range', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.1.3': { 'cordova-android': 'badSemverRange' }
         };
@@ -262,7 +262,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 011 : should respect unreleased versions in constraints', function () {
+    it('Test 011 : should respect unreleased versions in constraints', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.0.0': { 'cordova-android': '3.1.0' },
             '1.1.2': { 'cordova-android': '6.1.1' },
@@ -275,7 +275,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 012 : should respect plugin constraints', function () {
+    it('Test 012 : should respect plugin constraints', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': { 'ca.filmaj.AndroidPlugin': '1.2.0' },
             '1.1.3': { 'ca.filmaj.AndroidPlugin': '<5.0.0 || >2.3.0' },
@@ -288,7 +288,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 013 : should respect cordova constraints', function () {
+    it('Test 013 : should respect cordova constraints', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': { 'cordova': '>1.0.0' },
             '1.1.3': { 'cordova': '<3.0.0 || >4.0.0' },
@@ -301,7 +301,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 014 : should not include pre-release versions', function () {
+    it('Test 014 : should not include pre-release versions', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': {},
             '2.0.0': { 'cordova-android': '>5.0.0' }
@@ -314,7 +314,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 015 : should not fail if there is no engine in the npm info', function () {
+    it('Test 015 : should not fail if there is no engine in the npm info', () => {
         delete testPlugin.engines;
 
         return getFetchVersion(testPlugin).then(version => {
@@ -323,7 +323,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 016 : should not fail if there is no cordovaDependencies in the engines', function () {
+    it('Test 016 : should not fail if there is no cordovaDependencies in the engines', () => {
         testPlugin.engines = {
             'node': '>7.0.0',
             'npm': '~2.0.0'
@@ -335,7 +335,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 017 : should handle extra whitespace', function () {
+    it('Test 017 : should handle extra whitespace', () => {
         testPlugin.engines.cordovaDependencies = {
             '  1.0.0    ': {},
             '2.0.0   ': { ' cordova-android': '~5.0.0   ' },
@@ -348,7 +348,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 018 : should ignore badly typed version requirement entries', function () {
+    it('Test 018 : should ignore badly typed version requirement entries', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.1.0': ['cordova', '5.0.0'],
             '1.3.0': undefined,
@@ -361,7 +361,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 019 : should ignore badly typed constraint entries', function () {
+    it('Test 019 : should ignore badly typed constraint entries', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.2': { 'cordova': 1 },
             '0.7.0': { 'cordova': {} },
@@ -377,7 +377,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 020 : should ignore bad semver versions', function () {
+    it('Test 020 : should ignore bad semver versions', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': { 'cordova-android': '5.0.0' },
             'notAVersion': { 'cordova-android': '3.1.0' },
@@ -393,7 +393,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 021 : should not fail if there are bad semver versions', function () {
+    it('Test 021 : should not fail if there are bad semver versions', () => {
         testPlugin.engines.cordovaDependencies = {
             'notAVersion': { 'cordova-android': '3.1.0' },
             '^1.1.2': { 'cordova-android': '3.1.0' },
@@ -410,7 +410,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 022 : should properly warn about multiple unmet requirements', function () {
+    it('Test 022 : should properly warn about multiple unmet requirements', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.7.0': {
                 'cordova-android': '>5.1.0',
@@ -428,7 +428,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 023 : should properly warn about both unmet latest and upper bound requirements', function () {
+    it('Test 023 : should properly warn about both unmet latest and upper bound requirements', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.7.0': { 'cordova-android': '>5.1.0' },
             '<5.0.0': {
@@ -446,7 +446,7 @@ describe('plugin fetching version selection', function () {
         });
     });
 
-    it('Test 024 : should not warn about versions past latest', function () {
+    it('Test 024 : should not warn about versions past latest', () => {
         testPlugin.engines.cordovaDependencies = {
             '1.7.0': { 'cordova-android': '>5.1.0' },
             '7.0.0': {
