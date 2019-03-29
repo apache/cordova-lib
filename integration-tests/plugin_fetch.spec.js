@@ -19,10 +19,9 @@
 
 // TODO: all of these tests should go as unit tests to src/cordova/plugin/add
 
-const fs = require('fs-extra');
-const path = require('path');
 const { events } = require('cordova-common');
-const helpers = require('../spec/helpers');
+const cordovaUtil = require('../src/cordova/util');
+const pluginUtil = require('../src/cordova/plugin/util');
 const pluginAdd = require('../src/cordova/plugin/add');
 
 const cordovaVersion = '3.4.2';
@@ -77,30 +76,7 @@ function getPluginRequirement (requirement) {
 }
 
 describe('plugin fetching version selection', () => {
-    let tempDir, project, testPlugin;
-
-    beforeAll(() => {
-        const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
-
-        tempDir = helpers.tmpDir('plugin_fetch_spec');
-        project = path.join(tempDir, 'project');
-
-        // Copy the base project as our test project
-        fs.copySync(path.join(fixtures, 'base'), project);
-
-        // Copy a platform and a plugin to our test project
-        fs.copySync(
-            path.join(fixtures, 'platforms', helpers.testPlatform),
-            path.join(project, 'platforms', helpers.testPlatform));
-        fs.copySync(
-            path.join(fixtures, 'plugins/android'),
-            path.join(project, 'plugins/android'));
-    });
-
-    afterAll(() => {
-        process.chdir(__dirname);
-        fs.removeSync(tempDir);
-    });
+    let project, testPlugin;
 
     beforeEach(() => {
         unmetRequirementsCollector.store = [];
@@ -128,6 +104,13 @@ describe('plugin fetching version selection', () => {
                 '2.3.0'
             ]
         };
+
+        spyOn(pluginUtil, 'getInstalledPlugins').and.returnValue([
+            { id: 'ca.filmaj.AndroidPlugin', version: '4.2.0' }
+        ]);
+        spyOn(cordovaUtil, 'getInstalledPlatformsWithVersions').and.returnValue(
+            Promise.resolve({ android: '3.1.0' })
+        );
     });
 
     afterEach(() => {
