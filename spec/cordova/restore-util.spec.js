@@ -124,12 +124,13 @@ describe('cordova/restore-util', () => {
 
         // Check that dependencies key in package.json contains the expected specs
         // We only check the specs for plugins where an expected spec was given
-        const specs = plugins.reduce((o, { name, spec }) => {
+        const expectedSpecs = plugins.reduce((o, { name, spec }) => {
             if (spec) o[name] = spec;
             return o;
         }, {});
-        if (Object.keys(specs).length > 0) {
-            expect(pkgJson.dependencies).toEqual(jasmine.objectContaining(specs));
+        if (Object.keys(expectedSpecs).length > 0) {
+            let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+            expect(specs).toEqual(jasmine.objectContaining(expectedSpecs));
         }
     }
 
@@ -138,22 +139,23 @@ describe('cordova/restore-util', () => {
     }
 
     function expectPluginAdded (plugin) {
+        const expectedOpts = {
+            plugins: jasmine.arrayContaining([
+                jasmine.stringMatching(plugin.name)
+            ])
+        };
+        if ('variables' in plugin) {
+            expectedOpts.cli_variables = plugin.variables;
+        }
         expect(cordovaPlugin.add).toHaveBeenCalledWith(
             jasmine.any(String), jasmine.anything(),
-            jasmine.objectContaining({
-                plugins: jasmine.arrayContaining([
-                    jasmine.stringMatching(plugin)
-                ])
-            })
+            jasmine.objectContaining(expectedOpts)
         );
     }
 
-    function expectConsistentPlugins (plugins) {
-        const unwrappedPlugins = plugins.map(p => p.sample || p);
-        expectPluginsInPkgJson(unwrappedPlugins);
-
-        const pluginNames = unwrappedPlugins.map(({ name }) => name);
-        pluginNames.forEach(expectPluginAdded);
+    function expectPluginsAddedAndSavedToPkgJson (plugins) {
+        expectPluginsInPkgJson(plugins);
+        plugins.forEach(expectPluginAdded);
     }
 
     describe('installPlatformsFromConfigXML', () => {
@@ -264,152 +266,29 @@ describe('cordova/restore-util', () => {
     describe('installPluginsFromConfigXML', () => {
         beforeEach(() => {
             // Add some platform to test the plugins with
-            getCfg()
-                .addEngine(testPlatform)
-                .write();
             setPkgJson('cordova.platforms', [testPlatform]);
         });
 
-        /**
-        *   When pkg.json and config.xml define different values for a plugin variable,
-        *   pkg.json should win and that value will be used to replace config's value.
-        */
-        it('Test#011 : updates config.xml to use the variable found in pkg.json', () => {
-            getCfg()
-                .addPlugin({
-                    name: 'cordova-plugin-camera',
-                    variables: { variable_1: 'config' }
-                })
-                .write();
-            setPkgJson('cordova.plugins', {
-                'cordova-plugin-camera': { variable_1: 'json' }
-            });
-
-            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                expectConsistentPlugins([
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-camera',
-                        variables: { variable_1: 'json' }
-                    })
-                ]);
-            });
-        });
-
-        /**
-        *   When config.xml and pkg.json share a common plugin but pkg.json defines no variables for it,
-        *   prepare will update pkg.json to match config.xml's plugins/variables.
-        */
-        it('Test#012 : update pkg.json to include plugin and variable found in config.xml', () => {
-            getCfg()
-                .addPlugin({
-                    name: 'cordova-plugin-camera',
-                    variables: { variable_1: 'value_1' }
-                })
-                .write();
-            setPkgJson('cordova.plugins', {
-                'cordova-plugin-camera': {}
-            });
-
-            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                expectConsistentPlugins([
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-camera',
-                        variables: { variable_1: 'value_1' }
-                    })
-                ]);
-            });
-        });
-
-        /**
-        *   For plugins that are the same, it will merge their variables together for the final list.
-        *   Plugins that are unique to that file, will be copied over to the file that is missing it.
-        *   Config.xml and pkg.json will have identical plugins and variables after cordova prepare.
-        */
-        it('Test#013 : update pkg.json AND config.xml to include all plugins and merge unique variables', () => {
-            getCfg()
-                .addPlugin({
-                    name: 'cordova-plugin-camera',
-                    variables: { variable_3: 'value_3' }
-                })
-                .addPlugin({
-                    name: 'cordova-plugin-splashscreen',
-                    variables: {}
-                })
-                .write();
-            setPkgJson('cordova.plugins', {
-                'cordova-plugin-splashscreen': {},
-                'cordova-plugin-camera': { variable_1: ' ', variable_2: ' ' },
-                'cordova-plugin-device': { variable_1: 'value_1' }
-            });
-
-            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                expectPluginsInPkgJson([
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-camera',
-                        variables: { variable_1: ' ', variable_2: ' ', variable_3: 'value_3' }
-                    }),
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-splashscreen',
-                        variables: {}
-                    }),
-                    jasmine.objectContaining({
-                        name: 'cordova-plugin-device',
-                        variables: { variable_1: 'value_1' }
-                    })
-                ].map(p => p.sample || p));
-            });
-        });
-
-        /**
-        *   If either file is missing a plugin, it will be added with the correct variables.
-        *   If there is a matching plugin name, the variables will be merged and then added
-        *   to config and pkg.json.
-        */
-        it('Test#014 : update pkg.json AND config.xml to include all plugins and merge variables (no dupes)', () => {
-            getCfg()
-                .addPlugin({
-                    name: 'cordova-plugin-camera',
-                    spec: '~2.2.0',
-                    variables: { variable_1: 'value_1', variable_2: 'value_2' }
-                })
-                .addPlugin({
-                    name: 'cordova-plugin-device',
-                    spec: '~1.0.0',
-                    variables: {}
-                })
-                .write();
+        it('Test#011 : restores saved plugin', () => {
             setPkgJson('dependencies', {
                 'cordova-plugin-camera': '^2.3.0'
             });
             setPkgJson('cordova.plugins', {
-                'cordova-plugin-splashscreen': {},
-                'cordova-plugin-camera': { variable_1: 'value_1', variable_3: 'value_3' }
+                'cordova-plugin-camera': { variable_1: 'value_1' }
             });
 
             return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                expectPluginsInPkgJson([{
+                expectPluginAdded({
                     name: 'cordova-plugin-camera',
                     spec: '^2.3.0',
-                    variables: { variable_1: 'value_1', variable_2: 'value_2', variable_3: 'value_3' }
-                }, {
-                    name: 'cordova-plugin-device',
-                    spec: '~1.0.0',
-                    variables: {}
-                }, {
-                    name: 'cordova-plugin-splashscreen',
-                    spec: undefined,
-                    variables: {}
-                }].map(p => p.sample || p));
+                    variables: { variable_1: 'value_1' }
+                });
             });
         });
 
-        it('Test#018 : should restore saved plugin using an URL spec', () => {
+        it('Test#012 : restores saved plugin using an URL spec', () => {
             const PLUGIN_ID = 'cordova-plugin-splashscreen';
             const PLUGIN_URL = 'https://github.com/apache/cordova-plugin-splashscreen';
-
-            getCfg()
-                .addPlugin({ name: PLUGIN_ID, spec: PLUGIN_URL })
-                .write();
 
             setPkgJson('dependencies', {
                 [PLUGIN_ID]: `git+${PLUGIN_URL}.git`
@@ -417,12 +296,92 @@ describe('cordova/restore-util', () => {
             setPkgJson('cordova.plugins', { [PLUGIN_ID]: {} });
 
             return restore.installPluginsFromConfigXML({ save: true }).then(() => {
-                // Config.xml spec now matches the one in pkg.json.
-                expectConsistentPlugins([{
+                expectPluginAdded({
                     name: PLUGIN_ID,
                     spec: `git+${PLUGIN_URL}.git`,
-                    variables: jasmine.any(Object)
+                    variables: {}
+                });
+            });
+        });
+
+        it('Test#013 : does NOT detect plugins from dependencies ', () => {
+            setPkgJson('dependencies', { 'cordova-plugin-device': '~1.0.0' });
+            setPkgJson('devDependencies', { 'cordova-plugin-camera': '~1.0.0' });
+
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
+                expect(cordovaPlugin.add).not.toHaveBeenCalled();
+            });
+        });
+
+        it('Test#014 : adds any plugins only present in config.xml to pkg.json', () => {
+            getCfg()
+                .addPlugin({
+                    name: 'cordova-plugin-device',
+                    spec: '~1.0.0',
+                    variables: {}
+                })
+                .write();
+
+            setPkgJson('cordova.plugins', { 'cordova-plugin-camera': {} });
+            setPkgJson('devDependencies', { 'cordova-plugin-camera': '^2.3.0' });
+
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
+                expectPluginsAddedAndSavedToPkgJson([{
+                    name: 'cordova-plugin-camera',
+                    spec: '^2.3.0',
+                    variables: {}
+                }, {
+                    name: 'cordova-plugin-device',
+                    spec: '~1.0.0',
+                    variables: {}
                 }]);
+            });
+        });
+
+        it('Test#015 : prefers pkg.json plugins over those from config.xml', () => {
+            getCfg()
+                .addPlugin({
+                    name: 'cordova-plugin-camera',
+                    spec: '~2.2.0',
+                    variables: { common_var: 'xml', xml_var: 'foo' }
+                })
+                .write();
+
+            setPkgJson('cordova.plugins', {
+                'cordova-plugin-camera': { common_var: 'json', json_var: 'foo' }
+            });
+            setPkgJson('devDependencies', { 'cordova-plugin-camera': '^2.3.0' });
+
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
+                expectPluginsAddedAndSavedToPkgJson([{
+                    name: 'cordova-plugin-camera',
+                    spec: '^2.3.0',
+                    variables: { common_var: 'json', json_var: 'foo' }
+                }]);
+            });
+        });
+
+        it('Test#018 : does NOT produce conflicting dependencies', () => {
+            getCfg()
+                .addPlugin({
+                    name: 'cordova-plugin-camera',
+                    spec: '~2.2.0',
+                    variables: { common_var: 'xml', xml_var: 'foo' }
+                })
+                .write();
+
+            setPkgJson('dependencies', { 'cordova-plugin-camera': '^2.3.0' });
+
+            return restore.installPluginsFromConfigXML({ save: true }).then(() => {
+                expectPluginsAddedAndSavedToPkgJson([{
+                    name: 'cordova-plugin-camera',
+                    spec: '^2.3.0',
+                    variables: { common_var: 'xml', xml_var: 'foo' }
+                }]);
+
+                const pluginOccurences = !!getPkgJson('dependencies.cordova-plugin-camera')
+                                       + !!getPkgJson('devDependencies.cordova-plugin-camera');
+                expect(pluginOccurences).toBe(1);
             });
         });
     });
