@@ -34,36 +34,27 @@ function getFetchVersion (plugin) {
     return pluginAdd.getFetchVersion(project, plugin, cordovaVersion);
 }
 
-var warnings = [];
-
 // Used to extract the constraint, the installed version, and the required
 // semver range from a warning message
 var UNMET_REQ_REGEX = /\s+([^\s]+)[^\d]+(\d+\.\d+\.\d+) in project, (.+) required\)/;
 
-// We generate warnings when we don't fetch latest. Collect them to make sure we
-// are making the correct warnings
-events.on('warn', function (warning) {
-    warnings.push(warning);
-});
+function unmetRequirementsCollector (warning) {
+    const match = UNMET_REQ_REGEX.exec(warning);
+    if (!match) return;
+
+    unmetRequirementsCollector.store.push({
+        dependency: match[1],
+        installed: match[2],
+        required: match[3]
+    });
+}
 
 // Checks the warnings that were printed by the CLI to ensure that the code is
 // listing the correct reasons for failure. Checks against the global warnings
 // object which is reset before each test
-function expectUnmetRequirements (requirements) {
-    var reqWarnings = [];
-
-    warnings.forEach(function (warning) {
-        var extracted = UNMET_REQ_REGEX.exec(warning);
-        if (extracted) {
-            reqWarnings.push({
-                dependency: extracted[1],
-                installed: extracted[2],
-                required: extracted[3]
-            });
-        }
-    });
-
-    expect(reqWarnings).toEqual(jasmine.arrayWithExactContents(requirements));
+function expectUnmetRequirements (expected) {
+    const actual = unmetRequirementsCollector.store;
+    expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
 }
 
 // Helper functions for creating the requirements objects taken by
@@ -115,7 +106,11 @@ describe('plugin fetching version selection', function () {
 
     let testPlugin;
     beforeEach(function () {
-        warnings = [];
+        unmetRequirementsCollector.store = [];
+
+        // We generate warnings when we don't fetch latest. Collect them to make sure we
+        // are making the correct warnings
+        events.on('warn', unmetRequirementsCollector);
 
         testPlugin = {
             'version': '2.3.0',
@@ -136,6 +131,10 @@ describe('plugin fetching version selection', function () {
                 '2.3.0'
             ]
         };
+    });
+
+    afterEach(() => {
+        events.removeListener('warn', unmetRequirementsCollector);
     });
 
     it('Test 001 : should handle a mix of upper bounds and single versions', function () {
