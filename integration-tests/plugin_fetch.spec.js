@@ -25,21 +25,6 @@ var helpers = require('../spec/helpers');
 var path = require('path');
 var events = require('cordova-common').events;
 
-var testPluginVersions = [
-    '0.0.2',
-    '0.7.0',
-    '1.0.0',
-    '1.1.0',
-    '1.1.3',
-    '1.3.0',
-    '1.7.0',
-    '1.7.1',
-    '2.0.0-rc.1',
-    '2.0.0-rc.2',
-    '2.0.0',
-    '2.3.0'
-];
-
 var cordovaVersion = '3.4.2';
 
 var tempDir = helpers.tmpDir('plugin_fetch_spec');
@@ -136,7 +121,20 @@ describe('plugin fetching version selection', function () {
             'version': '2.3.0',
             'name': 'test-plugin',
             'engines': { 'cordovaDependencies': {} },
-            'versions': testPluginVersions
+            'versions': [
+                '0.0.2',
+                '0.7.0',
+                '1.0.0',
+                '1.1.0',
+                '1.1.3',
+                '1.3.0',
+                '1.7.0',
+                '1.7.1',
+                '2.0.0-rc.1',
+                '2.0.0-rc.2',
+                '2.0.0',
+                '2.3.0'
+            ]
         };
     });
 
@@ -317,31 +315,24 @@ describe('plugin fetching version selection', function () {
     });
 
     it('Test 015 : should not fail if there is no engine in the npm info', function () {
-        return pluginAdd.getFetchVersion(project, {
-            version: '2.3.0',
-            name: 'test-plugin',
-            versions: testPluginVersions
-        }, cordovaVersion)
-            .then(function (toFetch) {
-                expect(toFetch).toBe(null);
-            });
+        delete testPlugin.engines;
+
+        return getFetchVersion(testPlugin).then(version => {
+            expect(version).toBe(null);
+            expectUnmetRequirements([]);
+        });
     });
 
     it('Test 016 : should not fail if there is no cordovaDependencies in the engines', function () {
+        testPlugin.engines = {
+            'node': '>7.0.0',
+            'npm': '~2.0.0'
+        };
 
-        return pluginAdd.getFetchVersion(project, {
-            version: '2.3.0',
-            name: 'test-plugin',
-            versions: testPluginVersions,
-            engines: {
-                'node': '>7.0.0',
-                'npm': '~2.0.0'
-            }
-        }, cordovaVersion)
-            .then(function (toFetch) {
-                expect(toFetch).toBe(null);
-                expectUnmetRequirements([]);
-            });
+        return getFetchVersion(testPlugin).then(version => {
+            expect(version).toBe(null);
+            expectUnmetRequirements([]);
+        });
     });
 
     it('Test 017 : should handle extra whitespace', function () {
