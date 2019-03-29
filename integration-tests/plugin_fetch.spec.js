@@ -132,31 +132,26 @@ function getWarningCheckCallback (requirements) {
         checkUnmetRequirements(requirements);
     };
 }
-var fixtures = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
-
-function createTestProject () {
-    // Get the base project
-    fs.copySync(path.join(fixtures, 'base'), project);
-
-    // Copy a platform and a plugin to our sample project
-    fs.copySync(
-        path.join(fixtures, 'platforms', helpers.testPlatform),
-        path.join(project, 'platforms', helpers.testPlatform));
-    fs.copySync(
-        path.join(fixtures, 'plugins/android'),
-        path.join(project, 'plugins/android'));
-}
-
-function removeTestProject () {
-    fs.removeSync(tempDir);
-}
 
 describe('plugin fetching version selection', function () {
     beforeAll(() => {
-        createTestProject();
+        const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
+
+        // Copy the base project as our test project
+        fs.copySync(path.join(fixtures, 'base'), project);
+
+        // Copy a platform and a plugin to our test project
+        fs.copySync(
+            path.join(fixtures, 'platforms', helpers.testPlatform),
+            path.join(project, 'platforms', helpers.testPlatform));
+        fs.copySync(
+            path.join(fixtures, 'plugins/android'),
+            path.join(project, 'plugins/android'));
     });
+
     afterAll(() => {
-        removeTestProject();
+        process.chdir(__dirname);
+        fs.removeSync(tempDir);
     });
 
     beforeEach(function () {
