@@ -79,7 +79,7 @@ describe('plugman/uninstall', () => {
 
     beforeEach(() => {
         uninstall = rewire('../src/plugman/uninstall');
-        uninstall.__set__('npmUninstall', jasmine.createSpy());
+        uninstall.__set__('npmUninstall', jasmine.createSpy().and.returnValue(Promise.resolve()));
 
         emit = spyOn(events, 'emit');
         spyOn(fs, 'writeFileSync');
