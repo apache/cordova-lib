@@ -363,8 +363,8 @@ describe('cordova/plugin/add', function () {
     });
 
     // TODO: reorganize these tests once the logic here is understood! -filmaj
-    // TODO: rewrite the tests from integration-tests/plugin_fetch.spec.js to here.
     describe('unit tests to replace integration-tests/plugin_fetch.spec.js', function () {
+        // See also the tests in spec/cordova/plugin/add.getFetchVersion.spec.js
         describe('getFetchVersion helper method', function () {
             var pluginInfo;
 
