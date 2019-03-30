@@ -71,6 +71,10 @@ module.exports = function fixtureHelper (tmpDir) {
                     return platformAdd(hooksRunner, projectPath, platforms, opts);
                 })
                 .then(_ => projectPath);
+        },
+
+        testPlatform () {
+            return path.dirname(require.resolve('cordova-test-platform/package'));
         }
     };
 
@@ -82,7 +86,7 @@ module.exports = function fixtureHelper (tmpDir) {
     // the global fixtures in any way.
     return function getFixture (name) {
         if (!(name in fixturePromises)) {
-            fixturePromises[name] = fixtureConstructors[name]();
+            fixturePromises[name] = Promise.resolve(fixtureConstructors[name]());
         }
         return {
             copyTo (targetPath) {

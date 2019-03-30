@@ -272,19 +272,20 @@ describe('pkgJson', function () {
             // https://github.com/apache/cordova-lib/issues/787
             if (process.platform === 'win32') pending('skip on Windows host');
 
-            const PLATFORM = 'browser';
+            const PLATFORM = 'cordova-test-platform';
             const PLUGIN = 'cordova-lib-test-plugin';
 
-            const platformPath = copyFixture(`platforms/cordova-${PLATFORM}`);
+            const platformPath = path.join(tmpDir, PLATFORM);
             const pluginPath = copyFixture(path.join('plugins', PLUGIN));
 
-            expect(getPkgJson('cordova.platforms')).not.toContain(PLATFORM);
-
-            return cordova.platform('add', platformPath, { save: true })
+            return getFixture('testPlatform').copyTo(platformPath)
                 .then(function () {
+                    expect(getPkgJson('cordova.platforms')).not.toContain(PLATFORM);
+                    return cordova.platform('add', platformPath, { save: true });
+                }).then(function () {
                     // Pkg.json has platform
                     expect(getPkgJson('cordova.platforms')).toContain(PLATFORM);
-                    expect(getPkgJson(`dependencies.cordova-${PLATFORM}`)).toBeDefined();
+                    expect(getPkgJson(`dependencies.${PLATFORM}`)).toBeDefined();
                 }).then(function () {
                     // Run cordova plugin add local path --save --fetch.
                     return cordova.plugin('add', pluginPath, { save: true });
