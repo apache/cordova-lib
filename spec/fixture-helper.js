@@ -75,6 +75,18 @@ module.exports = function fixtureHelper (tmpDir) {
 
         testPlatform () {
             return path.dirname(require.resolve('cordova-test-platform/package'));
+        },
+
+        // Creates a stand-alone cordova-test-platform app (platform-centered)
+        testPlatformApp () {
+            const PlatformApi = require('cordova-test-platform');
+            const appPath = path.join(fixturesBaseDir, 'test-platform-app');
+
+            return PlatformApi.createPlatform(appPath, null, null, events)
+                // Make our node_modules accessible from the app dir to make
+                // platform modules work when they are required from the app dir.
+                .then(_ => linkToGlobalModulesFrom(appPath))
+                .then(_ => appPath);
         }
     };
 
