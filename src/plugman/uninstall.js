@@ -285,8 +285,17 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     var projectRoot = cordovaUtil.isCordova();
 
     if (projectRoot) {
+        // CB-10708 This is the case when we're trying to uninstall plugin using plugman from specific
+        // platform inside of the existing CLI project. This option is usually set by cordova-lib for CLI projects
+        // but since we're running this code through plugman, we need to set it here implicitly
+        options.usePlatformWww = true;
+        options.cli_variables = variables;
+    }
 
-        // using unified hooksRunner
+    return promise.then(function () {
+        if (!projectRoot) return;
+
+        var hooksRunner = new HooksRunner(projectRoot);
         var hooksRunnerOptions = {
             cordova: { platforms: [ platform ] },
             plugin: {
@@ -296,25 +305,10 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
                 dir: plugin_dir
             }
         };
-
-        // CB-10708 This is the case when we're trying to uninstall plugin using plugman from specific
-        // platform inside of the existing CLI project. This option is usually set by cordova-lib for CLI projects
-        // but since we're running this code through plugman, we need to set it here implicitly
-        options.usePlatformWww = true;
-        options.cli_variables = variables;
-
-        var hooksRunner = new HooksRunner(projectRoot);
-
-        return promise.then(function () {
-            return hooksRunner.fire('before_plugin_uninstall', hooksRunnerOptions);
-        }).then(function () {
-            return handleUninstall(actions, platform, pluginInfo, project_dir, options.www_dir, plugins_dir, options.is_top_level, options);
-        });
-    } else {
-        // TODO: Need review here - this condition added for plugman install.spec.js and uninstall.spec.js passing -
-        // where should we get projectRoot - via going up from project_dir?
+        return hooksRunner.fire('before_plugin_uninstall', hooksRunnerOptions);
+    }).then(function () {
         return handleUninstall(actions, platform, pluginInfo, project_dir, options.www_dir, plugins_dir, options.is_top_level, options);
-    }
+    });
 }
 
 // Returns a promise.
