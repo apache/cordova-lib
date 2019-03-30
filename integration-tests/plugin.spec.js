@@ -30,6 +30,7 @@ var plugin_util = require('../src/cordova/plugin/util');
 var util = require('../src/cordova/util');
 
 var tmpDir = helpers.tmpDir('plugin_test');
+var preparedProject = path.join(tmpDir, 'prepared-project');
 var project = path.join(tmpDir, 'project');
 var fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
 var pluginsDir = path.join(fixturesDir, 'plugins');
@@ -102,13 +103,13 @@ function mockPluginFetch (id, dir) {
 describe('plugin end-to-end', function () {
     events.on('results', function (res) { results = res; });
 
-    beforeEach(function () {
-        fs.copySync(path.join(fixturesDir, 'base'), project);
+    beforeAll(() => {
+        return helpers.getFixture('projectWithPlatform').copyTo(preparedProject);
+    }, 20000);
 
-        // Copy some platform to avoid working on a project with no platforms.
-        fs.copySync(
-            path.join(__dirname, '../spec/plugman/projects', helpers.testPlatform),
-            path.join(project, 'platforms', helpers.testPlatform));
+    beforeEach(function () {
+        // Reset our test project and change into it
+        fs.copySync(preparedProject, project);
         process.chdir(project);
 
         // Reset origCwd before each spec to respect chdirs
@@ -122,7 +123,7 @@ describe('plugin end-to-end', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        fs.removeSync(tmpDir);
+        fs.removeSync(project);
         expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
@@ -212,6 +213,16 @@ describe('plugin end-to-end', function () {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(plugin_util, 'info').and.callThrough();
+
+        // Pretend to have cordova-android 5.2.2 installed to force the
+        // expected version outcome for the plugin below
+        fs.writeFileSync(
+            path.join(project, 'platforms/android/cordova/version'),
+            `#!/usr/bin/env node
+            exports.version = '5.2.2';
+            if (!module.parent) console.log(exports.version);`
+        );
+
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin)
             .then(function () {
                 expect(plugin_util.info).toHaveBeenCalled();
