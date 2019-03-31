@@ -29,7 +29,6 @@ var plugman = {
     install: require('./install'),
     uninstall: require('./uninstall'),
     fetch: require('./fetch'),
-    help: require('./help'),
     create: require('./create'),
     platform: require('./platform_operation'),
     createpackagejson: require('./createpackagejson')
