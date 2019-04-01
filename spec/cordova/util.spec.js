@@ -24,7 +24,6 @@ var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
 
 var cwd = process.cwd();
-var home = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 var origPWD = process.env['PWD'];
 
 describe('util module', function () {
@@ -38,61 +37,44 @@ describe('util module', function () {
     });
 
     describe('isCordova method', function () {
+        let somedir, anotherdir;
+        beforeEach(() => {
+            // Base test directory setup
+            somedir = path.join(temp, 'somedir');
+            anotherdir = path.join(somedir, 'anotherdir');
+            fs.ensureDirSync(anotherdir);
+        });
         afterEach(function () {
             process.env['PWD'] = origPWD;
             process.chdir(cwd);
         });
-        function removeDir (directory) {
-            fs.removeSync(directory);
-        }
         it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function () {
-            var somedir = path.join(home, '..');
             expect(util.isCordova(somedir)).toEqual(false);
         });
         it('Test 003 : should return the first directory it finds with a .cordova folder in it', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
         it('Test 004 : should ignore PWD when its undefined', function () {
             delete process.env['PWD'];
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 005 : should use PWD when available', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = anotherdir;
             process.chdir(path.sep);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 006 : should use cwd as a fallback when PWD is not a cordova dir', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = path.sep;
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 007 : should ignore platform www/config.xml', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(anotherdir, 'www', 'config.xml'));
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
