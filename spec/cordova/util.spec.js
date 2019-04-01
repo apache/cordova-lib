@@ -37,12 +37,6 @@ describe('util module', function () {
         function removeDir (directory) {
             fs.removeSync(directory);
         }
-        it('Test 001 : should return false if it hits the home directory', function () {
-            var somedir = path.join(home, 'somedir');
-            removeDir(somedir);
-            fs.ensureDirSync(somedir);
-            expect(util.isCordova(somedir)).toEqual(false);
-        });
         it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function () {
             var somedir = path.join(home, '..');
             expect(util.isCordova(somedir)).toEqual(false);
