@@ -29,20 +29,18 @@ const { tmpDir } = require('../spec/helpers');
 const { PluginInfo, ConfigParser } = require('cordova-common');
 const { Q_chainmap } = require('../src/util/promise-util');
 
-const tmp = tmpDir('hooks_test');
-const project = path.join(tmp, 'project');
 const ext = process.platform === 'win32' ? 'bat' : 'sh';
 const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
 
-const testPlugin = 'com.plugin.withhooks';
-const testPluginFixture = path.join(fixtures, 'plugins', testPlugin);
-const testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
-
 describe('HooksRunner', function () {
     let hooksRunner, hookOptions;
+    let tmp, project;
 
     // This prepares a project that we will copy and use for all tests
     beforeEach(() => {
+        tmp = tmpDir('hooks_test');
+        project = path.join(tmp, 'project');
+
         // Copy project fixture
         const projectFixture = path.join(fixtures, 'projWithHooks');
         fs.copySync(projectFixture, project);
@@ -51,9 +49,6 @@ describe('HooksRunner', function () {
         globby.sync(['scripts/**'], {
             cwd: project, absolute: true
         }).forEach(f => fs.chmodSync(f, 0o755));
-
-        // Add the test plugin to our project
-        fs.copySync(testPluginFixture, testPluginInstalledPath);
 
         // Change into our project directory
         process.chdir(project);
@@ -78,9 +73,10 @@ describe('HooksRunner', function () {
 
     describe('fire method', function () {
         const test_event = 'before_build';
-        const hooksOrderFile = path.join(project, 'hooks_order.txt');
+        let hooksOrderFile;
 
         beforeEach(function () {
+            hooksOrderFile = path.join(project, 'hooks_order.txt');
             fs.removeSync(hooksOrderFile);
         });
 
@@ -197,6 +193,15 @@ describe('HooksRunner', function () {
                     </platform>
                 </widget>
             `;
+            const testPlugin = 'com.plugin.withhooks';
+            const testPluginFixture = path.join(fixtures, 'plugins', testPlugin);
+            let testPluginInstalledPath;
+
+            beforeEach(() => {
+                // Add the test plugin to our project
+                testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
+                fs.copySync(testPluginFixture, testPluginInstalledPath);
+            });
 
             function addHooksToPlugin (hooksXml) {
                 const config = new PluginInfo(testPluginInstalledPath);
