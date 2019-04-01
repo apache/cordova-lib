@@ -48,14 +48,14 @@ describe('util module', function () {
             process.env['PWD'] = origPWD;
             process.chdir(cwd);
         });
-        it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function () {
+        it('Test 002 : should return false if it cannot find a Cordova project directory up the directory tree', function () {
             expect(util.isCordova(somedir)).toEqual(false);
         });
-        it('Test 003 : should return the first directory it finds with a .cordova folder in it', function () {
+        it('Test 003 : should recognize a Cordova project directory', function () {
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
-        it('Test 004 : should ignore PWD when its undefined', function () {
+        it('Test 004 : should ignore PWD when it is undefined', function () {
             delete process.env['PWD'];
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
