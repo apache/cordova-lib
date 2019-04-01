@@ -137,26 +137,20 @@ describe('cordova/prepare', function () {
 
     describe('preparePlatforms helper method', function () {
         var cfg_parser_mock = function () {};
-        var cfg_parser_revert_mock;
         var platform_munger_mock = function () {};
-        var platform_munger_revert_mock;
         var platform_munger_save_mock;
         beforeEach(function () {
             spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Promise.resolve());
-            cfg_parser_revert_mock = prepare.__set__('ConfigParser', cfg_parser_mock);
+            prepare.__set__('ConfigParser', cfg_parser_mock);
             platform_munger_save_mock = jasmine.createSpy('platform munger save mock');
             platform_munger_mock.prototype = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);
             platform_munger_mock.prototype.add_config_changes.and.returnValue({
                 save_all: platform_munger_save_mock
             });
-            platform_munger_revert_mock = prepare.__set__('PlatformMunger', platform_munger_mock);
+            prepare.__set__('PlatformMunger', platform_munger_mock);
             spyOn(util, 'projectConfig').and.returnValue(project_dir);
             spyOn(util, 'projectWww').and.returnValue(path.join(project_dir, 'www'));
 
-        });
-        afterEach(function () {
-            cfg_parser_revert_mock();
-            platform_munger_revert_mock();
         });
         it('should call restoreMissingPluginsForPlatform', function () {
             return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {

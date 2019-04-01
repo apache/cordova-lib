@@ -22,75 +22,59 @@ var fs = require('fs-extra');
 var util = require('../../src/cordova/util');
 var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
-var temp = path.join(__dirname, '..', 'temp');
 
 var cwd = process.cwd();
-var home = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 var origPWD = process.env['PWD'];
 
 describe('util module', function () {
+    let temp;
+    beforeEach(() => {
+        temp = helpers.tmpDir('cordova.util.spec');
+    });
+    afterEach(() => {
+        process.chdir(__dirname);
+        fs.removeSync(temp);
+    });
+
     describe('isCordova method', function () {
+        let somedir, anotherdir;
+        beforeEach(() => {
+            // Base test directory setup
+            somedir = path.join(temp, 'somedir');
+            anotherdir = path.join(somedir, 'anotherdir');
+            fs.ensureDirSync(anotherdir);
+        });
         afterEach(function () {
             process.env['PWD'] = origPWD;
             process.chdir(cwd);
         });
-        function removeDir (directory) {
-            fs.removeSync(directory);
-        }
-        it('Test 001 : should return false if it hits the home directory', function () {
-            var somedir = path.join(home, 'somedir');
-            removeDir(somedir);
-            fs.ensureDirSync(somedir);
+        it('Test 002 : should return false if it cannot find a Cordova project directory up the directory tree', function () {
             expect(util.isCordova(somedir)).toEqual(false);
         });
-        it('Test 002 : should return false if it cannot find a .cordova directory up the directory tree', function () {
-            var somedir = path.join(home, '..');
-            expect(util.isCordova(somedir)).toEqual(false);
-        });
-        it('Test 003 : should return the first directory it finds with a .cordova folder in it', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
+        it('Test 003 : should recognize a Cordova project directory', function () {
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
-        it('Test 004 : should ignore PWD when its undefined', function () {
+        it('Test 004 : should ignore PWD when it is undefined', function () {
             delete process.env['PWD'];
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 005 : should use PWD when available', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = anotherdir;
             process.chdir(path.sep);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 006 : should use cwd as a fallback when PWD is not a cordova dir', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
             process.env['PWD'] = path.sep;
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 007 : should ignore platform www/config.xml', function () {
-            var somedir = path.join(home, 'somedir');
-            var anotherdir = path.join(somedir, 'anotherdir');
-            removeDir(somedir);
-            fs.ensureDirSync(anotherdir);
             fs.ensureDirSync(path.join(anotherdir, 'www', 'config.xml'));
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
@@ -98,9 +82,6 @@ describe('util module', function () {
         });
     });
     describe('deleteSvnFolders method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 008 : should delete .svn folders in any subdirectory of specified dir', function () {
             var one = path.join(temp, 'one');
             var two = path.join(temp, 'two');
@@ -114,9 +95,6 @@ describe('util module', function () {
         });
     });
     describe('listPlatforms method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             var platforms = path.join(temp, 'platforms');
 
@@ -133,9 +111,6 @@ describe('util module', function () {
         });
     });
     describe('getInstalledPlatformsWithVersions method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
@@ -150,9 +125,6 @@ describe('util module', function () {
         });
     });
     describe('findPlugins method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 011 : should only return plugin directories present in a cordova project dir', function () {
             var plugins = path.join(temp, 'plugins');
             var android = path.join(plugins, 'android');

@@ -31,9 +31,7 @@ describe('cordova/plugin/add', function () {
     var projectRoot = '/some/path';
     var hook_mock;
     var Cfg_parser_mock = function () {};
-    var cfg_parser_revert_mock;
     var plugin_info_provider_mock = function () {};
-    var plugin_info_provider_revert_mock;
     var plugin_info;
     var package_json_mock;
 
@@ -41,7 +39,7 @@ describe('cordova/plugin/add', function () {
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Promise.resolve());
         Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin']);
-        cfg_parser_revert_mock = add.__set__('ConfigParser', Cfg_parser_mock);
+        add.__set__('ConfigParser', Cfg_parser_mock);
         plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
         plugin_info.getPreferences.and.returnValue({});
         plugin_info.dir = 'some\\plugin\\path';
@@ -52,7 +50,7 @@ describe('cordova/plugin/add', function () {
             // id version dir getPreferences() engines engines.cordovaDependencies name versions
             return plugin_info;
         };
-        plugin_info_provider_revert_mock = add.__set__('PluginInfoProvider', plugin_info_provider_mock);
+        add.__set__('PluginInfoProvider', plugin_info_provider_mock);
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'writeFileSync');
         package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies', 'devDependencies']);
@@ -66,10 +64,7 @@ describe('cordova/plugin/add', function () {
         spyOn(add, 'getFetchVersion').and.returnValue(Promise.resolve());
         spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
-    afterEach(function () {
-        cfg_parser_revert_mock();
-        plugin_info_provider_revert_mock();
-    });
+
     describe('main method', function () {
 
         beforeEach(function () {

@@ -26,7 +26,7 @@ const HooksRunner = require('../src/hooks/HooksRunner');
 const cordovaUtil = require('../src/cordova/util');
 const cordova = require('../src/cordova/cordova');
 const { tmpDir, testPlatform } = require('../spec/helpers');
-const { PluginInfo, superspawn } = require('cordova-common');
+const { PluginInfo } = require('cordova-common');
 const { Q_chainmap } = require('../src/util/promise-util');
 
 const tmp = tmpDir('hooks_test');
@@ -252,19 +252,6 @@ describe('HooksRunner', function () {
         });
 
         describe('plugin hooks', function () {
-            beforeEach(function () {
-                spyOn(superspawn, 'spawn').and.callFake(function (cmd, args) {
-                    if (cmd.match(/create\b/)) {
-                        // This is a call to the bin/create script, so do the copy ourselves.
-                        fs.copySync(path.join(fixtures, 'platforms/android'), path.join(project, 'platforms/android'));
-                    } else if (cmd.match(/update\b/)) {
-                        fs.writeFileSync(path.join(project, 'platforms', testPlatform, 'updated'), 'I was updated!', 'utf-8');
-                    } else if (cmd.match(/version/)) {
-                        return '3.6.0';
-                    }
-                    return Promise.resolve();
-                });
-            });
 
             it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
                 usePluginConfig('OnlyNonPlatformScripts');
