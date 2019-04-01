@@ -24,20 +24,14 @@ var events = require('cordova-common').events;
 
 describe('cordova/plugin/util', function () {
     var plugin_info_mock = function () {};
-    var plugin_info_revert_mock;
-    var cfg_parser_revert_mock;
     var cfg_parser_mock = function () {};
     beforeEach(function () {
         spyOn(fs, 'removeSync');
         spyOn(events, 'emit');
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser protytpe mock', ['getPlugin']);
-        cfg_parser_revert_mock = plugin_util.__set__('ConfigParser', cfg_parser_mock);
+        plugin_util.__set__('ConfigParser', cfg_parser_mock);
         plugin_info_mock.prototype = jasmine.createSpyObj('plugin info provider prototype mock', ['getAllWithinSearchPath', 'getPreferences']);
-        plugin_info_revert_mock = plugin_util.__set__('PluginInfoProvider', plugin_info_mock);
-    });
-    afterEach(function () {
-        plugin_info_revert_mock();
-        cfg_parser_revert_mock();
+        plugin_util.__set__('PluginInfoProvider', plugin_info_mock);
     });
     describe('getInstalledPlugins helper method', function () {
         it('should return result of PluginInfoProvider\'s getAllWithinSearchPath method', function () {

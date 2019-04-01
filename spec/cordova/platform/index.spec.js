@@ -20,17 +20,13 @@ var platform = rewire('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
 
 describe('cordova/platform', function () {
-    var hooksRunnerRevert;
     var projectRoot = 'somepath';
+
     beforeEach(function () {
         // TODO: if we can change HooksRunner from a prototypal class to a function or object,
         // we could eliminate the need for rewire here and use just jasmine spies.
-        hooksRunnerRevert = platform.__set__('HooksRunner', function () {});
+        platform.__set__('HooksRunner', function () {});
         spyOn(cordova_util, 'cdProjectRoot').and.returnValue(projectRoot);
-    });
-
-    afterEach(function () {
-        hooksRunnerRevert();
     });
 
     describe('main module function', function () {

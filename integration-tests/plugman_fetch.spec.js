@@ -57,8 +57,6 @@ describe('fetch', function () {
 
     describe('local plugins', function () {
         var sym;
-        var revertLocal;
-        var revertFetch;
         var fetchCalls = 0;
 
         beforeEach(function () {
@@ -69,16 +67,14 @@ describe('fetch', function () {
             spyOn(fs, 'copySync').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
 
-            revertLocal = fetch.__set__('localPlugins', null);
-            revertFetch = fetch.__set__('fetch', function (pluginDir) {
+            fetch.__set__('localPlugins', null);
+            fetch.__set__('fetch', function (pluginDir) {
                 fetchCalls++;
                 return Promise.resolve(pluginDir);
             });
         });
 
         afterEach(function () {
-            revertLocal();
-            revertFetch();
             fetchCalls = 0;
         });
 

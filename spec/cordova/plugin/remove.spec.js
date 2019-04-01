@@ -32,10 +32,8 @@ describe('cordova/plugin/remove', function () {
     var projectRoot = '/some/path';
     var hook_mock;
     var cfg_parser_mock = function () {};
-    var cfg_parser_revert_mock;
     var package_json_mock;
     var plugin_info_provider_mock = function () {};
-    var plugin_info_provider_revert_mock;
     var plugin_info;
     package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
@@ -53,18 +51,13 @@ describe('cordova/plugin/remove', function () {
         spyOn(prepare, 'preparePlatforms').and.returnValue(true);
         hook_mock.fire.and.returnValue(Promise.resolve());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'getPlugin', 'removePlugin']);
-        cfg_parser_revert_mock = remove.__set__('ConfigParser', cfg_parser_mock);
+        remove.__set__('ConfigParser', cfg_parser_mock);
         plugin_info_provider_mock.prototype = jasmine.createSpyObj('plugin info provider mock', ['get', 'getPreferences']);
         plugin_info_provider_mock.prototype.get = function (directory) {
             // id version dir getPreferences() engines engines.cordovaDependencies name versions
             return plugin_info;
         };
-        plugin_info_provider_revert_mock = remove.__set__('PluginInfoProvider', plugin_info_provider_mock);
-    });
-
-    afterEach(function () {
-        cfg_parser_revert_mock();
-        plugin_info_provider_revert_mock();
+        remove.__set__('PluginInfoProvider', plugin_info_provider_mock);
     });
 
     describe('error/warning conditions', function () {

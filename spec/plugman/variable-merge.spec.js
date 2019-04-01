@@ -22,7 +22,6 @@ var underscore = require('underscore');
 
 describe('mergeVariables', function () {
     var plugin_info_provider_mock = function () {};
-    var plugin_info_provider_revert_mock;
     var plugin_info;
 
     beforeEach(function () {
@@ -34,10 +33,7 @@ describe('mergeVariables', function () {
         plugin_info_provider_mock.prototype.get = function (directory) {
             return plugin_info;
         };
-        plugin_info_provider_revert_mock = variable_merge.__set__('PluginInfoProvider', plugin_info_provider_mock);
-    });
-    afterEach(function () {
-        plugin_info_provider_revert_mock();
+        variable_merge.__set__('PluginInfoProvider', plugin_info_provider_mock);
     });
     it('use plugin.xml if no cli/config variables', function () {
         plugin_info.getPreferences.and.returnValue({ FCM_VERSION: '11.0.1' });

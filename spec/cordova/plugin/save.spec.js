@@ -26,26 +26,21 @@ var semver = require('semver');
 describe('cordova/plugin/save', function () {
     var projectRoot = '/some/path';
     var cfg_parser_mock = function () {};
-    var cfg_parser_revert_mock;
     var fake_plugin_list = ['VRPlugin', 'MastodonSocialPlugin'];
     var fake_fetch_json = { 'VRPlugin': {}, 'MastodonSocialPlugin': {} };
     var plugin_info_provider_mock = function () {};
-    var plugin_info_provider_revert_mock;
 
     beforeEach(function () {
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser protytpe mock', ['getPluginIdList', 'removePlugin', 'write', 'addPlugin']);
         cfg_parser_mock.prototype.getPluginIdList.and.returnValue(fake_plugin_list);
-        cfg_parser_revert_mock = save.__set__('ConfigParser', cfg_parser_mock);
+        save.__set__('ConfigParser', cfg_parser_mock);
         spyOn(cordova_util, 'projectConfig').and.returnValue(projectRoot + '/config.xml');
         spyOn(fs, 'readFileSync').and.returnValue(JSON.stringify(fake_fetch_json));
         spyOn(save, 'versionString');
         plugin_info_provider_mock.prototype = jasmine.createSpyObj('plugin info provider mock', ['get']);
-        plugin_info_provider_revert_mock = save.__set__('PluginInfoProvider', plugin_info_provider_mock);
+        save.__set__('PluginInfoProvider', plugin_info_provider_mock);
     });
-    afterEach(function () {
-        cfg_parser_revert_mock();
-        plugin_info_provider_revert_mock();
-    });
+
     describe('error conditions', function () {
         it('should explode if there was an issue parsing or reading from fetch.json file', function () {
             fs.readFileSync.and.callFake(function () {
