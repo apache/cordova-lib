@@ -22,13 +22,21 @@ var fs = require('fs-extra');
 var util = require('../../src/cordova/util');
 var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
-var temp = path.join(__dirname, '..', 'temp');
 
 var cwd = process.cwd();
 var home = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 var origPWD = process.env['PWD'];
 
 describe('util module', function () {
+    let temp;
+    beforeEach(() => {
+        temp = helpers.tmpDir('cordova.util.spec');
+    });
+    afterEach(() => {
+        process.chdir(__dirname);
+        fs.removeSync(temp);
+    });
+
     describe('isCordova method', function () {
         afterEach(function () {
             process.env['PWD'] = origPWD;
@@ -92,9 +100,6 @@ describe('util module', function () {
         });
     });
     describe('deleteSvnFolders method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 008 : should delete .svn folders in any subdirectory of specified dir', function () {
             var one = path.join(temp, 'one');
             var two = path.join(temp, 'two');
@@ -108,9 +113,6 @@ describe('util module', function () {
         });
     });
     describe('listPlatforms method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             var platforms = path.join(temp, 'platforms');
 
@@ -127,9 +129,6 @@ describe('util module', function () {
         });
     });
     describe('getInstalledPlatformsWithVersions method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
@@ -144,9 +143,6 @@ describe('util module', function () {
         });
     });
     describe('findPlugins method', function () {
-        afterEach(function () {
-            fs.removeSync(temp);
-        });
         it('Test 011 : should only return plugin directories present in a cordova project dir', function () {
             var plugins = path.join(temp, 'plugins');
             var android = path.join(plugins, 'android');
