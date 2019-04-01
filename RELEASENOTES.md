@@ -20,6 +20,11 @@
 -->
 # Cordova-lib Release Notes
 
+### 9.0.1 (Mar 31, 2019)
+* [GH-759](https://github.com/apache/cordova-lib/pull/759) Fix faulty Promise handling in plugman.uninstall
+* [GH-752](https://github.com/apache/cordova-lib/pull/752) Fix restoring plugins from `package.json`
+* [GH-754](https://github.com/apache/cordova-lib/issues/754) [GH-755](https://github.com/apache/cordova-lib/issues/755) Do not wrap engine script path in quotes
+
 ### 9.0.0 (Mar 15, 2019)
 
 * [GH-750](https://github.com/apache/cordova-lib/pull/750) Remove saving platforms/plugins to `config.xml`
