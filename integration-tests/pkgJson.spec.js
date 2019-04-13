@@ -379,7 +379,7 @@ describe('pkgJson', function () {
     });
 
     // Test #020 : pkg.json contains platform/spec and plugin/spec and config.xml does not
-    describe('During add, if pkg.json has a platform/plugin spec, use that one.', function () {
+    describe('with differing config files', function () {
         beforeEach(() => setupBaseProject());
 
         /** Test#020 will check that pkg.json, config.xml, platforms.json, and cordova platform ls
@@ -416,11 +416,6 @@ describe('pkgJson', function () {
                 expect(pluginVersion(PLUGIN)).toSatisfy(getPkgJson(`dependencies.${PLUGIN}`));
             });
         }, TIMEOUT * 2);
-    });
-
-    // Test #021 : config.xml contains platform/spec and plugin/spec pkg.json does not
-    describe('During add, if config.xml has a platform/plugin spec and pkg.json does not, use config.', function () {
-        beforeEach(() => setupBaseProject());
 
         /** Test#021 during add, this test will check that pkg.json, config.xml, platforms.json,
         *   and cordova platform ls are updated with the correct platform/plugin spec from config.xml.
@@ -452,11 +447,6 @@ describe('pkgJson', function () {
                 }]);
             });
         });
-    });
-
-    // Test #022 : config.xml and pkg.json each have ios platform with different specs
-    describe('During add, if add specifies a platform spec, use that one regardless of what is in pkg.json or config.xml', function () {
-        beforeEach(() => setupBaseProject());
 
         /** Test#022 : when adding with a specific platform version, always use that one
         *   regardless of what is in package.json or config.xml.
