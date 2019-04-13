@@ -22,7 +22,6 @@ var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
 var CordovaError = require('cordova-common').CordovaError;
-var underscore = require('underscore');
 var events = require('cordova-common').events;
 var platform_modules = require('../platforms/platforms');
 var promiseutil = require('../util/promise-util');
@@ -271,7 +270,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function (dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
-            var opts = underscore.extend({}, options, {
+            var opts = Object.assign({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
                 depsInfo: depsInfo
             });
