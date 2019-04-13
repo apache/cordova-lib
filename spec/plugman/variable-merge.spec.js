@@ -18,7 +18,6 @@
 */
 var rewire = require('rewire');
 var variable_merge = rewire('../../src/plugman/variable-merge');
-var underscore = require('underscore');
 
 describe('mergeVariables', function () {
     var plugin_info_provider_mock = function () {};
@@ -51,8 +50,7 @@ describe('mergeVariables', function () {
         expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({});
     });
     it('should throw error if variables are missing', function () {
-        plugin_info.getPreferences.and.returnValue({});
-        spyOn(underscore, 'difference').and.returnValue(['missing variable']);
+        plugin_info.getPreferences.and.returnValue({ foo: '' });
         var opts = { cli_variables: {} };
         expect(function () { variable_merge.mergeVariables('some/path', 'android', opts); }).toThrow();
     });
