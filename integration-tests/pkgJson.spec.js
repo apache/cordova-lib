@@ -20,9 +20,9 @@
 const path = require('path');
 const fs = require('fs-extra');
 const semver = require('semver');
-const { ConfigParser } = require('cordova-common');
 const { listPlatforms, requireNoCache } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+const projectTestHelpers = require('../spec/project-test-helpers');
 const cordova = require('../src/cordova/cordova');
 
 describe('pkgJson', function () {
@@ -30,13 +30,15 @@ describe('pkgJson', function () {
     setDefaultTimeout(TIMEOUT);
 
     const fixturesPath = path.join(__dirname, '../spec/cordova/fixtures');
-    var tmpDir, project, pkgJsonPath, configXmlPath;
+    let tmpDir, project, pkgJsonPath;
+    const {
+        getPkgJsonPath, setupBaseProject, getCfg, getPkgJson
+    } = projectTestHelpers(() => project);
 
     beforeEach(() => {
         tmpDir = getTmpDir('pkgJson');
         project = path.join(tmpDir, 'project');
-        pkgJsonPath = path.join(project, 'package.json');
-        configXmlPath = path.join(project, 'config.xml');
+        pkgJsonPath = getPkgJsonPath();
         delete process.env.PWD;
     });
 
@@ -73,20 +75,6 @@ describe('pkgJson', function () {
         const p = path.join(project, 'plugins', pluginName, 'package.json');
         expect(p).toExist();
         return fs.readJsonSync(p).version;
-    }
-
-    function getPkgJson (propPath) {
-        expect(pkgJsonPath).toExist();
-        const keys = propPath ? propPath.split('.') : [];
-        return keys.reduce((obj, key) => {
-            expect(obj).toBeDefined();
-            return obj[key];
-        }, fs.readJsonSync(pkgJsonPath));
-    }
-
-    function getCfg () {
-        expect(configXmlPath).toExist();
-        return new ConfigParser(configXmlPath);
     }
 
     function specSatisfiedBy (version) {
@@ -130,7 +118,7 @@ describe('pkgJson', function () {
         const pluginId = 'cordova-plugin-device';
 
         beforeEach(function () {
-            useProject('basePkgJson');
+            setupBaseProject();
             // Copy some platform to avoid working on a project with no platforms.
             // FIXME Use a fixture that is properly promisified. This one
             // causes spurious test failures when tests reuse the project path.
@@ -296,7 +284,7 @@ describe('pkgJson', function () {
 
     // This group of tests checks if platforms are added and removed as expected from package.json.
     describe('platform end-to-end with --save', function () {
-        beforeEach(() => useProject('basePkgJson'));
+        beforeEach(() => setupBaseProject());
 
         it('Test#006 : platform is added and removed correctly with --save', function () {
             expect(pkgJsonPath).toExist();
