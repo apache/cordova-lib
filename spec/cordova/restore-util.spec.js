@@ -18,23 +18,25 @@
 const path = require('path');
 const fs = require('fs-extra');
 const rewire = require('rewire');
-const { ConfigParser } = require('cordova-common');
 const { tmpDir: getTmpDir, testPlatform } = require('../helpers');
+const projectTestHelpers = require('../project-test-helpers');
 
 /**
  * Checks if "cordova/restore-util" is restoring platforms and plugins as
  * expected given different configurations of package.json and/or config.xml.
 */
 describe('cordova/restore-util', () => {
-    const fixturesPath = path.join(__dirname, './fixtures');
     var tmpDir, project, pkgJsonPath, configXmlPath;
     var restore, cordovaPlatform, cordovaPlugin;
+    const {
+        getPkgJsonPath, getConfigXmlPath, setupBaseProject, getCfg, getPkgJson, setPkgJson
+    } = projectTestHelpers(() => project);
 
     beforeEach(() => {
         tmpDir = getTmpDir('pkgJson');
         project = path.join(tmpDir, 'project');
-        pkgJsonPath = path.join(project, 'package.json');
-        configXmlPath = path.join(project, 'config.xml');
+        pkgJsonPath = getPkgJsonPath();
+        configXmlPath = getConfigXmlPath();
         delete process.env.PWD;
 
         cordovaPlugin = require('../../src/cordova/plugin');
@@ -54,55 +56,8 @@ describe('cordova/restore-util', () => {
         fs.removeSync(tmpDir);
     });
 
-    function setupBaseProject () {
-        fs.copySync(path.join(fixturesPath, 'basePkgJson'), project);
-        process.chdir(project);
-
-        // It's quite bland, I assure you
-        expect(getCfg().getPlugins()).toEqual([]);
-        expect(getCfg().getEngines()).toEqual([]);
-        expect(getPkgJson('cordova')).toBeUndefined();
-        expect(getPkgJson('dependencies')).toBeUndefined();
-    }
-
-    // TODO remove this once apache/cordova-common#38
-    // and apache/cordova-common#39 are resolved
-    class TestConfigParser extends ConfigParser {
-        addPlugin (plugin) {
-            return (super.addPlugin(plugin, plugin.variables), this);
-        }
-        addEngine (...args) {
-            return (super.addEngine(...args), this);
-        }
-    }
-    function getCfg () {
-        expect(configXmlPath).toExist();
-        return new TestConfigParser(configXmlPath);
-    }
-
     function getCfgEngineNames (cfg = getCfg()) {
         return cfg.getEngines().map(({ name }) => name);
-    }
-
-    function getPkgJson (propPath) {
-        expect(pkgJsonPath).toExist();
-        const keys = propPath ? propPath.split('.') : [];
-        return keys.reduce((obj, key) => {
-            expect(obj).toBeDefined();
-            return obj[key];
-        }, fs.readJsonSync(pkgJsonPath));
-    }
-
-    function setPkgJson (propPath, value) {
-        expect(pkgJsonPath).toExist();
-        const keys = propPath.split('.');
-        const target = keys.pop();
-        const pkgJsonObj = fs.readJsonSync(pkgJsonPath);
-        const parentObj = keys.reduce((obj, key) => {
-            return obj[key] || (obj[key] = {});
-        }, pkgJsonObj);
-        parentObj[target] = value;
-        fs.writeJsonSync(pkgJsonPath, pkgJsonObj);
     }
 
     function platformPkgName (platformName) {

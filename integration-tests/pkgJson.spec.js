@@ -20,9 +20,9 @@
 const path = require('path');
 const fs = require('fs-extra');
 const semver = require('semver');
-const { ConfigParser } = require('cordova-common');
 const { listPlatforms, requireNoCache } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+const projectTestHelpers = require('../spec/project-test-helpers');
 const cordova = require('../src/cordova/cordova');
 
 describe('pkgJson', function () {
@@ -30,13 +30,15 @@ describe('pkgJson', function () {
     setDefaultTimeout(TIMEOUT);
 
     const fixturesPath = path.join(__dirname, '../spec/cordova/fixtures');
-    var tmpDir, project, pkgJsonPath, configXmlPath;
+    let tmpDir, project, pkgJsonPath;
+    const {
+        getPkgJsonPath, setupBaseProject, getCfg, getPkgJson, setPkgJson
+    } = projectTestHelpers(() => project);
 
     beforeEach(() => {
         tmpDir = getTmpDir('pkgJson');
         project = path.join(tmpDir, 'project');
-        pkgJsonPath = path.join(project, 'package.json');
-        configXmlPath = path.join(project, 'config.xml');
+        pkgJsonPath = getPkgJsonPath();
         delete process.env.PWD;
     });
 
@@ -44,11 +46,6 @@ describe('pkgJson', function () {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
         fs.removeSync(tmpDir);
     });
-
-    function useProject (name) {
-        fs.copySync(path.join(fixturesPath, name), project);
-        process.chdir(project);
-    }
 
     // Copies a fixture to temp dir to avoid modifiying it as they get installed as symlinks
     function copyFixture (fixtureRelativePath) {
@@ -73,20 +70,6 @@ describe('pkgJson', function () {
         const p = path.join(project, 'plugins', pluginName, 'package.json');
         expect(p).toExist();
         return fs.readJsonSync(p).version;
-    }
-
-    function getPkgJson (propPath) {
-        expect(pkgJsonPath).toExist();
-        const keys = propPath ? propPath.split('.') : [];
-        return keys.reduce((obj, key) => {
-            expect(obj).toBeDefined();
-            return obj[key];
-        }, fs.readJsonSync(pkgJsonPath));
-    }
-
-    function getCfg () {
-        expect(configXmlPath).toExist();
-        return new ConfigParser(configXmlPath);
     }
 
     function specSatisfiedBy (version) {
@@ -130,7 +113,7 @@ describe('pkgJson', function () {
         const pluginId = 'cordova-plugin-device';
 
         beforeEach(function () {
-            useProject('basePkgJson');
+            setupBaseProject();
             // Copy some platform to avoid working on a project with no platforms.
             // FIXME Use a fixture that is properly promisified. This one
             // causes spurious test failures when tests reuse the project path.
@@ -296,7 +279,7 @@ describe('pkgJson', function () {
 
     // This group of tests checks if platforms are added and removed as expected from package.json.
     describe('platform end-to-end with --save', function () {
-        beforeEach(() => useProject('basePkgJson'));
+        beforeEach(() => setupBaseProject());
 
         it('Test#006 : platform is added and removed correctly with --save', function () {
             expect(pkgJsonPath).toExist();
@@ -395,9 +378,9 @@ describe('pkgJson', function () {
         });
     });
 
-    // Test #020 : use basePkgJson15 as pkg.json contains platform/spec and plugin/spec and config.xml does not.
-    describe('During add, if pkg.json has a platform/plugin spec, use that one.', function () {
-        beforeEach(() => useProject('basePkgJson15'));
+    // Test #020 : pkg.json contains platform/spec and plugin/spec and config.xml does not
+    describe('with differing config files', function () {
+        beforeEach(() => setupBaseProject());
 
         /** Test#020 will check that pkg.json, config.xml, platforms.json, and cordova platform ls
         *   are updated with the correct (platform and plugin) specs from pkg.json.
@@ -406,9 +389,8 @@ describe('pkgJson', function () {
             const PLATFORM = 'ios';
             const PLUGIN = 'cordova-plugin-splashscreen';
 
-            // Pkg.json has ios and spec '^4.2.1' and splashscreen '^3.2.2'.
-            expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
-            expect(getPkgJson('dependencies')).toEqual({
+            setPkgJson('cordova.platforms', [ PLATFORM ]);
+            setPkgJson('dependencies', {
                 [PLUGIN]: '^3.2.2',
                 [`cordova-${PLATFORM}`]: '^4.5.4'
             });
@@ -434,11 +416,6 @@ describe('pkgJson', function () {
                 expect(pluginVersion(PLUGIN)).toSatisfy(getPkgJson(`dependencies.${PLUGIN}`));
             });
         }, TIMEOUT * 2);
-    });
-
-    // Test #021 : use basePkgJson16 as config.xml contains platform/spec and plugin/spec pkg.json does not.
-    describe('During add, if config.xml has a platform/plugin spec and pkg.json does not, use config.', function () {
-        beforeEach(() => useProject('basePkgJson16'));
 
         /** Test#021 during add, this test will check that pkg.json, config.xml, platforms.json,
         *   and cordova platform ls are updated with the correct platform/plugin spec from config.xml.
@@ -447,7 +424,11 @@ describe('pkgJson', function () {
             const PLATFORM = 'ios';
             const PLUGIN = 'cordova-plugin-splashscreen';
 
-            // Pkg.json does not have platform or spec yet. Config.xml has ios and spec '~4.2.1'.
+            getCfg()
+                .addEngine(PLATFORM, '~4.2.1')
+                .addPlugin({ name: PLUGIN, spec: '~3.2.2' })
+                .write();
+
             expect(installedPlatforms()).toEqual([]);
 
             // Remove for testing purposes so platform is not pre-installed.
@@ -466,11 +447,6 @@ describe('pkgJson', function () {
                 }]);
             });
         });
-    });
-
-    // Test #022 : use basePkgJson17 (config.xml and pkg.json each have ios platform with different specs).
-    describe('During add, if add specifies a platform spec, use that one regardless of what is in pkg.json or config.xml', function () {
-        beforeEach(() => useProject('basePkgJson17'));
 
         /** Test#022 : when adding with a specific platform version, always use that one
         *   regardless of what is in package.json or config.xml.
@@ -479,16 +455,15 @@ describe('pkgJson', function () {
             const PLATFORM = 'ios';
             const PLUGIN = 'cordova-plugin-splashscreen';
 
-            // Pkg.json has ios and spec '^4.2.1'.
-            expect(getPkgJson('cordova.platforms')).toEqual([ PLATFORM ]);
-            expect(getPkgJson('dependencies')).toEqual({
+            setPkgJson('cordova.platforms', [ PLATFORM ]);
+            setPkgJson('dependencies', {
                 [`cordova-${PLATFORM}`]: '^4.2.1',
-                [PLUGIN]: '~3.2.2'
+                [PLUGIN]: '^3.2.2'
             });
-            // Config.xml has ios and spec ~4.2.1.
-            expect(getCfg().getEngines()).toEqual([
-                { name: PLATFORM, spec: '~4.2.1' }
-            ]);
+            getCfg()
+                .addEngine(PLATFORM, '~4.2.1')
+                .addPlugin({ name: PLUGIN, spec: '~3.2.1' })
+                .write();
 
             expect(installedPlatforms()).toEqual([]);
 
