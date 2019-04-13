@@ -220,7 +220,7 @@ describe('util module', function () {
                 var specPlugDir = __dirname.replace('spec-cordova', 'spec-plugman');
                 util.getPlatformApiFunction((path.join(specPlugDir, 'fixtures', 'projects', 'platformApi', 'platforms', 'windows', 'cordova', 'Api.js')), 'windows');
                 expect(events.emit.calls.count()).toBe(1);
-                expect(events.emit.calls.argsFor(0)[1]).toMatch('PlatformApi successfully found');
+                expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
             });
         });
     });

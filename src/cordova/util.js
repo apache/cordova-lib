@@ -359,15 +359,15 @@ function getPlatformApiFunction (dir) {
         PlatformApi = exports.requireNoCache(dir);
     } catch (err) {
         // Module not found or threw error during loading
-        err.message = `Unable to load Platform API from ${dir}:\n` + err.message;
+        err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
         throw err;
     }
 
     // Module doesn't implement the expected interface
     if (!PlatformApi || !PlatformApi.createPlatform) {
-        throw new Error(`The package at ${dir} does not appear to implement the Cordova Platform API.`);
+        throw new Error(`The package at "${dir}" does not appear to implement the Cordova Platform API.`);
     }
 
-    events.emit('verbose', 'PlatformApi successfully found in ' + dir);
+    events.emit('verbose', 'Platform API successfully found in: ' + dir);
     return PlatformApi;
 }
