@@ -21,7 +21,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const rewire = require('rewire');
 
-const { ActionStack, PluginInfo, events } = require('cordova-common');
+const { PluginInfo, events } = require('cordova-common');
 const common = require('../spec/common');
 const install = require('../src/plugman/install');
 const platforms = require('../src/platforms/platforms');
@@ -96,8 +96,6 @@ describe('plugman/uninstall', () => {
 
         beforeEach(function () {
             setupProject('uninstall.test');
-
-            spyOn(ActionStack.prototype, 'process').and.returnValue(Promise.resolve());
         });
 
         describe('success', function () {
