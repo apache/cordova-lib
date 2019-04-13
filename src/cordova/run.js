@@ -20,7 +20,6 @@
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var platform_lib = require('../platforms/platforms');
-var _ = require('underscore');
 
 // Returns a promise.
 module.exports = function run (options) {
@@ -29,7 +28,7 @@ module.exports = function run (options) {
         options = cordova_util.preProcessOptions(options);
 
         // This is needed as .build modifies opts
-        var optsClone = _.clone(options.options);
+        var optsClone = Object.assign({}, options.options);
         optsClone.nobuild = true;
 
         var hooksRunner = new HooksRunner(projectRoot);

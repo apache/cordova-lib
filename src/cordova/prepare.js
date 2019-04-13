@@ -28,7 +28,6 @@ var HooksRunner = require('../hooks/HooksRunner');
 var restore = require('./restore-util');
 var path = require('path');
 var config = require('./config');
-var _ = require('underscore');
 
 exports = module.exports = prepare;
 module.exports.preparePlatforms = preparePlatforms;
@@ -102,7 +101,7 @@ function preparePlatforms (platformList, projectRoot, options) {
                 // Please note that plugins' changes, such as installed js files, assets and
                 // config changes is not being reinstalled on each prepare.
                 var platformApi = platforms.getPlatformApi(platform);
-                return platformApi.prepare(project, _.clone(options))
+                return platformApi.prepare(project, Object.assign({}, options))
                     .then(function () {
                         // Handle edit-config in config.xml
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
