@@ -19,7 +19,6 @@ var path = require('path');
 var fs = require('fs-extra');
 var semver = require('semver');
 var fetch = require('cordova-fetch');
-var _ = require('underscore');
 var CordovaError = require('cordova-common').CordovaError;
 var ConfigParser = require('cordova-common').ConfigParser;
 var PlatformJson = require('cordova-common').PlatformJson;
@@ -265,7 +264,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
 function getVersionFromConfigFile (platform, cfg) {
     // Get appropriate version from config.xml
-    var engine = _.find(cfg.getEngines(), function (eng) {
+    const engine = cfg.getEngines().find(eng => {
         return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
