@@ -45,8 +45,7 @@ function createPackageJson (plugin_path) {
             events.emit('verbose', 'defaults.json created from plugin.xml');
 
             var initFile = require.resolve('./init-defaults');
-            var dir = process.cwd();
-            return initPkgJson(dir, initFile, {});
+            return initPkgJson(plugin_path, initFile, {});
         })
         .then(_ => {
             events.emit('verbose', 'Package.json successfully created');
