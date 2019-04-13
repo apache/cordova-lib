@@ -16,9 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 */
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-const SpecReporter = require('jasmine-spec-reporter').SpecReporter;
+const { events } = require('cordova-common');
+const { SpecReporter } = require('jasmine-spec-reporter');
+
+// Node.js throws an Error if the `error` event is emitted on a EventEmitter
+// instance that has no handlers attached for it. This often masks the actual
+// error that was causing the issue. So we attach a listener here.
+events.on('error', console.error);
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 jasmine.getEnv().clearReporters();
 jasmine.getEnv().addReporter(new SpecReporter({
