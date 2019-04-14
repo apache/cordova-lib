@@ -21,7 +21,8 @@ var fs = require('fs-extra');
 var path = require('path');
 var PluginInfo = require('cordova-common').PluginInfo;
 var events = require('cordova-common').events;
-var init = require('init-package-json');
+const pify = require('pify');
+const initPkgJson = pify(require('init-package-json'));
 
 // returns a promise
 function createPackageJson (plugin_path) {
@@ -39,18 +40,17 @@ function createPackageJson (plugin_path) {
         platforms: pluginInfo.getPlatformsArray()
     };
 
-    fs.writeFile(path.join(__dirname, 'defaults.json'), JSON.stringify(defaults), 'utf8', function (err) {
-        if (err) throw err;
-        events.emit('verbose', 'defaults.json created from plugin.xml');
-        var initFile = require.resolve('./init-defaults');
-        var dir = process.cwd();
+    return fs.writeFile(path.join(__dirname, 'defaults.json'), JSON.stringify(defaults), 'utf8')
+        .then(_ => {
+            events.emit('verbose', 'defaults.json created from plugin.xml');
 
-        init(dir, initFile, {}, function (err, data) {
-            if (err) throw err;
+            var initFile = require.resolve('./init-defaults');
+            var dir = process.cwd();
+            return initPkgJson(dir, initFile, {});
+        })
+        .then(_ => {
             events.emit('verbose', 'Package.json successfully created');
         });
-    });
-    return Promise.resolve();
 }
 
 module.exports = createPackageJson;
