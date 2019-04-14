@@ -35,7 +35,6 @@ function createPackageJson (plugin_path) {
         license: pluginInfo.license,
         keywords: pluginInfo.getKeywordsAndPlatforms(),
         repository: pluginInfo.repo,
-        bugs: pluginInfo.issue,
         engines: pluginInfo.getEngines(),
         platforms: pluginInfo.getPlatformsArray()
     };
