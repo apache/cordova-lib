@@ -18,7 +18,6 @@
  **/
 
 /* global dirname */
-/* global config */
 /* global basename */
 /* global yes */
 /* global prompt */
@@ -47,7 +46,7 @@ function readDeps (test) {
                     if (er) return next();
                     try { p = JSON.parse(p); } catch (e) { return next(); }
                     if (!p.version) return next();
-                    deps[d] = config.get('save-exact') ? p.version : config.get('save-prefix') + p.version;
+                    deps[d] = undefined + p.version;
                     return next();
                 });
             });
@@ -61,11 +60,7 @@ function readDeps (test) {
 var name = pkg.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
-var version = pkg.version ||
-              defaults.version ||
-              config.get('init.version') ||
-              config.get('init-version') ||
-              '1.0.0';
+var version = pkg.version || defaults.version || '1.0.0';
 exports.version = yes ? version : prompt('version', version);
 
 if (!pkg.description) {
@@ -139,22 +134,8 @@ if (!pkg.engines) {
 }
 
 if (!pkg.author) {
-    exports.author = (config.get('init.author.name') ||
-                     config.get('init-author-name')) ?
-        {
-            'name': config.get('init.author.name') ||
-                                        config.get('init-author-name'),
-            'email': config.get('init.author.email') ||
-                                        config.get('init-author-email'),
-            'url': config.get('init.author.url') ||
-                                        config.get('init-author-url')
-        }
-        : prompt('author');
+    exports.author = prompt('author');
 }
-var license = pkg.license ||
-              defaults.license ||
-              config.get('init.license') ||
-              config.get('init-license') ||
-              'ISC';
 
+const license = pkg.license || defaults.license || 'ISC';
 exports.license = yes ? license : prompt('license', license);
