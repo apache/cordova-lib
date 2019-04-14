@@ -17,6 +17,7 @@
     under the License.
  **/
 
+/* global config */
 /* global dirname */
 /* global basename */
 /* global yes */
@@ -29,7 +30,6 @@ const pkg = this.package;
 
 var fs = require('fs-extra');
 var path = require('path');
-var defaults = require('./defaults.json');
 
 function readDeps () {
     return function (cb) {
@@ -56,6 +56,9 @@ function readDeps () {
         });
     };
 }
+
+// The defaults read from plugin.xml
+const defaults = config.toJSON();
 
 var name = pkg.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
