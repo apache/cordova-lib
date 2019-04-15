@@ -31,7 +31,7 @@ var fs = require('fs-extra');
 var path = require('path');
 var defaults = require('./defaults.json');
 
-function readDeps (test) {
+function readDeps () {
     return function (cb) {
         fs.readdir('node_modules', function (er, dir) {
             if (er) return cb();
@@ -82,11 +82,11 @@ if (!pkg.cordova) {
 }
 
 if (!pkg.dependencies) {
-    exports.dependencies = readDeps(false);
+    exports.dependencies = readDeps();
 }
 
 if (!pkg.devDependencies) {
-    exports.devDependencies = readDeps(true);
+    exports.devDependencies = readDeps();
 }
 
 if (!pkg.repository) {
