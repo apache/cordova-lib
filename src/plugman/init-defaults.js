@@ -17,11 +17,7 @@
     under the License.
  **/
 
-/* global config */
-/* global dirname */
-/* global basename */
-/* global yes */
-/* global prompt */
+/* global config, dirname, basename, yes, prompt */
 // PromZard file that is used by createpackagejson and init-package-json module
 
 // The PromZard context is also provided via this. Make use of this to avoid
