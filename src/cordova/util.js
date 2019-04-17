@@ -351,43 +351,23 @@ function isSymbolicLink (dir) {
     }
 }
 
-// Takes a libDir (root of platform where pkgJson is expected) & a platform name.
-// Platform is used if things go wrong, so we can use polyfill.
-// Potential errors : path doesn't exist, module isn't found or can't load.
-// Message prints if file not named Api.js or falls back to pollyfill.
-function getPlatformApiFunction (libDir, platform) {
-    var PlatformApi;
+// Returns the API of the platform contained in `dir`.
+// Potential errors : module isn't found, can't load or doesn't implement the expected interface.
+function getPlatformApiFunction (dir) {
+    let PlatformApi;
     try {
-        // First we need to find whether platform exposes its' API via js module
-        // If it does, then we require and instantiate it.
-        // This will throw if package.json does not exist, or specify 'main'.
-        var apiEntryPoint = require.resolve(libDir);
-        if (apiEntryPoint) {
-            if (path.basename(apiEntryPoint) !== 'Api.js') {
-                events.emit('verbose', 'File name should be called Api.js.');
-                // Not an error, still load it ...
-            }
-            PlatformApi = exports.requireNoCache(apiEntryPoint);
-            if (!PlatformApi.createPlatform) {
-                PlatformApi = null;
-                events.emit('error', 'Does not appear to implement platform Api.');
-            } else {
-                events.emit('verbose', 'PlatformApi successfully found for platform ' + platform);
-            }
-        } else {
-            events.emit('verbose', 'No Api.js entry point found.');
-        }
+        PlatformApi = exports.requireNoCache(dir);
     } catch (err) {
-        // Emit the err, someone might care ...
-        events.emit('warn', 'Unable to load PlatformApi from platform. ' + err);
-        if (!platforms[platform]) {
-            events.emit('error', 'The platform "' + platform + '" does not appear to be a valid cordova platform. It is missing API.js. ' + platform + ' not supported.');
-        }
+        // Module not found or threw error during loading
+        err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
+        throw err;
     }
 
-    if (!PlatformApi) {
-        throw new Error('Your ' + platform + ' platform does not have Api.js');
+    // Module doesn't implement the expected interface
+    if (!PlatformApi || !PlatformApi.createPlatform) {
+        throw new Error(`The package at "${dir}" does not appear to implement the Cordova Platform API.`);
     }
 
+    events.emit('verbose', 'Platform API successfully found in: ' + dir);
     return PlatformApi;
 }
