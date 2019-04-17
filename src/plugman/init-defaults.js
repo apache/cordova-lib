@@ -17,11 +17,7 @@
     under the License.
  **/
 
-/* global dirname */
-/* global config */
-/* global basename */
-/* global yes */
-/* global prompt */
+/* global config, dirname, basename, yes, prompt */
 // PromZard file that is used by createpackagejson and init-package-json module
 
 // The PromZard context is also provided via this. Make use of this to avoid
@@ -30,9 +26,8 @@ const pkg = this.package;
 
 var fs = require('fs-extra');
 var path = require('path');
-var defaults = require('./defaults.json');
 
-function readDeps (test) {
+function readDeps () {
     return function (cb) {
         fs.readdir('node_modules', function (er, dir) {
             if (er) return cb();
@@ -47,7 +42,7 @@ function readDeps (test) {
                     if (er) return next();
                     try { p = JSON.parse(p); } catch (e) { return next(); }
                     if (!p.version) return next();
-                    deps[d] = config.get('save-exact') ? p.version : config.get('save-prefix') + p.version;
+                    deps[d] = undefined + p.version;
                     return next();
                 });
             });
@@ -58,14 +53,13 @@ function readDeps (test) {
     };
 }
 
+// The defaults read from plugin.xml
+const defaults = config.toJSON();
+
 var name = pkg.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
-var version = pkg.version ||
-              defaults.version ||
-              config.get('init.version') ||
-              config.get('init-version') ||
-              '1.0.0';
+var version = pkg.version || defaults.version || '1.0.0';
 exports.version = yes ? version : prompt('version', version);
 
 if (!pkg.description) {
@@ -87,11 +81,11 @@ if (!pkg.cordova) {
 }
 
 if (!pkg.dependencies) {
-    exports.dependencies = readDeps(false);
+    exports.dependencies = readDeps();
 }
 
 if (!pkg.devDependencies) {
-    exports.devDependencies = readDeps(true);
+    exports.devDependencies = readDeps();
 }
 
 if (!pkg.repository) {
@@ -139,22 +133,8 @@ if (!pkg.engines) {
 }
 
 if (!pkg.author) {
-    exports.author = (config.get('init.author.name') ||
-                     config.get('init-author-name')) ?
-        {
-            'name': config.get('init.author.name') ||
-                                        config.get('init-author-name'),
-            'email': config.get('init.author.email') ||
-                                        config.get('init-author-email'),
-            'url': config.get('init.author.url') ||
-                                        config.get('init-author-url')
-        }
-        : prompt('author');
+    exports.author = prompt('author');
 }
-var license = pkg.license ||
-              defaults.license ||
-              config.get('init.license') ||
-              config.get('init-license') ||
-              'ISC';
 
+const license = pkg.license || defaults.license || 'ISC';
 exports.license = yes ? license : prompt('license', license);

@@ -17,8 +17,6 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var path = require('path');
 var PluginInfo = require('cordova-common').PluginInfo;
 var events = require('cordova-common').events;
 const pify = require('pify');
@@ -35,18 +33,12 @@ function createPackageJson (plugin_path) {
         license: pluginInfo.license,
         keywords: pluginInfo.getKeywordsAndPlatforms(),
         repository: pluginInfo.repo,
-        bugs: pluginInfo.issue,
         engines: pluginInfo.getEngines(),
         platforms: pluginInfo.getPlatformsArray()
     };
 
-    return fs.writeFile(path.join(__dirname, 'defaults.json'), JSON.stringify(defaults), 'utf8')
-        .then(_ => {
-            events.emit('verbose', 'defaults.json created from plugin.xml');
-
-            var initFile = require.resolve('./init-defaults');
-            return initPkgJson(plugin_path, initFile, {});
-        })
+    var initFile = require.resolve('./init-defaults');
+    return initPkgJson(plugin_path, initFile, defaults)
         .then(_ => {
             events.emit('verbose', 'Package.json successfully created');
         });
