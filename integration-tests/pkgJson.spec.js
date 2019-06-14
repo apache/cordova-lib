@@ -275,7 +275,7 @@ describe('pkgJson', function () {
                     expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeDefined();
                 });
         });
-    });
+    }, TIMEOUT * 2);
 
     // This group of tests checks if platforms are added and removed as expected from package.json.
     describe('platform end-to-end with --save', function () {

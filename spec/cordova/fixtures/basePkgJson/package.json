@@ -1,11 +1,15 @@
 {
   "name": "testbase",
   "version": "1.0.0",
-  "description": "",
+  "description": "Test Base Package for Cordova Lib Test Spec",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apache/cordova-lib"
+  }
 }
