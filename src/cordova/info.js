@@ -17,8 +17,8 @@ specific language governing permissions and limitations
 under the License.
 */
 
+const execa = require('execa');
 var cordova_util = require('./util');
-var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
 var path = require('path');
 var fs = require('fs-extra');
@@ -72,7 +72,7 @@ function environmentInformation () {
     return Promise.all([
         'OS: ' + process.platform,
         'Node: ' + process.version,
-        failSafeSpawn('npm', ['-v']).then(out => 'npm: ' + out)
+        failSafeSpawn('npm', ['-v']).then(data => 'npm: ' + data.stdout)
     ])
         .then(env => env.join('\n'))
         .then(env => 'Environment: \n' + indent(env));
@@ -97,16 +97,16 @@ function getPlatformInfo (platform) {
     switch (platform) {
     case 'ios':
         return failSafeSpawn('xcodebuild', ['-version'])
-            .then(out => 'iOS platform:\n' + indent(out));
+            .then(data => 'iOS platform:\n' + indent(data.stdout));
     case 'android':
         return failSafeSpawn('android', ['list', 'target'])
-            .then(out => 'Android platform:\n' + indent(out));
+            .then(data => 'Android platform:\n' + indent(data.stdout));
     }
 }
 
 function failSafeSpawn (command, args) {
-    return superspawn.spawn(command, args)
-        .catch(err => `ERROR: ${err.message}`);
+    return execa(command, args)
+        .catch(error => `ERROR: ${error.stderr}`);
 }
 
 function displayFileContents (filePath) {

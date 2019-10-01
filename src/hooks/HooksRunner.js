@@ -15,16 +15,16 @@
  under the License.
  */
 
+const execa = require('execa');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 const readChunk = require('read-chunk');
 const shebangCommand = require('shebang-command');
-
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
 const Context = require('./Context');
-const { CordovaError, events, superspawn } = require('cordova-common');
+const { CordovaError, events } = require('cordova-common');
 
 const isWindows = os.platform().slice(0, 3) === 'win';
 
@@ -195,9 +195,10 @@ function runScriptViaChildProcessSpawn (script, context) {
         }
     };
 
-    return superspawn.spawn(command, args, execOpts)
-        .catch(function (err) {
-            throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
+    return execa(command, args, execOpts)
+        .then(data => data.stdout)
+        .catch(function (error) {
+            throw new Error('Hook failed with error code ' + error.errno + ': ' + script.fullPath);
         });
 }
 

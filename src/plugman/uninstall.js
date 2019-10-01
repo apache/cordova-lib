@@ -17,6 +17,7 @@
     under the License.
 */
 
+const execa = require('execa');
 var path = require('path');
 var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;

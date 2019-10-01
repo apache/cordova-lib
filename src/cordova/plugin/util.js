@@ -17,13 +17,13 @@
     under the License.
 */
 
+const execa = require('execa');
 var path = require('path');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var fetch = require('cordova-fetch');
-var superspawn = require('cordova-common').superspawn;
 
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
@@ -80,9 +80,9 @@ function info (plugin) {
     // check if npm is installed
     return fetch.isNpmInstalled()
         .then(function () {
-            return superspawn.spawn('npm', viewArgs)
-                .then(function (info) {
-                    var pluginInfo = JSON.parse(info);
+            return execa('npm', viewArgs)
+                .then(function (data) {
+                    var pluginInfo = JSON.parse(data.stdout);
                     return pluginInfo;
                 });
         });
