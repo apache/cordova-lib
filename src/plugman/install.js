@@ -227,7 +227,7 @@ function getEngines (pluginInfo, platform, project_dir, plugin_dir) {
         // check for other engines
         } else {
             if (typeof engine.platform === 'undefined' || typeof engine.scriptSrc === 'undefined') {
-                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine "' +
+                throw new CordovaError('engine.platform or engine.scriptSrc is not defined in custom engine "' +
                     theName + '" from plugin "' + pluginInfo.id + '" for ' + platform);
             }
 
