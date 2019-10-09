@@ -212,16 +212,14 @@ describe('util module', function () {
         describe('getPlatformApiFunction', function () {
 
             it('Test 030 : successfully find platform Api', function () {
-                const PLATFORM = 'cordova-platform-test';
-                const API_PATH = path.join(temp, 'cordova/Api.js');
+                const FIXTURE_PROJECT = path.join(__dirname, 'fixtures/projects/platformApi/');
+                const API_PATH = path.join(FIXTURE_PROJECT, 'platforms/windows/cordova/Api.js');
+                spyOn(events, 'emit');
 
-                return helpers.getFixture('testPlatformApp').copyTo(temp)
-                    .then(_ => spyOn(events, 'emit'))
-                    .then(_ => util.getPlatformApiFunction(API_PATH, PLATFORM))
-                    .then(_ => {
-                        expect(events.emit.calls.count()).toBe(1);
-                        expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
-                    });
+                util.getPlatformApiFunction(API_PATH, 'cordova-platform-fixture');
+
+                expect(events.emit.calls.count()).toBe(1);
+                expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
             });
         });
     });
