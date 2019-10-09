@@ -49,14 +49,8 @@ describe('HooksRunner', function () {
         const projectFixture = path.join(fixtures, 'projWithHooks');
         fs.copySync(projectFixture, preparedProject);
 
-        // Copy sh/bat scripts
-        const extDir = path.join(projectFixture, `_${ext}`);
-        fs.readdirSync(extDir).forEach(d => {
-            fs.copySync(path.join(extDir, d), path.join(preparedProject, d));
-        });
-
         // Ensure scripts are executable
-        globby.sync(['hooks/**', '.cordova/hooks/**', 'scripts/**'], {
+        globby.sync(['scripts/**'], {
             cwd: preparedProject, absolute: true
         }).forEach(f => fs.chmodSync(f, 0o755));
 
@@ -172,19 +166,6 @@ describe('HooksRunner', function () {
         }
 
         describe('application hooks', function () {
-            it('Test 004 : should execute hook scripts serially', function () {
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
-
-            it('Test 005 : should execute hook scripts serially from .cordova/hooks/hook_type and hooks/hook_type directories', function () {
-                // using empty platforms list to test only hooks/ directories
-                hookOptions.cordova.platforms = [];
-
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
-
             it('Test 006 : should execute hook scripts serially from config.xml', function () {
                 addHooksToConfig(BASE_HOOKS);
 
@@ -209,7 +190,7 @@ describe('HooksRunner', function () {
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
 
-                    const baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                    const baseScriptResults = [8, 9];
                     const androidPlatformScriptsResults = [14, 15];
                     const expectedResults = baseScriptResults.concat(androidPlatformScriptsResults);
                     expect(getActualHooksOrder()).toEqual(expectedResults);
@@ -281,7 +262,7 @@ describe('HooksRunner', function () {
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
 
-                    const baseScriptResults = [1, 2, 3, 4, 5, 6, 7, 21, 22];
+                    const baseScriptResults = [21, 22];
                     const androidPlatformScriptsResults = [26];
                     const expectedResults = baseScriptResults.concat(androidPlatformScriptsResults);
                     expect(getActualHooksOrder()).toEqual(expectedResults);
@@ -436,7 +417,14 @@ describe('HooksRunner', function () {
                 return hooksRunner.fire(test_event, hookOptions);
             });
 
-            it('Test 023 : should error if any script exits with non-zero code', function () {
+            it('Test 023 : should error if any hook fails', function () {
+                const FAIL_HOOK = `
+                    <widget xmlns="http://www.w3.org/ns/widgets">
+                        <hook type="fail" src="scripts/fail.js" />
+                    </widget>
+                `;
+                addHooksToConfig(FAIL_HOOK);
+
                 return hooksRunner.fire('fail', hookOptions).then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {

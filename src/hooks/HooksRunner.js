@@ -120,33 +120,24 @@ function runJobsSerially (jobs) {
  * Async runs single script file.
  */
 function runScript (script, context) {
-    if (typeof script.useModuleLoader === 'undefined') {
-        // if it is not explicitly defined whether we should use modeule loader or not
-        // we assume we should use module loader for .js files
-        script.useModuleLoader = path.extname(script.path).toLowerCase() === '.js';
-    }
-
     var source;
     var relativePath;
 
     if (script.plugin) {
         source = 'plugin ' + script.plugin.id;
         relativePath = path.join('plugins', script.plugin.id, script.path);
-    } else if (script.useModuleLoader) {
+    } else {
         source = 'config.xml';
         relativePath = path.normalize(script.path);
-    } else {
-        source = 'hooks directory';
-        relativePath = path.join('hooks', context.hook, script.path);
     }
 
     events.emit('verbose', 'Executing script found in ' + source + ' for hook "' + context.hook + '": ' + relativePath);
 
-    if (script.useModuleLoader) {
-        return runScriptViaModuleLoader(script, context);
-    } else {
-        return runScriptViaChildProcessSpawn(script, context);
-    }
+    const runScriptStrategy = path.extname(script.path).toLowerCase() === '.js'
+        ? runScriptViaModuleLoader
+        : runScriptViaChildProcessSpawn;
+
+    return runScriptStrategy(script, context);
 }
 
 /**
@@ -181,11 +172,6 @@ function runScriptViaChildProcessSpawn (script, context) {
     var command = script.fullPath;
     var args = [opts.projectRoot];
 
-    if (fs.statSync(script.fullPath).isDirectory()) {
-        events.emit('verbose', 'Skipped directory "' + script.fullPath + '" within hook directory');
-        return Promise.resolve();
-    }
-
     if (isWindows) {
         // TODO: Make shebang sniffing a setting (not everyone will want this).
         var interpreter = extractSheBangInterpreter(script.fullPath);
@@ -211,12 +197,7 @@ function runScriptViaChildProcessSpawn (script, context) {
 
     return superspawn.spawn(command, args, execOpts)
         .catch(function (err) {
-            // Don't treat non-executable files as errors. They could be READMEs, or Windows-only scripts.
-            if (!isWindows && err.code === 'EACCES') {
-                events.emit('verbose', 'Skipped non-executable file: ' + script.fullPath);
-            } else {
-                throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
-            }
+            throw new Error('Hook failed with error code ' + err.code + ': ' + script.fullPath);
         });
 }
 
