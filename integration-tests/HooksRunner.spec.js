@@ -183,6 +183,20 @@ describe('HooksRunner', function () {
         });
 
         describe('plugin hooks', function () {
+            it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
+                usePluginConfig('OnlyNonPlatformScripts');
+
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
+            });
+
+            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function () {
+                usePluginConfig('OnePlatform');
+
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
+            });
+
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
                 // Make scripts executable
                 globby.sync('scripts/**', { cwd: testPluginInstalledPath, absolute: true })
@@ -249,23 +263,6 @@ describe('HooksRunner', function () {
                             });
                     });
             }, 20 * 1000);
-        });
-
-        describe('plugin hooks', function () {
-
-            it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
-                usePluginConfig('OnlyNonPlatformScripts');
-
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
-
-            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function () {
-                usePluginConfig('OnePlatform');
-
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
 
             it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
                 hookOptions.nohooks = ['before_build'];
