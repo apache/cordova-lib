@@ -31,9 +31,7 @@
     "init-package-json": "^1.10.3",
     "md5-file": "^4.0.0",
     "pify": "^4.0.1",
-    "read-chunk": "^3.2.0",
-    "semver": "^6.3.0",
-    "shebang-command": "^2.0.0"
+    "semver": "^6.3.0"
   },
   "devDependencies": {
     "codecov": "^3.2.0",
