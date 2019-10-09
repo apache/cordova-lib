@@ -41,9 +41,12 @@ describe('HooksRunner', function () {
         tmp = tmpDir('hooks_test');
         project = path.join(tmp, 'project');
 
-        // Copy project fixture
-        const projectFixture = path.join(fixtures, 'projWithHooks');
-        fs.copySync(projectFixture, project);
+        // Copy base project fixture
+        fs.copySync(path.join(fixtures, 'basePkgJson'), project);
+
+        // Copy project hooks
+        const hooksDir = path.join(fixtures, 'projectHooks');
+        fs.copySync(hooksDir, path.join(project, 'scripts'));
 
         // Ensure scripts are executable
         globby.sync(['scripts/**'], {
