@@ -53,14 +53,11 @@ HooksRunner.prototype.fire = function fire (hook, opts) {
     }
     opts = this.prepareOptions(opts);
 
-    var scripts = scriptsFinder.getHookScripts(hook, opts);
-
-    // execute hook event listeners first
-    return executeEventHandlersSerially(hook, opts).then(function () {
-        // then execute hook script files
-        var context = new Context(hook, opts);
-        return runScriptsSerially(scripts, context);
-    });
+    // first run hook event listeners, then run hook script files
+    return runJobsSerially([
+        ...getEventHandlerJobs(hook, opts),
+        ...getHookJobs(hook, opts)
+    ]);
 };
 
 /**
@@ -96,35 +93,27 @@ function globalFire (hook, opts) {
     }
 
     opts = opts || {};
-    return executeEventHandlersSerially(hook, opts);
+    return runJobsSerially(getEventHandlerJobs(hook, opts));
 }
 
-// Returns a promise.
-function executeEventHandlersSerially (hook, opts) {
-    var handlers = events.listeners(hook);
-    if (handlers.length) {
-        // Chain the handlers in series.
-        return handlers.reduce(function (soFar, f) {
-            return soFar.then(function () { return f(opts); });
-        }, Promise.resolve());
-    } else {
-        return Promise.resolve(); // Nothing to do.
-    }
+function getEventHandlerJobs (hook, opts) {
+    return events.listeners(hook)
+        .map(handler => () => handler(opts));
 }
 
-/**
- * Serially fires scripts either via Promise.resolve(require(pathToScript)(context)) or via child_process.spawn.
- * Returns promise.
- */
-function runScriptsSerially (scripts, context) {
+function getHookJobs (hook, opts) {
+    const scripts = scriptsFinder.getHookScripts(hook, opts);
+
     if (scripts.length === 0) {
-        events.emit('verbose', 'No scripts found for hook "' + context.hook + '".');
+        events.emit('verbose', `No scripts found for hook "${hook}".`);
     }
-    return scripts.reduce(function (prevScriptPromise, nextScript) {
-        return prevScriptPromise.then(function () {
-            return runScript(nextScript, context);
-        });
-    }, Promise.resolve());
+
+    const context = new Context(hook, opts);
+    return scripts.map(script => () => runScript(script, context));
+}
+
+function runJobsSerially (jobs) {
+    return jobs.reduce((acc, job) => acc.then(job), Promise.resolve());
 }
 
 /**
@@ -207,13 +196,18 @@ function runScriptViaChildProcessSpawn (script, context) {
         }
     }
 
-    var execOpts = { cwd: opts.projectRoot, printCommand: true, stdio: 'inherit' };
-    execOpts.env = {};
-    execOpts.env.CORDOVA_VERSION = require('../../package').version;
-    execOpts.env.CORDOVA_PLATFORMS = opts.platforms ? opts.platforms.join() : '';
-    execOpts.env.CORDOVA_PLUGINS = opts.plugins ? opts.plugins.join() : '';
-    execOpts.env.CORDOVA_HOOK = script.fullPath;
-    execOpts.env.CORDOVA_CMDLINE = process.argv.join(' ');
+    const execOpts = {
+        cwd: opts.projectRoot,
+        printCommand: true,
+        stdio: 'inherit',
+        env: {
+            CORDOVA_VERSION: require('../../package').version,
+            CORDOVA_PLATFORMS: opts.platforms ? opts.platforms.join() : '',
+            CORDOVA_PLUGINS: opts.plugins ? opts.plugins.join() : '',
+            CORDOVA_HOOK: script.fullPath,
+            CORDOVA_CMDLINE: process.argv.join(' ')
+        }
+    };
 
     return superspawn.spawn(command, args, execOpts)
         .catch(function (err) {
@@ -251,12 +245,5 @@ function isHookDisabled (opts, hook) {
     if (opts === undefined || opts.nohooks === undefined) {
         return false;
     }
-    var disabledHooks = opts.nohooks;
-    var length = disabledHooks.length;
-    for (var i = 0; i < length; i++) {
-        if (hook.match(disabledHooks[i]) !== null) {
-            return true;
-        }
-    }
-    return false;
+    return opts.nohooks.some(pattern => hook.match(pattern) !== null);
 }
