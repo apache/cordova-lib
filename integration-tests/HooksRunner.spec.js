@@ -21,12 +21,13 @@ const path = require('path');
 const fs = require('fs-extra');
 const delay = require('delay');
 const globby = require('globby');
+const et = require('elementtree');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
 const cordovaUtil = require('../src/cordova/util');
 const cordova = require('../src/cordova/cordova');
 const { tmpDir, testPlatform } = require('../spec/helpers');
-const { PluginInfo } = require('cordova-common');
+const { PluginInfo, ConfigParser } = require('cordova-common');
 const { Q_chainmap } = require('../src/util/promise-util');
 
 const tmp = tmpDir('hooks_test');
@@ -131,12 +132,43 @@ describe('HooksRunner', function () {
             expect(hooksOrder).toEqual(sortedHooksOrder);
         }
 
-        function useAppConfig (name) {
-            fs.copySync(path.join(project, `config${name}_${ext}.xml`), path.join(project, 'config.xml'));
+        const BASE_HOOKS = `
+            <widget xmlns="http://www.w3.org/ns/widgets">
+                <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
+                <hook type="before_build" src="scripts/appBeforeBuild02.js" />
+                <hook type="before_plugin_install" src="scripts/appBeforePluginInstall.js" />
+            </widget>
+        `;
+        const WINDOWS_HOOKS = `
+            <widget xmlns="http://www.w3.org/ns/widgets">
+                <platform name="windows">
+                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
+                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
+                    <hook type="before_plugin_install" src="scripts/windows/appWindowsBeforePluginInstall.js" />
+                </platform>
+            </widget>
+        `;
+        const ANDROID_HOOKS = `
+            <widget xmlns="http://www.w3.org/ns/widgets">
+                <platform name="android">
+                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
+                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
+                    <hook type="before_plugin_install" src="scripts/android/appAndroidBeforePluginInstall.js" />
+                </platform>
+            </widget>
+        `;
+
+        function addHooks (hooksXml, doc) {
+            const hooks = et.parse(hooksXml);
+            for (const el of hooks.getroot().findall('./*')) {
+                doc.getroot().append(el);
+            }
         }
 
-        function usePluginConfig (name) {
-            fs.copySync(path.join(testPluginInstalledPath, `plugin${name}_${ext}.xml`), path.join(testPluginInstalledPath, 'plugin.xml'));
+        function addHooksToConfig (hooksXml) {
+            const config = new ConfigParser(path.join(project, 'config.xml'));
+            addHooks(hooksXml, config.doc);
+            config.write();
         }
 
         describe('application hooks', function () {
@@ -154,21 +186,24 @@ describe('HooksRunner', function () {
             });
 
             it('Test 006 : should execute hook scripts serially from config.xml', function () {
-                useAppConfig('OnlyNonPlatformScripts');
+                addHooksToConfig(BASE_HOOKS);
 
                 return hooksRunner.fire(test_event, hookOptions)
                     .then(checkHooksOrderFile);
             });
 
             it('Test 007 : should execute hook scripts serially from config.xml including platform scripts', function () {
-                useAppConfig('OnePlatform');
+                addHooksToConfig(BASE_HOOKS);
+                addHooksToConfig(WINDOWS_HOOKS);
 
                 return hooksRunner.fire(test_event, hookOptions)
                     .then(checkHooksOrderFile);
             });
 
             it('Test 008 : should filter hook scripts from config.xml by platform', function () {
-                useAppConfig('TwoPlatforms');
+                addHooksToConfig(BASE_HOOKS);
+                addHooksToConfig(WINDOWS_HOOKS);
+                addHooksToConfig(ANDROID_HOOKS);
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
@@ -183,12 +218,64 @@ describe('HooksRunner', function () {
         });
 
         describe('plugin hooks', function () {
+            const PLUGIN_BASE_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <hook type="before_plugin_install" src="scripts/beforeInstall01.js" />
+                    <hook type="before_plugin_install" src="scripts/beforeInstall2.js" />
+                    <hook type="before_plugin_install" src="scripts/beforeInstall.${ext}" />
+                    <hook type="before_plugin_uninstall" src="scripts/beforeUninstall.js" />
+                    <hook type="before_build" src="scripts/beforeBuild.js" />
+                    <hook type="before_build" src="scripts/beforeBuild.${ext}" />
+                </widget>
+            `;
+            const PLUGIN_WINDOWS_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="windows">
+                        <hook type="before_plugin_install" src="scripts/windows/windowsBeforeInstall.js" />
+                        <hook type="before_build" src="scripts/windows/windowsBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+            const PLUGIN_ANDROID_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="android">
+                        <hook type="before_plugin_install" src="scripts/android/androidBeforeInstall.js" />
+                        <hook type="before_build" src="scripts/android/androidBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+
+            function addHooksToPlugin (hooksXml) {
+                const config = new PluginInfo(testPluginInstalledPath);
+                addHooks(hooksXml, config._et);
+
+                const configPath = path.join(testPluginInstalledPath, 'plugin.xml');
+                fs.writeFileSync(configPath, config._et.write({ indent: 4 }));
+            }
+
+            it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
+                addHooksToPlugin(PLUGIN_BASE_HOOKS);
+
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
+            });
+
+            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function () {
+                addHooksToPlugin(PLUGIN_BASE_HOOKS);
+                addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
+
+                return hooksRunner.fire(test_event, hookOptions)
+                    .then(checkHooksOrderFile);
+            });
+
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
                 // Make scripts executable
                 globby.sync('scripts/**', { cwd: testPluginInstalledPath, absolute: true })
                     .forEach(f => fs.chmodSync(f, 0o755));
 
-                usePluginConfig('TwoPlatforms');
+                addHooksToPlugin(PLUGIN_BASE_HOOKS);
+                addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
+                addHooksToPlugin(PLUGIN_ANDROID_HOOKS);
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
@@ -249,23 +336,6 @@ describe('HooksRunner', function () {
                             });
                     });
             }, 20 * 1000);
-        });
-
-        describe('plugin hooks', function () {
-
-            it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
-                usePluginConfig('OnlyNonPlatformScripts');
-
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
-
-            it('Test 010 : should execute hook scripts serially from plugin.xml including platform scripts', function () {
-                usePluginConfig('OnePlatform');
-
-                return hooksRunner.fire(test_event, hookOptions)
-                    .then(checkHooksOrderFile);
-            });
 
             it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
                 hookOptions.nohooks = ['before_build'];
