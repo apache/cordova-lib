@@ -26,7 +26,6 @@ var restore = require('../../src/cordova/restore-util');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var PlatformJson = require('cordova-common').PlatformJson;
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 var project_dir = '/some/path';
 
@@ -140,7 +139,6 @@ describe('cordova/prepare', function () {
         var platform_munger_mock = function () {};
         var platform_munger_save_mock;
         beforeEach(function () {
-            spyOn(prepare, 'restoreMissingPluginsForPlatform').and.returnValue(Promise.resolve());
             prepare.__set__('ConfigParser', cfg_parser_mock);
             platform_munger_save_mock = jasmine.createSpy('platform munger save mock');
             platform_munger_mock.prototype = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);
@@ -152,11 +150,6 @@ describe('cordova/prepare', function () {
             spyOn(util, 'projectWww').and.returnValue(path.join(project_dir, 'www'));
 
         });
-        it('should call restoreMissingPluginsForPlatform', function () {
-            return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
-                expect(prepare.restoreMissingPluginsForPlatform).toHaveBeenCalled();
-            });
-        });
         it('should retrieve the platform API via getPlatformApi per platform provided, and invoke the prepare method from that API', function () {
             return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
                 expect(platforms.getPlatformApi).toHaveBeenCalledWith('android');
@@ -167,58 +160,6 @@ describe('cordova/prepare', function () {
             return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
                 expect(platform_munger_mock.prototype.add_config_changes).toHaveBeenCalled();
                 expect(platform_munger_save_mock).toHaveBeenCalled();
-            });
-        });
-    });
-
-    describe('restoreMissingPluginsForPlatform helper method', function () {
-        var is_plugin_installed_mock;
-        var is_plugin_provider_get_mock;
-        it('should resolve quickly and not invoke getPlatformAPI in the easy case of there being no difference between old and new platform.json', function () {
-            is_plugin_installed_mock = jasmine.createSpy('is plugin installed mock');
-            // mock platform json value below
-            PlatformJson.load.and.callFake(function (platformJsonPath, plat) {
-                return {
-                    isPluginInstalled: is_plugin_installed_mock,
-                    root: {
-                        installed_plugins: [],
-                        dependent_plugins: []
-                    }
-                };
-            });
-
-            return prepare.restoreMissingPluginsForPlatform('android', project_dir, {}).then(function () {
-                expect(platforms.getPlatformApi).not.toHaveBeenCalled();
-            });
-        });
-        it('should leverage platform API to remove and add any missing plugins identified', function () {
-            is_plugin_installed_mock = jasmine.createSpy('is plugin installed mock');
-            is_plugin_provider_get_mock = jasmine.createSpy('is plugin provider get mock');
-            // mock platform json value below
-            PlatformJson.load.and.callFake(function (platformJsonPath, plat) {
-                // set different installed plugins to simulate missing plugins
-                var missingPlugins;
-                if (platformJsonPath === '/some/path/platforms/android') {
-                    missingPlugins = { 'cordova-plugin-device': {} };
-                } else {
-                    missingPlugins = { 'cordova-plugin-camera': {} };
-                }
-                return {
-                    isPluginInstalled: is_plugin_installed_mock,
-                    root: {
-                        installed_plugins: missingPlugins,
-                        dependent_plugins: []
-                    }
-                };
-            });
-            spyOn(PluginInfoProvider.prototype, 'get').and.callFake(function () {
-                return is_plugin_provider_get_mock;
-            });
-            return prepare.restoreMissingPluginsForPlatform('android', project_dir, {}).then(function () {
-                expect(platforms.getPlatformApi).toHaveBeenCalled();
-                expect(platform_api_add_mock).toHaveBeenCalled();
-                expect(platform_api_remove_mock).toHaveBeenCalled();
-                expect(PluginInfoProvider.prototype.get).toHaveBeenCalled();
             });
         });
     });
