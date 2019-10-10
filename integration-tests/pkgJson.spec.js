@@ -21,7 +21,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const semver = require('semver');
 const { listPlatforms, requireNoCache } = require('../src/cordova/util');
-const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
+const { tmpDir: getTmpDir, testPlatform, getFixture, setDefaultTimeout } = require('../spec/helpers');
 const projectTestHelpers = require('../spec/project-test-helpers');
 const cordova = require('../src/cordova/cordova');
 
@@ -112,18 +112,27 @@ describe('pkgJson', function () {
     describe('plugin end-to-end', function () {
         const pluginId = 'cordova-plugin-device';
 
+        // Prepare a project with platform that can be reused by below tests
+        let projectFixture;
+        beforeAll(() => {
+            projectFixture = getTmpDir('pkgJson-project-fixture');
+            return getFixture('projectWithPlatform').copyTo(projectFixture);
+        });
+
+        afterAll(() => {
+            process.chdir(__dirname); // Needed to rm the dir on Windows.
+            fs.removeSync(projectFixture);
+        });
+
         beforeEach(function () {
-            setupBaseProject();
-            // Copy some platform to avoid working on a project with no platforms.
-            // FIXME Use a fixture that is properly promisified. This one
-            // causes spurious test failures when tests reuse the project path.
-            fs.copySync(path.join(__dirname, '../spec/plugman/projects', testPlatform), path.join(project, 'platforms', testPlatform));
+            fs.copySync(projectFixture, project);
+            process.chdir(project);
         });
 
         it('Test#001 : should successfully add and remove a plugin with save and correct spec', function () {
             // No plugins in config or pkg.json yet.
             expect(getCfg().getPluginIdList()).toEqual([]);
-            expect(getPkgJson('cordova')).toBeUndefined();
+            expect(getPkgJson('cordova.plugins')).toBeUndefined();
 
             // Add the plugin with --save.
             return cordova.plugin('add', `${pluginId}@1.1.2`, { save: true })
@@ -211,6 +220,7 @@ describe('pkgJson', function () {
                         [pluginId]: {}, [OTHER_PLUGIN]: {}
                     });
                     expect(getPkgJson('dependencies')).toEqual({
+                        'cordova-android': jasmine.any(String),
                         [pluginId]: jasmine.any(String),
                         [OTHER_PLUGIN]: jasmine.any(String)
                     });
@@ -220,7 +230,9 @@ describe('pkgJson', function () {
                 }).then(function () {
                     // Checking that the plugin removed is in not in the platforms.
                     expect(getPkgJson('cordova.plugins')).toEqual({});
-                    expect(getPkgJson('dependencies')).toEqual({});
+                    expect(getPkgJson('dependencies')).toEqual({
+                        'cordova-android': jasmine.any(String)
+                    });
                 });
         });
 
@@ -231,16 +243,16 @@ describe('pkgJson', function () {
             const PLUGIN = 'cordova-plugin-geolocation';
 
             // Pkg.json has no platform or plugin or specs.
-            expect(getPkgJson('cordova')).toBeUndefined();
-            expect(getPkgJson('dependencies')).toBeUndefined();
+            expect(getPkgJson('cordova.platforms')).not.toContain(PLATFORM);
+            expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeUndefined();
 
             // Config.xml has no platform or plugin or specs.
-            expect(getCfg().getEngines()).toEqual([]);
+            expect(getCfg().getEngines()).not.toContain(PLATFORM);
             expect(getCfg().getPluginIdList()).toEqual([]);
 
             return cordova.platform('add', PLATFORM, { save: true })
                 .then(function () {
-                    expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
+                    expect(getPkgJson('cordova.platforms')).toContain(PLATFORM);
                 }).then(function () {
                     return cordova.plugin('add', PLUGIN, { save: true });
                 }).then(function () {
@@ -254,27 +266,13 @@ describe('pkgJson', function () {
         });
 
         // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
-        it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function () {
-            // TEMPORARY WORKAROUND due to failure on AppVeyor CI on Node.js 10
-            // as reported in:
-            // https://github.com/apache/cordova-lib/issues/787
-            if (process.platform === 'win32') pending('skip on Windows host');
-
-            const PLATFORM = 'browser';
+        it('Test#025 : if you add a plugin with local path, pkg.json gets updated', () => {
             const PLUGIN = 'cordova-lib-test-plugin';
-
-            const platformPath = copyFixture(`platforms/cordova-${PLATFORM}`);
             const pluginPath = copyFixture(path.join('plugins', PLUGIN));
 
-            return cordova.platform('add', platformPath, { save: true })
-                .then(function () {
-                    // Pkg.json has platform
-                    expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
-                    expect(getPkgJson(`dependencies.cordova-${PLATFORM}`)).toBeDefined();
-                }).then(function () {
-                    // Run cordova plugin add local path --save --fetch.
-                    return cordova.plugin('add', pluginPath, { save: true });
-                }).then(function () {
+            // Run cordova plugin add local path --save
+            return cordova.plugin('add', pluginPath, { save: true })
+                .then(() => {
                     // Pkg.json has test plugin.
                     expect(getPkgJson(`cordova.plugins.${PLUGIN}`)).toBeDefined();
                     expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeDefined();
@@ -380,6 +378,24 @@ describe('pkgJson', function () {
                 expect(getCfg().getEngines()).toEqual([]);
                 expect(installedPlatforms()).toEqual([]);
             });
+        });
+
+        it('Test#012 : platform with local path is added correctly with --save', () => {
+            const PLATFORM = 'android';
+            const platformPath = path.join(tmpDir, PLATFORM);
+
+            expect(getPkgJson('cordova')).toBeUndefined();
+            expect(installedPlatforms()).toEqual([]);
+
+            return getFixture('androidPlatform').copyTo(platformPath)
+                .then(() => {
+                    return cordova.platform('add', platformPath, { save: true });
+                })
+                .then(() => {
+                    expect(installedPlatforms()).toEqual([PLATFORM]);
+                    expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
+                    expect(getPkgJson(`dependencies.cordova-${PLATFORM}`)).toBeDefined();
+                });
         });
     });
 

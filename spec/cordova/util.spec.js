@@ -112,16 +112,12 @@ describe('util module', function () {
     });
     describe('getInstalledPlatformsWithVersions method', function () {
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
-            var platforms = path.join(temp, 'platforms');
-            var android = path.join(platforms, 'android');
+            const PLATFORM = 'cordova-android';
+            const platformPath = path.join(temp, 'platforms', PLATFORM);
 
-            fs.ensureDirSync(android);
-
-            fs.copySync(path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(platforms, helpers.testPlatform));
-            return util.getInstalledPlatformsWithVersions(temp)
-                .then(function (platformMap) {
-                    expect(platformMap['android']).toBe('3.1.0');
-                });
+            return helpers.getFixture('androidApp').copyTo(platformPath)
+                .then(_ => util.getInstalledPlatformsWithVersions(temp))
+                .then(versions => expect(versions[PLATFORM]).toBe('8.1.0'));
         });
     });
     describe('findPlugins method', function () {
@@ -216,9 +212,12 @@ describe('util module', function () {
         describe('getPlatformApiFunction', function () {
 
             it('Test 030 : successfully find platform Api', function () {
-                spyOn(events, 'emit').and.returnValue(true);
-                var specPlugDir = __dirname.replace('spec-cordova', 'spec-plugman');
-                util.getPlatformApiFunction((path.join(specPlugDir, 'fixtures', 'projects', 'platformApi', 'platforms', 'windows', 'cordova', 'Api.js')), 'windows');
+                const FIXTURE_PROJECT = path.join(__dirname, 'fixtures/projects/platformApi/');
+                const API_PATH = path.join(FIXTURE_PROJECT, 'platforms/windows/cordova/Api.js');
+                spyOn(events, 'emit');
+
+                util.getPlatformApiFunction(API_PATH, 'cordova-platform-fixture');
+
                 expect(events.emit.calls.count()).toBe(1);
                 expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
             });
