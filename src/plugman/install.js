@@ -26,7 +26,6 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var CordovaError = require('cordova-common').CordovaError;
 var platform_modules = require('../platforms/platforms');
 var os = require('os');
-var underscore = require('underscore');
 var events = require('cordova-common').events;
 var HooksRunner = require('../hooks/HooksRunner');
 var isWindows = (os.platform().substr(0, 3) === 'win');
@@ -90,7 +89,7 @@ function possiblyFetch (id, plugins_dir, options) {
         return Promise.resolve(plugin_src_dir);
     }
 
-    var opts = underscore.extend({}, options, {
+    var opts = Object.assign({}, options, {
         client: 'plugman'
     });
     // TODO: without runtime require below, we have a circular dependency.
@@ -544,7 +543,7 @@ function installDependency (dep, install, options) {
                     return Promise.reject(new CordovaError(msg));
                 });
         }
-        opts = underscore.extend({}, options, {
+        opts = Object.assign({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
@@ -553,7 +552,7 @@ function installDependency (dep, install, options) {
     } else {
         events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
 
-        opts = underscore.extend({}, options, {
+        opts = Object.assign({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false,
             subdir: dep.subdir,

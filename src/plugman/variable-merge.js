@@ -18,7 +18,6 @@
 */
 
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var underscore = require('underscore');
 
 module.exports.mergeVariables = mergeVariables;
 
@@ -34,30 +33,30 @@ module.exports.mergeVariables = mergeVariables;
  */
 function mergeVariables (plugin_dir, platform, options) {
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
-    var pluginInfoProvider = options.pluginInfoProvider;
-    var pluginInfo = pluginInfoProvider.get(plugin_dir);
-    var filtered_variables = {};
-
-    var prefs = pluginInfo.getPreferences(platform);
-    var keys = underscore.keys(prefs);
+    const pluginInfo = options.pluginInfoProvider.get(plugin_dir);
+    const prefs = pluginInfo.getPreferences(platform);
+    const keys = Object.keys(prefs);
 
     options.cli_variables = options.cli_variables || {};
-    var missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
 
-    underscore.each(missing_vars, function (_key) {
-        var def = prefs[_key];
-        if (def) {
-            options.cli_variables[_key] = def;
+    // For all vars defined in prefs, take the value from cli_variables or
+    // default to the value from prefs if truthy.
+    const mergedVars = {};
+    for (const key of keys) {
+        if (key in options.cli_variables) {
+            mergedVars[key] = options.cli_variables[key];
+        } else if (prefs[key]) {
+            mergedVars[key] = options.cli_variables[key] = prefs[key];
         }
-    });
+    }
 
-    // test missing vars once again after having default
-    missing_vars = underscore.difference(keys, Object.keys(options.cli_variables));
+    // Test for missing vars after having applied defaults
+    const mergedVarKeys = new Set(Object.keys(mergedVars));
+    const missing_vars = keys.filter(key => !mergedVarKeys.has(key));
 
     if (missing_vars.length > 0) {
         throw new Error('Variable(s) missing: ' + missing_vars.join(', '));
     }
 
-    filtered_variables = underscore.pick(options.cli_variables, keys);
-    return filtered_variables;
+    return mergedVars;
 }

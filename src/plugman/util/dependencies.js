@@ -20,7 +20,6 @@
 var DepGraph = require('dep-graph');
 var path = require('path');
 var fs = require('fs-extra');
-var underscore = require('underscore');
 var events = require('cordova-common').events;
 var pkg;
 
@@ -84,23 +83,17 @@ module.exports = pkg = {
         var depsInfo;
         if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
 
-        var graph = depsInfo.graph;
-        var dependencies = graph.getChain(plugin_id);
+        const { graph, top_level_plugins } = depsInfo;
 
-        var tlps = depsInfo.top_level_plugins;
-        var diff_arr = [];
-        tlps.forEach(function (tlp) {
-            if (tlp !== plugin_id) {
-                diff_arr.push(graph.getChain(tlp));
-            }
-        });
+        // get plugin_id's dependencies
+        const dependencies = graph.getChain(plugin_id);
 
-        // if this plugin has dependencies, do a set difference to determine which dependencies are not required by other existing plugins
-        diff_arr.unshift(dependencies);
-        var danglers = underscore.difference.apply(null, diff_arr);
+        // Calculate the set of all top-level plugins and their transitive dependencies
+        const otherTlps = top_level_plugins.filter(tlp => tlp !== plugin_id);
+        const otherTlpDeps = otherTlps.map(tlp => graph.getChain(tlp));
+        const remainingPlugins = new Set(otherTlps.concat(...otherTlpDeps));
 
-        // Ensure no top-level plugins are tagged as danglers.
-        danglers = danglers && danglers.filter(function (x) { return tlps.indexOf(x) < 0; });
-        return danglers;
+        // dependencies - remainingPlugins
+        return dependencies.filter(p => !remainingPlugins.has(p));
     }
 };

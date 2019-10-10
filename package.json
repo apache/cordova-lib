@@ -32,8 +32,7 @@
     "pify": "^4.0.1",
     "read-chunk": "^3.1.0",
     "semver": "^5.6.0",
-    "shebang-command": "^1.2.0",
-    "underscore": "^1.9.1"
+    "shebang-command": "^1.2.0"
   },
   "devDependencies": {
     "codecov": "^3.2.0",

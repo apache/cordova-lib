@@ -21,7 +21,6 @@ var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var promiseUtil = require('../util/promise-util');
 var platform_lib = require('../platforms/platforms');
-var _ = require('underscore');
 
 // Returns a promise.
 module.exports = function compile (options) {
@@ -36,7 +35,7 @@ module.exports = function compile (options) {
                     return promiseUtil.Q_chainmap(options.platforms, function (platform) {
                         return platform_lib
                             .getPlatformApi(platform)
-                            .build(_.clone(options.options));
+                            .build(Object.assign({}, options.options));
                     });
                 }).then(function () {
                     return hooksRunner.fire('after_compile', options);

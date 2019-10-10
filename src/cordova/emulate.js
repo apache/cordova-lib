@@ -20,7 +20,6 @@
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var platform_lib = require('../platforms/platforms');
-var _ = require('underscore');
 
 // Returns a promise.
 module.exports = function emulate (options) {
@@ -30,7 +29,7 @@ module.exports = function emulate (options) {
         options.options.device = false;
         options.options.emulator = true;
 
-        var optsClone = _.clone(options.options);
+        var optsClone = Object.assign({}, options.options);
         // This is needed as .build modifies opts
         optsClone.nobuild = true;
 
