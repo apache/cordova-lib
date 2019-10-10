@@ -18,7 +18,6 @@
  */
 
 var path = require('path');
-var fs = require('fs-extra');
 var cordovaUtil = require('../cordova/util');
 var events = require('cordova-common').events;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
@@ -43,17 +42,22 @@ module.exports = {
 };
 
 /**
- * Returns script files defined on application level.
- * They are stored in .cordova/hooks folders and in config.xml.
+ * Gets all scripts defined in config.xml with the specified type and platforms.
  */
 function getApplicationHookScripts (hook, opts) {
     // args check
     if (!hook) {
         throw new Error('hook type is not specified');
     }
-    return getApplicationHookScriptsFromDir(path.join(opts.projectRoot, '.cordova', 'hooks', hook))
-        .concat(getApplicationHookScriptsFromDir(path.join(opts.projectRoot, 'hooks', hook)))
-        .concat(getScriptsFromConfigXml(hook, opts));
+
+    const configPath = cordovaUtil.projectConfig(opts.projectRoot);
+    const configXml = new ConfigParser(configPath);
+
+    return configXml.getHookScripts(hook, opts.cordova.platforms)
+        .map(scriptElement => ({
+            path: scriptElement.attrib.src,
+            fullPath: path.join(opts.projectRoot, scriptElement.attrib.src)
+        }));
 }
 
 /**
@@ -74,44 +78,6 @@ function getPluginsHookScripts (hook, opts) {
     }
 
     return getAllPluginsHookScriptFiles(hook, opts);
-}
-
-/**
- * Gets application level hooks from the directrory specified.
- */
-function getApplicationHookScriptsFromDir (dir) {
-    if (!(fs.existsSync(dir))) {
-        return [];
-    }
-
-    var compareNumbers = function (a, b) {
-        // TODO SG looks very complex, do we really need this?
-        return isNaN(parseInt(a, 10)) ? a.toLowerCase().localeCompare(b.toLowerCase ? b.toLowerCase() : b)
-            : parseInt(a, 10) > parseInt(b, 10) ? 1 : parseInt(a, 10) < parseInt(b, 10) ? -1 : 0;
-    };
-
-    var scripts = fs.readdirSync(dir).sort(compareNumbers).filter(function (s) {
-        return s[0] !== '.';
-    });
-    return scripts.map(function (scriptPath) {
-        // for old style hook files we don't use module loader for backward compatibility
-        return { path: scriptPath, fullPath: path.join(dir, scriptPath), useModuleLoader: false };
-    });
-}
-
-/**
- * Gets all scripts defined in config.xml with the specified type and platforms.
- */
-function getScriptsFromConfigXml (hook, opts) {
-    var configPath = cordovaUtil.projectConfig(opts.projectRoot);
-    var configXml = new ConfigParser(configPath);
-
-    return configXml.getHookScripts(hook, opts.cordova.platforms).map(function (scriptElement) {
-        return {
-            path: scriptElement.attrib.src,
-            fullPath: path.join(opts.projectRoot, scriptElement.attrib.src)
-        };
-    });
 }
 
 /**

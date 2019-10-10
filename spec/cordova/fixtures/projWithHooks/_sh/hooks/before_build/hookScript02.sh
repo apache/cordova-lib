@@ -1,1 +1,0 @@
-echo 05 >> hooks_order.txt
