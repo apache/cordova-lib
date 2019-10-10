@@ -38,7 +38,6 @@
   "devDependencies": {
     "codecov": "^3.2.0",
     "cordova-android": "^8.1.0",
-    "cordova-test-platform": "github:apache/cordova-test-platform",
     "delay": "^4.1.0",
     "eslint": "^5.15.1",
     "eslint-config-semistandard": "^13.0.0",

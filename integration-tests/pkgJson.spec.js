@@ -266,30 +266,13 @@ describe('pkgJson', function () {
         });
 
         // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
-        it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function () {
-            // TEMPORARY WORKAROUND due to failure on AppVeyor CI on Node.js 10
-            // as reported in:
-            // https://github.com/apache/cordova-lib/issues/787
-            if (process.platform === 'win32') pending('skip on Windows host');
-
-            const PLATFORM = 'cordova-test-platform';
+        it('Test#025 : if you add a plugin with local path, pkg.json gets updated', () => {
             const PLUGIN = 'cordova-lib-test-plugin';
-
-            const platformPath = path.join(tmpDir, PLATFORM);
             const pluginPath = copyFixture(path.join('plugins', PLUGIN));
 
-            return getFixture('testPlatform').copyTo(platformPath)
-                .then(function () {
-                    expect(getPkgJson('cordova.platforms')).not.toContain(PLATFORM);
-                    return cordova.platform('add', platformPath, { save: true });
-                }).then(function () {
-                    // Pkg.json has platform
-                    expect(getPkgJson('cordova.platforms')).toContain(PLATFORM);
-                    expect(getPkgJson(`dependencies.${PLATFORM}`)).toBeDefined();
-                }).then(function () {
-                    // Run cordova plugin add local path --save --fetch.
-                    return cordova.plugin('add', pluginPath, { save: true });
-                }).then(function () {
+            // Run cordova plugin add local path --save
+            return cordova.plugin('add', pluginPath, { save: true })
+                .then(() => {
                     // Pkg.json has test plugin.
                     expect(getPkgJson(`cordova.plugins.${PLUGIN}`)).toBeDefined();
                     expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeDefined();
@@ -395,6 +378,24 @@ describe('pkgJson', function () {
                 expect(getCfg().getEngines()).toEqual([]);
                 expect(installedPlatforms()).toEqual([]);
             });
+        });
+
+        it('Test#012 : platform with local path is added correctly with --save', () => {
+            const PLATFORM = 'android';
+            const platformPath = path.join(tmpDir, PLATFORM);
+
+            expect(getPkgJson('cordova')).toBeUndefined();
+            expect(installedPlatforms()).toEqual([]);
+
+            return getFixture('androidPlatform').copyTo(platformPath)
+                .then(() => {
+                    return cordova.platform('add', platformPath, { save: true });
+                })
+                .then(() => {
+                    expect(installedPlatforms()).toEqual([PLATFORM]);
+                    expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
+                    expect(getPkgJson(`dependencies.cordova-${PLATFORM}`)).toBeDefined();
+                });
         });
     });
 

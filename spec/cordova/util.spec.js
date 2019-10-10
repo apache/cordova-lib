@@ -112,12 +112,12 @@ describe('util module', function () {
     });
     describe('getInstalledPlatformsWithVersions method', function () {
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
-            const PLATFORM = 'cordova-test-platform';
+            const PLATFORM = 'cordova-android';
             const platformPath = path.join(temp, 'platforms', PLATFORM);
 
-            return helpers.getFixture('testPlatformApp').copyTo(platformPath)
+            return helpers.getFixture('androidApp').copyTo(platformPath)
                 .then(_ => util.getInstalledPlatformsWithVersions(temp))
-                .then(versions => expect(versions[PLATFORM]).toBe('0.0.2'));
+                .then(versions => expect(versions[PLATFORM]).toBe('8.1.0'));
         });
     });
     describe('findPlugins method', function () {
