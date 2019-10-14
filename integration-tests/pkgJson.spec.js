@@ -237,7 +237,7 @@ describe('pkgJson', function () {
         });
 
         // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
-        // and --save --fetch is called, use the pinned version or plugin pkg.json version.
+        // and --save is called, use the pinned version or plugin pkg.json version.
         it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function () {
             const PLATFORM = 'ios';
             const PLUGIN = 'cordova-plugin-geolocation';
@@ -349,7 +349,7 @@ describe('pkgJson', function () {
                 });
         });
 
-        it('Test#010 : two platforms are added and removed correctly with --save --fetch', function () {
+        it('Test#010 : two platforms are added and removed correctly with --save', function () {
             // No platforms installed nor saved in config or pkg.json yet.
             expect(getPkgJson('cordova')).toBeUndefined();
             expect(getCfg().getEngines()).toEqual([]);
