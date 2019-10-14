@@ -279,7 +279,9 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
         events.emit('verbose', 'Not checking npm info for ' + parsedSpec.package + ' because searchpath or noregistry flag was given');
     }
     // if noregistry or searchpath are true, then shouldUseNpmInfo is false. Just return target
-    // else run `npm info` on the target via registry.info so we could get engines elemenent in package.json. Pass that info to getFetchVersion which determines the correct plugin to fetch based on engines element.
+    // else run `npm info` on the target via registry.info so we could get
+    // engines elemenent in package.json. Pass that info to getFetchVersion
+    // which determines the correct plugin to fetch based on engines element.
     return (shouldUseNpmInfo ? plugin_util.info([id])
         .then(function (pluginInfo) {
             return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);

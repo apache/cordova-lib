@@ -35,7 +35,7 @@ var cordovaUtil = require('../cordova/util');
 var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var variableMerge = require('../plugman/variable-merge');
+var variableMerge = require('./variable-merge');
 
 /* INSTALL FLOW
    ------------
