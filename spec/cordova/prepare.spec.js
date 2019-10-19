@@ -131,34 +131,4 @@ describe('cordova/prepare', function () {
             });
         });
     });
-
-    describe('preparePlatforms helper method', function () {
-        var cfg_parser_mock = function () {};
-        var platform_munger_mock = function () {};
-        var platform_munger_save_mock;
-        beforeEach(function () {
-            prepare.__set__('ConfigParser', cfg_parser_mock);
-            platform_munger_save_mock = jasmine.createSpy('platform munger save mock');
-            platform_munger_mock.prototype = jasmine.createSpyObj('platform munger prototype mock', ['add_config_changes']);
-            platform_munger_mock.prototype.add_config_changes.and.returnValue({
-                save_all: platform_munger_save_mock
-            });
-            prepare.__set__('PlatformMunger', platform_munger_mock);
-            spyOn(util, 'projectConfig').and.returnValue(project_dir);
-            spyOn(util, 'projectWww').and.returnValue(path.join(project_dir, 'www'));
-
-        });
-        it('should retrieve the platform API via getPlatformApi per platform provided, and invoke the prepare method from that API', function () {
-            return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
-                expect(platforms.getPlatformApi).toHaveBeenCalledWith('android');
-                expect(platform_api_prepare_mock).toHaveBeenCalled();
-            });
-        });
-        it('should handle config changes by invoking add_config_changes and save_all', function () {
-            return prepare.preparePlatforms(['android'], project_dir, {}).then(function () {
-                expect(platform_munger_mock.prototype.add_config_changes).toHaveBeenCalled();
-                expect(platform_munger_save_mock).toHaveBeenCalled();
-            });
-        });
-    });
 });

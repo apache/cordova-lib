@@ -29,6 +29,7 @@ var fs = require('fs-extra');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var detectIndent = require('detect-indent');
 const { Q_chainmap } = require('../../util/promise-util');
+const preparePlatforms = require('../prepare/platforms');
 
 module.exports = remove;
 module.exports.validatePluginId = validatePluginId;
@@ -53,7 +54,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
             if (!shouldRunPrepare) {
                 return Promise.resolve();
             }
-            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+            return preparePlatforms(platformList, projectRoot, opts);
         }).then(function () {
             opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('after_plugin_rm', opts);

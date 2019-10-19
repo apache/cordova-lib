@@ -28,6 +28,7 @@ var promiseutil = require('../../util/promise-util');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
 var getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
+var preparePlatforms = require('../prepare/platforms');
 
 module.exports = addHelper;
 module.exports.getVersionFromConfigFile = getVersionFromConfigFile;
@@ -177,7 +178,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     return promise()
                         .then(function () {
                             if (!opts.restoring) {
-                                return require('../prepare').preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                                return preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
                             }
                         })
                         .then(function () {
