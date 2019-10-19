@@ -17,6 +17,7 @@
 
 var path = require('path');
 var fs = require('fs-extra');
+var util = require('util');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
@@ -91,12 +92,12 @@ describe('cordova/platform/addHelper', function () {
     });
 
     describe('error/warning conditions', function () {
-        it('should require specifying at least one platform', function () {
-            return platform_addHelper('add', hooks_mock).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
-                expect(e.message).toContain('No platform specified.');
-            });
+        it('should require specifying at least one platform', async () => {
+            for (const targets of [[], undefined, null]) {
+                await expectAsync(platform_addHelper('add', hooks_mock, projectRoot, targets))
+                    .withContext(`targets = ${util.inspect(targets)}`)
+                    .toBeRejectedWithError(/No platform specified\./);
+            }
         });
 
         it('should log if host OS does not support the specified platform', function () {
