@@ -40,18 +40,6 @@ describe('cordova/plugin/util', function () {
             expect(plugin_util.getInstalledPlugins('/some/path/to/a/project')).toEqual(plugins_list);
         });
     });
-    describe('saveToConfigXmlOn helper method', function () {
-        it('should return true if config.json\'s autosave option is truthy', function () {
-            expect(plugin_util.saveToConfigXmlOn({
-                auto_save_plugins: true
-            })).toBe(true);
-        });
-        it('should return true if options passed in have a truthy save property', function () {
-            expect(plugin_util.saveToConfigXmlOn({}, {
-                save: true
-            })).toBe(true);
-        });
-    });
     describe('mergeVariables happy path', function () {
         it('should return variable from cli', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);

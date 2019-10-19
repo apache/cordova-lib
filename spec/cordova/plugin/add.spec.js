@@ -62,7 +62,6 @@ describe('cordova/plugin/add', function () {
         spyOn(events, 'emit');
         spyOn(plugin_util, 'info').and.returnValue(Promise.resolve());
         spyOn(add, 'getFetchVersion').and.returnValue(Promise.resolve());
-        spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
 
     describe('main method', function () {
