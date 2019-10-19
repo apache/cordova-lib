@@ -24,30 +24,9 @@ var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
 var platforms = require('../platforms/platforms');
 
-// Global configuration paths
-var global_config_path = process.env['CORDOVA_HOME'];
-if (!global_config_path) {
-    var HOME = process.env[(process.platform.slice(0, 3) === 'win') ? 'USERPROFILE' : 'HOME'];
-    global_config_path = path.join(HOME, '.cordova');
-}
-
 var origCwd = null;
 
-var lib_path = path.join(global_config_path, 'lib');
-
 exports.binname = 'cordova';
-exports.globalConfig = global_config_path;
-
-// defer defining libDirectory on exports so we don't create it if
-// someone simply requires this module
-Object.defineProperty(exports, 'libDirectory', {
-    configurable: true,
-    get: function () {
-        fs.ensureDirSync(lib_path);
-        exports.libDirectory = lib_path;
-        return lib_path;
-    }
-});
 
 exports.isCordova = isCordova;
 exports.getProjectRoot = getProjectRoot;
