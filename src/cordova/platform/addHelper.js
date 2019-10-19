@@ -25,7 +25,6 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
 var promiseutil = require('../../util/promise-util');
-var config = require('../config');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
 
@@ -52,10 +51,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
-    var config_json = config.read(projectRoot);
-    var autosave = config_json.auto_save_platforms || false;
     opts = opts || {};
-    opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
@@ -171,11 +167,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         link: opts.link
                     };
 
-                    if (config_json && config_json.lib && config_json.lib[platform] &&
-                        config_json.lib[platform].template) {
-                        options.customTemplate = config_json.lib[platform].template;
-                    }
-
                     events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
                     var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                     var destination = path.resolve(projectRoot, 'platforms', platform);
@@ -214,7 +205,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             var versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
 
-                            if (opts.save || autosave) {
+                            if (opts.save) {
                                 // Similarly here, we save the source location if that was specified, otherwise the version that
                                 // was installed. However, we save it with the "~" attribute (this allows for patch updates).
                                 spec = saveVersion ? '~' + platDetails.version : spec;

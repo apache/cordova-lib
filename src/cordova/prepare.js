@@ -25,7 +25,6 @@ var platforms = require('../platforms/platforms');
 var HooksRunner = require('../hooks/HooksRunner');
 var restore = require('./restore-util');
 var path = require('path');
-var config = require('./config');
 
 exports = module.exports = prepare;
 module.exports.preparePlatforms = preparePlatforms;
@@ -33,7 +32,6 @@ module.exports.preparePlatforms = preparePlatforms;
 function prepare (options) {
     return Promise.resolve().then(function () {
         var projectRoot = cordova_util.cdProjectRoot();
-        var config_json = config.read(projectRoot);
         options = options || { verbose: false, platforms: [], options: {} };
         options.save = options.save || false;
         var hooksRunner = new HooksRunner(projectRoot);
@@ -53,7 +51,6 @@ function prepare (options) {
                 return restore.installPluginsFromConfigXML(options);
             }).then(function () {
                 options = cordova_util.preProcessOptions(options);
-                options.searchpath = options.searchpath || config_json.plugin_search_path;
                 // Iterate over each added platform
                 return module.exports.preparePlatforms(options.platforms, projectRoot, options);
             }).then(function () {

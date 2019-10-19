@@ -23,7 +23,6 @@ var plugman = require('../../../src/plugman/plugman');
 var cordova_util = require('../../../src/cordova/util');
 var path = require('path');
 var fs = require('fs-extra');
-var config = require('../../../src/cordova/config');
 var events = require('cordova-common').events;
 var plugin_util = require('../../../src/cordova/plugin/util');
 
@@ -62,7 +61,6 @@ describe('cordova/plugin/add', function () {
         spyOn(events, 'emit');
         spyOn(plugin_util, 'info').and.returnValue(Promise.resolve());
         spyOn(add, 'getFetchVersion').and.returnValue(Promise.resolve());
-        spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
 
     describe('main method', function () {
@@ -79,7 +77,6 @@ describe('cordova/plugin/add', function () {
                 return ['android'];
             });
             spyOn(cordova_util, 'findPlugins').and.returnValue({ plugins: [] });
-            spyOn(config, 'read').and.returnValue({});
         });
         describe('error/warning conditions', function () {
             it('should error out if at least one plugin is not specified', function () {

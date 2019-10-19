@@ -25,7 +25,6 @@ var CordovaError = require('cordova-common').CordovaError;
 var fetch = require('cordova-fetch');
 var superspawn = require('cordova-common').superspawn;
 
-module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
 module.exports.info = info;
@@ -35,12 +34,6 @@ function getInstalledPlugins (projectRoot) {
     // TODO: This should list based off of platform.json, not directories within plugins/
     var pluginInfoProvider = new PluginInfoProvider();
     return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
-}
-
-function saveToConfigXmlOn (config_json, options) {
-    options = options || {};
-    var autosave = config_json.auto_save_plugins || false;
-    return autosave || options.save;
 }
 
 /*
