@@ -21,7 +21,7 @@ var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
+var supported_platforms = Object.keys(platforms);
 
 describe('emulate command', function () {
     var is_cordova;
