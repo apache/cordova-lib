@@ -22,7 +22,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var events = require('cordova-common').events;
 var npmUninstall = require('cordova-fetch').uninstall;
 var cordova_util = require('../util');
-var config = require('../config');
 var promiseutil = require('../../util/promise-util');
 var platforms = require('../../platforms/platforms');
 var detectIndent = require('detect-indent');
@@ -40,8 +39,6 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                 cordova_util.removePlatformPluginsJson(projectRoot, target);
             });
         }).then(function () {
-            var config_json = config.read(projectRoot);
-            var autosave = config_json.auto_save_platforms || false;
             var modifiedPkgJson = false;
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
@@ -49,7 +46,7 @@ function remove (hooksRunner, projectRoot, targets, opts) {
             if (fs.existsSync(pkgJsonPath)) {
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             }
-            if (opts.save || autosave) {
+            if (opts.save) {
                 targets.forEach(function (target) {
                     var platformName = target.split('@')[0];
                     var xml = cordova_util.projectConfig(projectRoot);

@@ -26,7 +26,6 @@ var plugman = require('../../../src/plugman/plugman');
 var fs = require('fs-extra');
 var prepare = require('../../../src/cordova/prepare');
 var plugin_util = require('../../../src/cordova/plugin/util');
-var config = require('../../../src/cordova/config');
 
 describe('cordova/plugin/remove', function () {
     var projectRoot = '/some/path';
@@ -142,7 +141,6 @@ describe('cordova/plugin/remove', function () {
 
             beforeEach(function () {
                 spyOn(plugin_util, 'mergeVariables');
-                spyOn(config, 'read').and.returnValue(true);
                 spyOn(cordova_util, 'projectConfig').and.returnValue('config.xml');
                 spyOn(cordova_util, 'findPlugins').and.returnValue([]);
                 spyOn(metadata, 'remove_fetch_metadata').and.returnValue(true);

@@ -21,7 +21,6 @@ var events = require('cordova-common').events;
 var rewire = require('rewire');
 var platform_module = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
-var cordova_config = require('../../../src/cordova/config');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
 var prepare = require('../../../src/cordova/prepare');
@@ -73,7 +72,6 @@ describe('cordova/platform/addHelper', function () {
         spyOn(cordova_util, 'isUrl').and.returnValue(false);
         spyOn(cordova_util, 'hostSupports').and.returnValue(true);
         spyOn(cordova_util, 'removePlatformPluginsJson');
-        spyOn(cordova_config, 'read').and.returnValue({});
         spyOn(events, 'emit');
         // Fake platform details we will use for our mocks, returned by either
         // getPlatfromDetailsFromDir (in the local-directory case), or
@@ -259,7 +257,7 @@ describe('cordova/platform/addHelper', function () {
 
                 it('should file the after_platform_* hook', function () {
                     return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], { save: true, restoring: true }).then(function (result) {
-                        expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', Object({ save: true, restoring: true, searchpath: undefined }));
+                        expect(hooks_mock.fire).toHaveBeenCalledWith('before_platform_add', Object({ save: true, restoring: true }));
                     });
                 });
             });

@@ -20,7 +20,6 @@
 var path = require('path');
 var rewire = require('rewire');
 var util = require('../../src/cordova/util');
-var cordova_config = require('../../src/cordova/config');
 var prepare = rewire('../../src/cordova/prepare');
 var restore = require('../../src/cordova/restore-util');
 var platforms = require('../../src/platforms/platforms');
@@ -56,7 +55,6 @@ describe('cordova/prepare', function () {
 
     describe('main method', function () {
         beforeEach(function () {
-            spyOn(cordova_config, 'read').and.returnValue({});
             spyOn(restore, 'installPlatformsFromConfigXML').and.returnValue(Promise.resolve());
             spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Promise.resolve());
             spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);

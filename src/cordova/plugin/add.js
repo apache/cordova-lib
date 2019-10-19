@@ -19,7 +19,6 @@
 
 var cordova_util = require('../util');
 var plugin_util = require('./util');
-var config = require('../config');
 var cordova_pkgJson = require('../../../package.json');
 var pluginSpec = require('./plugin_spec_parser');
 var plugman = require('../../plugman/plugman');
@@ -52,17 +51,15 @@ function add (projectRoot, hooksRunner, opts) {
     var shouldRunPrepare = false;
     var pluginPath = path.join(projectRoot, 'plugins');
     var platformList = cordova_util.listPlatforms(projectRoot);
-    var config_json = config.read(projectRoot);
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
-    var searchPath = config_json.plugin_search_path || [];
-    if (typeof opts.searchpath === 'string') {
-        searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
-    } else if (opts.searchpath) {
-        searchPath = opts.searchpath.concat(searchPath);
+
+    var searchPath = opts.searchpath;
+    if (typeof searchPath === 'string') {
+        searchPath = searchPath.split(path.delimiter);
     }
     // Blank it out to appease unit tests.
-    if (searchPath.length === 0) {
+    if (searchPath && searchPath.length === 0) {
         searchPath = undefined;
     }
 
