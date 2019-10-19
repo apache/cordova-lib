@@ -22,7 +22,6 @@ var rewire = require('rewire');
 var cordova_util = require('../../../src/cordova/util');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
-var prepare = require('../../../src/cordova/prepare');
 
 describe('cordova/platform/addHelper', function () {
     const projectRoot = '/some/path';
@@ -204,10 +203,10 @@ describe('cordova/platform/addHelper', function () {
         describe('after platform api invocation', function () {
 
             describe('when the restoring option is not provided', function () {
-                // test is commented out b/c preparePlatforms can't be spied on as it is dynamically required due to circular references.
-                xit('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
+                it('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
+                    const preparePlatforms = platform_addHelper.__get__('preparePlatforms');
                     return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], { save: true }).then(function (result) {
-                        expect(prepare.preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', Object({ searchpath: undefined }));
+                        expect(preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', { searchpath: undefined });
                     });
                 });
             });

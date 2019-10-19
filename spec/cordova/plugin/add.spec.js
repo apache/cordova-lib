@@ -18,7 +18,6 @@
 */
 
 var rewire = require('rewire');
-var add = rewire('../../../src/cordova/plugin/add');
 var plugman = require('../../../src/plugman/plugman');
 var cordova_util = require('../../../src/cordova/util');
 var path = require('path');
@@ -33,8 +32,11 @@ describe('cordova/plugin/add', function () {
     var plugin_info_provider_mock = function () {};
     var plugin_info;
     var package_json_mock;
+    var add;
 
     beforeEach(function () {
+        add = rewire('../../../src/cordova/plugin/add');
+
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Promise.resolve());
         Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin']);
@@ -158,9 +160,14 @@ describe('cordova/plugin/add', function () {
                     expect(plugman.install).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({ 'cli_variables': cli_plugin_variables }));
                 });
             });
-            // can't test the following due to inline require of preparePlatforms
-            xit('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
-                plugman.install.and.returnValue(false);
+            it('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
+                plugman.install.and.resolveTo(false);
+                const preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.resolveTo();
+                add.__set__({ preparePlatforms });
+
+                return add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] }).then(() => {
+                    expect(preparePlatforms).toHaveBeenCalled();
+                });
             });
             it('should fire after_plugin_add hook', function () {
                 return add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] }).then(function () {
