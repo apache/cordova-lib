@@ -81,19 +81,6 @@ describe('util module', function () {
             expect(util.isCordova(anotherdir)).toEqual(somedir);
         });
     });
-    describe('deleteSvnFolders method', function () {
-        it('Test 008 : should delete .svn folders in any subdirectory of specified dir', function () {
-            var one = path.join(temp, 'one');
-            var two = path.join(temp, 'two');
-            var one_svn = path.join(one, '.svn');
-            var two_svn = path.join(two, '.svn');
-            fs.ensureDirSync(one_svn);
-            fs.ensureDirSync(two_svn);
-            util.deleteSvnFolders(temp);
-            expect(fs.existsSync(one_svn)).toEqual(false);
-            expect(fs.existsSync(two_svn)).toEqual(false);
-        });
-    });
     describe('listPlatforms method', function () {
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             var platforms = path.join(temp, 'platforms');

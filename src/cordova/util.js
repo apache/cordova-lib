@@ -31,10 +31,8 @@ exports.binname = 'cordova';
 exports.isCordova = isCordova;
 exports.getProjectRoot = getProjectRoot;
 exports.cdProjectRoot = cdProjectRoot;
-exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
 exports.findPlugins = findPlugins;
-exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
@@ -187,19 +185,6 @@ function convertToRealPathSafe (path) {
     return path;
 }
 
-// Recursively deletes .svn folders from a target path
-function deleteSvnFolders (dir) {
-    var contents = fs.readdirSync(dir);
-    contents.forEach(function (entry) {
-        var fullpath = path.join(dir, entry);
-        if (isDirectory(fullpath)) {
-            if (entry === '.svn') {
-                fs.removeSync(fullpath);
-            } else module.exports.deleteSvnFolders(fullpath);
-        }
-    });
-}
-
 function listPlatforms (project_dir) {
     var platforms_dir = path.join(project_dir, 'platforms');
     if (!fs.existsSync(platforms_dir)) {
@@ -243,10 +228,6 @@ function findPlugins (pluginDir) {
     }
 
     return plugins;
-}
-
-function appDir (projectDir) {
-    return projectDir;
 }
 
 function projectWww (projectDir) {
