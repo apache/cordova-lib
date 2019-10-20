@@ -24,38 +24,15 @@ var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
 var platforms = require('../platforms/platforms');
 
-// Global configuration paths
-var global_config_path = process.env['CORDOVA_HOME'];
-if (!global_config_path) {
-    var HOME = process.env[(process.platform.slice(0, 3) === 'win') ? 'USERPROFILE' : 'HOME'];
-    global_config_path = path.join(HOME, '.cordova');
-}
-
 var origCwd = null;
 
-var lib_path = path.join(global_config_path, 'lib');
-
 exports.binname = 'cordova';
-exports.globalConfig = global_config_path;
-
-// defer defining libDirectory on exports so we don't create it if
-// someone simply requires this module
-Object.defineProperty(exports, 'libDirectory', {
-    configurable: true,
-    get: function () {
-        fs.ensureDirSync(lib_path);
-        exports.libDirectory = lib_path;
-        return lib_path;
-    }
-});
 
 exports.isCordova = isCordova;
 exports.getProjectRoot = getProjectRoot;
 exports.cdProjectRoot = cdProjectRoot;
-exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
 exports.findPlugins = findPlugins;
-exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
@@ -208,19 +185,6 @@ function convertToRealPathSafe (path) {
     return path;
 }
 
-// Recursively deletes .svn folders from a target path
-function deleteSvnFolders (dir) {
-    var contents = fs.readdirSync(dir);
-    contents.forEach(function (entry) {
-        var fullpath = path.join(dir, entry);
-        if (isDirectory(fullpath)) {
-            if (entry === '.svn') {
-                fs.removeSync(fullpath);
-            } else module.exports.deleteSvnFolders(fullpath);
-        }
-    });
-}
-
 function listPlatforms (project_dir) {
     var platforms_dir = path.join(project_dir, 'platforms');
     if (!fs.existsSync(platforms_dir)) {
@@ -264,10 +228,6 @@ function findPlugins (pluginDir) {
     }
 
     return plugins;
-}
-
-function appDir (projectDir) {
-    return projectDir;
 }
 
 function projectWww (projectDir) {
