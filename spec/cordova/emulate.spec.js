@@ -21,7 +21,7 @@ var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
+var supported_platforms = Object.keys(platforms);
 
 describe('emulate command', function () {
     var is_cordova;
@@ -46,7 +46,7 @@ describe('emulate command', function () {
     describe('failure', function () {
         it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function () {
             list_platforms.and.returnValue([]);
-            return cordova.compile()
+            return cordova.emulate()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -56,7 +56,7 @@ describe('emulate command', function () {
         });
         it('Test 002 : should not run outside of a Cordova-based project', function () {
             is_cordova.and.returnValue(false);
-            return cordova.compile()
+            return cordova.emulate()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -99,11 +99,15 @@ describe('emulate command', function () {
                 platformApi.build = originalBuildSpy;
             });
             it('Test 006 : should leave parameters unchanged', function () {
-                return cordova.run({ platforms: ['blackberry10'], options: { password: '1q1q' } })
+                const baseOptions = { password: '1q1q', device: false, emulator: true };
+                const expectedRunOptions = Object.assign({ nobuild: true }, baseOptions);
+                const expectedBuildOptions = Object.assign({ couldBeModified: 'insideBuild' }, baseOptions);
+
+                return cordova.emulate({ platforms: ['blackberry10'], options: { password: '1q1q' } })
                     .then(function () {
-                        expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
-                        expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q', 'couldBeModified': 'insideBuild' });
-                        expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
+                        expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: expectedBuildOptions, verbose: false });
+                        expect(platformApi.build).toHaveBeenCalledWith(expectedBuildOptions);
+                        expect(platformApi.run).toHaveBeenCalledWith(expectedRunOptions);
                     });
             });
         });
