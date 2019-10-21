@@ -25,8 +25,10 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
 var promiseutil = require('../../util/promise-util');
-var platforms = require('../../platforms/platforms');
+var platforms = require('../../platforms');
 var detectIndent = require('detect-indent');
+var getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
+var preparePlatforms = require('../prepare/platforms');
 
 module.exports = addHelper;
 module.exports.getVersionFromConfigFile = getVersionFromConfigFile;
@@ -42,7 +44,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     }
 
     for (var i = 0; i < targets.length; i++) {
-        if (!cordova_util.hostSupports(targets[i])) {
+        if (!platforms.hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
             events.emit('warning', msg);
@@ -111,9 +113,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
 
                     // If spec still doesn't exist, try to use pinned version
-                    if (!spec && platforms[platform]) {
+                    if (!spec && platforms.info[platform]) {
                         events.emit('verbose', 'Grabbing pinned version.');
-                        spec = platforms[platform].version;
+                        spec = platforms.info[platform].version;
                     }
 
                     // Handle local paths
@@ -122,7 +124,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         if (cordova_util.isDirectory(maybeDir)) {
                             return fetch(path.resolve(maybeDir), projectRoot, opts)
                                 .then(function (directory) {
-                                    return require('./index').getPlatformDetailsFromDir(directory, platform);
+                                    return getPlatformDetailsFromDir(directory, platform);
                                 });
                         }
                     }
@@ -176,7 +178,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     return promise()
                         .then(function () {
                             if (!opts.restoring) {
-                                return require('../prepare').preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                                return preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
                             }
                         })
                         .then(function () {
@@ -268,7 +270,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Promise.resolve().then(function () {
         // append cordova to platform
-        if (platform in platforms) {
+        if (platform in platforms.info) {
             target = 'cordova-' + target;
         }
 
@@ -285,7 +287,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             '\n' + error;
         return Promise.reject(new CordovaError(message));
     }).then(function (libDir) {
-        return require('./index').getPlatformDetailsFromDir(libDir, platform);
+        return getPlatformDetailsFromDir(libDir, platform);
     });
 }
 

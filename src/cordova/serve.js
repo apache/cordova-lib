@@ -25,6 +25,7 @@ const { template, object: zipObject } = require('underscore');
 
 const { ConfigParser, events } = require('cordova-common');
 const cordovaServe = require('cordova-serve');
+const cordovaPrepare = require('./prepare');
 const cordovaUtil = require('./util');
 const platforms = require('../platforms/platforms');
 const HooksRunner = require('../hooks/HooksRunner');
@@ -146,7 +147,7 @@ function serve (port) {
         const server = cordovaServe();
 
         // Run a prepare first!
-        return require('./cordova').prepare([])
+        return cordovaPrepare([])
             .then(() => {
                 registerRoutes(server.app);
                 return server.launchServer({ port, events });

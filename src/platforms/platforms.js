@@ -17,52 +17,18 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('../cordova/util');
-var platforms = require('./platformsConfig.json');
-var events = require('cordova-common').events;
+const { getPlatformApi, info } = require('.');
 
-// Avoid loading the same platform projects more than once (identified by path)
-var cachedApis = {};
-
-// getPlatformApi() should be the only method of instantiating the
-// PlatformProject classes for now.
-function getPlatformApi (platform, platformRootDir) {
-    // if platformRootDir is not specified, try to detect it first
-    if (!platformRootDir) {
-        var projectRootDir = util.isCordova();
-        platformRootDir = projectRootDir && path.join(projectRootDir, 'platforms', platform);
-    }
-    if (!platformRootDir) {
-        // If platformRootDir is still undefined, then we're probably is not inside of cordova project
-        throw new Error('Current location is not a Cordova project');
-    }
-    // CB-11174 Resolve symlinks first before working with root directory
-    platformRootDir = util.convertToRealPathSafe(platformRootDir);
-
-    // Make sure the platforms/platform folder exists
-    if (!fs.existsSync(platformRootDir)) {
-        throw new Error('The platform "' + platform + '" does not appear to have been added to this project.');
-    }
-
-    var platformApi;
-    var cached = cachedApis[platformRootDir];
-    var libDir = path.join(platformRootDir, 'cordova', 'Api.js');
-    if (cached && cached.platform === platform) {
-        platformApi = cached;
-    } else {
-        var PlatformApi = util.getPlatformApiFunction(libDir, platform);
-        platformApi = new PlatformApi(platform, platformRootDir, events);
-        cachedApis[platformRootDir] = platformApi;
-    }
-    return platformApi;
-}
-
-module.exports = platforms;
+// Shallow-copy so that we don't affect other instances below
+module.exports = Object.assign({}, info);
 
 // We don't want these methods to be enumerable on the platforms object, because we expect enumerable properties of the
 // platforms object to be platforms.
 Object.defineProperties(module.exports, {
-    'getPlatformApi': { value: getPlatformApi, configurable: true, writable: true }
+    getPlatformApi: {
+        value: getPlatformApi,
+        configurable: true,
+        enumerable: false,
+        writable: true
+    }
 });

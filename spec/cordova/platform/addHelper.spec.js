@@ -19,11 +19,10 @@ var path = require('path');
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var rewire = require('rewire');
-var platform_module = require('../../../src/cordova/platform');
 var cordova_util = require('../../../src/cordova/util');
+var platforms = require('../../../src/platforms');
 var plugman = require('../../../src/plugman/plugman');
 var fetch_metadata = require('../../../src/plugman/util/metadata');
-var prepare = require('../../../src/cordova/prepare');
 
 describe('cordova/platform/addHelper', function () {
     const projectRoot = '/some/path';
@@ -48,7 +47,8 @@ describe('cordova/platform/addHelper', function () {
         ]);
         fetch_mock = jasmine.createSpy('fetch mock').and.returnValue(Promise.resolve());
         prepare_mock = jasmine.createSpy('prepare mock').and.returnValue(Promise.resolve());
-        prepare_mock.preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Promise.resolve());
+        const preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.returnValue(Promise.resolve());
+        prepare_mock.preparePlatforms = preparePlatforms;
 
         // `cordova.prepare` is never saved to a variable, so we need to fake `require`
         platform_addHelper = rewire('../../../src/cordova/platform/addHelper');
@@ -56,10 +56,14 @@ describe('cordova/platform/addHelper', function () {
         const requireFake = jasmine.createSpy('require', testSubjectRequire).and.callThrough();
         requireFake.withArgs('../prepare').and.returnValue(prepare_mock);
 
+        const getPlatformDetailsFromDir = jasmine.createSpy('getPlatformDetailsFromDir').and.returnValue(Promise.resolve(fake_platform));
+
         platform_addHelper.__set__({
             ConfigParser: cfg_parser_mock,
             fetch: fetch_mock,
-            require: requireFake
+            require: requireFake,
+            getPlatformDetailsFromDir,
+            preparePlatforms
         });
 
         spyOn(fs, 'ensureDirSync');
@@ -70,13 +74,12 @@ describe('cordova/platform/addHelper', function () {
         spyOn(cordova_util, 'isDirectory').and.returnValue(false);
         spyOn(cordova_util, 'fixRelativePath').and.callFake(function (input) { return input; });
         spyOn(cordova_util, 'isUrl').and.returnValue(false);
-        spyOn(cordova_util, 'hostSupports').and.returnValue(true);
         spyOn(cordova_util, 'removePlatformPluginsJson');
+        spyOn(platforms, 'hostSupports').and.returnValue(true);
         spyOn(events, 'emit');
         // Fake platform details we will use for our mocks, returned by either
         // getPlatfromDetailsFromDir (in the local-directory case), or
         // downloadPlatform (in every other case)
-        spyOn(platform_module, 'getPlatformDetailsFromDir').and.returnValue(Promise.resolve(fake_platform));
         spyOn(platform_addHelper, 'downloadPlatform').and.returnValue(Promise.resolve(fake_platform));
         spyOn(platform_addHelper, 'getVersionFromConfigFile').and.returnValue(false);
         spyOn(platform_addHelper, 'installPluginsForNewPlatform').and.returnValue(Promise.resolve());
@@ -97,9 +100,9 @@ describe('cordova/platform/addHelper', function () {
         });
 
         it('should log if host OS does not support the specified platform', function () {
-            cordova_util.hostSupports.and.returnValue(false);
+            platforms.hostSupports.and.returnValue(false);
             return platform_addHelper('add', hooks_mock, projectRoot, ['atari']).then(function () {
-                expect(cordova_util.hostSupports).toHaveBeenCalled();
+                expect(platforms.hostSupports).toHaveBeenCalled();
                 expect(events.emit).toHaveBeenCalledWith('warning', jasmine.stringMatching(/WARNING: Applications/));
             });
         });
@@ -134,7 +137,7 @@ describe('cordova/platform/addHelper', function () {
                 cordova_util.isDirectory.and.returnValue(true);
                 fetch_mock.and.returnValue(Promise.resolve(directory_to_platform));
                 return platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], { restoring: true }).then(function () {
-                    expect(platform_module.getPlatformDetailsFromDir).toHaveBeenCalledWith(directory_to_platform, null);
+                    expect(platform_addHelper.__get__('getPlatformDetailsFromDir')).toHaveBeenCalledWith(directory_to_platform, null);
                     expect(platform_addHelper.downloadPlatform).not.toHaveBeenCalled();
                 });
             });
@@ -201,10 +204,10 @@ describe('cordova/platform/addHelper', function () {
         describe('after platform api invocation', function () {
 
             describe('when the restoring option is not provided', function () {
-                // test is commented out b/c preparePlatforms can't be spied on as it is dynamically required due to circular references.
-                xit('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
+                it('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
+                    const preparePlatforms = platform_addHelper.__get__('preparePlatforms');
                     return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], { save: true }).then(function (result) {
-                        expect(prepare.preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', Object({ searchpath: undefined }));
+                        expect(preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', { searchpath: undefined });
                     });
                 });
             });
@@ -287,7 +290,7 @@ describe('cordova/platform/addHelper', function () {
             it('should pass along a libDir argument to getPlatformDetailsFromDir on a successful platform download', function () {
                 cordova_util.isUrl.and.returnValue(true);
                 return platform_addHelper.downloadPlatform(projectRoot, 'android', 'https://github.com/apache/cordova-android', { save: true }).then(function () {
-                    expect(require('../../../src/cordova/platform/index').getPlatformDetailsFromDir).toHaveBeenCalled();
+                    expect(platform_addHelper.__get__('getPlatformDetailsFromDir')).toHaveBeenCalled();
                 });
             }, 60000);
         });

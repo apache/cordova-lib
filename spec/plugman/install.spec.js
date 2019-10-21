@@ -20,13 +20,12 @@
 const fs = require('fs-extra');
 const path = require('path');
 const semver = require('semver');
+const rewire = require('rewire');
 
 const { events, PlatformJson, superspawn } = require('cordova-common');
 const { spy: emitSpyHelper } = require('../common');
-const install = require('../../src/plugman/install');
 const knownPlatforms = require('../../src/platforms/platforms');
 const platforms = require('../../src/plugman/platforms/common');
-const plugman = require('../../src/plugman/plugman');
 
 const { tmpDir, getFixture } = require('../helpers');
 const temp_dir = tmpDir('plugman-install-test');
@@ -67,6 +66,7 @@ const fake = {
 };
 
 describe('plugman/install', () => {
+    let install = require('../../src/plugman/install');
     let fetchSpy;
 
     beforeAll(() => {
@@ -112,11 +112,14 @@ describe('plugman/install', () => {
     });
 
     beforeEach(() => {
+        install = rewire('../../src/plugman/install');
+        fetchSpy = jasmine.createSpy('plugmanFetch').and.returnValue(Promise.resolve(pluginDir('com.cordova.engine')));
+        install.__set__({ plugmanFetch: fetchSpy });
+
         spyOn(superspawn, 'spawn').and.returnValue(Promise.resolve(''));
         spyOn(fs, 'ensureDirSync');
         spyOn(platforms, 'copyFile').and.returnValue(true);
 
-        fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Promise.resolve(pluginDir('com.cordova.engine')));
         spyOn(fs, 'writeFileSync');
         spyOn(fs, 'copySync');
         spyOn(fs, 'removeSync');

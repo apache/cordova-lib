@@ -22,7 +22,6 @@ const fs = require('fs-extra');
 const rewire = require('rewire');
 const cordovaServe = require('cordova-serve');
 const { tmpDir: getTmpDir, omniStub } = require('../helpers');
-const cordova = require('../../src/cordova/cordova');
 const cordovaUtil = require('../../src/cordova/util');
 const platforms = require('../../src/platforms/platforms');
 
@@ -109,9 +108,8 @@ describe('cordova/serve', () => {
             serverSpy.app = Symbol('server.app');
             serverSpy.server = Symbol('server.server');
 
-            spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
-
             serve.__set__({
+                cordovaPrepare: jasmine.createSpy('cordovaPrepare').and.returnValue(Promise.resolve()),
                 cordovaServe: jasmine.createSpy('cordova-serve').and.returnValue(serverSpy),
                 registerRoutes: jasmine.createSpy('registerRoutes')
             });
@@ -121,6 +119,7 @@ describe('cordova/serve', () => {
         it('should launch a server after preparing the project', () => {
             const PORT = 1234567;
             const registerRoutes = serve.__get__('registerRoutes');
+            const prepareSpy = serve.__get__('cordovaPrepare');
 
             return privateServe(PORT).then(result => {
                 expect(result).toBe(serverSpy.server);
@@ -128,7 +127,7 @@ describe('cordova/serve', () => {
                 expect(serverSpy.launchServer).toHaveBeenCalledWith(
                     jasmine.objectContaining({ port: PORT })
                 );
-                expect(cordova.prepare).toHaveBeenCalledBefore(serverSpy.launchServer);
+                expect(prepareSpy).toHaveBeenCalledBefore(serverSpy.launchServer);
             });
         });
 
@@ -142,7 +141,8 @@ describe('cordova/serve', () => {
 
         it('should fail if prepare fails', () => {
             const fakeError = new Error();
-            cordova.prepare.and.returnValue(Promise.reject(fakeError));
+            const prepareSpy = serve.__get__('cordovaPrepare');
+            prepareSpy.and.returnValue(Promise.reject(fakeError));
 
             return privateServe(1234567, {}).then(
                 _ => fail('Expected promise to be rejected'),

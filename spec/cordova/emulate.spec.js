@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../../src/cordova/cordova');
+const rewire = require('rewire');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var util = require('../../src/cordova/util');
@@ -24,29 +24,29 @@ var util = require('../../src/cordova/util');
 var supported_platforms = Object.keys(platforms);
 
 describe('emulate command', function () {
-    var is_cordova;
-    var list_platforms;
-    var fire;
     var project_dir = '/some/path';
-    var prepare_spy, platformApi, getPlatformApi;
+    let cordovaEmulate, cordovaPrepare, platformApi, getPlatformApi;
 
     beforeEach(function () {
-        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
-        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
+        spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
+        spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+
+        cordovaEmulate = rewire('../../src/cordova/emulate');
+        cordovaPrepare = jasmine.createSpy('cordovaPrepare').and.returnValue(Promise.resolve());
+        cordovaEmulate.__set__({ cordovaPrepare });
+
         platformApi = {
             run: jasmine.createSpy('run').and.returnValue(Promise.resolve()),
             build: jasmine.createSpy('build').and.returnValue(Promise.resolve())
         };
-
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
     describe('failure', function () {
         it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function () {
-            list_platforms.and.returnValue([]);
-            return cordova.emulate()
+            util.listPlatforms.and.returnValue([]);
+            return cordovaEmulate()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -55,8 +55,8 @@ describe('emulate command', function () {
                 });
         });
         it('Test 002 : should not run outside of a Cordova-based project', function () {
-            is_cordova.and.returnValue(false);
-            return cordova.emulate()
+            util.isCordova.and.returnValue(false);
+            return cordovaEmulate()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -67,9 +67,9 @@ describe('emulate command', function () {
 
     describe('success', function () {
         it('Test 003 : should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function () {
-            return cordova.emulate(['android', 'ios'])
+            return cordovaEmulate(['android', 'ios'])
                 .then(function () {
-                    expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['android', 'ios'] }));
+                    expect(cordovaPrepare).toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['android', 'ios'] }));
                     expect(getPlatformApi).toHaveBeenCalledWith('android');
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalled();
@@ -77,9 +77,9 @@ describe('emulate command', function () {
                 });
         });
         it('Test 004 : should pass down options', function () {
-            return cordova.emulate({ platforms: ['ios'], options: { optionTastic: true } })
+            return cordovaEmulate({ platforms: ['ios'], options: { optionTastic: true } })
                 .then(function () {
-                    expect(prepare_spy).toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['ios'] }));
+                    expect(cordovaPrepare).toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['ios'] }));
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
                     expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true, nobuild: true });
@@ -87,25 +87,19 @@ describe('emulate command', function () {
         });
 
         describe('run parameters should not be altered by intermediate build command', function () {
-            var originalBuildSpy;
             beforeEach(function () {
-                originalBuildSpy = platformApi.build;
-                platformApi.build = jasmine.createSpy('build').and.callFake(function (opts) {
+                platformApi.build.and.callFake(opts => {
                     opts.couldBeModified = 'insideBuild';
                     return Promise.resolve();
                 });
-            });
-            afterEach(function () {
-                platformApi.build = originalBuildSpy;
             });
             it('Test 006 : should leave parameters unchanged', function () {
                 const baseOptions = { password: '1q1q', device: false, emulator: true };
                 const expectedRunOptions = Object.assign({ nobuild: true }, baseOptions);
                 const expectedBuildOptions = Object.assign({ couldBeModified: 'insideBuild' }, baseOptions);
-
-                return cordova.emulate({ platforms: ['blackberry10'], options: { password: '1q1q' } })
+                return cordovaEmulate({ platforms: ['blackberry10'], options: { password: '1q1q' } })
                     .then(function () {
-                        expect(prepare_spy).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: expectedBuildOptions, verbose: false });
+                        expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: expectedBuildOptions, verbose: false });
                         expect(platformApi.build).toHaveBeenCalledWith(expectedBuildOptions);
                         expect(platformApi.run).toHaveBeenCalledWith(expectedRunOptions);
                     });
@@ -113,18 +107,18 @@ describe('emulate command', function () {
         });
 
         it('Test 007 : should call platform\'s build method', function () {
-            return cordova.emulate({ platforms: ['blackberry10'] })
+            return cordovaEmulate({ platforms: ['blackberry10'] })
                 .then(function () {
-                    expect(prepare_spy).toHaveBeenCalled();
+                    expect(cordovaPrepare).toHaveBeenCalled();
                     expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true });
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({ nobuild: true }));
                 });
         });
 
         it('Test 008 : should not call build if --nobuild option is passed', function () {
-            return cordova.emulate({ platforms: ['blackberry10'], options: { nobuild: true } })
+            return cordovaEmulate({ platforms: ['blackberry10'], options: { nobuild: true } })
                 .then(function () {
-                    expect(prepare_spy).toHaveBeenCalled();
+                    expect(cordovaPrepare).toHaveBeenCalled();
                     expect(platformApi.build).not.toHaveBeenCalled();
                     expect(platformApi.run).toHaveBeenCalledWith(jasmine.objectContaining({ nobuild: true }));
                 });
@@ -134,16 +128,16 @@ describe('emulate command', function () {
     describe('hooks', function () {
         describe('when platforms are added', function () {
             it('Test 009 : should fire before hooks through the hooker module', function () {
-                return cordova.emulate(['android', 'ios'])
+                return cordovaEmulate(['android', 'ios'])
                     .then(function () {
-                        expect(fire).toHaveBeenCalledWith('before_emulate',
+                        expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('before_emulate',
                             jasmine.objectContaining({ verbose: false, platforms: ['android', 'ios'], options: jasmine.any(Object) }));
                     });
             });
             it('Test 010 : should fire after hooks through the hooker module', function () {
-                return cordova.emulate('android')
+                return cordovaEmulate('android')
                     .then(function () {
-                        expect(fire).toHaveBeenCalledWith('after_emulate',
+                        expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('after_emulate',
                             jasmine.objectContaining({ verbose: false, platforms: ['android'], options: jasmine.any(Object) }));
                     });
             });
@@ -151,13 +145,13 @@ describe('emulate command', function () {
 
         describe('with no platforms added', function () {
             it('Test 011 : should not fire the hooker', function () {
-                list_platforms.and.returnValue([]);
-                return Promise.resolve().then(cordova.emulate).then(function () {
+                util.listPlatforms.and.returnValue([]);
+                return Promise.resolve().then(cordovaEmulate).then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
                     expect(err).toEqual(jasmine.any(Error));
                     expect(err.message).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-                    expect(fire).not.toHaveBeenCalled();
+                    expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
                 });
             });
         });

@@ -24,7 +24,6 @@ var metadata = require('../../../src/plugman/util/metadata');
 var events = require('cordova-common').events;
 var plugman = require('../../../src/plugman/plugman');
 var fs = require('fs-extra');
-var prepare = require('../../../src/cordova/prepare');
 var plugin_util = require('../../../src/cordova/plugin/util');
 
 describe('cordova/plugin/remove', function () {
@@ -47,7 +46,6 @@ describe('cordova/plugin/remove', function () {
         spyOn(plugman.uninstall, 'uninstallPlatform').and.returnValue(Promise.resolve());
         spyOn(plugman.uninstall, 'uninstallPlugin').and.returnValue(Promise.resolve());
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
-        spyOn(prepare, 'preparePlatforms').and.returnValue(true);
         hook_mock.fire.and.returnValue(Promise.resolve());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'getPlugin', 'removePlugin']);
         remove.__set__('ConfigParser', cfg_parser_mock);
@@ -56,7 +54,10 @@ describe('cordova/plugin/remove', function () {
             // id version dir getPreferences() engines engines.cordovaDependencies name versions
             return plugin_info;
         };
-        remove.__set__('PluginInfoProvider', plugin_info_provider_mock);
+        remove.__set__({
+            PluginInfoProvider: plugin_info_provider_mock,
+            preparePlatforms: jasmine.createSpy('preparePlatforms')
+        });
     });
 
     describe('error/warning conditions', function () {

@@ -20,6 +20,7 @@
 var cordova_util = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
 var platform_lib = require('../platforms/platforms');
+var cordovaPrepare = require('./prepare');
 
 // Returns a promise.
 module.exports = function emulate (options) {
@@ -38,7 +39,7 @@ module.exports = function emulate (options) {
             .then(function () {
                 if (!options.options.noprepare) {
                     // Run a prepare first!
-                    return require('./cordova').prepare(options);
+                    return cordovaPrepare(options);
                 }
             }).then(function () {
                 // Deploy in parallel (output gets intermixed though...)

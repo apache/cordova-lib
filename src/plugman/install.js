@@ -36,6 +36,7 @@ var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var variableMerge = require('./variable-merge');
+var plugmanFetch = require('./fetch');
 
 /* INSTALL FLOW
    ------------
@@ -92,8 +93,7 @@ function possiblyFetch (id, plugins_dir, options) {
     var opts = Object.assign({}, options, {
         client: 'plugman'
     });
-    // TODO: without runtime require below, we have a circular dependency.
-    return require('./plugman').fetch(id, plugins_dir, opts);
+    return plugmanFetch(id, plugins_dir, opts);
 }
 
 function checkEngines (engines) {

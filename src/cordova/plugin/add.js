@@ -32,6 +32,7 @@ var fs = require('fs-extra');
 var semver = require('semver');
 var url = require('url');
 var detectIndent = require('detect-indent');
+var preparePlatforms = require('../prepare/platforms');
 
 module.exports = add;
 module.exports.determinePluginTarget = determinePluginTarget;
@@ -190,7 +191,7 @@ function add (projectRoot, hooksRunner, opts) {
             // Need to require right here instead of doing this at the beginning of file
             // otherwise tests are failing without any real reason.
             // TODO: possible circular dependency?
-            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+            return preparePlatforms(platformList, projectRoot, opts);
         }).then(function () {
             opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('after_plugin_add', opts);
