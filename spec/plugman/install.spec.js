@@ -25,7 +25,6 @@ const rewire = require('rewire');
 const { events, PlatformJson, superspawn } = require('cordova-common');
 const { spy: emitSpyHelper } = require('../common');
 const knownPlatforms = require('../../src/platforms/platforms');
-const platforms = require('../../src/plugman/platforms/common');
 
 const { tmpDir, getFixture } = require('../helpers');
 const temp_dir = tmpDir('plugman-install-test');
@@ -118,8 +117,6 @@ describe('plugman/install', () => {
 
         spyOn(superspawn, 'spawn').and.returnValue(Promise.resolve(''));
         spyOn(fs, 'ensureDirSync');
-        spyOn(platforms, 'copyFile').and.returnValue(true);
-
         spyOn(fs, 'writeFileSync');
         spyOn(fs, 'copySync');
         spyOn(fs, 'removeSync');
