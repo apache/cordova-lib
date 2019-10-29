@@ -57,7 +57,6 @@ describe('fetch', function () {
 
     describe('local plugins', function () {
         var sym;
-        var fetchCalls = 0;
 
         beforeEach(function () {
             fs.removeSync(temp);
@@ -67,15 +66,9 @@ describe('fetch', function () {
             spyOn(fs, 'copySync').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
 
-            fetch.__set__('localPlugins', null);
-            fetch.__set__('fetch', function (pluginDir) {
-                fetchCalls++;
-                return Promise.resolve(pluginDir);
-            });
-        });
-
-        afterEach(function () {
-            fetchCalls = 0;
+            const fetchSpy = jasmine.createSpy('fetch')
+                .and.callFake(x => Promise.resolve(x));
+            fetch.__set__({ localPlugins: null, fetch: fetchSpy });
         });
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
@@ -125,7 +118,7 @@ describe('fetch', function () {
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_pkgjson_plugin, temp).then(function () {
                 expect(fs.copySync).toHaveBeenCalledWith(path.join(test_pkgjson_plugin), path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({ dereference: true }));
-                expect(fetchCalls).toBe(1);
+                expect(fetch.__get__('fetch')).toHaveBeenCalledTimes(1);
             });
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {
