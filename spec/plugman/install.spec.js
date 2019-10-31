@@ -85,10 +85,6 @@ describe('plugman/install', () => {
                         .then(_ => returnValues.next());
                 });
 
-                // execaSpy = jasmine.createSpy('execa');
-                // execaSpy.and.returnValue(Promise.resolve({ stdout: '' }));
-                // install.__set__('execa', execaSpy);
-
                 return install('android', project, pluginDir('org.test.plugins.dummyplugin'));
             })
             .then(result => {
