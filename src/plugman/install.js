@@ -296,7 +296,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         if (options.platformVersion) {
             return Promise.resolve(options.platformVersion);
         }
-        return Promise.resolve(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
+        return Promise.resolve(cordovaUtil.getPlatformVersion(project_dir));
     }).then(function (platformVersion) {
         options.platformVersion = platformVersion;
         return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
