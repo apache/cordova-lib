@@ -42,7 +42,7 @@ function displayVirtualDevices (projectRoot, platform, options) {
     var caller = { 'script': 'list-emulator-images' };
     events.emit('log', 'Available ' + platform + ' virtual devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
-    return execa(cmd, options.argv, { stdio: 'inherit', chmod: true }).then(data => data.stdout).catch(handleError.bind(caller));
+    return execa(cmd, options.argv, { stdio: 'inherit', chmod: true }).then(data => data.stdout, handleError.bind(caller));
 }
 
 module.exports = function targets (options) {
