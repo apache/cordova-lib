@@ -35,7 +35,7 @@ function displayDevices (projectRoot, platform, options) {
     var caller = { 'script': 'list-devices' };
     events.emit('log', 'Available ' + platform + ' devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
-    return execa(cmd, options.argv, { stdio: 'inherit', chmod: true }).then(data => data.stdout).catch(handleError.bind(caller));
+    return execa(cmd, options.argv, { stdio: 'inherit', chmod: true }).then(data => data.stdout, handleError.bind(caller));
 }
 
 function displayVirtualDevices (projectRoot, platform, options) {
