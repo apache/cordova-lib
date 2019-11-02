@@ -81,13 +81,6 @@ function removePlugin (id) {
         });
 }
 
-var errorHandler = {
-    errorCallback: function (error) {
-        // We want the error to be printed by jasmine
-        expect(error).toBeUndefined();
-    }
-};
-
 // We can't call add with a searchpath or else we will conflict with other tests
 // that use a searchpath. See loadLocalPlugins() in plugman/fetch.js for details.
 // The searchpath behavior gets tested in the plugman spec
@@ -118,13 +111,11 @@ describe('plugin end-to-end', function () {
 
         spyOn(platforms, 'getPlatformApi').and.callThrough();
         spyOn(install, 'runInstall').and.callThrough();
-        spyOn(errorHandler, 'errorCallback').and.callThrough();
     });
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
         fs.removeSync(project);
-        expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
     it('Test 001 : should successfully add and remove a plugin with no options', function () {
