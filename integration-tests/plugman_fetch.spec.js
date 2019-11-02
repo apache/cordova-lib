@@ -29,6 +29,7 @@ var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
 var test_plugin_searchpath = path.join(test_plugin, '..');
 var test_plugin_id = 'org.test.plugins.childbrowser';
 var test_plugin_version = '0.6.0';
+const { asymmetricMatchers: { pathNormalizingTo } } = require('../spec/helpers');
 
 describe('fetch', function () {
     describe('local plugins', function () {
@@ -65,7 +66,11 @@ describe('fetch', function () {
 
         it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
             return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
+                expect(fs.copySync).toHaveBeenCalledWith(
+                    pathNormalizingTo(test_plugin),
+                    path.join(temp, test_plugin_id),
+                    jasmine.objectContaining({ dereference: true })
+                );
             });
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
