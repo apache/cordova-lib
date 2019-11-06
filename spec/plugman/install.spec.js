@@ -119,8 +119,6 @@ describe('plugman/install', () => {
         execaSpy.and.returnValue(Promise.resolve({ stdout: '' }));
         install.__set__('execa', execaSpy);
 
-        execaSpy.and.returnValue(Promise.resolve({ stdout: '' }));
-
         spyOn(fs, 'ensureDirSync');
         spyOn(fs, 'writeFileSync');
         spyOn(fs, 'copySync');
