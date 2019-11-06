@@ -189,6 +189,15 @@ module.exports.writeConfigContent = function (appPath, configContent) {
     fs.writeFileSync(configFile, configContent, 'utf-8');
 };
 
+module.exports.asymmetricMatchers = {
+    pathNormalizingTo (expectedPath) {
+        return {
+            asymmetricMatch: actualPath => path.normalize(actualPath) === expectedPath,
+            jasmineToString: _ => `<pathNormalizingTo(${expectedPath})>`
+        };
+    }
+};
+
 const customMatchers = {
     toExist: () => ({ compare (file) {
         const pass = fs.existsSync(file);

@@ -297,32 +297,70 @@ describe('cordova/platform/addHelper', function () {
     });
     describe('installPluginsForNewPlatform', function () {
         beforeEach(function () {
-            spyOn(fetch_metadata, 'get_fetch_metadata');
             spyOn(plugman, 'install').and.returnValue(Promise.resolve());
+            spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-whitelist']);
+            spyOn(fetch_metadata, 'get_fetch_metadata').and.returnValue({});
             platform_addHelper.installPluginsForNewPlatform.and.callThrough();
         });
 
+        // Call installPluginsForNewPlatform with some preset test arguments
+        function installPluginsForNewPlatformWithTestArgs () {
+            return platform_addHelper.installPluginsForNewPlatform('atari', projectRoot, {});
+        }
+
         it('should immediately return if there are no plugins to install into the platform', function () {
-            return platform_addHelper.installPluginsForNewPlatform('android', projectRoot).then(function () {
+            cordova_util.findPlugins.and.returnValue([]);
+
+            return installPluginsForNewPlatformWithTestArgs().then(() => {
                 expect(plugman.install).not.toHaveBeenCalled();
             });
         });
 
         it('should invoke plugman.install, giving correct platform, plugin and other arguments', function () {
-            spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-whitelist']);
-            fetch_metadata.get_fetch_metadata.and.returnValue({ });
-            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, { save: true }).then(function () {
-                expect(plugman.install).toHaveBeenCalled();
-                expect(events.emit).toHaveBeenCalledWith('verbose', 'Installing plugin "cordova-plugin-whitelist" following successful platform add of browser');
+            return installPluginsForNewPlatformWithTestArgs().then(() => {
+                expect(events.emit).toHaveBeenCalledWith(
+                    'verbose',
+                    'Installing plugin "cordova-plugin-whitelist" following successful platform add of atari'
+                );
+                expect(plugman.install).toHaveBeenCalledTimes(1);
+                expect(plugman.install).toHaveBeenCalledWith(
+                    'atari',
+                    path.normalize('/some/path/platforms/atari'),
+                    'cordova-plugin-whitelist',
+                    path.normalize('/some/path/plugins'),
+                    {
+                        searchpath: undefined,
+                        usePlatformWww: true,
+                        is_top_level: undefined,
+                        force: undefined,
+                        save: false
+                    }
+                );
+            });
+        });
+
+        it('should properly signal a top level plugin to plugman.install,', () => {
+            fetch_metadata.get_fetch_metadata.and.returnValue({ is_top_level: true });
+
+            return installPluginsForNewPlatformWithTestArgs().then(() => {
+                expect(plugman.install).toHaveBeenCalledTimes(1);
+                const installOptions = plugman.install.calls.argsFor(0)[4];
+                expect(installOptions.is_top_level).toBe(true);
             });
         });
 
         it('should include any plugin variables as options when invoking plugman install', function () {
-            spyOn(cordova_util, 'findPlugins').and.returnValue(['cordova-plugin-camera']);
-            fetch_metadata.get_fetch_metadata.and.returnValue({ source: {}, variables: {} });
-            return platform_addHelper.installPluginsForNewPlatform('browser', projectRoot, { save: true }).then(function () {
-                expect(plugman.install).toHaveBeenCalled();
-                expect(events.emit).toHaveBeenCalledWith('verbose', 'Found variables for "cordova-plugin-camera". Processing as cli_variables.');
+            const variables = {};
+            fetch_metadata.get_fetch_metadata.and.returnValue({ variables });
+
+            return installPluginsForNewPlatformWithTestArgs().then(() => {
+                expect(events.emit).toHaveBeenCalledWith(
+                    'verbose',
+                    'Found variables for "cordova-plugin-whitelist". Processing as cli_variables.'
+                );
+                expect(plugman.install).toHaveBeenCalledTimes(1);
+                const installOptions = plugman.install.calls.argsFor(0)[4];
+                expect(installOptions.cli_variables).toBe(variables);
             });
         });
     });
