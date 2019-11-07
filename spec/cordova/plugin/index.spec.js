@@ -99,14 +99,6 @@ describe('cordova/plugin', function () {
                 });
         });
 
-        it('should direct "save" command to the "save" submodule', function () {
-            spyOn(plugin, 'save').and.returnValue(true);
-            return plugin('save')
-                .then(function () {
-                    expect(plugin.save).toHaveBeenCalled();
-                });
-        });
-
         it('should direct "list", all other commands and no command at all to the "list" submodule', function () {
             spyOn(plugin, 'list').and.returnValue(true);
             return plugin('list')
