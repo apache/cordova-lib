@@ -72,7 +72,7 @@ function environmentInformation () {
     return Promise.all([
         'OS: ' + process.platform,
         'Node: ' + process.version,
-        failSafeSpawn('npm', ['-v']).then(data => 'npm: ' + data.stdout)
+        failSafeSpawn('npm', ['-v']).then(out => 'npm: ' + out)
     ])
         .then(env => env.join('\n'))
         .then(env => 'Environment: \n' + indent(env));
@@ -97,16 +97,16 @@ function getPlatformInfo (platform) {
     switch (platform) {
     case 'ios':
         return failSafeSpawn('xcodebuild', ['-version'])
-            .then(data => 'iOS platform:\n' + indent(data.stdout));
+            .then(out => 'iOS platform:\n' + indent(out));
     case 'android':
         return failSafeSpawn('android', ['list', 'target'])
-            .then(data => 'Android platform:\n' + indent(data.stdout));
+            .then(out => 'Android platform:\n' + indent(out));
     }
 }
 
 function failSafeSpawn (command, args) {
     return execa(command, args)
-        .catch(err => `ERROR: ${err.message}`);
+        .then(({ stdout }) => stdout, err => `ERROR: ${err.message}`);
 }
 
 function displayFileContents (filePath) {
