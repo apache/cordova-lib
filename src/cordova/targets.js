@@ -27,7 +27,7 @@ function handleError (error) {
         events.emit('warn', 'Platform does not support ' + this.script);
     } else {
         events.emit('warn', 'An unexpected error has occured while running ' + this.script +
-            ' with code ' + error.errno + ': ' + error.message);
+            ':\n' + error.message);
     }
 }
 
