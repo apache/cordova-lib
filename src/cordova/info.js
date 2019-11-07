@@ -106,7 +106,7 @@ function getPlatformInfo (platform) {
 
 function failSafeSpawn (command, args) {
     return execa(command, args)
-        .catch(error => `ERROR: ${error.stderr}`);
+        .catch(err => `ERROR: ${err.message}`);
 }
 
 function displayFileContents (filePath) {
