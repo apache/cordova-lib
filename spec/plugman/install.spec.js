@@ -17,15 +17,16 @@
     under the License.
 */
 
-const rewire = require('rewire');
 const fs = require('fs-extra');
 const path = require('path');
 const semver = require('semver');
+const rewire = require('rewire');
+
 const { events, PlatformJson } = require('cordova-common');
 const { spy: emitSpyHelper } = require('../common');
 const knownPlatforms = require('../../src/platforms/platforms');
-const { tmpDir, getFixture } = require('../helpers');
 
+const { tmpDir, getFixture } = require('../helpers');
 const temp_dir = tmpDir('plugman-install-test');
 const project = path.join(temp_dir, 'android_install');
 const plugins_dir = path.join(__dirname, 'plugins');

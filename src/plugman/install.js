@@ -171,8 +171,8 @@ function callEngineScripts (engines, project_dir) {
                     fs.chmodSync(engine.scriptSrc, '755');
                 }
                 return execa(scriptPath)
-                    .then(data => {
-                        engine.currentVersion = cleanVersionOutput(data.stdout, engine.name);
+                    .then(({ stdout }) => {
+                        engine.currentVersion = cleanVersionOutput(stdout, engine.name);
                         if (engine.currentVersion === '') {
                             events.emit('warn', engine.name + ' version check returned nothing (' + scriptPath + '), continuing anyways.');
                             engine.currentVersion = null;
@@ -434,16 +434,16 @@ function tryFetchDependency (dep, install, options) {
             dep.url = fetchdata.source.path;
 
             return execa.command('git rev-parse --show-toplevel', { cwd: dep.url })
-                .catch(error => {
-                    if (error.exitCode === 128) {
+                .catch(err => {
+                    if (err.exitCode === 128) {
                         throw new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.');
                     } else {
                         throw new Error('Failed to locate git repository for ' + dep.id + ' plugin.');
                     }
                 })
-                .then(function (data) {
+                .then(({ stdout: git_repo }) => {
                     // Clear out the subdir since the url now contains it
-                    var url = path.join(data.stdout, dep.subdir);
+                    var url = path.join(git_repo, dep.subdir);
                     dep.subdir = '';
                     return Promise.resolve(url);
                 }).catch(function () {

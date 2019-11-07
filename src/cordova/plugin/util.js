@@ -81,8 +81,8 @@ function info (plugin) {
     return fetch.isNpmInstalled()
         .then(function () {
             return execa('npm', viewArgs)
-                .then(function (data) {
-                    var pluginInfo = JSON.parse(data.stdout);
+                .then(({ stdout: info }) => {
+                    var pluginInfo = JSON.parse(info);
                     return pluginInfo;
                 });
         });

@@ -21,6 +21,7 @@ const os = require('os');
 const path = require('path');
 const readChunk = require('read-chunk');
 const shebangCommand = require('shebang-command');
+
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
 const Context = require('./Context');

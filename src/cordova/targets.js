@@ -23,7 +23,7 @@ var path = require('path');
 var events = require('cordova-common').events;
 
 function handleError (error) {
-    if (error.errno === 'ENOENT') {
+    if (error.code === 'ENOENT') {
         events.emit('warn', 'Platform does not support ' + this.script);
     } else {
         events.emit('warn', 'An unexpected error has occured while running ' + this.script +
