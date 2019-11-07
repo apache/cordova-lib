@@ -20,7 +20,6 @@
 var cordova_util = require('../util');
 var CordovaError = require('cordova-common').CordovaError;
 var HooksRunner = require('../../hooks/HooksRunner');
-const { events } = require('cordova-common');
 
 module.exports = plugin;
 module.exports.add = require('./add');
