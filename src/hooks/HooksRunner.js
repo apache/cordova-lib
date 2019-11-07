@@ -194,13 +194,10 @@ function runScriptViaChildProcessSpawn (script, context) {
         }
     };
 
-    events.emit('log', `Running command: ${command} ${args.join(' ')}`);
+    events.emit('log', `Running hook: ${command} ${args.join(' ')}`);
 
     return execa(command, args, execOpts)
-        .then(data => data.stdout)
-        .catch(function (error) {
-            throw new Error('Hook failed with error code ' + error.errno + ': ' + script.fullPath);
-        });
+        .then(data => data.stdout);
 }
 
 /**
