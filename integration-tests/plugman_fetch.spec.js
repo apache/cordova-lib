@@ -29,35 +29,11 @@ var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
 var test_plugin_searchpath = path.join(test_plugin, '..');
 var test_plugin_id = 'org.test.plugins.childbrowser';
 var test_plugin_version = '0.6.0';
+const { asymmetricMatchers: { pathNormalizingTo } } = require('../spec/helpers');
 
 describe('fetch', function () {
-
-    // Taking out the following test. Fetch has a copyPlugin method that uses
-    // existsSync to see if a plugin already exists in the plugins folder. If
-    // the plugin exists in the plugins directory for the cordova project, it
-    // won't be copied over. This test fails now due it always returning true
-    // for existsSync.
-    xdescribe('plugin in a dir with spaces', function () {
-        var xml_helpers = require('cordova-common').xmlHelpers;
-        var test_plugin_with_space = path.join(__dirname, 'folder with space', 'plugins', 'org.test.plugins.childbrowser');
-        var test_plugin_xml = xml_helpers.parseElementtreeSync(path.join(test_plugin, 'plugin.xml'));
-
-        it('should copy locally-available plugin to plugins directory when spaces in path', function (done) {
-            // XXX: added this because plugman tries to fetch from registry when plugin folder does not exist
-            spyOn(fs, 'existsSync').and.returnValue(true);
-            spyOn(xml_helpers, 'parseElementtreeSync').and.returnValue(test_plugin_xml);
-            spyOn(fs, 'removeSync');
-            spyOn(metadata, 'save_fetch_metadata');
-            spyOn(fs, 'copySync');
-            return fetch(test_plugin_with_space, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith('-R', path.join(test_plugin_with_space, '*'), path.join(temp, test_plugin_id));
-            });
-        });
-    });
-
     describe('local plugins', function () {
         var sym;
-        var fetchCalls = 0;
 
         beforeEach(function () {
             fs.removeSync(temp);
@@ -67,25 +43,34 @@ describe('fetch', function () {
             spyOn(fs, 'copySync').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
 
-            fetch.__set__('localPlugins', null);
-            fetch.__set__('fetch', function (pluginDir) {
-                fetchCalls++;
-                return Promise.resolve(pluginDir);
-            });
-        });
-
-        afterEach(function () {
-            fetchCalls = 0;
+            const fetchSpy = jasmine.createSpy('fetch')
+                .and.callFake(x => Promise.resolve(x));
+            fetch.__set__({ localPlugins: null, fetch: fetchSpy });
         });
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
+                expect(fs.copySync).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
             });
         });
+
+        it('Test 008 : should copy locally-available plugin to plugins directory when spaces in path', () => {
+            const testPluginWithSpace = path.join(temp, 'folder with space/org.test.plugins.childbrowser');
+            fs.copySync(test_plugin, testPluginWithSpace);
+            fs.copySync.calls.reset();
+
+            return fetch(testPluginWithSpace, temp).then(() => {
+                expect(fs.copySync).toHaveBeenCalledWith(testPluginWithSpace, path.join(temp, test_plugin_id), jasmine.any(Object));
+            });
+        });
+
         it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
             return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_plugin), path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
+                expect(fs.copySync).toHaveBeenCalledWith(
+                    pathNormalizingTo(test_plugin),
+                    path.join(temp, test_plugin_id),
+                    jasmine.objectContaining({ dereference: true })
+                );
             });
         });
         it('Test 003 : should create a symlink if used with `link` param', function () {
@@ -124,8 +109,8 @@ describe('fetch', function () {
         });
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_pkgjson_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(path.join(test_pkgjson_plugin), path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({ dereference: true }));
-                expect(fetchCalls).toBe(1);
+                expect(fs.copySync).toHaveBeenCalledWith(test_pkgjson_plugin, path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({ dereference: true }));
+                expect(fetch.__get__('fetch')).toHaveBeenCalledTimes(1);
             });
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {

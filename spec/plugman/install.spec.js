@@ -18,19 +18,16 @@
 */
 
 const fs = require('fs-extra');
-const os = require('os');
 const path = require('path');
 const semver = require('semver');
+const rewire = require('rewire');
 
 const { events, PlatformJson, superspawn } = require('cordova-common');
 const { spy: emitSpyHelper } = require('../common');
-const install = require('../../src/plugman/install');
 const knownPlatforms = require('../../src/platforms/platforms');
-const platforms = require('../../src/plugman/platforms/common');
-const plugman = require('../../src/plugman/plugman');
 
-const srcProject = path.join(__dirname, 'projects', 'android');
-const temp_dir = path.join(fs.realpathSync(os.tmpdir()), 'plugman-test');
+const { tmpDir, getFixture } = require('../helpers');
+const temp_dir = tmpDir('plugman-install-test');
 const project = path.join(temp_dir, 'android_install');
 const plugins_dir = path.join(__dirname, 'plugins');
 const plugins_install_dir = path.join(project, 'cordova', 'plugins');
@@ -68,24 +65,28 @@ const fake = {
 };
 
 describe('plugman/install', () => {
+    let install = require('../../src/plugman/install');
     let fetchSpy;
 
     beforeAll(() => {
-        results['emit_results'] = [];
-        events.on('results', result => results['emit_results'].push(result));
+        let api;
 
-        fs.copySync(srcProject, project);
+        return getFixture('androidApp').copyTo(project)
+            .then(_ => {
+                results['emit_results'] = [];
+                events.on('results', result => results['emit_results'].push(result));
 
-        // Every time when addPlugin is called it will return some truthy value
-        const returnValues = [true, {}, [], 'foo', () => {}][Symbol.iterator]();
-        const api = knownPlatforms.getPlatformApi('android', project);
-        const addPluginOrig = api.addPlugin;
-        spyOn(api, 'addPlugin').and.callFake(function () {
-            return addPluginOrig.apply(api, arguments)
-                .then(_ => returnValues.next());
-        });
+                // Every time when addPlugin is called it will return some truthy value
+                const returnValues = [true, {}, [], 'foo', () => {}][Symbol.iterator]();
+                api = knownPlatforms.getPlatformApi('android', project);
+                const addPluginOrig = api.addPlugin;
+                spyOn(api, 'addPlugin').and.callFake(function () {
+                    return addPluginOrig.apply(api, arguments)
+                        .then(_ => returnValues.next());
+                });
 
-        return install('android', project, pluginDir('org.test.plugins.dummyplugin'))
+                return install('android', project, pluginDir('org.test.plugins.dummyplugin'));
+            })
             .then(result => {
                 expect(result).toBeTruthy();
                 return install('android', project, pluginDir('com.cordova.engine'));
@@ -110,11 +111,12 @@ describe('plugman/install', () => {
     });
 
     beforeEach(() => {
+        install = rewire('../../src/plugman/install');
+        fetchSpy = jasmine.createSpy('plugmanFetch').and.returnValue(Promise.resolve(pluginDir('com.cordova.engine')));
+        install.__set__({ plugmanFetch: fetchSpy });
+
         spyOn(superspawn, 'spawn').and.returnValue(Promise.resolve(''));
         spyOn(fs, 'ensureDirSync');
-        spyOn(platforms, 'copyFile').and.returnValue(true);
-
-        fetchSpy = spyOn(plugman, 'fetch').and.returnValue(Promise.resolve(pluginDir('com.cordova.engine')));
         spyOn(fs, 'writeFileSync');
         spyOn(fs, 'copySync');
         spyOn(fs, 'removeSync');

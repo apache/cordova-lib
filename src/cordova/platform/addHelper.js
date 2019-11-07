@@ -19,16 +19,16 @@ var path = require('path');
 var fs = require('fs-extra');
 var semver = require('semver');
 var fetch = require('cordova-fetch');
-var _ = require('underscore');
 var CordovaError = require('cordova-common').CordovaError;
 var ConfigParser = require('cordova-common').ConfigParser;
 var PlatformJson = require('cordova-common').PlatformJson;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
 var promiseutil = require('../../util/promise-util');
-var config = require('../config');
-var platforms = require('../../platforms/platforms');
+var platforms = require('../../platforms');
 var detectIndent = require('detect-indent');
+var getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
+var preparePlatforms = require('../prepare/platforms');
 
 module.exports = addHelper;
 module.exports.getVersionFromConfigFile = getVersionFromConfigFile;
@@ -44,7 +44,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     }
 
     for (var i = 0; i < targets.length; i++) {
-        if (!cordova_util.hostSupports(targets[i])) {
+        if (!platforms.hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
             events.emit('warning', msg);
@@ -53,10 +53,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
-    var config_json = config.read(projectRoot);
-    var autosave = config_json.auto_save_platforms || false;
     opts = opts || {};
-    opts.searchpath = opts.searchpath || config_json.plugin_search_path;
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
@@ -116,9 +113,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
 
                     // If spec still doesn't exist, try to use pinned version
-                    if (!spec && platforms[platform]) {
+                    if (!spec && platforms.info[platform]) {
                         events.emit('verbose', 'Grabbing pinned version.');
-                        spec = platforms[platform].version;
+                        spec = platforms.info[platform].version;
                     }
 
                     // Handle local paths
@@ -127,7 +124,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         if (cordova_util.isDirectory(maybeDir)) {
                             return fetch(path.resolve(maybeDir), projectRoot, opts)
                                 .then(function (directory) {
-                                    return require('./index').getPlatformDetailsFromDir(directory, platform);
+                                    return getPlatformDetailsFromDir(directory, platform);
                                 });
                         }
                     }
@@ -172,11 +169,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         link: opts.link
                     };
 
-                    if (config_json && config_json.lib && config_json.lib[platform] &&
-                        config_json.lib[platform].template) {
-                        options.customTemplate = config_json.lib[platform].template;
-                    }
-
                     events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
                     var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
                     var destination = path.resolve(projectRoot, 'platforms', platform);
@@ -186,7 +178,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     return promise()
                         .then(function () {
                             if (!opts.restoring) {
-                                return require('../prepare').preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
+                                return preparePlatforms([platform], projectRoot, { searchpath: opts.searchpath });
                             }
                         })
                         .then(function () {
@@ -215,7 +207,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             var versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
 
-                            if (opts.save || autosave) {
+                            if (opts.save) {
                                 // Similarly here, we save the source location if that was specified, otherwise the version that
                                 // was installed. However, we save it with the "~" attribute (this allows for patch updates).
                                 spec = saveVersion ? '~' + platDetails.version : spec;
@@ -265,7 +257,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
 function getVersionFromConfigFile (platform, cfg) {
     // Get appropriate version from config.xml
-    var engine = _.find(cfg.getEngines(), function (eng) {
+    const engine = cfg.getEngines().find(eng => {
         return eng.name.toLowerCase() === platform.toLowerCase();
     });
 
@@ -278,7 +270,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
     var target = version ? (platform + '@' + version) : platform;
     return Promise.resolve().then(function () {
         // append cordova to platform
-        if (platform in platforms) {
+        if (platform in platforms.info) {
             target = 'cordova-' + target;
         }
 
@@ -295,7 +287,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
             '\n' + error;
         return Promise.reject(new CordovaError(message));
     }).then(function (libDir) {
-        return require('./index').getPlatformDetailsFromDir(libDir, platform);
+        return getPlatformDetailsFromDir(libDir, platform);
     });
 }
 

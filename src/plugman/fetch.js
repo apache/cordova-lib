@@ -19,7 +19,6 @@
 
 var fs = require('fs-extra');
 var url = require('url');
-var underscore = require('underscore');
 var semver = require('semver');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var CordovaError = require('cordova-common').CordovaError;
@@ -200,7 +199,7 @@ function loadLocalPlugins (searchpath, pluginInfoProvider) {
     if (localPlugins) {
         // localPlugins already populated, nothing to do.
         // just in case, make sure it was loaded with the same search path
-        if (!underscore.isEqual(localPlugins.searchpath, searchpath)) {
+        if (localPlugins.searchpath.join(path.delimiter) !== searchpath.join(path.delimiter)) {
             var msg =
                 'loadLocalPlugins called twice with different search paths.' +
                 'Support for this is not implemented.  Using previously cached path.';

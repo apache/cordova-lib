@@ -21,7 +21,6 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var CordovaError = require('cordova-common').CordovaError;
 var events = require('cordova-common').events;
 var cordova_util = require('../util');
-var config = require('../config');
 var plugin_util = require('./util');
 var plugman = require('../../plugman/plugman');
 var metadata = require('../../plugman/util/metadata');
@@ -30,6 +29,7 @@ var fs = require('fs-extra');
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var detectIndent = require('detect-indent');
 const { Q_chainmap } = require('../../util/promise-util');
+const preparePlatforms = require('../prepare/platforms');
 
 module.exports = remove;
 module.exports.validatePluginId = validatePluginId;
@@ -38,7 +38,6 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     if (!targets || !targets.length) {
         return Promise.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See: ' + cordova_util.binname + ' plugin list.'));
     }
-    var config_json = config.read(projectRoot);
     var pluginPath = path.join(projectRoot, 'plugins');
     var plugins = cordova_util.findPlugins(pluginPath);
     var platformList = cordova_util.listPlatforms(projectRoot);
@@ -55,7 +54,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
             if (!shouldRunPrepare) {
                 return Promise.resolve();
             }
-            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+            return preparePlatforms(platformList, projectRoot, opts);
         }).then(function () {
             opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('after_plugin_rm', opts);
@@ -81,7 +80,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
                 // TODO: Should only uninstallPlugin when no platforms have it.
                 return plugman.uninstall.uninstallPlugin(target, pluginPath, opts);
             }).then(function () {
-                if (!plugin_util.saveToConfigXmlOn(config_json, opts)) return;
+                if (!opts.save) return;
                 persistRemovalToCfg(target);
                 persistRemovalToPkg(target);
             }).then(function () {

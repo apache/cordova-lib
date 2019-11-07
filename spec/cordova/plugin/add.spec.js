@@ -18,12 +18,10 @@
 */
 
 var rewire = require('rewire');
-var add = rewire('../../../src/cordova/plugin/add');
 var plugman = require('../../../src/plugman/plugman');
 var cordova_util = require('../../../src/cordova/util');
 var path = require('path');
 var fs = require('fs-extra');
-var config = require('../../../src/cordova/config');
 var events = require('cordova-common').events;
 var plugin_util = require('../../../src/cordova/plugin/util');
 
@@ -34,8 +32,11 @@ describe('cordova/plugin/add', function () {
     var plugin_info_provider_mock = function () {};
     var plugin_info;
     var package_json_mock;
+    var add;
 
     beforeEach(function () {
+        add = rewire('../../../src/cordova/plugin/add');
+
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
         hook_mock.fire.and.returnValue(Promise.resolve());
         Cfg_parser_mock.prototype = jasmine.createSpyObj('config parser prototype mock', ['getPlugin']);
@@ -62,7 +63,6 @@ describe('cordova/plugin/add', function () {
         spyOn(events, 'emit');
         spyOn(plugin_util, 'info').and.returnValue(Promise.resolve());
         spyOn(add, 'getFetchVersion').and.returnValue(Promise.resolve());
-        spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
     });
 
     describe('main method', function () {
@@ -79,7 +79,6 @@ describe('cordova/plugin/add', function () {
                 return ['android'];
             });
             spyOn(cordova_util, 'findPlugins').and.returnValue({ plugins: [] });
-            spyOn(config, 'read').and.returnValue({});
         });
         describe('error/warning conditions', function () {
             it('should error out if at least one plugin is not specified', function () {
@@ -161,9 +160,14 @@ describe('cordova/plugin/add', function () {
                     expect(plugman.install).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.anything(), jasmine.objectContaining({ 'cli_variables': cli_plugin_variables }));
                 });
             });
-            // can't test the following due to inline require of preparePlatforms
-            xit('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
-                plugman.install.and.returnValue(false);
+            it('should invoke preparePlatforms if plugman.install returned a falsey value', function () {
+                plugman.install.and.resolveTo(false);
+                const preparePlatforms = jasmine.createSpy('preparePlatforms mock').and.resolveTo();
+                add.__set__({ preparePlatforms });
+
+                return add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] }).then(() => {
+                    expect(preparePlatforms).toHaveBeenCalled();
+                });
             });
             it('should fire after_plugin_add hook', function () {
                 return add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] }).then(function () {
@@ -377,7 +381,7 @@ describe('cordova/plugin/add', function () {
                     });
             });
             it('should retrieve installed plugins and installed platforms version and feed that information into determinePluginVersionToFetch', function () {
-                plugin_util.getInstalledPlugins.and.returnValue([{ 'id': 'cordova-plugin-camera', 'version': '2.0.0' }]);
+                plugin_util.getInstalledPlugins.and.returnValue([{ 'id': '@cordova/plugin-thinger', 'version': '2.0.0' }]);
                 cordova_util.getInstalledPlatformsWithVersions.and.returnValue(Promise.resolve({ 'android': '6.0.0' }));
                 pluginInfo.engines = {};
                 pluginInfo.engines.cordovaDependencies = { '^1.0.0': { 'cordova': '>7.0.0' } };
@@ -385,7 +389,7 @@ describe('cordova/plugin/add', function () {
                     .then(function () {
                         expect(plugin_util.getInstalledPlugins).toHaveBeenCalledWith(projectRoot);
                         expect(cordova_util.getInstalledPlatformsWithVersions).toHaveBeenCalledWith(projectRoot);
-                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { 'cordova-plugin-camera': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
+                        expect(add.determinePluginVersionToFetch).toHaveBeenCalledWith(pluginInfo, { '@cordova/plugin-thinger': '2.0.0' }, { 'android': '6.0.0' }, '7.0.0');
                     });
             });
         });

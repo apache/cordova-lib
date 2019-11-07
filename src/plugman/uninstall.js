@@ -22,7 +22,6 @@ var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
 var dependencies = require('./util/dependencies');
 var CordovaError = require('cordova-common').CordovaError;
-var underscore = require('underscore');
 var events = require('cordova-common').events;
 var platform_modules = require('../platforms/platforms');
 var promiseutil = require('../util/promise-util');
@@ -30,7 +29,6 @@ var HooksRunner = require('../hooks/HooksRunner');
 var cordovaUtil = require('../cordova/util');
 var npmUninstall = require('cordova-fetch').uninstall;
 
-var superspawn = require('cordova-common').superspawn;
 var PlatformJson = require('cordova-common').PlatformJson;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var variableMerge = require('../plugman/variable-merge');
@@ -84,7 +82,7 @@ module.exports.uninstallPlatform = function (platform, project_dir, id, plugins_
         if (options.platformVersion) {
             return Promise.resolve(options.platformVersion);
         }
-        return Promise.resolve(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
+        return Promise.resolve(cordovaUtil.getPlatformVersion(project_dir));
     }).then(function (platformVersion) {
         options.platformVersion = platformVersion;
         return runUninstallPlatform(current_stack, platform, project_dir, plugin_dir, plugins_dir, options);
@@ -271,7 +269,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function (dangler) {
             var dependent_path = path.join(plugins_dir, dangler);
-            var opts = underscore.extend({}, options, {
+            var opts = Object.assign({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
                 depsInfo: depsInfo
             });

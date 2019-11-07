@@ -36,13 +36,10 @@ describe('end-to-end plugin dependency tests', function () {
     helpers.setDefaultTimeout(TIMEOUT);
 
     // This prepares a project that we will copy and use for all tests
-    const preparedProject = helpers.tmpDir('plugin_dependency_test_project');
+    let preparedProject;
     beforeAll(function () {
-        return cordova.create(preparedProject)
-            .then(function () {
-                process.chdir(preparedProject);
-                return cordova.platform('add', 'android', { save: true });
-            });
+        preparedProject = helpers.tmpDir('plugin_dependency_test_project');
+        return helpers.getFixture('projectWithPlatform').copyTo(preparedProject);
     });
 
     afterAll(function () {

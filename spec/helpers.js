@@ -21,6 +21,7 @@ var path = require('path');
 var fs = require('fs-extra');
 var os = require('os');
 var ConfigParser = require('cordova-common').ConfigParser;
+const fixtureHelper = require('./fixture-helper');
 
 // Just use Android everywhere; we're mocking out any calls to the `android` binary.
 module.exports.testPlatform = 'android';
@@ -38,6 +39,15 @@ module.exports.tmpDir = function (suffix = 'test') {
     const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
     return fs.realpathSync(fs.mkdtempSync(dir));
 };
+
+/**
+ * Provides access to various fixtures by name.
+ *
+ * @param {String} fixtureName name of fixture that should be accessed
+ * @returns {Object} with a `copyTo` method that asynchronously copies the
+ *                   fixture to the given target directory
+ */
+module.exports.getFixture = fixtureHelper(() => exports.tmpDir('fixtures'));
 
 /**
  * Sets the default timeout for the current suite.
@@ -177,6 +187,15 @@ module.exports.getConfigContent = function (appPath) {
 module.exports.writeConfigContent = function (appPath, configContent) {
     var configFile = path.join(appPath, 'config.xml');
     fs.writeFileSync(configFile, configContent, 'utf-8');
+};
+
+module.exports.asymmetricMatchers = {
+    pathNormalizingTo (expectedPath) {
+        return {
+            asymmetricMatch: actualPath => path.normalize(actualPath) === expectedPath,
+            jasmineToString: _ => `<pathNormalizingTo(${expectedPath})>`
+        };
+    }
 };
 
 const customMatchers = {

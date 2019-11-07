@@ -103,13 +103,6 @@ describe('cordova/platform', function () {
                         expect(platform.update).toHaveBeenCalled();
                     });
             });
-            it('should direct `check` commands to the `check` method/module', function () {
-                spyOn(platform, 'check').and.returnValue(true);
-                return platform('check', ['android'])
-                    .then(function () {
-                        expect(platform.check).toHaveBeenCalled();
-                    });
-            });
             it('should direct `list`, all other commands and no command at all to the `list` method/module', function () {
                 spyOn(platform, 'list').and.returnValue(true);
                 // test the `list` command directly

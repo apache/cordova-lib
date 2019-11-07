@@ -19,7 +19,6 @@
 
 var cordova_util = require('../util');
 var plugin_util = require('./util');
-var config = require('../config');
 var cordova_pkgJson = require('../../../package.json');
 var pluginSpec = require('./plugin_spec_parser');
 var plugman = require('../../plugman/plugman');
@@ -33,6 +32,7 @@ var fs = require('fs-extra');
 var semver = require('semver');
 var url = require('url');
 var detectIndent = require('detect-indent');
+var preparePlatforms = require('../prepare/platforms');
 
 module.exports = add;
 module.exports.determinePluginTarget = determinePluginTarget;
@@ -52,17 +52,15 @@ function add (projectRoot, hooksRunner, opts) {
     var shouldRunPrepare = false;
     var pluginPath = path.join(projectRoot, 'plugins');
     var platformList = cordova_util.listPlatforms(projectRoot);
-    var config_json = config.read(projectRoot);
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
-    var searchPath = config_json.plugin_search_path || [];
-    if (typeof opts.searchpath === 'string') {
-        searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
-    } else if (opts.searchpath) {
-        searchPath = opts.searchpath.concat(searchPath);
+
+    var searchPath = opts.searchpath;
+    if (typeof searchPath === 'string') {
+        searchPath = searchPath.split(path.delimiter);
     }
     // Blank it out to appease unit tests.
-    if (searchPath.length === 0) {
+    if (searchPath && searchPath.length === 0) {
         searchPath = undefined;
     }
 
@@ -137,9 +135,8 @@ function add (projectRoot, hooksRunner, opts) {
                     var pkgJson;
                     var pkgJsonPath = path.join(projectRoot, 'package.json');
 
-                    // save to config.xml
-                    // TODO: no need to have saveToConfigXMLOn anymore. Should just check opts.save instead
-                    if (plugin_util.saveToConfigXmlOn(config_json, opts)) {
+                    // save to package.json
+                    if (opts.save) {
                         // If statement to see if pkgJsonPath exists in the filesystem
                         if (fs.existsSync(pkgJsonPath)) {
                             // Delete any previous caches of require(package.json)
@@ -194,7 +191,7 @@ function add (projectRoot, hooksRunner, opts) {
             // Need to require right here instead of doing this at the beginning of file
             // otherwise tests are failing without any real reason.
             // TODO: possible circular dependency?
-            return require('../prepare').preparePlatforms(platformList, projectRoot, opts);
+            return preparePlatforms(platformList, projectRoot, opts);
         }).then(function () {
             opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
             return hooksRunner.fire('after_plugin_add', opts);
@@ -279,7 +276,9 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
         events.emit('verbose', 'Not checking npm info for ' + parsedSpec.package + ' because searchpath or noregistry flag was given');
     }
     // if noregistry or searchpath are true, then shouldUseNpmInfo is false. Just return target
-    // else run `npm info` on the target via registry.info so we could get engines elemenent in package.json. Pass that info to getFetchVersion which determines the correct plugin to fetch based on engines element.
+    // else run `npm info` on the target via registry.info so we could get
+    // engines elemenent in package.json. Pass that info to getFetchVersion
+    // which determines the correct plugin to fetch based on engines element.
     return (shouldUseNpmInfo ? plugin_util.info([id])
         .then(function (pluginInfo) {
             return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);

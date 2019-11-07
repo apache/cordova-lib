@@ -30,7 +30,6 @@ module.exports.update = function update (hooksRunner, projectRoot, targets, opts
     return addHelper('update', hooksRunner, projectRoot, targets, opts);
 };
 module.exports.remove = require('./remove');
-module.exports.check = require('./check');
 module.exports.list = require('./list');
 module.exports.getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
 
@@ -75,8 +74,6 @@ function platform (command, targets, opts) {
         case 'update':
         case 'up':
             return module.exports.update(hooksRunner, projectRoot, targets, opts);
-        case 'check':
-            return module.exports.check(hooksRunner, projectRoot);
         default:
             return module.exports.list(hooksRunner, projectRoot, opts);
         }

@@ -16,32 +16,30 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../../src/cordova/cordova');
+const rewire = require('rewire');
 var platforms = require('../../src/platforms/platforms');
 var HooksRunner = require('../../src/hooks/HooksRunner');
 var util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms);
-
 describe('build command', function () {
-    var is_cordova;
-    var list_platforms;
-    var fire;
     var project_dir = '/some/path';
-    var prepare_spy, compile_spy;
+    let cordovaBuild, cordovaPrepare, cordovaCompile;
 
     beforeEach(function () {
-        is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);
+        spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
-        list_platforms = spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
-        fire = spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
-        prepare_spy = spyOn(cordova, 'prepare').and.returnValue(Promise.resolve());
-        compile_spy = spyOn(cordova, 'compile').and.returnValue(Promise.resolve());
+        spyOn(util, 'listPlatforms').and.returnValue(Object.keys(platforms));
+        spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+
+        cordovaBuild = rewire('../../src/cordova/build');
+        cordovaPrepare = jasmine.createSpy('cordovaPrepare').and.returnValue(Promise.resolve());
+        cordovaCompile = jasmine.createSpy('cordovaCompile').and.returnValue(Promise.resolve());
+        cordovaBuild.__set__({ cordovaPrepare, cordovaCompile });
     });
     describe('failure', function () {
         it('Test 001 : should not run inside a project with no platforms', function () {
-            list_platforms.and.returnValue([]);
-            return cordova.build()
+            util.listPlatforms.and.returnValue([]);
+            return cordovaBuild()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -53,9 +51,9 @@ describe('build command', function () {
         });
 
         it('Test 002 : should not run outside of a Cordova-based project', function () {
-            is_cordova.and.returnValue(false);
+            util.isCordova.and.returnValue(false);
 
-            return cordova.build()
+            return cordovaBuild()
                 .then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
@@ -69,17 +67,17 @@ describe('build command', function () {
 
     describe('success', function () {
         it('Test 003 : should run inside a Cordova-based project with at least one added platform and call both prepare and compile', function () {
-            return cordova.build(['android', 'ios']).then(function () {
+            return cordovaBuild(['android', 'ios']).then(function () {
                 var opts = Object({ platforms: [ 'android', 'ios' ], verbose: false, options: Object({ }) });
-                expect(prepare_spy).toHaveBeenCalledWith(opts);
-                expect(compile_spy).toHaveBeenCalledWith(opts);
+                expect(cordovaPrepare).toHaveBeenCalledWith(opts);
+                expect(cordovaCompile).toHaveBeenCalledWith(opts);
             });
         });
         it('Test 004 : should pass down options', function () {
-            return cordova.build({ platforms: ['android'], options: { release: true } }).then(function () {
+            return cordovaBuild({ platforms: ['android'], options: { release: true } }).then(function () {
                 var opts = { platforms: ['android'], options: { release: true }, verbose: false };
-                expect(prepare_spy).toHaveBeenCalledWith(opts);
-                expect(compile_spy).toHaveBeenCalledWith(opts);
+                expect(cordovaPrepare).toHaveBeenCalledWith(opts);
+                expect(cordovaCompile).toHaveBeenCalledWith(opts);
             });
         });
     });
@@ -87,21 +85,23 @@ describe('build command', function () {
     describe('hooks', function () {
         describe('when platforms are added', function () {
             it('Test 006 : should fire before hooks through the hooker module', function () {
-                return cordova.build(['android', 'ios']).then(function () {
-                    expect(fire.calls.argsFor(0)).toEqual(['before_build', { verbose: false, platforms: ['android', 'ios'], options: {} }]);
+                return cordovaBuild(['android', 'ios']).then(function () {
+                    expect(HooksRunner.prototype.fire.calls.argsFor(0))
+                        .toEqual(['before_build', { verbose: false, platforms: ['android', 'ios'], options: {} }]);
                 });
             });
             it('Test 007 : should fire after hooks through the hooker module', function () {
-                return cordova.build('android').then(function () {
-                    expect(fire.calls.argsFor(1)).toEqual([ 'after_build', { platforms: [ 'android' ], verbose: false, options: {} } ]);
+                return cordovaBuild('android').then(function () {
+                    expect(HooksRunner.prototype.fire.calls.argsFor(1))
+                        .toEqual([ 'after_build', { platforms: [ 'android' ], verbose: false, options: {} } ]);
                 });
             });
         });
 
         describe('with no platforms added', function () {
             it('Test 008 : should not fire the hooker', function () {
-                list_platforms.and.returnValue([]);
-                return Promise.resolve().then(cordova.build).then(function () {
+                util.listPlatforms.and.returnValue([]);
+                return Promise.resolve().then(cordovaBuild).then(function () {
                     fail('Expected promise to be rejected');
                 }, function (err) {
                     expect(err).toEqual(jasmine.any(Error));

@@ -81,19 +81,6 @@ describe('util module', function () {
             expect(util.isCordova(anotherdir)).toEqual(somedir);
         });
     });
-    describe('deleteSvnFolders method', function () {
-        it('Test 008 : should delete .svn folders in any subdirectory of specified dir', function () {
-            var one = path.join(temp, 'one');
-            var two = path.join(temp, 'two');
-            var one_svn = path.join(one, '.svn');
-            var two_svn = path.join(two, '.svn');
-            fs.ensureDirSync(one_svn);
-            fs.ensureDirSync(two_svn);
-            util.deleteSvnFolders(temp);
-            expect(fs.existsSync(one_svn)).toEqual(false);
-            expect(fs.existsSync(two_svn)).toEqual(false);
-        });
-    });
     describe('listPlatforms method', function () {
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             var platforms = path.join(temp, 'platforms');
@@ -112,55 +99,51 @@ describe('util module', function () {
     });
     describe('getInstalledPlatformsWithVersions method', function () {
         it('Test 010 : should get the supported platforms in the cordova project dir along with their reported versions', function () {
-            var platforms = path.join(temp, 'platforms');
-            var android = path.join(platforms, 'android');
+            const PLATFORM = 'cordova-android';
+            const platformPath = path.join(temp, 'platforms', PLATFORM);
 
-            fs.ensureDirSync(android);
-
-            fs.copySync(path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform), path.join(platforms, helpers.testPlatform));
-            return util.getInstalledPlatformsWithVersions(temp)
-                .then(function (platformMap) {
-                    expect(platformMap['android']).toBe('3.1.0');
-                });
+            return helpers.getFixture('androidApp').copyTo(platformPath)
+                .then(_ => util.getInstalledPlatformsWithVersions(temp))
+                .then(versions => expect(versions[PLATFORM]).toBe('8.1.0'));
         });
     });
     describe('findPlugins method', function () {
+        let pluginsDir, plugins;
+
+        function expectFindPluginsToReturn (expectedPlugins) {
+            expect(util.findPlugins(pluginsDir))
+                .toEqual(jasmine.arrayWithExactContents(expectedPlugins));
+        }
+
+        beforeEach(function () {
+            pluginsDir = path.join(temp, 'plugins');
+            plugins = ['foo', 'bar', 'baz'];
+
+            plugins.forEach(plugin => {
+                fs.ensureDirSync(path.join(pluginsDir, plugin));
+            });
+        });
+
         it('Test 011 : should only return plugin directories present in a cordova project dir', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var wp8_dir = path.join(plugins, 'wp8');
-            var atari = path.join(plugins, 'atari');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(wp8_dir);
-            fs.ensureDirSync(atari);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(4);
+            expectFindPluginsToReturn(plugins);
         });
+
         it('Test 012 : should not return ".svn" directories', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var svn = path.join(plugins, '.svn');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(svn);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(2);
-            expect(res.indexOf('.svn')).toEqual(-1);
+            fs.ensureDirSync(path.join(pluginsDir, '.svn'));
+            expectFindPluginsToReturn(plugins);
         });
+
         it('Test 013 : should not return "CVS" directories', function () {
-            var plugins = path.join(temp, 'plugins');
-            var android = path.join(plugins, 'android');
-            var ios = path.join(plugins, 'ios');
-            var cvs = path.join(plugins, 'CVS');
-            fs.ensureDirSync(android);
-            fs.ensureDirSync(ios);
-            fs.ensureDirSync(cvs);
-            var res = util.findPlugins(plugins);
-            expect(res.length).toEqual(2);
-            expect(res.indexOf('CVS')).toEqual(-1);
+            fs.ensureDirSync(path.join(pluginsDir, 'CVS'));
+            expectFindPluginsToReturn(plugins);
+        });
+
+        it('Test 031 : should return plugin symlinks', function () {
+            const linkedPluginPath = path.join(temp, 'linked-plugin');
+            const pluginLinkPath = path.join(pluginsDir, 'plugin-link');
+            fs.ensureDirSync(linkedPluginPath);
+            fs.ensureSymlinkSync(linkedPluginPath, pluginLinkPath);
+            expectFindPluginsToReturn(plugins.concat('plugin-link'));
         });
     });
 
@@ -216,9 +199,12 @@ describe('util module', function () {
         describe('getPlatformApiFunction', function () {
 
             it('Test 030 : successfully find platform Api', function () {
-                spyOn(events, 'emit').and.returnValue(true);
-                var specPlugDir = __dirname.replace('spec-cordova', 'spec-plugman');
-                util.getPlatformApiFunction((path.join(specPlugDir, 'fixtures', 'projects', 'platformApi', 'platforms', 'windows', 'cordova', 'Api.js')), 'windows');
+                const FIXTURE_PROJECT = path.join(__dirname, 'fixtures/projects/platformApi/');
+                const API_PATH = path.join(FIXTURE_PROJECT, 'platforms/windows/cordova/Api.js');
+                spyOn(events, 'emit');
+
+                util.getPlatformApiFunction(API_PATH, 'cordova-platform-fixture');
+
                 expect(events.emit.calls.count()).toBe(1);
                 expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
             });

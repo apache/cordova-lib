@@ -22,40 +22,16 @@ var path = require('path');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
-var platforms = require('../platforms/platforms');
-
-// Global configuration paths
-var global_config_path = process.env['CORDOVA_HOME'];
-if (!global_config_path) {
-    var HOME = process.env[(process.platform.slice(0, 3) === 'win') ? 'USERPROFILE' : 'HOME'];
-    global_config_path = path.join(HOME, '.cordova');
-}
 
 var origCwd = null;
 
-var lib_path = path.join(global_config_path, 'lib');
-
 exports.binname = 'cordova';
-exports.globalConfig = global_config_path;
-
-// defer defining libDirectory on exports so we don't create it if
-// someone simply requires this module
-Object.defineProperty(exports, 'libDirectory', {
-    configurable: true,
-    get: function () {
-        fs.ensureDirSync(lib_path);
-        exports.libDirectory = lib_path;
-        return lib_path;
-    }
-});
 
 exports.isCordova = isCordova;
 exports.getProjectRoot = getProjectRoot;
 exports.cdProjectRoot = cdProjectRoot;
-exports.deleteSvnFolders = deleteSvnFolders;
 exports.listPlatforms = listPlatforms;
 exports.findPlugins = findPlugins;
-exports.appDir = appDir;
 exports.projectWww = projectWww;
 exports.projectConfig = projectConfig;
 exports.preProcessOptions = preProcessOptions;
@@ -68,24 +44,13 @@ exports.isUrl = isUrl;
 exports.getInstalledPlatformsWithVersions = getInstalledPlatformsWithVersions;
 exports.requireNoCache = requireNoCache;
 exports.getPlatformApiFunction = getPlatformApiFunction;
-exports.hostSupports = hostSupports;
 exports.removePlatformPluginsJson = removePlatformPluginsJson;
+exports.getPlatformVersion = getPlatformVersionOrNull;
 
 // Remove <platform>.json file from plugins directory.
 function removePlatformPluginsJson (projectRoot, target) {
     var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
     fs.removeSync(plugins_json);
-}
-
-// Used to prevent attempts of installing platforms that are not supported on
-// the host OS. E.g. ios on linux.
-function hostSupports (platform) {
-    var p = platforms[platform] || {};
-    var hostos = p.hostos || null;
-    if (!hostos) { return true; }
-    if (hostos.indexOf('*') >= 0) { return true; }
-    if (hostos.indexOf(process.platform) >= 0) { return true; }
-    return false;
 }
 
 function requireNoCache (pkgJsonPath) {
@@ -208,19 +173,6 @@ function convertToRealPathSafe (path) {
     return path;
 }
 
-// Recursively deletes .svn folders from a target path
-function deleteSvnFolders (dir) {
-    var contents = fs.readdirSync(dir);
-    contents.forEach(function (entry) {
-        var fullpath = path.join(dir, entry);
-        if (isDirectory(fullpath)) {
-            if (entry === '.svn') {
-                fs.removeSync(fullpath);
-            } else module.exports.deleteSvnFolders(fullpath);
-        }
-    });
-}
-
 function listPlatforms (project_dir) {
     var platforms_dir = path.join(project_dir, 'platforms');
     if (!fs.existsSync(platforms_dir)) {
@@ -235,20 +187,28 @@ function listPlatforms (project_dir) {
 }
 
 function getInstalledPlatformsWithVersions (project_dir) {
-    var result = {};
-    var platforms_on_fs = listPlatforms(project_dir);
-
-    return Promise.all(platforms_on_fs.map(function (p) {
-        var superspawn = require('cordova-common').superspawn;
-        return superspawn.maybeSpawn(path.join(project_dir, 'platforms', p, 'cordova', 'version'), [], { chmod: true })
-            .then(function (v) {
-                result[p] = v || null;
-            }, function (v) {
-                result[p] = 'broken';
-            });
-    })).then(function () {
+    return Promise.resolve(listPlatforms(project_dir).reduce((result, p) => {
+        try {
+            const platformPath = path.join(project_dir, 'platforms', p);
+            result[p] = getPlatformVersion(platformPath) || null;
+        } catch (e) {
+            result[p] = 'broken';
+        }
         return result;
-    });
+    }, {}));
+}
+
+function getPlatformVersion (platformPath) {
+    const versionPath = path.join(platformPath, 'cordova/version');
+    return requireNoCache(versionPath).version;
+}
+
+function getPlatformVersionOrNull (platformPath) {
+    try {
+        return getPlatformVersion(platformPath);
+    } catch (e) {
+        return null;
+    }
 }
 
 // list the directories in the path, ignoring any files
@@ -264,10 +224,6 @@ function findPlugins (pluginDir) {
     }
 
     return plugins;
-}
-
-function appDir (projectDir) {
-    return projectDir;
 }
 
 function projectWww (projectDir) {

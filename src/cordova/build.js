@@ -19,6 +19,8 @@
 
 var cordovaUtil = require('./util');
 var HooksRunner = require('../hooks/HooksRunner');
+const cordovaPrepare = require('./prepare');
+const cordovaCompile = require('./compile');
 
 // Returns a promise.
 module.exports = function build (options) {
@@ -30,9 +32,9 @@ module.exports = function build (options) {
         var hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_build', options)
             .then(function () {
-                return require('./cordova').prepare(options);
+                return cordovaPrepare(options);
             }).then(function () {
-                return require('./cordova').compile(options);
+                return cordovaCompile(options);
             }).then(function () {
                 return hooksRunner.fire('after_build', options);
             });

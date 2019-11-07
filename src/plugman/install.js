@@ -26,7 +26,6 @@ var PlatformJson = require('cordova-common').PlatformJson;
 var CordovaError = require('cordova-common').CordovaError;
 var platform_modules = require('../platforms/platforms');
 var os = require('os');
-var underscore = require('underscore');
 var events = require('cordova-common').events;
 var HooksRunner = require('../hooks/HooksRunner');
 var isWindows = (os.platform().substr(0, 3) === 'win');
@@ -36,7 +35,8 @@ var cordovaUtil = require('../cordova/util');
 var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var variableMerge = require('../plugman/variable-merge');
+var variableMerge = require('./variable-merge');
+var plugmanFetch = require('./fetch');
 
 /* INSTALL FLOW
    ------------
@@ -90,11 +90,10 @@ function possiblyFetch (id, plugins_dir, options) {
         return Promise.resolve(plugin_src_dir);
     }
 
-    var opts = underscore.extend({}, options, {
+    var opts = Object.assign({}, options, {
         client: 'plugman'
     });
-    // TODO: without runtime require below, we have a circular dependency.
-    return require('./plugman').fetch(id, plugins_dir, opts);
+    return plugmanFetch(id, plugins_dir, opts);
 }
 
 function checkEngines (engines) {
@@ -227,7 +226,7 @@ function getEngines (pluginInfo, platform, project_dir, plugin_dir) {
         // check for other engines
         } else {
             if (typeof engine.platform === 'undefined' || typeof engine.scriptSrc === 'undefined') {
-                throw new CordovaError('warn', 'engine.platform or engine.scriptSrc is not defined in custom engine "' +
+                throw new CordovaError('engine.platform or engine.scriptSrc is not defined in custom engine "' +
                     theName + '" from plugin "' + pluginInfo.id + '" for ' + platform);
             }
 
@@ -297,7 +296,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         if (options.platformVersion) {
             return Promise.resolve(options.platformVersion);
         }
-        return Promise.resolve(superspawn.maybeSpawn(path.join(project_dir, 'cordova', 'version'), [], { chmod: true }));
+        return Promise.resolve(cordovaUtil.getPlatformVersion(project_dir));
     }).then(function (platformVersion) {
         options.platformVersion = platformVersion;
         return callEngineScripts(theEngines, path.resolve(plugins_dir, '..'));
@@ -544,7 +543,7 @@ function installDependency (dep, install, options) {
                     return Promise.reject(new CordovaError(msg));
                 });
         }
-        opts = underscore.extend({}, options, {
+        opts = Object.assign({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false
         });
@@ -553,7 +552,7 @@ function installDependency (dep, install, options) {
     } else {
         events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
 
-        opts = underscore.extend({}, options, {
+        opts = Object.assign({}, options, {
             cli_variables: install.filtered_variables,
             is_top_level: false,
             subdir: dep.subdir,

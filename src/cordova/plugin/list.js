@@ -49,8 +49,6 @@ function list (projectRoot, hooksRunner, opts) {
                 p = pluginsDict[id];
                 for (var depId in p.deps) {
                     var dep = pluginsDict[depId];
-                    // events.emit('results', p.deps[depId].version);
-                    // events.emit('results', dep != null);
                     if (!dep) {
                         txt = 'WARNING, missing dependency: plugin ' + id +
                               ' depends on ' + depId +

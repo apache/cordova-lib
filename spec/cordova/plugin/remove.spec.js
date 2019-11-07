@@ -24,9 +24,7 @@ var metadata = require('../../../src/plugman/util/metadata');
 var events = require('cordova-common').events;
 var plugman = require('../../../src/plugman/plugman');
 var fs = require('fs-extra');
-var prepare = require('../../../src/cordova/prepare');
 var plugin_util = require('../../../src/cordova/plugin/util');
-var config = require('../../../src/cordova/config');
 
 describe('cordova/plugin/remove', function () {
     var projectRoot = '/some/path';
@@ -48,7 +46,6 @@ describe('cordova/plugin/remove', function () {
         spyOn(plugman.uninstall, 'uninstallPlatform').and.returnValue(Promise.resolve());
         spyOn(plugman.uninstall, 'uninstallPlugin').and.returnValue(Promise.resolve());
         hook_mock = jasmine.createSpyObj('hooks runner mock', ['fire']);
-        spyOn(prepare, 'preparePlatforms').and.returnValue(true);
         hook_mock.fire.and.returnValue(Promise.resolve());
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser mock', ['write', 'getPlugin', 'removePlugin']);
         remove.__set__('ConfigParser', cfg_parser_mock);
@@ -57,7 +54,10 @@ describe('cordova/plugin/remove', function () {
             // id version dir getPreferences() engines engines.cordovaDependencies name versions
             return plugin_info;
         };
-        remove.__set__('PluginInfoProvider', plugin_info_provider_mock);
+        remove.__set__({
+            PluginInfoProvider: plugin_info_provider_mock,
+            preparePlatforms: jasmine.createSpy('preparePlatforms')
+        });
     });
 
     describe('error/warning conditions', function () {
@@ -138,20 +138,25 @@ describe('cordova/plugin/remove', function () {
         });
 
         describe('when save option is provided or autosave config is on', function () {
+            let opts;
+
             beforeEach(function () {
                 spyOn(plugin_util, 'mergeVariables');
-                spyOn(plugin_util, 'saveToConfigXmlOn').and.returnValue(true);
-                spyOn(config, 'read').and.returnValue(true);
                 spyOn(cordova_util, 'projectConfig').and.returnValue('config.xml');
                 spyOn(cordova_util, 'findPlugins').and.returnValue([]);
                 spyOn(metadata, 'remove_fetch_metadata').and.returnValue(true);
+                fs.existsSync.and.returnValue(true);
+                remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
+
+                opts = {
+                    save: true,
+                    important: 'options',
+                    plugins: ['cordova-plugin-splashscreen']
+                };
             });
 
             it('should remove provided plugins from config.xml', function () {
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(true);
-                fs.existsSync.and.returnValue(true);
-                remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-                var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
                 cfg_parser_mock.prototype.getPlugin.and.returnValue({});
                 return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(cfg_parser_mock.prototype.removePlugin).toHaveBeenCalled();
@@ -163,9 +168,6 @@ describe('cordova/plugin/remove', function () {
             it('should remove provided plugins from package.json (if exists)', function () {
                 spyOn(fs, 'readFileSync').and.returnValue('file');
                 spyOn(cordova_util, 'requireNoCache').and.returnValue(package_json_mock);
-                remove.validatePluginId.and.returnValue('cordova-plugin-splashscreen');
-                fs.existsSync.and.returnValue(true);
-                var opts = { important: 'options', plugins: ['cordova-plugin-splashscreen'] };
                 return remove(projectRoot, 'cordova-plugin-splashscreen', hook_mock, opts).then(function () {
                     expect(fs.writeFileSync).toHaveBeenCalled();
                     expect(events.emit).toHaveBeenCalledWith('log', jasmine.stringMatching('Removing cordova-plugin-splashscreen from package.json'));

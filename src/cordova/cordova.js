@@ -46,7 +46,6 @@ exports = module.exports = {
     },
     prepare: require('./prepare'),
     build: require('./build'),
-    config: require('./config'),
     create: require('./create'),
     emulate: require('./emulate'),
     plugin: require('./plugin'),
