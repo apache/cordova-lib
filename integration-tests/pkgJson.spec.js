@@ -278,6 +278,17 @@ describe('pkgJson', function () {
                     expect(getPkgJson(`dependencies.${PLUGIN}`)).toBeDefined();
                 });
         });
+
+        it('Test#026 : should successfully add a plugin with git/semver combo', async () => {
+            const URL = 'https://github.com/apache/cordova-plugin-device.git#semver:2.0.x';
+
+            expect(getPkgJson('cordova.plugins')).toBeUndefined();
+            expect(getPkgJson(`dependencies.${pluginId}`)).toBeUndefined();
+
+            await cordova.plugin('add', URL, { save: true });
+            expect(getPkgJson('cordova.plugins')[pluginId]).toBeDefined();
+            expect(getPkgJson('dependencies')[pluginId]).toMatch(URL);
+        });
     });
 
     // This group of tests checks if platforms are added and removed as expected from package.json.
