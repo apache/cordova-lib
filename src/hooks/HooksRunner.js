@@ -184,7 +184,6 @@ function runScriptViaChildProcessSpawn (script, context) {
 
     const execOpts = {
         cwd: opts.projectRoot,
-        printCommand: true,
         stdio: 'inherit',
         env: {
             CORDOVA_VERSION: require('../../package').version,
@@ -194,6 +193,8 @@ function runScriptViaChildProcessSpawn (script, context) {
             CORDOVA_CMDLINE: process.argv.join(' ')
         }
     };
+
+    events.emit('log', `Running command: ${command} ${args.join(' ')}`);
 
     return execa(command, args, execOpts)
         .then(data => data.stdout)
