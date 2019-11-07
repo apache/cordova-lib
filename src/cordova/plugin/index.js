@@ -20,6 +20,7 @@
 var cordova_util = require('../util');
 var CordovaError = require('cordova-common').CordovaError;
 var HooksRunner = require('../../hooks/HooksRunner');
+const { events } = require('cordova-common');
 
 module.exports = plugin;
 module.exports.add = require('./add');
@@ -85,6 +86,7 @@ function plugin (command, targets, opts) {
             return module.exports.remove(projectRoot, targets, hooksRunner, opts);
         case 'save':
             // save the versions/folders/git-urls of currently installed plugins into config.xml
+            events.emit('warn', 'This command has been deprecated and will be removed in the next major release of Cordova.');
             return module.exports.save(projectRoot, opts);
         default:
             return module.exports.list(projectRoot, hooksRunner);
