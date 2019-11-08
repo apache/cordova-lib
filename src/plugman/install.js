@@ -17,6 +17,7 @@
     under the License.
 */
 
+const execa = require('execa');
 var path = require('path');
 var fs = require('fs-extra');
 var ActionStack = require('cordova-common').ActionStack;
@@ -32,7 +33,6 @@ var isWindows = (os.platform().substr(0, 3) === 'win');
 var pluginSpec = require('../cordova/plugin/plugin_spec_parser');
 var cordovaUtil = require('../cordova/util');
 
-var superspawn = require('cordova-common').superspawn;
 var PluginInfo = require('cordova-common').PluginInfo;
 var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 var variableMerge = require('./variable-merge');
@@ -170,8 +170,8 @@ function callEngineScripts (engines, project_dir) {
                 if (!isWindows) { // not required on Windows
                     fs.chmodSync(engine.scriptSrc, '755');
                 }
-                return superspawn.spawn(scriptPath)
-                    .then(stdout => {
+                return execa(scriptPath)
+                    .then(({ stdout }) => {
                         engine.currentVersion = cleanVersionOutput(stdout, engine.name);
                         if (engine.currentVersion === '') {
                             events.emit('warn', engine.name + ' version check returned nothing (' + scriptPath + '), continuing anyways.');
@@ -433,15 +433,15 @@ function tryFetchDependency (dep, install, options) {
 
             dep.url = fetchdata.source.path;
 
-            return superspawn.spawn('git rev-parse --show-toplevel', { cwd: dep.url })
+            return execa.command('git rev-parse --show-toplevel', { cwd: dep.url })
                 .catch(err => {
-                    if (err.code === 128) {
+                    if (err.exitCode === 128) {
                         throw new Error('Plugin ' + dep.id + ' is not in git repository. All plugins must be in a git repository.');
                     } else {
                         throw new Error('Failed to locate git repository for ' + dep.id + ' plugin.');
                     }
                 })
-                .then(function (git_repo) {
+                .then(({ stdout: git_repo }) => {
                     // Clear out the subdir since the url now contains it
                     var url = path.join(git_repo, dep.subdir);
                     dep.subdir = '';

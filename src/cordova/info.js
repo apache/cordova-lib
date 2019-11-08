@@ -17,8 +17,8 @@ specific language governing permissions and limitations
 under the License.
 */
 
+const execa = require('execa');
 var cordova_util = require('./util');
-var superspawn = require('cordova-common').superspawn;
 var pkg = require('../../package');
 var path = require('path');
 var fs = require('fs-extra');
@@ -105,8 +105,8 @@ function getPlatformInfo (platform) {
 }
 
 function failSafeSpawn (command, args) {
-    return superspawn.spawn(command, args)
-        .catch(err => `ERROR: ${err.message}`);
+    return execa(command, args)
+        .then(({ stdout }) => stdout, err => `ERROR: ${err.message}`);
 }
 
 function displayFileContents (filePath) {

@@ -17,8 +17,8 @@
     under the License.
 */
 
+const execa = require('execa');
 var cordova_util = require('./util');
-var superspawn = require('cordova-common').superspawn;
 var path = require('path');
 var events = require('cordova-common').events;
 
@@ -27,7 +27,7 @@ function handleError (error) {
         events.emit('warn', 'Platform does not support ' + this.script);
     } else {
         events.emit('warn', 'An unexpected error has occured while running ' + this.script +
-            ' with code ' + error.code + ': ' + error);
+            ':\n' + error.message);
     }
 }
 
@@ -35,14 +35,14 @@ function displayDevices (projectRoot, platform, options) {
     var caller = { 'script': 'list-devices' };
     events.emit('log', 'Available ' + platform + ' devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
-    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return execa(cmd, options.argv, { stdio: 'inherit' }).then(data => data.stdout, handleError.bind(caller));
 }
 
 function displayVirtualDevices (projectRoot, platform, options) {
     var caller = { 'script': 'list-emulator-images' };
     events.emit('log', 'Available ' + platform + ' virtual devices:');
     var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
-    return superspawn.spawn(cmd, options.argv, { stdio: 'inherit', chmod: true }).catch(handleError.bind(caller));
+    return execa(cmd, options.argv, { stdio: 'inherit' }).then(data => data.stdout, handleError.bind(caller));
 }
 
 module.exports = function targets (options) {
