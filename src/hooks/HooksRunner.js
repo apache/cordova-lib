@@ -17,17 +17,12 @@
 
 const execa = require('execa');
 const fs = require('fs-extra');
-const os = require('os');
 const path = require('path');
-const readChunk = require('read-chunk');
-const shebangCommand = require('shebang-command');
 
 const cordovaUtil = require('../cordova/util');
 const scriptsFinder = require('./scriptsFinder');
 const Context = require('./Context');
 const { CordovaError, events } = require('cordova-common');
-
-const isWindows = os.platform().slice(0, 3) === 'win';
 
 /**
  * Tries to create a HooksRunner for passed project root.
@@ -173,16 +168,6 @@ function runScriptViaChildProcessSpawn (script, context) {
     var command = script.fullPath;
     var args = [opts.projectRoot];
 
-    if (isWindows) {
-        // TODO: Make shebang sniffing a setting (not everyone will want this).
-        var interpreter = extractSheBangInterpreter(script.fullPath);
-        // we have shebang, so try to run this script using correct interpreter
-        if (interpreter) {
-            args.unshift(command);
-            command = interpreter;
-        }
-    }
-
     const execOpts = {
         cwd: opts.projectRoot,
         stdio: 'inherit',
@@ -199,21 +184,6 @@ function runScriptViaChildProcessSpawn (script, context) {
 
     return execa(command, args, execOpts)
         .then(data => data.stdout);
-}
-
-/**
- * Extracts shebang interpreter from script' source. */
-function extractSheBangInterpreter (fullpath) {
-    // this is a modern cluster size. no need to read less
-    const chunkSize = 4096;
-    const fileData = readChunk.sync(fullpath, 0, chunkSize);
-    const fileChunk = fileData.toString();
-    const hookCmd = shebangCommand(fileChunk);
-
-    if (hookCmd && fileData.length === chunkSize && !fileChunk.match(/[\r\n]/)) {
-        events.emit('warn', 'shebang is too long for "' + fullpath + '"');
-    }
-    return hookCmd;
 }
 
 /**
