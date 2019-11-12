@@ -26,6 +26,7 @@ var platforms = require('../src/platforms/platforms');
 var plugman = require('../src/plugman/plugman');
 var install = require('../src/plugman/install');
 var plugin_util = require('../src/cordova/plugin/util');
+const HooksRunner = require('../src/hooks/HooksRunner');
 
 var util = require('../src/cordova/util');
 
@@ -269,4 +270,39 @@ describe('plugin end-to-end', function () {
                 return removePlugin(scopedTestPlugin);
             });
     }, 30000);
+
+    it('Test 014 : should run plugin (un)install hooks with correct opts', async () => {
+        const testPluginInstalledPath = path.join(project, 'plugins', npmInfoTestPlugin);
+        const expectedOpts = jasmine.objectContaining({
+            cordova: {
+                platforms: [helpers.testPlatform],
+                plugins: [npmInfoTestPlugin],
+                version: require('../package').version
+            },
+            plugin: {
+                id: npmInfoTestPlugin,
+                platform: helpers.testPlatform,
+                dir: testPluginInstalledPath,
+                pluginInfo: jasmine.objectContaining({
+                    id: npmInfoTestPlugin,
+                    dir: testPluginInstalledPath
+                })
+            },
+            projectRoot: project
+        });
+
+        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+        spyOn(HooksRunner.prototype, 'fire').and.callThrough();
+
+        await cordova.plugin('add', npmInfoTestPlugin);
+        await cordova.plugin('rm', npmInfoTestPlugin);
+
+        HooksRunner.prototype.fire.calls.allArgs()
+            .filter(([hook]) => /_plugin_(un)?install$/.test(hook))
+            .forEach(([hook, opts]) => {
+                expect(opts)
+                    .withContext(`${hook} hook options`)
+                    .toEqual(expectedOpts);
+            });
+    }, 20 * 1000);
 });
