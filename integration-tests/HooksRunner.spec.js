@@ -275,37 +275,39 @@ describe('HooksRunner', function () {
         });
 
         describe('module-level hooks (event handlers)', function () {
-            var handler = jasmine.createSpy().and.returnValue(Promise.resolve());
+            let handler;
+
+            beforeEach(() => {
+                handler = jasmine.createSpy('testHandler').and.resolveTo();
+                cordova.on(test_event, handler);
+            });
 
             afterEach(function () {
                 cordova.removeAllListeners(test_event);
-                handler.calls.reset();
             });
 
-            it('Test 016 : should fire handlers using cordova.on', function () {
-                cordova.on(test_event, handler);
+            it('Test 016 : should fire handlers that were attached using cordova.on', function () {
                 return hooksRunner.fire(test_event).then(function () {
                     expect(handler).toHaveBeenCalled();
                 });
             });
 
             it('Test 017 : should pass the project root folder as parameter into the module-level handlers', function () {
-                const hookOptions = {};
-                cordova.on(test_event, handler);
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(handler).toHaveBeenCalledWith(hookOptions);
+                return hooksRunner.fire(test_event).then(function () {
+                    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({
+                        projectRoot: project
+                    }));
                 });
             });
 
             it('Test 018 : should be able to stop listening to events using cordova.off', function () {
-                cordova.on(test_event, handler);
                 cordova.off(test_event, handler);
                 return hooksRunner.fire(test_event).then(function () {
                     expect(handler).not.toHaveBeenCalled();
                 });
             });
 
-            it('Test 019 : should execute event listeners serially', function () {
+            it('Test 019 : should execute async event listeners serially', function () {
                 const order = [];
                 // Delay 100 ms here to check that h2 is not executed until after
                 // the promise returned by h1 is resolved.
@@ -319,23 +321,10 @@ describe('HooksRunner', function () {
                     .then(_ => expect(order).toEqual([1, 2]));
             });
 
-            it('Test 021 : should pass data object that fire calls into async handlers', function () {
-                const hookOptions = {};
-                var asyncHandler = function (opts) {
-                    expect(opts).toEqual(hookOptions);
-                    return Promise.resolve();
-                };
-                cordova.on(test_event, asyncHandler);
-                return hooksRunner.fire(test_event, hookOptions);
-            });
-
-            it('Test 022 : should pass data object that fire calls into sync handlers', function () {
-                const hookOptions = {};
-                var syncHandler = function (opts) {
-                    expect(opts).toEqual(hookOptions);
-                };
-                cordova.on(test_event, syncHandler);
-                return hooksRunner.fire(test_event, hookOptions);
+            it('Test 021 : should pass options passed to fire into handlers', async () => {
+                const hookOptions = { test: 'funky' };
+                await hooksRunner.fire(test_event, hookOptions);
+                expect(handler).toHaveBeenCalledWith(hookOptions);
             });
         });
     });
