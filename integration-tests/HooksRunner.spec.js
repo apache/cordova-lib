@@ -26,7 +26,6 @@ const HooksRunner = require('../src/hooks/HooksRunner');
 const cordova = require('../src/cordova/cordova');
 const { tmpDir } = require('../spec/helpers');
 const { PluginInfo, ConfigParser } = require('cordova-common');
-const { Q_chainmap } = require('../src/util/promise-util');
 
 const ext = process.platform === 'win32' ? 'bat' : 'sh';
 const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
@@ -229,42 +228,32 @@ describe('HooksRunner', function () {
                     expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
+        });
 
-            it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
-                hookOptions.nohooks = ['before_build'];
+        describe('nohooks option', () => {
+            it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', async () => {
+                hookOptions.nohooks = [test_event];
 
-                return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                    expect(msg).toBeDefined();
-                    expect(msg).toBe('hook before_build is disabled.');
-                });
+                expect(await hooksRunner.fire(test_event, hookOptions))
+                    .toBe('hook before_build is disabled.');
             });
 
-            it('Test 014 : should not execute a set of matched hooks when --nohooks option specifies the hook pattern.', function () {
-                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
-                hookOptions.nohooks = ['before*'];
+            it('Test 014 : should not execute matched hooks when --nohooks option specifies a hook pattern', async () => {
+                hookOptions.nohooks = ['ba'];
 
-                return Q_chainmap(test_events, e => {
-                    return hooksRunner.fire(e, hookOptions).then(msg => {
-                        if (e === 'after_plugin_add') {
-                            expect(msg).toBeUndefined();
-                        } else {
-                            expect(msg).toBeDefined();
-                            expect(msg).toBe(`hook ${e} is disabled.`);
-                        }
-                    });
-                });
+                for (const e of ['foo', 'bar', 'baz']) {
+                    expect(await hooksRunner.fire(e, hookOptions))
+                        .toBe(e === 'foo' ? undefined : `hook ${e} is disabled.`);
+                }
             });
 
-            it('Test 015 : should not execute all hooks when --nohooks option specifies .', function () {
-                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
+            it('Test 015 : should not execute any hooks when --nohooks option specifies .', async () => {
                 hookOptions.nohooks = ['.'];
 
-                return Q_chainmap(test_events, e => {
-                    return hooksRunner.fire(e, hookOptions).then(msg => {
-                        expect(msg).toBeDefined();
-                        expect(msg).toBe(`hook ${e} is disabled.`);
-                    });
-                });
+                for (const e of ['foo', 'bar', 'baz']) {
+                    expect(await hooksRunner.fire(e, hookOptions))
+                        .toBe(`hook ${e} is disabled.`);
+                }
             });
         });
 
