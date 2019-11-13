@@ -24,15 +24,13 @@ const globby = require('globby');
 const et = require('elementtree');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
-const cordovaUtil = require('../src/cordova/util');
 const cordova = require('../src/cordova/cordova');
-const { tmpDir, testPlatform } = require('../spec/helpers');
+const { tmpDir } = require('../spec/helpers');
 const { PluginInfo, ConfigParser } = require('cordova-common');
 const { Q_chainmap } = require('../src/util/promise-util');
 
 const tmp = tmpDir('hooks_test');
 const project = path.join(tmp, 'project');
-const preparedProject = path.join(tmp, 'preparedProject');
 const ext = process.platform === 'win32' ? 'bat' : 'sh';
 const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
 
@@ -44,50 +42,28 @@ describe('HooksRunner', function () {
     let hooksRunner, hookOptions;
 
     // This prepares a project that we will copy and use for all tests
-    beforeAll(function () {
+    beforeEach(() => {
         // Copy project fixture
         const projectFixture = path.join(fixtures, 'projWithHooks');
-        fs.copySync(projectFixture, preparedProject);
+        fs.copySync(projectFixture, project);
 
         // Ensure scripts are executable
         globby.sync(['scripts/**'], {
-            cwd: preparedProject, absolute: true
+            cwd: project, absolute: true
         }).forEach(f => fs.chmodSync(f, 0o755));
 
-        // Add the testing platform and plugin to our project
-        process.chdir(preparedProject);
-        return cordova.platform('add', testPlatform)
-            .then(() => fs.copy(
-                testPluginFixture,
-                path.join(preparedProject, 'plugins', testPlugin)
-            ));
-    }, 60 * 1000);
-
-    beforeEach(function () {
-        // Reset our test project
-        // We are linking node_modules to improve performance
-        process.chdir(__dirname); // Avoid EBUSY on Windows
-        fs.removeSync(project);
-        fs.copySync(preparedProject, project, {
-            filter: p => path.basename(p) !== 'node_modules'
-        });
-        const platformModules = 'platforms/android/cordova/node_modules';
-        fs.symlinkSync(path.join(preparedProject, platformModules),
-            path.join(project, platformModules), 'junction');
+        // Add the test plugin to our project
+        fs.copySync(testPluginFixture, testPluginInstalledPath);
 
         // Change into our project directory
         process.chdir(project);
         process.env.PWD = project; // this is used by cordovaUtil.isCordova
 
-        hookOptions = {
-            projectRoot: project,
-            cordova: cordovaUtil.preProcessOptions()
-        };
-
+        hookOptions = { projectRoot: project };
         hooksRunner = new HooksRunner(project);
     });
 
-    afterAll(function () {
+    afterEach(() => {
         process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
         fs.removeSync(tmp);
     });
@@ -181,7 +157,7 @@ describe('HooksRunner', function () {
                 addHooksToConfig(BASE_HOOKS);
                 addHooksToConfig(WINDOWS_HOOKS);
                 addHooksToConfig(ANDROID_HOOKS);
-                hookOptions.cordova.platforms = ['android'];
+                hookOptions.cordova = { platforms: ['android'] };
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
@@ -253,7 +229,7 @@ describe('HooksRunner', function () {
                 addHooksToPlugin(PLUGIN_BASE_HOOKS);
                 addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
                 addHooksToPlugin(PLUGIN_ANDROID_HOOKS);
-                hookOptions.cordova.platforms = ['android'];
+                hookOptions.cordova = { platforms: ['android'] };
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
