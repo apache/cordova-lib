@@ -20,7 +20,6 @@
 const path = require('path');
 const fs = require('fs-extra');
 const delay = require('delay');
-const globby = require('globby');
 const et = require('elementtree');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
@@ -47,11 +46,6 @@ describe('HooksRunner', function () {
         // Copy project hooks
         const hooksDir = path.join(fixtures, 'projectHooks');
         fs.copySync(hooksDir, path.join(project, 'scripts'));
-
-        // Ensure scripts are executable
-        globby.sync(['scripts/**'], {
-            cwd: project, absolute: true
-        }).forEach(f => fs.chmodSync(f, 0o755));
 
         // Change into our project directory
         process.chdir(project);
@@ -221,10 +215,6 @@ describe('HooksRunner', function () {
             });
 
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
-                // Make scripts executable
-                globby.sync('scripts/**', { cwd: testPluginInstalledPath, absolute: true })
-                    .forEach(f => fs.chmodSync(f, 0o755));
-
                 addHooksToPlugin(PLUGIN_BASE_HOOKS);
                 addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
                 addHooksToPlugin(PLUGIN_ANDROID_HOOKS);
