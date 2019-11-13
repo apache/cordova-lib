@@ -90,29 +90,6 @@ describe('HooksRunner', function () {
             expect(hooksOrder).toEqual(sortedHooksOrder);
         }
 
-        const BASE_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
-                <hook type="before_build" src="scripts/appBeforeBuild02.js" />
-            </widget>
-        `;
-        const WINDOWS_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <platform name="windows">
-                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
-                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
-                </platform>
-            </widget>
-        `;
-        const ANDROID_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <platform name="android">
-                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
-                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
-                </platform>
-            </widget>
-        `;
-
         function addHooks (hooksXml, doc) {
             const hooks = et.parse(hooksXml);
             for (const el of hooks.getroot().findall('./*')) {
@@ -120,13 +97,36 @@ describe('HooksRunner', function () {
             }
         }
 
-        function addHooksToConfig (hooksXml) {
-            const config = new ConfigParser(path.join(project, 'config.xml'));
-            addHooks(hooksXml, config.doc);
-            config.write();
-        }
-
         describe('application hooks', function () {
+            const BASE_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
+                    <hook type="before_build" src="scripts/appBeforeBuild02.js" />
+                </widget>
+            `;
+            const WINDOWS_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="windows">
+                        <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
+                        <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+            const ANDROID_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="android">
+                        <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
+                        <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+
+            function addHooksToConfig (hooksXml) {
+                const config = new ConfigParser(path.join(project, 'config.xml'));
+                addHooks(hooksXml, config.doc);
+                config.write();
+            }
+
             it('Test 006 : should execute hook scripts serially from config.xml', function () {
                 addHooksToConfig(BASE_HOOKS);
 
@@ -156,6 +156,25 @@ describe('HooksRunner', function () {
                     const expectedResults = baseScriptResults.concat(androidPlatformScriptsResults);
                     expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
+            });
+
+            it('Test 023 : should error if any hook fails', function () {
+                const FAIL_HOOK = `
+                    <widget xmlns="http://www.w3.org/ns/widgets">
+                        <hook type="fail" src="scripts/fail.js" />
+                    </widget>
+                `;
+                addHooksToConfig(FAIL_HOOK);
+
+                return hooksRunner.fire('fail', hookOptions).then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                });
+            });
+
+            it('Test 024 : should not error if the hook is unrecognized', function () {
+                return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions);
             });
         });
 
@@ -317,25 +336,6 @@ describe('HooksRunner', function () {
                 cordova.on(test_event, syncHandler);
                 return hooksRunner.fire(test_event, hookOptions);
             });
-
-            it('Test 023 : should error if any hook fails', function () {
-                const FAIL_HOOK = `
-                    <widget xmlns="http://www.w3.org/ns/widgets">
-                        <hook type="fail" src="scripts/fail.js" />
-                    </widget>
-                `;
-                addHooksToConfig(FAIL_HOOK);
-
-                return hooksRunner.fire('fail', hookOptions).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
-            });
-        });
-
-        it('Test 024 : should not error if the hook is unrecognized', function () {
-            return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions);
         });
     });
 });
