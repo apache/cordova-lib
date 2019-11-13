@@ -57,20 +57,20 @@ module.exports = function fixtureHelper (tmpDir) {
         },
 
         // Creates a cordova project with one platform installed
-        projectWithPlatform () {
+        async projectWithPlatform () {
             const projectFixture = path.join(__dirname, 'cordova/fixtures/basePkgJson');
             const projectPath = path.join(fixturesBaseDir, 'project-with-platform');
 
-            return fs.copy(projectFixture, projectPath)
-                .then(_ => process.chdir(projectPath))
-                .then(_ => {
-                    // Talk about a clunky interface :(
-                    const platforms = ['android'];
-                    const opts = { platforms, save: true };
-                    const hooksRunner = new HooksRunner(projectPath);
-                    return platformAdd(hooksRunner, projectPath, platforms, opts);
-                })
-                .then(_ => projectPath);
+            fs.copySync(projectFixture, projectPath);
+            process.chdir(projectPath);
+
+            // Talk about a clunky interface :(
+            const platforms = ['android'];
+            const opts = { platforms, save: true };
+            const hooksRunner = new HooksRunner(projectPath);
+            await platformAdd(hooksRunner, projectPath, platforms, opts);
+
+            return projectPath;
         },
 
         androidPlatform () {
@@ -89,10 +89,10 @@ module.exports = function fixtureHelper (tmpDir) {
             fixturePromises[name] = Promise.resolve(fixtureConstructors[name]());
         }
         return {
-            copyTo (targetPath) {
-                return fixturePromises[name]
-                    .then(fixturePath => fs.copy(fixturePath, targetPath))
-                    .then(_ => targetPath);
+            async copyTo (targetPath) {
+                const fixturePath = await fixturePromises[name];
+                fs.copySync(fixturePath, targetPath);
+                return targetPath;
             }
         };
     };
