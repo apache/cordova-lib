@@ -84,7 +84,7 @@ describe('cordova/restore-util', () => {
             return o;
         }, {});
         if (Object.keys(expectedSpecs).length > 0) {
-            let specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+            const specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
             expect(specs).toEqual(jasmine.objectContaining(expectedSpecs));
         }
     }
@@ -114,7 +114,6 @@ describe('cordova/restore-util', () => {
     }
 
     describe('installPlatformsFromConfigXML', () => {
-
         it('Test#001 : should restore saved platform from package.json', () => {
             setPkgJson('cordova.platforms', [testPlatform]);
 
@@ -334,8 +333,8 @@ describe('cordova/restore-util', () => {
                     variables: { common_var: 'xml', xml_var: 'foo' }
                 }]);
 
-                const pluginOccurences = !!getPkgJson('dependencies.cordova-plugin-camera')
-                                       + !!getPkgJson('devDependencies.cordova-plugin-camera');
+                const pluginOccurences = !!getPkgJson('dependencies.cordova-plugin-camera') +
+                                       !!getPkgJson('devDependencies.cordova-plugin-camera');
                 expect(pluginOccurences).toBe(1);
             });
         });

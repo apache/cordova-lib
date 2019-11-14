@@ -86,7 +86,7 @@ describe('cordova/platform/remove', function () {
         });
 
         it('should remove from package.json', function () {
-            package_json_mock.cordova = { 'platforms': ['atari'] };
+            package_json_mock.cordova = { platforms: ['atari'] };
             cordova_util.requireNoCache.and.returnValue(package_json_mock);
             spyOn(fs, 'readFileSync').and.returnValue('file');
             fs.existsSync.and.callFake(function (filePath) {

@@ -224,7 +224,6 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     return deleteExecList.reduce(function (acc, deleteExec) {
         return acc.then(deleteExec);
     }, Promise.resolve());
-
 };
 
 // possible options: cli_variables, www_dir, is_top_level
@@ -264,7 +263,6 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
 
     var promise;
     if (deps && deps.length && danglers && danglers.length) {
-
         // @tests - important this event is checked spec/uninstall.spec.js
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function (dangler) {
@@ -295,7 +293,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
 
         var hooksRunner = new HooksRunner(projectRoot);
         var hooksRunnerOptions = {
-            cordova: { platforms: [ platform ] },
+            cordova: { platforms: [platform] },
             plugin: {
                 id: pluginInfo.id,
                 pluginInfo: pluginInfo,

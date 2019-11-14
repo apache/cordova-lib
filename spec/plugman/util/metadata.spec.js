@@ -85,7 +85,6 @@ describe('plugman.metadata', () => {
                 expect(fsMock.existsSync).not.toHaveBeenCalled();
                 expect(fsMock.readFileSync).not.toHaveBeenCalled();
             });
-
         });
     });
 

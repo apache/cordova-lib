@@ -94,7 +94,7 @@ module.exports.setDefaultTimeout = timeout => {
 module.exports.omniStub = (terminalProps = {}) => {
     const stub = new Proxy(_ => _, {
         get: (_, key) => {
-            if (terminalProps.hasOwnProperty(key)) return terminalProps[key];
+            if (Object.prototype.hasOwnProperty.call(terminalProps, key)) return terminalProps[key];
             return key === Symbol.toPrimitive ? _ => '' : stub;
         },
         apply: _ => stub
@@ -145,7 +145,7 @@ module.exports.setPluginSpec = function (appPath, plugin, spec) {
         }
     }
 
-    parser.addPlugin({ 'name': plugin, 'spec': spec }, variables);
+    parser.addPlugin({ name: plugin, spec: spec }, variables);
     parser.write();
 };
 

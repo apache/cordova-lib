@@ -71,7 +71,7 @@ describe('cordova/plugin/remove', function () {
         });
 
         it('should require that a provided plugin be installed in the current project', function () {
-            var opts = { plugins: [ undefined ] };
+            var opts = { plugins: [undefined] };
             return remove(projectRoot, 'plugin', hook_mock, opts).then(function () {
                 fail('Expected promise to be rejected');
             }, function (err) {

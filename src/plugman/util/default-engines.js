@@ -21,29 +21,29 @@ var path = require('path');
 
 module.exports = function (project_dir) {
     return {
-        'cordova':
-            { 'platform': '*', 'currentVersion': require('../../../package.json').version },
+        cordova:
+            { platform: '*', currentVersion: require('../../../package.json').version },
         'cordova-plugman':
-            { 'platform': '*', 'currentVersion': require('../../../package.json').version },
+            { platform: '*', currentVersion: require('../../../package.json').version },
         'cordova-android':
-            { 'platform': 'android', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'android', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'cordova-ios':
-            { 'platform': 'ios', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'ios', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'cordova-osx':
-            { 'platform': 'osx', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'osx', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'cordova-windows':
-            { 'platform': 'windows', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'windows', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'cordova-browser':
-            { 'platform': 'browser', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'browser', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'cordova-electron':
-            { 'platform': 'electron', 'scriptSrc': path.join(project_dir, 'cordova', 'version') },
+            { platform: 'electron', scriptSrc: path.join(project_dir, 'cordova', 'version') },
         'apple-xcode':
-            { 'platform': 'ios', 'scriptSrc': path.join(project_dir, 'cordova', 'apple_xcode_version') },
+            { platform: 'ios', scriptSrc: path.join(project_dir, 'cordova', 'apple_xcode_version') },
         'apple-ios':
-            { 'platform': 'ios', 'scriptSrc': path.join(project_dir, 'cordova', 'apple_ios_version') },
+            { platform: 'ios', scriptSrc: path.join(project_dir, 'cordova', 'apple_ios_version') },
         'apple-osx':
-            { 'platform': 'ios', 'scriptSrc': path.join(project_dir, 'cordova', 'apple_osx_version') },
+            { platform: 'ios', scriptSrc: path.join(project_dir, 'cordova', 'apple_osx_version') },
         'android-sdk':
-            { 'platform': 'android', 'scriptSrc': path.join(project_dir, 'cordova', 'android_sdk_version') }
+            { platform: 'android', scriptSrc: path.join(project_dir, 'cordova', 'android_sdk_version') }
     };
 };

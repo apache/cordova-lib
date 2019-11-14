@@ -1,4 +1,2 @@
-env:
-    jasmine: true
-rules:
-    prefer-promise-reject-errors: off
+root: true
+extends: '@cordova/eslint-config/node-tests'

@@ -144,5 +144,4 @@ function doPlatformBase (templatesDir, platformName, pluginName, pluginID, plugi
         const filePath = path.join(baseDir, `${pluginName}.${extension}`);
         fs.writeFileSync(filePath, file, 'utf-8');
     }
-
 }

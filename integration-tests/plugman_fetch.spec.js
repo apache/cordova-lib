@@ -126,7 +126,6 @@ describe('fetch', function () {
     });
 
     describe('fetch recursive error CB-8809', function () {
-
         var srcDir = path.join(plugins_dir, 'recursivePlug');
         var appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
         fetch.__set__('fetch', function (pluginDir) {

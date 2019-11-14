@@ -184,11 +184,11 @@ describe('plugman/install', () => {
                     .then(() => {
                         expect(satisfies.calls.count()).toBe(3);
                         // <engine name="cordova" VERSION=">=3.0.0"/>
-                        expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=3.0.0', true ]);
+                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=3.0.0', true]);
                         // <engine name="cordova-android" VERSION=">=3.1.0"/>
-                        expect(satisfies.calls.argsFor(1)).toEqual([ '18.0.0', '>=3.1.0', true ]);
+                        expect(satisfies.calls.argsFor(1)).toEqual(['18.0.0', '>=3.1.0', true]);
                         // <engine name="android-sdk" VERSION=">=18"/>
-                        expect(satisfies.calls.argsFor(2)).toEqual([ '18.0.0', '>=18', true ]);
+                        expect(satisfies.calls.argsFor(2)).toEqual(['18.0.0', '>=18', true]);
                     });
             }, TIMEOUT);
             it('Test 011 : should check engine versions', () => {
@@ -198,13 +198,13 @@ describe('plugman/install', () => {
                         const cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
                         expect(satisfies.calls.count()).toBe(4);
                         // <engine name="cordova" version=">=2.3.0"/>
-                        expect(satisfies.calls.argsFor(0)).toEqual([ cordovaVersion, '>=2.3.0', true ]);
+                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=2.3.0', true]);
                         // <engine name="cordova-plugman" version=">=0.10.0" />
-                        expect(satisfies.calls.argsFor(1)).toEqual([ plugmanVersion, '>=0.10.0', true ]);
+                        expect(satisfies.calls.argsFor(1)).toEqual([plugmanVersion, '>=0.10.0', true]);
                         // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />
-                        expect(satisfies.calls.argsFor(2)).toEqual([ null, '>=1.0.0', true ]);
+                        expect(satisfies.calls.argsFor(2)).toEqual([null, '>=1.0.0', true]);
                         // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
-                        expect(satisfies.calls.argsFor(3)).toEqual([ null, '>=3.0.0', true ]);
+                        expect(satisfies.calls.argsFor(3)).toEqual([null, '>=3.0.0', true]);
                     });
             }, TIMEOUT);
             it('Test 012 : should not check custom engine version that is not supported for platform', () => {

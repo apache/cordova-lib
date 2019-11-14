@@ -51,7 +51,7 @@ describe('cordova/plugin', function () {
             var targets = ['plugin1', 'plugin2', 'plugin3'];
             return plugin(cmd, targets)
                 .then(function () {
-                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ ], plugins: [ 'plugin1', 'plugin2', 'plugin3' ] }));
+                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [], plugins: ['plugin1', 'plugin2', 'plugin3'] }));
                 });
         });
 
@@ -59,7 +59,7 @@ describe('cordova/plugin', function () {
             var targets = 'plugin1';
             return plugin(cmd, targets)
                 .then(function () {
-                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ ], plugins: [ 'plugin1' ] }));
+                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [], plugins: ['plugin1'] }));
                 });
         });
 
@@ -67,7 +67,7 @@ describe('cordova/plugin', function () {
             var targets = '-plugin1';
             return plugin(cmd, targets)
                 .then(function () {
-                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [ '-plugin1' ], plugins: [ ] }));
+                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: ['-plugin1'], plugins: [] }));
                 });
         });
 
@@ -76,13 +76,12 @@ describe('cordova/plugin', function () {
             var targets = 'plugin1';
             return plugin(cmd, targets, options)
                 .then(function () {
-                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ save: true, options: [ ], plugins: [ 'plugin1' ] }));
+                    expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ save: true, options: [], plugins: ['plugin1'] }));
                 });
         });
     });
 
     describe('happy path', function () {
-
         it('should direct "add" command to the "add" submodule', function () {
             spyOn(plugin, 'add').and.returnValue(true);
             return plugin('add', ['cordova-plugin-splashscreen'])

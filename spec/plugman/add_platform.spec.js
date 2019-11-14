@@ -20,7 +20,6 @@ var platform = require('../../src/plugman/platform');
 var fs = require('fs-extra');
 
 describe('plugman/platform', () => {
-
     describe('add', function () {
         beforeEach(function () {
             spyOn(fs, 'existsSync').and.returnValue(false);

@@ -62,7 +62,6 @@ function installPlatformsFromConfigXML (platforms, opts) {
     }
 
     if (cfg !== undefined) {
-
         if (pkgJsonPlatforms !== undefined) {
             // Combining arrays and checking duplicates.
             comboArray = pkgJsonPlatforms.slice();

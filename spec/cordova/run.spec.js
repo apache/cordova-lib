@@ -71,7 +71,7 @@ describe('run command', function () {
     describe('success', function () {
         it('Test 003 : should call prepare before actually run platform ', function () {
             return cordovaRun(['android', 'ios']).then(function () {
-                expect(cordovaPrepare.calls.argsFor(0)).toEqual([ { platforms: [ 'android', 'ios' ], verbose: false, options: {} } ]);
+                expect(cordovaPrepare.calls.argsFor(0)).toEqual([{ platforms: ['android', 'ios'], verbose: false, options: {} }]);
             });
         });
         it('Test 004 : should get PlatformApi instance for each platform and call its\' run method', function () {
@@ -84,7 +84,7 @@ describe('run command', function () {
         });
         it('Test 005 : should pass down parameters', function () {
             return cordovaRun({ platforms: ['blackberry10'], options: { password: '1q1q' } }).then(function () {
-                expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q' }, verbose: false });
+                expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: ['blackberry10'], options: { password: '1q1q' }, verbose: false });
                 expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q' });
                 expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
             });
@@ -117,8 +117,8 @@ describe('run command', function () {
             });
             it('Test 009 : should leave parameters unchanged', function () {
                 return cordovaRun({ platforms: ['blackberry10'], options: { password: '1q1q' } }).then(function () {
-                    expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: { password: '1q1q', 'couldBeModified': 'insideBuild' }, verbose: false });
-                    expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q', 'couldBeModified': 'insideBuild' });
+                    expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: ['blackberry10'], options: { password: '1q1q', couldBeModified: 'insideBuild' }, verbose: false });
+                    expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q', couldBeModified: 'insideBuild' });
                     expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
                 });
             });
@@ -130,13 +130,13 @@ describe('run command', function () {
             it('Test 010 : should fire before hooks through the hooker module', function () {
                 return cordovaRun(['android', 'ios']).then(function () {
                     expect(HooksRunner.prototype.fire.calls.argsFor(0))
-                        .toEqual([ 'before_run', { platforms: [ 'android', 'ios' ], verbose: false, options: {} } ]);
+                        .toEqual(['before_run', { platforms: ['android', 'ios'], verbose: false, options: {} }]);
                 });
             });
             it('Test 011 : should fire after hooks through the hooker module', function () {
                 return cordovaRun('android').then(function () {
                     expect(HooksRunner.prototype.fire.calls.argsFor(2))
-                        .toEqual([ 'after_run', { platforms: [ 'android' ], verbose: false, options: {} } ]);
+                        .toEqual(['after_run', { platforms: ['android'], verbose: false, options: {} }]);
                 });
             });
         });
