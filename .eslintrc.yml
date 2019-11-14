@@ -1,2 +1,8 @@
 root: true
 extends: '@cordova/eslint-config/node'
+
+rules:
+  linebreak-style:
+    - error
+    - unix
+  promise/catch-or-return: error
