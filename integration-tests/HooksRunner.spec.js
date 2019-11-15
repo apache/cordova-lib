@@ -103,11 +103,9 @@ describe('HooksRunner', function () {
     describe('fire method', function () {
         const test_event = 'before_build';
         const hooksOrderFile = path.join(project, 'hooks_order.txt');
-        let fire;
 
         beforeEach(function () {
             fs.removeSync(hooksOrderFile);
-            fire = spyOn(HooksRunner.prototype, 'fire').and.callThrough();
         });
 
         // helper methods
@@ -266,55 +264,6 @@ describe('HooksRunner', function () {
                     expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
-
-            // FIXME Sometimes the paths returned in the hook context are resolved to their realpath, sometimes not.
-            // Furthermore, using npm@3 (default for node@6) will install the local plugin by copying not by symlinking.
-            // Disabling this test until the paths in the in the hook context are handled consistently.
-            xit('Test 012 : should run before_plugin_uninstall, before_plugin_install, after_plugin_install hooks for a plugin being installed with correct opts.plugin context', function () {
-                const hooksToTest = [
-                    'before_plugin_uninstall',
-                    'before_plugin_install',
-                    'after_plugin_install'
-                ];
-                const toPlainObject = o => JSON.parse(JSON.stringify(o));
-
-                const expectedContext = toPlainObject({
-                    cordova: {
-                        platforms: ['android'],
-                        plugins: [testPlugin],
-                        version: require('../package').version
-                    },
-                    plugin: {
-                        id: testPlugin,
-                        pluginInfo: new PluginInfo(testPluginInstalledPath),
-                        platform: 'android',
-                        dir: testPluginInstalledPath
-                    },
-                    projectRoot: project
-                });
-                // Delete unique ids to allow comparing PluginInfo
-                delete expectedContext.plugin.pluginInfo._et;
-
-                return Promise.resolve()
-                    .then(_ => cordova.plugin('rm', testPlugin))
-                    .then(_ => cordova.plugin('add', testPluginFixture))
-                    .then(_ => {
-                        fire.calls.all()
-                            .filter(call => hooksToTest.includes(call.args[0]))
-                            .forEach(call => {
-                                const context = toPlainObject(call.args[1]);
-
-                                expect(context).toBeDefined();
-                                expect(context.plugin).toBeDefined();
-                                expect(context.plugin.platform).toBe(testPlatform);
-
-                                // Delete unique ids to allow comparing PluginInfo
-                                delete context.plugin.pluginInfo._et;
-
-                                expect(context).toEqual(expectedContext);
-                            });
-                    });
-            }, 20 * 1000);
 
             it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
                 hookOptions.nohooks = ['before_build'];
