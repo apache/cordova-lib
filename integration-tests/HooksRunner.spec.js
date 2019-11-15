@@ -98,7 +98,6 @@ describe('HooksRunner', function () {
             <widget xmlns="http://www.w3.org/ns/widgets">
                 <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
                 <hook type="before_build" src="scripts/appBeforeBuild02.js" />
-                <hook type="before_plugin_install" src="scripts/appBeforePluginInstall.js" />
             </widget>
         `;
         const WINDOWS_HOOKS = `
@@ -106,7 +105,6 @@ describe('HooksRunner', function () {
                 <platform name="windows">
                     <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
                     <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
-                    <hook type="before_plugin_install" src="scripts/windows/appWindowsBeforePluginInstall.js" />
                 </platform>
             </widget>
         `;
@@ -115,7 +113,6 @@ describe('HooksRunner', function () {
                 <platform name="android">
                     <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
                     <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
-                    <hook type="before_plugin_install" src="scripts/android/appAndroidBeforePluginInstall.js" />
                 </platform>
             </widget>
         `;
@@ -169,10 +166,6 @@ describe('HooksRunner', function () {
         describe('plugin hooks', function () {
             const PLUGIN_BASE_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
-                    <hook type="before_plugin_install" src="scripts/beforeInstall01.js" />
-                    <hook type="before_plugin_install" src="scripts/beforeInstall2.js" />
-                    <hook type="before_plugin_install" src="scripts/beforeInstall.${ext}" />
-                    <hook type="before_plugin_uninstall" src="scripts/beforeUninstall.js" />
                     <hook type="before_build" src="scripts/beforeBuild.js" />
                     <hook type="before_build" src="scripts/beforeBuild.${ext}" />
                 </widget>
@@ -180,7 +173,6 @@ describe('HooksRunner', function () {
             const PLUGIN_WINDOWS_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
                     <platform name="windows">
-                        <hook type="before_plugin_install" src="scripts/windows/windowsBeforeInstall.js" />
                         <hook type="before_build" src="scripts/windows/windowsBeforeBuild.js" />
                     </platform>
                 </widget>
@@ -188,7 +180,6 @@ describe('HooksRunner', function () {
             const PLUGIN_ANDROID_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
                     <platform name="android">
-                        <hook type="before_plugin_install" src="scripts/android/androidBeforeInstall.js" />
                         <hook type="before_build" src="scripts/android/androidBeforeBuild.js" />
                     </platform>
                 </widget>
