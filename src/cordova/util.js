@@ -216,7 +216,7 @@ function getPlatformVersionOrNull (platformPath) {
 function findPlugins (pluginDir) {
     if (!fs.existsSync(pluginDir)) return [];
 
-    return globby.sync([ '*', '!@*', '@*/*', '!CVS' ], {
+    return globby.sync(['*', '!@*', '@*/*', '!CVS'], {
         cwd: pluginDir,
         onlyDirectories: true
     });
