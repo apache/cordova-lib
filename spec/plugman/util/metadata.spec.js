@@ -53,7 +53,7 @@ describe('plugman.metadata', () => {
 
     describe('get_fetch_metadata', () => {
         const get_fetch_metadata = pluginId =>
-            metadata.get_fetch_metadata(path.join(pluginsDir, pluginId));
+            metadata.get_fetch_metadata(pluginsDir, pluginId);
 
         it('should return an empty object if there is no record', () => {
             fetchJson = null;
@@ -62,6 +62,13 @@ describe('plugman.metadata', () => {
 
         it('should return the fetch metadata in plugins_dir/fetch.json if it is there', () => {
             expect(get_fetch_metadata(TEST_PLUGIN)).toEqual({ metadata: 'matches' });
+        });
+
+        it('should return the fetch metadata in plugins_dir/fetch.json for a scoped plugin', () => {
+            const meta = { metadata: 'matches' };
+            fetchJson = JSON.stringify({ '@cordova/plugin-thinger': meta });
+
+            expect(get_fetch_metadata('@cordova/plugin-thinger')).toEqual(meta);
         });
 
         describe('cache behaviour', () => {

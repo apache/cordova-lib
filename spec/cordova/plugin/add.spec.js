@@ -129,6 +129,15 @@ describe('cordova/plugin/add', function () {
                     expect(plugman.install).toHaveBeenCalledWith('android', jasmine.any(String), jasmine.any(String), jasmine.any(String), jasmine.any(Object));
                 });
             });
+            it('should invoke plugman.install with the full ID of a scoped plugin', () => {
+                const scopedPluginId = '@cordova/plugin-thinger';
+                plugin_info.id = scopedPluginId;
+
+                return add(projectRoot, hook_mock, { plugins: [scopedPluginId] }).then(() => {
+                    const actualPluginId = plugman.install.calls.argsFor(0)[2];
+                    expect(actualPluginId).toBe(scopedPluginId);
+                });
+            });
             it('should save plugin variable information to package.json file (if exists)', function () {
                 var cli_plugin_variables = { some: 'variable' };
 

@@ -26,14 +26,10 @@ module.exports.parse = parse;
  * Represents a parsed specification for a plugin
  * @class
  * @param {String} raw      The raw specification (i.e. provided by the user)
- * @param {String} scope    The scope of the package if this is an npm package
  * @param {String} id       The id of the package if this is an npm package
  * @param {String} version  The version specified for the package if this is an npm package
  */
-function PluginSpec (raw, scope, id, version) {
-    /** @member {String|null} The npm scope of the plugin spec or null if it does not have one */
-    this.scope = scope || null;
-
+function PluginSpec (raw, id, version) {
     /** @member {String|null} The id of the plugin or the raw plugin spec if it is not an npm package */
     this.id = id || raw;
 
@@ -41,7 +37,7 @@ function PluginSpec (raw, scope, id, version) {
     this.version = version || null;
 
     /** @member {String|null} The npm package of the plugin (with scope) or null if this is not a spec for an npm package */
-    this.package = (scope ? scope + id : id) || null;
+    this.package = id;
 }
 
 /**
@@ -54,7 +50,7 @@ function PluginSpec (raw, scope, id, version) {
 function parse (raw) {
     var split = NPM_SPEC_REGEX.exec(raw);
     if (split) {
-        return new PluginSpec(raw, split[1], split[2], split[3]);
+        return new PluginSpec(raw, (split[1] || '') + split[2], split[3]);
     }
 
     return new PluginSpec(raw);

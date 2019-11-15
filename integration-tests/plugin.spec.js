@@ -46,6 +46,8 @@ var org_test_defaultvariables = 'org.test.defaultvariables';
 var npmInfoTestPlugin = 'cordova-lib-test-plugin';
 var npmInfoTestPluginVersion = '1.1.2';
 
+var scopedTestPlugin = '@cordova/plugin-test-dummy';
+
 var testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.git';
 var testGitPluginId = 'cordova-plugin-device';
 
@@ -224,33 +226,47 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 011 : should handle scoped npm packages', function () {
-        var scopedPackage = '@testscope/' + npmInfoTestPlugin;
-        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+        mockPluginFetch(scopedTestPlugin, path.join(pluginsDir, scopedTestPlugin));
 
         spyOn(plugin_util, 'info').and.returnValue(Promise.resolve({}));
-        return addPlugin(scopedPackage, npmInfoTestPlugin, {})
+        return addPlugin(scopedTestPlugin, scopedTestPlugin, {})
             .then(function () {
                 // Check to make sure that we are at least trying to get the correct package.
                 // This package is not published to npm, so we can't truly do end-to-end tests
 
-                expect(plugin_util.info).toHaveBeenCalledWith([scopedPackage]);
+                expect(plugin_util.info).toHaveBeenCalledWith([scopedTestPlugin]);
+
+                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                expect(fetchTarget).toEqual(scopedTestPlugin);
+            });
+    }, 30000);
+
+    it('Test 012 : should handle scoped npm packages with given version tags', function () {
+        var scopedPackage = scopedTestPlugin + '@latest';
+        mockPluginFetch(scopedTestPlugin, path.join(pluginsDir, scopedTestPlugin));
+
+        spyOn(plugin_util, 'info');
+        return addPlugin(scopedPackage, scopedTestPlugin, {})
+            .then(function () {
+                expect(plugin_util.info).not.toHaveBeenCalled();
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedPackage);
             });
     }, 30000);
 
-    it('Test 012 : should handle scoped npm packages with given version tags', function () {
-        var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
-        mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
+    it('Test 013 : should be able to add and remove scoped npm packages without screwing up everything', () => {
+        mockPluginFetch(scopedTestPlugin, path.join(pluginsDir, scopedTestPlugin));
+        spyOn(plugin_util, 'info').and.returnValue(Promise.resolve({}));
 
-        spyOn(plugin_util, 'info');
-        return addPlugin(scopedPackage, npmInfoTestPlugin, {})
-            .then(function () {
-                expect(plugin_util.info).not.toHaveBeenCalled();
+        return addPlugin(scopedTestPlugin, scopedTestPlugin, {})
+            .then(() => {
+                expect(plugin_util.info).toHaveBeenCalledWith([scopedTestPlugin]);
 
                 var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
-                expect(fetchTarget).toEqual(scopedPackage);
+                expect(fetchTarget).toEqual(scopedTestPlugin);
+
+                return removePlugin(scopedTestPlugin);
             });
     }, 30000);
 });

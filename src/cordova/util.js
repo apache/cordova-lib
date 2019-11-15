@@ -22,6 +22,7 @@ var path = require('path');
 var events = require('cordova-common').events;
 var CordovaError = require('cordova-common').CordovaError;
 var url = require('url');
+const globby = require('globby');
 
 var origCwd = null;
 
@@ -213,17 +214,12 @@ function getPlatformVersionOrNull (platformPath) {
 
 // list the directories in the path, ignoring any files
 function findPlugins (pluginDir) {
-    var plugins = [];
+    if (!fs.existsSync(pluginDir)) return [];
 
-    if (fs.existsSync(pluginDir)) {
-        plugins = fs.readdirSync(pluginDir).filter(function (fileName) {
-            var pluginPath = path.join(pluginDir, fileName);
-            var isPlugin = isDirectory(pluginPath) || isSymbolicLink(pluginPath);
-            return fileName !== '.svn' && fileName !== 'CVS' && isPlugin;
-        });
-    }
-
-    return plugins;
+    return globby.sync([ '*', '!@*', '@*/*', '!CVS' ], {
+        cwd: pluginDir,
+        onlyDirectories: true
+    });
 }
 
 function projectWww (projectDir) {
@@ -288,20 +284,6 @@ function preProcessOptions (inputOptions) {
 function isDirectory (dir) {
     try {
         return fs.lstatSync(dir).isDirectory();
-    } catch (e) {
-        return false;
-    }
-}
-
-/**
- * Checks to see if the argument is a symbolic link
- *
- * @param {string} dir - string representing path of directory
- * @return {boolean}
- */
-function isSymbolicLink (dir) {
-    try {
-        return fs.lstatSync(dir).isSymbolicLink();
     } catch (e) {
         return false;
     }
