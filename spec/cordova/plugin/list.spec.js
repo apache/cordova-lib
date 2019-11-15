@@ -73,7 +73,7 @@ describe('cordova/plugin/list', function () {
     });
     it('should resolve the promise by returning an array of plugin ids installed', function () {
         return list(projectRoot, hook_mock).then(function (results) {
-            expect(results).toEqual([ 'VRPlugin', 'MastodonSocialPlugin' ]);
+            expect(results).toEqual(['VRPlugin', 'MastodonSocialPlugin']);
         });
     });
 });

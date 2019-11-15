@@ -99,7 +99,7 @@ describe('emulate command', function () {
                 const expectedBuildOptions = Object.assign({ couldBeModified: 'insideBuild' }, baseOptions);
                 return cordovaEmulate({ platforms: ['blackberry10'], options: { password: '1q1q' } })
                     .then(function () {
-                        expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: [ 'blackberry10' ], options: expectedBuildOptions, verbose: false });
+                        expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: ['blackberry10'], options: expectedBuildOptions, verbose: false });
                         expect(platformApi.build).toHaveBeenCalledWith(expectedBuildOptions);
                         expect(platformApi.run).toHaveBeenCalledWith(expectedRunOptions);
                     });

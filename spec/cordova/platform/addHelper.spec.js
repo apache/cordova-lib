@@ -31,7 +31,7 @@ describe('cordova/platform/addHelper', function () {
 
     beforeEach(function () {
         fake_platform = {
-            'platform': 'atari'
+            platform: 'atari'
         };
         package_json_mock = {
             cordova: {},
@@ -185,7 +185,6 @@ describe('cordova/platform/addHelper', function () {
         });
 
         describe('platform api invocation', function () {
-
             it('should invoke the createPlatform platform API method when adding a platform, providing destination location, parsed config file and platform detail options as arguments', function () {
                 return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function (result) {
                     expect(platform_api_mock.createPlatform).toHaveBeenCalled();
@@ -202,12 +201,11 @@ describe('cordova/platform/addHelper', function () {
         });
 
         describe('after platform api invocation', function () {
-
             describe('when the restoring option is not provided', function () {
                 it('should invoke preparePlatforms twice (?!?), once before installPluginsForNewPlatforms and once after... ?!', function () {
                     const preparePlatforms = platform_addHelper.__get__('preparePlatforms');
                     return platform_addHelper('add', hooks_mock, projectRoot, ['atari'], { save: true }).then(function (result) {
-                        expect(preparePlatforms).toHaveBeenCalledWith([ 'atari' ], '/some/path', { searchpath: undefined });
+                        expect(preparePlatforms).toHaveBeenCalledWith(['atari'], '/some/path', { searchpath: undefined });
                     });
                 });
             });
@@ -228,7 +226,7 @@ describe('cordova/platform/addHelper', function () {
                             return false;
                         }
                     });
-                    package_json_mock.cordova = { 'platforms': ['ios'] };
+                    package_json_mock.cordova = { platforms: ['ios'] };
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
                     return platform_addHelper('add', hooks_mock, projectRoot, ['android'], { save: true, restoring: true }).then(function (result) {
                         expect(fs.writeFileSync).toHaveBeenCalled();
@@ -237,7 +235,7 @@ describe('cordova/platform/addHelper', function () {
 
                 it('should use pkgJson version devDependencies, if dependencies are undefined', function () {
                     package_json_mock.dependencies = undefined;
-                    package_json_mock.cordova = { 'platforms': ['ios'] };
+                    package_json_mock.cordova = { platforms: ['ios'] };
                     package_json_mock.devDependencies['ios'] = {};
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
                     fs.existsSync.and.callFake(function (filePath) {
@@ -251,7 +249,7 @@ describe('cordova/platform/addHelper', function () {
                 });
 
                 it('should only write the package.json file if it was modified', function () {
-                    package_json_mock.cordova = { 'platforms': ['ios'] };
+                    package_json_mock.cordova = { platforms: ['ios'] };
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
                     return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function (result) {
                         expect(fs.writeFileSync).not.toHaveBeenCalled();
@@ -272,7 +270,7 @@ describe('cordova/platform/addHelper', function () {
         });
         describe('errors', function () {
             it('should reject the promise should fetch fail', function () {
-                fetch_mock.and.returnValue(Promise.reject('fetch has failed, rejecting promise'));
+                fetch_mock.and.returnValue(Promise.reject(new Error('fetch has failed, rejecting promise')));
                 return platform_addHelper.downloadPlatform(projectRoot, 'android', '67').then(function () {
                     fail('success handler unexpectedly invoked');
                 }, function (e) {

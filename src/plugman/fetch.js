@@ -252,7 +252,6 @@ function findLocalPlugin (plugin_src, searchpath, pluginInfoProvider) {
         if (semver.gt(pinfo.version, latest.version)) {
             latest = pinfo;
         }
-
     });
     return latest;
 }
@@ -260,7 +259,6 @@ function findLocalPlugin (plugin_src, searchpath, pluginInfoProvider) {
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 // if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying
 function copyPlugin (pinfo, plugins_dir, link) {
-
     var plugin_dir = pinfo.dir;
     var dest = path.join(plugins_dir, pinfo.id);
 

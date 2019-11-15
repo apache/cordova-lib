@@ -26,9 +26,9 @@ describe('dependency module', function () {
     describe('generateDependencyInfo method', function () {
         it('Test 001 : should return a list of top-level plugins based on what is inside a platform.json file', function () {
             var tlps = {
-                'hello': '',
-                'isitme': '',
-                'yourelookingfor': ''
+                hello: '',
+                isitme: '',
+                yourelookingfor: ''
             };
             var platformJson = new PlatformJson('filePath', 'platform', {
                 installed_plugins: tlps,
@@ -44,8 +44,8 @@ describe('dependency module', function () {
         });
         it('Test 002 : should return a dependency graph for the plugins', function () {
             var tlps = {
-                'A': '',
-                'B': ''
+                A: '',
+                B: ''
             };
             var plugins_dir = path.join(__dirname, '..', 'plugins', 'dependencies');
             var platformJson = new PlatformJson(plugins_dir, 'android', {

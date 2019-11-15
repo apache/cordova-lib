@@ -280,7 +280,7 @@ describe('HooksRunner', function () {
 
                 const expectedContext = toPlainObject({
                     cordova: {
-                        platforms: [ 'android' ],
+                        platforms: ['android'],
                         plugins: [testPlugin],
                         version: require('../package').version
                     },

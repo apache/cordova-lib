@@ -507,7 +507,7 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
     }
 
     for (var req in reqs) {
-        if (reqs.hasOwnProperty(req) && typeof req === 'string' && semver.validRange(reqs[req])) {
+        if (Object.prototype.hasOwnProperty.call(reqs, req) && typeof req === 'string' && semver.validRange(reqs[req])) {
             var badInstalledVersion = null;
             // remove potential whitespace
             var trimmedReq = req.trim();

@@ -42,9 +42,8 @@ module.exports = function run (options) {
             }).then(function () {
                 // Deploy in parallel (output gets intermixed though...)
                 return Promise.all(options.platforms.map(function (platform) {
-
-                    var buildPromise = options.options.nobuild ? Promise.resolve() :
-                        platform_lib.getPlatformApi(platform).build(options.options);
+                    var buildPromise = options.options.nobuild ? Promise.resolve()
+                        : platform_lib.getPlatformApi(platform).build(options.options);
 
                     return buildPromise
                         .then(function () {

@@ -84,10 +84,10 @@ describe('plugin fetching version selection', () => {
         events.on('warn', unmetRequirementsCollector);
 
         testPlugin = {
-            'version': '2.3.0',
-            'name': 'test-plugin',
-            'engines': { 'cordovaDependencies': {} },
-            'versions': [
+            version: '2.3.0',
+            name: 'test-plugin',
+            engines: { cordovaDependencies: {} },
+            versions: [
                 '0.0.2',
                 '0.7.0',
                 '1.0.0',
@@ -132,7 +132,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.3.0');
-            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([getPlatformRequirement('6.1.1')]);
         });
     });
 
@@ -149,7 +149,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([getPlatformRequirement('6.1.1')]);
         });
     });
 
@@ -162,7 +162,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('~5.0.0')]);
         });
     });
 
@@ -173,7 +173,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('0.7.0');
-            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('~5.0.0')]);
         });
     });
 
@@ -184,7 +184,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('~5.0.0')]);
         });
     });
 
@@ -207,7 +207,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            expectUnmetRequirements([ getPlatformRequirement('<2.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('<2.0.0')]);
         });
     });
 
@@ -219,7 +219,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.0.0');
-            expectUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('>5.0.0')]);
         });
     });
 
@@ -252,7 +252,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.1.0');
-            expectUnmetRequirements([ getPlatformRequirement('6.1.1') ]);
+            expectUnmetRequirements([getPlatformRequirement('6.1.1')]);
         });
     });
 
@@ -265,20 +265,20 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('2.0.0');
-            expectUnmetRequirements([ getPluginRequirement('6.1.1') ]);
+            expectUnmetRequirements([getPluginRequirement('6.1.1')]);
         });
     });
 
     it('Test 013 : should respect cordova constraints', () => {
         testPlugin.engines.cordovaDependencies = {
-            '0.0.0': { 'cordova': '>1.0.0' },
-            '1.1.3': { 'cordova': '<3.0.0 || >4.0.0' },
-            '2.3.0': { 'cordova': '6.1.1' }
+            '0.0.0': { cordova: '>1.0.0' },
+            '1.1.3': { cordova: '<3.0.0 || >4.0.0' },
+            '2.3.0': { cordova: '6.1.1' }
         };
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.1.0');
-            expectUnmetRequirements([ getCordovaRequirement('6.1.1') ]);
+            expectUnmetRequirements([getCordovaRequirement('6.1.1')]);
         });
     });
 
@@ -291,7 +291,7 @@ describe('plugin fetching version selection', () => {
         // Should not return 2.0.0-rc.2
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            expectUnmetRequirements([ getPlatformRequirement('>5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('>5.0.0')]);
         });
     });
 
@@ -306,8 +306,8 @@ describe('plugin fetching version selection', () => {
 
     it('Test 016 : should not fail if there is no cordovaDependencies in the engines', () => {
         testPlugin.engines = {
-            'node': '>7.0.0',
-            'npm': '~2.0.0'
+            node: '>7.0.0',
+            npm: '~2.0.0'
         };
 
         return getFetchVersion(testPlugin).then(version => {
@@ -325,7 +325,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            expectUnmetRequirements([ getPlatformRequirement('~5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('~5.0.0')]);
         });
     });
 
@@ -344,12 +344,12 @@ describe('plugin fetching version selection', () => {
 
     it('Test 019 : should ignore badly typed constraint entries', () => {
         testPlugin.engines.cordovaDependencies = {
-            '0.0.2': { 'cordova': 1 },
-            '0.7.0': { 'cordova': {} },
-            '1.0.0': { 'cordova': undefined },
+            '0.0.2': { cordova: 1 },
+            '0.7.0': { cordova: {} },
+            '1.0.0': { cordova: undefined },
             '1.1.3': { 8: '5.0.0' },
-            '1.3.0': { 'cordova': [] },
-            '1.7.1': { 'cordova': null }
+            '1.3.0': { cordova: [] },
+            '1.7.1': { cordova: null }
         };
 
         return getFetchVersion(testPlugin).then(version => {
@@ -361,33 +361,33 @@ describe('plugin fetching version selection', () => {
     it('Test 020 : should ignore bad semver versions', () => {
         testPlugin.engines.cordovaDependencies = {
             '0.0.0': { 'cordova-android': '5.0.0' },
-            'notAVersion': { 'cordova-android': '3.1.0' },
+            notAVersion: { 'cordova-android': '3.1.0' },
             '^1.1.2': { 'cordova-android': '3.1.0' },
             '<=1.3.0': { 'cordova-android': '3.1.0' },
             '1.0': { 'cordova-android': '3.1.0' },
-            '2': { 'cordova-android': '3.1.0' }
+            2: { 'cordova-android': '3.1.0' }
         };
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe(null);
-            expectUnmetRequirements([ getPlatformRequirement('5.0.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('5.0.0')]);
         });
     });
 
     it('Test 021 : should not fail if there are bad semver versions', () => {
         testPlugin.engines.cordovaDependencies = {
-            'notAVersion': { 'cordova-android': '3.1.0' },
+            notAVersion: { 'cordova-android': '3.1.0' },
             '^1.1.2': { 'cordova-android': '3.1.0' },
             '<=1.3.0': { 'cordova-android': '3.1.0' },
             '1.0.0': { 'cordova-android': '~3' }, // Good semver
             '2.0.0': { 'cordova-android': '5.1.0' }, // Good semver
             '1.0': { 'cordova-android': '3.1.0' },
-            '2': { 'cordova-android': '3.1.0' }
+            2: { 'cordova-android': '3.1.0' }
         };
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.7.1');
-            expectUnmetRequirements([ getPlatformRequirement('5.1.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('5.1.0')]);
         });
     });
 
@@ -396,7 +396,7 @@ describe('plugin fetching version selection', () => {
             '1.7.0': {
                 'cordova-android': '>5.1.0',
                 'ca.filmaj.AndroidPlugin': '3.1.0',
-                'cordova': '3.4.2'
+                cordova: '3.4.2'
             }
         };
 
@@ -438,7 +438,7 @@ describe('plugin fetching version selection', () => {
 
         return getFetchVersion(testPlugin).then(version => {
             expect(version).toBe('1.3.0');
-            expectUnmetRequirements([ getPlatformRequirement('>5.1.0') ]);
+            expectUnmetRequirements([getPlatformRequirement('>5.1.0')]);
         });
     });
 });

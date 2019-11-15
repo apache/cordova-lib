@@ -35,8 +35,8 @@ const plugins_install_dir = path.join(project, 'cordova/plugins');
 const plugins_dir = path.join(__dirname, '../spec/plugman/plugins');
 const plugins = {
     'org.test.plugins.dummyplugin': path.join(plugins_dir, 'org.test.plugins.dummyplugin'),
-    'A': path.join(plugins_dir, 'dependencies', 'A'),
-    'C': path.join(plugins_dir, 'dependencies', 'C')
+    A: path.join(plugins_dir, 'dependencies', 'A'),
+    C: path.join(plugins_dir, 'dependencies', 'C')
 };
 
 function setupProject (name) {
@@ -97,7 +97,6 @@ describe('plugman/uninstall', () => {
         });
 
         describe('success', function () {
-
             it('Test 002 : should get PlatformApi instance for platform and invoke its\' removePlugin method', function () {
                 const platformApi = { removePlugin: jasmine.createSpy('removePlugin').and.returnValue(Promise.resolve()) };
                 const getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
@@ -139,9 +138,9 @@ describe('plugman/uninstall', () => {
                     }, Promise.resolve());
                 }
 
-                return validateReturnedResultFor([ true, {}, [], 'foo', function () {} ], true)
+                return validateReturnedResultFor([true, {}, [], 'foo', function () {}], true)
                     .then(function () {
-                        return validateReturnedResultFor([ false, null, undefined, '' ], false);
+                        return validateReturnedResultFor([false, null, undefined, ''], false);
                     });
             });
 
@@ -175,9 +174,7 @@ describe('plugman/uninstall', () => {
     });
 
     describe('uninstallPlugin', function () {
-
         describe('with dependencies', function () {
-
             it('Test 006 : should delete all dependent plugins', function () {
                 setupProject('uninstall.test');
 
@@ -242,7 +239,6 @@ describe('plugman/uninstall', () => {
     });
 
     describe('uninstall', function () {
-
         beforeEach(() => {
             setupProject('uninstall.test');
         });

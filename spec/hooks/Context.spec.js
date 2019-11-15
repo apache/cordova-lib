@@ -106,6 +106,5 @@ describe('hooks/Context', () => {
                 expectErrorOnRequire('/foo');
             });
         });
-
     });
 });

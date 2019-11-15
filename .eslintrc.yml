@@ -1,13 +1,7 @@
 root: true
-extends: semistandard
+extends: '@cordova/eslint-config/node'
+
 rules:
-  indent:
-    - error
-    - 4
-  camelcase: off
-  padded-blocks: off
-  operator-linebreak: off
-  no-throw-literal: off
   linebreak-style:
     - error
     - unix

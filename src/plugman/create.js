@@ -52,7 +52,7 @@ module.exports = function create (name, id, version, pluginPath, options) {
     // Loop through the options( variables ) for other tags
     for (var key in options) {
         var temp = et.XML('<' + key + '>');
-        temp.text = options[ key ];
+        temp.text = options[key];
         root.append(temp);
     }
 

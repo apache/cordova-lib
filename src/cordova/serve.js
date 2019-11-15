@@ -81,8 +81,8 @@ function handleRoot (request, response) {
     const contentNode = config.doc.find('content');
     const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
     const metaDataKeys = ['name', 'packageName', 'version'];
-    const platformUrl = name => installedPlatforms.includes(name) ?
-        `${name}/www/${contentSrc}` : null;
+    const platformUrl = name => installedPlatforms.includes(name)
+        ? `${name}/www/${contentSrc}` : null;
 
     response.send(renderIndex({
         metaData: zipObject(metaDataKeys, metaDataKeys.map(k => config[k]())),

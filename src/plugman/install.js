@@ -66,7 +66,7 @@ module.exports = function installPlugin (platform, project_dir, id, plugins_dir,
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
     options = options || {};
-    if (!options.hasOwnProperty('is_top_level')) options.is_top_level = true;
+    if (!Object.prototype.hasOwnProperty.call(options, 'is_top_level')) options.is_top_level = true;
 
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
@@ -97,7 +97,6 @@ function possiblyFetch (id, plugins_dir, options) {
 }
 
 function checkEngines (engines) {
-
     for (var i = 0; i < engines.length; i++) {
         var engine = engines[i];
 
@@ -160,13 +159,11 @@ function cleanVersionOutput (version, name) {
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
 function callEngineScripts (engines, project_dir) {
-
     return Promise.all(
         engines.map(function (engine) {
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
             var scriptPath = engine.scriptSrc || null;
             if (scriptPath && (isWindows || fs.existsSync(engine.scriptSrc))) {
-
                 if (!isWindows) { // not required on Windows
                     fs.chmodSync(engine.scriptSrc, '755');
                 }
@@ -183,7 +180,6 @@ function callEngineScripts (engines, project_dir) {
                     })
                     .then(_ => engine);
             } else {
-
                 if (engine.currentVersion) {
                     engine.currentVersion = cleanVersionOutput(engine.currentVersion, engine.name);
                 } else {
@@ -237,7 +233,7 @@ function getEngines (pluginInfo, platform, project_dir, plugin_dir) {
                 throw new Error('Security violation: scriptSrc ' + scriptSrcPath + ' is out of plugin dir ' + plugin_dir);
             }
             if (platformIndex > -1 || engine.platform === '*') {
-                uncheckedEngines.push({ 'name': theName, 'platform': engine.platform, 'scriptSrc': scriptSrcPath, 'minVersion': engine.version });
+                uncheckedEngines.push({ name: theName, platform: engine.platform, scriptSrc: scriptSrcPath, minVersion: engine.version });
             }
         }
     });
@@ -327,7 +323,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
             if (projectRoot) {
                 // using unified hooksRunner
                 var hookOptions = {
-                    cordova: { platforms: [ platform ] },
+                    cordova: { platforms: [platform] },
                     plugin: {
                         id: pluginInfo.id,
                         pluginInfo: pluginInfo,
@@ -357,7 +353,6 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
         }
     ).catch(
         function (error) {
-
             if (error.skip) {
                 events.emit('warn', 'Skipping \'' + pluginInfo.id + '\' for ' + platform);
             } else {
@@ -404,23 +399,19 @@ function installDependencies (install, dependencies, options) {
                     );
             }
         );
-
     }, Promise.resolve(true));
 }
 
 function tryFetchDependency (dep, install, options) {
-
     // Handle relative dependency paths by expanding and resolving them.
     // The easy case of relative paths is to have a URL of '.' and a different subdir.
     // TODO: Implement the hard case of different repo URLs, rather than the special case of
     // same-repo-different-subdir.
     var relativePath;
     if (dep.url === '.') {
-
         // Look up the parent plugin's fetch metadata and determine the correct URL.
         var fetchdata = require('./util/metadata').get_fetch_metadata(install.top_plugin_dir);
         if (!fetchdata || !(fetchdata.source && fetchdata.source.type)) {
-
             relativePath = dep.subdir || dep.id;
 
             events.emit('warn', 'No fetch metadata found for plugin ' + install.top_plugin_id + '. checking for ' + relativePath + ' in ' + options.searchpath.join(','));
@@ -430,7 +421,6 @@ function tryFetchDependency (dep, install, options) {
 
         // Now there are two cases here: local directory, and git URL.
         if (fetchdata.source.type === 'local') {
-
             dep.url = fetchdata.source.path;
 
             return execa.command('git rev-parse --show-toplevel', { cwd: dep.url })
@@ -449,11 +439,9 @@ function tryFetchDependency (dep, install, options) {
                 }).catch(function () {
                     return Promise.resolve(dep.url);
                 });
-
         } else if (fetchdata.source.type === 'git') {
             return Promise.resolve(fetchdata.source.url);
         } else if (fetchdata.source.type === 'dir') {
-
             // Note: With fetch() independant from install()
             // $md5 = md5(uri)
             // Need a Hash(uri) --> $tmpDir/cordova-fetch/git-hostname.com-$md5/
@@ -499,7 +487,6 @@ function tryFetchDependency (dep, install, options) {
 }
 
 function installDependency (dep, install, options) {
-
     var opts;
     dep.install_dir = path.join(install.plugins_dir, dep.id);
 
@@ -548,7 +535,6 @@ function installDependency (dep, install, options) {
             is_top_level: false
         });
         return module.exports.runInstall(install.actions, install.platform, install.project_dir, dep.install_dir, install.plugins_dir, opts);
-
     } else {
         events.emit('verbose', 'Plugin dependency "' + dep.id + '" not fetched, retrieving then installing.');
 
@@ -571,7 +557,6 @@ function installDependency (dep, install, options) {
 }
 
 function handleInstall (actions, pluginInfo, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, options) {
-
     // @tests - important this event is checked spec/install.spec.js
     events.emit('verbose', 'Install start for "' + pluginInfo.id + '" on ' + platform + '.');
 

@@ -37,6 +37,7 @@ describe('cordova/serve', () => {
 
         class HooksRunnerMock {
             constructor (dir) { expect(dir).toBe(PROJECT_ROOT); }
+
             fire (hook, fireOpts) { return Promise.resolve(); }
         }
 
@@ -165,7 +166,7 @@ describe('cordova/serve', () => {
         let registerRoutes, app;
 
         beforeEach(() => {
-            spyOn(cordovaUtil, 'listPlatforms').and.returnValue([ 'foo' ]);
+            spyOn(cordovaUtil, 'listPlatforms').and.returnValue(['foo']);
             serve.__set__({
                 handleRoot: jasmine.createSpy('handleRoot'),
                 absolutePathHandler: jasmine.createSpy('absolutePathHandler'),
@@ -195,7 +196,7 @@ describe('cordova/serve', () => {
         });
 
         it('should register platform routes', () => {
-            cordovaUtil.listPlatforms.and.returnValue([ 'foo', 'bar' ]);
+            cordovaUtil.listPlatforms.and.returnValue(['foo', 'bar']);
             const platformRouter = serve.__get__('platformRouter');
             platformRouter
                 .withArgs('foo').and.returnValue(jasmine.createSpy('fooHandler'))
@@ -239,7 +240,7 @@ describe('cordova/serve', () => {
             handleRoot(null, response);
             expect(response.send).toHaveBeenCalledTimes(1);
 
-            const [ document ] = response.send.calls.argsFor(0);
+            const [document] = response.send.calls.argsFor(0);
             expect(document).toContain('cordova-plugin-beer');
             expect(document).toContain('foo');
             expect(document).toContain('bar');

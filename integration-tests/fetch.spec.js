@@ -26,10 +26,10 @@ const TIMEOUT = 60 * 1000;
 var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
 
 var plugins = {
-    'Test1': path.join(plugins_dir, 'dependencies', 'Test1'),
-    'Test2': path.join(plugins_dir, 'dependencies', 'Test2'),
-    'Test3': path.join(plugins_dir, 'dependencies', 'Test3'),
-    'Test4': path.join(plugins_dir, 'dependencies', 'Test4')
+    Test1: path.join(plugins_dir, 'dependencies', 'Test1'),
+    Test2: path.join(plugins_dir, 'dependencies', 'Test2'),
+    Test3: path.join(plugins_dir, 'dependencies', 'Test3'),
+    Test4: path.join(plugins_dir, 'dependencies', 'Test4')
 };
 
 describe('end-to-end plugin dependency tests', function () {
@@ -82,7 +82,7 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], { 'force': true });
+                return cordova.plugin('add', plugins['Test1'], { force: true });
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();

@@ -20,7 +20,6 @@ var create = require('../../src/plugman/create');
 var fs = require('fs-extra');
 
 describe('plugman/create', () => {
-
     it('Test 002 : should be successful', function () {
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'ensureDirSync');

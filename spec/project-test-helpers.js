@@ -29,6 +29,7 @@ class TestConfigParser extends ConfigParser {
     addPlugin (plugin) {
         return (super.addPlugin(plugin, plugin.variables), this);
     }
+
     addEngine (...args) {
         return (super.addEngine(...args), this);
     }

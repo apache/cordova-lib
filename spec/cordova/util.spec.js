@@ -148,7 +148,6 @@ describe('util module', function () {
     });
 
     describe('preprocessOptions method', function () {
-
         var isCordova, listPlatforms;
         var DEFAULT_OPTIONS = {
             // 'android' is here because we create a spy
@@ -197,7 +196,6 @@ describe('util module', function () {
         });
 
         describe('getPlatformApiFunction', function () {
-
             it('Test 030 : successfully find platform Api', function () {
                 const FIXTURE_PROJECT = path.join(__dirname, 'fixtures/projects/platformApi/');
                 const API_PATH = path.join(FIXTURE_PROJECT, 'platforms/windows/cordova/Api.js');
