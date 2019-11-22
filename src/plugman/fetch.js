@@ -61,11 +61,6 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         if (result) {
             if (result[1]) { options.git_ref = result[1]; }
             if (result[2]) { options.subdir = result[2]; }
-
-            // throw error for subdirectories
-            if (options.subdir && options.subdir !== '.') {
-                return Promise.reject(new CordovaError('Cordova does not support subdirectories'));
-            }
         }
     }
     return Promise.resolve().then(function () {
