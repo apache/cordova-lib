@@ -1,2 +1,0 @@
-root: true
-extends: '@cordova/eslint-config/node-tests'
