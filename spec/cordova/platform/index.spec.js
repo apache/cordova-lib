@@ -32,23 +32,20 @@ describe('cordova/platform', function () {
     describe('main module function', function () {
         describe('error/warning conditions', function () {
             // TODO: what about other commands? update? save?
-            it('should require at least one platform for add and remove commands', function () {
+            it('should require at least one platform for add and remove commands', async function () {
                 // targets = empty array
-                return platform('add', [])
-                    .then(function () {
-                        fail('should not succeed without targets');
-                    }, function (err) {
-                        expect(err).toMatch(/You need to qualify.* with one or more platforms/gi);
-                    })
-                    .then(function () {
-                        // targets = null
-                        return platform('remove', null);
-                    })
-                    .then(function () {
-                        fail('should not succeed without targets');
-                    }, function (err) {
-                        expect(err).toMatch(/You need to qualify.* with one or more platforms/gi);
-                    });
+                await expectAsync(
+                    platform('add', [])
+                ).toBeRejectedWithError(
+                    /You need to qualify.* with one or more platforms/i
+                );
+
+                // targets = null
+                await expectAsync(
+                    platform('remove', null)
+                ).toBeRejectedWithError(
+                    /You need to qualify.* with one or more platforms/i
+                );
             });
         });
         describe('handling of targets parameter', function () {

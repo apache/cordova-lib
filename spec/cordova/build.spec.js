@@ -39,29 +39,21 @@ describe('build command', function () {
     describe('failure', function () {
         it('Test 001 : should not run inside a project with no platforms', function () {
             util.listPlatforms.and.returnValue([]);
-            return cordovaBuild()
-                .then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toEqual(
-                        'No platforms added to this project. Please use `cordova platform add <platform>`.'
-                    );
-                });
+            return expectAsync(
+                cordovaBuild()
+            ).toBeRejectedWithError(
+                'No platforms added to this project. Please use `cordova platform add <platform>`.'
+            );
         });
 
         it('Test 002 : should not run outside of a Cordova-based project', function () {
             util.isCordova.and.returnValue(false);
 
-            return cordovaBuild()
-                .then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toEqual(
-                        'Current working directory is not a Cordova-based project.'
-                    );
-                });
+            return expectAsync(
+                cordovaBuild()
+            ).toBeRejectedWithError(
+                'Current working directory is not a Cordova-based project.'
+            );
         });
     });
 
@@ -101,14 +93,12 @@ describe('build command', function () {
         describe('with no platforms added', function () {
             it('Test 008 : should not fire the hooker', function () {
                 util.listPlatforms.and.returnValue([]);
-                return Promise.resolve().then(cordovaBuild).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toEqual(
-                        'No platforms added to this project. Please use `cordova platform add <platform>`.'
-                    );
-                });
+
+                return expectAsync(
+                    cordovaBuild()
+                ).toBeRejectedWithError(
+                    'No platforms added to this project. Please use `cordova platform add <platform>`.'
+                );
             });
         });
     });

@@ -55,11 +55,9 @@ describe('cordova/platform/remove', function () {
 
     describe('error/warning conditions', function () {
         it('should require specifying at least one platform', function () {
-            return platform_remove('remove', hooks_mock).then(function () {
-                fail('remove success handler unexpectedly invoked');
-            }, function (e) {
-                expect(e.message).toContain('No platform(s) specified.');
-            });
+            return expectAsync(
+                platform_remove('remove', hooks_mock)
+            ).toBeRejectedWithError(/No platform\(s\) specified\./);
         });
     });
     describe('happy path (success conditions)', function () {

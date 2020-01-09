@@ -110,19 +110,17 @@ describe('cordova/platform/addHelper', function () {
 
         it('should throw if platform was already added before adding', function () {
             fs.existsSync.and.returnValue('/some/path/platforms/ios');
-            return platform_addHelper('add', hooks_mock, projectRoot, ['ios']).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
-                expect(e.message).toContain('already added.');
-            });
+            return expectAsync(
+                platform_addHelper('add', hooks_mock, projectRoot, ['ios'])
+            ).toBeRejectedWithError(/already added\./);
         });
 
         it('should throw if platform was not added before updating', function () {
-            return platform_addHelper('update', hooks_mock, projectRoot, ['atari']).then(function () {
-                fail('addHelper success handler unexpectedly invoked');
-            }, function (e) {
-                expect(e.message).toContain('Platform "atari" is not yet added. See `cordova platform list`.');
-            });
+            return expectAsync(
+                platform_addHelper('update', hooks_mock, projectRoot, ['atari'])
+            ).toBeRejectedWithError(
+                'Platform "atari" is not yet added. See `cordova platform list`.'
+            );
         });
     });
     describe('happy path (success conditions)', function () {
@@ -272,11 +270,11 @@ describe('cordova/platform/addHelper', function () {
         describe('errors', function () {
             it('should reject the promise should fetch fail', function () {
                 fetch_mock.and.returnValue(Promise.reject(new Error('fetch has failed, rejecting promise')));
-                return platform_addHelper.downloadPlatform(projectRoot, 'android', '67').then(function () {
-                    fail('success handler unexpectedly invoked');
-                }, function (e) {
-                    expect(e.message).toContain('fetch has failed, rejecting promise');
-                });
+                return expectAsync(
+                    platform_addHelper.downloadPlatform(projectRoot, 'android', '67')
+                ).toBeRejectedWithError(
+                    /fetch has failed, rejecting promise/
+                );
             });
         });
         describe('happy path', function () {

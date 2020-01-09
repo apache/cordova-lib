@@ -65,30 +65,27 @@ describe('cordova/prepare', function () {
             spyOn(prepare, 'preparePlatforms').and.returnValue(Promise.resolve());
         });
         describe('failure', function () {
-            it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection and only fire the before_prepare hook', function () {
+            it('should invoke util.preProcessOptions as preflight task checker, which, if fails, should trigger promise rejection and only fire the before_prepare hook', async function () {
                 util.preProcessOptions.and.callFake(function () {
                     throw new Error('preProcessOption error');
                 });
-                return prepare({}).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toBe('preProcessOption error');
-                    expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('before_prepare', jasmine.any(Object));
-                });
+
+                await expectAsync(
+                    prepare({})
+                ).toBeRejectedWithError('preProcessOption error');
+
+                expect(HooksRunner.prototype.fire).toHaveBeenCalledWith('before_prepare', jasmine.any(Object));
             });
-            it('should invoke util.cdProjectRoot as a preflight task checker, which, if fails, should trigger a promise rejection and fire no hooks', function () {
+            it('should invoke util.cdProjectRoot as a preflight task checker, which, if fails, should trigger a promise rejection and fire no hooks', async function () {
                 util.cdProjectRoot.and.callFake(function () {
                     throw new Error('cdProjectRoot error');
                 });
 
-                return prepare({}).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toBe('cdProjectRoot error');
-                    expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
-                });
+                await expectAsync(
+                    prepare({})
+                ).toBeRejectedWithError('cdProjectRoot error');
+
+                expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
             });
         });
 

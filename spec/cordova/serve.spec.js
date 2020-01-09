@@ -77,27 +77,24 @@ describe('cordova/serve', () => {
             });
         });
 
-        it('should fail if run outside of a Cordova project', () => {
+        it('should fail if run outside of a Cordova project', async () => {
             const fakeMessage = 'CAN I HAZ CORDOVA PLZ?';
             cordovaUtil.cdProjectRoot.and.throwError(fakeMessage);
 
-            return serve(1234567, {}).then(() => {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toBe(fakeMessage);
-                expect(cordovaUtil.cdProjectRoot).toHaveBeenCalled();
-            });
+            await expectAsync(
+                serve(1234567, {})
+            ).toBeRejectedWithError(fakeMessage);
+
+            expect(cordovaUtil.cdProjectRoot).toHaveBeenCalled();
         });
 
         it('should fail if serve fails', () => {
-            const fakeError = new Error();
+            const fakeError = new Error('FAKE');
             serve.__get__('serve').and.returnValue(Promise.reject(fakeError));
 
-            return serve(1234567, {}).then(
-                _ => fail('Expected promise to be rejected'),
-                err => expect(err).toBe(fakeError)
-            );
+            return expectAsync(
+                serve(1234567, {})
+            ).toBeRejectedWith(fakeError);
         }, 100);
     });
 
@@ -141,24 +138,22 @@ describe('cordova/serve', () => {
         });
 
         it('should fail if prepare fails', () => {
-            const fakeError = new Error();
+            const fakeError = new Error('FAKE');
             const prepareSpy = serve.__get__('cordovaPrepare');
             prepareSpy.and.returnValue(Promise.reject(fakeError));
 
-            return privateServe(1234567, {}).then(
-                _ => fail('Expected promise to be rejected'),
-                err => expect(err).toBe(fakeError)
-            );
+            return expectAsync(
+                privateServe(1234567, {})
+            ).toBeRejectedWith(fakeError);
         }, 100);
 
         it('should fail if launching the server fails', () => {
-            const fakeError = new Error();
+            const fakeError = new Error('FAKE');
             serverSpy.launchServer.and.returnValue(Promise.reject(fakeError));
 
-            return privateServe(1234567, {}).then(
-                _ => fail('Expected promise to be rejected'),
-                err => expect(err).toBe(fakeError)
-            );
+            return expectAsync(
+                privateServe(1234567, {})
+            ).toBeRejectedWith(fakeError);
         }, 100);
     });
 
