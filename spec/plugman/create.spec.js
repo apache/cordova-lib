@@ -34,12 +34,10 @@ describe('plugman/create', () => {
     it('Test 003 : should fail due to an existing plugin.xml', function () {
         spyOn(fs, 'existsSync').and.returnValue(true);
 
-        return create()
-            .then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('plugin.xml already exists. Are you already in a plugin?');
-            });
+        return expectAsync(
+            create()
+        ).toBeRejectedWithError(
+            'plugin.xml already exists. Are you already in a plugin?'
+        );
     }, 6000);
 });

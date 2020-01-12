@@ -32,12 +32,9 @@ describe('cordova/plugin', function () {
 
     describe('error conditions', function () {
         it('should require at least one target for add and rm commands', function () {
-            return plugin('add', null).then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('one or more plugins');
-            });
+            return expectAsync(
+                plugin('add', null)
+            ).toBeRejectedWithError(/one or more plugins/);
         });
     });
 

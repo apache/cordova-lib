@@ -25,12 +25,11 @@ describe('plugman/platform', () => {
             spyOn(fs, 'existsSync').and.returnValue(false);
         });
         it('Test 002 : should error on non existing plugin.xml', function () {
-            return platform.add().then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
-            });
+            return expectAsync(
+                platform.add()
+            ).toBeRejectedWithError(
+                'can\'t find a plugin.xml.  Are you in the plugin?'
+            );
         }, 6000);
     });
 
@@ -39,12 +38,11 @@ describe('plugman/platform', () => {
             spyOn(fs, 'existsSync').and.returnValue(false);
         });
         it('Test 003 : should error on non existing plugin.xml', function () {
-            return platform.remove().then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
-            });
+            return expectAsync(
+                platform.remove()
+            ).toBeRejectedWithError(
+                'can\'t find a plugin.xml.  Are you in the plugin?'
+            );
         }, 6000);
     });
 });

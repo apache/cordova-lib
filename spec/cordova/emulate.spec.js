@@ -46,22 +46,17 @@ describe('emulate command', function () {
     describe('failure', function () {
         it('Test 001 : should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function () {
             util.listPlatforms.and.returnValue([]);
-            return cordovaEmulate()
-                .then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-                });
+            return expectAsync(
+                cordovaEmulate()
+            ).toBeRejectedWithError(
+                'No platforms added to this project. Please use `cordova platform add <platform>`.'
+            );
         });
         it('Test 002 : should not run outside of a Cordova-based project', function () {
             util.isCordova.and.returnValue(false);
-            return cordovaEmulate()
-                .then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
+            return expectAsync(
+                cordovaEmulate()
+            ).toBeRejectedWithError();
         });
     });
 
@@ -144,15 +139,16 @@ describe('emulate command', function () {
         });
 
         describe('with no platforms added', function () {
-            it('Test 011 : should not fire the hooker', function () {
+            it('Test 011 : should not fire the hooker', async function () {
                 util.listPlatforms.and.returnValue([]);
-                return Promise.resolve().then(cordovaEmulate).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toContain('No platforms added to this project. Please use `cordova platform add <platform>`.');
-                    expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
-                });
+
+                await expectAsync(
+                    cordovaEmulate()
+                ).toBeRejectedWithError(
+                    'No platforms added to this project. Please use `cordova platform add <platform>`.'
+                );
+
+                expect(HooksRunner.prototype.fire).not.toHaveBeenCalled();
             });
         });
     });

@@ -35,22 +35,20 @@ describe('cordova/platform/getPlatformDetailsFromDir', function () {
     });
 
     it('should throw if no config.xml or pkgJson', function () {
-        return platform_getPlatformDetails('dir', ['ios'])
-            .then(function () {
-                fail('Expected promise to be rejected');
-            }, function (reason) {
-                expect(reason).toMatch(/does not seem to contain a valid package.json or a valid Cordova platform/);
-            });
+        return expectAsync(
+            platform_getPlatformDetails('dir', ['ios'])
+        ).toBeRejectedWithError(
+            /does not seem to contain a valid package.json or a valid Cordova platform/
+        );
     });
 
     it('should throw if no platform is provided', function () {
         cordova_util.requireNoCache.and.returnValue({});
-        return platform_getPlatformDetails('dir')
-            .then(function () {
-                fail('Expected promise to be rejected');
-            }, function (reason) {
-                expect(reason).toMatch(/does not seem to contain a Cordova platform:/);
-            });
+        return expectAsync(
+            platform_getPlatformDetails('dir')
+        ).toBeRejectedWithError(
+            /does not seem to contain a Cordova platform:/
+        );
     });
 
     it('should return a promise with platform and version', function () {

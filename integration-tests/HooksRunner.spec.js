@@ -164,11 +164,9 @@ describe('HooksRunner', function () {
                 `;
                 addHooksToConfig(FAIL_HOOK);
 
-                return hooksRunner.fire('fail').then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
+                return expectAsync(
+                    hooksRunner.fire('fail')
+                ).toBeRejectedWithError();
             });
 
             it('Test 024 : should not error if the hook is unrecognized', function () {

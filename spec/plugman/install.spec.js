@@ -285,12 +285,11 @@ describe('plugman/install', () => {
             }, TIMEOUT);
 
             it('Test 019 : should throw if there is a cyclic dependency', () => {
-                return install('android', project, pluginDir('G'))
-                    .then(() => {
-                        fail('Expected promise to be rejected');
-                    }, err => {
-                        expect(err.toString()).toContain('Cyclic dependency from G to H');
-                    });
+                return expectAsync(
+                    install('android', project, pluginDir('G'))
+                ).toBeRejectedWithError(
+                    'Cyclic dependency from G to H'
+                );
             }, TIMEOUT);
 
             it('Test 020 : install subdir relative to top level plugin if no fetch meta', () => {
@@ -333,12 +332,11 @@ describe('plugman/install', () => {
     describe('failure', () => {
         it('Test 023 : should throw if variables are missing', () => {
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
-            return install('android', project, pluginDir('com.adobe.vars'))
-                .then(() => {
-                    fail('Expected promise to be rejected');
-                }, err => {
-                    expect(err.toString()).toContain('Variable(s) missing: API_KEY');
-                });
+            return expectAsync(
+                install('android', project, pluginDir('com.adobe.vars'))
+            ).toBeRejectedWithError(
+                'Variable(s) missing: API_KEY'
+            );
         }, TIMEOUT);
 
         it('Test 025 :should not fail when trying to install plugin less than minimum version. Skip instead  ', () => {
@@ -353,32 +351,21 @@ describe('plugman/install', () => {
 
         it('Test 026 : should throw if the engine scriptSrc escapes out of the plugin dir.', () => {
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
-            return install('android', project, pluginDir('org.test.invalid.engine.script'))
-                .then(() => {
-                    fail('Expected promise to be rejected');
-                }, err => {
-                    // <engine name="path-escaping-plugin" version=">=1.0.0" scriptSrc="../../../malicious/script" platform="*" />
-                    expect(err).toBeDefined();
-                    expect(err.message.indexOf('Security violation:')).toBe(0);
-                });
+            return expectAsync(
+                install('android', project, pluginDir('org.test.invalid.engine.script'))
+            ).toBeRejectedWithError(/^Security violation:/);
         }, TIMEOUT);
         it('Test 027 : should throw if a non-default cordova engine platform attribute is not defined.', () => {
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
-            return install('android', project, pluginDir('org.test.invalid.engine.no.platform'))
-                .then(() => {
-                    fail('Expected promise to be rejected');
-                }, err => {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
+            return expectAsync(
+                install('android', project, pluginDir('org.test.invalid.engine.no.platform'))
+            ).toBeRejectedWithError();
         }, TIMEOUT);
         it('Test 028 : should throw if a non-default cordova engine scriptSrc attribute is not defined.', () => {
             spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
-            return install('android', project, pluginDir('org.test.invalid.engine.no.scriptSrc'))
-                .then(() => {
-                    fail('Expected promise to be rejected');
-                }, err => {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
+            return expectAsync(
+                install('android', project, pluginDir('org.test.invalid.engine.no.scriptSrc'))
+            ).toBeRejectedWithError();
         }, TIMEOUT);
     });
 });

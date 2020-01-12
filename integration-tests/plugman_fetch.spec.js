@@ -115,13 +115,9 @@ describe('fetch', function () {
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {
             test_plugin = path.join(plugins_dir, 'org.test.androidonly');
-            return fetch(test_plugin, temp)
-                .then(function () {
-                    fail();
-                }, function (err) {
-                    expect(err).toBeDefined();
-                    expect(err.message).toContain('needs a valid package.json');
-                });
+            return expectAsync(
+                fetch(test_plugin, temp)
+            ).toBeRejectedWithError(/needs a valid package\.json/);
         });
     });
 

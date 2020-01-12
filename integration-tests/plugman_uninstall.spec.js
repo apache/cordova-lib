@@ -154,21 +154,17 @@ describe('plugman/uninstall', () => {
 
         describe('failure ', function () {
             it('Test 004 : should throw if platform is unrecognized', function () {
-                return uninstall.uninstallPlatform('atari', project, 'SomePlugin')
-                    .then(function (result) {
-                        fail('Expected promise to be rejected');
-                    }, function err (errMsg) {
-                        expect(errMsg.toString()).toContain('Platform "atari" not supported.');
-                    });
+                return expectAsync(
+                    uninstall.uninstallPlatform('atari', project, 'SomePlugin')
+                ).toBeRejectedWithError('Platform "atari" not supported.');
             });
 
             it('Test 005 : should throw if plugin is missing', function () {
-                return uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist')
-                    .then(function (result) {
-                        fail('Expected promise to be rejected');
-                    }, function err (errMsg) {
-                        expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-                    });
+                return expectAsync(
+                    uninstall.uninstallPlatform('android', project, 'SomePluginThatDoesntExist')
+                ).toBeRejectedWithError(
+                    'Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?'
+                );
             });
         });
     });
@@ -192,12 +188,11 @@ describe('plugman/uninstall', () => {
             it('Test 007 : should fail if plugin is a required dependency', function () {
                 setupProject('uninstall.test');
 
-                return uninstall.uninstallPlugin('C', plugins_install_dir)
-                    .then(function (result) {
-                        fail('Expected promise to be rejected');
-                    }, function err (errMsg) {
-                        expect(errMsg.toString()).toEqual('Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)');
-                    });
+                return expectAsync(
+                    uninstall.uninstallPlugin('C', plugins_install_dir)
+                ).toBeRejectedWithError(
+                    'Plugin "C" is required by (A) and cannot be removed (hint: use -f or --force)'
+                );
             });
 
             it('Test 008 : allow forcefully removing a plugin', function () {
@@ -245,21 +240,17 @@ describe('plugman/uninstall', () => {
 
         describe('failure', function () {
             it('Test 011 : should throw if platform is unrecognized', function () {
-                return uninstall('atari', project, 'SomePlugin')
-                    .then(function (result) {
-                        fail('Expected promise to be rejected');
-                    }, function err (errMsg) {
-                        expect(errMsg.toString()).toContain('Platform "atari" not supported.');
-                    });
+                return expectAsync(
+                    uninstall('atari', project, 'SomePlugin')
+                ).toBeRejectedWithError('Platform "atari" not supported.');
             });
 
             it('Test 012 : should throw if plugin is missing', function () {
-                return uninstall('android', project, 'SomePluginThatDoesntExist')
-                    .then(function (result) {
-                        fail('Expected promise to be rejected');
-                    }, function err (errMsg) {
-                        expect(errMsg.toString()).toContain('Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?');
-                    });
+                return expectAsync(
+                    uninstall('android', project, 'SomePluginThatDoesntExist')
+                ).toBeRejectedWithError(
+                    'Plugin "SomePluginThatDoesntExist" not found. Already uninstalled?'
+                );
             });
         });
     });

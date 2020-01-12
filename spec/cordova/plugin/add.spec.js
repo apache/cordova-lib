@@ -81,22 +81,16 @@ describe('cordova/plugin/add', function () {
         });
         describe('error/warning conditions', function () {
             it('should error out if at least one plugin is not specified', function () {
-                return add(projectRoot, hook_mock, { plugins: [] }).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toContain('No plugin specified');
-                });
+                return expectAsync(
+                    add(projectRoot, hook_mock, { plugins: [] })
+                ).toBeRejectedWithError(/No plugin specified/);
             });
             it('should error out if any mandatory plugin variables are not provided', function () {
                 plugin_info.getPreferences.and.returnValue({ some: undefined });
 
-                return add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] }).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                    expect(err.message).toContain('Variable(s) missing (use: --variable');
-                });
+                return expectAsync(
+                    add(projectRoot, hook_mock, { plugins: ['cordova-plugin-device'] })
+                ).toBeRejectedWithError(/Variable\(s\) missing \(use: --variable/);
             });
         });
         describe('happy path', function () {

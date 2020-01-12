@@ -62,22 +62,16 @@ describe('cordova/plugin/remove', function () {
 
     describe('error/warning conditions', function () {
         it('should require that a plugin be provided', function () {
-            return remove(projectRoot, null).then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('No plugin specified');
-            });
+            return expectAsync(
+                remove(projectRoot, null)
+            ).toBeRejectedWithError(/No plugin specified/);
         });
 
         it('should require that a provided plugin be installed in the current project', function () {
             var opts = { plugins: [undefined] };
-            return remove(projectRoot, 'plugin', hook_mock, opts).then(function () {
-                fail('Expected promise to be rejected');
-            }, function (err) {
-                expect(err).toEqual(jasmine.any(Error));
-                expect(err.message).toContain('is not present in the project');
-            });
+            return expectAsync(
+                remove(projectRoot, 'plugin', hook_mock, opts)
+            ).toBeRejectedWithError(/is not present in the project/);
         });
     });
     describe('happy path', function () {
