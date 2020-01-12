@@ -20,74 +20,39 @@
 const path = require('path');
 const fs = require('fs-extra');
 const delay = require('delay');
-const globby = require('globby');
 const et = require('elementtree');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
-const cordovaUtil = require('../src/cordova/util');
 const cordova = require('../src/cordova/cordova');
-const { tmpDir, testPlatform } = require('../spec/helpers');
+const { tmpDir } = require('../spec/helpers');
 const { PluginInfo, ConfigParser } = require('cordova-common');
-const { Q_chainmap } = require('../src/util/promise-util');
 
-const tmp = tmpDir('hooks_test');
-const project = path.join(tmp, 'project');
-const preparedProject = path.join(tmp, 'preparedProject');
 const ext = process.platform === 'win32' ? 'bat' : 'sh';
 const fixtures = path.join(__dirname, '../spec/cordova/fixtures');
 
-const testPlugin = 'com.plugin.withhooks';
-const testPluginFixture = path.join(fixtures, 'plugins', testPlugin);
-const testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
-
 describe('HooksRunner', function () {
-    let hooksRunner, hookOptions;
+    let tmp, project, hooksRunner;
 
     // This prepares a project that we will copy and use for all tests
-    beforeAll(function () {
-        // Copy project fixture
-        const projectFixture = path.join(fixtures, 'projWithHooks');
-        fs.copySync(projectFixture, preparedProject);
+    beforeEach(() => {
+        tmp = tmpDir('hooks_test');
+        project = path.join(tmp, 'project');
 
-        // Ensure scripts are executable
-        globby.sync(['scripts/**'], {
-            cwd: preparedProject, absolute: true
-        }).forEach(f => fs.chmodSync(f, 0o755));
+        // Copy base project fixture
+        fs.copySync(path.join(fixtures, 'basePkgJson'), project);
 
-        // Add the testing platform and plugin to our project
-        process.chdir(preparedProject);
-        return cordova.platform('add', testPlatform)
-            .then(() => fs.copy(
-                testPluginFixture,
-                path.join(preparedProject, 'plugins', testPlugin)
-            ));
-    }, 60 * 1000);
-
-    beforeEach(function () {
-        // Reset our test project
-        // We are linking node_modules to improve performance
-        process.chdir(__dirname); // Avoid EBUSY on Windows
-        fs.removeSync(project);
-        fs.copySync(preparedProject, project, {
-            filter: p => path.basename(p) !== 'node_modules'
-        });
-        const platformModules = 'platforms/android/cordova/node_modules';
-        fs.symlinkSync(path.join(preparedProject, platformModules),
-            path.join(project, platformModules), 'junction');
+        // Copy project hooks
+        const hooksDir = path.join(fixtures, 'projectHooks');
+        fs.copySync(hooksDir, path.join(project, 'scripts'));
 
         // Change into our project directory
         process.chdir(project);
         process.env.PWD = project; // this is used by cordovaUtil.isCordova
 
-        hookOptions = {
-            projectRoot: project,
-            cordova: cordovaUtil.preProcessOptions()
-        };
-
         hooksRunner = new HooksRunner(project);
     });
 
-    afterAll(function () {
+    afterEach(() => {
         process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
         fs.removeSync(tmp);
     });
@@ -102,9 +67,10 @@ describe('HooksRunner', function () {
 
     describe('fire method', function () {
         const test_event = 'before_build';
-        const hooksOrderFile = path.join(project, 'hooks_order.txt');
+        let hooksOrderFile;
 
         beforeEach(function () {
+            hooksOrderFile = path.join(project, 'hooks_order.txt');
             fs.removeSync(hooksOrderFile);
         });
 
@@ -122,32 +88,6 @@ describe('HooksRunner', function () {
             expect(hooksOrder).toEqual(sortedHooksOrder);
         }
 
-        const BASE_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
-                <hook type="before_build" src="scripts/appBeforeBuild02.js" />
-                <hook type="before_plugin_install" src="scripts/appBeforePluginInstall.js" />
-            </widget>
-        `;
-        const WINDOWS_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <platform name="windows">
-                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
-                    <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
-                    <hook type="before_plugin_install" src="scripts/windows/appWindowsBeforePluginInstall.js" />
-                </platform>
-            </widget>
-        `;
-        const ANDROID_HOOKS = `
-            <widget xmlns="http://www.w3.org/ns/widgets">
-                <platform name="android">
-                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
-                    <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
-                    <hook type="before_plugin_install" src="scripts/android/appAndroidBeforePluginInstall.js" />
-                </platform>
-            </widget>
-        `;
-
         function addHooks (hooksXml, doc) {
             const hooks = et.parse(hooksXml);
             for (const el of hooks.getroot().findall('./*')) {
@@ -155,17 +95,40 @@ describe('HooksRunner', function () {
             }
         }
 
-        function addHooksToConfig (hooksXml) {
-            const config = new ConfigParser(path.join(project, 'config.xml'));
-            addHooks(hooksXml, config.doc);
-            config.write();
-        }
-
         describe('application hooks', function () {
+            const BASE_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <hook type="before_build" src="scripts/appBeforeBuild1.${ext}" />
+                    <hook type="before_build" src="scripts/appBeforeBuild02.js" />
+                </widget>
+            `;
+            const WINDOWS_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="windows">
+                        <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.${ext}" />
+                        <hook type="before_build" src="scripts/windows/appWindowsBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+            const ANDROID_HOOKS = `
+                <widget xmlns="http://www.w3.org/ns/widgets">
+                    <platform name="android">
+                        <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.${ext}" />
+                        <hook type="before_build" src="scripts/android/appAndroidBeforeBuild.js" />
+                    </platform>
+                </widget>
+            `;
+
+            function addHooksToConfig (hooksXml) {
+                const config = new ConfigParser(path.join(project, 'config.xml'));
+                addHooks(hooksXml, config.doc);
+                config.write();
+            }
+
             it('Test 006 : should execute hook scripts serially from config.xml', function () {
                 addHooksToConfig(BASE_HOOKS);
 
-                return hooksRunner.fire(test_event, hookOptions)
+                return hooksRunner.fire(test_event)
                     .then(checkHooksOrderFile);
             });
 
@@ -173,7 +136,7 @@ describe('HooksRunner', function () {
                 addHooksToConfig(BASE_HOOKS);
                 addHooksToConfig(WINDOWS_HOOKS);
 
-                return hooksRunner.fire(test_event, hookOptions)
+                return hooksRunner.fire(test_event)
                     .then(checkHooksOrderFile);
             });
 
@@ -181,7 +144,7 @@ describe('HooksRunner', function () {
                 addHooksToConfig(BASE_HOOKS);
                 addHooksToConfig(WINDOWS_HOOKS);
                 addHooksToConfig(ANDROID_HOOKS);
-                hookOptions.cordova.platforms = ['android'];
+                const hookOptions = { cordova: { platforms: ['android'] } };
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
@@ -192,15 +155,30 @@ describe('HooksRunner', function () {
                     expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
+
+            it('Test 023 : should error if any hook fails', function () {
+                const FAIL_HOOK = `
+                    <widget xmlns="http://www.w3.org/ns/widgets">
+                        <hook type="fail" src="scripts/fail.js" />
+                    </widget>
+                `;
+                addHooksToConfig(FAIL_HOOK);
+
+                return hooksRunner.fire('fail').then(function () {
+                    fail('Expected promise to be rejected');
+                }, function (err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                });
+            });
+
+            it('Test 024 : should not error if the hook is unrecognized', function () {
+                return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!');
+            });
         });
 
         describe('plugin hooks', function () {
             const PLUGIN_BASE_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
-                    <hook type="before_plugin_install" src="scripts/beforeInstall01.js" />
-                    <hook type="before_plugin_install" src="scripts/beforeInstall2.js" />
-                    <hook type="before_plugin_install" src="scripts/beforeInstall.${ext}" />
-                    <hook type="before_plugin_uninstall" src="scripts/beforeUninstall.js" />
                     <hook type="before_build" src="scripts/beforeBuild.js" />
                     <hook type="before_build" src="scripts/beforeBuild.${ext}" />
                 </widget>
@@ -208,7 +186,6 @@ describe('HooksRunner', function () {
             const PLUGIN_WINDOWS_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
                     <platform name="windows">
-                        <hook type="before_plugin_install" src="scripts/windows/windowsBeforeInstall.js" />
                         <hook type="before_build" src="scripts/windows/windowsBeforeBuild.js" />
                     </platform>
                 </widget>
@@ -216,11 +193,19 @@ describe('HooksRunner', function () {
             const PLUGIN_ANDROID_HOOKS = `
                 <widget xmlns="http://www.w3.org/ns/widgets">
                     <platform name="android">
-                        <hook type="before_plugin_install" src="scripts/android/androidBeforeInstall.js" />
                         <hook type="before_build" src="scripts/android/androidBeforeBuild.js" />
                     </platform>
                 </widget>
             `;
+            const testPlugin = 'com.plugin.withhooks';
+            const testPluginFixture = path.join(fixtures, 'plugins', testPlugin);
+            let testPluginInstalledPath;
+
+            beforeEach(() => {
+                // Add the test plugin to our project
+                testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
+                fs.copySync(testPluginFixture, testPluginInstalledPath);
+            });
 
             function addHooksToPlugin (hooksXml) {
                 const config = new PluginInfo(testPluginInstalledPath);
@@ -233,7 +218,7 @@ describe('HooksRunner', function () {
             it('Test 009 : should execute hook scripts serially from plugin.xml', function () {
                 addHooksToPlugin(PLUGIN_BASE_HOOKS);
 
-                return hooksRunner.fire(test_event, hookOptions)
+                return hooksRunner.fire(test_event)
                     .then(checkHooksOrderFile);
             });
 
@@ -241,19 +226,15 @@ describe('HooksRunner', function () {
                 addHooksToPlugin(PLUGIN_BASE_HOOKS);
                 addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
 
-                return hooksRunner.fire(test_event, hookOptions)
+                return hooksRunner.fire(test_event)
                     .then(checkHooksOrderFile);
             });
 
             it('Test 011 : should filter hook scripts from plugin.xml by platform', function () {
-                // Make scripts executable
-                globby.sync('scripts/**', { cwd: testPluginInstalledPath, absolute: true })
-                    .forEach(f => fs.chmodSync(f, 0o755));
-
                 addHooksToPlugin(PLUGIN_BASE_HOOKS);
                 addHooksToPlugin(PLUGIN_WINDOWS_HOOKS);
                 addHooksToPlugin(PLUGIN_ANDROID_HOOKS);
-                hookOptions.cordova.platforms = ['android'];
+                const hookOptions = { cordova: { platforms: ['android'] } };
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
                     checkHooksOrderFile();
@@ -264,76 +245,69 @@ describe('HooksRunner', function () {
                     expect(getActualHooksOrder()).toEqual(expectedResults);
                 });
             });
+        });
 
-            it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', function () {
-                hookOptions.nohooks = ['before_build'];
+        describe('nohooks option', () => {
+            it('Test 013 : should not execute the designated hook when --nohooks option specifies the exact hook name', async () => {
+                const hookOptions = { nohooks: [test_event] };
 
-                return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                    expect(msg).toBeDefined();
-                    expect(msg).toBe('hook before_build is disabled.');
-                });
+                expect(await hooksRunner.fire(test_event, hookOptions))
+                    .toBe('hook before_build is disabled.');
             });
 
-            it('Test 014 : should not execute a set of matched hooks when --nohooks option specifies the hook pattern.', function () {
-                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
-                hookOptions.nohooks = ['before*'];
+            it('Test 014 : should not execute matched hooks when --nohooks option specifies a hook pattern', async () => {
+                const hookOptions = { nohooks: ['ba'] };
 
-                return Q_chainmap(test_events, e => {
-                    return hooksRunner.fire(e, hookOptions).then(msg => {
-                        if (e === 'after_plugin_add') {
-                            expect(msg).toBeUndefined();
-                        } else {
-                            expect(msg).toBeDefined();
-                            expect(msg).toBe(`hook ${e} is disabled.`);
-                        }
-                    });
-                });
+                for (const e of ['foo', 'bar', 'baz']) {
+                    expect(await hooksRunner.fire(e, hookOptions))
+                        .toBe(e === 'foo' ? undefined : `hook ${e} is disabled.`);
+                }
             });
 
-            it('Test 015 : should not execute all hooks when --nohooks option specifies .', function () {
-                var test_events = ['before_build', 'after_plugin_add', 'before_platform_rm', 'before_prepare'];
-                hookOptions.nohooks = ['.'];
+            it('Test 015 : should not execute any hooks when --nohooks option specifies .', async () => {
+                const hookOptions = { nohooks: ['.'] };
 
-                return Q_chainmap(test_events, e => {
-                    return hooksRunner.fire(e, hookOptions).then(msg => {
-                        expect(msg).toBeDefined();
-                        expect(msg).toBe(`hook ${e} is disabled.`);
-                    });
-                });
+                for (const e of ['foo', 'bar', 'baz']) {
+                    expect(await hooksRunner.fire(e, hookOptions))
+                        .toBe(`hook ${e} is disabled.`);
+                }
             });
         });
 
         describe('module-level hooks (event handlers)', function () {
-            var handler = jasmine.createSpy().and.returnValue(Promise.resolve());
+            let handler;
+
+            beforeEach(() => {
+                handler = jasmine.createSpy('testHandler').and.resolveTo();
+                cordova.on(test_event, handler);
+            });
 
             afterEach(function () {
                 cordova.removeAllListeners(test_event);
-                handler.calls.reset();
             });
 
-            it('Test 016 : should fire handlers using cordova.on', function () {
-                cordova.on(test_event, handler);
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
+            it('Test 016 : should fire handlers that were attached using cordova.on', function () {
+                return hooksRunner.fire(test_event).then(function () {
                     expect(handler).toHaveBeenCalled();
                 });
             });
 
             it('Test 017 : should pass the project root folder as parameter into the module-level handlers', function () {
-                cordova.on(test_event, handler);
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(handler).toHaveBeenCalledWith(hookOptions);
+                return hooksRunner.fire(test_event).then(function () {
+                    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({
+                        projectRoot: project
+                    }));
                 });
             });
 
             it('Test 018 : should be able to stop listening to events using cordova.off', function () {
-                cordova.on(test_event, handler);
                 cordova.off(test_event, handler);
-                return hooksRunner.fire(test_event, hookOptions).then(function () {
+                return hooksRunner.fire(test_event).then(function () {
                     expect(handler).not.toHaveBeenCalled();
                 });
             });
 
-            it('Test 019 : should execute event listeners serially', function () {
+            it('Test 019 : should execute async event listeners serially', function () {
                 const order = [];
                 // Delay 100 ms here to check that h2 is not executed until after
                 // the promise returned by h1 is resolved.
@@ -343,45 +317,15 @@ describe('HooksRunner', function () {
                 cordova.on(test_event, h1);
                 cordova.on(test_event, h2);
 
-                return hooksRunner.fire(test_event, hookOptions)
+                return hooksRunner.fire(test_event)
                     .then(_ => expect(order).toEqual([1, 2]));
             });
 
-            it('Test 021 : should pass data object that fire calls into async handlers', function () {
-                var asyncHandler = function (opts) {
-                    expect(opts).toEqual(hookOptions);
-                    return Promise.resolve();
-                };
-                cordova.on(test_event, asyncHandler);
-                return hooksRunner.fire(test_event, hookOptions);
+            it('Test 021 : should pass options passed to fire into handlers', async () => {
+                const hookOptions = { test: 'funky' };
+                await hooksRunner.fire(test_event, hookOptions);
+                expect(handler).toHaveBeenCalledWith(hookOptions);
             });
-
-            it('Test 022 : should pass data object that fire calls into sync handlers', function () {
-                var syncHandler = function (opts) {
-                    expect(opts).toEqual(hookOptions);
-                };
-                cordova.on(test_event, syncHandler);
-                return hooksRunner.fire(test_event, hookOptions);
-            });
-
-            it('Test 023 : should error if any hook fails', function () {
-                const FAIL_HOOK = `
-                    <widget xmlns="http://www.w3.org/ns/widgets">
-                        <hook type="fail" src="scripts/fail.js" />
-                    </widget>
-                `;
-                addHooksToConfig(FAIL_HOOK);
-
-                return hooksRunner.fire('fail', hookOptions).then(function () {
-                    fail('Expected promise to be rejected');
-                }, function (err) {
-                    expect(err).toEqual(jasmine.any(Error));
-                });
-            });
-        });
-
-        it('Test 024 : should not error if the hook is unrecognized', function () {
-            return hooksRunner.fire('CLEAN YOUR SHORTS GODDAMNIT LIKE A BIG BOY!', hookOptions);
         });
     });
 });
