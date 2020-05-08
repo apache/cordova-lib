@@ -104,7 +104,7 @@ describe('util module', function () {
 
             return helpers.getFixture('androidApp').copyTo(platformPath)
                 .then(_ => util.getInstalledPlatformsWithVersions(temp))
-                .then(versions => expect(versions[PLATFORM]).toBe('8.1.0'));
+                .then(versions => expect(versions[PLATFORM]).toBe('9.0.0-dev'));
         });
     });
     describe('findPlugins method', function () {

@@ -17,9 +17,9 @@
     "node": ">=10.0.0"
   },
   "dependencies": {
-    "cordova-common": "4.0.0-nightly.2019.11.8.40cb6cee",
-    "cordova-create": "^2.0.0",
-    "cordova-fetch": "^2.0.0",
+    "cordova-common": "^4.0.1-nightly.2020.5.8.82cded7d",
+    "cordova-create": "^3.0.0-nightly.2020.5.8.fcc799b1",
+    "cordova-fetch": "^3.0.0",
     "cordova-serve": "^3.0.0",
     "dep-graph": "^1.1.0",
     "detect-indent": "^6.0.0",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@cordova/eslint-config": "^2.0.0",
     "codecov": "^3.2.0",
-    "cordova-android": "^8.1.0",
+    "cordova-android": "^9.0.0-nightly.2020.5.8.e86b211c",
     "delay": "^4.1.0",
     "jasmine": "^3.5.0",
     "jasmine-spec-reporter": "^4.2.1",
