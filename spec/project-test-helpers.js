@@ -48,7 +48,7 @@ module.exports = function projectTestHelpers (getProjectPath) {
         expect(getCfg().getPlugins()).toEqual([]);
         expect(getCfg().getEngines()).toEqual([]);
         expect(getPkgJson('cordova')).toBeUndefined();
-        expect(getPkgJson('dependencies')).toBeUndefined();
+        expect(getPkgJson('devDependencies')).toBeUndefined();
     }
 
     function getCfg () {
