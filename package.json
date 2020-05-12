@@ -17,8 +17,8 @@
     "node": ">=10.0.0"
   },
   "dependencies": {
-    "cordova-common": "^4.0.1-nightly.2020.5.8.82cded7d",
-    "cordova-create": "^3.0.0-nightly.2020.5.8.fcc799b1",
+    "cordova-common": "^4.0.1",
+    "cordova-create": "^3.0.0",
     "cordova-fetch": "^3.0.0",
     "cordova-serve": "^3.0.0",
     "dep-graph": "^1.1.0",
