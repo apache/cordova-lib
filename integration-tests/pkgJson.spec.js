@@ -61,9 +61,9 @@ describe('pkgJson', function () {
     }
 
     function platformVersion (platformName) {
-        const p = path.join(project, 'platforms', platformName, 'cordova/version');
+        const p = path.join(project, 'platforms', platformName, 'cordova/Api.js');
         expect(p).toExist();
-        return requireNoCache(p).version;
+        return requireNoCache(p).version();
     }
 
     function pluginVersion (pluginName) {
@@ -417,16 +417,15 @@ describe('pkgJson', function () {
         /** Test#020 will check that pkg.json, config.xml, platforms.json, and cordova platform ls
         *   are updated with the correct (platform and plugin) specs from pkg.json.
         */
-        // @todo test needs improvement. Platforms are now installed to devDependencies but must
-        // constinue to work in dependencies. Appears to ignore package.json too...
-        xit('Test#020 : During add, if pkg.json has a spec, use that one.', function () {
+        // @todo add a test to also support checking dependencies
+        it('Test#020 : During add, if pkg.json has a spec, use that one.', function () {
             const PLATFORM = 'ios';
             const PLUGIN = 'cordova-plugin-splashscreen';
 
             setPkgJson('cordova.platforms', [PLATFORM]);
             setPkgJson('devDependencies', {
                 [PLUGIN]: '^3.2.2',
-                [`cordova-${PLATFORM}`]: '^6.0.0-nightly.2020.5.9.e65d685c'
+                [`cordova-${PLATFORM}`]: '^6.0.0-nightly.2020.5.12.e65d685c'
             });
 
             // config.xml has no platforms or plugins yet.
