@@ -200,8 +200,17 @@ function getInstalledPlatformsWithVersions (project_dir) {
 }
 
 function getPlatformVersion (platformPath) {
-    const versionPath = path.join(platformPath, 'cordova/version');
-    return requireNoCache(versionPath).version;
+    try {
+        // Major Platforms for Cordova 10+
+        return requireNoCache(
+            path.join(platformPath, 'cordova/Api')
+        ).version();
+    } catch (e) {
+        // Platforms pre-Cordova 10
+        return requireNoCache(
+            path.join(platformPath, 'cordova/version')
+        ).version;
+    }
 }
 
 function getPlatformVersionOrNull (platformPath) {

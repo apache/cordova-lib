@@ -127,22 +127,22 @@ describe('cordova/platform end-to-end', () => {
     it('Test 007 : should add and remove platform from node_modules directory', () => {
         return Promise.resolve()
             .then(() => {
-                return cordova.platform('add', 'browser', { save: true });
+                return cordova.platform('add', 'ios', { save: true });
             })
             .then(() => {
-                expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
-                expect(path.join(platformsDir, 'browser')).toExist();
-                return cordova.platform('add', 'android');
+                expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
+                expect(path.join(platformsDir, 'ios')).toExist();
+                return cordova.platform('add', 'android@9.0.0-nightly.2020.5.9.e86b211c');
             })
             .then(() => {
-                expect(path.join(nodeModulesDir, 'cordova-browser')).toExist();
+                expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
                 expect(path.join(platformsDir, 'android')).toExist();
-                return cordova.platform('rm', 'browser');
+                return cordova.platform('rm', 'ios', { save: true });
             })
             .then(() => {
-                expect(path.join(nodeModulesDir, 'cordova-browser')).not.toExist();
-                expect(path.join(platformsDir, 'browser')).not.toExist();
-                return cordova.platform('rm', 'android');
+                expect(path.join(nodeModulesDir, 'cordova-ios')).not.toExist();
+                expect(path.join(platformsDir, 'ios')).not.toExist();
+                return cordova.platform('rm', 'android', { save: true });
             })
             .then(() => {
                 expect(path.join(nodeModulesDir, 'cordova-android')).not.toExist();
@@ -177,7 +177,7 @@ describe('cordova/platform end-to-end', () => {
         return Promise.resolve()
             .then(() => {
                 // add cordova-android instead of android
-                return cordova.platform('add', 'cordova-android');
+                return cordova.platform('add', 'cordova-android@9.0.0-nightly.2020.5.9.e86b211c');
             })
             .then(() => {
                 // 3rd party platform from npm

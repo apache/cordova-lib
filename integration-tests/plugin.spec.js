@@ -210,12 +210,11 @@ describe('plugin end-to-end', function () {
 
         // Pretend to have cordova-android 5.2.2 installed to force the
         // expected version outcome for the plugin below
-        fs.writeFileSync(
-            path.join(project, 'platforms/android/cordova/version'),
-            `#!/usr/bin/env node
-            exports.version = '5.2.2';
-            if (!module.parent) console.log(exports.version);`
-        );
+        const targetVersion = '5.2.2';
+        const apiFile = path.join(project, 'platforms/android/cordova/Api.js');
+        const apiString = fs.readFileSync(apiFile, 'utf8')
+            .replace(/const VERSION = '9.0.0-nightly.2020.5.12.e86b211c';/, `const VERSION = '${targetVersion}';`);
+        fs.writeFileSync(apiFile, apiString, 'utf8');
 
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin)
             .then(function () {
