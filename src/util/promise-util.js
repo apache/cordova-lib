@@ -31,21 +31,4 @@ function Q_chainmap (args, func) {
     });
 }
 
-// Behaves similar to Q_chainmap but gracefully handles failures.
-// When a promise in the chain is rejected, it will call the failureCallback and then continue the processing, instead of stopping
-function Q_chainmap_graceful (args, func, failureCallback) {
-    return Promise.resolve().then(function (inValue) {
-        return args.reduce(function (soFar, arg) {
-            return soFar.then(function (val) {
-                return func(arg, val);
-            }).catch(function (err) {
-                if (failureCallback) {
-                    failureCallback(err);
-                }
-            });
-        }, Promise.resolve(inValue));
-    });
-}
-
 exports.Q_chainmap = Q_chainmap;
-exports.Q_chainmap_graceful = Q_chainmap_graceful;

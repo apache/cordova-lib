@@ -23,7 +23,6 @@ var path = require('path');
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
 var semver = require('semver');
-var promiseutil = require('../util/promise-util');
 var detectIndent = require('detect-indent');
 var detectNewline = require('detect-newline');
 var stringifyPackage = require('stringify-package');
@@ -114,14 +113,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
 
     let platformName = '';
 
-    // Run `platform add` for all the platforms separately
-    // so that failure on one does not affect the other.
-
-    // CB-9278 : Run `platform add` serially, one platform after another
-    // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
-    // gets executed simultaneously by each platform and leads to an exception being thrown
-
-    return promiseutil.Q_chainmap_graceful(platformInfo, function (platform) {
+    function restoreCallback (platform) {
         platformName = platform.name;
 
         const platformPath = path.join(platformRoot, platformName);
@@ -143,12 +135,23 @@ function installPlatformsFromConfigXML (platforms, opts) {
 
         const cordovaPlatform = require('./platform');
         return cordovaPlatform('add', installFrom, opts);
-    }, function (error) {
+    }
+
+    function errCallback (error) {
         // CB-10921 emit a warning in case of error
         const msg = `Failed to restore platform "${platformName}". You might need to try adding it again. Error: ${error}`;
         process.exitCode = 1;
         events.emit('warn', msg);
-    });
+
+        return Promise.reject(error);
+    }
+
+    // CB-9278 : Run `platform add` serially, one platform after another
+    // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
+    // gets executed simultaneously by each platform and leads to an exception being thrown
+    return platformInfo.reduce(function (soFar, platform) {
+        return soFar.then(() => restoreCallback(platform), errCallback);
+    }, Promise.resolve());
 }
 
 // Returns a promise.
@@ -219,11 +222,7 @@ function installPluginsFromConfigXML (args) {
 
     let pluginName = '';
 
-    // CB-9560 : Run `plugin add` serially, one plugin after another
-    // We need to wait for the plugin and its dependencies to be installed
-    // before installing the next root plugin otherwise we can have common
-    // plugin dependencies installed twice which throws a nasty error.
-    return promiseutil.Q_chainmap_graceful(plugins, function (pluginConfig) {
+    function restoreCallback (pluginConfig) {
         pluginName = pluginConfig.name;
 
         const pluginPath = path.join(pluginsRoot, pluginName);
@@ -251,10 +250,20 @@ function installPluginsFromConfigXML (args) {
 
         const plugin = require('./plugin');
         return plugin('add', installFrom, options);
-    }, function (error) {
+    }
+
+    function errCallback (error) {
         // CB-10921 emit a warning in case of error
         const msg = `Failed to restore plugin "${pluginName}". You might need to try adding it again. Error: ${error}`;
         process.exitCode = 1;
         events.emit('warn', msg);
-    });
+    }
+
+    // CB-9560 : Run `plugin add` serially, one plugin after another
+    // We need to wait for the plugin and its dependencies to be installed
+    // before installing the next root plugin otherwise we can have common
+    // plugin dependencies installed twice which throws a nasty error.
+    return plugins.reduce(function (soFar, plugin) {
+        return soFar.then(() => restoreCallback(plugin), errCallback);
+    }, Promise.resolve());
 }
