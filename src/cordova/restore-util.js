@@ -22,192 +22,136 @@ var ConfigParser = require('cordova-common').ConfigParser;
 var path = require('path');
 var fs = require('fs-extra');
 var events = require('cordova-common').events;
-var cordovaPlatform = require('./platform');
 var semver = require('semver');
-var platformsList = require('../platforms/platforms.js');
-var promiseutil = require('../util/promise-util');
 var detectIndent = require('detect-indent');
+var detectNewline = require('detect-newline');
+var stringifyPackage = require('stringify-package');
+var writeFileAtomicSync = require('write-file-atomic').sync;
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
+
 // Install platforms looking at config.xml and package.json (if there is one).
 function installPlatformsFromConfigXML (platforms, opts) {
-    events.emit('verbose', 'Checking config.xml and package.json for saved platforms that haven\'t been added to the project');
+    events.emit('verbose', 'Checking for saved platforms that haven\'t been added to the project');
 
-    var projectHome = cordova_util.cdProjectRoot();
-    var configPath = cordova_util.projectConfig(projectHome);
-    var cfg = new ConfigParser(configPath);
-    var engines = cfg.getEngines();
-    var pkgJsonPath = path.join(projectHome, 'package.json');
-    var pkgJson;
-    var pkgJsonPlatforms;
-    var comboArray = [];
-    var configPlatforms = [];
-    var modifiedPkgJson = false;
-    var mergedPlatformSpecs = {};
-    var key;
-    var installAllPlatforms = !platforms || platforms.length === 0;
-    var file;
-    var indent;
+    const installAllPlatforms = !platforms || platforms.length === 0;
+    const projectRoot = cordova_util.getProjectRoot();
+    const platformRoot = path.join(projectRoot, 'platforms');
+    const pkgJsonPath = path.join(projectRoot, 'package.json');
+    const confXmlPath = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(confXmlPath);
 
-    // Check if path exists and require pkgJsonPath.
+    let pkgJson = {};
+    let indent = '  ';
+    let newline = '\n';
+
     if (fs.existsSync(pkgJsonPath)) {
-        pkgJson = require(pkgJsonPath);
-        file = fs.readFileSync(pkgJsonPath, 'utf8');
-        indent = detectIndent(file).indent || '  ';
-    }
-
-    if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
-        pkgJsonPlatforms = pkgJson.cordova.platforms;
-    }
-
-    if (cfg !== undefined) {
-        if (pkgJsonPlatforms !== undefined) {
-            // Combining arrays and checking duplicates.
-            comboArray = pkgJsonPlatforms.slice();
+        const fileData = fs.readFileSync(pkgJsonPath, 'utf8');
+        indent = detectIndent(fileData).indent;
+        newline = detectNewline(fileData);
+        pkgJson = JSON.parse(fileData);
+    } else {
+        if (cfg.packageName()) {
+            pkgJson.name = cfg.packageName().toLowerCase();
         }
 
-        engines = cfg.getEngines(projectHome);
-
-        // TODO: CB-12592: Eventually refactor out to pacakge manager module.
-        // If package.json doesn't exist, auto-create one.
-        if (engines.length > 0 && pkgJson === undefined) {
-            pkgJson = {};
-            if (cfg.packageName()) {
-                pkgJson.name = cfg.packageName().toLowerCase();
-            }
-            if (cfg.version()) {
-                pkgJson.version = cfg.version();
-            }
-            if (cfg.name()) {
-                pkgJson.displayName = cfg.name();
-            }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
+        if (cfg.version()) {
+            pkgJson.version = cfg.version();
         }
 
-        configPlatforms = engines.map(function (Engine) {
-            var configPlatName = Engine.name;
-            // Add specs from config into mergedPlatformSpecs.
-            if (mergedPlatformSpecs[configPlatName] === undefined && Engine.spec) {
-                mergedPlatformSpecs[configPlatName] = Engine.spec;
-            }
-            return configPlatName;
-        });
-        configPlatforms.forEach(function (item) {
-            if (comboArray.indexOf(item) < 0) {
-                comboArray.push(item);
-            }
-        });
-        // ComboArray should have all platforms from config.xml & package.json.
-        // Remove duplicates in comboArray & sort.
-        var uniq = comboArray.reduce(function (a, b) {
-            if (a.indexOf(b) < 0) a.push(b);
-            return a;
-        }, []);
-        comboArray = uniq;
-
-        // No platforms to restore from either config.xml or package.json.
-        if (comboArray.length <= 0) {
-            return Promise.resolve('No platforms found in config.xml or package.json. Nothing to restore');
-        }
-
-        // If no package.json, don't continue.
-        if (pkgJson !== undefined) {
-            // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
-            if (pkgJson.cordova === undefined) {
-                pkgJson.cordova = {};
-            }
-            // If there is no platforms array, create an empty one.
-            if (pkgJson.cordova.platforms === undefined) {
-                pkgJson.cordova.platforms = [];
-            }
-            // If comboArray has the same platforms as pkg.json, no modification to pkg.json.
-            if (comboArray.toString() === pkgJson.cordova.platforms.toString()) {
-                events.emit('verbose', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
-            } else {
-                // Modify pkg.json to include the elements.
-                // From the comboArray array so that the arrays are identical.
-                events.emit('verbose', 'Config.xml and package.json platforms are different. Updating package.json with most current list of platforms.');
-                modifiedPkgJson = true;
-            }
-
-            events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
-            comboArray.forEach(function (item) {
-                var prefixItem = ('cordova-' + item);
-
-                // Modify package.json if any of these cases are true:
-                if ((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length) ||
-                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) ||
-                (pkgJson.dependencies && mergedPlatformSpecs && pkgJson.dependencies[prefixItem] === undefined && mergedPlatformSpecs[prefixItem])) {
-                    modifiedPkgJson = true;
-                }
-
-                // Get the cordova- prefixed spec from package.json and add it to mergedPluginSpecs.
-                if (pkgJson.dependencies && pkgJson.dependencies[prefixItem]) {
-                    if (mergedPlatformSpecs[prefixItem] !== pkgJson.dependencies[prefixItem]) {
-                        modifiedPkgJson = true;
-                    }
-                    mergedPlatformSpecs[item] = pkgJson.dependencies[prefixItem];
-                }
-
-                // Get the spec from package.json and add it to mergedPluginSpecs.
-                if (pkgJson.dependencies && pkgJson.dependencies[item] && pkgJson.dependencies[prefixItem] === undefined) {
-                    if (mergedPlatformSpecs[item] !== pkgJson.dependencies[item]) {
-                        modifiedPkgJson = true;
-                    }
-                    mergedPlatformSpecs[item] = pkgJson.dependencies[item];
-                }
-            });
-        }
-
-        // Write and update pkg.json if it has been modified.
-        if (modifiedPkgJson === true) {
-            pkgJson.cordova.platforms = comboArray;
-            if (pkgJson.dependencies === undefined) {
-                pkgJson.dependencies = {};
-            }
-            // Check if key is part of cordova alias list.
-            // Add prefix if it is.
-            for (key in mergedPlatformSpecs) {
-                var prefixKey = key;
-                if (key in platformsList) {
-                    prefixKey = 'cordova-' + key;
-                }
-                pkgJson.dependencies[prefixKey] = mergedPlatformSpecs[key];
-            }
-            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
-        }
-        if (!comboArray || !comboArray.length) {
-            return Promise.resolve('No platforms found in config.xml and/or package.json that haven\'t been added to the project');
+        if (cfg.name()) {
+            pkgJson.displayName = cfg.name();
         }
     }
-    // Run `platform add` for all the platforms separately
-    // so that failure on one does not affect the other.
+
+    pkgJson.dependencies = pkgJson.dependencies || {};
+    pkgJson.devDependencies = pkgJson.devDependencies || {};
+    pkgJson.cordova = pkgJson.cordova || {};
+    pkgJson.cordova.platforms = pkgJson.cordova.platforms || [];
+
+    const pkgPlatforms = pkgJson.cordova.platforms.slice();
+    const pkgSpecs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+
+    // Check for platforms listed in config.xml
+    const cfgPlatforms = cfg.getEngines();
+
+    cfgPlatforms.forEach(engine => {
+        const platformModule = engine.name.startsWith('cordova-') ? engine.name : `cordova-${engine.name}`;
+
+        // If package.json includes the platform, we use that config
+        // Otherwise, we need to add the platform to package.json
+        if (!pkgPlatforms.includes(engine.name) || (engine.spec && !(platformModule in pkgSpecs))) {
+            events.emit('info', `Platform '${engine.name}' found in config.xml... Migrating it to package.json`);
+
+            // If config.xml has a spec for the platform and package.json has
+            // not, add the spec to devDependencies of package.json
+            if (engine.spec && !(platformModule in pkgSpecs)) {
+                pkgJson.devDependencies[platformModule] = engine.spec;
+            }
+
+            if (!pkgPlatforms.includes(engine.name)) {
+                pkgJson.cordova.platforms.push(engine.name);
+            }
+        }
+    });
+
+    // Now that platforms have been updated, re-fetch them from package.json
+    const platformIDs = pkgJson.cordova.platforms.slice();
+
+    if (platformIDs.length !== pkgPlatforms.length) {
+        // We've modified package.json and need to save it
+        writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+    }
+
+    const specs = Object.assign({}, pkgJson.dependencies || {}, pkgJson.devDependencies);
+
+    const platformInfo = platformIDs.map(plID => ({
+        name: plID,
+        spec: specs[plID]
+    }));
+
+    let platformName = '';
+
+    function restoreCallback (platform) {
+        platformName = platform.name;
+
+        const platformPath = path.join(platformRoot, platformName);
+        if (fs.existsSync(platformPath) || (!installAllPlatforms && !platforms.includes(platformName))) {
+            // Platform already exists
+            return Promise.resolve();
+        }
+
+        events.emit('log', `Discovered platform "${platformName}". Adding it to the project`);
+
+        // Install from given URL if defined or using a plugin id. If spec
+        // isn't a valid version or version range, assume it is the location to
+        // install from.
+        // CB-10761 If plugin spec is not specified, use plugin name
+        var installFrom = platform.spec || platformName;
+        if (platform.spec && semver.validRange(platform.spec, true)) {
+            installFrom = platformName + '@' + platform.spec;
+        }
+
+        const cordovaPlatform = require('./platform');
+        return cordovaPlatform('add', installFrom, opts);
+    }
+
+    function errCallback (error) {
+        // CB-10921 emit a warning in case of error
+        const msg = `Failed to restore platform "${platformName}". You might need to try adding it again. Error: ${error}`;
+        process.exitCode = 1;
+        events.emit('warn', msg);
+
+        return Promise.reject(error);
+    }
 
     // CB-9278 : Run `platform add` serially, one platform after another
     // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
     // gets executed simultaneously by each platform and leads to an exception being thrown
-
-    return promiseutil.Q_chainmap_graceful(comboArray, function (target) {
-        var cwd = process.cwd();
-        var platformsFolderPath = path.join(cwd, 'platforms');
-        var platformsInstalled = path.join(platformsFolderPath, target);
-        if (target) {
-            var platformName = target;
-            // Add the spec to the target
-            if (mergedPlatformSpecs[target]) {
-                target = target + '@' + mergedPlatformSpecs[target];
-            }
-            // If the platform is already installed, no need to re-install it.
-            if (!fs.existsSync(platformsInstalled) && (installAllPlatforms || platforms.indexOf(platformName) > -1)) {
-                events.emit('log', 'Discovered platform "' + target + '" in config.xml or package.json. Adding it to the project');
-                return cordovaPlatform('add', target, opts);
-            }
-        }
-        return Promise.resolve();
-    }, function (err) {
-        events.emit('warn', err);
-    });
+    return platformInfo.reduce(function (soFar, platform) {
+        return soFar.then(() => restoreCallback(platform), errCallback);
+    }, Promise.resolve());
 }
 
 // Returns a promise.
@@ -221,13 +165,16 @@ function installPluginsFromConfigXML (args) {
 
     let pkgJson = {};
     let indent = '  ';
+    let newline = '\n';
 
     if (fs.existsSync(pkgJsonPath)) {
         const fileData = fs.readFileSync(pkgJsonPath, 'utf8');
         indent = detectIndent(fileData).indent;
+        newline = detectNewline(fileData);
         pkgJson = JSON.parse(fileData);
     }
 
+    pkgJson.dependencies = pkgJson.dependencies || {};
     pkgJson.devDependencies = pkgJson.devDependencies || {};
     pkgJson.cordova = pkgJson.cordova || {};
     pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
@@ -262,10 +209,7 @@ function installPluginsFromConfigXML (args) {
 
     if (pluginIDs.length !== pkgPluginIDs.length) {
         // We've modified package.json and need to save it
-        fs.outputJsonSync(pkgJsonPath, pkgJson, {
-            indent: indent,
-            encoding: 'utf8'
-        });
+        writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
     }
 
     const specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
@@ -278,11 +222,7 @@ function installPluginsFromConfigXML (args) {
 
     let pluginName = '';
 
-    // CB-9560 : Run `plugin add` serially, one plugin after another
-    // We need to wait for the plugin and its dependencies to be installed
-    // before installing the next root plugin otherwise we can have common
-    // plugin dependencies installed twice which throws a nasty error.
-    return promiseutil.Q_chainmap_graceful(plugins, function (pluginConfig) {
+    function restoreCallback (pluginConfig) {
         pluginName = pluginConfig.name;
 
         const pluginPath = path.join(pluginsRoot, pluginName);
@@ -291,7 +231,7 @@ function installPluginsFromConfigXML (args) {
             return Promise.resolve();
         }
 
-        events.emit('log', `Discovered saved plugin "${pluginName}". Adding it to the project`);
+        events.emit('log', `Discovered plugin "${pluginName}". Adding it to the project`);
 
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
@@ -310,11 +250,20 @@ function installPluginsFromConfigXML (args) {
 
         const plugin = require('./plugin');
         return plugin('add', installFrom, options);
-    }, function (error) {
+    }
+
+    function errCallback (error) {
         // CB-10921 emit a warning in case of error
-        var msg = 'Failed to restore plugin "' + pluginName + '" from config.xml. ' +
-            'You might need to try adding it again. Error: ' + error;
+        const msg = `Failed to restore plugin "${pluginName}". You might need to try adding it again. Error: ${error}`;
         process.exitCode = 1;
         events.emit('warn', msg);
-    });
+    }
+
+    // CB-9560 : Run `plugin add` serially, one plugin after another
+    // We need to wait for the plugin and its dependencies to be installed
+    // before installing the next root plugin otherwise we can have common
+    // plugin dependencies installed twice which throws a nasty error.
+    return plugins.reduce(function (soFar, plugin) {
+        return soFar.then(() => restoreCallback(plugin), errCallback);
+    }, Promise.resolve());
 }

@@ -17,7 +17,6 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const rewire = require('rewire');
 const { tmpDir: getTmpDir, testPlatform } = require('../helpers');
 const projectTestHelpers = require('../project-test-helpers');
 
@@ -39,14 +38,15 @@ describe('cordova/restore-util', () => {
         configXmlPath = getConfigXmlPath();
         delete process.env.PWD;
 
+        restore = require('../../src/cordova/restore-util');
+
         cordovaPlugin = require('../../src/cordova/plugin');
         spyOn(cordovaPlugin, 'add')
             .and.returnValue(Promise.resolve());
 
-        cordovaPlatform = jasmine.createSpy('cordovaPlatform')
+        cordovaPlatform = require('../../src/cordova/platform');
+        spyOn(cordovaPlatform, 'add')
             .and.returnValue(Promise.resolve());
-        restore = rewire('../../src/cordova/restore-util');
-        restore.__set__({ cordovaPlatform });
 
         setupBaseProject();
     });
@@ -90,7 +90,17 @@ describe('cordova/restore-util', () => {
     }
 
     function expectPlatformAdded (platform) {
-        expect(cordovaPlatform).toHaveBeenCalledWith('add', platform, undefined);
+        const expectedOpts = {
+            platforms: jasmine.arrayContaining([
+                jasmine.stringMatching(platform)
+            ])
+        };
+
+        expect(cordovaPlatform.add).toHaveBeenCalledWith(
+            jasmine.anything(), jasmine.any(String),
+            jasmine.arrayContaining([platform]),
+            jasmine.objectContaining(expectedOpts)
+        );
     }
 
     function expectPluginAdded (plugin) {
@@ -141,7 +151,9 @@ describe('cordova/restore-util', () => {
                 // No change to pkg.json.
                 const pkgJson = getPkgJson();
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM]);
-                expect(pkgJson.dependencies[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
+
+                const specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+                expect(specs[platformPkgName(PLATFORM)]).toEqual(`git+${PLATFORM_URL}.git`);
             });
         });
 
@@ -177,8 +189,10 @@ describe('cordova/restore-util', () => {
                 // Expect both pkg.json and config.xml to each have both platforms in their arrays.
                 expect(getCfgEngineNames()).toEqual([PLATFORM_1, PLATFORM_2]);
                 expect(pkgJson.cordova.platforms).toEqual([PLATFORM_1, PLATFORM_2]);
+
                 // Platform specs from config.xml have been added to pkg.json.
-                expect(pkgJson.dependencies).toEqual({
+                const specs = Object.assign({}, pkgJson.dependencies, pkgJson.devDependencies);
+                expect(specs).toEqual({
                     [platformPkgName(PLATFORM_1)]: '7.0.0',
                     [platformPkgName(PLATFORM_2)]: '^5.0.3'
                 });
