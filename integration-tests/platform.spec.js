@@ -132,7 +132,7 @@ describe('cordova/platform end-to-end', () => {
             .then(() => {
                 expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
                 expect(path.join(platformsDir, 'ios')).toExist();
-                return cordova.platform('add', 'android@9.0.0-nightly.2020.5.9.e86b211c');
+                return cordova.platform('add', 'android@9.0.0');
             })
             .then(() => {
                 expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
@@ -177,7 +177,7 @@ describe('cordova/platform end-to-end', () => {
         return Promise.resolve()
             .then(() => {
                 // add cordova-android instead of android
-                return cordova.platform('add', 'cordova-android@9.0.0-nightly.2020.5.9.e86b211c');
+                return cordova.platform('add', 'cordova-android@9.0.0');
             })
             .then(() => {
                 // 3rd party platform from npm

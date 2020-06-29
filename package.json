@@ -39,7 +39,7 @@
   "devDependencies": {
     "@cordova/eslint-config": "^2.0.0",
     "codecov": "^3.2.0",
-    "cordova-android": "9.0.0-nightly.2020.5.12.e86b211c",
+    "cordova-android": "9.0.0",
     "delay": "^4.1.0",
     "jasmine": "^3.5.0",
     "jasmine-spec-reporter": "^4.2.1",
