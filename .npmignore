@@ -1,5 +1,4 @@
 .*
-appveyor.yml
 spec
 integration-tests
 coverage

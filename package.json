@@ -41,12 +41,23 @@
     "rewire": "^4.0.1"
   },
   "scripts": {
-    "test": "npm run lint && npm run unit-tests && npm run e2e-tests",
     "lint": "eslint .",
-    "unit-tests": "jasmine \"spec/**/*.spec.js\"",
-    "cover": "nyc -x spec/ -x integration-tests/ npm test",
-    "report-coverage": "nyc report -r text-lcov > coverage.lcov && codecov",
-    "e2e-tests": "jasmine \"integration-tests/**/*.spec.js\""
+    "test": "npm run lint && npm run test:coverage",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "test:coverage": "nyc npm run test:all",
+    "test:e2e": "jasmine \"integration-tests/**/*.spec.js\"",
+    "test:unit": "jasmine \"spec/**/*.spec.js\""
+  },
+  "nyc": {
+    "all": true,
+    "exclude": [
+      "spec/",
+      "integration-tests/"
+    ],
+    "reporter": [
+      "lcov",
+      "text"
+    ]
   },
   "contributors": [
     {
