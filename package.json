@@ -4,14 +4,8 @@
   "license": "Apache-2.0",
   "description": "Apache Cordova tools core lib and API",
   "version": "10.0.0-dev",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/apache/cordova-lib"
-  },
-  "bugs": {
-    "url": "https://issues.apache.org/jira/browse/CB",
-    "email": "dev@cordova.apache.org"
-  },
+  "repository": "github:apache/cordova-lib",
+  "bugs": "https://github.com/apache/cordova-lib/issues",
   "main": "cordova-lib.js",
   "engines": {
     "node": ">=10.0.0"
