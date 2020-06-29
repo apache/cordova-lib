@@ -13,7 +13,7 @@
     },
     "android": {
         "url": "https://github.com/apache/cordova-android.git",
-        "version": "^9.0.0-nightly.2020.5.11.e86b211c",
+        "version": "^9.0.0",
         "deprecated": false
     },
     "windows": {
