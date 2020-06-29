@@ -367,15 +367,15 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.platform('add', ['android@9.0.0-nightly.2020.5.9.e86b211c', 'ios@6.0.0-nightly.2020.5.9.e65d685c'], { save: true }).then(function () {
+            return cordova.platform('add', ['android@9.0.0', 'ios@6.1.0'], { save: true }).then(function () {
                 expect(installedPlatforms()).toEqual(['android', 'ios']);
 
                 // Check the platform add was successful in platforms list and
                 // dependencies should have specific version from add.
                 expect(getPkgJson('cordova.platforms')).toEqual(['android', 'ios']);
                 expect(getPkgJson('devDependencies')).toEqual({
-                    'cordova-android': specWithMinSatisfyingVersion('9.0.0-nightly.2020.5.9.e86b211c'),
-                    'cordova-ios': specWithMinSatisfyingVersion('6.0.0-nightly.2020.5.9.e65d685c')
+                    'cordova-android': specWithMinSatisfyingVersion('9.0.0'),
+                    'cordova-ios': specWithMinSatisfyingVersion('6.1.0')
                 });
 
                 expect(getCfg().getEngines()).toEqual([]);
@@ -425,7 +425,7 @@ describe('pkgJson', function () {
             setPkgJson('cordova.platforms', [PLATFORM]);
             setPkgJson('devDependencies', {
                 [PLUGIN]: '^3.2.2',
-                [`cordova-${PLATFORM}`]: '^6.0.0-nightly.2020.5.12.e65d685c'
+                [`cordova-${PLATFORM}`]: '^6.1.0'
             });
 
             // config.xml has no platforms or plugins yet.
@@ -490,17 +490,17 @@ describe('pkgJson', function () {
 
             setPkgJson('cordova.platforms', [PLATFORM]);
             setPkgJson('devDependencies', {
-                [`cordova-${PLATFORM}`]: '^6.0.0-nightly.2020.5.1.e65d685c',
+                [`cordova-${PLATFORM}`]: '^6.1.0',
                 [PLUGIN]: '^3.2.2'
             });
             getCfg()
-                .addEngine(PLATFORM, '~6.0.0-nightly.2020.5.1.e65d685c')
+                .addEngine(PLATFORM, '~6.1.0')
                 .addPlugin({ name: PLUGIN, spec: '~3.2.1' })
                 .write();
 
             expect(installedPlatforms()).toEqual([]);
 
-            return cordova.platform('add', `${PLATFORM}@6.0.0-nightly.2020.5.9.e65d685c`, { save: true }).then(function () {
+            return cordova.platform('add', `${PLATFORM}@6.1.0`, { save: true }).then(function () {
                 // Pkg.json has ios.
                 expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
             }).then(function () {
