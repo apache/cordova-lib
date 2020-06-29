@@ -8,7 +8,7 @@
     "osx": {
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-osx.git",
-        "version": "^5.0.0",
+        "version": "^6.0.0",
         "deprecated": false
     },
     "android": {
