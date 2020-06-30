@@ -19,7 +19,6 @@
 
 var path = require('path');
 var fs = require('fs-extra');
-var os = require('os');
 var ConfigParser = require('cordova-common').ConfigParser;
 const fixtureHelper = require('./fixture-helper');
 
@@ -36,8 +35,8 @@ function getConfigPath (dir) {
 }
 
 module.exports.tmpDir = function (suffix = 'test') {
-    const dir = path.join(os.tmpdir(), `cordova-lib-${suffix}-`);
-    return fs.realpathSync(fs.mkdtempSync(dir));
+    const dir = path.join(__dirname, `../temp/cordova-lib-${suffix}-`);
+    return fs.realpathSync(fs.mkdirpSync(dir));
 };
 
 /**
