@@ -65,9 +65,7 @@ module.exports = function fixtureHelper (tmpDir) {
             process.chdir(projectPath);
 
             // Talk about a clunky interface :(
-            // @todo remove @nightly once Android next major is released.
-            const platformFromPackageDependencies = path.resolve(path.dirname(require.resolve('cordova-android')), '../../../');
-            const platforms = [platformFromPackageDependencies];
+            const platforms = ['android'];
             const opts = { platforms, save: true };
             const hooksRunner = new HooksRunner(projectPath);
             await platformAdd(hooksRunner, projectPath, platforms, opts);
