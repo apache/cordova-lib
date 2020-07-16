@@ -74,8 +74,8 @@ describe('plugman/install', () => {
 
         return getFixture('androidApp').copyTo(project)
             .then(_ => {
-                results['emit_results'] = [];
-                events.on('results', result => results['emit_results'].push(result));
+                results.emit_results = [];
+                events.on('results', result => results.emit_results.push(result));
 
                 // Every time when addPlugin is called it will return some truthy value
                 const returnValues = [true, {}, [], 'foo', () => {}][Symbol.iterator]();
@@ -130,19 +130,19 @@ describe('plugman/install', () => {
     describe('success', () => {
         it('Test 002 : should emit a results event with platform-agnostic <info>', () => {
             // org.test.plugins.childbrowser
-            expect(results['emit_results'][0]).toBe('No matter what platform you are installing to, this notice is very important.');
+            expect(results.emit_results[0]).toBe('No matter what platform you are installing to, this notice is very important.');
         }, TIMEOUT);
         it('Test 003 : should emit a results event with platform-specific <info>', () => {
             // org.test.plugins.childbrowser
-            expect(results['emit_results'][1]).toBe('Please make sure you read this because it is very important to complete the installation of your plugin.');
+            expect(results.emit_results[1]).toBe('Please make sure you read this because it is very important to complete the installation of your plugin.');
         }, TIMEOUT);
         it('Test 004 : should interpolate variables into <info> tags', () => {
             // VariableBrowser
-            expect(results['emit_results'][2]).toBe('Remember that your api key is batman!');
+            expect(results.emit_results[2]).toBe('Remember that your api key is batman!');
         }, TIMEOUT);
         it('Test 005 : should call fetch if provided plugin cannot be resolved locally', () => {
             fetchSpy.and.returnValue(Promise.resolve(pluginDir('org.test.plugins.dummyplugin')));
-            spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
+            spyOn(fs, 'existsSync').and.callFake(fake.existsSync.noPlugins);
             return install('android', project, 'CLEANYOURSHORTS')
                 .then(() => {
                     expect(fetchSpy).toHaveBeenCalled();
@@ -221,8 +221,8 @@ describe('plugman/install', () => {
             let emit;
             beforeEach(() => {
                 spyOn(PlatformJson.prototype, 'isPluginInstalled').and.returnValue(false);
-                spyOn(fs, 'existsSync').and.callFake(fake['existsSync']['noPlugins']);
-                fetchSpy.and.callFake(fake['fetch']['dependencies']);
+                spyOn(fs, 'existsSync').and.callFake(fake.existsSync.noPlugins);
+                fetchSpy.and.callFake(fake.fetch.dependencies);
                 emit = spyOn(events, 'emit');
                 execaSpy.and.returnValue(Promise.resolve({ stdout: '9.0.0' }));
 

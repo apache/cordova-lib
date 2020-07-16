@@ -55,9 +55,9 @@ Context.prototype.requireCordovaModule = function (modulePath) {
 
     if (!pkg.match(/^cordova-[^/]+/)) {
         throw new CordovaError(
-            `Using "requireCordovaModule" to load non-cordova module ` +
+            'Using "requireCordovaModule" to load non-cordova module ' +
             `"${modulePath}" is not supported. Instead, add this module to ` +
-            `your dependencies and use regular "require" to load it.`
+            'your dependencies and use regular "require" to load it.'
         );
     }
 

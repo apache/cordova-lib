@@ -84,7 +84,7 @@ function add (projectRoot, hooksRunner, opts) {
                         pluginInfoProvider: pluginInfoProvider,
                         variables: opts.cli_variables,
                         is_top_level: true,
-                        save_exact: opts['save_exact'] || false,
+                        save_exact: opts.save_exact || false,
                         production: opts.production
                     };
 
@@ -118,7 +118,7 @@ function add (projectRoot, hooksRunner, opts) {
                             usePlatformWww: true,
                             nohooks: opts.nohooks,
                             force: opts.force,
-                            save_exact: opts['save_exact'] || false,
+                            save_exact: opts.save_exact || false,
                             production: opts.production
                         };
 

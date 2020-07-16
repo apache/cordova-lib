@@ -69,7 +69,7 @@ describe('end-to-end plugin dependency tests', function () {
                 return cordova.plugin('add', 'cordova-plugin-file');
             }).then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1']);
+                return cordova.plugin('add', plugins.Test1);
             }).catch(function (err) {
                 expect(err.message).toContain('does not satisfy dependency plugin requirement');
             });
@@ -82,7 +82,7 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1'], { force: true });
+                return cordova.plugin('add', plugins.Test1, { force: true });
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
@@ -97,7 +97,7 @@ describe('end-to-end plugin dependency tests', function () {
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-                return cordova.plugin('add', plugins['Test1']);
+                return cordova.plugin('add', plugins.Test1);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'Test1')).toExist();
@@ -109,15 +109,15 @@ describe('end-to-end plugin dependency tests', function () {
         // Test1 and Test3 have incompatible dependencies on cordova-plugin-file
         return Promise.resolve()
             .then(function () {
-                return cordova.plugin('add', plugins['Test1']);
+                return cordova.plugin('add', plugins.Test1);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
                 expect(path.join(pluginsDir, 'Test1')).toExist();
-                return cordova.plugin('add', plugins['Test2']);
+                return cordova.plugin('add', plugins.Test2);
             })
             .then(function () {
-                return cordova.plugin('add', plugins['Test3']);
+                return cordova.plugin('add', plugins.Test3);
             })
             .catch(function (err) {
                 expect(path.join(pluginsDir, 'Test2')).toExist();
@@ -134,7 +134,7 @@ describe('end-to-end plugin dependency tests', function () {
                 return cordova.plugin('add', 'https://github.com/apache/cordova-plugin-file');
             })
             .then(function () {
-                return cordova.plugin('add', plugins['Test4']);
+                return cordova.plugin('add', plugins.Test4);
             })
             .then(function () {
                 expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();

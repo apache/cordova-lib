@@ -24,7 +24,7 @@ var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
 
 var cwd = process.cwd();
-var origPWD = process.env['PWD'];
+var origPWD = process.env.PWD;
 
 describe('util module', function () {
     let temp;
@@ -45,7 +45,7 @@ describe('util module', function () {
             fs.ensureDirSync(anotherdir);
         });
         afterEach(function () {
-            process.env['PWD'] = origPWD;
+            process.env.PWD = origPWD;
             process.chdir(cwd);
         });
         it('Test 002 : should return false if it cannot find a Cordova project directory up the directory tree', function () {
@@ -56,7 +56,7 @@ describe('util module', function () {
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
         it('Test 004 : should ignore PWD when it is undefined', function () {
-            delete process.env['PWD'];
+            delete process.env.PWD;
             fs.ensureDirSync(path.join(somedir, 'www'));
             fs.ensureDirSync(path.join(somedir, 'config.xml'));
             process.chdir(anotherdir);
@@ -64,13 +64,13 @@ describe('util module', function () {
         });
         it('Test 005 : should use PWD when available', function () {
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
-            process.env['PWD'] = anotherdir;
+            process.env.PWD = anotherdir;
             process.chdir(path.sep);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 006 : should use cwd as a fallback when PWD is not a cordova dir', function () {
             fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
-            process.env['PWD'] = path.sep;
+            process.env.PWD = path.sep;
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
