@@ -89,20 +89,24 @@ describe('pkgJson', function () {
     }
 
     const customMatchers = {
-        toSatisfy: () => ({ compare (version, spec) {
-            const pass = semver.satisfies(version, spec);
-            const expectation = (pass ? 'not ' : '') + 'to satisfy';
-            return {
-                pass, message: `expected ${version} ${expectation} ${spec}`
-            };
-        } }),
-        tohaveMinSatisfyingVersion: () => ({ compare (spec, version) {
-            const pass = specWithMinSatisfyingVersion(version).asymmetricMatch(spec);
-            const expectation = (pass ? 'not ' : '') + 'to have minimal satisfying version';
-            return {
-                pass, message: `expected ${spec} ${expectation} ${version}`
-            };
-        } })
+        toSatisfy: () => ({
+            compare (version, spec) {
+                const pass = semver.satisfies(version, spec);
+                const expectation = (pass ? 'not ' : '') + 'to satisfy';
+                return {
+                    pass, message: `expected ${version} ${expectation} ${spec}`
+                };
+            }
+        }),
+        tohaveMinSatisfyingVersion: () => ({
+            compare (spec, version) {
+                const pass = specWithMinSatisfyingVersion(version).asymmetricMatch(spec);
+                const expectation = (pass ? 'not ' : '') + 'to have minimal satisfying version';
+                return {
+                    pass, message: `expected ${spec} ${expectation} ${version}`
+                };
+            }
+        })
     };
 
     // Add our custom matchers

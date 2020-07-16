@@ -199,13 +199,15 @@ module.exports.asymmetricMatchers = {
 };
 
 const customMatchers = {
-    toExist: () => ({ compare (file) {
-        const pass = fs.existsSync(file);
-        const expectation = (pass ? 'not ' : '') + 'to exist';
-        return {
-            pass, message: `expected ${file} ${expectation}`
-        };
-    } })
+    toExist: () => ({
+        compare (file) {
+            const pass = fs.existsSync(file);
+            const expectation = (pass ? 'not ' : '') + 'to exist';
+            return {
+                pass, message: `expected ${file} ${expectation}`
+            };
+        }
+    })
 };
 
 // Add our custom matchers

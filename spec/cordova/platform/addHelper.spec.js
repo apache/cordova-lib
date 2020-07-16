@@ -235,7 +235,7 @@ describe('cordova/platform/addHelper', function () {
                 it('should use pkgJson version devDependencies, if dependencies are undefined', function () {
                     package_json_mock.dependencies = undefined;
                     package_json_mock.cordova = { platforms: ['ios'] };
-                    package_json_mock.devDependencies['ios'] = {};
+                    package_json_mock.devDependencies.ios = {};
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
                     fs.existsSync.and.callFake(function (filePath) {
                         return path.basename(filePath) === 'package.json';
