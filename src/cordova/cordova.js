@@ -54,7 +54,6 @@ exports = module.exports = {
     platforms: require('./platform'),
     compile: require('./compile'),
     run: require('./run'),
-    info: require('./info'),
     targets: require('./targets'),
     requirements: require('./requirements'),
     projectMetadata: require('./project_metadata'),
