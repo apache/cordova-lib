@@ -57,7 +57,7 @@ describe('cordova/platform/list show deprecated platforms info', function () {
     it('shows available platforms with deprecated info', () => {
         return platform_list(hooks_mock, projectRoot, { save: true })
             .then((result) => {
-                expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:[\s\S]*Available.*:\s\s\s\sandroid 1.2.3\s\s\swp7 4.5.6.*\(deprecated\)/));
+                expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:[\s\S]*Available.*:[\s]*android 1.2.3[\s]*wp7 4.5.6 \(deprecated\)/));
             });
     });
 
