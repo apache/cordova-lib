@@ -58,7 +58,7 @@ function addDeprecatedInformationToPlatforms (platformsList) {
         var platformKey = p.split(' ')[0]; // Remove Version Information
         // allow for 'unknown' platforms, which will not exist in platforms
         if ((platforms.info[platformKey] || {}).deprecated) {
-            p = p.concat(' ', '(deprecated)');
+            p = p.concat('- deprecated');
         }
         return p;
     });
