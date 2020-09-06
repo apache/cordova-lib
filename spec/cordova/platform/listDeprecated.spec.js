@@ -57,12 +57,12 @@ describe('cordova/platform/list show deprecated platforms info', function () {
     it('shows available platforms with deprecated info', () => {
         return platform_list(hooks_mock, projectRoot, { save: true })
             .then((result) => {
-                expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:[\s\S]*Available.*:[\s]*android 1.2.3[\s]*wp7 4.5.6 \(deprecated\)/));
+                expect(events.emit).toHaveBeenCalledWith('results', jasmine.stringMatching(/Installed platforms:[\s\S]*Available.*:[\s]*android 1.2.3[\s]*wp7 4.5.6 - deprecated/));
             });
     });
 
     it('returns platform list with deprecated info', function () {
         var platformList = ['android 1.2.3', 'wp7 4.5.6'];
-        expect(platform_list.addDeprecatedInformationToPlatforms(platformList)).toEqual(['android 1.2.3', 'wp7 4.5.6 (deprecated)']);
+        expect(platform_list.addDeprecatedInformationToPlatforms(platformList)).toEqual(['android 1.2.3', 'wp7 4.5.6 - deprecated']);
     });
 });
