@@ -207,9 +207,10 @@ function getPlatformVersion (platformPath) {
         ).version();
     } catch (e) {
         // Platforms pre-Cordova 10
-        return requireNoCache(
-            path.join(platformPath, 'cordova/version')
-        ).version;
+        return require('execa').sync(
+            process.argv0, // node
+            [path.join(platformPath, 'cordova/version')]
+        ).stdout;
     }
 }
 
