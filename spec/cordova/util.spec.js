@@ -107,6 +107,19 @@ describe('util module', function () {
                 .then(versions => expect(versions[PLATFORM]).toBe('9.0.0'));
         });
     });
+    describe('getPlatformVersion method', () => {
+        it('should get the version from a legacy platform', () => {
+            const PLATFORM_VERSION = '1.2.3-dev';
+
+            fs.outputFileSync(path.join(temp, 'cordova/version'), `
+                #!/usr/bin/env node
+                console.log('${PLATFORM_VERSION}');
+            `.trim());
+
+            const version = util.getPlatformVersion(temp);
+            expect(version).toBe(PLATFORM_VERSION);
+        });
+    });
     describe('findPlugins method', function () {
         let pluginsDir, plugins;
 
