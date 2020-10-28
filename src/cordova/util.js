@@ -301,14 +301,23 @@ function isDirectory (dir) {
 
 // Returns the API of the platform contained in `dir`.
 // Potential errors : module isn't found, can't load or doesn't implement the expected interface.
-function getPlatformApiFunction (dir) {
+function getPlatformApiFunction (dir, platform) {
     let PlatformApi;
     try {
         PlatformApi = exports.requireNoCache(dir);
     } catch (err) {
-        // Module not found or threw error during loading
-        err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
-        throw err;
+        try {
+            let cdvPlatform = platform;
+            if (!platform.startsWith('cordova-')) {
+                cdvPlatform = `cordova-${platform}`;
+            }
+
+            PlatformApi = exports.requireNoCache(cdvPlatform);
+        } catch (err) {
+            // Module not found or threw error during loading
+            err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
+            throw err;
+        }
     }
 
     // Module doesn't implement the expected interface
