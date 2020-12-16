@@ -168,7 +168,7 @@ describe('pkgJson', function () {
                 }).then(function () {
                     // Expect that only the plugin that had --save was added.
                     expect(getPkgJson('cordova.plugins')).toEqual({
-                        [SAVED_PLUGIN]: {}
+                        [SAVED_PLUGIN]: jasmine.anything()
                     });
                 });
         });
