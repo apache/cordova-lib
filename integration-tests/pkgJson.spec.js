@@ -284,14 +284,15 @@ describe('pkgJson', function () {
         });
 
         it('Test#026 : should successfully add a plugin with git/semver combo', async () => {
-            const URL = 'https://github.com/apache/cordova-plugin-device.git#semver:2.0.x';
+            const TAG = '#semver:2.0.x';
+            const URL = `https://github.com/apache/cordova-plugin-device.git${TAG}`;
 
             expect(getPkgJson('cordova.plugins')).toBeUndefined();
             expect(getPkgJson(`devDependencies.${pluginId}`)).toBeUndefined();
 
             await cordova.plugin('add', URL, { save: true });
             expect(getPkgJson('cordova.plugins')[pluginId]).toBeDefined();
-            expect(getPkgJson('devDependencies')[pluginId]).toMatch(URL);
+            expect(getPkgJson('devDependencies')[pluginId]).toContain(TAG);
         });
     });
 
@@ -389,7 +390,7 @@ describe('pkgJson', function () {
             }).then(function () {
                 // Expect platforms to be uninstalled & removed from config files
                 expect(getPkgJson('cordova.platforms')).toEqual([]);
-                expect(getPkgJson('devDependencies')).toEqual({});
+                expect(getPkgJson('devDependencies') || {}).toEqual({});
                 expect(getCfg().getEngines()).toEqual([]);
                 expect(installedPlatforms()).toEqual([]);
             });
