@@ -18,6 +18,7 @@
     "detect-indent": "^6.0.0",
     "detect-newline": "^3.1.0",
     "elementtree": "^0.1.7",
+    "underscore": "^1.9.2",
     "execa": "^4.0.3",
     "fs-extra": "^9.0.1",
     "globby": "^11.0.1",
