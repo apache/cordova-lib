@@ -213,7 +213,7 @@ describe('plugin end-to-end', function () {
         const targetVersion = '5.2.2';
         const apiFile = path.join(project, 'platforms/android/cordova/Api.js');
         const apiString = fs.readFileSync(apiFile, 'utf8')
-            .replace(/const VERSION = '9.0.0';/, `const VERSION = '${targetVersion}';`);
+            .replace(/const VERSION = '[^']+';/, `const VERSION = '${targetVersion}';`);
         fs.writeFileSync(apiFile, apiString, 'utf8');
 
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin)
