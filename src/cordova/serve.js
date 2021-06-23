@@ -21,7 +21,6 @@ const url = require('url');
 const path = require('path');
 const globby = require('globby');
 const md5File = require('md5-file');
-const { template, object: zipObject } = require('underscore');
 
 const { ConfigParser, events } = require('cordova-common');
 const cordovaServe = require('cordova-serve');
@@ -32,60 +31,50 @@ const HooksRunner = require('../hooks/HooksRunner');
 
 let projectRoot, installedPlatforms;
 
-const INDEX_TEMPLATE = `
+const renderIndex = ({ config, plugins, platforms }) => `
 <!doctype html>
 <html>
 <head>
     <meta charset=utf-8>
-    <title>{{ metaData.name }}</title>
+    <title>${config.name()}</title>
 </head>
 <body>
     <h3>Package Metadata</h3>
     <table style="text-align: left">
-        {% for (const key in metaData) { %}
-            <tr>
-                <th>{{ key }}</th><td>{{ metaData[key] }}</td>
-            </tr>
-        {% } %}
+    ${['name', 'packageName', 'version'].map(key =>
+        `<tr><th>${key}</th><td>${config[key]()}</td></tr>`
+    ).join('\n')}
     </table>
 
     <h3>Platforms</h3>
     <ul>
-        {% for (const platform of platforms) { %}
-            <li>
-                {% if (platform.url) { %}
-                    <a href="{{ platform.url }}">{{ platform.name }}</a>
-                {% } else { %}
-                    <em>{{ platform.name }}</em>
-                {% } %}
-            </li>
-        {% } %}
+    ${platforms.map(platform =>
+        `<li>${
+            platform.url
+                ? `<a href="${platform.url}">${platform.name}</a>`
+                : `<em>${platform.name}</em>`
+        }</li>`).join('\n')}
     </ul>
 
     <h3>Plugins</h3>
     <ul>
-        {% for (const plugin of plugins) { %}
-            <li>{{ plugin }}</li>
-        {% } %}
+    ${plugins.map(plugin =>
+        `<li>${plugin}</li>`
+    ).join('\n')}
     </ul>
 </body>
 </html>
 `;
-const renderIndex = template(INDEX_TEMPLATE, {
-    escape: /\{\{(.+?)\}\}/g,
-    evaluate: /\{%(.+?)%\}/g
-});
 
 function handleRoot (request, response) {
     const config = new ConfigParser(cordovaUtil.projectConfig(projectRoot));
     const contentNode = config.doc.find('content');
     const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
-    const metaDataKeys = ['name', 'packageName', 'version'];
     const platformUrl = name => installedPlatforms.includes(name)
         ? `${name}/www/${contentSrc}` : null;
 
     response.send(renderIndex({
-        metaData: zipObject(metaDataKeys, metaDataKeys.map(k => config[k]())),
+        config,
         plugins: cordovaUtil.findPlugins(path.join(projectRoot, 'plugins')),
         platforms: Object.keys(platforms).map(name => ({
             name, url: platformUrl(name)

@@ -17,7 +17,6 @@
     under the License.
 */
 
-const { object: zipObject } = require('underscore');
 const cordova_util = require('./util');
 const { CordovaError } = require('cordova-common');
 const knownPlatforms = require('../platforms/platforms');
@@ -37,7 +36,11 @@ module.exports = function check_reqs (platforms) {
 
         return Promise.all(
             normalizedPlatforms.map(getPlatformRequirementsOrError)
-        ).then(results => zipObject(normalizedPlatforms, results));
+        ).then(results =>
+            normalizedPlatforms.reduce((acc, platform, idx) =>
+                Object.assign(acc, { [platform]: results[idx] })
+            , {})
+        );
     });
 };
 
