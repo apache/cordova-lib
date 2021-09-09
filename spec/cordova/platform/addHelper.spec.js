@@ -247,6 +247,21 @@ describe('cordova/platform/addHelper', function () {
                     });
                 });
 
+                it('should use pkgJson version devDependencies, if dependencies are nonempty but do not include the platform', function () {
+                    package_json_mock.dependencies.lorem = {}; // Add some item to dependencies so it's defined but nonempty
+                    package_json_mock.cordova = { platforms: ['ios'] };
+                    package_json_mock.devDependencies.ios = {};
+                    cordova_util.requireNoCache.and.returnValue(package_json_mock);
+                    fs.existsSync.and.callFake(function (filePath) {
+                        return path.basename(filePath) === 'package.json';
+                    });
+                    fs.readFileSync.and.returnValue('{}');
+                    return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function () {
+                        expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
+                        expect(fs.writeFileSync).toHaveBeenCalled();
+                    });
+                });
+
                 it('should only write the package.json file if it was modified', function () {
                     package_json_mock.cordova = { platforms: ['ios'] };
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
