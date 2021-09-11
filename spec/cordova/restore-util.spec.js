@@ -212,6 +212,22 @@ describe('cordova/restore-util', () => {
             });
         });
 
+        it('Test#007 : should find platform spec', () => {
+            setPkgJson('cordova.platforms', ['android']);
+            setPkgJson('devDependencies', {
+                'cordova-android': '1.0.0'
+            });
+
+            return restore.installPlatformsFromConfigXML(['android'], {}).then(() => {
+                expect(cordovaPlatform.add).toHaveBeenCalledWith(
+                    jasmine.anything(),
+                    jasmine.anything(),
+                    ['android@1.0.0'],
+                    jasmine.anything()
+                );
+            });
+        });
+
         it('Test#016 : should restore platforms & plugins and create a missing package.json', () => {
             getCfg()
                 .addEngine(testPlatform)
