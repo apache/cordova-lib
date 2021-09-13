@@ -66,7 +66,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
             return promiseutil.Q_chainmap(targets, function (target) {
                 // For each platform, download it and call its helper script.
-                var pkgJson;
                 var platform;
                 var spec;
                 var parts = target.split('@');
@@ -87,28 +86,13 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         platform = null;
                     }
 
-                    if (fs.existsSync(path.join(projectRoot, 'package.json'))) {
-                        pkgJson = cordova_util.requireNoCache(path.join(projectRoot, 'package.json'));
-                    }
-
                     // If there is no spec specified, try to get spec from package.json
-                    // else, if there is no spec specified, try to get spec from config.xml
-                    if (spec === undefined && pkgJson && pkgJson.dependencies && cmd === 'add') {
-                        if (pkgJson.dependencies['cordova-' + platform]) {
-                            spec = pkgJson.dependencies['cordova-' + platform];
-                        } else if (pkgJson.dependencies[platform]) {
-                            spec = pkgJson.dependencies[platform];
-                        }
+                    if (spec === undefined && cmd === 'add') {
+                        const pkgJson = readPackageJsonIfExists(projectRoot);
+                        spec = getVersionFromPackageJson(platform, pkgJson);
                     }
 
-                    if (spec === undefined && pkgJson && pkgJson.devDependencies && cmd === 'add') {
-                        if (pkgJson.devDependencies['cordova-' + platform]) {
-                            spec = pkgJson.devDependencies['cordova-' + platform];
-                        } else if (pkgJson.devDependencies[platform]) {
-                            spec = pkgJson.devDependencies[platform];
-                        }
-                    }
-
+                    // if we still have no spec, try to get it from config.xml
                     if (platform && spec === undefined && cmd === 'add') {
                         events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                         spec = module.exports.getVersionFromConfigFile(platform, cfg);
@@ -255,6 +239,18 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
         }).then(function () {
             return hooksRunner.fire('after_platform_' + cmd, opts);
         });
+}
+
+function readPackageJsonIfExists (packageDir) {
+    const pkgJsonPath = path.join(packageDir, 'package.json');
+    return fs.existsSync(pkgJsonPath)
+        ? cordova_util.requireNoCache(pkgJsonPath)
+        : undefined;
+}
+
+function getVersionFromPackageJson (platform, { dependencies, devDependencies } = {}) {
+    const deps = { ...dependencies, ...devDependencies };
+    return deps[`cordova-${platform}`] || deps[platform];
 }
 
 function getVersionFromConfigFile (platform, cfg) {
