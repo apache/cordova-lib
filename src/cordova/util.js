@@ -304,6 +304,8 @@ function isDirectory (dir) {
 function getPlatformApiFunction (dir, platform) {
     let PlatformApi;
     try {
+        // First try to load the platform API from the platform project
+        // This is necessary to support older platform API versions
         PlatformApi = exports.requireNoCache(dir);
     } catch (err) {
         try {
@@ -312,6 +314,7 @@ function getPlatformApiFunction (dir, platform) {
                 cdvPlatform = `cordova-${platform}`;
             }
 
+            // Load the platform API directly from node_modules
             PlatformApi = exports.requireNoCache(cdvPlatform);
         } catch (err) {
             // Module not found or threw error during loading
