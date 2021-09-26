@@ -301,14 +301,26 @@ function isDirectory (dir) {
 
 // Returns the API of the platform contained in `dir`.
 // Potential errors : module isn't found, can't load or doesn't implement the expected interface.
-function getPlatformApiFunction (dir) {
+function getPlatformApiFunction (dir, platform) {
     let PlatformApi;
     try {
+        // First try to load the platform API from the platform project
+        // This is necessary to support older platform API versions
         PlatformApi = exports.requireNoCache(dir);
-    } catch (err) {
-        // Module not found or threw error during loading
-        err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
-        throw err;
+    } catch (loadFromDirError) {
+        events.emit('verbose', `Unable to load Platform API from ${dir}:`);
+        events.emit('verbose', CordovaError.fullStack(loadFromDirError));
+
+        const cdvPlatform = platform.replace(/^(?:cordova-)?/, 'cordova-');
+        try {
+            // Load the platform API directly from node_modules
+            PlatformApi = require(cdvPlatform);
+        } catch (loadByNameError) {
+            events.emit('verbose', `Unable to load module ${cdvPlatform} by name:`);
+            events.emit('verbose', CordovaError.fullStack(loadByNameError));
+
+            throw new CordovaError(`Could not load API for ${platform} project ${dir}`);
+        }
     }
 
     // Module doesn't implement the expected interface
@@ -316,6 +328,6 @@ function getPlatformApiFunction (dir) {
         throw new Error(`The package at "${dir}" does not appear to implement the Cordova Platform API.`);
     }
 
-    events.emit('verbose', 'Platform API successfully found in: ' + dir);
+    events.emit('verbose', `Loaded API for ${platform} project ${dir}`);
     return PlatformApi;
 }
