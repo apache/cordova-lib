@@ -315,7 +315,7 @@ function getPlatformApiFunction (dir, platform) {
             }
 
             // Load the platform API directly from node_modules
-            PlatformApi = exports.requireNoCache(cdvPlatform);
+            PlatformApi = require(cdvPlatform);
         } catch (err) {
             // Module not found or threw error during loading
             err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
