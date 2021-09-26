@@ -224,6 +224,11 @@ describe('util module', function () {
                 expect(events.emit.calls.count()).toBe(1);
                 expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
             });
+
+            it('successfully loads platform Api from node_modules', () => {
+                const Api = util.getPlatformApiFunction(null, 'android');
+                expect(Api).toBe(require('cordova-android'));
+            });
         });
     });
 });
