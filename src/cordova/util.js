@@ -307,15 +307,19 @@ function getPlatformApiFunction (dir, platform) {
         // First try to load the platform API from the platform project
         // This is necessary to support older platform API versions
         PlatformApi = exports.requireNoCache(dir);
-    } catch (err) {
+    } catch (loadFromDirError) {
+        events.emit('verbose', `Unable to load Platform API from ${dir}:`);
+        events.emit('verbose', CordovaError.fullStack(loadFromDirError));
+
+        const cdvPlatform = platform.replace(/^(?:cordova-)?/, 'cordova-');
         try {
             // Load the platform API directly from node_modules
-            const cdvPlatform = platform.replace(/^(?:cordova-)?/, 'cordova-');
             PlatformApi = require(cdvPlatform);
-        } catch (err) {
-            // Module not found or threw error during loading
-            err.message = `Unable to load Platform API from ${dir}:\n${err.message}`;
-            throw err;
+        } catch (loadByNameError) {
+            events.emit('verbose', `Unable to load module ${cdvPlatform} by name:`);
+            events.emit('verbose', CordovaError.fullStack(loadByNameError));
+
+            throw new CordovaError(`Could not load API for ${platform} project ${dir}`);
         }
     }
 
