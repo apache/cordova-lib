@@ -108,7 +108,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
 
     const platformInfo = platformIDs.map(plID => ({
         name: plID,
-        spec: specs[plID]
+        spec: specs[`cordova-${plID}`] || specs[plID]
     }));
 
     let platformName = '';
