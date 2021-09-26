@@ -309,12 +309,8 @@ function getPlatformApiFunction (dir, platform) {
         PlatformApi = exports.requireNoCache(dir);
     } catch (err) {
         try {
-            let cdvPlatform = platform;
-            if (!platform.startsWith('cordova-')) {
-                cdvPlatform = `cordova-${platform}`;
-            }
-
             // Load the platform API directly from node_modules
+            const cdvPlatform = platform.replace(/^(?:cordova-)?/, 'cordova-');
             PlatformApi = require(cdvPlatform);
         } catch (err) {
             // Module not found or threw error during loading
