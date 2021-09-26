@@ -20,7 +20,6 @@
 var path = require('path');
 var fs = require('fs-extra');
 var util = require('../../src/cordova/util');
-var events = require('../../cordova-lib').events;
 var helpers = require('../helpers');
 
 var cwd = process.cwd();
@@ -217,12 +216,9 @@ describe('util module', function () {
             it('Test 030 : successfully find platform Api', function () {
                 const FIXTURE_PROJECT = path.join(__dirname, 'fixtures/projects/platformApi/');
                 const API_PATH = path.join(FIXTURE_PROJECT, 'platforms/windows/cordova/Api.js');
-                spyOn(events, 'emit');
 
-                util.getPlatformApiFunction(API_PATH, 'cordova-platform-fixture');
-
-                expect(events.emit.calls.count()).toBe(1);
-                expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
+                const Api = util.getPlatformApiFunction(API_PATH, 'windows');
+                expect(Api.createPlatform().platform).toBe('windows');
             });
 
             it('successfully loads platform Api from node_modules', () => {

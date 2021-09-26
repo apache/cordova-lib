@@ -328,6 +328,6 @@ function getPlatformApiFunction (dir, platform) {
         throw new Error(`The package at "${dir}" does not appear to implement the Cordova Platform API.`);
     }
 
-    events.emit('verbose', 'Platform API successfully found in: ' + dir);
+    events.emit('verbose', `Loaded API for ${platform} project ${dir}`);
     return PlatformApi;
 }

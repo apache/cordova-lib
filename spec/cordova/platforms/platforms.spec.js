@@ -62,7 +62,7 @@ describe('platforms/platforms', () => {
             expect(platformApi).toBeDefined();
             expect(platformApi.platform).toEqual('windows');
             expect(events.emit.calls.count()).toEqual(1);
-            expect(events.emit.calls.argsFor(0)[1]).toMatch('Platform API successfully found in:');
+            expect(events.emit.calls.argsFor(0)[1]).toMatch('Loaded API for windows project');
             expect(util.convertToRealPathSafe.calls.count()).toEqual(1);
             expect(util.isCordova.calls.count()).toEqual(0);
             expect(util.requireNoCache.calls.count()).toEqual(1);
