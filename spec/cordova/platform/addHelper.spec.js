@@ -216,6 +216,21 @@ describe('cordova/platform/addHelper', function () {
             });
 
             describe('if the project contains a package.json', function () {
+                it('should use getVersionFromPackageJson to determine platform version', async () => {
+                    const getVersionFromPackageJson = jasmine.createSpy('getVersionFromPackageJson')
+                        .and.returnValue('1.2.3');
+
+                    platform_addHelper.__set__({
+                        getVersionFromPackageJson,
+                        readPackageJsonIfExists: () => package_json_mock
+                    });
+
+                    await platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true });
+
+                    expect(getVersionFromPackageJson).toHaveBeenCalledWith('ios', package_json_mock);
+                    expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
+                });
+
                 it('should write out the platform just added/updated to the cordova.platforms property of package.json', function () {
                     fs.readFileSync.and.returnValue('file');
                     fs.existsSync.and.callFake(function (filePath) {
@@ -228,36 +243,6 @@ describe('cordova/platform/addHelper', function () {
                     package_json_mock.cordova = { platforms: ['ios'] };
                     cordova_util.requireNoCache.and.returnValue(package_json_mock);
                     return platform_addHelper('add', hooks_mock, projectRoot, ['android'], { save: true, restoring: true }).then(function (result) {
-                        expect(fs.writeFileSync).toHaveBeenCalled();
-                    });
-                });
-
-                it('should use pkgJson version devDependencies, if dependencies are undefined', function () {
-                    package_json_mock.dependencies = undefined;
-                    package_json_mock.cordova = { platforms: ['ios'] };
-                    package_json_mock.devDependencies.ios = {};
-                    cordova_util.requireNoCache.and.returnValue(package_json_mock);
-                    fs.existsSync.and.callFake(function (filePath) {
-                        return path.basename(filePath) === 'package.json';
-                    });
-                    fs.readFileSync.and.returnValue('{}');
-                    return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function () {
-                        expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
-                        expect(fs.writeFileSync).toHaveBeenCalled();
-                    });
-                });
-
-                it('should use pkgJson version devDependencies, if dependencies are nonempty but do not include the platform', function () {
-                    package_json_mock.dependencies.lorem = {}; // Add some item to dependencies so it's defined but nonempty
-                    package_json_mock.cordova = { platforms: ['ios'] };
-                    package_json_mock.devDependencies.ios = {};
-                    cordova_util.requireNoCache.and.returnValue(package_json_mock);
-                    fs.existsSync.and.callFake(function (filePath) {
-                        return path.basename(filePath) === 'package.json';
-                    });
-                    fs.readFileSync.and.returnValue('{}');
-                    return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { save: true, restoring: true }).then(function () {
-                        expect(platform_addHelper.getVersionFromConfigFile).not.toHaveBeenCalled();
                         expect(fs.writeFileSync).toHaveBeenCalled();
                     });
                 });
@@ -385,6 +370,39 @@ describe('cordova/platform/addHelper', function () {
                 const installOptions = plugman.install.calls.argsFor(0)[4];
                 expect(installOptions.cli_variables).toBe(variables);
             });
+        });
+    });
+
+    describe('getVersionFromPackageJson', () => {
+        let getVersionFromPackageJson;
+        beforeEach(() => {
+            getVersionFromPackageJson = platform_addHelper.__get__('getVersionFromPackageJson');
+        });
+
+        it('gets the platform version from dependencies or devDependencies, preferring the latter', () => {
+            const pkgJson = {
+                dependencies: {
+                    'cordova-ios': '1.2.3-ios',
+                    'cordova-android': '1.2.3-android'
+                },
+                devDependencies: { 'cordova-ios': '1.2.3-ios.dev' }
+            };
+            expect(getVersionFromPackageJson('android', pkgJson)).toBe('1.2.3-android');
+            expect(getVersionFromPackageJson('ios', pkgJson)).toBe('1.2.3-ios.dev');
+            expect(getVersionFromPackageJson('osx', pkgJson)).toBeUndefined();
+        });
+
+        it('gets the platform version given either long or short name', () => {
+            const pkgJson = {
+                devDependencies: { 'cordova-ios': '1.2.3-ios.dev' }
+            };
+            expect(getVersionFromPackageJson('ios', pkgJson)).toBe('1.2.3-ios.dev');
+            expect(getVersionFromPackageJson('cordova-ios', pkgJson)).toBe('1.2.3-ios.dev');
+        });
+
+        it('handles empty package.json objects', () => {
+            expect(getVersionFromPackageJson('ios', undefined)).toBeUndefined();
+            expect(getVersionFromPackageJson('ios', {})).toBeUndefined();
         });
     });
 });
