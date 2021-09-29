@@ -2,7 +2,7 @@
     "ios": {
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-ios.git",
-        "version": "^6.1.0",
+        "version": "^6.2.0",
         "deprecated": false
     },
     "osx": {
@@ -13,7 +13,7 @@
     },
     "android": {
         "url": "https://github.com/apache/cordova-android.git",
-        "version": "^9.0.0",
+        "version": "^9.1.0",
         "deprecated": false
     },
     "windows": {
@@ -31,7 +31,7 @@
     },
     "electron": {
         "url": "https://github.com/apache/cordova-electron.git",
-        "version": "^1.0.0",
+        "version": "^1.1.1",
         "deprecated": false
     }
 }
