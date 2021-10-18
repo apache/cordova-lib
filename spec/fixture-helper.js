@@ -45,7 +45,7 @@ module.exports = function fixtureHelper (tmpDir) {
             const appPath = path.join(fixturesBaseDir, 'android-app');
 
             // We need to provide a ConfigParser instance to createPlatform :(
-            const cfgXmlPath = require.resolve('cordova-android/bin/templates/project/res/xml/config.xml');
+            const cfgXmlPath = require.resolve('cordova-android/templates/project/res/xml/config.xml');
             const config = new ConfigParser(cfgXmlPath);
 
             // Create the app folder and return its path
