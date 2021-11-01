@@ -15,12 +15,12 @@
     under the License.
 */
 
-var rewire = require('rewire');
-var platform = rewire('../../../src/cordova/platform');
-var cordova_util = require('../../../src/cordova/util');
+const rewire = require('rewire');
+const platform = rewire('../../../src/cordova/platform');
+const cordova_util = require('../../../src/cordova/util');
 
 describe('cordova/platform', function () {
-    var projectRoot = 'somepath';
+    const projectRoot = 'somepath';
 
     beforeEach(function () {
         // TODO: if we can change HooksRunner from a prototypal class to a function or object,
@@ -49,19 +49,19 @@ describe('cordova/platform', function () {
             });
         });
         describe('handling of targets parameter', function () {
-            var cmd = 'add';
+            const cmd = 'add';
             beforeEach(function () {
                 spyOn(platform, cmd).and.returnValue(true);
             });
             it('should be able to handle an array of platform targets', function () {
-                var targets = ['nokia brick', 'HAM radio', 'nintendo wii'];
+                const targets = ['nokia brick', 'HAM radio', 'nintendo wii'];
                 return platform(cmd, targets)
                     .then(function () {
                         expect(platform[cmd]).toHaveBeenCalledWith(jasmine.any(Object), projectRoot, targets, jasmine.any(Object));
                     });
             });
             it('should be able to handle a single platform target string', function () {
-                var target = 'motorola razr';
+                const target = 'motorola razr';
                 return platform(cmd, target)
                     .then(function () {
                         expect(platform[cmd]).toHaveBeenCalledWith(jasmine.any(Object), projectRoot, [target], jasmine.any(Object));

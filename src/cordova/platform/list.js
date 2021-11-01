@@ -15,9 +15,9 @@
     under the License.
 */
 
-var events = require('cordova-common').events;
-var cordova_util = require('../util');
-var platforms = require('../../platforms');
+const events = require('cordova-common').events;
+const cordova_util = require('../util');
+const platforms = require('../../platforms');
 
 module.exports = list;
 module.exports.addDeprecatedInformationToPlatforms = addDeprecatedInformationToPlatforms;
@@ -27,14 +27,14 @@ function list (hooksRunner, projectRoot, opts) {
         .then(function () {
             return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
         }).then(function (platformMap) {
-            var platformsText = [];
-            for (var plat in platformMap) {
+            let platformsText = [];
+            for (const plat in platformMap) {
                 platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
             }
 
             platformsText = addDeprecatedInformationToPlatforms(platformsText);
-            var results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
-            var available = platforms.list.filter(platforms.hostSupports);
+            let results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
+            let available = platforms.list.filter(platforms.hostSupports);
 
             available = available.filter(function (p) {
                 return !platformMap[p]; // Only those not already installed.
@@ -55,7 +55,7 @@ function list (hooksRunner, projectRoot, opts) {
 
 function addDeprecatedInformationToPlatforms (platformsList) {
     platformsList = platformsList.map(function (p) {
-        var platformKey = p.split(' ')[0]; // Remove Version Information
+        const platformKey = p.split(' ')[0]; // Remove Version Information
         // allow for 'unknown' platforms, which will not exist in platforms
         if ((platforms.info[platformKey] || {}).deprecated) {
             p = p.concat(' ', '(deprecated)');

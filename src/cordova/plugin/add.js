@@ -17,22 +17,22 @@
     under the License.
 */
 
-var cordova_util = require('../util');
-var plugin_util = require('./util');
-var cordova_pkgJson = require('../../../package.json');
-var pluginSpec = require('./plugin_spec_parser');
-var plugman = require('../../plugman/plugman');
-var chainMap = require('../../util/promise-util').Q_chainmap;
-var ConfigParser = require('cordova-common').ConfigParser;
-var CordovaError = require('cordova-common').CordovaError;
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var events = require('cordova-common').events;
-var path = require('path');
-var fs = require('fs-extra');
-var semver = require('semver');
-var url = require('url');
-var detectIndent = require('detect-indent');
-var preparePlatforms = require('../prepare/platforms');
+const cordova_util = require('../util');
+const plugin_util = require('./util');
+const cordova_pkgJson = require('../../../package.json');
+const pluginSpec = require('./plugin_spec_parser');
+const plugman = require('../../plugman/plugman');
+const chainMap = require('../../util/promise-util').Q_chainmap;
+const ConfigParser = require('cordova-common').ConfigParser;
+const CordovaError = require('cordova-common').CordovaError;
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const events = require('cordova-common').events;
+const path = require('path');
+const fs = require('fs-extra');
+const semver = require('semver');
+const url = require('url');
+const detectIndent = require('detect-indent');
+const preparePlatforms = require('../prepare/platforms');
 
 module.exports = add;
 module.exports.determinePluginTarget = determinePluginTarget;
@@ -48,14 +48,14 @@ function add (projectRoot, hooksRunner, opts) {
     if (!opts.plugins || !opts.plugins.length) {
         return Promise.reject(new CordovaError('No plugin specified. Please specify a plugin to add.'));
     }
-    var pluginInfo;
-    var shouldRunPrepare = false;
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var platformList = cordova_util.listPlatforms(projectRoot);
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+    let pluginInfo;
+    let shouldRunPrepare = false;
+    const pluginPath = path.join(projectRoot, 'plugins');
+    const platformList = cordova_util.listPlatforms(projectRoot);
+    const xml = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(xml);
 
-    var searchPath = opts.searchpath;
+    let searchPath = opts.searchpath;
     if (typeof searchPath === 'string') {
         searchPath = searchPath.split(path.delimiter);
     }
@@ -67,7 +67,7 @@ function add (projectRoot, hooksRunner, opts) {
     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
     return hooksRunner.fire('before_plugin_add', opts)
         .then(function () {
-            var pluginInfoProvider = new PluginInfoProvider();
+            const pluginInfoProvider = new PluginInfoProvider();
             return opts.plugins.reduce(function (soFar, target) {
                 return soFar.then(function () {
                     if (target[target.length - 1] === path.sep) {
@@ -75,7 +75,7 @@ function add (projectRoot, hooksRunner, opts) {
                     }
 
                     // Fetch the plugin first.
-                    var fetchOptions = {
+                    const fetchOptions = {
                         searchpath: searchPath,
                         noregistry: opts.noregistry,
                         save: opts.save,
@@ -103,8 +103,8 @@ function add (projectRoot, hooksRunner, opts) {
 
                     // Iterate (in serial!) over all platforms in the project and install the plugin.
                     return chainMap(platformList, function (platform) {
-                        var platformRoot = path.join(projectRoot, 'platforms', platform);
-                        var options = {
+                        const platformRoot = path.join(projectRoot, 'platforms', platform);
+                        const options = {
                             cli_variables: opts.cli_variables || {},
                             save: opts.save,
                             searchpath: searchPath,
@@ -132,8 +132,8 @@ function add (projectRoot, hooksRunner, opts) {
                     })
                         .then(_ => pluginInfo);
                 }).then(function (pluginInfo) {
-                    var pkgJson;
-                    var pkgJsonPath = path.join(projectRoot, 'package.json');
+                    let pkgJson;
+                    const pkgJsonPath = path.join(projectRoot, 'package.json');
 
                     // save to package.json
                     if (opts.save) {
@@ -152,20 +152,20 @@ function add (projectRoot, hooksRunner, opts) {
                             events.emit('log', 'Adding ' + pluginInfo.id + ' to package.json');
 
                             // Write to package.json
-                            var file = fs.readFileSync(pkgJsonPath, 'utf8');
-                            var indent = detectIndent(file).indent || '  ';
+                            const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                            const indent = detectIndent(file).indent || '  ';
                             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                         }
 
-                        var src = module.exports.parseSource(target, opts);
-                        var attributes = {
+                        const src = module.exports.parseSource(target, opts);
+                        const attributes = {
                             name: pluginInfo.id
                         };
 
                         if (src) {
                             attributes.spec = src;
                         } else {
-                            var ver = '~' + pluginInfo.version;
+                            const ver = '~' + pluginInfo.version;
                             if (pkgJson && pkgJson.dependencies && pkgJson.dependencies[pluginInfo.id]) {
                                 attributes.spec = pkgJson.dependencies[pluginInfo.id];
                             } else if (pkgJson && pkgJson.devDependencies && pkgJson.devDependencies[pluginInfo.id]) {
@@ -193,17 +193,17 @@ function add (projectRoot, hooksRunner, opts) {
 }
 
 function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
-    var parsedSpec = pluginSpec.parse(target);
-    var id = parsedSpec.package || target;
+    const parsedSpec = pluginSpec.parse(target);
+    const id = parsedSpec.package || target;
     // CB-10975 We need to resolve relative path to plugin dir from app's root before checking whether if it exists
-    var maybeDir = cordova_util.fixRelativePath(id);
+    const maybeDir = cordova_util.fixRelativePath(id);
     if (parsedSpec.version || cordova_util.isUrl(id) || cordova_util.isDirectory(maybeDir)) {
         return Promise.resolve(target);
     }
     // Require project pkgJson.
-    var pkgJson;
-    var pkgJsonPath = path.join(projectRoot, 'package.json');
-    var cordovaVersion = cordova_pkgJson.version;
+    let pkgJson;
+    const pkgJsonPath = path.join(projectRoot, 'package.json');
+    const cordovaVersion = cordova_pkgJson.version;
     if (fs.existsSync(pkgJsonPath)) {
         pkgJson = cordova_util.requireNoCache(pkgJsonPath);
     }
@@ -261,7 +261,7 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // If no version is given at all and we are fetching from npm, we
     // can attempt to use the Cordova dependencies the plugin lists in
     // their package.json
-    var shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
+    const shouldUseNpmInfo = !fetchOptions.searchpath && !fetchOptions.noregistry;
 
     events.emit('verbose', 'No version for ' + parsedSpec.package + ' saved in config.xml or package.json');
     if (shouldUseNpmInfo) {
@@ -273,10 +273,12 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
     // else run `npm info` on the target via registry.info so we could get
     // engines elemenent in package.json. Pass that info to getFetchVersion
     // which determines the correct plugin to fetch based on engines element.
-    return (shouldUseNpmInfo ? plugin_util.info([id])
-        .then(function (pluginInfo) {
-            return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
-        }) : Promise.resolve(null))
+    return (shouldUseNpmInfo
+        ? plugin_util.info([id])
+            .then(function (pluginInfo) {
+                return module.exports.getFetchVersion(projectRoot, pluginInfo, cordovaVersion);
+            })
+        : Promise.resolve(null))
         .then(function (fetchVersion) {
             return fetchVersion ? (id + '@' + fetchVersion) : target;
         });
@@ -288,7 +290,7 @@ function parseSource (target, opts) {
     if (uri.protocol && uri.protocol !== 'file:' && uri.protocol[1] !== ':' && !target.match(/^\w+:\\/)) {
         return target;
     } else {
-        var plugin_dir = cordova_util.fixRelativePath(path.join(target, (opts.subdir || '.')));
+        const plugin_dir = cordova_util.fixRelativePath(path.join(target, (opts.subdir || '.')));
         if (fs.existsSync(plugin_dir)) {
             return target;
         }
@@ -297,8 +299,8 @@ function parseSource (target, opts) {
 }
 
 function getVersionFromConfigFile (plugin, cfg) {
-    var parsedSpec = pluginSpec.parse(plugin);
-    var pluginEntry = cfg.getPlugin(parsedSpec.id);
+    const parsedSpec = pluginSpec.parse(plugin);
+    const pluginEntry = cfg.getPlugin(parsedSpec.id);
 
     return pluginEntry && pluginEntry.spec;
 }
@@ -328,8 +330,8 @@ function getFetchVersion (projectRoot, pluginInfo, cordovaVersion) {
     // Figure out the project requirements
     if (pluginInfo.engines && pluginInfo.engines.cordovaDependencies) {
         // grab array of already installed plugins
-        var pluginList = plugin_util.getInstalledPlugins(projectRoot);
-        var pluginMap = {};
+        const pluginList = plugin_util.getInstalledPlugins(projectRoot);
+        const pluginMap = {};
         pluginList.forEach(function (plugin) {
             pluginMap[plugin.id] = plugin.version;
         });
@@ -349,7 +351,7 @@ function getFetchVersion (projectRoot, pluginInfo, cordovaVersion) {
 }
 
 // For upper bounds in cordovaDependencies
-var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
+const UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
 /*
  * The engine entry maps plugin versions to constraints like so:
  *  {
@@ -367,33 +369,33 @@ var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
  * See cordova-spec/plugin_fetch.spec.js for test cases and examples
  */
 function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cordovaVersion) {
-    var allVersions = pluginInfo.versions;
-    var engine = pluginInfo.engines.cordovaDependencies;
-    var name = pluginInfo.name;
+    const allVersions = pluginInfo.versions;
+    const engine = pluginInfo.engines.cordovaDependencies;
+    const name = pluginInfo.name;
 
     // Filters out pre-release versions
-    var latest = semver.maxSatisfying(allVersions, '>=0.0.0');
+    const latest = semver.maxSatisfying(allVersions, '>=0.0.0');
 
-    var versions = [];
-    var upperBound = null;
-    var upperBoundRange = null;
-    var upperBoundExists = false;
+    const versions = [];
+    let upperBound = null;
+    let upperBoundRange = null;
+    let upperBoundExists = false;
 
     // TODO: lots of 'versions' being thrown around in this function: cordova version,
     // platform version, plugin version. The below for loop: what version is it
     // iterating over? plugin version? please clarify the variable name.
-    for (var version in engine) {
+    for (const version in engine) {
         // if a single version && less than latest
         if (semver.valid(semver.clean(version)) && semver.lte(version, latest)) {
             versions.push(version);
         } else {
             // Check if this is an upperbound; validRange() handles whitespace
-            var cleanedRange = semver.validRange(version);
+            const cleanedRange = semver.validRange(version);
             if (cleanedRange && UPPER_BOUND_REGEX.exec(cleanedRange)) {
                 upperBoundExists = true;
                 // We only care about the highest upper bound that our project does not support
                 if (module.exports.getFailedRequirements(engine[version], pluginMap, platformMap, cordovaVersion).length !== 0) {
-                    var maxMatchingUpperBound = cleanedRange.substring(1);
+                    const maxMatchingUpperBound = cleanedRange.substring(1);
                     if (maxMatchingUpperBound && (!upperBound || semver.gt(maxMatchingUpperBound, upperBound))) {
                         upperBound = maxMatchingUpperBound;
                         upperBoundRange = version;
@@ -421,7 +423,7 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
     // needs a 1.0.0 entry that has the same engine as 0.0.0
     if (upperBound && !module.exports.findVersion(versions, upperBound) && !semver.gt(upperBound, latest)) {
         versions.push(upperBound);
-        var below = semver.maxSatisfying(versions, upperBoundRange);
+        let below = semver.maxSatisfying(versions, upperBoundRange);
 
         // Get the original entry without trimmed whitespace
         below = below ? module.exports.findVersion(versions, below) : null;
@@ -431,7 +433,7 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
     // Sort in descending order; we want to start at latest and work back
     versions.sort(semver.rcompare);
 
-    for (var i = 0; i < versions.length; i++) {
+    for (let i = 0; i < versions.length; i++) {
         if (upperBound && semver.lt(versions[i], upperBound)) {
             // Because we sorted in desc. order, if the upper bound we found
             // applies to this version (and thus the ones below) we can just
@@ -439,14 +441,14 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
             break;
         }
 
-        var range = i ? ('>=' + versions[i] + ' <' + versions[i - 1]) : ('>=' + versions[i]);
-        var maxMatchingVersion = semver.maxSatisfying(allVersions, range);
+        const range = i ? ('>=' + versions[i] + ' <' + versions[i - 1]) : ('>=' + versions[i]);
+        const maxMatchingVersion = semver.maxSatisfying(allVersions, range);
 
         if (maxMatchingVersion && module.exports.getFailedRequirements(engine[versions[i]], pluginMap, platformMap, cordovaVersion).length === 0) {
             // Because we sorted in descending order, we can stop searching once
             // we hit a satisfied constraint
             if (maxMatchingVersion !== latest) {
-                var failedReqs = module.exports.getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion);
+                const failedReqs = module.exports.getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion);
 
                 // Warn the user that we are not fetching latest
                 module.exports.listUnmetRequirements(name, failedReqs);
@@ -458,14 +460,14 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
 
     // No version of the plugin is satisfied. In this case, we fall back to
     // fetching the latest version, but also output a warning
-    var latestFailedReqs = versions.length > 0 ? module.exports.getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion) : [];
+    const latestFailedReqs = versions.length > 0 ? module.exports.getFailedRequirements(engine[versions[0]], pluginMap, platformMap, cordovaVersion) : [];
 
     // If the upper bound is greater than latest, we need to combine its engine
     // requirements with latest to print out in the warning
     if (upperBound && semver.satisfies(latest, upperBoundRange)) {
-        var upperFailedReqs = module.exports.getFailedRequirements(engine[upperBoundRange], pluginMap, platformMap, cordovaVersion);
+        const upperFailedReqs = module.exports.getFailedRequirements(engine[upperBoundRange], pluginMap, platformMap, cordovaVersion);
         upperFailedReqs.forEach(function (failedReq) {
-            for (var i = 0; i < latestFailedReqs.length; i++) {
+            for (let i = 0; i < latestFailedReqs.length; i++) {
                 if (latestFailedReqs[i].dependency === failedReq.dependency) {
                     // Not going to overcomplicate things and actually merge the ranges
                     latestFailedReqs[i].required += ' AND ' + failedReq.required;
@@ -493,18 +495,18 @@ function determinePluginVersionToFetch (pluginInfo, pluginMap, platformMap, cord
  * cordovaVersion - version of cordova being used
  */
 function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
-    var failed = [];
-    var version = cordovaVersion;
+    const failed = [];
+    let version = cordovaVersion;
     if (semver.prerelease(version)) {
         //  semver.inc with 'patch' type removes prereleased tag from version
         version = semver.inc(version, 'patch');
     }
 
-    for (var req in reqs) {
+    for (const req in reqs) {
         if (Object.prototype.hasOwnProperty.call(reqs, req) && typeof req === 'string' && semver.validRange(reqs[req])) {
-            var badInstalledVersion = null;
+            let badInstalledVersion = null;
             // remove potential whitespace
-            var trimmedReq = req.trim();
+            const trimmedReq = req.trim();
 
             if (pluginMap[trimmedReq] && !semver.satisfies(pluginMap[trimmedReq], reqs[req])) {
                 badInstalledVersion = pluginMap[req];
@@ -512,7 +514,7 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
                 badInstalledVersion = cordovaVersion;
             } else if (trimmedReq.indexOf('cordova-') === 0) {
                 // Might be a platform constraint
-                var platform = trimmedReq.substring(8);
+                const platform = trimmedReq.substring(8);
                 if (platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req])) {
                     badInstalledVersion = platformMap[platform];
                 }
@@ -536,8 +538,8 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
 // return the version if it is in the versions array
 // return null if the version doesn't exist in the array
 function findVersion (versions, version) {
-    var cleanedVersion = semver.clean(version);
-    for (var i = 0; i < versions.length; i++) {
+    const cleanedVersion = semver.clean(version);
+    for (let i = 0; i < versions.length; i++) {
         if (semver.clean(versions[i]) === cleanedVersion) {
             return versions[i];
         }

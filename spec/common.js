@@ -17,7 +17,7 @@
     under the License.
 */
 
-var common = {};
+let common = {};
 
 module.exports = common = {
     spy: {

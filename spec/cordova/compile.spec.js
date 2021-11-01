@@ -16,20 +16,20 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../../src/cordova/cordova');
-var platforms = require('../../src/platforms/platforms');
-var HooksRunner = require('../../src/hooks/HooksRunner');
-var util = require('../../src/cordova/util');
+const cordova = require('../../src/cordova/cordova');
+const platforms = require('../../src/platforms/platforms');
+const HooksRunner = require('../../src/hooks/HooksRunner');
+const util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
+const supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
 
 describe('compile command', function () {
-    var is_cordova;
-    var list_platforms;
-    var fire;
-    var platformApi;
-    var getPlatformApi;
-    var project_dir = '/some/path';
+    let is_cordova;
+    let list_platforms;
+    let fire;
+    let platformApi;
+    let getPlatformApi;
+    const project_dir = '/some/path';
 
     beforeEach(function () {
         is_cordova = spyOn(util, 'isCordova').and.returnValue(project_dir);

@@ -17,28 +17,28 @@
  under the License.
  */
 
-var cordova = require('../../src/cordova/cordova');
-var path = require('path');
+const cordova = require('../../src/cordova/cordova');
+const path = require('path');
 
 describe('retrieval of project metadata', function () {
-    var projectRoot = path.resolve(__dirname, 'fixtures/projects/ProjectMetadata');
+    const projectRoot = path.resolve(__dirname, 'fixtures/projects/ProjectMetadata');
 
     it('Test 001 : retrieve platforms saved in config.xml', function () {
-        var androidVersion = '3.7.1';
-        var browserSrc = 'https://github.com/apache/cordova-browser.git';
+        const androidVersion = '3.7.1';
+        const browserSrc = 'https://github.com/apache/cordova-browser.git';
 
         return cordova.projectMetadata.getPlatforms(projectRoot)
             .then(function (platforms) {
                 expect(platforms.length).toBe(2);
 
                 // Android platform has version defined in deprecated version field - should still work.
-                var androidPlatform = findPlatform(platforms, 'android');
+                const androidPlatform = findPlatform(platforms, 'android');
                 expect(androidPlatform).not.toBeNull();
                 expect(androidPlatform.version).toBe(androidVersion);
                 expect(androidPlatform.src).toBeUndefined();
 
                 // Browser platform has source defined in the spec field.
-                var browserPlatform = findPlatform(platforms, 'browser');
+                const browserPlatform = findPlatform(platforms, 'browser');
                 expect(browserPlatform).not.toBeNull();
                 expect(browserPlatform.version).toBeUndefined();
                 expect(browserPlatform.src).toBe(browserSrc);
@@ -46,51 +46,51 @@ describe('retrieval of project metadata', function () {
     });
 
     it('Test 002 : retrieve plugins saved in config.xml', function () {
-        var deviceId = 'org.apache.cordova.device';
-        var deviceVersion = '0.3.0';
+        const deviceId = 'org.apache.cordova.device';
+        const deviceVersion = '0.3.0';
 
-        var cameraId = 'org.apache.cordova.camera';
-        var cameraSrc = 'https://github.com/apache/cordova-plugin-camera.git';
-        var cameraVariableName = 'TEST_VARIABLE';
-        var cameraVariableValue = 'My Test Variable';
+        const cameraId = 'org.apache.cordova.camera';
+        const cameraSrc = 'https://github.com/apache/cordova-plugin-camera.git';
+        const cameraVariableName = 'TEST_VARIABLE';
+        const cameraVariableValue = 'My Test Variable';
 
-        var fileId = 'org.apache.cordova.file';
-        var fileSource = 'https://github.com/apache/cordova-plugin-file.git';
+        const fileId = 'org.apache.cordova.file';
+        const fileSource = 'https://github.com/apache/cordova-plugin-file.git';
 
         return cordova.projectMetadata.getPlugins(projectRoot)
             .then(function (plugins) {
                 expect(plugins.length).toBe(3);
 
                 // Device plugin uses current spec attribute to specify version - should be returned in version field.
-                var devicePlugin = findPlugin(plugins, deviceId);
+                const devicePlugin = findPlugin(plugins, deviceId);
                 expect(devicePlugin).not.toBeNull();
                 expect(devicePlugin.version).toBe(deviceVersion);
                 expect(devicePlugin.src).toBeUndefined();
 
-                var deviceVariables = devicePlugin.variables;
+                const deviceVariables = devicePlugin.variables;
                 expect(deviceVariables).not.toBeNull();
                 expect(Array.isArray(deviceVariables)).toBeTruthy();
                 expect(deviceVariables.length).toBe(0);
 
                 // Camera plugin uses deprecated src attribute - still should work.
-                var cameraPlugin = findPlugin(plugins, cameraId);
+                const cameraPlugin = findPlugin(plugins, cameraId);
                 expect(cameraPlugin).not.toBeNull();
                 expect(cameraPlugin.src).toBe(cameraSrc);
                 expect(cameraPlugin.version).toBeUndefined();
 
-                var cameraVariables = cameraPlugin.variables;
+                const cameraVariables = cameraPlugin.variables;
                 expect(cameraVariables).not.toBeNull();
                 expect(cameraVariables.length).toBe(1);
                 expect(cameraVariables[0].name).toBe(cameraVariableName);
                 expect(cameraVariables[0].value).toBe(cameraVariableValue);
 
                 // File plugin uses deprecated src and version attributes - version should be ignored.
-                var filePlugin = findPlugin(plugins, fileId);
+                const filePlugin = findPlugin(plugins, fileId);
                 expect(filePlugin).not.toBeNull();
                 expect(filePlugin.version).toBeUndefined();
                 expect(filePlugin.src).toBe(fileSource);
 
-                var fileVariables = filePlugin.variables;
+                const fileVariables = filePlugin.variables;
                 expect(fileVariables).not.toBeNull();
                 expect(Array.isArray(fileVariables)).toBeTruthy();
                 expect(fileVariables.length).toBe(0);
@@ -99,7 +99,7 @@ describe('retrieval of project metadata', function () {
 });
 
 function findPlatform (platforms, platformName) {
-    for (var i = 0; i < platforms.length; i++) {
+    for (let i = 0; i < platforms.length; i++) {
         if (platforms[i].name === platformName) {
             return platforms[i];
         }
@@ -108,7 +108,7 @@ function findPlatform (platforms, platformName) {
 }
 
 function findPlugin (plugins, pluginId) {
-    for (var i = 0; i < plugins.length; i++) {
+    for (let i = 0; i < plugins.length; i++) {
         if (plugins[i].name === pluginId) {
             return plugins[i];
         }

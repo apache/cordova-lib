@@ -17,18 +17,18 @@
     under the License.
 */
 
-var os = require('os');
-var path = require('path');
-var fs = require('fs-extra');
-var rewire = require('rewire');
-var events = require('cordova-common').events;
+const os = require('os');
+const path = require('path');
+const fs = require('fs-extra');
+const rewire = require('rewire');
+const events = require('cordova-common').events;
 
-var util = require('../../../src/cordova/util');
-var platforms = rewire('../../../src/platforms/platforms');
+const util = require('../../../src/cordova/util');
+const platforms = rewire('../../../src/platforms/platforms');
 
-var CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
-var PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
-var PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
+const CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
+const PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
+const PLATFORM_SYMLINK = path.join(os.tmpdir(), 'cordova_windows_symlink');
 
 describe('platforms/platforms', () => {
     it('should have getPlatformApi function as a property', function () {
@@ -43,7 +43,7 @@ describe('platforms/platforms', () => {
     });
 
     describe('getPlatformApi method', function () {
-        var isCordova;
+        let isCordova;
 
         beforeEach(function () {
             // reset api cache after each spec
@@ -58,7 +58,7 @@ describe('platforms/platforms', () => {
             spyOn(events, 'emit').and.returnValue(true);
             spyOn(util, 'convertToRealPathSafe').and.callThrough();
             spyOn(util, 'requireNoCache').and.callThrough();
-            var platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
+            const platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
             expect(platformApi).toBeDefined();
             expect(platformApi.platform).toEqual('windows');
             expect(events.emit.calls.count()).toEqual(1);
@@ -70,14 +70,14 @@ describe('platforms/platforms', () => {
         });
 
         it('should cache PlatformApi instance for further calls', function () {
-            var platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
+            const platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
             expect(platformApi.fakeProperty).not.toBeDefined();
             platformApi.fakeProperty = 'fakeValue';
             expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty).toBe('fakeValue');
         });
 
         it('should resolve symlinks before creating an instance', function () {
-            var platformApi = platforms.getPlatformApi('windows', PLATFORM_SYMLINK);
+            const platformApi = platforms.getPlatformApi('windows', PLATFORM_SYMLINK);
             expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API)).toBe(platformApi);
         });
 
@@ -87,7 +87,7 @@ describe('platforms/platforms', () => {
         });
 
         it('should succeed if called inside of cordova project w/out platformRoot param', function () {
-            var platformApi = platforms.getPlatformApi('windows');
+            const platformApi = platforms.getPlatformApi('windows');
             expect(platformApi).toBeDefined();
             expect(platformApi.platform).toEqual('windows');
         });

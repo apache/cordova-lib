@@ -17,7 +17,7 @@
     under the License.
 */
 
-var platform = require('./platform');
+const platform = require('./platform');
 
 module.exports = function (args) {
     return platform[args.operation](args.platform_name);

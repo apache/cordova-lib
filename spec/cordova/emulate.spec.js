@@ -17,14 +17,14 @@
     under the License.
 */
 const rewire = require('rewire');
-var platforms = require('../../src/platforms/platforms');
-var HooksRunner = require('../../src/hooks/HooksRunner');
-var util = require('../../src/cordova/util');
+const platforms = require('../../src/platforms/platforms');
+const HooksRunner = require('../../src/hooks/HooksRunner');
+const util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms);
+const supported_platforms = Object.keys(platforms);
 
 describe('emulate command', function () {
-    var project_dir = '/some/path';
+    const project_dir = '/some/path';
     let cordovaEmulate, cordovaPrepare, platformApi, getPlatformApi;
 
     beforeEach(function () {

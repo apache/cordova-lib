@@ -17,16 +17,16 @@
     under the License.
 */
 
-var PluginInfo = require('cordova-common').PluginInfo;
-var events = require('cordova-common').events;
+const PluginInfo = require('cordova-common').PluginInfo;
+const events = require('cordova-common').events;
 const pify = require('pify');
 const initPkgJson = pify(require('init-package-json'));
 
 // returns a promise
 function createPackageJson (plugin_path) {
-    var pluginInfo = new PluginInfo(plugin_path);
+    const pluginInfo = new PluginInfo(plugin_path);
 
-    var defaults = {
+    const defaults = {
         id: pluginInfo.id,
         version: pluginInfo.version,
         description: pluginInfo.description,
@@ -37,7 +37,7 @@ function createPackageJson (plugin_path) {
         platforms: pluginInfo.getPlatformsArray()
     };
 
-    var initFile = require.resolve('./init-defaults');
+    const initFile = require.resolve('./init-defaults');
     return initPkgJson(plugin_path, initFile, defaults)
         .then(_ => {
             events.emit('verbose', 'Package.json successfully created');

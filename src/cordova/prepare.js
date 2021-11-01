@@ -17,29 +17,29 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var platforms = require('../platforms/platforms');
-var HooksRunner = require('../hooks/HooksRunner');
-var restore = require('./restore-util');
-var path = require('path');
+const cordova_util = require('./util');
+const platforms = require('../platforms/platforms');
+const HooksRunner = require('../hooks/HooksRunner');
+const restore = require('./restore-util');
+const path = require('path');
 
 exports = module.exports = prepare;
 module.exports.preparePlatforms = require('./prepare/platforms');
 
 function prepare (options) {
     return Promise.resolve().then(function () {
-        var projectRoot = cordova_util.cdProjectRoot();
+        const projectRoot = cordova_util.cdProjectRoot();
         options = options || { verbose: false, platforms: [], options: {} };
         options.save = options.save || false;
-        var hooksRunner = new HooksRunner(projectRoot);
+        const hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_prepare', options)
             .then(function () {
                 return restore.installPlatformsFromConfigXML(options.platforms, { searchpath: options.searchpath, restoring: true });
             })
             .then(function () {
                 options = cordova_util.preProcessOptions(options);
-                var paths = options.platforms.map(function (p) {
-                    var platform_path = path.join(projectRoot, 'platforms', p);
+                const paths = options.platforms.map(function (p) {
+                    const platform_path = path.join(projectRoot, 'platforms', p);
                     return platforms.getPlatformApi(p, platform_path).getPlatformInfo().locations.www;
                 });
                 options.paths = paths;

@@ -17,14 +17,14 @@
     under the License.
 */
 
-var cordova_events = require('cordova-common').events;
-var cordova_util = require('./util');
+const cordova_events = require('cordova-common').events;
+const cordova_util = require('./util');
 
-var off = function () {
+const off = function () {
     cordova_events.removeListener.apply(cordova_events, arguments);
 };
 
-var emit = function () {
+const emit = function () {
     cordova_events.emit.apply(cordova_events, arguments);
 };
 

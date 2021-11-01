@@ -17,9 +17,9 @@
     under the License.
 */
 
-var cordova_util = require('../util');
-var CordovaError = require('cordova-common').CordovaError;
-var HooksRunner = require('../../hooks/HooksRunner');
+const cordova_util = require('../util');
+const CordovaError = require('cordova-common').CordovaError;
+const HooksRunner = require('../../hooks/HooksRunner');
 
 module.exports = plugin;
 module.exports.add = require('./add');
@@ -30,7 +30,7 @@ function plugin (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
     // would result in promise rejection instead of uncaught exception
     return Promise.resolve().then(function () {
-        var projectRoot = cordova_util.cdProjectRoot();
+        const projectRoot = cordova_util.cdProjectRoot();
 
         // Dance with all the possible call signatures we've come up over the time. They can be:
         // 1. plugin() -> list the plugins
@@ -53,7 +53,7 @@ function plugin (command, targets, opts) {
         opts.options = opts.options || [];
         opts.plugins = [];
 
-        var hooksRunner = new HooksRunner(projectRoot);
+        const hooksRunner = new HooksRunner(projectRoot);
 
         // Massage plugin name(s) / path(s)
         if (!targets || !targets.length) {
@@ -67,7 +67,7 @@ function plugin (command, targets, opts) {
 
         // Split targets between plugins and options
         // Assume everything after a token with a '-' is an option
-        for (var i = 0; i < targets.length; i++) {
+        for (let i = 0; i < targets.length; i++) {
             if (targets[i].match(/^-/)) {
                 opts.options = targets.slice(i);
                 break;

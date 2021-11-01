@@ -18,21 +18,21 @@
 */
 
 const execa = require('execa');
-var path = require('path');
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var CordovaError = require('cordova-common').CordovaError;
-var fetch = require('cordova-fetch');
+const path = require('path');
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
+const CordovaError = require('cordova-common').CordovaError;
+const fetch = require('cordova-fetch');
 
 module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
 module.exports.info = info;
 
 function getInstalledPlugins (projectRoot) {
-    var pluginsDir = path.join(projectRoot, 'plugins');
+    const pluginsDir = path.join(projectRoot, 'plugins');
     // TODO: This should list based off of platform.json, not directories within plugins/
-    var pluginInfoProvider = new PluginInfoProvider();
+    const pluginInfoProvider = new PluginInfoProvider();
     return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
 }
 
@@ -48,16 +48,16 @@ function getInstalledPlugins (projectRoot) {
 
 function mergeVariables (pluginInfo, cfg, opts) {
     // Validate top-level required variables
-    var pluginVariables = pluginInfo.getPreferences();
+    const pluginVariables = pluginInfo.getPreferences();
     opts.cli_variables = opts.cli_variables || {};
-    var pluginEntry = cfg.getPlugin(pluginInfo.id);
+    const pluginEntry = cfg.getPlugin(pluginInfo.id);
     // Get variables from config.xml
-    var configVariables = pluginEntry ? pluginEntry.variables : {};
+    const configVariables = pluginEntry ? pluginEntry.variables : {};
     // Add config variable if it's missing in cli_variables
     Object.keys(configVariables).forEach(function (variable) {
         opts.cli_variables[variable] = opts.cli_variables[variable] || configVariables[variable];
     });
-    var missingVariables = Object.keys(pluginVariables)
+    const missingVariables = Object.keys(pluginVariables)
         .filter(function (variableName) {
             // discard variables with default value
             return !(pluginVariables[variableName] || opts.cli_variables[variableName]);
@@ -66,14 +66,14 @@ function mergeVariables (pluginInfo, cfg, opts) {
     if (missingVariables.length) {
         events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
         fs.removeSync(pluginInfo.dir);
-        var msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
+        const msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
         throw new CordovaError(msg);
     }
     return opts.cli_variables;
 }
 
 function info (plugin) {
-    var viewArgs = ['view'];
+    const viewArgs = ['view'];
     plugin = plugin.shift();
     viewArgs.push(plugin);
     viewArgs.push('--json');
@@ -82,7 +82,7 @@ function info (plugin) {
         .then(function () {
             return execa('npm', viewArgs)
                 .then(({ stdout: info }) => {
-                    var pluginInfo = JSON.parse(info);
+                    const pluginInfo = JSON.parse(info);
                     return pluginInfo;
                 });
         });

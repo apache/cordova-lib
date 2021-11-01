@@ -15,15 +15,15 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var rewire = require('rewire');
-var cordova_util = require('../../../src/cordova/util');
-var platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');
-var events = require('cordova-common').events;
+const path = require('path');
+const fs = require('fs-extra');
+const rewire = require('rewire');
+const cordova_util = require('../../../src/cordova/util');
+const platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');
+const events = require('cordova-common').events;
 
 describe('cordova/platform/getPlatformDetailsFromDir', function () {
-    var package_json_mock;
+    let package_json_mock;
     package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.name = 'io.cordova.hellocordova';
     package_json_mock.version = '1.0.0';

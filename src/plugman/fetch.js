@@ -17,22 +17,22 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var url = require('url');
-var semver = require('semver');
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var CordovaError = require('cordova-common').CordovaError;
-var events = require('cordova-common').events;
-var metadata = require('./util/metadata');
-var path = require('path');
-var pluginSpec = require('../cordova/plugin/plugin_spec_parser');
-var fetch = require('cordova-fetch');
-var cordovaUtil = require('../cordova/util');
+const fs = require('fs-extra');
+const url = require('url');
+const semver = require('semver');
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const CordovaError = require('cordova-common').CordovaError;
+const events = require('cordova-common').events;
+const metadata = require('./util/metadata');
+const path = require('path');
+const pluginSpec = require('../cordova/plugin/plugin_spec_parser');
+const fetch = require('cordova-fetch');
+const cordovaUtil = require('../cordova/util');
 
-var projectRoot;
+let projectRoot;
 
 // Cache of PluginInfo objects for plugins in search path.
-var localPlugins = null;
+let localPlugins = null;
 
 // possible options: link, subdir, git_ref, client, expected_id
 // Returns a promise.
@@ -47,7 +47,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         options.searchpath = options.searchpath.split(path.delimiter);
     }
 
-    var pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
+    const pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
 
     // clone from git repository
     // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
@@ -57,14 +57,14 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
     // git-ref can be a commit SHA, a tag, or a branch
     // NB: No leading or trailing slash on the subdir.
     if (uri.hash) {
-        var result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
+        const result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
         if (result) {
             if (result[1]) { options.git_ref = result[1]; }
             if (result[2]) { options.subdir = result[2]; }
         }
     }
     return Promise.resolve().then(function () {
-        var plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
+        let plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Promise.resolve().then(function () {
             // check if it is a local path
             if (fs.existsSync(plugin_dir)) {
@@ -94,7 +94,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             }
             // If there is no such local path or it's a git URL, it's a plugin id or id@versionspec.
             // First look for it in the local search path (if provided).
-            var pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
+            const pinfo = findLocalPlugin(plugin_src, options.searchpath, pluginInfoProvider);
             if (pinfo) {
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
                 return {
@@ -111,9 +111,9 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                 ));
             }
             // If not found in local search path, fetch from the registry.
-            var parsedSpec = pluginSpec.parse(plugin_src);
-            var P;
-            var skipCopyingPlugin;
+            const parsedSpec = pluginSpec.parse(plugin_src);
+            let P;
+            let skipCopyingPlugin;
             plugin_dir = path.join(plugins_dir, parsedSpec.id);
             // if the plugin has already been fetched, use it.
             if (fs.existsSync(plugin_dir)) {
@@ -133,7 +133,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             }
             return P
                 .catch(function (error) {
-                    var message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
+                    const message = 'Failed to fetch plugin ' + plugin_src + ' via registry.' +
                         '\nProbably this is either a connection problem, or plugin spec is incorrect.' +
                         '\nCheck your connection and plugin name/version/URL.' +
                         '\n' + error;
@@ -151,7 +151,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                 });
         }).then(function (result) {
             options.plugin_src_dir = result.pinfo.dir;
-            var P;
+            let P;
             if (result.skipCopyingPlugin) {
                 P = Promise.resolve(options.plugin_src_dir);
             } else {
@@ -164,7 +164,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
         });
     }).then(function (result) {
         checkID(options.expected_id, result.pinfo);
-        var data = { source: result.fetchJsonSource };
+        const data = { source: result.fetchJsonSource };
         data.is_top_level = options.is_top_level;
         data.variables = options.variables || {};
         metadata.save_fetch_metadata(plugins_dir, result.pinfo.id, data);
@@ -176,7 +176,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
 function checkID (expectedIdAndVersion, pinfo) {
     if (!expectedIdAndVersion) return;
 
-    var parsedSpec = pluginSpec.parse(expectedIdAndVersion);
+    const parsedSpec = pluginSpec.parse(expectedIdAndVersion);
 
     if (parsedSpec.id !== pinfo.id) {
         throw new Error('Expected plugin to have ID "' + parsedSpec.id + '" but got "' + pinfo.id + '".');
@@ -195,7 +195,7 @@ function loadLocalPlugins (searchpath, pluginInfoProvider) {
         // localPlugins already populated, nothing to do.
         // just in case, make sure it was loaded with the same search path
         if (localPlugins.searchpath.join(path.delimiter) !== searchpath.join(path.delimiter)) {
-            var msg =
+            const msg =
                 'loadLocalPlugins called twice with different search paths.' +
                 'Support for this is not implemented.  Using previously cached path.';
             events.emit('warn', msg);
@@ -209,9 +209,9 @@ function loadLocalPlugins (searchpath, pluginInfoProvider) {
     localPlugins.plugins = {};
 
     searchpath.forEach(function (dir) {
-        var ps = pluginInfoProvider.getAllWithinSearchPath(dir);
+        const ps = pluginInfoProvider.getAllWithinSearchPath(dir);
         ps.forEach(function (p) {
-            var versions = localPlugins.plugins[p.id] || [];
+            const versions = localPlugins.plugins[p.id] || [];
             versions.push(p);
             localPlugins.plugins[p.id] = versions;
         });
@@ -226,11 +226,11 @@ function loadLocalPlugins (searchpath, pluginInfoProvider) {
 //      org.apache.cordova.file@>=1.2.0
 function findLocalPlugin (plugin_src, searchpath, pluginInfoProvider) {
     loadLocalPlugins(searchpath, pluginInfoProvider);
-    var parsedSpec = pluginSpec.parse(plugin_src);
-    var versionspec = parsedSpec.version || '*';
+    const parsedSpec = pluginSpec.parse(plugin_src);
+    const versionspec = parsedSpec.version || '*';
 
-    var latest = null;
-    var versions = localPlugins.plugins[parsedSpec.id];
+    let latest = null;
+    const versions = localPlugins.plugins[parsedSpec.id];
 
     if (!versions) return null;
 
@@ -254,8 +254,8 @@ function findLocalPlugin (plugin_src, searchpath, pluginInfoProvider) {
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 // if alternative ID of plugin exists in plugins_dir/plugin_id, skip copying
 function copyPlugin (pinfo, plugins_dir, link) {
-    var plugin_dir = pinfo.dir;
-    var dest = path.join(plugins_dir, pinfo.id);
+    const plugin_dir = pinfo.dir;
+    const dest = path.join(plugins_dir, pinfo.id);
 
     fs.removeSync(dest);
 
@@ -265,8 +265,8 @@ function copyPlugin (pinfo, plugins_dir, link) {
     }
 
     if (link) {
-        var isRelativePath = plugin_dir.charAt(1) !== ':' && plugin_dir.charAt(0) !== path.sep;
-        var fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;
+        const isRelativePath = plugin_dir.charAt(1) !== ':' && plugin_dir.charAt(0) !== path.sep;
+        const fixedPath = isRelativePath ? path.join(path.relative(plugins_dir, process.env.PWD || process.cwd()), plugin_dir) : plugin_dir;
         events.emit('verbose', 'Linking "' + dest + '" => "' + fixedPath + '"');
         fs.symlinkSync(fixedPath, dest, 'junction');
     } else {

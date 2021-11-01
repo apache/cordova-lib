@@ -17,13 +17,13 @@
     under the License.
 */
 
-var rewire = require('rewire');
-var plugin = rewire('../../../src/cordova/plugin');
-var cordova_util = require('../../../src/cordova/util');
+const rewire = require('rewire');
+const plugin = rewire('../../../src/cordova/plugin');
+const cordova_util = require('../../../src/cordova/util');
 
 describe('cordova/plugin', function () {
-    var projectRoot = '/some/path';
-    var hook_mock = function () {};
+    const projectRoot = '/some/path';
+    const hook_mock = function () {};
 
     beforeEach(function () {
         spyOn(cordova_util, 'cdProjectRoot').and.returnValue(projectRoot);
@@ -39,13 +39,13 @@ describe('cordova/plugin', function () {
     });
 
     describe('handling/massaging of parameters', function () {
-        var cmd = 'add';
+        const cmd = 'add';
         beforeEach(function () {
             spyOn(plugin, cmd).and.returnValue(true);
         });
 
         it('should be able to handle an array of platform targets', function () {
-            var targets = ['plugin1', 'plugin2', 'plugin3'];
+            const targets = ['plugin1', 'plugin2', 'plugin3'];
             return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [], plugins: ['plugin1', 'plugin2', 'plugin3'] }));
@@ -53,7 +53,7 @@ describe('cordova/plugin', function () {
         });
 
         it('should be able to handle a single string as a target', function () {
-            var targets = 'plugin1';
+            const targets = 'plugin1';
             return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: [], plugins: ['plugin1'] }));
@@ -61,7 +61,7 @@ describe('cordova/plugin', function () {
         });
 
         it('should transform targets that start with a dash into options', function () {
-            var targets = '-plugin1';
+            const targets = '-plugin1';
             return plugin(cmd, targets)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ options: ['-plugin1'], plugins: [] }));
@@ -69,8 +69,8 @@ describe('cordova/plugin', function () {
         });
 
         it('should also include targets into a plugins property on options', function () {
-            var options = { save: true };
-            var targets = 'plugin1';
+            const options = { save: true };
+            const targets = 'plugin1';
             return plugin(cmd, targets, options)
                 .then(function () {
                     expect(plugin[cmd]).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), Object({ save: true, options: [], plugins: ['plugin1'] }));

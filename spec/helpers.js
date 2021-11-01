@@ -17,10 +17,10 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var os = require('os');
-var ConfigParser = require('cordova-common').ConfigParser;
+const path = require('path');
+const fs = require('fs-extra');
+const os = require('os');
+const ConfigParser = require('cordova-common').ConfigParser;
 const fixtureHelper = require('./fixture-helper');
 
 // Just use Android everywhere; we're mocking out any calls to the `android` binary.
@@ -104,7 +104,7 @@ module.exports.omniStub = (terminalProps = {}) => {
 
 module.exports.setEngineSpec = function (appPath, engine, spec) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
+    const parser = new ConfigParser(appPath);
 
     parser.removeEngine(engine);
     parser.addEngine(engine, spec);
@@ -113,10 +113,10 @@ module.exports.setEngineSpec = function (appPath, engine, spec) {
 
 module.exports.getEngineSpec = function (appPath, engine) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
-    var engines = parser.getEngines();
+    const parser = new ConfigParser(appPath);
+    const engines = parser.getEngines();
 
-    for (var i = 0; i < engines.length; i++) {
+    for (let i = 0; i < engines.length; i++) {
         if (engines[i].name === module.exports.testPlatform) {
             return engines[i].spec;
         }
@@ -126,7 +126,7 @@ module.exports.getEngineSpec = function (appPath, engine) {
 
 module.exports.removeEngine = function (appPath, engine) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
+    const parser = new ConfigParser(appPath);
 
     parser.removeEngine(module.exports.testPlatform);
     parser.write();
@@ -134,9 +134,9 @@ module.exports.removeEngine = function (appPath, engine) {
 
 module.exports.setPluginSpec = function (appPath, plugin, spec) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
-    var p = parser.getPlugin(plugin);
-    var variables = [];
+    const parser = new ConfigParser(appPath);
+    const p = parser.getPlugin(plugin);
+    let variables = [];
 
     if (p) {
         parser.removePlugin(p.name);
@@ -151,8 +151,8 @@ module.exports.setPluginSpec = function (appPath, plugin, spec) {
 
 module.exports.getPluginSpec = function (appPath, plugin) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
-    var p = parser.getPlugin(plugin);
+    const parser = new ConfigParser(appPath);
+    const p = parser.getPlugin(plugin);
 
     if (p) {
         return p.spec;
@@ -162,8 +162,8 @@ module.exports.getPluginSpec = function (appPath, plugin) {
 
 module.exports.getPluginVariable = function (appPath, plugin, variable) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
-    var p = parser.getPlugin(plugin);
+    const parser = new ConfigParser(appPath);
+    const p = parser.getPlugin(plugin);
 
     if (p && p.variables) {
         return p.variables[variable];
@@ -173,19 +173,19 @@ module.exports.getPluginVariable = function (appPath, plugin, variable) {
 
 module.exports.removePlugin = function (appPath, plugin) {
     appPath = getConfigPath(appPath);
-    var parser = new ConfigParser(appPath);
+    const parser = new ConfigParser(appPath);
 
     parser.removePlugin(plugin);
     parser.write();
 };
 
 module.exports.getConfigContent = function (appPath) {
-    var configFile = path.join(appPath, 'config.xml');
+    const configFile = path.join(appPath, 'config.xml');
     return fs.readFileSync(configFile, 'utf-8');
 };
 
 module.exports.writeConfigContent = function (appPath, configContent) {
-    var configFile = path.join(appPath, 'config.xml');
+    const configFile = path.join(appPath, 'config.xml');
     fs.writeFileSync(configFile, configContent, 'utf-8');
 };
 

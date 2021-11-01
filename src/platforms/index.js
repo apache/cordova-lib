@@ -17,21 +17,21 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('../cordova/util');
-var platforms = require('./platformsConfig.json');
-var events = require('cordova-common').events;
+const path = require('path');
+const fs = require('fs-extra');
+const util = require('../cordova/util');
+const platforms = require('./platformsConfig.json');
+const events = require('cordova-common').events;
 
 // Avoid loading the same platform projects more than once (identified by path)
-var cachedApis = {};
+const cachedApis = {};
 
 // getPlatformApi() should be the only method of instantiating the
 // PlatformProject classes for now.
 function getPlatformApi (platform, platformRootDir) {
     // if platformRootDir is not specified, try to detect it first
     if (!platformRootDir) {
-        var projectRootDir = util.isCordova();
+        const projectRootDir = util.isCordova();
         platformRootDir = projectRootDir && path.join(projectRootDir, 'platforms', platform);
     }
     if (!platformRootDir) {
@@ -46,13 +46,13 @@ function getPlatformApi (platform, platformRootDir) {
         throw new Error('The platform "' + platform + '" does not appear to have been added to this project.');
     }
 
-    var platformApi;
-    var cached = cachedApis[platformRootDir];
-    var libDir = path.join(platformRootDir, 'cordova', 'Api.js');
+    let platformApi;
+    const cached = cachedApis[platformRootDir];
+    const libDir = path.join(platformRootDir, 'cordova', 'Api.js');
     if (cached && cached.platform === platform) {
         platformApi = cached;
     } else {
-        var PlatformApi = util.getPlatformApiFunction(libDir, platform);
+        const PlatformApi = util.getPlatformApiFunction(libDir, platform);
         platformApi = new PlatformApi(platform, platformRootDir, events);
         cachedApis[platformRootDir] = platformApi;
     }

@@ -18,7 +18,7 @@
 */
 
 // npm packages follow the pattern of (@scope/)?package(@spec)? where scope and tag are optional
-var NPM_SPEC_REGEX = /^(@[^/]+\/)?([^@/]+)(?:@(.+))?$/;
+const NPM_SPEC_REGEX = /^(@[^/]+\/)?([^@/]+)(?:@(.+))?$/;
 
 module.exports.parse = parse;
 
@@ -48,7 +48,7 @@ function PluginSpec (raw, id, version) {
  * @return {PluginSpec}  The parsed plugin spec
  */
 function parse (raw) {
-    var split = NPM_SPEC_REGEX.exec(raw);
+    const split = NPM_SPEC_REGEX.exec(raw);
     if (split) {
         return new PluginSpec(raw, (split[1] || '') + split[2], split[3]);
     }

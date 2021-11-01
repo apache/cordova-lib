@@ -17,20 +17,20 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var path = require('path');
-var et = require('elementtree');
-var CordovaError = require('cordova-common').CordovaError;
-var stripLicense = require('./util/strip-license');
+const fs = require('fs-extra');
+const path = require('path');
+const et = require('elementtree');
+const CordovaError = require('cordova-common').CordovaError;
+const stripLicense = require('./util/strip-license');
 
 module.exports = function create (name, id, version, pluginPath, options) {
-    var cwd = pluginPath + '/' + name + '/';
-    var templatesDir = path.join(__dirname, '..', '..', 'templates/');
-    var baseJS;
-    var root;
-    var pluginName;
-    var clobber;
-    var jsMod;
+    const cwd = pluginPath + '/' + name + '/';
+    const templatesDir = path.join(__dirname, '..', '..', 'templates/');
+    let baseJS;
+    let root;
+    let pluginName;
+    let clobber;
+    let jsMod;
 
     // Check we are not already in a plugin
     if (fs.existsSync(cwd + 'plugin.xml')) {
@@ -50,8 +50,8 @@ module.exports = function create (name, id, version, pluginPath, options) {
     root.append(pluginName);
 
     // Loop through the options( variables ) for other tags
-    for (var key in options) {
-        var temp = et.XML('<' + key + '>');
+    for (const key in options) {
+        const temp = et.XML('<' + key + '>');
         temp.text = options[key];
         root.append(temp);
     }

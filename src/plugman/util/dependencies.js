@@ -17,41 +17,41 @@
     under the License.
 */
 
-var DepGraph = require('dep-graph');
-var path = require('path');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var pkg;
+const DepGraph = require('dep-graph');
+const path = require('path');
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
+let pkg;
 
 module.exports = pkg = {
 
     generateDependencyInfo: function (platformJson, plugins_dir, pluginInfoProvider) {
-        var json = platformJson.root;
+        const json = platformJson.root;
 
         // TODO: store whole dependency tree in plugins/[platform].json
         // in case plugins are forcefully removed...
-        var tlps = [];
-        var graph = new DepGraph();
+        const tlps = [];
+        const graph = new DepGraph();
         Object.keys(json.installed_plugins).forEach(function (plugin_id) {
             tlps.push(plugin_id);
 
-            var plugin_dir = path.join(plugins_dir, plugin_id);
-            var pluginInfo = pluginInfoProvider.get(plugin_dir);
-            var deps = pluginInfo.getDependencies(platformJson.platform);
+            const plugin_dir = path.join(plugins_dir, plugin_id);
+            const pluginInfo = pluginInfoProvider.get(plugin_dir);
+            const deps = pluginInfo.getDependencies(platformJson.platform);
             deps.forEach(function (dep) {
                 graph.add(plugin_id, dep.id);
             });
         });
         Object.keys(json.dependent_plugins).forEach(function (plugin_id) {
-            var plugin_dir = path.join(plugins_dir, plugin_id);
+            const plugin_dir = path.join(plugins_dir, plugin_id);
             // dependency plugin does not exist (CB-7846)
             if (!fs.existsSync(plugin_dir)) {
                 events.emit('verbose', 'Plugin "' + plugin_id + '" does not exist (' + plugin_dir + ')');
                 return;
             }
 
-            var pluginInfo = pluginInfoProvider.get(plugin_dir);
-            var deps = pluginInfo.getDependencies(platformJson.platform);
+            const pluginInfo = pluginInfoProvider.get(plugin_dir);
+            const deps = pluginInfo.getDependencies(platformJson.platform);
             deps.forEach(function (dep) {
                 graph.add(plugin_id, dep.id);
             });
@@ -65,12 +65,12 @@ module.exports = pkg = {
 
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
     dependents: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
-        var depsInfo;
+        let depsInfo;
         if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
 
-        var graph = depsInfo.graph;
-        var tlps = depsInfo.top_level_plugins;
-        var dependents = tlps.filter(function (tlp) {
+        const graph = depsInfo.graph;
+        const tlps = depsInfo.top_level_plugins;
+        const dependents = tlps.filter(function (tlp) {
             return tlp !== plugin_id && graph.getChain(tlp).indexOf(plugin_id) >= 0;
         });
 
@@ -80,7 +80,7 @@ module.exports = pkg = {
     // Returns a list of plugins which the given plugin depends on, for which it is the only dependent.
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
     danglers: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
-        var depsInfo;
+        let depsInfo;
         if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
 
         const { graph, top_level_plugins } = depsInfo;

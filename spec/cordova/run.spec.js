@@ -17,14 +17,14 @@
     under the License.
 */
 const rewire = require('rewire');
-var platforms = require('../../src/platforms/platforms');
-var HooksRunner = require('../../src/hooks/HooksRunner');
-var util = require('../../src/cordova/util');
+const platforms = require('../../src/platforms/platforms');
+const HooksRunner = require('../../src/hooks/HooksRunner');
+const util = require('../../src/cordova/util');
 
-var supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
+const supported_platforms = Object.keys(platforms).filter(function (p) { return p !== 'www'; });
 
 describe('run command', function () {
-    var project_dir = '/some/path';
+    const project_dir = '/some/path';
     let cordovaRun, cordovaPrepare, platformApi, getPlatformApi;
 
     beforeEach(function () {
@@ -53,7 +53,7 @@ describe('run command', function () {
             );
         });
         it('Test 002 : should not run outside of a Cordova-based project', function () {
-            var msg = 'Dummy message about not being in a cordova dir.';
+            const msg = 'Dummy message about not being in a cordova dir.';
             util.cdProjectRoot.and.throwError(new Error(msg));
             util.isCordova.and.returnValue(false);
             return expectAsync(

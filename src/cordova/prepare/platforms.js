@@ -17,12 +17,12 @@
     under the License.
 */
 
-var cordova_util = require('../util');
-var ConfigParser = require('cordova-common').ConfigParser;
-var PlatformJson = require('cordova-common').PlatformJson;
-var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
-var platforms = require('../../platforms/platforms');
-var path = require('path');
+const cordova_util = require('../util');
+const ConfigParser = require('cordova-common').ConfigParser;
+const PlatformJson = require('cordova-common').PlatformJson;
+const PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
+const platforms = require('../../platforms/platforms');
+const path = require('path');
 
 module.exports = preparePlatforms;
 
@@ -38,7 +38,7 @@ function preparePlatforms (platformList, projectRoot, options) {
     return Promise.all(platformList.map(function (platform) {
         // TODO: this need to be replaced by real projectInfo
         // instance for current project.
-        var project = {
+        const project = {
             root: projectRoot,
             projectConfig: new ConfigParser(cordova_util.projectConfig(projectRoot)),
             locations: {
@@ -55,13 +55,13 @@ function preparePlatforms (platformList, projectRoot, options) {
         //   - update platform's project
         // Please note that plugins' changes, such as installed js files, assets and
         // config changes is not being reinstalled on each prepare.
-        var platformApi = platforms.getPlatformApi(platform);
+        const platformApi = platforms.getPlatformApi(platform);
         return platformApi.prepare(project, Object.assign({}, options))
             .then(function () {
                 // Handle edit-config in config.xml
-                var platformRoot = path.join(projectRoot, 'platforms', platform);
-                var platformJson = PlatformJson.load(platformRoot, platform);
-                var munger = new PlatformMunger(platform, platformRoot, platformJson);
+                const platformRoot = path.join(projectRoot, 'platforms', platform);
+                const platformJson = PlatformJson.load(platformRoot, platform);
+                const munger = new PlatformMunger(platform, platformRoot, platformJson);
                 // the boolean argument below is "should_increment"
                 munger.add_config_changes(project.projectConfig, true).save_all();
             });

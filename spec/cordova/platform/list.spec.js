@@ -15,13 +15,13 @@
     under the License.
 */
 
-var events = require('cordova-common').events;
-var platform_list = require('../../../src/cordova/platform/list');
-var cordova_util = require('../../../src/cordova/util');
+const events = require('cordova-common').events;
+const platform_list = require('../../../src/cordova/platform/list');
+const cordova_util = require('../../../src/cordova/util');
 
 describe('cordova/platform/list', function () {
-    var hooks_mock;
-    var projectRoot = '/some/path';
+    let hooks_mock;
+    const projectRoot = '/some/path';
 
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);
@@ -51,7 +51,7 @@ describe('cordova/platform/list', function () {
     });
 
     it('should return platform list', function () {
-        var platformList = ['android', 'ios'];
+        const platformList = ['android', 'ios'];
         expect(platform_list.addDeprecatedInformationToPlatforms(platformList).toString()).toBe('android,ios');
     });
 });
