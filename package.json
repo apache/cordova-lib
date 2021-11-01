@@ -19,7 +19,7 @@
     "detect-newline": "^3.1.0",
     "elementtree": "^0.1.7",
     "execa": "^5.1.1",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.0.0",
     "globby": "^11.0.4",
     "init-package-json": "^1.10.3",
     "md5-file": "^5.0.0",
