@@ -31,7 +31,7 @@
   "devDependencies": {
     "@cordova/eslint-config": "^3.0.0",
     "cordova-android": "10.1.1",
-    "delay": "^4.4.1",
+    "delay": "^5.0.0",
     "jasmine": "^3.9.0",
     "jasmine-spec-reporter": "^5.0.2",
     "nyc": "^15.1.0",
