@@ -145,12 +145,12 @@ function cleanVersionOutput (version, name) {
     const minorReg = /\d+\.\d+/;
     const patchReg = /\d+\.\d+\.\d+/;
 
-    if (patchReg.test(out)) {
-
-    } else if (minorReg.test(out)) {
-        out = out.match(minorReg)[0] + '.0';
-    } else if (majorReg.test(out)) {
-        out = out.match(majorReg)[0] + '.0.0';
+    if (!patchReg.test(out)) {
+        if (minorReg.test(out)) {
+            out = out.match(minorReg)[0] + '.0';
+        } else if (majorReg.test(out)) {
+            out = out.match(majorReg)[0] + '.0.0';
+        }
     }
 
     return out;
