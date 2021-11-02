@@ -29,7 +29,7 @@ const { CordovaError, events } = require('cordova-common');
  * @constructor
  */
 function HooksRunner (projectRoot) {
-    var root = cordovaUtil.isCordova(projectRoot);
+    const root = cordovaUtil.isCordova(projectRoot);
     if (!root) throw new CordovaError('Not a Cordova project ("' + projectRoot + '"), can\'t use hooks.');
     else this.projectRoot = root;
 }
@@ -116,8 +116,8 @@ function runJobsSerially (jobs) {
  * Async runs single script file.
  */
 function runScript (script, context) {
-    var source;
-    var relativePath;
+    let source;
+    let relativePath;
 
     if (script.plugin) {
         source = 'plugin ' + script.plugin.id;
@@ -144,7 +144,7 @@ function runScriptViaModuleLoader (script, context) {
         events.emit('warn', 'Script file does\'t exist and will be skipped: ' + script.fullPath);
         return Promise.resolve();
     }
-    var scriptFn = require(script.fullPath);
+    const scriptFn = require(script.fullPath);
     context.scriptLocation = script.fullPath;
     if (script.plugin) {
         context.opts.plugin = script.plugin;
@@ -164,9 +164,9 @@ function runScriptViaModuleLoader (script, context) {
  * Runs script using child_process spawn method.
  * Returns a promise. */
 function runScriptViaChildProcessSpawn (script, context) {
-    var opts = context.opts;
-    var command = script.fullPath;
-    var args = [opts.projectRoot];
+    const opts = context.opts;
+    const command = script.fullPath;
+    const args = [opts.projectRoot];
 
     const execOpts = {
         cwd: opts.projectRoot,

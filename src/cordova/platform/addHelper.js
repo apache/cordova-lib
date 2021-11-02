@@ -15,20 +15,20 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var semver = require('semver');
-var fetch = require('cordova-fetch');
-var CordovaError = require('cordova-common').CordovaError;
-var ConfigParser = require('cordova-common').ConfigParser;
-var PlatformJson = require('cordova-common').PlatformJson;
-var events = require('cordova-common').events;
-var cordova_util = require('../util');
-var promiseutil = require('../../util/promise-util');
-var platforms = require('../../platforms');
-var detectIndent = require('detect-indent');
-var getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
-var preparePlatforms = require('../prepare/platforms');
+const path = require('path');
+const fs = require('fs-extra');
+const semver = require('semver');
+const fetch = require('cordova-fetch');
+const CordovaError = require('cordova-common').CordovaError;
+const ConfigParser = require('cordova-common').ConfigParser;
+const PlatformJson = require('cordova-common').PlatformJson;
+const events = require('cordova-common').events;
+const cordova_util = require('../util');
+const promiseutil = require('../../util/promise-util');
+const platforms = require('../../platforms');
+const detectIndent = require('detect-indent');
+const getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
+const preparePlatforms = require('../prepare/platforms');
 
 module.exports = addHelper;
 module.exports.getVersionFromConfigFile = getVersionFromConfigFile;
@@ -36,14 +36,14 @@ module.exports.downloadPlatform = downloadPlatform;
 module.exports.installPluginsForNewPlatform = installPluginsForNewPlatform;
 
 function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
-    var msg;
+    let msg;
     if (!targets || !targets.length) {
         msg = 'No platform specified. Please specify a platform to ' + cmd + '. ' +
               'See `' + cordova_util.binname + ' platform list`.';
         return Promise.reject(new CordovaError(msg));
     }
 
-    for (var i = 0; i < targets.length; i++) {
+    for (let i = 0; i < targets.length; i++) {
         if (!platforms.hostSupports(targets[i])) {
             msg = 'WARNING: Applications for platform ' + targets[i] +
                   ' can not be built on this OS - ' + process.platform + '.';
@@ -51,24 +51,24 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
         }
     }
 
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+    const xml = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(xml);
     opts = opts || {};
 
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
-    var platformsDir = path.join(projectRoot, 'platforms');
+    const platformsDir = path.join(projectRoot, 'platforms');
     fs.ensureDirSync(platformsDir);
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
         .then(function () {
-            var platformsToSave = [];
+            const platformsToSave = [];
 
             return promiseutil.Q_chainmap(targets, function (target) {
                 // For each platform, download it and call its helper script.
-                var platform;
-                var spec;
-                var parts = target.split('@');
+                let platform;
+                let spec;
+                const parts = target.split('@');
                 if (parts.length > 1 && parts[0] === '') {
                     // scoped package
                     platform = '@' + parts[1];
@@ -106,7 +106,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
 
                     // Handle local paths
                     if (spec) {
-                        var maybeDir = cordova_util.fixRelativePath(spec);
+                        const maybeDir = cordova_util.fixRelativePath(spec);
                         if (cordova_util.isDirectory(maybeDir)) {
                             return fetch(path.resolve(maybeDir), projectRoot, opts)
                                 .then(function (directory) {
@@ -117,8 +117,8 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     return module.exports.downloadPlatform(projectRoot, platform, spec, opts);
                 }).then(function (platDetails) {
                     platform = platDetails.platform;
-                    var platformPath = path.join(projectRoot, 'platforms', platform);
-                    var platformAlreadyAdded = fs.existsSync(platformPath);
+                    const platformPath = path.join(projectRoot, 'platforms', platform);
+                    const platformAlreadyAdded = fs.existsSync(platformPath);
 
                     if (cmd === 'add') {
                         // TODO: Can we check for this before downloading the platform?
@@ -147,7 +147,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
 
                     // TODO: NIT: can we rename this to platformapi options so as to not confuse with addHelper options?
-                    var options = {
+                    const options = {
                         // We need to pass a platformDetails into update/create
                         // since PlatformApiPoly needs to know something about
                         // platform, it is going to create.
@@ -156,9 +156,10 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     };
 
                     events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
-                    var PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
-                    var destination = path.resolve(projectRoot, 'platforms', platform);
-                    var promise = cmd === 'add' ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
+                    const PlatformApi = cordova_util.getPlatformApiFunction(platDetails.libDir, platform);
+                    const destination = path.resolve(projectRoot, 'platforms', platform);
+                    const promise = cmd === 'add'
+                        ? PlatformApi.createPlatform.bind(null, destination, cfg, options, events)
                         : PlatformApi.updatePlatform.bind(null, destination, options, events);
                     // TODO: if we return the promise immediately, can we not unindent the promise .then()s by one indent?
                     return promise()
@@ -176,7 +177,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             // TODO: didnt we just do this two promise then's ago?
                             if (!opts.restoring) {
                                 // Call prepare for the current platform if we're not restoring from config.xml.
-                                var prepOpts = {
+                                const prepOpts = {
                                     platforms: [platform],
                                     searchpath: opts.searchpath,
                                     save: opts.save || false
@@ -186,11 +187,11 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                             }
                         })
                         .then(function () {
-                            var saveVersion = !spec || semver.validRange(spec, true);
+                            const saveVersion = !spec || semver.validRange(spec, true);
                             // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                             // source location was specified, we always save that. Otherwise we save the version that was
                             // actually installed.
-                            var versionToSave = saveVersion ? platDetails.version : spec;
+                            const versionToSave = saveVersion ? platDetails.version : spec;
                             events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
 
                             if (opts.save) {
@@ -205,9 +206,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 });
             }).then(function () {
                 // save installed platforms to cordova.platforms array in package.json
-                var pkgJson;
-                var pkgJsonPath = path.join(projectRoot, 'package.json');
-                var modifiedPkgJson = false;
+                let pkgJson;
+                const pkgJsonPath = path.join(projectRoot, 'package.json');
+                let modifiedPkgJson = false;
 
                 if (fs.existsSync(pkgJsonPath)) {
                     pkgJson = cordova_util.requireNoCache(path.join(pkgJsonPath));
@@ -231,8 +232,8 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 });
                 // Save to package.json.
                 if (modifiedPkgJson === true) {
-                    var file = fs.readFileSync(pkgJsonPath, 'utf8');
-                    var indent = detectIndent(file).indent || '  ';
+                    const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                    const indent = detectIndent(file).indent || '  ';
                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                 }
             });
@@ -265,7 +266,7 @@ function getVersionFromConfigFile (platform, cfg) {
 // Downloads via npm or via git clone (tries both)
 // Returns a Promise
 function downloadPlatform (projectRoot, platform, version, opts) {
-    var target = version ? (platform + '@' + version) : platform;
+    let target = version ? (platform + '@' + version) : platform;
     return Promise.resolve().then(function () {
         // append cordova to platform
         if (platform in platforms.info) {
@@ -279,7 +280,7 @@ function downloadPlatform (projectRoot, platform, version, opts) {
         events.emit('log', 'Using cordova-fetch for ' + target);
         return fetch(target, projectRoot, opts);
     }).catch(function (error) {
-        var message = 'Failed to fetch platform ' + target +
+        const message = 'Failed to fetch platform ' + target +
             '\nProbably this is either a connection problem, or platform spec is incorrect.' +
             '\nCheck your connection and platform name/version/URL.' +
             '\n' + error;
@@ -291,21 +292,21 @@ function downloadPlatform (projectRoot, platform, version, opts) {
 
 function installPluginsForNewPlatform (platform, projectRoot, opts) {
     // Install all currently installed plugins into this new platform.
-    var plugins_dir = path.join(projectRoot, 'plugins');
+    const plugins_dir = path.join(projectRoot, 'plugins');
 
     // Get a list of all currently installed plugins, ignoring those that have already been installed for this platform
     // during prepare (installed from config.xml).
-    var platformJson = PlatformJson.load(plugins_dir, platform);
-    var plugins = cordova_util.findPlugins(plugins_dir).filter(function (plugin) {
+    const platformJson = PlatformJson.load(plugins_dir, platform);
+    const plugins = cordova_util.findPlugins(plugins_dir).filter(function (plugin) {
         return !platformJson.isPluginInstalled(plugin);
     });
     if (plugins.length === 0) {
         return Promise.resolve();
     }
 
-    var output = path.join(projectRoot, 'platforms', platform);
-    var plugman = require('../../plugman/plugman');
-    var fetchMetadata = require('../../plugman/util/metadata');
+    const output = path.join(projectRoot, 'platforms', platform);
+    const plugman = require('../../plugman/plugman');
+    const fetchMetadata = require('../../plugman/util/metadata');
 
     // Install them serially.
     return plugins.reduce(function (soFar, plugin) {
@@ -313,9 +314,9 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
             events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + platform);
 
             // Get plugin variables from fetch.json if have any and pass them as cli_variables to plugman
-            var pluginMetadata = fetchMetadata.get_fetch_metadata(plugins_dir, plugin);
+            const pluginMetadata = fetchMetadata.get_fetch_metadata(plugins_dir, plugin);
 
-            var options = {
+            const options = {
                 searchpath: opts.searchpath,
                 // Set up platform to install asset files/js modules to <platform>/platform_www dir
                 // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
@@ -331,7 +332,7 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
                 save: opts.save || false
             };
 
-            var variables = pluginMetadata && pluginMetadata.variables;
+            const variables = pluginMetadata && pluginMetadata.variables;
             if (variables) {
                 events.emit('verbose', 'Found variables for "' + plugin + '". Processing as cli_variables.');
                 options.cli_variables = variables;

@@ -17,22 +17,22 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var HooksRunner = require('../hooks/HooksRunner');
-var platform_lib = require('../platforms/platforms');
-var cordovaPrepare = require('./prepare');
+const cordova_util = require('./util');
+const HooksRunner = require('../hooks/HooksRunner');
+const platform_lib = require('../platforms/platforms');
+const cordovaPrepare = require('./prepare');
 
 // Returns a promise.
 module.exports = function run (options) {
     return Promise.resolve().then(function () {
-        var projectRoot = cordova_util.cdProjectRoot();
+        const projectRoot = cordova_util.cdProjectRoot();
         options = cordova_util.preProcessOptions(options);
 
         // This is needed as .build modifies opts
-        var optsClone = Object.assign({}, options.options);
+        const optsClone = Object.assign({}, options.options);
         optsClone.nobuild = true;
 
-        var hooksRunner = new HooksRunner(projectRoot);
+        const hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_run', options)
             .then(function () {
                 if (!options.options.noprepare) {
@@ -42,7 +42,8 @@ module.exports = function run (options) {
             }).then(function () {
                 // Deploy in parallel (output gets intermixed though...)
                 return Promise.all(options.platforms.map(function (platform) {
-                    var buildPromise = options.options.nobuild ? Promise.resolve()
+                    const buildPromise = options.options.nobuild
+                        ? Promise.resolve()
                         : platform_lib.getPlatformApi(platform).build(options.options);
 
                     return buildPromise

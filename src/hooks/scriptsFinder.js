@@ -17,11 +17,11 @@
  under the License.
  */
 
-var path = require('path');
-var cordovaUtil = require('../cordova/util');
-var events = require('cordova-common').events;
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var ConfigParser = require('cordova-common').ConfigParser;
+const path = require('path');
+const cordovaUtil = require('../cordova/util');
+const events = require('cordova-common').events;
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const ConfigParser = require('cordova-common').ConfigParser;
 
 /**
  * Implements logic to retrieve hook script files defined in special folders and configuration
@@ -84,7 +84,7 @@ function getPluginsHookScripts (hook, opts) {
  * Gets hook scripts defined by the plugin.
  */
 function getPluginScriptFiles (plugin, hook, platforms) {
-    var scriptElements = plugin.pluginInfo.getHookScripts(hook, platforms);
+    const scriptElements = plugin.pluginInfo.getHookScripts(hook, platforms);
 
     return scriptElements.map(function (scriptElement) {
         return {
@@ -99,10 +99,10 @@ function getPluginScriptFiles (plugin, hook, platforms) {
  * Gets hook scripts defined by all plugins.
  */
 function getAllPluginsHookScriptFiles (hook, opts) {
-    var scripts = [];
-    var currentPluginOptions;
+    let scripts = [];
+    let currentPluginOptions;
 
-    var plugins = (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins'));
+    const plugins = (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins'));
 
     plugins.forEach(function (pluginInfo) {
         currentPluginOptions = {

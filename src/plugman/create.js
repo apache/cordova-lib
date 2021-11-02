@@ -17,20 +17,15 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var path = require('path');
-var et = require('elementtree');
-var CordovaError = require('cordova-common').CordovaError;
-var stripLicense = require('./util/strip-license');
+const fs = require('fs-extra');
+const path = require('path');
+const et = require('elementtree');
+const CordovaError = require('cordova-common').CordovaError;
+const stripLicense = require('./util/strip-license');
 
 module.exports = function create (name, id, version, pluginPath, options) {
-    var cwd = pluginPath + '/' + name + '/';
-    var templatesDir = path.join(__dirname, '..', '..', 'templates/');
-    var baseJS;
-    var root;
-    var pluginName;
-    var clobber;
-    var jsMod;
+    const cwd = pluginPath + '/' + name + '/';
+    const templatesDir = path.join(__dirname, '..', '..', 'templates/');
 
     // Check we are not already in a plugin
     if (fs.existsSync(cwd + 'plugin.xml')) {
@@ -38,20 +33,20 @@ module.exports = function create (name, id, version, pluginPath, options) {
     }
 
     // Create a plugin.xml file
-    root = et.Element('plugin');
+    const root = et.Element('plugin');
     root.set('xmlns', 'http://apache.org/cordova/ns/plugins/1.0');
     root.set('xmlns:android', 'http://schemas.android.com/apk/res/android');
     root.set('id', id);
     root.set('version', version);
 
     // Add the name tag
-    pluginName = et.XML('<name></name>');
+    const pluginName = et.XML('<name></name>');
     pluginName.text = name;
     root.append(pluginName);
 
     // Loop through the options( variables ) for other tags
-    for (var key in options) {
-        var temp = et.XML('<' + key + '>');
+    for (const key in options) {
+        const temp = et.XML('<' + key + '>');
         temp.text = options[key];
         root.append(temp);
     }
@@ -61,14 +56,14 @@ module.exports = function create (name, id, version, pluginPath, options) {
     fs.ensureDirSync(cwd + 'src');
 
     // Create a base plugin.js file
-    baseJS = stripLicense.fromCode(fs.readFileSync(templatesDir + 'base.js', 'utf-8').replace(/%pluginName%/g, name));
+    const baseJS = stripLicense.fromCode(fs.readFileSync(templatesDir + 'base.js', 'utf-8').replace(/%pluginName%/g, name));
     fs.writeFileSync(cwd + 'www/' + name + '.js', baseJS, 'utf-8');
     // Add it to the xml as a js module
-    jsMod = et.Element('js-module');
+    const jsMod = et.Element('js-module');
     jsMod.set('src', 'www/' + name + '.js');
     jsMod.set('name', name);
 
-    clobber = et.Element('clobbers');
+    const clobber = et.Element('clobbers');
     clobber.set('target', 'cordova.plugins.' + name);
     jsMod.append(clobber);
 

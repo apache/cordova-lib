@@ -32,7 +32,7 @@ const fsMock = {
 };
 
 // expect fsMock to only operate on fetchJsonPath
-Object.entries(fsMock).map(([key, fn]) => {
+Object.entries(fsMock).forEach(([key, fn]) => {
     fsMock[key] = (...args) => {
         expect(args[0]).toBe(fetchJsonPath);
         return fn(...args);

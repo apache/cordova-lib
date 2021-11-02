@@ -18,9 +18,9 @@
 */
 
 const execa = require('execa');
-var cordova_util = require('./util');
-var path = require('path');
-var events = require('cordova-common').events;
+const cordova_util = require('./util');
+const path = require('path');
+const events = require('cordova-common').events;
 
 function handleError (error) {
     if (error.code === 'ENOENT') {
@@ -32,24 +32,24 @@ function handleError (error) {
 }
 
 function displayDevices (projectRoot, platform, options) {
-    var caller = { script: 'list-devices' };
+    const caller = { script: 'list-devices' };
     events.emit('log', 'Available ' + platform + ' devices:');
-    var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
+    const cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-devices');
     return execa(cmd, options.argv, { stdio: 'inherit' }).then(data => data.stdout, handleError.bind(caller));
 }
 
 function displayVirtualDevices (projectRoot, platform, options) {
-    var caller = { script: 'list-emulator-images' };
+    const caller = { script: 'list-emulator-images' };
     events.emit('log', 'Available ' + platform + ' virtual devices:');
-    var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
+    const cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'lib', 'list-emulator-images');
     return execa(cmd, options.argv, { stdio: 'inherit' }).then(data => data.stdout, handleError.bind(caller));
 }
 
 module.exports = function targets (options) {
-    var projectRoot = cordova_util.cdProjectRoot();
+    const projectRoot = cordova_util.cdProjectRoot();
     options = cordova_util.preProcessOptions(options);
 
-    var result = Promise.resolve();
+    let result = Promise.resolve();
     options.platforms.forEach(function (platform) {
         if (options.options.device) {
             result = result.then(displayDevices.bind(null, projectRoot, platform, options.options));

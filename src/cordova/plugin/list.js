@@ -17,15 +17,15 @@
     under the License.
 */
 
-var semver = require('semver');
-var events = require('cordova-common').events;
-var plugin_util = require('./util');
-var cordova_util = require('../util');
+const semver = require('semver');
+const events = require('cordova-common').events;
+const plugin_util = require('./util');
+const cordova_util = require('../util');
 
 module.exports = list;
 
 function list (projectRoot, hooksRunner, opts) {
-    var pluginsList = [];
+    const pluginsList = [];
     return hooksRunner.fire('before_plugin_ls', opts)
         .then(function () {
             return plugin_util.getInstalledPlugins(projectRoot);
@@ -34,10 +34,10 @@ function list (projectRoot, hooksRunner, opts) {
                 events.emit('results', 'No plugins added. Use `' + cordova_util.binname + ' plugin add <plugin>`.');
                 return;
             }
-            var pluginsDict = {};
-            var lines = [];
-            var txt, p;
-            for (var i = 0; i < plugins.length; i++) {
+            const pluginsDict = {};
+            const lines = [];
+            let txt, p;
+            for (let i = 0; i < plugins.length; i++) {
                 p = plugins[i];
                 pluginsDict[p.id] = p;
                 pluginsList.push(p.id);
@@ -45,10 +45,10 @@ function list (projectRoot, hooksRunner, opts) {
                 lines.push(txt);
             }
             // Add warnings for deps with wrong versions.
-            for (var id in pluginsDict) {
+            for (const id in pluginsDict) {
                 p = pluginsDict[id];
-                for (var depId in p.deps) {
-                    var dep = pluginsDict[depId];
+                for (const depId in p.deps) {
+                    const dep = pluginsDict[depId];
                     if (!dep) {
                         txt = 'WARNING, missing dependency: plugin ' + id +
                               ' depends on ' + depId +

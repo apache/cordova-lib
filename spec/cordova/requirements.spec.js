@@ -17,11 +17,11 @@
     under the License.
 */
 
-var rewire = require('rewire');
-var util = require('../../src/cordova/util');
-var requirements = rewire('../../src/cordova/requirements');
+const rewire = require('rewire');
+const util = require('../../src/cordova/util');
+const requirements = rewire('../../src/cordova/requirements');
 
-var project_dir = '/some/path';
+const project_dir = '/some/path';
 
 describe('cordova/requirements', function () {
     beforeEach(function () {

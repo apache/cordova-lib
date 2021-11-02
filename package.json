@@ -29,7 +29,7 @@
     "write-file-atomic": "^3.0.3"
   },
   "devDependencies": {
-    "@cordova/eslint-config": "^3.0.0",
+    "@cordova/eslint-config": "^4.0.0",
     "cordova-android": "10.1.1",
     "delay": "^5.0.0",
     "jasmine": "^3.10.0",

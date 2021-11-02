@@ -16,12 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-var rewire = require('rewire');
-var variable_merge = rewire('../../src/plugman/variable-merge');
+const rewire = require('rewire');
+const variable_merge = rewire('../../src/plugman/variable-merge');
 
 describe('mergeVariables', function () {
-    var plugin_info_provider_mock = function () {};
-    var plugin_info;
+    const plugin_info_provider_mock = function () {};
+    let plugin_info;
 
     beforeEach(function () {
         plugin_info = jasmine.createSpyObj('pluginInfo', ['getPreferences']);
@@ -36,22 +36,22 @@ describe('mergeVariables', function () {
     });
     it('use plugin.xml if no cli/config variables', function () {
         plugin_info.getPreferences.and.returnValue({ FCM_VERSION: '11.0.1' });
-        var opts = { cli_variables: { } };
+        const opts = { cli_variables: { } };
         expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({ FCM_VERSION: '11.0.1' });
     });
     it('cli & config variables take precedence over plugin.xml ', function () {
         plugin_info.getPreferences.and.returnValue({ FCM_VERSION: '11.0.1' });
-        var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
+        const opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
         expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({ FCM_VERSION: '9.0.0' });
     });
     it('should return no variables', function () {
         plugin_info.getPreferences.and.returnValue({});
-        var opts = { cli_variables: {} };
+        const opts = { cli_variables: {} };
         expect(variable_merge.mergeVariables('some/path', 'android', opts)).toEqual({});
     });
     it('should throw error if variables are missing', function () {
         plugin_info.getPreferences.and.returnValue({ foo: '' });
-        var opts = { cli_variables: {} };
+        const opts = { cli_variables: {} };
         expect(function () { variable_merge.mergeVariables('some/path', 'android', opts); }).toThrow();
     });
 });

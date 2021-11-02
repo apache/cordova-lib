@@ -71,7 +71,8 @@ function handleRoot (request, response) {
     const contentNode = config.doc.find('content');
     const contentSrc = (contentNode && contentNode.attrib.src) || 'index.html';
     const platformUrl = name => installedPlatforms.includes(name)
-        ? `${name}/www/${contentSrc}` : null;
+        ? `${name}/www/${contentSrc}`
+        : null;
 
     response.send(renderIndex({
         config,

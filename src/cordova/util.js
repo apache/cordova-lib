@@ -17,14 +17,14 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var path = require('path');
-var events = require('cordova-common').events;
-var CordovaError = require('cordova-common').CordovaError;
-var url = require('url');
+const fs = require('fs-extra');
+const path = require('path');
+const events = require('cordova-common').events;
+const CordovaError = require('cordova-common').CordovaError;
+const url = require('url');
 const globby = require('globby');
 
-var origCwd = null;
+let origCwd = null;
 
 exports.binname = 'cordova';
 
@@ -50,13 +50,13 @@ exports.getPlatformVersion = getPlatformVersionOrNull;
 
 // Remove <platform>.json file from plugins directory.
 function removePlatformPluginsJson (projectRoot, target) {
-    var plugins_json = path.join(projectRoot, 'plugins', target + '.json');
+    const plugins_json = path.join(projectRoot, 'plugins', target + '.json');
     fs.removeSync(plugins_json);
 }
 
 function requireNoCache (pkgJsonPath) {
     delete require.cache[require.resolve(pkgJsonPath)];
-    var returnVal = require(pkgJsonPath);
+    const returnVal = require(pkgJsonPath);
     delete require.cache[require.resolve(pkgJsonPath)];
     return returnVal;
 }
@@ -91,23 +91,23 @@ function isRootDir (dir) {
 function isCordova (dir) {
     if (!dir) {
         // Prefer PWD over cwd so that symlinked dirs within your PWD work correctly (CB-5687).
-        var pwd = process.env.PWD;
-        var cwd = process.cwd();
+        const pwd = process.env.PWD;
+        const cwd = process.cwd();
         if (pwd && pwd !== cwd && pwd !== 'undefined') {
             return this.isCordova(pwd) || this.isCordova(cwd);
         }
         return this.isCordova(cwd);
     }
-    var bestReturnValueSoFar = false;
-    for (var i = 0; i < 1000; ++i) {
-        var result = isRootDir(dir);
+    let bestReturnValueSoFar = false;
+    for (let i = 0; i < 1000; ++i) {
+        const result = isRootDir(dir);
         if (result === 2) {
             return dir;
         }
         if (result === 1) {
             bestReturnValueSoFar = dir;
         }
-        var parentDir = path.normalize(path.join(dir, '..'));
+        const parentDir = path.normalize(path.join(dir, '..'));
         // Detect fs root.
         if (parentDir === dir) {
             return bestReturnValueSoFar;
@@ -158,10 +158,10 @@ function fixRelativePath (value, /* optional */ cwd) {
     if (value[1] === ':' || value[0] === path.sep) {
         return value;
     }
-    var newDir = cwd || process.env.PWD || process.cwd();
-    var origDir = getOrigWorkingDirectory();
-    var pathDiff = path.relative(newDir, origDir);
-    var ret = path.normalize(path.join(pathDiff, value));
+    const newDir = cwd || process.env.PWD || process.cwd();
+    const origDir = getOrigWorkingDirectory();
+    const pathDiff = path.relative(newDir, origDir);
+    const ret = path.normalize(path.join(pathDiff, value));
     return ret;
 }
 
@@ -175,12 +175,12 @@ function convertToRealPathSafe (path) {
 }
 
 function listPlatforms (project_dir) {
-    var platforms_dir = path.join(project_dir, 'platforms');
+    const platforms_dir = path.join(project_dir, 'platforms');
     if (!fs.existsSync(platforms_dir)) {
         return [];
     }
     // get subdirs (that are actually dirs, and not files)
-    var subdirs = fs.readdirSync(platforms_dir)
+    const subdirs = fs.readdirSync(platforms_dir)
         .filter(function (file) {
             return isDirectory(path.join(platforms_dir, file));
         });
@@ -237,8 +237,8 @@ function projectWww (projectDir) {
 }
 
 function projectConfig (projectDir) {
-    var rootPath = path.join(projectDir, 'config.xml');
-    var wwwPath = path.join(projectDir, 'www', 'config.xml');
+    const rootPath = path.join(projectDir, 'config.xml');
+    const wwwPath = path.join(projectDir, 'www', 'config.xml');
     if (fs.existsSync(rootPath)) {
         return rootPath;
     } else if (fs.existsSync(wwwPath)) {
@@ -255,7 +255,7 @@ function preProcessOptions (inputOptions) {
      * platformList: [String] -- assume just a list of platforms
      * platform: String -- assume this is a platform
      */
-    var result = inputOptions || {};
+    let result = inputOptions || {};
     if (Array.isArray(inputOptions)) {
         result = { platforms: inputOptions };
     } else if (typeof inputOptions === 'string') {
@@ -265,12 +265,12 @@ function preProcessOptions (inputOptions) {
     result.platforms = result.platforms || [];
     result.options = result.options || {};
 
-    var projectRoot = this.isCordova();
+    const projectRoot = this.isCordova();
 
     if (!projectRoot) {
         throw new CordovaError('Current working directory is not a Cordova-based project.');
     }
-    var projectPlatforms = this.listPlatforms(projectRoot);
+    const projectPlatforms = this.listPlatforms(projectRoot);
     if (projectPlatforms.length === 0) {
         throw new CordovaError('No platforms added to this project. Please use `' + exports.binname + ' platform add <platform>`.');
     }

@@ -17,7 +17,7 @@
     under the License.
 */
 
-var common = require('cordova-common');
+const common = require('cordova-common');
 
 exports = module.exports = {
     set binname (name) {

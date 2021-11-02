@@ -17,15 +17,15 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var helpers = require('../spec/helpers');
-var cordova = require('../src/cordova/cordova');
+const path = require('path');
+const fs = require('fs-extra');
+const helpers = require('../spec/helpers');
+const cordova = require('../src/cordova/cordova');
 
 const TIMEOUT = 60 * 1000;
-var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
+const plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
 
-var plugins = {
+const plugins = {
     Test1: path.join(plugins_dir, 'dependencies', 'Test1'),
     Test2: path.join(plugins_dir, 'dependencies', 'Test2'),
     Test3: path.join(plugins_dir, 'dependencies', 'Test3'),
@@ -47,7 +47,7 @@ describe('end-to-end plugin dependency tests', function () {
         fs.removeSync(preparedProject);
     });
 
-    var tmpDir, project, pluginsDir;
+    let tmpDir, project, pluginsDir;
     beforeEach(function () {
         tmpDir = helpers.tmpDir('plugin_dependency_test');
         project = path.join(tmpDir, 'project');

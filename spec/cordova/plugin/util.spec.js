@@ -17,14 +17,14 @@
     under the License.
 */
 
-var rewire = require('rewire');
-var plugin_util = rewire('../../../src/cordova/plugin/util');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
+const rewire = require('rewire');
+const plugin_util = rewire('../../../src/cordova/plugin/util');
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
 
 describe('cordova/plugin/util', function () {
-    var plugin_info_mock = function () {};
-    var cfg_parser_mock = function () {};
+    const plugin_info_mock = function () {};
+    const cfg_parser_mock = function () {};
     beforeEach(function () {
         spyOn(fs, 'removeSync');
         spyOn(events, 'emit');
@@ -35,7 +35,7 @@ describe('cordova/plugin/util', function () {
     });
     describe('getInstalledPlugins helper method', function () {
         it('should return result of PluginInfoProvider\'s getAllWithinSearchPath method', function () {
-            var plugins_list = ['VRPlugin', 'MastodonSocialPlugin'];
+            const plugins_list = ['VRPlugin', 'MastodonSocialPlugin'];
             plugin_info_mock.prototype.getAllWithinSearchPath.and.returnValue(plugins_list);
             expect(plugin_util.getInstalledPlugins('/some/path/to/a/project')).toEqual(plugins_list);
         });
@@ -44,13 +44,13 @@ describe('cordova/plugin/util', function () {
         it('should return variable from cli', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
             plugin_info_mock.prototype.getPreferences.and.returnValue({});
-            var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
+            const opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
             expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '9.0.0' });
         });
         it('should return empty object if there are no config and no cli variables', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
             plugin_info_mock.prototype.getPreferences.and.returnValue({});
-            var opts = { cli_variables: {} };
+            const opts = { cli_variables: {} };
             expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({});
         });
         it('cli variable takes precedence over config.xml', function () {
@@ -60,7 +60,7 @@ describe('cordova/plugin/util', function () {
                 spec: '/Users/auso/cordova/phonegap-plugin-push',
                 variables: { FCM_VERSION: '11.0.1' }
             });
-            var opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
+            const opts = { cli_variables: { FCM_VERSION: '9.0.0' } };
             expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '9.0.0' });
         });
         it('use config.xml variable if no cli variable is passed in', function () {
@@ -70,13 +70,13 @@ describe('cordova/plugin/util', function () {
                 variables: { FCM_VERSION: '11.0.1' }
             });
             plugin_info_mock.prototype.getPreferences.and.returnValue({});
-            var opts = { cli_variables: {} };
+            const opts = { cli_variables: {} };
             expect(plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts)).toEqual({ FCM_VERSION: '11.0.1' });
         });
         it('should get missed variables', function () {
             cfg_parser_mock.prototype.getPlugin.and.returnValue(undefined);
             plugin_info_mock.prototype.getPreferences.and.returnValue({ key: 'FCM_VERSION', value: undefined });
-            var opts = { cli_variables: {} };
+            const opts = { cli_variables: {} };
             expect(function () { plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts); }).toThrow();
             expect(fs.removeSync).toHaveBeenCalledWith(undefined);
             expect(events.emit).toHaveBeenCalledWith('verbose', 'Removing undefined because mandatory plugin variables were missing.');

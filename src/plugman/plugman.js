@@ -19,9 +19,9 @@
 
 // copyright (c) 2013 Andrew Lunny, Adobe Systems
 
-var events = require('cordova-common').events;
+const events = require('cordova-common').events;
 
-var plugman = {
+const plugman = {
     on: events.on.bind(events),
     off: events.removeListener.bind(events),
     removeAllListeners: events.removeAllListeners.bind(events),

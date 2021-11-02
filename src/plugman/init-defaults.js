@@ -24,20 +24,20 @@
 // having to use the reserved word package. This way we can lint this file.
 const pkg = this.package;
 
-var fs = require('fs-extra');
-var path = require('path');
+const fs = require('fs-extra');
+const path = require('path');
 
 function readDeps () {
     return function (cb) {
         fs.readdir('node_modules', function (er, dir) {
             if (er) return cb();
-            var deps = {};
-            var n = dir.length;
+            const deps = {};
+            let n = dir.length;
             if (n === 0) return cb(null, deps);
             dir.forEach(function (d) {
                 if (d.match(/^\./)) return next();
 
-                var dp = path.join(dirname, 'node_modules', d, 'package.json');
+                const dp = path.join(dirname, 'node_modules', d, 'package.json');
                 fs.readFile(dp, 'utf8', function (er, p) {
                     if (er) return next();
                     try { p = JSON.parse(p); } catch (e) { return next(); }
@@ -56,10 +56,10 @@ function readDeps () {
 // The defaults read from plugin.xml
 const defaults = config.toJSON();
 
-var name = pkg.name || defaults.id || basename;
+const name = pkg.name || defaults.id || basename;
 exports.name = yes ? name : prompt('name', name);
 
-var version = pkg.version || defaults.version || '1.0.0';
+const version = pkg.version || defaults.version || '1.0.0';
 exports.version = yes ? version : prompt('version', version);
 
 if (!pkg.description) {
@@ -98,8 +98,8 @@ if (!pkg.repository) {
                 return cb(null, yes ? '' : prompt('git repository'));
             }
             gconf = gconf.split(/\r?\n/);
-            var i = gconf.indexOf('[remote "origin"]');
-            var u;
+            const i = gconf.indexOf('[remote "origin"]');
+            let u;
             if (i !== -1) {
                 u = gconf[i + 1];
                 if (!u.match(/^\s*url =/)) u = gconf[i + 2];
@@ -117,12 +117,14 @@ if (!pkg.keywords) {
     if (defaults.keywords) {
         exports.keywords = defaults.keywords;
     } else {
-        exports.keywords = yes ? '' : prompt('keywords', function (s) {
-            if (!s) return undefined;
-            if (Array.isArray(s)) s = s.join(' ');
-            if (typeof s !== 'string') return s;
-            return s.split(/[\s,]+/);
-        });
+        exports.keywords = yes
+            ? ''
+            : prompt('keywords', function (s) {
+                if (!s) return undefined;
+                if (Array.isArray(s)) s = s.join(' ');
+                if (typeof s !== 'string') return s;
+                return s.split(/[\s,]+/);
+            });
     }
 }
 

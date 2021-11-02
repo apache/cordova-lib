@@ -16,24 +16,24 @@
     specific language governing permissions and limitations
     under the License.
 */
-var rewire = require('rewire');
-var fetch = rewire('../src/plugman/fetch');
-var fs = require('fs-extra');
-var os = require('os');
-var path = require('path');
-var metadata = require('../src/plugman/util/metadata');
-var temp = path.join(os.tmpdir(), 'plugman', 'fetch');
-var plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
-var test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
-var test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
-var test_plugin_searchpath = path.join(test_plugin, '..');
-var test_plugin_id = 'org.test.plugins.childbrowser';
-var test_plugin_version = '0.6.0';
+const rewire = require('rewire');
+const fetch = rewire('../src/plugman/fetch');
+const fs = require('fs-extra');
+const os = require('os');
+const path = require('path');
+const metadata = require('../src/plugman/util/metadata');
+const temp = path.join(os.tmpdir(), 'plugman', 'fetch');
+const plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
+let test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
+const test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
+const test_plugin_searchpath = path.join(test_plugin, '..');
+const test_plugin_id = 'org.test.plugins.childbrowser';
+const test_plugin_version = '0.6.0';
 const { asymmetricMatchers: { pathNormalizingTo } } = require('../spec/helpers');
 
 describe('fetch', function () {
     describe('local plugins', function () {
-        var sym;
+        let sym;
 
         beforeEach(function () {
             fs.removeSync(temp);
@@ -102,7 +102,7 @@ describe('fetch', function () {
                 });
         });
         it('Test 007 : should succeed when the plugin version specified is correct', function () {
-            var exp_id = test_plugin_id + '@' + test_plugin_version;
+            const exp_id = test_plugin_id + '@' + test_plugin_version;
             return fetch(test_plugin, temp, { expected_id: exp_id }).then(function () {
                 expect().nothing();
             });
@@ -122,8 +122,8 @@ describe('fetch', function () {
     });
 
     describe('fetch recursive error CB-8809', function () {
-        var srcDir = path.join(plugins_dir, 'recursivePlug');
-        var appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
+        const srcDir = path.join(plugins_dir, 'recursivePlug');
+        const appDir = path.join(plugins_dir, 'recursivePlug', 'demo');
         fetch.__set__('fetch', function (pluginDir) {
             return Promise.resolve(pluginDir);
         });

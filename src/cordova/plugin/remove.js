@@ -17,17 +17,17 @@
     under the License.
 */
 
-var ConfigParser = require('cordova-common').ConfigParser;
-var CordovaError = require('cordova-common').CordovaError;
-var events = require('cordova-common').events;
-var cordova_util = require('../util');
-var plugin_util = require('./util');
-var plugman = require('../../plugman/plugman');
-var metadata = require('../../plugman/util/metadata');
-var path = require('path');
-var fs = require('fs-extra');
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var detectIndent = require('detect-indent');
+const ConfigParser = require('cordova-common').ConfigParser;
+const CordovaError = require('cordova-common').CordovaError;
+const events = require('cordova-common').events;
+const cordova_util = require('../util');
+const plugin_util = require('./util');
+const plugman = require('../../plugman/plugman');
+const metadata = require('../../plugman/util/metadata');
+const path = require('path');
+const fs = require('fs-extra');
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const detectIndent = require('detect-indent');
 const { Q_chainmap } = require('../../util/promise-util');
 const preparePlatforms = require('../prepare/platforms');
 
@@ -38,12 +38,12 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     if (!targets || !targets.length) {
         return Promise.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See: ' + cordova_util.binname + ' plugin list.'));
     }
-    var pluginPath = path.join(projectRoot, 'plugins');
-    var plugins = cordova_util.findPlugins(pluginPath);
-    var platformList = cordova_util.listPlatforms(projectRoot);
-    var shouldRunPrepare = false;
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+    const pluginPath = path.join(projectRoot, 'plugins');
+    const plugins = cordova_util.findPlugins(pluginPath);
+    const platformList = cordova_util.listPlatforms(projectRoot);
+    let shouldRunPrepare = false;
+    const xml = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(xml);
 
     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
     return hooksRunner.fire('before_plugin_rm', opts)
@@ -63,7 +63,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     function removePlugin (target) {
         return Promise.resolve()
             .then(function () {
-                var validatedPluginId = module.exports.validatePluginId(target, plugins);
+                const validatedPluginId = module.exports.validatePluginId(target, plugins);
                 if (!validatedPluginId) {
                     throw new CordovaError('Plugin "' + target + '" is not present in the project. See `' + cordova_util.binname + ' plugin list`.');
                 }
@@ -91,12 +91,12 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     }
 
     function removePluginFromPlatform (target, platform) {
-        var platformRoot;
+        let platformRoot;
 
         return Promise.resolve().then(function () {
             platformRoot = path.join(projectRoot, 'platforms', platform);
-            var directory = path.join(pluginPath, target);
-            var pluginInfo = new PluginInfoProvider().get(directory);
+            const directory = path.join(pluginPath, target);
+            const pluginInfo = new PluginInfoProvider().get(directory);
             events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
             opts.force = opts.force || false;
 
@@ -114,9 +114,9 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     }
 
     function persistRemovalToCfg (target) {
-        var configPath = cordova_util.projectConfig(projectRoot);
+        const configPath = cordova_util.projectConfig(projectRoot);
         if (fs.existsSync(configPath)) { // should not happen with real life but needed for tests
-            var configXml = new ConfigParser(configPath);
+            const configXml = new ConfigParser(configPath);
 
             if (configXml.getPlugin(target)) {
                 events.emit('log', 'Removing plugin ' + target + ' from config.xml file...');
@@ -127,8 +127,8 @@ function remove (projectRoot, targets, hooksRunner, opts) {
     }
 
     function persistRemovalToPkg (target) {
-        var pkgJson;
-        var pkgJsonPath = path.join(projectRoot, 'package.json');
+        let pkgJson;
+        const pkgJsonPath = path.join(projectRoot, 'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
         if (fs.existsSync(pkgJsonPath)) {
             // delete any previous caches of require(package.json)
@@ -140,8 +140,8 @@ function remove (projectRoot, targets, hooksRunner, opts) {
             // Remove plugin from package.json
             delete pkgJson.cordova.plugins[target];
             // Write out new package.json with plugin removed correctly.
-            var file = fs.readFileSync(pkgJsonPath, 'utf8');
-            var indent = detectIndent(file).indent || '  ';
+            const file = fs.readFileSync(pkgJsonPath, 'utf8');
+            const indent = detectIndent(file).indent || '  ';
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
         }
     }

@@ -15,11 +15,11 @@
     under the License.
 */
 
-var cordova_util = require('../util');
-var HooksRunner = require('../../hooks/HooksRunner');
-var CordovaError = require('cordova-common').CordovaError;
-var platforms = require('../../platforms/platforms');
-var addHelper = require('./addHelper');
+const cordova_util = require('../util');
+const HooksRunner = require('../../hooks/HooksRunner');
+const CordovaError = require('cordova-common').CordovaError;
+const platforms = require('../../platforms/platforms');
+const addHelper = require('./addHelper');
 
 module.exports = platform;
 
@@ -34,7 +34,7 @@ module.exports.list = require('./list');
 module.exports.getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
 
 // Expose the platform parsers on top of this command
-for (var p in platforms) {
+for (const p in platforms) {
     module.exports[p] = platforms[p];
 }
 
@@ -49,9 +49,9 @@ function platform (command, targets, opts) {
     // CB-10519 wrap function code into promise so throwing error
     // would result in promise rejection instead of uncaught exception
     return Promise.resolve().then(function () {
-        var msg;
-        var projectRoot = cordova_util.cdProjectRoot();
-        var hooksRunner = new HooksRunner(projectRoot);
+        let msg;
+        const projectRoot = cordova_util.cdProjectRoot();
+        const hooksRunner = new HooksRunner(projectRoot);
 
         if (arguments.length === 0) command = 'ls';
 

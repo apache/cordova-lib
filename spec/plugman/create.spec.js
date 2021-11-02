@@ -16,8 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var create = require('../../src/plugman/create');
-var fs = require('fs-extra');
+const create = require('../../src/plugman/create');
+const fs = require('fs-extra');
 
 describe('plugman/create', () => {
     it('Test 002 : should be successful', function () {

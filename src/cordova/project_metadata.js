@@ -17,21 +17,21 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var ConfigParser = require('cordova-common').ConfigParser;
-var semver = require('semver');
+const cordova_util = require('./util');
+const ConfigParser = require('cordova-common').ConfigParser;
+const semver = require('semver');
 
 /** Returns all the platforms that are currently saved into config.xml
  *  @return {Promise<{name: string, version: string, src: string}[]>}
  *      e.g: [ {name: 'android', version: '3.5.0'}, {name: 'wp8', src: 'C:/path/to/platform'}, {name: 'ios', src: 'git://...'} ]
  */
 function getPlatforms (projectRoot) {
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+    const xml = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(xml);
 
     // If an engine's 'version' property is really its source, map that to the appropriate field.
-    var engines = cfg.getEngines().map(function (engine) {
-        var result = {
+    const engines = cfg.getEngines().map(function (engine) {
+        const result = {
             name: engine.name
         };
 
@@ -52,12 +52,12 @@ function getPlatforms (projectRoot) {
  *      e.g: [ {id: 'org.apache.cordova.device', variables: [{name: 'APP_ID', value: 'my-app-id'}, {name: 'APP_NAME', value: 'my-app-name'}]} ]
  */
 function getPlugins (projectRoot) {
-    var xml = cordova_util.projectConfig(projectRoot);
-    var cfg = new ConfigParser(xml);
+    const xml = cordova_util.projectConfig(projectRoot);
+    const cfg = new ConfigParser(xml);
 
     // Map variables object to an array
-    var plugins = cfg.getPlugins().map(function (plugin) {
-        var result = {
+    const plugins = cfg.getPlugins().map(function (plugin) {
+        const result = {
             name: plugin.name
         };
 
@@ -67,10 +67,10 @@ function getPlugins (projectRoot) {
             result.src = plugin.spec;
         }
 
-        var variablesObject = plugin.variables;
-        var variablesArray = [];
+        const variablesObject = plugin.variables;
+        const variablesArray = [];
         if (variablesObject) {
-            for (var variable in variablesObject) {
+            for (const variable in variablesObject) {
                 variablesArray.push({
                     name: variable,
                     value: variablesObject[variable]

@@ -25,8 +25,8 @@ const projectTestHelpers = require('../project-test-helpers');
  * expected given different configurations of package.json and/or config.xml.
 */
 describe('cordova/restore-util', () => {
-    var tmpDir, project, pkgJsonPath, configXmlPath;
-    var restore, cordovaPlatform, cordovaPlugin;
+    let tmpDir, project, pkgJsonPath, configXmlPath;
+    let restore, cordovaPlatform, cordovaPlugin;
     const {
         getPkgJsonPath, getConfigXmlPath, setupBaseProject, getCfg, getPkgJson, setPkgJson
     } = projectTestHelpers(() => project);

@@ -17,7 +17,7 @@
     under the License.
 */
 
-var path = require('path');
+const path = require('path');
 
 module.exports = function (project_dir) {
     return {

@@ -17,16 +17,16 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var ConfigParser = require('cordova-common').ConfigParser;
-var path = require('path');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var semver = require('semver');
-var detectIndent = require('detect-indent');
-var detectNewline = require('detect-newline');
-var stringifyPackage = require('stringify-package');
-var writeFileAtomicSync = require('write-file-atomic').sync;
+const cordova_util = require('./util');
+const ConfigParser = require('cordova-common').ConfigParser;
+const path = require('path');
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
+const semver = require('semver');
+const detectIndent = require('detect-indent');
+const detectNewline = require('detect-newline');
+const stringifyPackage = require('stringify-package');
+const writeFileAtomicSync = require('write-file-atomic').sync;
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
@@ -128,7 +128,7 @@ function installPlatformsFromConfigXML (platforms, opts) {
         // isn't a valid version or version range, assume it is the location to
         // install from.
         // CB-10761 If plugin spec is not specified, use plugin name
-        var installFrom = platform.spec || platformName;
+        let installFrom = platform.spec || platformName;
         if (platform.spec && semver.validRange(platform.spec, true)) {
             installFrom = platformName + '@' + platform.spec;
         }
@@ -236,13 +236,13 @@ function installPluginsFromConfigXML (args) {
         // Install from given URL if defined or using a plugin id. If spec isn't a valid version or version range,
         // assume it is the location to install from.
         // CB-10761 If plugin spec is not specified, use plugin name
-        var installFrom = pluginConfig.spec || pluginName;
+        let installFrom = pluginConfig.spec || pluginName;
         if (pluginConfig.spec && semver.validRange(pluginConfig.spec, true)) {
             installFrom = pluginName + '@' + pluginConfig.spec;
         }
 
         // Add feature preferences as CLI variables if have any
-        var options = {
+        const options = {
             cli_variables: pluginConfig.variables,
             searchpath: args.searchpath,
             save: args.save || false

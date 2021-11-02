@@ -17,21 +17,21 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var ActionStack = require('cordova-common').ActionStack;
-var dependencies = require('./util/dependencies');
-var CordovaError = require('cordova-common').CordovaError;
-var events = require('cordova-common').events;
-var platform_modules = require('../platforms/platforms');
-var promiseutil = require('../util/promise-util');
-var HooksRunner = require('../hooks/HooksRunner');
-var cordovaUtil = require('../cordova/util');
-var npmUninstall = require('cordova-fetch').uninstall;
+const path = require('path');
+const fs = require('fs-extra');
+const ActionStack = require('cordova-common').ActionStack;
+const dependencies = require('./util/dependencies');
+const CordovaError = require('cordova-common').CordovaError;
+const events = require('cordova-common').events;
+const platform_modules = require('../platforms/platforms');
+const promiseutil = require('../util/promise-util');
+const HooksRunner = require('../hooks/HooksRunner');
+const cordovaUtil = require('../cordova/util');
+const npmUninstall = require('cordova-fetch').uninstall;
 
-var PlatformJson = require('cordova-common').PlatformJson;
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-var variableMerge = require('../plugman/variable-merge');
+const PlatformJson = require('cordova-common').PlatformJson;
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const variableMerge = require('../plugman/variable-merge');
 
 // possible options: cli_variables, www_dir
 // Returns a promise.
@@ -46,7 +46,7 @@ function uninstall (platform, project_dir, id, plugins_dir, options) {
     plugins_dir = plugins_dir || path.join(project_dir, 'cordova', 'plugins');
 
     // Allow `id` to be a path to a file.
-    var xml_path = path.join(id, 'plugin.xml');
+    const xml_path = path.join(id, 'plugin.xml');
     if (fs.existsSync(xml_path)) {
         id = options.pluginInfoProvider.get(id).id;
     }
@@ -71,12 +71,12 @@ module.exports.uninstallPlatform = function (platform, project_dir, id, plugins_
         return Promise.reject(new CordovaError('Platform "' + platform + '" not supported.'));
     }
 
-    var plugin_dir = path.join(plugins_dir, id);
+    const plugin_dir = path.join(plugins_dir, id);
     if (!fs.existsSync(plugin_dir)) {
         return Promise.reject(new CordovaError('Plugin "' + id + '" not found. Already uninstalled?'));
     }
 
-    var current_stack = new ActionStack();
+    const current_stack = new ActionStack();
 
     return Promise.resolve().then(function () {
         if (options.platformVersion) {
@@ -95,9 +95,9 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
 
     options = options || {};
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
-    var pluginInfoProvider = options.pluginInfoProvider;
+    const pluginInfoProvider = options.pluginInfoProvider;
 
-    var plugin_dir = path.join(plugins_dir, id);
+    const plugin_dir = path.join(plugins_dir, id);
 
     // @tests - important this event is checked spec/uninstall.spec.js
     events.emit('log', 'Removing "' + id + '"');
@@ -115,8 +115,8 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
      *
      * @return {Promise||Error} Returns a empty promise or a promise of doing the npm uninstall
      */
-    var doDelete = function (id) {
-        var plugin_dir = path.join(plugins_dir, id);
+    const doDelete = function (id) {
+        const plugin_dir = path.join(plugins_dir, id);
         if (!fs.existsSync(plugin_dir)) {
             events.emit('verbose', 'Plugin "' + id + '" already removed (' + plugin_dir + ')');
             return Promise.resolve();
@@ -133,20 +133,20 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
     // Instead, we list all dependencies of the target plugin, and check the remaining metadata to see if
     // anything depends on them, or if they're listed as top-level.
     // If neither, they can be deleted.
-    var top_plugin_id = id;
+    const top_plugin_id = id;
 
     // Recursively remove plugins which were installed as dependents (that are not top-level)
-    var toDelete = [];
+    const toDelete = [];
     function findDependencies (pluginId) {
-        var depPluginDir = path.join(plugins_dir, pluginId);
+        const depPluginDir = path.join(plugins_dir, pluginId);
         // Skip plugin check for dependencies if it does not exist (CB-7846).
         if (!fs.existsSync(depPluginDir)) {
             events.emit('verbose', 'Plugin "' + pluginId + '" does not exist (' + depPluginDir + ')');
             return;
         }
-        var pluginInfo = pluginInfoProvider.get(depPluginDir);
+        const pluginInfo = pluginInfoProvider.get(depPluginDir);
         // TODO: Should remove dependencies in a separate step, since dependencies depend on platform.
-        var deps = pluginInfo.getDependencies();
+        const deps = pluginInfo.getDependencies();
         deps.forEach(function (d) {
             if (toDelete.indexOf(d.id) === -1) {
                 toDelete.push(d.id);
@@ -159,30 +159,30 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
 
     // Okay, now we check if any of these are depended on, or top-level.
     // Find the installed platforms by whether they have a metadata file.
-    var platforms = Object.keys(platform_modules).filter(function (platform) {
+    const platforms = Object.keys(platform_modules).filter(function (platform) {
         return fs.existsSync(path.join(plugins_dir, platform + '.json'));
     });
 
     // Can have missing plugins on some platforms when not supported..
-    var dependList = {};
+    const dependList = {};
     platforms.forEach(function (platform) {
-        var platformJson = PlatformJson.load(plugins_dir, platform);
-        var depsInfo = dependencies.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
-        var tlps = depsInfo.top_level_plugins;
-        var deps;
+        const platformJson = PlatformJson.load(plugins_dir, platform);
+        const depsInfo = dependencies.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+        const tlps = depsInfo.top_level_plugins;
+        let deps;
 
         // Top-level deps must always be explicitely asked to remove by user
         tlps.forEach(function (plugin_id) {
             if (top_plugin_id === plugin_id) { return; }
 
-            var i = toDelete.indexOf(plugin_id);
+            const i = toDelete.indexOf(plugin_id);
             if (i >= 0) { toDelete.splice(i, 1); }
         });
 
         toDelete.forEach(function (plugin) {
             deps = dependencies.dependents(plugin, depsInfo, platformJson, pluginInfoProvider);
 
-            var i = deps.indexOf(top_plugin_id);
+            const i = deps.indexOf(top_plugin_id);
             if (i >= 0) { deps.splice(i, 1); } // remove current/top-level plugin as blocking uninstall
 
             if (deps.length) {
@@ -191,34 +191,34 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
         });
     });
 
-    var dependPluginIds = toDelete.filter(function (plugin_id) {
+    const dependPluginIds = toDelete.filter(function (plugin_id) {
         return dependList[plugin_id];
     });
-    var createMsg = function (plugin_id) {
+    const createMsg = function (plugin_id) {
         return 'Plugin "' + plugin_id + '" is required by (' + dependList[plugin_id] + ')';
     };
-    var createMsg2 = function (plugin_id) {
+    const createMsg2 = function (plugin_id) {
         return createMsg(plugin_id) + ' and cannot be removed (hint: use -f or --force)';
     };
     if (!options.force && dependPluginIds.includes(top_plugin_id)) {
-        var msg = createMsg2(top_plugin_id);
+        const msg = createMsg2(top_plugin_id);
         return Promise.reject(new CordovaError(msg));
     }
 
     // action emmiting events.
     if (options.force) {
         dependPluginIds.forEach(function (plugin_id) {
-            var msg = createMsg(plugin_id);
+            const msg = createMsg(plugin_id);
             events.emit('log', msg + ' but forcing removal.');
         });
     } else {
         dependPluginIds.forEach(function (plugin_id) {
-            var msg = createMsg2(plugin_id);
+            const msg = createMsg2(plugin_id);
             events.emit('warn', msg);
         });
     }
-    var deletePluginIds = options.force ? toDelete : toDelete.filter(function (plugin_id) { return !dependList[plugin_id]; });
-    var deleteExecList = deletePluginIds.map(function (plugin_id) {
+    const deletePluginIds = options.force ? toDelete : toDelete.filter(function (plugin_id) { return !dependList[plugin_id]; });
+    const deleteExecList = deletePluginIds.map(function (plugin_id) {
         return function () { return doDelete(plugin_id); };
     });
     return deleteExecList.reduce(function (acc, deleteExec) {
@@ -229,27 +229,27 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise
 function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugins_dir, options) {
-    var pluginInfoProvider = options.pluginInfoProvider;
+    const pluginInfoProvider = options.pluginInfoProvider;
     // If this plugin is not really installed, return (CB-7004).
     if (!fs.existsSync(plugin_dir)) {
         return Promise.resolve(true);
     }
 
-    var pluginInfo = pluginInfoProvider.get(plugin_dir);
-    var plugin_id = pluginInfo.id;
+    const pluginInfo = pluginInfoProvider.get(plugin_dir);
+    const plugin_id = pluginInfo.id;
 
     // Merge cli_variables and plugin.xml variables
-    var variables = variableMerge.mergeVariables(plugin_dir, platform, options);
+    const variables = variableMerge.mergeVariables(plugin_dir, platform, options);
 
     // Deps info can be passed recusively
-    var platformJson = PlatformJson.load(plugins_dir, platform);
-    var depsInfo = options.depsInfo || dependencies.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+    const platformJson = PlatformJson.load(plugins_dir, platform);
+    const depsInfo = options.depsInfo || dependencies.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
 
     // Check that this plugin has no dependents.
-    var dependents = dependencies.dependents(plugin_id, depsInfo, platformJson, pluginInfoProvider);
+    const dependents = dependencies.dependents(plugin_id, depsInfo, platformJson, pluginInfoProvider);
 
     if (options.is_top_level && dependents && dependents.length > 0) {
-        var msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
+        const msg = 'The plugin \'' + plugin_id + '\' is required by (' + dependents.join(', ') + ')';
         if (options.force) {
             events.emit('warn', msg + ' but forcing removal');
         } else {
@@ -258,16 +258,16 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     }
 
     // Check how many dangling dependencies this plugin has.
-    var deps = depsInfo.graph.getChain(plugin_id);
-    var danglers = dependencies.danglers(plugin_id, depsInfo, platformJson, pluginInfoProvider);
+    const deps = depsInfo.graph.getChain(plugin_id);
+    const danglers = dependencies.danglers(plugin_id, depsInfo, platformJson, pluginInfoProvider);
 
-    var promise;
+    let promise;
     if (deps && deps.length && danglers && danglers.length) {
         // @tests - important this event is checked spec/uninstall.spec.js
         events.emit('log', 'Uninstalling ' + danglers.length + ' dependent plugins.');
         promise = promiseutil.Q_chainmap(danglers, function (dangler) {
-            var dependent_path = path.join(plugins_dir, dangler);
-            var opts = Object.assign({}, options, {
+            const dependent_path = path.join(plugins_dir, dangler);
+            const opts = Object.assign({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
                 depsInfo: depsInfo
             });
@@ -278,7 +278,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
         promise = Promise.resolve();
     }
 
-    var projectRoot = cordovaUtil.isCordova();
+    const projectRoot = cordovaUtil.isCordova();
 
     if (projectRoot) {
         // CB-10708 This is the case when we're trying to uninstall plugin using plugman from specific
@@ -291,8 +291,8 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
     return promise.then(function () {
         if (!projectRoot) return;
 
-        var hooksRunner = new HooksRunner(projectRoot);
-        var hooksRunnerOptions = {
+        const hooksRunner = new HooksRunner(projectRoot);
+        const hooksRunnerOptions = {
             cordova: { platforms: [platform] },
             plugin: {
                 id: pluginInfo.id,

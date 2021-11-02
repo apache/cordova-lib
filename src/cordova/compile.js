@@ -17,19 +17,19 @@
     under the License.
 */
 
-var cordova_util = require('./util');
-var HooksRunner = require('../hooks/HooksRunner');
-var promiseUtil = require('../util/promise-util');
-var platform_lib = require('../platforms/platforms');
+const cordova_util = require('./util');
+const HooksRunner = require('../hooks/HooksRunner');
+const promiseUtil = require('../util/promise-util');
+const platform_lib = require('../platforms/platforms');
 
 // Returns a promise.
 module.exports = function compile (options) {
     return Promise.resolve()
         .then(function () {
-            var projectRoot = cordova_util.cdProjectRoot();
+            const projectRoot = cordova_util.cdProjectRoot();
             options = cordova_util.preProcessOptions(options);
 
-            var hooksRunner = new HooksRunner(projectRoot);
+            const hooksRunner = new HooksRunner(projectRoot);
             return hooksRunner.fire('before_compile', options)
                 .then(function () {
                     return promiseUtil.Q_chainmap(options.platforms, function (platform) {

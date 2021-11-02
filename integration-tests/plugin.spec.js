@@ -17,42 +17,42 @@
     under the License.
 */
 
-var fs = require('fs-extra');
-var helpers = require('../spec/helpers');
-var path = require('path');
-var events = require('cordova-common').events;
-var cordova = require('../src/cordova/cordova');
-var platforms = require('../src/platforms/platforms');
-var plugman = require('../src/plugman/plugman');
-var install = require('../src/plugman/install');
-var plugin_util = require('../src/cordova/plugin/util');
+const fs = require('fs-extra');
+const helpers = require('../spec/helpers');
+const path = require('path');
+const events = require('cordova-common').events;
+const cordova = require('../src/cordova/cordova');
+const platforms = require('../src/platforms/platforms');
+const plugman = require('../src/plugman/plugman');
+const install = require('../src/plugman/install');
+const plugin_util = require('../src/cordova/plugin/util');
 const HooksRunner = require('../src/hooks/HooksRunner');
 
-var util = require('../src/cordova/util');
+const util = require('../src/cordova/util');
 
-var tmpDir = helpers.tmpDir('plugin_test');
-var preparedProject = path.join(tmpDir, 'prepared-project');
-var project = path.join(tmpDir, 'project');
-var fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
-var pluginsDir = path.join(fixturesDir, 'plugins');
+const tmpDir = helpers.tmpDir('plugin_test');
+const preparedProject = path.join(tmpDir, 'prepared-project');
+const project = path.join(tmpDir, 'project');
+const fixturesDir = path.join(__dirname, '..', 'spec', 'cordova', 'fixtures');
+const pluginsDir = path.join(fixturesDir, 'plugins');
 
-var pluginId = 'org.apache.cordova.fakeplugin1';
-var org_test_defaultvariables = 'org.test.defaultvariables';
+const pluginId = 'org.apache.cordova.fakeplugin1';
+const org_test_defaultvariables = 'org.test.defaultvariables';
 
 // This plugin is published to npm and defines cordovaDependencies
 // in its package.json. Based on the dependencies and the version of
 // cordova-android installed in our test project, the CLI should
 // select version 1.1.2 of the plugin. We don't actually fetch from
 // npm, but we do check the npm info.
-var npmInfoTestPlugin = 'cordova-lib-test-plugin';
-var npmInfoTestPluginVersion = '1.1.2';
+const npmInfoTestPlugin = 'cordova-lib-test-plugin';
+const npmInfoTestPluginVersion = '1.1.2';
 
-var scopedTestPlugin = '@cordova/plugin-test-dummy';
+const scopedTestPlugin = '@cordova/plugin-test-dummy';
 
-var testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.git';
-var testGitPluginId = 'cordova-plugin-device';
+const testGitPluginRepository = 'https://github.com/apache/cordova-plugin-device.git';
+const testGitPluginId = 'cordova-plugin-device';
 
-var results;
+let results;
 
 // Runs: list, add, list
 function addPlugin (target, id, options) {
@@ -89,7 +89,7 @@ function removePlugin (id) {
 // The searchpath behavior gets tested in the plugman spec
 function mockPluginFetch (id, dir) {
     spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, fetchOptions) {
-        var dest = path.join(project, 'plugins', id);
+        const dest = path.join(project, 'plugins', id);
 
         fs.copySync(path.join(dir, 'plugin.xml'), path.join(dest, 'plugin.xml'));
         return Promise.resolve(dest);
@@ -135,11 +135,11 @@ describe('plugin end-to-end', function () {
     it('Test 004 : should successfully add a plugin using relative path when running from subdir inside of project', function () {
         // Copy plugin to subdir inside of the project. This is required since path.relative
         // returns an absolute path when source and dest are on different drives
-        var plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
+        const plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
         fs.copySync(path.join(pluginsDir, 'fake1'), plugindir);
 
         // Create a subdir, where we're going to run cordova from
-        var subdir = path.join(project, 'bin');
+        const subdir = path.join(project, 'bin');
         fs.ensureDirSync(subdir);
         process.chdir(subdir);
 
@@ -151,13 +151,13 @@ describe('plugin end-to-end', function () {
     }, 30000);
 
     it('Test 005 : should respect preference default values', function () {
-        var plugin_util = require('../src/cordova/plugin/util');
+        const plugin_util = require('../src/cordova/plugin/util');
         spyOn(plugin_util, 'mergeVariables').and.returnValue({ REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' });
         return addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, { cli_variables: { REQUIRED: 'NO', REQUIRED_ANDROID: 'NO' } })
             .then(function () {
-                var platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
-                var installed_plugins = require(platformJsonPath).installed_plugins;
-                var defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
+                const platformJsonPath = path.join(project, 'plugins', helpers.testPlatform + '.json');
+                const installed_plugins = require(platformJsonPath).installed_plugins;
+                const defaultPluginPreferences = installed_plugins[org_test_defaultvariables];
                 expect(defaultPluginPreferences).toBeDefined();
                 expect(defaultPluginPreferences.DEFAULT).toBe('yes');
                 expect(defaultPluginPreferences.DEFAULT_ANDROID).toBe('yes');
@@ -177,7 +177,7 @@ describe('plugin end-to-end', function () {
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, { searchpath: pluginsDir })
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
-                var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
+                const fetchOptions = plugman.fetch.calls.mostRecent().args[2];
                 expect(fetchOptions.searchpath[0]).toExist();
             });
     }, 30000);
@@ -190,7 +190,7 @@ describe('plugin end-to-end', function () {
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
 
-                var fetchOptions = plugman.fetch.calls.mostRecent().args[2];
+                const fetchOptions = plugman.fetch.calls.mostRecent().args[2];
                 expect(fetchOptions.noregistry).toBeTruthy();
             });
     }, 30000);
@@ -220,7 +220,7 @@ describe('plugin end-to-end', function () {
             .then(function () {
                 expect(plugin_util.info).toHaveBeenCalled();
 
-                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                const fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
             });
     }, 30000);
@@ -236,13 +236,13 @@ describe('plugin end-to-end', function () {
 
                 expect(plugin_util.info).toHaveBeenCalledWith([scopedTestPlugin]);
 
-                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                const fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedTestPlugin);
             });
     }, 30000);
 
     it('Test 012 : should handle scoped npm packages with given version tags', function () {
-        var scopedPackage = scopedTestPlugin + '@latest';
+        const scopedPackage = scopedTestPlugin + '@latest';
         mockPluginFetch(scopedTestPlugin, path.join(pluginsDir, scopedTestPlugin));
 
         spyOn(plugin_util, 'info');
@@ -250,7 +250,7 @@ describe('plugin end-to-end', function () {
             .then(function () {
                 expect(plugin_util.info).not.toHaveBeenCalled();
 
-                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                const fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedPackage);
             });
     }, 30000);
@@ -263,7 +263,7 @@ describe('plugin end-to-end', function () {
             .then(() => {
                 expect(plugin_util.info).toHaveBeenCalledWith([scopedTestPlugin]);
 
-                var fetchTarget = plugman.fetch.calls.mostRecent().args[0];
+                const fetchTarget = plugman.fetch.calls.mostRecent().args[0];
                 expect(fetchTarget).toEqual(scopedTestPlugin);
 
                 return removePlugin(scopedTestPlugin);

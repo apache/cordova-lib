@@ -17,19 +17,19 @@
     under the License.
 */
 
-var cordovaUtil = require('./util');
-var HooksRunner = require('../hooks/HooksRunner');
+const cordovaUtil = require('./util');
+const HooksRunner = require('../hooks/HooksRunner');
 const cordovaPrepare = require('./prepare');
 const cordovaCompile = require('./compile');
 
 // Returns a promise.
 module.exports = function build (options) {
     return Promise.resolve().then(function () {
-        var projectRoot = cordovaUtil.cdProjectRoot();
+        const projectRoot = cordovaUtil.cdProjectRoot();
         options = cordovaUtil.preProcessOptions(options);
 
         // fire build hooks
-        var hooksRunner = new HooksRunner(projectRoot);
+        const hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_build', options)
             .then(function () {
                 return cordovaPrepare(options);

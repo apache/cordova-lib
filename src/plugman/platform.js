@@ -17,26 +17,23 @@
     under the License.
 */
 
-var et = require('elementtree');
-var fs = require('fs-extra');
-var path = require('path');
-var stripLicense = require('./util/strip-license');
+const et = require('elementtree');
+const fs = require('fs-extra');
+const path = require('path');
+const stripLicense = require('./util/strip-license');
 
 /**
  * Used for adding templates for plugin platforms to plugin.xml
  */
 module.exports = {
     add: function (platformName) {
-        var pluginxml,
-            platform;
-
         // Check to make sure we are in the plugin first
         if (!fs.existsSync('plugin.xml')) {
             return Promise.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
         }
 
         // Get the current plugin.xml file
-        pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
+        const pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
 
         // Check if this platform exists
         if (pluginxml.find("./platform/[@name='" + platformName + "']")) {
@@ -44,7 +41,7 @@ module.exports = {
         }
 
         // Get the platform specific elements
-        platform = doPlatform(platformName, pluginxml.find('./name').text, pluginxml.getroot().get('id'));
+        const platform = doPlatform(platformName, pluginxml.find('./name').text, pluginxml.getroot().get('id'));
 
         // Make sure we support it
         if (!platform) {
@@ -63,7 +60,7 @@ module.exports = {
         }
 
         // Get the current plugin.xml file
-        var pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
+        const pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
 
         // Check if this platform exists
         if (!pluginxml.find("./platform/[@name='" + platformName + "']")) {
@@ -84,9 +81,9 @@ module.exports = {
 };
 
 function doPlatform (platformName, pluginName, pluginID, pluginVersion) {
-    var templatesDir = path.join(__dirname, '..', '..', 'templates/platforms/' + platformName + '/');
-    var platformFile = templatesDir + platformName + '.xml';
-    var platform;
+    const templatesDir = path.join(__dirname, '..', '..', 'templates/platforms/' + platformName + '/');
+    const platformFile = templatesDir + platformName + '.xml';
+    let platform;
 
     if (!fs.existsSync(platformFile)) {
         return false;
@@ -105,7 +102,7 @@ function doPlatform (platformName, pluginName, pluginID, pluginVersion) {
 
 function doPlatformBase (templatesDir, platformName, pluginName, pluginID, pluginVersion) {
     // Create the default plugin file
-    var baseFiles = [];
+    const baseFiles = [];
 
     switch (platformName) {
     case 'android':

@@ -15,23 +15,22 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var rewire = require('rewire');
-var cordova_util = require('../../../src/cordova/util');
-var promiseutil = require('../../../src/util/promise-util');
+const path = require('path');
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
+const rewire = require('rewire');
+const cordova_util = require('../../../src/cordova/util');
+const promiseutil = require('../../../src/util/promise-util');
 
 describe('cordova/platform/remove', function () {
-    var projectRoot = '/some/path';
-    var cfg_parser_mock = function () {};
-    var hooks_mock;
-    var package_json_mock;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    const projectRoot = '/some/path';
+    const cfg_parser_mock = function () {};
+    let hooks_mock;
+    const package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
 
-    var platform_remove;
+    let platform_remove;
 
     beforeEach(function () {
         hooks_mock = jasmine.createSpyObj('hooksRunner mock', ['fire']);

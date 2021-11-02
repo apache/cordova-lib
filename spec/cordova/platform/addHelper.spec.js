@@ -15,19 +15,19 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('util');
-var events = require('cordova-common').events;
-var rewire = require('rewire');
-var cordova_util = require('../../../src/cordova/util');
-var platforms = require('../../../src/platforms');
-var plugman = require('../../../src/plugman/plugman');
-var fetch_metadata = require('../../../src/plugman/util/metadata');
+const path = require('path');
+const fs = require('fs-extra');
+const util = require('util');
+const events = require('cordova-common').events;
+const rewire = require('rewire');
+const cordova_util = require('../../../src/cordova/util');
+const platforms = require('../../../src/platforms');
+const plugman = require('../../../src/plugman/plugman');
+const fetch_metadata = require('../../../src/plugman/util/metadata');
 
 describe('cordova/platform/addHelper', function () {
     const projectRoot = '/some/path';
-    var cfg_parser_mock, fake_platform, fetch_mock, hooks_mock,
+    let cfg_parser_mock, fake_platform, fetch_mock, hooks_mock,
         package_json_mock, platform_addHelper, platform_api_mock, prepare_mock;
 
     beforeEach(function () {
@@ -132,7 +132,7 @@ describe('cordova/platform/addHelper', function () {
 
         describe('platform spec inference', function () {
             it('should retrieve platform details from directories-specified-as-platforms using getPlatformDetailsFromDir', function () {
-                var directory_to_platform = '/path/to/cordova-atari';
+                const directory_to_platform = '/path/to/cordova-atari';
                 cordova_util.isDirectory.and.returnValue(true);
                 fetch_mock.and.returnValue(Promise.resolve(directory_to_platform));
                 return platform_addHelper('add', hooks_mock, projectRoot, [directory_to_platform], { restoring: true }).then(function () {
@@ -143,7 +143,7 @@ describe('cordova/platform/addHelper', function () {
 
             it('should retrieve platform details from URLs-specified-as-platforms using downloadPlatform', function () {
                 cordova_util.isUrl.and.returnValue(true);
-                var url_to_platform = 'http://github.com/apache/cordova-atari';
+                const url_to_platform = 'http://github.com/apache/cordova-atari';
                 return platform_addHelper('add', hooks_mock, projectRoot, [url_to_platform], { restoring: true }).then(function () {
                     expect(platform_addHelper.downloadPlatform).toHaveBeenCalledWith(projectRoot, null, url_to_platform, jasmine.any(Object));
                 });

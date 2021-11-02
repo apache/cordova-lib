@@ -17,7 +17,7 @@
     under the License.
 */
 
-var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
+const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 module.exports.mergeVariables = mergeVariables;
 

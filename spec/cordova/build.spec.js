@@ -17,12 +17,12 @@
     under the License.
 */
 const rewire = require('rewire');
-var platforms = require('../../src/platforms/platforms');
-var HooksRunner = require('../../src/hooks/HooksRunner');
-var util = require('../../src/cordova/util');
+const platforms = require('../../src/platforms/platforms');
+const HooksRunner = require('../../src/hooks/HooksRunner');
+const util = require('../../src/cordova/util');
 
 describe('build command', function () {
-    var project_dir = '/some/path';
+    const project_dir = '/some/path';
     let cordovaBuild, cordovaPrepare, cordovaCompile;
 
     beforeEach(function () {
@@ -60,14 +60,14 @@ describe('build command', function () {
     describe('success', function () {
         it('Test 003 : should run inside a Cordova-based project with at least one added platform and call both prepare and compile', function () {
             return cordovaBuild(['android', 'ios']).then(function () {
-                var opts = Object({ platforms: ['android', 'ios'], verbose: false, options: Object({ }) });
+                const opts = Object({ platforms: ['android', 'ios'], verbose: false, options: Object({ }) });
                 expect(cordovaPrepare).toHaveBeenCalledWith(opts);
                 expect(cordovaCompile).toHaveBeenCalledWith(opts);
             });
         });
         it('Test 004 : should pass down options', function () {
             return cordovaBuild({ platforms: ['android'], options: { release: true } }).then(function () {
-                var opts = { platforms: ['android'], options: { release: true }, verbose: false };
+                const opts = { platforms: ['android'], options: { release: true }, verbose: false };
                 expect(cordovaPrepare).toHaveBeenCalledWith(opts);
                 expect(cordovaCompile).toHaveBeenCalledWith(opts);
             });

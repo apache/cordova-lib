@@ -17,21 +17,21 @@
     under the License.
 */
 
-var path = require('path');
-var rewire = require('rewire');
-var util = require('../../src/cordova/util');
-var prepare = rewire('../../src/cordova/prepare');
-var restore = require('../../src/cordova/restore-util');
-var platforms = require('../../src/platforms/platforms');
-var HooksRunner = require('../../src/hooks/HooksRunner');
-var PlatformJson = require('cordova-common').PlatformJson;
+const path = require('path');
+const rewire = require('rewire');
+const util = require('../../src/cordova/util');
+const prepare = rewire('../../src/cordova/prepare');
+const restore = require('../../src/cordova/restore-util');
+const platforms = require('../../src/platforms/platforms');
+const HooksRunner = require('../../src/hooks/HooksRunner');
+const PlatformJson = require('cordova-common').PlatformJson;
 
-var project_dir = '/some/path';
+const project_dir = '/some/path';
 
 describe('cordova/prepare', function () {
-    var platform_api_prepare_mock;
-    var platform_api_add_mock;
-    var platform_api_remove_mock;
+    let platform_api_prepare_mock;
+    let platform_api_add_mock;
+    let platform_api_remove_mock;
     beforeEach(function () {
         platform_api_prepare_mock = jasmine.createSpy('prepare').and.returnValue(Promise.resolve());
         platform_api_add_mock = jasmine.createSpy('add').and.returnValue(Promise.resolve());
@@ -59,7 +59,7 @@ describe('cordova/prepare', function () {
             spyOn(restore, 'installPluginsFromConfigXML').and.returnValue(Promise.resolve());
             spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
             spyOn(util, 'preProcessOptions').and.callFake(function (options) {
-                var platforms = options.platforms || [];
+                const platforms = options.platforms || [];
                 return { platforms: platforms };
             });
             spyOn(prepare, 'preparePlatforms').and.returnValue(Promise.resolve());

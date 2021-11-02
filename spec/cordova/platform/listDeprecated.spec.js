@@ -22,8 +22,8 @@ const events = require('cordova-common').events;
 const platform_list = rewire('../../../src/cordova/platform/list');
 
 describe('cordova/platform/list show deprecated platforms info', function () {
-    var hooks_mock;
-    var projectRoot = '/some/path';
+    let hooks_mock;
+    const projectRoot = '/some/path';
 
     beforeEach(function () {
         // use mock platforms info so that this test can working properly
@@ -62,7 +62,7 @@ describe('cordova/platform/list show deprecated platforms info', function () {
     });
 
     it('returns platform list with deprecated info', function () {
-        var platformList = ['android 1.2.3', 'wp7 4.5.6'];
+        const platformList = ['android 1.2.3', 'wp7 4.5.6'];
         expect(platform_list.addDeprecatedInformationToPlatforms(platformList)).toEqual(['android 1.2.3', 'wp7 4.5.6 (deprecated)']);
     });
 });

@@ -16,8 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-var platform = require('../../src/plugman/platform');
-var fs = require('fs-extra');
+const platform = require('../../src/plugman/platform');
+const fs = require('fs-extra');
 
 describe('plugman/platform', () => {
     describe('add', function () {

@@ -17,13 +17,13 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('../../src/cordova/util');
-var helpers = require('../helpers');
+const path = require('path');
+const fs = require('fs-extra');
+const util = require('../../src/cordova/util');
+const helpers = require('../helpers');
 
-var cwd = process.cwd();
-var origPWD = process.env.PWD;
+const cwd = process.cwd();
+const origPWD = process.env.PWD;
 
 describe('util module', function () {
     let temp;
@@ -82,7 +82,7 @@ describe('util module', function () {
     });
     describe('listPlatforms method', function () {
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
-            var platforms = path.join(temp, 'platforms');
+            const platforms = path.join(temp, 'platforms');
 
             fs.ensureDirSync(path.join(platforms, 'android'));
             fs.ensureDirSync(path.join(platforms, 'ios'));
@@ -92,7 +92,7 @@ describe('util module', function () {
             // create a typical platforms.json file, it should not be returned as a platform
             fs.ensureFileSync(path.join(platforms, 'platforms.json'));
 
-            var res = util.listPlatforms(temp);
+            const res = util.listPlatforms(temp);
             expect(res.length).toEqual(4);
         });
     });
@@ -165,8 +165,8 @@ describe('util module', function () {
     });
 
     describe('preprocessOptions method', function () {
-        var isCordova, listPlatforms;
-        var DEFAULT_OPTIONS = {
+        let isCordova, listPlatforms;
+        const DEFAULT_OPTIONS = {
             // 'android' is here because we create a spy
             // for listPlatforms below that returns 'android'
             platforms: ['android'],

@@ -15,16 +15,16 @@
     under the License.
 */
 
-var path = require('path');
-var fs = require('fs-extra');
-var CordovaError = require('cordova-common').CordovaError;
-var ConfigParser = require('cordova-common').ConfigParser;
-var events = require('cordova-common').events;
-var npmUninstall = require('cordova-fetch').uninstall;
-var cordova_util = require('../util');
-var promiseutil = require('../../util/promise-util');
-var platforms = require('../../platforms/platforms');
-var detectIndent = require('detect-indent');
+const path = require('path');
+const fs = require('fs-extra');
+const CordovaError = require('cordova-common').CordovaError;
+const ConfigParser = require('cordova-common').ConfigParser;
+const events = require('cordova-common').events;
+const npmUninstall = require('cordova-fetch').uninstall;
+const cordova_util = require('../util');
+const promiseutil = require('../../util/promise-util');
+const platforms = require('../../platforms/platforms');
+const detectIndent = require('detect-indent');
 
 module.exports = remove;
 
@@ -39,18 +39,18 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                 cordova_util.removePlatformPluginsJson(projectRoot, target);
             });
         }).then(function () {
-            var modifiedPkgJson = false;
-            var pkgJson;
-            var pkgJsonPath = path.join(projectRoot, 'package.json');
+            let modifiedPkgJson = false;
+            let pkgJson;
+            const pkgJsonPath = path.join(projectRoot, 'package.json');
             // If statement to see if pkgJsonPath exists in the filesystem
             if (fs.existsSync(pkgJsonPath)) {
                 pkgJson = cordova_util.requireNoCache(pkgJsonPath);
             }
             if (opts.save) {
                 targets.forEach(function (target) {
-                    var platformName = target.split('@')[0];
-                    var xml = cordova_util.projectConfig(projectRoot);
-                    var cfg = new ConfigParser(xml);
+                    const platformName = target.split('@')[0];
+                    const xml = cordova_util.projectConfig(projectRoot);
+                    const cfg = new ConfigParser(xml);
                     if (cfg.getEngines && cfg.getEngines().some(function (e) { return e.name === platformName; })) {
                         events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                         cfg.removeEngine(platformName);
@@ -58,7 +58,7 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                     }
                     // If package.json exists and contains a specified platform in cordova.platforms, it will be removed.
                     if (pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
-                        var index = pkgJson.cordova.platforms.indexOf(platformName);
+                        const index = pkgJson.cordova.platforms.indexOf(platformName);
                         // Check if platform exists in platforms array.
                         if (pkgJson.cordova.platforms !== undefined && index > -1) {
                             events.emit('log', 'Removing ' + platformName + ' from cordova.platforms array in package.json');
@@ -69,8 +69,8 @@ function remove (hooksRunner, projectRoot, targets, opts) {
                 });
                 // Write out new package.json if changes have been made.
                 if (modifiedPkgJson === true) {
-                    var file = fs.readFileSync(pkgJsonPath, 'utf8');
-                    var indent = detectIndent(file).indent || '  ';
+                    const file = fs.readFileSync(pkgJsonPath, 'utf8');
+                    const indent = detectIndent(file).indent || '  ';
                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
                 }
             }

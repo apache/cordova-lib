@@ -17,22 +17,22 @@
     under the License.
 */
 
-var rewire = require('rewire');
-var plugman = require('../../../src/plugman/plugman');
-var cordova_util = require('../../../src/cordova/util');
-var path = require('path');
-var fs = require('fs-extra');
-var events = require('cordova-common').events;
-var plugin_util = require('../../../src/cordova/plugin/util');
+const rewire = require('rewire');
+const plugman = require('../../../src/plugman/plugman');
+const cordova_util = require('../../../src/cordova/util');
+const path = require('path');
+const fs = require('fs-extra');
+const events = require('cordova-common').events;
+const plugin_util = require('../../../src/cordova/plugin/util');
 
 describe('cordova/plugin/add', function () {
-    var projectRoot = '/some/path';
-    var hook_mock;
-    var Cfg_parser_mock = function () {};
-    var plugin_info_provider_mock = function () {};
-    var plugin_info;
-    var package_json_mock;
-    var add;
+    const projectRoot = '/some/path';
+    let hook_mock;
+    const Cfg_parser_mock = function () {};
+    const plugin_info_provider_mock = function () {};
+    let plugin_info;
+    let package_json_mock;
+    let add;
 
     beforeEach(function () {
         add = rewire('../../../src/cordova/plugin/add');
@@ -106,7 +106,7 @@ describe('cordova/plugin/add', function () {
                 });
             });
             it('should retrieve any variables for the plugin from config.xml and add them as cli variables only when the variables were not already provided via options', function () {
-                var cfg_plugin_variables = { some: 'variable' };
+                const cfg_plugin_variables = { some: 'variable' };
                 Cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
                     return { variables: cfg_plugin_variables };
                 });
@@ -133,7 +133,7 @@ describe('cordova/plugin/add', function () {
                 });
             });
             it('should save plugin variable information to package.json file (if exists)', function () {
-                var cli_plugin_variables = { some: 'variable' };
+                const cli_plugin_variables = { some: 'variable' };
 
                 fs.existsSync.and.callFake(function (file_path) {
                     if (path.basename(file_path) === 'package.json') {
@@ -149,8 +149,8 @@ describe('cordova/plugin/add', function () {
                 });
             });
             it('should overwrite plugin information in config.xml after a successful installation', function () {
-                var cfg_plugin_variables = { some: 'variable' };
-                var cli_plugin_variables = { some: 'new_variable' };
+                const cfg_plugin_variables = { some: 'variable' };
+                const cli_plugin_variables = { some: 'new_variable' };
                 Cfg_parser_mock.prototype.getPlugin.and.callFake(function (plugin_id) {
                     return { variables: cfg_plugin_variables };
                 });
@@ -352,13 +352,13 @@ describe('cordova/plugin/add', function () {
     });
     describe('getVersionFromConfigFile helper method', function () {
         it('should return spec', function () {
-            var fakePlugin = {};
+            const fakePlugin = {};
             fakePlugin.name = '';
             fakePlugin.spec = '1.0.0';
             fakePlugin.variables = {};
 
             Cfg_parser_mock.prototype.getPlugin.and.returnValue(fakePlugin);
-            var new_cfg = new Cfg_parser_mock();
+            const new_cfg = new Cfg_parser_mock();
             expect(add.getVersionFromConfigFile('cordova-plugin-device', new_cfg)).toEqual('1.0.0');
         });
     });
@@ -367,7 +367,7 @@ describe('cordova/plugin/add', function () {
     describe('unit tests to replace integration-tests/plugin_fetch.spec.js', function () {
         // See also the tests in spec/cordova/plugin/add.getFetchVersion.spec.js
         describe('getFetchVersion helper method', function () {
-            var pluginInfo;
+            let pluginInfo;
 
             beforeEach(function () {
                 add.getFetchVersion.and.callThrough();
@@ -397,7 +397,7 @@ describe('cordova/plugin/add', function () {
         });
         // TODO More work to be done here to replace plugin_fetch.spec.js
         describe('determinePluginVersionToFetch helper method', function () {
-            var pluginInfo;
+            let pluginInfo;
             beforeEach(function () {
                 pluginInfo = {};
                 pluginInfo.name = 'cordova-plugin-device';
@@ -427,7 +427,7 @@ describe('cordova/plugin/add', function () {
         });
         describe('getFailedRequirements helper method', function () {
             it('should remove prerelease version', function () {
-                var semver = require('semver');
+                const semver = require('semver');
                 spyOn(semver, 'prerelease').and.returnValue('7.0.1');
                 spyOn(semver, 'inc').and.callThrough();
                 expect(add.getFailedRequirements({ cordova: '>=7.0.0' }, {}, {}, '7.0.0').length).toBe(0);

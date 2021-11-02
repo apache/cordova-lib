@@ -17,11 +17,11 @@
     under the License.
 */
 
-var pluginSpec = require('../../../src/cordova/plugin/plugin_spec_parser');
+const pluginSpec = require('../../../src/cordova/plugin/plugin_spec_parser');
 
 describe('methods for parsing npm plugin packages', function () {
     function checkPluginSpecParsing (testString, id, version) {
-        var parsedSpec = pluginSpec.parse(testString);
+        const parsedSpec = pluginSpec.parse(testString);
         expect(parsedSpec.id).toEqual(id || testString);
         expect(parsedSpec.version).toEqual(version);
     }
