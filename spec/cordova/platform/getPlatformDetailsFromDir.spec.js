@@ -23,8 +23,7 @@ const platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPla
 const events = require('cordova-common').events;
 
 describe('cordova/platform/getPlatformDetailsFromDir', function () {
-    let package_json_mock;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    const package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.name = 'io.cordova.hellocordova';
     package_json_mock.version = '1.0.0';
 

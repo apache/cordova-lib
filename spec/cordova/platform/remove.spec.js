@@ -26,8 +26,7 @@ describe('cordova/platform/remove', function () {
     const projectRoot = '/some/path';
     const cfg_parser_mock = function () {};
     let hooks_mock;
-    let package_json_mock;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    const package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
 

@@ -27,16 +27,13 @@ const stripLicense = require('./util/strip-license');
  */
 module.exports = {
     add: function (platformName) {
-        let pluginxml,
-            platform;
-
         // Check to make sure we are in the plugin first
         if (!fs.existsSync('plugin.xml')) {
             return Promise.reject(new Error("can't find a plugin.xml.  Are you in the plugin?"));
         }
 
         // Get the current plugin.xml file
-        pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
+        const pluginxml = et.parse(fs.readFileSync('plugin.xml', 'utf-8'));
 
         // Check if this platform exists
         if (pluginxml.find("./platform/[@name='" + platformName + "']")) {
@@ -44,7 +41,7 @@ module.exports = {
         }
 
         // Get the platform specific elements
-        platform = doPlatform(platformName, pluginxml.find('./name').text, pluginxml.getroot().get('id'));
+        const platform = doPlatform(platformName, pluginxml.find('./name').text, pluginxml.getroot().get('id'));
 
         // Make sure we support it
         if (!platform) {

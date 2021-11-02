@@ -32,8 +32,7 @@ describe('cordova/plugin/remove', function () {
     const cfg_parser_mock = function () {};
     let package_json_mock;
     const plugin_info_provider_mock = function () {};
-    let plugin_info;
-    package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    const plugin_info = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
     package_json_mock.cordova.plugins = {};
