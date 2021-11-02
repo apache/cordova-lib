@@ -30,12 +30,14 @@ describe('cordova/plugin/remove', function () {
     const projectRoot = '/some/path';
     let hook_mock;
     const cfg_parser_mock = function () {};
-    let package_json_mock;
     const plugin_info_provider_mock = function () {};
-    const plugin_info = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
+    let plugin_info;
+
+    const package_json_mock = jasmine.createSpyObj('package json mock', ['cordova', 'dependencies']);
     package_json_mock.dependencies = {};
     package_json_mock.cordova = {};
     package_json_mock.cordova.plugins = {};
+
     beforeEach(function () {
         spyOn(events, 'emit');
         spyOn(fs, 'writeFileSync');
