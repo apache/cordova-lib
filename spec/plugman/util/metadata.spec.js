@@ -32,8 +32,7 @@ const fsMock = {
 };
 
 // expect fsMock to only operate on fetchJsonPath
-// eslint-disable-next-line
-Object.entries(fsMock).map(([key, fn]) => {
+Object.entries(fsMock).forEach(([key, fn]) => {
     fsMock[key] = (...args) => {
         expect(args[0]).toBe(fetchJsonPath);
         return fn(...args);
