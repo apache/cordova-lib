@@ -20,6 +20,15 @@
 -->
 # Cordova-lib Release Notes
 
+### 11.0.0 (Dec 14, 2021)
+
+* [GH-889](https://github.com/apache/cordova-lib/pull/889) bump(platform): bump **Electron** & **Android** to latest release
+* [GH-890](https://github.com/apache/cordova-lib/pull/890) chore: rebuild `package-lock`
+* [GH-888](https://github.com/apache/cordova-lib/pull/888) dep(dev)!: bump `@cordova/eslint-config@^4.0.0` w/ fix
+* [GH-887](https://github.com/apache/cordova-lib/pull/887) dep!: update dependencies
+* [GH-873](https://github.com/apache/cordova-lib/pull/873) ci: switch to GitHub Actions
+* [GH-884](https://github.com/apache/cordova-lib/pull/884) chore!: drop support for Node.js 10
+
 ### 10.1.0 (Sep 29, 2021)
 
 **Features:**
