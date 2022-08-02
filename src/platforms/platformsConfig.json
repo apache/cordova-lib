@@ -9,7 +9,7 @@
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-osx.git",
         "version": "^6.0.0",
-        "deprecated": false
+        "deprecated": true
     },
     "android": {
         "url": "https://github.com/apache/cordova-android.git",
@@ -20,7 +20,7 @@
         "hostos": ["win32"],
         "url": "https://github.com/apache/cordova-windows.git",
         "version": "^7.0.0",
-        "deprecated": false
+        "deprecated": true
     },
     "browser": {
         "parser_file": "../cordova/metadata/browser_parser",
