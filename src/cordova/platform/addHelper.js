@@ -99,9 +99,9 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                     }
 
                     // If spec still doesn't exist, try to use pinned version
-                    if (!spec && platforms.info[platform]) {
-                        events.emit('verbose', 'Grabbing pinned version.');
-                        spec = platforms.info[platform].version;
+                    if (!spec) {
+                        events.emit('verbose', 'Grabbing the latest released version from the npmjs registry.');
+                        spec = 'latest';
                     }
 
                     // Handle local paths
