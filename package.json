@@ -11,7 +11,7 @@
     "node": ">=12"
   },
   "dependencies": {
-    "cordova-common": "^4.0.2",
+    "cordova-common": "file:cordova-common-4.0.3-dev.tgz",
     "cordova-fetch": "^3.0.1",
     "cordova-serve": "^4.0.0",
     "dep-graph": "^1.1.0",
