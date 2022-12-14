@@ -169,7 +169,7 @@ describe('cordova/platform/addHelper', function () {
 
             it('should fall back to using pinned version if both package.json and config.xml do not specify it', function () {
                 return platform_addHelper('add', hooks_mock, projectRoot, ['ios'], { restoring: true }).then(function () {
-                    expect(events.emit).toHaveBeenCalledWith('verbose', 'Grabbing pinned version.');
+                    expect(events.emit).toHaveBeenCalledWith('verbose', 'Grabbing the latest released version from the npmjs registry.');
                 });
             });
 
