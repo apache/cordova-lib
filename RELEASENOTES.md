@@ -20,6 +20,19 @@
 -->
 # Cordova-lib Release Notes
 
+### 11.1.0 (Dec 26, 2022)
+
+* [GH-904](https://github.com/apache/cordova-lib/pull/904) dep(npm): bump `cordova-fetch@3.1.0` w/ package-lock rebuild
+* [GH-901](https://github.com/apache/cordova-lib/pull/901) feat: bump dependencies to latest minor & patch revision
+  * `fs-extra@^10.1.0`
+  * `globby@^11.1.0`
+  * `semver@^7.3.8`
+  * `cordova-android@10.1.2`
+  * `jasmine@^3.99.0`
+* [GH-899](https://github.com/apache/cordova-lib/pull/899) feat: bump `cordova-common@4.1.0`
+* [GH-852](https://github.com/apache/cordova-lib/pull/852) feat(windows): deprecate platform
+* [GH-851](https://github.com/apache/cordova-lib/pull/851) feat(osx): deprecate platform
+
 ### 11.0.0 (Dec 14, 2021)
 
 * [GH-889](https://github.com/apache/cordova-lib/pull/889) bump(platform): bump **Electron** & **Android** to latest release
