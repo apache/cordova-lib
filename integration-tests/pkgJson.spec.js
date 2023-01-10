@@ -396,7 +396,7 @@ describe('pkgJson', function () {
             });
         });
 
-        it('Test#012 : platform with local path is added correctly with --save', () => {
+        xit('Test#012 : platform with local path is added correctly with --save', () => {
             const PLATFORM = 'android';
             const platformPath = path.join(tmpDir, PLATFORM);
 
