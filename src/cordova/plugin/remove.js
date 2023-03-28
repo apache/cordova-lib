@@ -92,6 +92,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
 
     function removePluginFromPlatform (target, platform) {
         let platformRoot;
+
         return Promise.resolve().then(function () {
             platformRoot = path.join(projectRoot, 'platforms', platform);
             const directory = path.join(pluginPath, target);
