@@ -81,7 +81,7 @@ function add (projectRoot, hooksRunner, opts) {
                         save: opts.save,
                         nohooks: opts.nohooks,
                         link: opts.link,
-                        pluginInfoProvider: pluginInfoProvider,
+                        pluginInfoProvider,
                         variables: opts.cli_variables,
                         is_top_level: true,
                         save_exact: opts.save_exact || false,
@@ -110,7 +110,7 @@ function add (projectRoot, hooksRunner, opts) {
                             searchpath: searchPath,
                             noregistry: opts.noregistry,
                             link: opts.link,
-                            pluginInfoProvider: pluginInfoProvider,
+                            pluginInfoProvider,
                             // Set up platform to install asset files/js modules to <platform>/platform_www dir
                             // instead of <platform>/www. This is required since on each prepare platform's www dir is changed
                             // and files from 'platform_www' merged into 'www'. Thus we need to persist these

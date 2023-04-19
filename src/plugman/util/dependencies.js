@@ -58,7 +58,7 @@ module.exports = pkg = {
         });
 
         return {
-            graph: graph,
+            graph,
             top_level_plugins: tlps
         };
     },

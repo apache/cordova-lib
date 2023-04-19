@@ -48,9 +48,9 @@ function getPlatformDetailsFromDir (dir, platformIfKnown) {
     }
 
     return Promise.resolve({
-        libDir: libDir,
-        platform: platform,
-        version: version
+        libDir,
+        platform,
+        version
     });
 }
 

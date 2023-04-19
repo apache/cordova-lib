@@ -60,7 +60,7 @@ describe('cordova/prepare', function () {
             spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
             spyOn(util, 'preProcessOptions').and.callFake(function (options) {
                 const platforms = options.platforms || [];
-                return { platforms: platforms };
+                return { platforms };
             });
             spyOn(prepare, 'preparePlatforms').and.returnValue(Promise.resolve());
         });
