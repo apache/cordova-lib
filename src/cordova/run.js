@@ -22,12 +22,33 @@ const HooksRunner = require('../hooks/HooksRunner');
 const platform_lib = require('../platforms/platforms');
 const cordovaPrepare = require('./prepare');
 
+// Support for listing targets.
+const targets = require('./targets');
+
 // Returns a promise.
 module.exports = function run (options) {
-    return Promise.resolve().then(function () {
-        const projectRoot = cordova_util.cdProjectRoot();
-        options = cordova_util.preProcessOptions(options);
+    options = cordova_util.preProcessOptions(options);
 
+    const { options: cliArgs, platforms } = options;
+    const projectRoot = cordova_util.cdProjectRoot();
+
+    if (cliArgs.list) {
+        return Promise.resolve(platforms.map(function (platform) {
+            const platformApi = platform_lib.getPlatformApi(platform);
+
+            // @todo enable warning once all platforms known to implement platformApi.listTargets
+            // if (!platformApi.listTargets) {
+            //     events.emit('warn', 'Please upgrade to the latest platfrom release to ensure the emulator list functionality continues to function in the future.');
+            // }
+
+            // If the Platform API object contains the `listTarget` method, call it, else fallback to original.
+            return platformApi.listTargets
+                ? platformApi.listTargets(options)
+                : targets(options, true);
+        }));
+    }
+
+    return Promise.resolve().then(function () {
         // This is needed as .build modifies opts
         const optsClone = Object.assign({}, options.options);
         optsClone.nobuild = true;

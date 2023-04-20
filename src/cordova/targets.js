@@ -45,9 +45,12 @@ function displayVirtualDevices (projectRoot, platform, options) {
     return execa(cmd, options.argv, { stdio: 'inherit' }).then(data => data.stdout, handleError.bind(caller));
 }
 
-module.exports = function targets (options) {
+module.exports = function targets (options, isOptionsProcessed = false) {
     const projectRoot = cordova_util.cdProjectRoot();
-    options = cordova_util.preProcessOptions(options);
+
+    if (!isOptionsProcessed) {
+        options = cordova_util.preProcessOptions(options);
+    }
 
     let result = Promise.resolve();
     options.platforms.forEach(function (platform) {
