@@ -98,7 +98,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         spec = module.exports.getVersionFromConfigFile(platform, cfg);
                     }
 
-                    // If spec still doesn't exist, try to use pinned version
+                    // If spec still doesn't exist, grab latest released version from the npmjs registry
                     if (!spec) {
                         events.emit('verbose', 'Grabbing the latest released version from the npmjs registry.');
                         spec = 'latest';
