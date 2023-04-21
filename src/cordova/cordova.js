@@ -34,12 +34,12 @@ exports = module.exports = {
     on: function () {
         cordova_events.on.apply(cordova_events, arguments);
     },
-    off: off,
+    off,
     removeListener: off,
     removeAllListeners: function () {
         cordova_events.removeAllListeners.apply(cordova_events, arguments);
     },
-    emit: emit,
+    emit,
     trigger: emit,
     findProjectRoot: function (opt_startDir) {
         return cordova_util.isCordova(opt_startDir);

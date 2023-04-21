@@ -98,7 +98,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
             if (pinfo) {
                 events.emit('verbose', 'Found ' + plugin_src + ' at ' + pinfo.dir);
                 return {
-                    pinfo: pinfo,
+                    pinfo,
                     fetchJsonSource: {
                         type: 'local',
                         path: pinfo.dir
@@ -146,7 +146,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                             type: 'registry',
                             id: plugin_src
                         },
-                        skipCopyingPlugin: skipCopyingPlugin
+                        skipCopyingPlugin
                     };
                 });
         }).then(function (result) {

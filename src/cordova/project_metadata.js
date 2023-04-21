@@ -85,6 +85,6 @@ function getPlugins (projectRoot) {
 }
 
 module.exports = {
-    getPlatforms: getPlatforms,
-    getPlugins: getPlugins
+    getPlatforms,
+    getPlugins
 };

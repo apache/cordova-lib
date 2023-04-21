@@ -145,7 +145,7 @@ module.exports.setPluginSpec = function (appPath, plugin, spec) {
         }
     }
 
-    parser.addPlugin({ name: plugin, spec: spec }, variables);
+    parser.addPlugin({ name: plugin, spec }, variables);
     parser.write();
 };
 

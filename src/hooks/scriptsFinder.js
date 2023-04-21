@@ -90,7 +90,7 @@ function getPluginScriptFiles (plugin, hook, platforms) {
         return {
             path: scriptElement.attrib.src,
             fullPath: path.join(plugin.dir, scriptElement.attrib.src),
-            plugin: plugin
+            plugin
         };
     });
 }
@@ -107,7 +107,7 @@ function getAllPluginsHookScriptFiles (hook, opts) {
     plugins.forEach(function (pluginInfo) {
         currentPluginOptions = {
             id: pluginInfo.id,
-            pluginInfo: pluginInfo,
+            pluginInfo,
             dir: pluginInfo.dir
         };
 

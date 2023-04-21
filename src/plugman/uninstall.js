@@ -269,7 +269,7 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
             const dependent_path = path.join(plugins_dir, dangler);
             const opts = Object.assign({}, options, {
                 is_top_level: depsInfo.top_level_plugins.indexOf(dangler) > -1,
-                depsInfo: depsInfo
+                depsInfo
             });
 
             return runUninstallPlatform(actions, platform, project_dir, dependent_path, plugins_dir, opts);
@@ -296,8 +296,8 @@ function runUninstallPlatform (actions, platform, project_dir, plugin_dir, plugi
             cordova: { platforms: [platform] },
             plugin: {
                 id: pluginInfo.id,
-                pluginInfo: pluginInfo,
-                platform: platform,
+                pluginInfo,
+                platform,
                 dir: plugin_dir
             }
         };

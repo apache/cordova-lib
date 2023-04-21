@@ -280,10 +280,10 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
     const theEngines = getEngines(pluginInfo, platform, project_dir, plugin_dir);
 
     const install = {
-        actions: actions,
-        platform: platform,
-        project_dir: project_dir,
-        plugins_dir: plugins_dir,
+        actions,
+        platform,
+        project_dir,
+        plugins_dir,
         top_plugin_id: pluginInfo.id,
         top_plugin_dir: plugin_dir
     };
@@ -326,7 +326,7 @@ function runInstall (actions, platform, project_dir, plugin_dir, plugins_dir, op
                     cordova: { platforms: [platform] },
                     plugin: {
                         id: pluginInfo.id,
-                        pluginInfo: pluginInfo,
+                        pluginInfo,
                         platform: install.platform,
                         dir: install.top_plugin_dir
                     },
