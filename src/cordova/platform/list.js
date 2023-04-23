@@ -27,27 +27,20 @@ function list (hooksRunner, projectRoot, opts) {
         .then(function () {
             return cordova_util.getInstalledPlatformsWithVersions(projectRoot);
         }).then(function (platformMap) {
-            let platformsText = [];
-            for (const plat in platformMap) {
-                platformsText.push(platformMap[plat] ? plat + ' ' + platformMap[plat] : plat);
-            }
+            // Exrtacted the installed platforms
+            const installed = Object.keys(platformMap)
+                .map(p => platformMap[p] ? p + ' ' + platformMap[p] : p)
+                .sort();
+            const installedResult = addDeprecatedInformationToPlatforms(installed).join('\n  ');
+            events.emit('results', `Installed platforms:\n  ${installedResult}`);
 
-            platformsText = addDeprecatedInformationToPlatforms(platformsText);
-            let results = 'Installed platforms:\n  ' + platformsText.sort().join('\n  ') + '\n';
-            let available = platforms.list.filter(platforms.hostSupports);
-
-            available = available.filter(function (p) {
-                return !platformMap[p]; // Only those not already installed.
-            });
-
-            available = available.map(function (p) {
-                return p.concat(' ', platforms.info[p].version);
-            });
-
-            available = addDeprecatedInformationToPlatforms(available);
-            results += 'Available platforms: \n  ' + available.sort().join('\n  ');
-
-            events.emit('results', results);
+            // Get the avaliable platforms excluding the installed ones
+            const available = platforms.list
+                .filter(platforms.hostSupports)
+                .filter(p => !platformMap[p])
+                .sort();
+            const availableResult = addDeprecatedInformationToPlatforms(available).join('\n  ');
+            events.emit('results', `Available platforms:\n  ${availableResult}`);
         }).then(function () {
             return hooksRunner.fire('after_platform_ls', opts);
         });

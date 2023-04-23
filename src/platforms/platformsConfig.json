@@ -2,24 +2,20 @@
     "ios": {
         "hostos": ["darwin"],
         "url": "https://github.com/apache/cordova-ios.git",
-        "version": "^6.2.0",
         "deprecated": false
     },
     "android": {
         "url": "https://github.com/apache/cordova-android.git",
-        "version": "^10.1.1",
         "deprecated": false
     },
     "browser": {
         "parser_file": "../cordova/metadata/browser_parser",
         "handler_file": "../plugman/platforms/browser",
         "url": "https://github.com/apache/cordova-browser.git",
-        "version": "^6.0.0",
         "deprecated": false
     },
     "electron": {
         "url": "https://github.com/apache/cordova-electron.git",
-        "version": "^3.0.0",
         "deprecated": false
     }
 }
