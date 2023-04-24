@@ -54,13 +54,13 @@ module.exports = function run (options) {
     }
 
     return Promise.resolve().then(function () {
+        const projectRoot = cordova_util.cdProjectRoot();
         options = cordova_util.preProcessOptions(options);
 
         // This is needed as .build modifies opts
         const optsClone = Object.assign({}, options.options);
         optsClone.nobuild = true;
 
-        const projectRoot = cordova_util.cdProjectRoot();
         const hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_run', options)
             .then(function () {
