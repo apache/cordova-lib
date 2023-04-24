@@ -27,10 +27,10 @@ const cordovaPrepare = require('./prepare');
 const targets = require('./targets');
 
 // Returns a promise.
-module.exports = function run (options) {
+module.exports = function run (options = {}) {
     const { options: cliArgs } = options;
 
-    if (cliArgs.list) {
+    if (cliArgs?.list) {
         const { platforms } = options;
 
         if (platforms.length <= 0) {
