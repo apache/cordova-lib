@@ -18,6 +18,7 @@
 */
 
 const cordova_util = require('./util');
+const { events } = require('cordova-common');
 const HooksRunner = require('../hooks/HooksRunner');
 const platform_lib = require('../platforms/platforms');
 const cordovaPrepare = require('./prepare');
@@ -27,12 +28,16 @@ const targets = require('./targets');
 
 // Returns a promise.
 module.exports = function run (options) {
-    options = cordova_util.preProcessOptions(options);
-
-    const { options: cliArgs, platforms } = options;
-    const projectRoot = cordova_util.cdProjectRoot();
+    const { options: cliArgs } = options;
 
     if (cliArgs.list) {
+        const { platforms } = options;
+
+        if (platforms.length <= 0) {
+            events.emit('warn', 'A platform must be provided when using the "--list" flag.');
+            return false;
+        }
+
         return Promise.resolve(platforms.map(function (platform) {
             const platformApi = platform_lib.getPlatformApi(platform);
 
@@ -49,10 +54,13 @@ module.exports = function run (options) {
     }
 
     return Promise.resolve().then(function () {
+        options = cordova_util.preProcessOptions(options);
+
         // This is needed as .build modifies opts
         const optsClone = Object.assign({}, options.options);
         optsClone.nobuild = true;
 
+        const projectRoot = cordova_util.cdProjectRoot();
         const hooksRunner = new HooksRunner(projectRoot);
         return hooksRunner.fire('before_run', options)
             .then(function () {
