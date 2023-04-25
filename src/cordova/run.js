@@ -41,15 +41,14 @@ module.exports = function run (options = {}) {
         return Promise.resolve(platforms.map(function (platform) {
             const platformApi = platform_lib.getPlatformApi(platform);
 
-            // @todo enable warning once all platforms known to implement platformApi.listTargets
-            // if (!platformApi.listTargets) {
-            //     events.emit('warn', 'Please upgrade to the latest platfrom release to ensure the emulator list functionality continues to function in the future.');
-            // }
-
-            // If the Platform API object contains the `listTarget` method, call it, else fallback to original.
-            return platformApi.listTargets
-                ? platformApi.listTargets(options)
-                : targets(options, true);
+            if (platformApi?.listTargets) {
+                // Use Platform's API to fetch target list when available
+                return platformApi.listTargets(options);
+            } else {
+                events.emit('warn', 'Please update to the latest platform release to ensure uninterrupted fetching of target lists.');
+                // fallback to original method.
+                return targets(options);
+            }
         }));
     }
 
