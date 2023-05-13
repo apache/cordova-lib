@@ -20,6 +20,43 @@
 -->
 # Cordova-lib Release Notes
 
+### 12.0.0 (May 13, 2023)
+
+**Features:**
+
+* [GH-917](https://github.com/apache/cordova-lib/pull/917) feat!(`run`): call platform api to list targets
+* [GH-894](https://github.com/apache/cordova-lib/pull/894) feat!: remove platform pinning
+* [GH-896](https://github.com/apache/cordova-lib/pull/896) feat!: remove **OSX** & **Windows** platform
+
+**Dependencies:**
+
+* [GH-915](https://github.com/apache/cordova-lib/pull/915) dep!: bump `@cordova/eslint-config@latest@5.0.0` w/ automatic fix
+* [GH-914](https://github.com/apache/cordova-lib/pull/914) dep!: packages upgrade & requirements
+  * Bumped Packages
+    * `cordova-common@5.0.0`
+    * `cordova-fetch@4.0.0`
+    * `cordova-serve@4.0.1`
+    * `init-package-json@5.0.0`
+    * `jasmine@4.6.0`
+    * `semver@7.5.0`
+  * Rebuilt `package-lock.json`
+  * Bumped `node` engine requirement `>=16.13.0`
+* [GH-910](https://github.com/apache/cordova-lib/pull/910) dep(npm): bump all dependencies to next major
+  * `fs-extra@^11.1.0`
+  * `write-file-atomic@^5.0.0`
+  * `cordova-android@^11.0.0`
+  * `jasmine@^4.5.0`
+  * `jasmine-spec-reporter@^7.0.0`
+  * `rewire@^6.0.0`
+  * `init-package-json@^4.0.1`
+
+**Others:**
+
+* [GH-916](https://github.com/apache/cordova-lib/pull/916) fix(node-18): hook tests
+* [GH-905](https://github.com/apache/cordova-lib/pull/905) ci(workflow): update codecov action usage
+* [GH-903](https://github.com/apache/cordova-lib/pull/903) ci(workflow): update node support & action dependencies
+* [GH-911](https://github.com/apache/cordova-lib/pull/911) test: temporary disable broken spec#012
+
 ### 11.1.0 (Dec 26, 2022)
 
 * [GH-904](https://github.com/apache/cordova-lib/pull/904) dep(npm): bump `cordova-fetch@3.1.0` w/ package-lock rebuild
