@@ -3,7 +3,7 @@
   "name": "cordova-lib",
   "license": "Apache-2.0",
   "description": "Apache Cordova tools core lib and API",
-  "version": "12.0.0",
+  "version": "12.0.1-dev",
   "repository": "github:apache/cordova-lib",
   "bugs": "https://github.com/apache/cordova-lib/issues",
   "main": "cordova-lib.js",
