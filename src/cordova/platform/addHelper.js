@@ -98,12 +98,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                         spec = module.exports.getVersionFromConfigFile(platform, cfg);
                     }
 
-                    // If spec still doesn't exist, grab latest released version from the npmjs registry
-                    if (!spec && platforms.info[platform]) {
-                        events.emit('verbose', 'Grabbing the latest released version from the npmjs registry.');
-                        spec = 'latest';
-                    }
-
                     // Handle local paths
                     if (spec) {
                         const maybeDir = cordova_util.fixRelativePath(spec);
