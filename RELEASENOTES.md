@@ -20,6 +20,10 @@
 -->
 # Cordova-lib Release Notes
 
+### 12.0.1 (May 19, 2023)
+
+* [GH-918](https://github.com/apache/cordova-lib/pull/918) fix: platform add with tarball & directory
+
 ### 12.0.0 (May 13, 2023)
 
 **Features:**
