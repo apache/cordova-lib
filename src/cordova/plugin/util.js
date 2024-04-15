@@ -17,10 +17,10 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const execa = require('execa');
-const path = require('path');
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
-const fs = require('fs-extra');
 const events = require('cordova-common').events;
 const CordovaError = require('cordova-common').CordovaError;
 const fetch = require('cordova-fetch');
@@ -65,7 +65,7 @@ function mergeVariables (pluginInfo, cfg, opts) {
 
     if (missingVariables.length) {
         events.emit('verbose', 'Removing ' + pluginInfo.dir + ' because mandatory plugin variables were missing.');
-        fs.removeSync(pluginInfo.dir);
+        fs.rmSync(pluginInfo.dir, { recursive: true, force: true });
         const msg = 'Variable(s) missing (use: --variable ' + missingVariables.join('=value --variable ') + '=value).';
         throw new CordovaError(msg);
     }

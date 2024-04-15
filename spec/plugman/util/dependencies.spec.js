@@ -16,9 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+const path = require('node:path');
 const dependencies = require('../../../src/plugman/util/dependencies');
 const xml_helpers = require('cordova-common').xmlHelpers;
-const path = require('path');
 const PlatformJson = require('cordova-common').PlatformJson;
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 

@@ -1,1 +1,1 @@
-./dependencies/G/www/plugin-g.js
+//dependencies/G/www/plugin-g.js

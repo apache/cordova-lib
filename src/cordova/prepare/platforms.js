@@ -17,12 +17,12 @@
     under the License.
 */
 
+const path = require('node:path');
 const cordova_util = require('../util');
 const ConfigParser = require('cordova-common').ConfigParser;
 const PlatformJson = require('cordova-common').PlatformJson;
 const PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
 const platforms = require('../../platforms/platforms');
-const path = require('path');
 
 module.exports = preparePlatforms;
 

@@ -17,18 +17,18 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const et = require('elementtree');
 const CordovaError = require('cordova-common').CordovaError;
 const stripLicense = require('./util/strip-license');
 
 module.exports = function create (name, id, version, pluginPath, options) {
-    const cwd = pluginPath + '/' + name + '/';
+    const cwd = path.join(pluginPath, name);
     const templatesDir = path.join(__dirname, '..', '..', 'templates/');
 
     // Check we are not already in a plugin
-    if (fs.existsSync(cwd + 'plugin.xml')) {
+    if (fs.existsSync(path.join(cwd, 'plugin.xml'))) {
         return Promise.reject(new CordovaError('plugin.xml already exists. Are you already in a plugin?'));
     }
 
@@ -52,25 +52,25 @@ module.exports = function create (name, id, version, pluginPath, options) {
     }
 
     // Setup the directory structure
-    fs.ensureDirSync(cwd + 'www');
-    fs.ensureDirSync(cwd + 'src');
+    fs.mkdirSync(path.join(cwd, 'www'), { recursive: true });
+    fs.mkdirSync(path.join(cwd, 'src'), { recursive: true });
 
     // Create a base plugin.js file
-    const baseJS = stripLicense.fromCode(fs.readFileSync(templatesDir + 'base.js', 'utf-8').replace(/%pluginName%/g, name));
-    fs.writeFileSync(cwd + 'www/' + name + '.js', baseJS, 'utf-8');
+    const baseJS = stripLicense.fromCode(fs.readFileSync(path.join(templatesDir, 'base.js'), 'utf-8').replace(/%pluginName%/g, name));
+    fs.writeFileSync(path.join(cwd, 'www', `${name}.js`), baseJS, 'utf-8');
     // Add it to the xml as a js module
     const jsMod = et.Element('js-module');
-    jsMod.set('src', 'www/' + name + '.js');
+    jsMod.set('src', `www/${name}.js`);
     jsMod.set('name', name);
 
     const clobber = et.Element('clobbers');
-    clobber.set('target', 'cordova.plugins.' + name);
+    clobber.set('target', `cordova.plugins.${name}`);
     jsMod.append(clobber);
 
     root.append(jsMod);
 
     // Write out the plugin.xml file
-    fs.writeFileSync(cwd + 'plugin.xml', new et.ElementTree(root).write({ indent: 4 }), 'utf-8');
+    fs.writeFileSync(path.join(cwd, 'plugin.xml'), new et.ElementTree(root).write({ indent: 4 }), 'utf-8');
 
     return Promise.resolve();
 };

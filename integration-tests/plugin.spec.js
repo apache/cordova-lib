@@ -17,9 +17,9 @@
     under the License.
 */
 
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const helpers = require('../spec/helpers');
-const path = require('path');
 const events = require('cordova-common').events;
 const cordova = require('../src/cordova/cordova');
 const platforms = require('../src/platforms/platforms');
@@ -90,7 +90,7 @@ function mockPluginFetch (project, id, dir) {
     spyOn(plugman, 'fetch').and.callFake(function (target, pluginPath, fetchOptions) {
         const dest = path.join(project, 'plugins', id);
 
-        fs.copySync(path.join(dir, 'plugin.xml'), path.join(dest, 'plugin.xml'));
+        fs.cpSync(path.join(dir, 'plugin.xml'), path.join(dest, 'plugin.xml'));
         return Promise.resolve(dest);
     });
 }
@@ -107,7 +107,7 @@ describe('plugin end-to-end', function () {
     beforeEach(function () {
         project = path.join(tmpDir, `project-${Date.now()}`);
         // Reset our test project and change into it
-        fs.copySync(preparedProject, project);
+        fs.cpSync(preparedProject, project, { recursive: true });
         process.chdir(project);
 
         // Reset origCwd before each spec to respect chdirs
@@ -120,7 +120,7 @@ describe('plugin end-to-end', function () {
 
     afterEach(function () {
         process.chdir(path.join(__dirname, '..')); // Needed to rm the dir on Windows.
-        fs.removeSync(project);
+        fs.rmSync(project, { recursive: true, force: true });
     });
 
     it('Test 001 : should successfully add and remove a plugin with no options', function () {
@@ -138,11 +138,11 @@ describe('plugin end-to-end', function () {
         // Copy plugin to subdir inside of the project. This is required since path.relative
         // returns an absolute path when source and dest are on different drives
         const plugindir = path.join(project, 'custom-plugins/some-plugin-inside-subfolder');
-        fs.copySync(path.join(pluginsDir, 'fake1'), plugindir);
+        fs.cpSync(path.join(pluginsDir, 'fake1'), plugindir, { recursive: true });
 
         // Create a subdir, where we're going to run cordova from
         const subdir = path.join(project, 'bin');
-        fs.ensureDirSync(subdir);
+        fs.mkdirSync(subdir, { recursive: true });
         process.chdir(subdir);
 
         // Add plugin using relative path

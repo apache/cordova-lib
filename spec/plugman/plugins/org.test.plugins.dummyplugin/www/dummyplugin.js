@@ -1,1 +1,1 @@
-./org.test.plugins.dummyplugin/www/dummyplugin.js
+//org.test.plugins.dummyplugin/www/dummyplugin.js

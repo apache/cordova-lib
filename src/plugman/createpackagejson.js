@@ -19,8 +19,7 @@
 
 const PluginInfo = require('cordova-common').PluginInfo;
 const events = require('cordova-common').events;
-const pify = require('pify');
-const initPkgJson = pify(require('init-package-json'));
+const initPkgJson = require('init-package-json');
 
 // returns a promise
 function createPackageJson (plugin_path) {

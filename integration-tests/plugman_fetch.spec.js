@@ -16,11 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const rewire = require('rewire');
 const fetch = rewire('../src/plugman/fetch');
-const fs = require('fs-extra');
-const os = require('os');
-const path = require('path');
 const metadata = require('../src/plugman/util/metadata');
 const temp = path.join(os.tmpdir(), 'plugman', 'fetch');
 const plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
@@ -36,11 +37,11 @@ describe('fetch', function () {
         let sym;
 
         beforeEach(function () {
-            fs.removeSync(temp);
+            fs.rmSync(temp, { recursive: true, force: true });
 
-            spyOn(fs, 'removeSync');
+            spyOn(fs, 'rmSync');
             sym = spyOn(fs, 'symlinkSync');
-            spyOn(fs, 'copySync').and.callThrough();
+            spyOn(fs, 'cpSync').and.callThrough();
             spyOn(metadata, 'save_fetch_metadata');
 
             const fetchSpy = jasmine.createSpy('fetch')
@@ -50,23 +51,23 @@ describe('fetch', function () {
 
         it('Test 001 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
+                expect(fs.cpSync).toHaveBeenCalledWith(test_plugin, path.join(temp, test_plugin_id), jasmine.objectContaining({ dereference: true }));
             });
         });
 
         it('Test 008 : should copy locally-available plugin to plugins directory when spaces in path', () => {
             const testPluginWithSpace = path.join(temp, 'folder with space/org.test.plugins.childbrowser');
-            fs.copySync(test_plugin, testPluginWithSpace);
-            fs.copySync.calls.reset();
+            fs.cpSync(test_plugin, testPluginWithSpace, { recursive: true });
+            fs.cpSync.calls.reset();
 
             return fetch(testPluginWithSpace, temp).then(() => {
-                expect(fs.copySync).toHaveBeenCalledWith(testPluginWithSpace, path.join(temp, test_plugin_id), jasmine.any(Object));
+                expect(fs.cpSync).toHaveBeenCalledWith(testPluginWithSpace, path.join(temp, test_plugin_id), jasmine.any(Object));
             });
         });
 
         it('Test 002 : should copy locally-available plugin to plugins directory when adding a plugin with searchpath argument', function () {
             return fetch(test_plugin_id, temp, { searchpath: test_plugin_searchpath }).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(
+                expect(fs.cpSync).toHaveBeenCalledWith(
                     pathNormalizingTo(test_plugin),
                     path.join(temp, test_plugin_id),
                     jasmine.objectContaining({ dereference: true })
@@ -109,7 +110,7 @@ describe('fetch', function () {
         });
         it('Test 027 : should copy locally-available plugin to plugins directory', function () {
             return fetch(test_pkgjson_plugin, temp).then(function () {
-                expect(fs.copySync).toHaveBeenCalledWith(test_pkgjson_plugin, path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({ dereference: true }));
+                expect(fs.cpSync).toHaveBeenCalledWith(test_pkgjson_plugin, path.join(temp, 'pkgjson-test-plugin'), jasmine.objectContaining({ dereference: true }));
                 expect(fetch.__get__('fetch')).toHaveBeenCalledTimes(1);
             });
         });
@@ -129,10 +130,10 @@ describe('fetch', function () {
         });
 
         it('Test 021 : should skip copy to avoid recursive error', function () {
-            spyOn(fs, 'copySync');
+            spyOn(fs, 'cpSync');
 
             return fetch(srcDir, appDir).then(function () {
-                expect(fs.copySync).not.toHaveBeenCalled();
+                expect(fs.cpSync).not.toHaveBeenCalled();
             });
         });
     });

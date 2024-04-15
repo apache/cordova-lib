@@ -17,8 +17,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const ActionStack = require('cordova-common').ActionStack;
 const dependencies = require('./util/dependencies');
 const CordovaError = require('cordova-common').CordovaError;
@@ -122,7 +122,7 @@ module.exports.uninstallPlugin = function (id, plugins_dir, options) {
             return Promise.resolve();
         }
 
-        fs.removeSync(plugin_dir);
+        fs.rmSync(plugin_dir, { recursive: true, force: true });
         events.emit('verbose', 'Deleted plugin "' + id + '"');
 
         // remove plugin from node_modules directory

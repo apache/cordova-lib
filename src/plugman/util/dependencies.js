@@ -17,9 +17,9 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const DepGraph = require('dep-graph');
-const path = require('path');
-const fs = require('fs-extra');
 const events = require('cordova-common').events;
 let pkg;
 

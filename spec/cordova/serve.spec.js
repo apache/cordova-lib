@@ -17,8 +17,9 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
+const path = require('node:path');
 const rewire = require('rewire');
 const cordovaServe = require('cordova-serve');
 const { tmpDir: getTmpDir, omniStub } = require('../helpers');
@@ -349,12 +350,14 @@ describe('cordova/serve', () => {
         });
 
         afterEach(() => {
-            return fs.remove(tmpDir);
+            return fsp.rm(tmpDir, { recursive: true, force: true });
         });
 
         it('should generate a list of files with MD5 sums', () => {
-            for (const f of ['a', 'b/c']) {
-                fs.ensureFileSync(path.join(tmpDir, f));
+            for (const f of ['a', path.join('b', 'c')]) {
+                const fullpath = path.join(tmpDir, f);
+                fs.mkdirSync(path.dirname(fullpath), { recursive: true });
+                fs.writeFileSync(fullpath, '', 'utf8');
             }
             expect(generateWwwFileList(tmpDir)).toEqual([
                 { path: 'a', etag: emptyStringMd5 },
@@ -363,8 +366,10 @@ describe('cordova/serve', () => {
         });
 
         it('should not include hidden files or directories', () => {
-            for (const f of ['a', '.b/c', '.d']) {
-                fs.ensureFileSync(path.join(tmpDir, f));
+            for (const f of ['a', path.join('.b', 'c'), '.d']) {
+                const fullpath = path.join(tmpDir, f);
+                fs.mkdirSync(path.dirname(fullpath), { recursive: true });
+                fs.writeFileSync(fullpath, '', 'utf8');
             }
             expect(generateWwwFileList(tmpDir)).toEqual([
                 { path: 'a', etag: emptyStringMd5 }

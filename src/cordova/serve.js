@@ -18,7 +18,7 @@
 */
 
 const url = require('url');
-const path = require('path');
+const path = require('node:path');
 const globby = require('globby');
 const md5File = require('md5-file');
 

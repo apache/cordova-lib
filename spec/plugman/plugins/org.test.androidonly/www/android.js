@@ -1,1 +1,1 @@
-./org.test.androidonly/www/android.js
+//org.test.androidonly/www/android.js

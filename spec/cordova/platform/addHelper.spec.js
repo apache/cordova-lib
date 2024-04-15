@@ -15,9 +15,9 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
-const util = require('util');
+const path = require('node:path');
+const fs = require('node:fs');
+const util = require('node:util');
 const events = require('cordova-common').events;
 const rewire = require('rewire');
 const cordova_util = require('../../../src/cordova/util');
@@ -67,7 +67,7 @@ describe('cordova/platform/addHelper', function () {
             preparePlatforms
         });
 
-        spyOn(fs, 'ensureDirSync');
+        spyOn(fs, 'mkdirSync');
         spyOn(fs, 'existsSync').and.returnValue(false);
         spyOn(fs, 'readFileSync');
         spyOn(fs, 'writeFileSync');

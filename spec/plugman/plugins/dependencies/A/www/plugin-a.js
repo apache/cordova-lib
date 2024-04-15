@@ -1,1 +1,1 @@
-./dependencies/A/www/plugin-a.js
+//dependencies/A/www/plugin-a.js

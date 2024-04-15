@@ -17,13 +17,14 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const timers = require('node:timers/promises');
 const rewire = require('rewire');
 const remove = rewire('../../../src/cordova/plugin/remove');
 const cordova_util = require('../../../src/cordova/util');
 const metadata = require('../../../src/plugman/util/metadata');
 const events = require('cordova-common').events;
 const plugman = require('../../../src/plugman/plugman');
-const fs = require('fs-extra');
 const plugin_util = require('../../../src/cordova/plugin/util');
 
 describe('cordova/plugin/remove', function () {
@@ -119,9 +120,8 @@ describe('cordova/plugin/remove', function () {
             // We delay the uninstall of the first plugin to give the second
             // one the chance to finish early if Promises are handled wrong.
             const observedOrder = [];
-            const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
             plugman.uninstall.uninstallPlugin.and.callFake(target => {
-                return delay(target.endsWith('cream') ? 100 : 0)
+                return timers.setTimeout(target.endsWith('cream') ? 100 : 0)
                     .then(_ => observedOrder.push(target));
             });
 

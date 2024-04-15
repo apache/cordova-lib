@@ -15,8 +15,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const CordovaError = require('cordova-common').CordovaError;
 const ConfigParser = require('cordova-common').ConfigParser;
 const events = require('cordova-common').events;
@@ -35,7 +35,7 @@ function remove (hooksRunner, projectRoot, targets, opts) {
     return hooksRunner.fire('before_platform_rm', opts)
         .then(function () {
             targets.forEach(function (target) {
-                fs.removeSync(path.join(projectRoot, 'platforms', target));
+                fs.rmSync(path.join(projectRoot, 'platforms', target), { recursive: true, force: true });
                 cordova_util.removePlatformPluginsJson(projectRoot, target);
             });
         }).then(function () {

@@ -17,13 +17,13 @@
     under the License.
 */
 
+const path = require('node:path');
 const cordova_util = require('./util');
 const platforms = require('../platforms/platforms');
 const HooksRunner = require('../hooks/HooksRunner');
 const restore = require('./restore-util');
-const path = require('path');
 
-exports = module.exports = prepare;
+module.exports = prepare;
 module.exports.preparePlatforms = require('./prepare/platforms');
 
 function prepare (options) {

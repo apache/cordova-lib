@@ -15,8 +15,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const semver = require('semver');
 const fetch = require('cordova-fetch');
 const CordovaError = require('cordova-common').CordovaError;
@@ -58,7 +58,7 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
     const platformsDir = path.join(projectRoot, 'platforms');
-    fs.ensureDirSync(platformsDir);
+    fs.mkdirSync(platformsDir, { recursive: true });
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
         .then(function () {

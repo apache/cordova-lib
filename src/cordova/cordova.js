@@ -28,7 +28,7 @@ const emit = function () {
     cordova_events.emit.apply(cordova_events, arguments);
 };
 
-exports = module.exports = {
+module.exports = {
     get binname () { return cordova_util.binname; },
     set binname (name) { cordova_util.binname = name; },
     on: function () {

@@ -17,6 +17,11 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
+const semver = require('semver');
+const url = require('url');
+const detectIndent = require('detect-indent');
 const cordova_util = require('../util');
 const plugin_util = require('./util');
 const cordova_pkgJson = require('../../../package.json');
@@ -27,11 +32,6 @@ const ConfigParser = require('cordova-common').ConfigParser;
 const CordovaError = require('cordova-common').CordovaError;
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const events = require('cordova-common').events;
-const path = require('path');
-const fs = require('fs-extra');
-const semver = require('semver');
-const url = require('url');
-const detectIndent = require('detect-indent');
 const preparePlatforms = require('../prepare/platforms');
 
 module.exports = add;

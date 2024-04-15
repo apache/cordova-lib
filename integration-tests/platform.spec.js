@@ -15,8 +15,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const path = require('node:path');
+const fs = require('node:fs');
 const rewire = require('rewire');
 
 const { tmpDir: getTmpDir, testPlatform, setDefaultTimeout } = require('../spec/helpers');
@@ -41,13 +41,13 @@ describe('cordova/platform end-to-end', () => {
         nodeModulesDir = path.join(project, 'node_modules');
         testPlatformDir = path.join(platformsDir, testPlatform);
 
-        fs.copySync(path.join(fixturesDir, 'basePkgJson'), project);
+        fs.cpSync(path.join(fixturesDir, 'basePkgJson'), project, { recursive: true });
         process.chdir(project);
     });
 
     afterEach(() => {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
-        fs.removeSync(tmpDir);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     function installedPlatforms () {

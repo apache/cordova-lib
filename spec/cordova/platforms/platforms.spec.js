@@ -17,9 +17,9 @@
     under the License.
 */
 
-const os = require('os');
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const rewire = require('rewire');
 const events = require('cordova-common').events;
 
@@ -50,8 +50,8 @@ describe('platforms/platforms', () => {
             platforms.__set__('cachedApis', {});
             isCordova = spyOn(util, 'isCordova').and.returnValue(CORDOVA_ROOT);
 
-            fs.removeSync(PLATFORM_SYMLINK);
-            fs.ensureSymlinkSync(PLATFORM_WITH_API, PLATFORM_SYMLINK);
+            fs.rmSync(PLATFORM_SYMLINK, { recursive: true, force: true });
+            fs.symlinkSync(PLATFORM_WITH_API, PLATFORM_SYMLINK);
         });
 
         it('should return PlatformApi class defined by platform', function () {

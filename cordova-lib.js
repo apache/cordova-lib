@@ -19,7 +19,7 @@
 
 const common = require('cordova-common');
 
-exports = module.exports = {
+module.exports = {
     set binname (name) {
         this.cordova.binname = name;
     },

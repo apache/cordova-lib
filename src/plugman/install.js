@@ -17,19 +17,18 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const execa = require('execa');
-const path = require('path');
-const fs = require('fs-extra');
 const ActionStack = require('cordova-common').ActionStack;
 const DepGraph = require('dep-graph');
 const semver = require('semver');
 const PlatformJson = require('cordova-common').PlatformJson;
 const CordovaError = require('cordova-common').CordovaError;
 const platform_modules = require('../platforms/platforms');
-const os = require('os');
 const events = require('cordova-common').events;
 const HooksRunner = require('../hooks/HooksRunner');
-const isWindows = (os.platform().substr(0, 3) === 'win');
 const pluginSpec = require('../cordova/plugin/plugin_spec_parser');
 const cordovaUtil = require('../cordova/util');
 
@@ -37,6 +36,8 @@ const PluginInfo = require('cordova-common').PluginInfo;
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const variableMerge = require('./variable-merge');
 const plugmanFetch = require('./fetch');
+
+const isWindows = (os.platform().substr(0, 3) === 'win');
 
 /* INSTALL FLOW
    ------------
@@ -520,7 +521,7 @@ function installDependency (dep, install, options) {
             return Promise.resolve()
                 .then(function () {
                     // Remove plugin
-                    return fs.removeSync(path.join(install.plugins_dir, install.top_plugin_id));
+                    return fs.rmSync(path.join(install.plugins_dir, install.top_plugin_id), { recursive: true, force: true });
                 }).then(function () {
                     // Return promise chain and finally reject
                     return Promise.reject(new CordovaError(msg));
@@ -599,11 +600,11 @@ function copyPlugin (plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
 
     if (link) {
         events.emit('verbose', 'Symlinking from location "' + plugin_src_dir + '" to location "' + dest + '"');
-        fs.removeSync(dest);
+        fs.rmSync(dest, { recursive: true, force: true });
         fs.ensureSymlinkSync(plugin_src_dir, dest, 'junction');
     } else {
         events.emit('verbose', 'Copying from location "' + plugin_src_dir + '" to location "' + dest + '"');
-        fs.copySync(plugin_src_dir, dest);
+        fs.cpSync(plugin_src_dir, dest, { recursive: true });
     }
     pluginInfo.dir = dest;
     pluginInfoProvider.put(pluginInfo);

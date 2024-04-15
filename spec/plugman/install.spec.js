@@ -17,8 +17,8 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const semver = require('semver');
 const rewire = require('rewire');
 
@@ -108,7 +108,7 @@ describe('plugman/install', () => {
     }, 2 * TIMEOUT);
 
     afterAll(() => {
-        fs.removeSync(temp_dir);
+        fs.rmSync(temp_dir, { recursive: true, force: true });
     });
 
     beforeEach(() => {
@@ -120,10 +120,10 @@ describe('plugman/install', () => {
         execaSpy.and.returnValue(Promise.resolve({ stdout: '' }));
         install.__set__('execa', execaSpy);
 
-        spyOn(fs, 'ensureDirSync');
+        spyOn(fs, 'mkdirSync');
         spyOn(fs, 'writeFileSync');
-        spyOn(fs, 'copySync');
-        spyOn(fs, 'removeSync');
+        spyOn(fs, 'cpSync');
+        spyOn(fs, 'rmSync');
         spyOn(PlatformJson.prototype, 'addInstalledPluginToPrepareQueue');
     });
 

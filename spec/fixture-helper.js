@@ -17,8 +17,9 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
+const path = require('node:path');
 const { ConfigParser, events } = require('cordova-common');
 const platformAdd = require('../src/cordova/platform').add;
 const HooksRunner = require('../src/hooks/HooksRunner');
@@ -34,7 +35,7 @@ module.exports = function fixtureHelper (tmpDir) {
 
     // Setup and teardown the directory where we setup our fixtures
     beforeAll(() => { fixturesBaseDir = tmpDir(); });
-    afterAll(() => fs.removeSync(fixturesBaseDir));
+    afterAll(() => fs.rmSync(fixturesBaseDir, { recursive: true, force: true }));
 
     // The recipes for building the different kinds of fixture.
     // Resolve to the fixture path.
@@ -61,7 +62,7 @@ module.exports = function fixtureHelper (tmpDir) {
             const projectFixture = path.join(__dirname, 'cordova/fixtures/basePkgJson');
             const projectPath = path.join(fixturesBaseDir, 'project-with-platform');
 
-            fs.copySync(projectFixture, projectPath);
+            fs.cpSync(projectFixture, projectPath, { recursive: true });
             process.chdir(projectPath);
 
             // Talk about a clunky interface :(
@@ -91,7 +92,7 @@ module.exports = function fixtureHelper (tmpDir) {
         return {
             async copyTo (targetPath) {
                 const fixturePath = await fixturePromises[name];
-                fs.copySync(fixturePath, targetPath);
+                fs.cpSync(fixturePath, targetPath, { recursive: true });
                 return targetPath;
             }
         };
@@ -99,7 +100,7 @@ module.exports = function fixtureHelper (tmpDir) {
 };
 
 function linkToGlobalModulesFrom (dir) {
-    return fs.symlink(
+    return fsp.symlink(
         path.join(__dirname, '../node_modules'),
         path.join(dir, 'node_modules'),
         'junction'

@@ -24,8 +24,8 @@
 // having to use the reserved word package. This way we can lint this file.
 const pkg = this.package;
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 function readDeps () {
     return function (cb) {
@@ -42,7 +42,7 @@ function readDeps () {
                     if (er) return next();
                     try { p = JSON.parse(p); } catch (e) { return next(); }
                     if (!p.version) return next();
-                    deps[d] = undefined + p.version;
+                    deps[d] = p.version;
                     return next();
                 });
             });

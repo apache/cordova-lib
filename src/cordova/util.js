@@ -17,11 +17,10 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const events = require('cordova-common').events;
 const CordovaError = require('cordova-common').CordovaError;
-const url = require('url');
 const globby = require('globby');
 
 let origCwd = null;
@@ -51,7 +50,7 @@ exports.getPlatformVersion = getPlatformVersionOrNull;
 // Remove <platform>.json file from plugins directory.
 function removePlatformPluginsJson (projectRoot, target) {
     const plugins_json = path.join(projectRoot, 'plugins', target + '.json');
-    fs.removeSync(plugins_json);
+    fs.rmSync(plugins_json, { recursive: true, force: true });
 }
 
 function requireNoCache (pkgJsonPath) {
@@ -62,9 +61,12 @@ function requireNoCache (pkgJsonPath) {
 }
 
 function isUrl (value) {
-    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
-    var u = value && url.parse(value); // eslint-disable-line
-    return !!(u && u.protocol && u.protocol.length > 2); // Account for windows c:/ paths
+    try {
+        const u = value && new URL(value);
+        return !!(u && u.protocol && u.protocol.length > 2); // Account for windows c:/ paths
+    } catch (e) {
+        return false;
+    }
 }
 
 function isRootDir (dir) {

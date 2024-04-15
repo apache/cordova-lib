@@ -17,9 +17,9 @@
     under the License.
 */
 
+const path = require('node:path');
 const execa = require('execa');
 const cordova_util = require('./util');
-const path = require('path');
 const events = require('cordova-common').events;
 
 function handleError (error) {

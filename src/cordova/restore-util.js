@@ -17,10 +17,10 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const cordova_util = require('./util');
 const ConfigParser = require('cordova-common').ConfigParser;
-const path = require('path');
-const fs = require('fs-extra');
 const events = require('cordova-common').events;
 const semver = require('semver');
 const detectIndent = require('detect-indent');
