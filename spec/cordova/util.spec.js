@@ -17,8 +17,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const util = require('../../src/cordova/util');
 const helpers = require('../helpers');
 
@@ -32,7 +32,7 @@ describe('util module', function () {
     });
     afterEach(() => {
         process.chdir(__dirname);
-        fs.removeSync(temp);
+        fs.rmSync(temp, { recursive: true, force: true });
     });
 
     describe('isCordova method', function () {
@@ -41,7 +41,7 @@ describe('util module', function () {
             // Base test directory setup
             somedir = path.join(temp, 'somedir');
             anotherdir = path.join(somedir, 'anotherdir');
-            fs.ensureDirSync(anotherdir);
+            fs.mkdirSync(anotherdir, { recursive: true });
         });
         afterEach(function () {
             process.env.PWD = origPWD;
@@ -51,32 +51,36 @@ describe('util module', function () {
             expect(util.isCordova(somedir)).toEqual(false);
         });
         it('Test 003 : should recognize a Cordova project directory', function () {
-            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
+            fs.mkdirSync(path.join(somedir, 'www'), { recursive: true });
+            fs.writeFileSync(path.join(somedir, 'www', 'config.xml'), '', 'utf8');
             expect(util.isCordova(somedir)).toEqual(somedir);
         });
         it('Test 004 : should ignore PWD when it is undefined', function () {
             delete process.env.PWD;
-            fs.ensureDirSync(path.join(somedir, 'www'));
-            fs.ensureDirSync(path.join(somedir, 'config.xml'));
+            fs.mkdirSync(path.join(somedir, 'www'), { recursive: true });
+            fs.writeFileSync(path.join(somedir, 'config.xml'), '', 'utf8');
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 005 : should use PWD when available', function () {
-            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
+            fs.mkdirSync(path.join(somedir, 'www'), { recursive: true });
+            fs.writeFileSync(path.join(somedir, 'www', 'config.xml'), '', 'utf8');
             process.env.PWD = anotherdir;
             process.chdir(path.sep);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 006 : should use cwd as a fallback when PWD is not a cordova dir', function () {
-            fs.ensureDirSync(path.join(somedir, 'www', 'config.xml'));
+            fs.mkdirSync(path.join(somedir, 'www'), { recursive: true });
+            fs.writeFileSync(path.join(somedir, 'www', 'config.xml'), '', 'utf8');
             process.env.PWD = path.sep;
             process.chdir(anotherdir);
             expect(util.isCordova()).toEqual(somedir);
         });
         it('Test 007 : should ignore platform www/config.xml', function () {
-            fs.ensureDirSync(path.join(anotherdir, 'www', 'config.xml'));
-            fs.ensureDirSync(path.join(somedir, 'www'));
-            fs.ensureDirSync(path.join(somedir, 'config.xml'));
+            fs.mkdirSync(path.join(somedir, 'www'), { recursive: true });
+            fs.mkdirSync(path.join(anotherdir, 'www'), { recursive: true });
+            fs.writeFileSync(path.join(anotherdir, 'www', 'config.xml'), '', 'utf8');
+            fs.writeFileSync(path.join(somedir, 'config.xml'), '', 'utf8');
             expect(util.isCordova(anotherdir)).toEqual(somedir);
         });
     });
@@ -84,13 +88,13 @@ describe('util module', function () {
         it('Test 009 : should only return supported platform directories present in a cordova project dir', function () {
             const platforms = path.join(temp, 'platforms');
 
-            fs.ensureDirSync(path.join(platforms, 'android'));
-            fs.ensureDirSync(path.join(platforms, 'ios'));
-            fs.ensureDirSync(path.join(platforms, 'wp8'));
-            fs.ensureDirSync(path.join(platforms, 'atari'));
+            fs.mkdirSync(path.join(platforms, 'android'), { recursive: true });
+            fs.mkdirSync(path.join(platforms, 'ios'), { recursive: true });
+            fs.mkdirSync(path.join(platforms, 'wp8'), { recursive: true });
+            fs.mkdirSync(path.join(platforms, 'atari'), { recursive: true });
 
             // create a typical platforms.json file, it should not be returned as a platform
-            fs.ensureFileSync(path.join(platforms, 'platforms.json'));
+            fs.writeFileSync(path.join(platforms, 'platforms.json'), '{}', 'utf8');
 
             const res = util.listPlatforms(temp);
             expect(res.length).toEqual(4);
@@ -103,17 +107,18 @@ describe('util module', function () {
 
             return helpers.getFixture('androidApp').copyTo(platformPath)
                 .then(_ => util.getInstalledPlatformsWithVersions(temp))
-                .then(versions => expect(versions[PLATFORM]).toBe('11.0.0'));
+                .then(versions => expect(versions[PLATFORM]).toBe('12.0.1'));
         });
     });
     describe('getPlatformVersion method', () => {
         it('should get the version from a legacy platform', () => {
             const PLATFORM_VERSION = '1.2.3-dev';
 
-            fs.outputFileSync(path.join(temp, 'cordova/version'), `
+            fs.mkdirSync(path.join(temp, 'cordova'), { recursive: true });
+            fs.writeFileSync(path.join(temp, 'cordova', 'version'), `
                 #!/usr/bin/env node
                 console.log('${PLATFORM_VERSION}');
-            `.trim());
+            `.trim(), 'utf8');
 
             const version = util.getPlatformVersion(temp);
             expect(version).toBe(PLATFORM_VERSION);
@@ -132,7 +137,7 @@ describe('util module', function () {
             plugins = ['foo', 'bar', 'baz'];
 
             plugins.forEach(plugin => {
-                fs.ensureDirSync(path.join(pluginsDir, plugin));
+                fs.mkdirSync(path.join(pluginsDir, plugin), { recursive: true });
             });
         });
 
@@ -141,25 +146,25 @@ describe('util module', function () {
         });
 
         it('Test 012 : should not return ".svn" directories', function () {
-            fs.ensureDirSync(path.join(pluginsDir, '.svn'));
+            fs.mkdirSync(path.join(pluginsDir, '.svn'), { recursive: true });
             expectFindPluginsToReturn(plugins);
         });
 
         it('Test 013 : should not return "CVS" directories', function () {
-            fs.ensureDirSync(path.join(pluginsDir, 'CVS'));
+            fs.mkdirSync(path.join(pluginsDir, 'CVS'), { recursive: true });
             expectFindPluginsToReturn(plugins);
         });
 
         it('Test 031 : should return plugin symlinks', function () {
             const linkedPluginPath = path.join(temp, 'linked-plugin');
             const pluginLinkPath = path.join(pluginsDir, 'plugin-link');
-            fs.ensureDirSync(linkedPluginPath);
-            fs.ensureSymlinkSync(linkedPluginPath, pluginLinkPath);
+            fs.mkdirSync(linkedPluginPath, { recursive: true });
+            fs.symlinkSync(linkedPluginPath, pluginLinkPath);
             expectFindPluginsToReturn(plugins.concat('plugin-link'));
         });
 
         it('Test 032 : should work with scoped plugins', () => {
-            fs.ensureDirSync(path.join(pluginsDir, '@baz/foo'));
+            fs.mkdirSync(path.join(pluginsDir, '@baz/foo'), { recursive: true });
             expectFindPluginsToReturn(plugins.concat('@baz/foo'));
         });
     });

@@ -17,9 +17,9 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
-const os = require('os');
+const path = require('node:path');
+const fs = require('node:fs');
+const os = require('node:os');
 const ConfigParser = require('cordova-common').ConfigParser;
 const fixtureHelper = require('./fixture-helper');
 
@@ -28,7 +28,7 @@ module.exports.testPlatform = 'android';
 
 function getConfigPath (dir) {
     // if path ends with 'config.xml', return it
-    if (dir.indexOf('config.xml') === dir.length - 10) {
+    if (dir.endsWith('config.xml')) {
         return dir;
     }
     // otherwise, add 'config.xml' to the end of it

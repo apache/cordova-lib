@@ -17,8 +17,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const path = require('node:path');
+const fs = require('node:fs');
 const semver = require('semver');
 const { listPlatforms, requireNoCache } = require('../src/cordova/util');
 const { tmpDir: getTmpDir, testPlatform, getFixture, setDefaultTimeout } = require('../spec/helpers');
@@ -44,14 +44,14 @@ describe('pkgJson', function () {
 
     afterEach(() => {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
-        fs.removeSync(tmpDir);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     // Copies a fixture to temp dir to avoid modifiying it as they get installed as symlinks
     function copyFixture (fixtureRelativePath) {
         const fixturePath = path.join(fixturesPath, fixtureRelativePath);
         const tmpPath = path.join(tmpDir, path.basename(fixtureRelativePath));
-        fs.copySync(fixturePath, tmpPath);
+        fs.cpSync(fixturePath, tmpPath, { recursive: true });
         return tmpPath;
     }
 
@@ -69,7 +69,7 @@ describe('pkgJson', function () {
     function pluginVersion (pluginName) {
         const p = path.join(project, 'plugins', pluginName, 'package.json');
         expect(p).toExist();
-        return fs.readJsonSync(p).version;
+        return JSON.parse(fs.readFileSync(p)).version;
     }
 
     function specSatisfiedBy (version) {
@@ -125,11 +125,11 @@ describe('pkgJson', function () {
 
         afterAll(() => {
             process.chdir(__dirname); // Needed to rm the dir on Windows.
-            fs.removeSync(projectFixture);
+            fs.rmSync(projectFixture, { recursive: true, force: true });
         });
 
         beforeEach(function () {
-            fs.copySync(projectFixture, project);
+            fs.cpSync(projectFixture, project, { recursive: true });
             process.chdir(project);
         });
 
@@ -260,7 +260,7 @@ describe('pkgJson', function () {
                 }).then(function () {
                     return cordova.plugin('add', PLUGIN, { save: true });
                 }).then(function () {
-                    const iosJson = fs.readJsonSync(path.join(project, 'platforms/ios/ios.json'));
+                    const iosJson = JSON.parse(fs.readFileSync(path.join(project, 'platforms/ios/ios.json')));
                     expect(iosJson.installed_plugins[PLUGIN]).toBeDefined();
 
                     // Check that installed version satisfies the dependency spec

@@ -17,8 +17,8 @@
  under the License.
  */
 
+const path = require('node:path');
 const cordova = require('../../src/cordova/cordova');
-const path = require('path');
 
 describe('retrieval of project metadata', function () {
     const projectRoot = path.resolve(__dirname, 'fixtures/projects/ProjectMetadata');

@@ -1,1 +1,1 @@
-./org.test.plugins.childbrowser/www/childbrowser.js
+//org.test.plugins.childbrowser/www/childbrowser.js

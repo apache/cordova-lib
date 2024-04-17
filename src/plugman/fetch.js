@@ -17,16 +17,15 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const url = require('url');
+const fs = require('node:fs');
+const path = require('node:path');
 const semver = require('semver');
+const fetch = require('cordova-fetch');
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const CordovaError = require('cordova-common').CordovaError;
 const events = require('cordova-common').events;
 const metadata = require('./util/metadata');
-const path = require('path');
 const pluginSpec = require('../cordova/plugin/plugin_spec_parser');
-const fetch = require('cordova-fetch');
 const cordovaUtil = require('../cordova/util');
 
 let projectRoot;
@@ -39,7 +38,7 @@ let localPlugins = null;
 module.exports = fetchPlugin;
 function fetchPlugin (plugin_src, plugins_dir, options) {
     // Ensure the containing directory exists.
-    fs.ensureDirSync(plugins_dir);
+    fs.mkdirSync(plugins_dir, { recursive: true });
     options = options || {};
     options.subdir = options.subdir || '.';
     options.searchpath = options.searchpath || [];
@@ -49,20 +48,22 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
 
     const pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
 
-    // clone from git repository
-    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
-    var uri = url.parse(plugin_src); // eslint-disable-line
+    try {
+        // clone from git repository
+        const uri = new URL(plugin_src);
 
-    // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
-    // git-ref can be a commit SHA, a tag, or a branch
-    // NB: No leading or trailing slash on the subdir.
-    if (uri.hash) {
-        const result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
-        if (result) {
-            if (result[1]) { options.git_ref = result[1]; }
-            if (result[2]) { options.subdir = result[2]; }
+        // If the hash exists, it has the form from npm: http://foo.com/bar#git-ref[:subdir]
+        // git-ref can be a commit SHA, a tag, or a branch
+        // NB: No leading or trailing slash on the subdir.
+        if (uri.hash) {
+            const result = uri.hash.match(/^#([^:]*)(?::\/?(.*?)\/?)?$/);
+            if (result) {
+                if (result[1]) { options.git_ref = result[1]; }
+                if (result[2]) { options.subdir = result[2]; }
+            }
         }
-    }
+    } catch (_) { }
+
     return Promise.resolve().then(function () {
         let plugin_dir = cordovaUtil.fixRelativePath(path.join(plugin_src, options.subdir));
         return Promise.resolve().then(function () {
@@ -196,7 +197,7 @@ function loadLocalPlugins (searchpath, pluginInfoProvider) {
         // just in case, make sure it was loaded with the same search path
         if (localPlugins.searchpath.join(path.delimiter) !== searchpath.join(path.delimiter)) {
             const msg =
-                'loadLocalPlugins called twice with different search paths.' +
+                'loadLocalPlugins called twice with different search paths. ' +
                 'Support for this is not implemented.  Using previously cached path.';
             events.emit('warn', msg);
         }
@@ -257,7 +258,7 @@ function copyPlugin (pinfo, plugins_dir, link) {
     const plugin_dir = pinfo.dir;
     const dest = path.join(plugins_dir, pinfo.id);
 
-    fs.removeSync(dest);
+    fs.rmSync(dest, { recursive: true, force: true });
 
     if (!link && dest.indexOf(path.resolve(plugin_dir) + path.sep) === 0) {
         events.emit('verbose', 'Copy plugin destination is child of src. Forcing --link mode.');
@@ -271,7 +272,7 @@ function copyPlugin (pinfo, plugins_dir, link) {
         fs.symlinkSync(fixedPath, dest, 'junction');
     } else {
         events.emit('verbose', 'Copying plugin "' + plugin_dir + '" => "' + dest + '"');
-        fs.copySync(plugin_dir, dest, { dereference: true });
+        fs.cpSync(plugin_dir, dest, { recursive: true, dereference: true });
     }
     return dest;
 }

@@ -17,6 +17,8 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const ConfigParser = require('cordova-common').ConfigParser;
 const CordovaError = require('cordova-common').CordovaError;
 const events = require('cordova-common').events;
@@ -24,8 +26,6 @@ const cordova_util = require('../util');
 const plugin_util = require('./util');
 const plugman = require('../../plugman/plugman');
 const metadata = require('../../plugman/util/metadata');
-const path = require('path');
-const fs = require('fs-extra');
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const detectIndent = require('detect-indent');
 const { Q_chainmap } = require('../../util/promise-util');

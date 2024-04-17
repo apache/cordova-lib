@@ -1,1 +1,1 @@
-./dependencies/F/www/plugin-f.js
+//dependencies/F/www/plugin-f.js

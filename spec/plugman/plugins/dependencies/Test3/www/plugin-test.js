@@ -1,1 +1,1 @@
-./dependencies/Test3/www/plugin-test.js
+//dependencies/Test3/www/plugin-test.js

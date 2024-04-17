@@ -17,8 +17,8 @@
     under the License.
 */
 
-const fs = require('fs-extra');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const rewire = require('rewire');
 
 const { PluginInfo, events } = require('cordova-common');
@@ -41,7 +41,7 @@ const plugins = {
 
 function setupProject (name) {
     const projectPath = path.join(projectsPath, name);
-    fs.copySync(projectPath, project);
+    fs.cpSync(projectPath, project, { recursive: true });
 }
 
 describe('plugman/uninstall', () => {
@@ -82,11 +82,11 @@ describe('plugman/uninstall', () => {
 
     afterEach(() => {
         // Just so everything fails if someone does not setup their project
-        fs.removeSync(project);
+        fs.rmSync(project, { recursive: true, force: true });
     });
 
     afterAll(() => {
-        fs.removeSync(tmpDir);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     describe('uninstallPlatform', function () {

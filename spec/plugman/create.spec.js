@@ -16,13 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+const fs = require('node:fs');
 const create = require('../../src/plugman/create');
-const fs = require('fs-extra');
 
 describe('plugman/create', () => {
     it('Test 002 : should be successful', function () {
         spyOn(fs, 'existsSync').and.returnValue(false);
-        spyOn(fs, 'ensureDirSync');
+        spyOn(fs, 'mkdirSync');
         spyOn(fs, 'writeFileSync');
 
         return create('name', 'org.plugin.id', '0.0.0', '.', [])
@@ -35,7 +36,7 @@ describe('plugman/create', () => {
         spyOn(fs, 'existsSync').and.returnValue(true);
 
         return expectAsync(
-            create()
+            create('name', 'org.plugin.id', '0.0.0', '.', [])
         ).toBeRejectedWithError(
             'plugin.xml already exists. Are you already in a plugin?'
         );

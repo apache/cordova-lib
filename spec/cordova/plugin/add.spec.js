@@ -17,11 +17,11 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const rewire = require('rewire');
 const plugman = require('../../../src/plugman/plugman');
 const cordova_util = require('../../../src/cordova/util');
-const path = require('path');
-const fs = require('fs-extra');
 const events = require('cordova-common').events;
 const plugin_util = require('../../../src/cordova/plugin/util');
 

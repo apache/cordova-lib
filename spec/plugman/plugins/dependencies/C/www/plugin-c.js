@@ -1,1 +1,1 @@
-./dependencies/C/www/plugin-c.js
+//dependencies/C/www/plugin-c.js

@@ -15,8 +15,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const { tmpDir: getTmpDir, testPlatform } = require('../helpers');
 const projectTestHelpers = require('../project-test-helpers');
 
@@ -53,7 +53,7 @@ describe('cordova/restore-util', () => {
 
     afterEach(() => {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
-        fs.removeSync(tmpDir);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     function getCfgEngineNames (cfg = getCfg()) {
@@ -232,7 +232,7 @@ describe('cordova/restore-util', () => {
             getCfg()
                 .addEngine(testPlatform)
                 .write();
-            fs.removeSync(pkgJsonPath);
+            fs.rmSync(pkgJsonPath, { recursive: true, force: true });
 
             return restore.installPlatformsFromConfigXML().then(() => {
                 // Package.json should be auto-created using values from config.xml

@@ -17,16 +17,16 @@
     under the License.
 */
 
+const fs = require('node:fs');
 const rewire = require('rewire');
 const plugin_util = rewire('../../../src/cordova/plugin/util');
-const fs = require('fs-extra');
 const events = require('cordova-common').events;
 
 describe('cordova/plugin/util', function () {
     const plugin_info_mock = function () {};
     const cfg_parser_mock = function () {};
     beforeEach(function () {
-        spyOn(fs, 'removeSync');
+        spyOn(fs, 'rmSync');
         spyOn(events, 'emit');
         cfg_parser_mock.prototype = jasmine.createSpyObj('config parser protytpe mock', ['getPlugin']);
         plugin_util.__set__('ConfigParser', cfg_parser_mock);
@@ -78,7 +78,7 @@ describe('cordova/plugin/util', function () {
             plugin_info_mock.prototype.getPreferences.and.returnValue({ key: 'FCM_VERSION', value: undefined });
             const opts = { cli_variables: {} };
             expect(function () { plugin_util.mergeVariables(plugin_info_mock.prototype, cfg_parser_mock.prototype, opts); }).toThrow();
-            expect(fs.removeSync).toHaveBeenCalledWith(undefined);
+            expect(fs.rmSync).toHaveBeenCalledWith(undefined, { recursive: true, force: true });
             expect(events.emit).toHaveBeenCalledWith('verbose', 'Removing undefined because mandatory plugin variables were missing.');
         });
     });

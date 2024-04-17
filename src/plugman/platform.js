@@ -17,9 +17,9 @@
     under the License.
 */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const et = require('elementtree');
-const fs = require('fs-extra');
-const path = require('path');
 const stripLicense = require('./util/strip-license');
 
 /**
@@ -74,7 +74,7 @@ module.exports = {
         fs.writeFileSync('plugin.xml', pluginxml.write('plugin.xml', { indent: 4 }), 'utf-8');
 
         // Remove the src/"platform"
-        fs.removeSync(path.join('src', platformName));
+        fs.rmSync(path.join('src', platformName), { recursive: true, force: true });
 
         return Promise.resolve();
     }
@@ -135,7 +135,7 @@ function doPlatformBase (templatesDir, platformName, pluginName, pluginID, plugi
     }
 
     const baseDir = path.join('src', platformName);
-    fs.ensureDirSync(baseDir);
+    fs.mkdirSync(baseDir, { recursive: true });
 
     for (const { extension, file } of baseFiles) {
         const filePath = path.join(baseDir, `${pluginName}.${extension}`);

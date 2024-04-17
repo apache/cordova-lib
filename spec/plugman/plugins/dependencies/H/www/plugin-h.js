@@ -1,1 +1,1 @@
-./dependencies/H/www/plugin-h.js
+//dependencies/H/www/plugin-h.js

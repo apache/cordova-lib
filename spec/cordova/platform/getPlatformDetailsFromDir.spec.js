@@ -15,8 +15,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const rewire = require('rewire');
 const cordova_util = require('../../../src/cordova/util');
 const platform_getPlatformDetails = rewire('../../../src/cordova/platform/getPlatformDetailsFromDir');

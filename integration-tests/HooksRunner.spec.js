@@ -17,9 +17,9 @@
  under the License.
  **/
 
-const path = require('path');
-const fs = require('fs-extra');
-const delay = require('delay');
+const fs = require('node:fs');
+const path = require('node:path');
+const timers = require('node:timers/promises');
 const et = require('elementtree');
 
 const HooksRunner = require('../src/hooks/HooksRunner');
@@ -39,11 +39,11 @@ describe('HooksRunner', function () {
         project = path.join(tmp, 'project');
 
         // Copy base project fixture
-        fs.copySync(path.join(fixtures, 'basePkgJson'), project);
+        fs.cpSync(path.join(fixtures, 'basePkgJson'), project, { recursive: true });
 
         // Copy project hooks
         const hooksDir = path.join(fixtures, 'projectHooks');
-        fs.copySync(hooksDir, path.join(project, 'scripts'));
+        fs.cpSync(hooksDir, path.join(project, 'scripts'), { recursive: true });
 
         // Change into our project directory
         process.chdir(project);
@@ -54,7 +54,7 @@ describe('HooksRunner', function () {
 
     afterEach(() => {
         process.chdir(path.join(__dirname, '..')); // Non e2e tests assume CWD is repo root.
-        fs.removeSync(tmp);
+        fs.rmSync(tmp, { recursive: true, force: true });
     });
 
     it('Test 001 : should throw if provided directory is not a cordova project', function () {
@@ -71,7 +71,7 @@ describe('HooksRunner', function () {
 
         beforeEach(function () {
             hooksOrderFile = path.join(project, 'hooks_order.txt');
-            fs.removeSync(hooksOrderFile);
+            fs.rmSync(hooksOrderFile, { recursive: true, force: true });
         });
 
         // helper methods
@@ -202,7 +202,7 @@ describe('HooksRunner', function () {
             beforeEach(() => {
                 // Add the test plugin to our project
                 testPluginInstalledPath = path.join(project, 'plugins', testPlugin);
-                fs.copySync(testPluginFixture, testPluginInstalledPath);
+                fs.cpSync(testPluginFixture, testPluginInstalledPath, { recursive: true });
             });
 
             function addHooksToPlugin (hooksXml) {
@@ -309,7 +309,7 @@ describe('HooksRunner', function () {
                 const order = [];
                 // Delay 100 ms here to check that h2 is not executed until after
                 // the promise returned by h1 is resolved.
-                const h1 = _ => delay(100).then(_ => order.push(1));
+                const h1 = _ => timers.setTimeout(100).then(_ => order.push(1));
                 const h2 = _ => Promise.resolve().then(_ => order.push(2));
 
                 cordova.on(test_event, h1);

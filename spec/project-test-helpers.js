@@ -17,8 +17,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const fs = require('node:fs');
+const path = require('node:path');
 const { ConfigParser } = require('cordova-common');
 
 const fixturesPath = path.join(__dirname, 'cordova/fixtures');
@@ -41,7 +41,7 @@ module.exports = function projectTestHelpers (getProjectPath) {
 
     function setupBaseProject () {
         const projectPath = getProjectPath();
-        fs.copySync(path.join(fixturesPath, 'basePkgJson'), projectPath);
+        fs.cpSync(path.join(fixturesPath, 'basePkgJson'), projectPath, { recursive: true });
         process.chdir(projectPath);
 
         // It's quite bland, I assure you
@@ -61,10 +61,11 @@ module.exports = function projectTestHelpers (getProjectPath) {
         const pkgJsonPath = getPkgJsonPath();
         expect(pkgJsonPath).toExist();
         const keys = propPath ? propPath.split('.') : [];
+        const jsonobj = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
         return keys.reduce((obj, key) => {
             expect(obj).toBeDefined();
             return obj[key];
-        }, fs.readJsonSync(pkgJsonPath));
+        }, jsonobj);
     }
 
     function setPkgJson (propPath, value) {
@@ -72,12 +73,12 @@ module.exports = function projectTestHelpers (getProjectPath) {
         expect(pkgJsonPath).toExist();
         const keys = propPath.split('.');
         const target = keys.pop();
-        const pkgJsonObj = fs.readJsonSync(pkgJsonPath);
+        const pkgJsonObj = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
         const parentObj = keys.reduce((obj, key) => {
             return obj[key] || (obj[key] = {});
         }, pkgJsonObj);
         parentObj[target] = value;
-        fs.writeJsonSync(pkgJsonPath, pkgJsonObj);
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJsonObj, null, 2), 'utf8');
     }
 
     return {

@@ -17,8 +17,8 @@
     under the License.
 */
 
-const path = require('path');
-const fs = require('fs-extra');
+const path = require('node:path');
+const fs = require('node:fs');
 const helpers = require('../spec/helpers');
 const cordova = require('../src/cordova/cordova');
 
@@ -44,7 +44,7 @@ describe('end-to-end plugin dependency tests', function () {
 
     afterAll(function () {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
-        fs.removeSync(preparedProject);
+        fs.rmSync(preparedProject, { recursive: true, force: true });
     });
 
     let tmpDir, project, pluginsDir;
@@ -53,14 +53,14 @@ describe('end-to-end plugin dependency tests', function () {
         project = path.join(tmpDir, 'project');
         pluginsDir = path.join(project, 'plugins');
 
-        fs.copySync(preparedProject, project);
+        fs.cpSync(preparedProject, project, { recursive: true });
         process.chdir(project);
         delete process.env.PWD;
     });
 
     afterEach(function () {
         process.chdir(__dirname); // Needed to rm the dir on Windows.
-        fs.removeSync(tmpDir);
+        fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     it('Test 029 : should fail if dependency already installed is wrong version', function () {
