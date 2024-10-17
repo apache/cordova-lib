@@ -297,7 +297,7 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
     const plugins = cordova_util.findPlugins(plugins_dir).filter(function (plugin) {
         return !platformJson.isPluginInstalled(plugin);
     }).sort(function (a, b) {
-        return pkgJsonCordovaPlugins.indexOf(a) - pkgJsonCordovaPlugins.indexOf(b)
+        return pkgJsonCordovaPlugins.indexOf(a) - pkgJsonCordovaPlugins.indexOf(b);
     });
     if (plugins.length === 0) {
         return Promise.resolve();
