@@ -290,9 +290,14 @@ function installPluginsForNewPlatform (platform, projectRoot, opts) {
 
     // Get a list of all currently installed plugins, ignoring those that have already been installed for this platform
     // during prepare (installed from config.xml).
+    // Apply plugins sort from package.json
     const platformJson = PlatformJson.load(plugins_dir, platform);
+    const pkgJson = readPackageJsonIfExists(projectRoot);
+    const pkgJsonCordovaPlugins = Object.keys(pkgJson.cordova.plugins);
     const plugins = cordova_util.findPlugins(plugins_dir).filter(function (plugin) {
         return !platformJson.isPluginInstalled(plugin);
+    }).sort(function (a, b) {
+        return pkgJsonCordovaPlugins.indexOf(a) - pkgJsonCordovaPlugins.indexOf(b)
     });
     if (plugins.length === 0) {
         return Promise.resolve();
