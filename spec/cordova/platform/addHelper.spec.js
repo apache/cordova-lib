@@ -296,6 +296,9 @@ describe('cordova/platform/addHelper', function () {
 
         // Call installPluginsForNewPlatform with some preset test arguments
         function installPluginsForNewPlatformWithTestArgs () {
+            platform_addHelper.__set__({
+                readPackageJsonIfExists: () => ({ ...package_json_mock, cordova: { platforms: [], plugins: [] } })
+            });
             return platform_addHelper.installPluginsForNewPlatform('atari', projectRoot, {});
         }
 
