@@ -296,9 +296,6 @@ describe('cordova/platform/addHelper', function () {
 
         // Call installPluginsForNewPlatform with some preset test arguments
         function installPluginsForNewPlatformWithTestArgs () {
-            platform_addHelper.__set__({
-                readPackageJsonIfExists: () => ({ ...package_json_mock, cordova: { platforms: [], plugins: [] } })
-            });
             return platform_addHelper.installPluginsForNewPlatform('atari', projectRoot, {});
         }
 
@@ -343,14 +340,24 @@ describe('cordova/platform/addHelper', function () {
             });
         });
 
-        it('should invoke plugman.install with correct plugin ID for a scoped plugin', () => {
-            const scopedPluginId = '@cordova/cordova-plugin-scoped';
-            cordova_util.findPlugins.and.returnValue([scopedPluginId]);
+        it('should invoke plugman.install with correct plugin ID for a scoped plugins', () => {
+            const pkgJsonPluginIds = ['@cordova/cordova-plugin-scoped', 'cordova-plugin-whitelist'];
+            platform_addHelper.__set__({
+                readPackageJsonIfExists: jasmine.createSpy('readPackageJsonIfExists').and.returnValue({
+                    ...package_json_mock,
+                    cordova: {
+                        plugins: Object.fromEntries(pkgJsonPluginIds.map(pluginId => [pluginId, {}]))
+                    }
+                })
+            });
+            cordova_util.findPlugins.and.returnValue([pkgJsonPluginIds[1], pkgJsonPluginIds[0]]);
 
             return installPluginsForNewPlatformWithTestArgs().then(() => {
-                expect(plugman.install).toHaveBeenCalledTimes(1);
-                const pluginId = plugman.install.calls.argsFor(0)[2];
-                expect(pluginId).toBe(scopedPluginId);
+                expect(plugman.install).toHaveBeenCalledTimes(pkgJsonPluginIds.length);
+                const installedPluginIds = pkgJsonPluginIds.map(function (pkgJsonPluginId, index) {
+                    return plugman.install.calls.argsFor(index)[2];
+                });
+                expect(installedPluginIds).toEqual(pkgJsonPluginIds);
             });
         });
 
