@@ -102,8 +102,11 @@ function remove (projectRoot, targets, hooksRunner, opts) {
 
             return plugin_util.mergeVariables(pluginInfo, cfg, opts);
         }).then(function (variables) {
-            opts.cli_variables = variables;
-            return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, opts)
+            // leave opts.cli_variables untouched, so values discarded by mergeVariables()
+            // for this platform are still available for other platforms
+            const platformOpts = { ...opts, cli_variables: variables };
+
+            return plugman.uninstall.uninstallPlatform(platform, platformRoot, target, pluginPath, platformOpts)
                 .then(function (didPrepare) {
                     // If platform does not returned anything we'll need
                     // to trigger a prepare after all plugins installed
