@@ -99,22 +99,12 @@ function possiblyFetch (id, plugins_dir, options) {
 
 function checkEngines (engines) {
     for (let i = 0; i < engines.length; i++) {
-        const engine = engines[i];
+        const { currentVersion, minVersion, name } = engines[i];
 
-        // This is a hack to allow plugins with <engine> tag to be installed with
-        // engine with '-dev' or '-nightly' suffixes. It is required due to new semver range logic,
-        // introduced in semver@3.x. For more details see https://github.com/npm/node-semver#prerelease-tags.
-        //
-        // This may lead to false-positive checks, when engine version with dropped
-        // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
-        // However this shouldn't be a problem, because this only should happen in dev workflow.
-        engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev|-nightly.*$/, '');
-        if (semver.satisfies(engine.currentVersion, engine.minVersion, /* loose= */true) || engine.currentVersion === null) {
+        if (semver.satisfies(currentVersion, minVersion, { loose: true, includePrerelease: true }) || currentVersion === null) {
             continue; // engine ok!
         } else {
-            const msg = 'Plugin doesn\'t support this project\'s ' + engine.name + ' version. ' +
-                      engine.name + ': ' + engine.currentVersion +
-                      ', failed version requirement: ' + engine.minVersion;
+            const msg = `Plugin doesn't support this project's ${name} version. ${name}: ${currentVersion}, failed version requirement: ${minVersion}`;
             events.emit('warn', msg);
             return Promise.reject(Object.assign(new Error(), { skip: true }));
         }

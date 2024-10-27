@@ -160,51 +160,51 @@ describe('plugman/install', () => {
                 execaSpy.and.returnValue(Promise.resolve({ stdout: '2.5.0' }));
                 return install('android', project, pluginDir('com.cordova.engine'))
                     .then(() => {
-                        expect(satisfies).toHaveBeenCalledWith('2.5.0', '>=1.0.0', true);
+                        expect(satisfies).toHaveBeenCalledWith('2.5.0', '>=1.0.0', { loose: true, includePrerelease: true });
                     });
             }, TIMEOUT);
             it('Test 008 : should check version and munge it a little if it has "rc" in it so it plays nice with semver (introduce a dash in it)', () => {
                 execaSpy.and.returnValue(Promise.resolve({ stdout: '3.0.0rc1' }));
                 return install('android', project, pluginDir('com.cordova.engine'))
                     .then(() => {
-                        expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1', '>=1.0.0', true);
+                        expect(satisfies).toHaveBeenCalledWith('3.0.0-rc1', '>=1.0.0', { loose: true, includePrerelease: true });
                     });
             }, TIMEOUT);
             it('Test 009 : should check specific platform version over cordova version if specified', () => {
                 execaSpy.and.returnValue(Promise.resolve({ stdout: '3.1.0' }));
                 return install('android', project, pluginDir('com.cordova.engine-android'))
                     .then(() => {
-                        expect(satisfies).toHaveBeenCalledWith('3.1.0', '>=3.1.0', true);
+                        expect(satisfies).toHaveBeenCalledWith('3.1.0', '>=3.1.0', { loose: true, includePrerelease: true });
                     });
             }, TIMEOUT);
             it('Test 010 : should check platform sdk version if specified', () => {
-                const cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                const cordovaVersion = require('../../package.json').version;
                 execaSpy.and.returnValue(Promise.resolve({ stdout: '18' }));
                 return install('android', project, pluginDir('com.cordova.engine-android'))
                     .then(() => {
                         expect(satisfies.calls.count()).toBe(3);
                         // <engine name="cordova" VERSION=">=3.0.0"/>
-                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=3.0.0', true]);
+                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=3.0.0', { loose: true, includePrerelease: true }]);
                         // <engine name="cordova-android" VERSION=">=3.1.0"/>
-                        expect(satisfies.calls.argsFor(1)).toEqual(['18.0.0', '>=3.1.0', true]);
+                        expect(satisfies.calls.argsFor(1)).toEqual(['18.0.0', '>=3.1.0', { loose: true, includePrerelease: true }]);
                         // <engine name="android-sdk" VERSION=">=18"/>
-                        expect(satisfies.calls.argsFor(2)).toEqual(['18.0.0', '>=18', true]);
+                        expect(satisfies.calls.argsFor(2)).toEqual(['18.0.0', '>=18', { loose: true, includePrerelease: true }]);
                     });
             }, TIMEOUT);
             it('Test 011 : should check engine versions', () => {
                 return install('android', project, pluginDir('com.cordova.engine'))
                     .then(() => {
-                        const plugmanVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
-                        const cordovaVersion = require('../../package.json').version.replace(/-dev|-nightly.*$/, '');
+                        const plugmanVersion = require('../../package.json').version;
+                        const cordovaVersion = require('../../package.json').version;
                         expect(satisfies.calls.count()).toBe(4);
                         // <engine name="cordova" version=">=2.3.0"/>
-                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=2.3.0', true]);
+                        expect(satisfies.calls.argsFor(0)).toEqual([cordovaVersion, '>=2.3.0', { loose: true, includePrerelease: true }]);
                         // <engine name="cordova-plugman" version=">=0.10.0" />
-                        expect(satisfies.calls.argsFor(1)).toEqual([plugmanVersion, '>=0.10.0', true]);
+                        expect(satisfies.calls.argsFor(1)).toEqual([plugmanVersion, '>=0.10.0', { loose: true, includePrerelease: true }]);
                         // <engine name="mega-fun-plugin" version=">=1.0.0" scriptSrc="megaFunVersion" platform="*" />
-                        expect(satisfies.calls.argsFor(2)).toEqual([null, '>=1.0.0', true]);
+                        expect(satisfies.calls.argsFor(2)).toEqual([null, '>=1.0.0', { loose: true, includePrerelease: true }]);
                         // <engine name="mega-boring-plugin" version=">=3.0.0" scriptSrc="megaBoringVersion" platform="ios|android" />
-                        expect(satisfies.calls.argsFor(3)).toEqual([null, '>=3.0.0', true]);
+                        expect(satisfies.calls.argsFor(3)).toEqual([null, '>=3.0.0', { loose: true, includePrerelease: true }]);
                     });
             }, TIMEOUT);
             it('Test 012 : should not check custom engine version that is not supported for platform', () => {
@@ -212,7 +212,7 @@ describe('plugman/install', () => {
                     .then(() => {
                         // Version >=3.0.0 of `mega-boring-plugin` is specified with platform="ios|android"
                         expect(satisfies.calls.count()).toBe(3);
-                        expect(satisfies).not.toHaveBeenCalledWith(jasmine.anything(), '>=3.0.0', true);
+                        expect(satisfies).not.toHaveBeenCalledWith(jasmine.anything(), '>=3.0.0', { loose: true, includePrerelease: true });
                     });
             }, TIMEOUT);
         });
