@@ -20,6 +20,26 @@
 -->
 # Cordova-lib Release Notes
 
+### 12.0.2 (Oct 29, 2024)
+
+**Fixes:**
+
+* [GH-935](https://github.com/apache/cordova-lib/pull/935) fix: platform & plugin prerelease package support
+* [GH-933](https://github.com/apache/cordova-lib/pull/933) fix(ios): Prevent mix build phases
+* [GH-913](https://github.com/apache/cordova-lib/pull/913) fix: uninstalling plugin with platform separated required variables
+
+**Chores:**
+
+* [GH-934](https://github.com/apache/cordova-lib/pull/934) chore(deps): bump cookie and express
+* [GH-928](https://github.com/apache/cordova-lib/pull/928) chore(deps): bump micromatch from 4.0.5 to 4.0.8
+* [GH-925](https://github.com/apache/cordova-lib/pull/925) chore(deps): bump braces from 3.0.2 to 3.0.3
+* [GH-924](https://github.com/apache/cordova-lib/pull/924) chore(deps): Update some dependencies, add Node 20 to CI
+
+**CI:**
+
+* [GH-926](https://github.com/apache/cordova-lib/pull/926) ci(release-audit): add license header and dependency checker
+* [GH-923](https://github.com/apache/cordova-lib/pull/923) ci: update codecov@v4 w/ token
+
 ### 12.0.1 (May 19, 2023)
 
 * [GH-918](https://github.com/apache/cordova-lib/pull/918) fix: platform add with tarball & directory
