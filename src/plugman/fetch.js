@@ -85,7 +85,7 @@ function fetchPlugin (plugin_src, plugins_dir, options) {
                             pinfo: pluginInfoProvider.get(directory),
                             fetchJsonSource: {
                                 type: 'local',
-                                path: directory
+                                path: path.relative(projectRoot, directory)
                             }
                         };
                     }).catch(function (error) {
