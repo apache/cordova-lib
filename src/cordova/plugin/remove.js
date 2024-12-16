@@ -30,7 +30,6 @@ const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const detectIndent = require('detect-indent');
 const detectNewline = require('detect-newline');
 const stringifyPackage = require('stringify-package');
-const writeFileAtomicSync = require('write-file-atomic').sync;
 const { Q_chainmap } = require('../../util/promise-util');
 const preparePlatforms = require('../prepare/platforms');
 
@@ -149,7 +148,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
             const file = fs.readFileSync(pkgJsonPath, 'utf8');
             const indent = detectIndent(file).indent || '  ';
             const newline = detectNewline(file);
-            writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+            fs.writeFileSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), 'utf8');
         }
     }
 }

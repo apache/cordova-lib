@@ -24,7 +24,6 @@ const url = require('url');
 const detectIndent = require('detect-indent');
 const detectNewline = require('detect-newline');
 const stringifyPackage = require('stringify-package');
-const writeFileAtomicSync = require('write-file-atomic').sync;
 const cordova_util = require('../util');
 const plugin_util = require('./util');
 const cordova_pkgJson = require('../../../package.json');
@@ -158,7 +157,7 @@ function add (projectRoot, hooksRunner, opts) {
                             const file = fs.readFileSync(pkgJsonPath, 'utf8');
                             const indent = detectIndent(file).indent || '  ';
                             const newline = detectNewline(file);
-                            writeFileAtomicSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), { encoding: 'utf8' });
+                            fs.writeFileSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), 'utf8');
                         }
 
                         const src = module.exports.parseSource(target, opts);
