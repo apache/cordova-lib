@@ -22,6 +22,8 @@ const path = require('node:path');
 const semver = require('semver');
 const url = require('url');
 const detectIndent = require('detect-indent');
+const detectNewline = require('detect-newline');
+const stringifyPackage = require('stringify-package');
 const cordova_util = require('../util');
 const plugin_util = require('./util');
 const cordova_pkgJson = require('../../../package.json');
@@ -154,7 +156,8 @@ function add (projectRoot, hooksRunner, opts) {
                             // Write to package.json
                             const file = fs.readFileSync(pkgJsonPath, 'utf8');
                             const indent = detectIndent(file).indent || '  ';
-                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
+                            const newline = detectNewline(file);
+                            fs.writeFileSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), 'utf8');
                         }
 
                         const src = module.exports.parseSource(target, opts);

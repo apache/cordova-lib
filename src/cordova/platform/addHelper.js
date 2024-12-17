@@ -27,6 +27,8 @@ const cordova_util = require('../util');
 const promiseutil = require('../../util/promise-util');
 const platforms = require('../../platforms');
 const detectIndent = require('detect-indent');
+const detectNewline = require('detect-newline');
+const stringifyPackage = require('stringify-package');
 const getPlatformDetailsFromDir = require('./getPlatformDetailsFromDir');
 const preparePlatforms = require('../prepare/platforms');
 
@@ -226,7 +228,8 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 if (modifiedPkgJson === true) {
                     const file = fs.readFileSync(pkgJsonPath, 'utf8');
                     const indent = detectIndent(file).indent || '  ';
-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, indent), 'utf8');
+                    const newline = detectNewline(file);
+                    fs.writeFileSync(pkgJsonPath, stringifyPackage(pkgJson, indent, newline), 'utf8');
                 }
             });
         }).then(function () {
