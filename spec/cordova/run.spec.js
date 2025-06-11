@@ -17,6 +17,7 @@
     under the License.
 */
 const rewire = require('rewire');
+const { events } = require('cordova-common');
 const platforms = require('../../src/platforms/platforms');
 const HooksRunner = require('../../src/hooks/HooksRunner');
 const util = require('../../src/cordova/util');
@@ -25,21 +26,24 @@ const supported_platforms = Object.keys(platforms).filter(function (p) { return 
 
 describe('run command', function () {
     const project_dir = '/some/path';
-    let cordovaRun, cordovaPrepare, platformApi, getPlatformApi;
+    let cordovaRun, cordovaPrepare, platformApi, getPlatformApi, targets;
 
     beforeEach(function () {
         spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        spyOn(events, 'emit');
 
         cordovaRun = rewire('../../src/cordova/run');
         cordovaPrepare = jasmine.createSpy('cordovaPrepare').and.returnValue(Promise.resolve());
-        cordovaRun.__set__({ cordovaPrepare });
+        targets = jasmine.createSpy('targets').and.returnValue(Promise.resolve());
+        cordovaRun.__set__({ cordovaPrepare, targets });
 
         platformApi = {
             run: jasmine.createSpy('run').and.returnValue(Promise.resolve()),
-            build: jasmine.createSpy('build').and.returnValue(Promise.resolve())
+            build: jasmine.createSpy('build').and.returnValue(Promise.resolve()),
+            listTargets: jasmine.createSpy('listTargets').and.returnValue(Promise.resolve())
         };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
@@ -62,6 +66,43 @@ describe('run command', function () {
         });
     });
 
+    describe('list', function () {
+        it('should warn if platforms are not specified', function () {
+            const result = cordovaRun({ platforms: [], options: { list: true } });
+
+            expect(result).toBeFalsy();
+            expect(events.emit).toHaveBeenCalledWith('warn', 'A platform must be provided when using the "--list" flag.');
+        });
+
+        it('should try to use the Platform API to list emulator targets', function () {
+            return cordovaRun({ platforms: ['ios'], options: { list: true } })
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(platformApi.listTargets).toHaveBeenCalledWith(jasmine.objectContaining({ options: jasmine.objectContaining({ list: true }) }));
+                });
+        });
+
+        it('should pass options down', function () {
+            return cordovaRun({ platforms: ['ios'], options: { list: true, device: true } })
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(platformApi.listTargets).toHaveBeenCalledWith(jasmine.objectContaining({ options: jasmine.objectContaining({ device: true }) }));
+                });
+        });
+
+        it('should fall back to the pre-Platform API targets', function () {
+            delete platformApi.listTargets;
+
+            return cordovaRun({ platforms: ['ios'], options: { list: true } })
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(targets).toHaveBeenCalledWith(jasmine.objectContaining({ options: jasmine.objectContaining({ list: true }) }));
+
+                    expect(events.emit).toHaveBeenCalledWith('warn', 'Please update to the latest platform release to ensure uninterrupted fetching of target lists.');
+                });
+        });
+    });
+
     describe('success', function () {
         it('Test 003 : should call prepare before actually run platform ', function () {
             return cordovaRun(['android', 'ios']).then(function () {
@@ -81,6 +122,14 @@ describe('run command', function () {
                 expect(cordovaPrepare).toHaveBeenCalledWith({ platforms: ['blackberry10'], options: { password: '1q1q' }, verbose: false });
                 expect(platformApi.build).toHaveBeenCalledWith({ password: '1q1q' });
                 expect(platformApi.run).toHaveBeenCalledWith({ password: '1q1q', nobuild: true });
+            });
+        });
+
+        it('Test 006 : should skip preparing if --noprepare is passed', function () {
+            return cordovaRun({ platforms: ['blackberry10'], options: { noprepare: true } }).then(function () {
+                expect(cordovaPrepare).not.toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['blackberry10'] }));
+                expect(platformApi.build).toHaveBeenCalledWith({ noprepare: true });
+                expect(platformApi.run).toHaveBeenCalledWith({ noprepare: true, nobuild: true });
             });
         });
 
