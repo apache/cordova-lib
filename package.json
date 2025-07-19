@@ -11,7 +11,7 @@
     "node": ">=20.5.0"
   },
   "dependencies": {
-    "cordova-common": "^5.0.0",
+    "cordova-common": "^5.0.1",
     "cordova-fetch": "^4.0.0",
     "cordova-serve": "^4.0.1",
     "dep-graph": "^1.1.0",
@@ -27,7 +27,7 @@
     "write-file-atomic": "^5.0.0"
   },
   "devDependencies": {
-    "@cordova/eslint-config": "^5.0.0",
+    "@cordova/eslint-config": "^5.1.0",
     "cordova-android": "12.0.1",
     "jasmine": "^4.6.0",
     "jasmine-spec-reporter": "^7.0.0",
