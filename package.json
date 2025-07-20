@@ -8,10 +8,10 @@
   "bugs": "https://github.com/apache/cordova-lib/issues",
   "main": "cordova-lib.js",
   "engines": {
-    "node": ">=16.13.0"
+    "node": ">=20.17.0"
   },
   "dependencies": {
-    "cordova-common": "^5.0.0",
+    "cordova-common": "^5.0.1",
     "cordova-fetch": "^4.0.0",
     "cordova-serve": "^4.0.1",
     "dep-graph": "^1.1.0",
@@ -20,19 +20,19 @@
     "elementtree": "^0.1.7",
     "execa": "^5.1.1",
     "globby": "^11.1.0",
-    "init-package-json": "^6.0.0",
+    "init-package-json": "^8.2.1",
     "md5-file": "^5.0.0",
-    "semver": "^7.5.0",
+    "semver": "^7.7.2",
     "stringify-package": "^1.0.1",
-    "write-file-atomic": "^5.0.0"
+    "write-file-atomic": "^6.0.0"
   },
   "devDependencies": {
-    "@cordova/eslint-config": "^5.0.0",
+    "@cordova/eslint-config": "^5.1.0",
     "cordova-android": "12.0.1",
-    "jasmine": "^4.6.0",
+    "jasmine": "^5.8.0",
     "jasmine-spec-reporter": "^7.0.0",
-    "nyc": "^15.1.0",
-    "rewire": "^6.0.0"
+    "nyc": "^17.1.0",
+    "rewire": "^9.0.0"
   },
   "scripts": {
     "test": "npm run lint && npm run test:coverage",
