@@ -28,10 +28,7 @@ const plugman = {
     emit: events.emit.bind(events),
     install: require('./install'),
     uninstall: require('./uninstall'),
-    fetch: require('./fetch'),
-    create: require('./create'),
-    platform: require('./platform_operation'),
-    createpackagejson: require('./createpackagejson')
+    fetch: require('./fetch')
 };
 
 module.exports = plugman;
