@@ -17,4 +17,3 @@
 
 ignored-packages:
   - spdx-exceptions@2.5.0
-  - underscore@1.2.1

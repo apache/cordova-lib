@@ -22,7 +22,6 @@ const os = require('node:os');
 const path = require('node:path');
 const execa = require('execa');
 const ActionStack = require('cordova-common').ActionStack;
-const DepGraph = require('dep-graph');
 const semver = require('semver');
 const PlatformJson = require('cordova-common').PlatformJson;
 const CordovaError = require('cordova-common').CordovaError;
@@ -36,6 +35,7 @@ const PluginInfo = require('cordova-common').PluginInfo;
 const PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 const variableMerge = require('./variable-merge');
 const plugmanFetch = require('./fetch');
+const DepGraph = require('./util/dep-graph');
 
 const isWindows = (os.platform().substr(0, 3) === 'win');
 
