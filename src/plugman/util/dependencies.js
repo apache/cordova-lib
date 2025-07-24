@@ -19,8 +19,8 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const DepGraph = require('dep-graph');
 const events = require('cordova-common').events;
+const DepGraph = require('./dep-graph');
 let pkg;
 
 module.exports = pkg = {
@@ -66,7 +66,11 @@ module.exports = pkg = {
     // Returns a list of top-level plugins which are (transitively) dependent on the given plugin.
     dependents: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         let depsInfo;
-        if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
+        if (typeof plugins_dir === 'object') {
+            depsInfo = plugins_dir;
+        } else {
+            depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+        }
 
         const graph = depsInfo.graph;
         const tlps = depsInfo.top_level_plugins;
@@ -81,7 +85,11 @@ module.exports = pkg = {
     // In other words, if the given plugin were deleted, these dangling dependencies should be deleted too.
     danglers: function (plugin_id, plugins_dir, platformJson, pluginInfoProvider) {
         let depsInfo;
-        if (typeof plugins_dir === 'object') { depsInfo = plugins_dir; } else { depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider); }
+        if (typeof plugins_dir === 'object') {
+            depsInfo = plugins_dir;
+        } else {
+            depsInfo = pkg.generateDependencyInfo(platformJson, plugins_dir, pluginInfoProvider);
+        }
 
         const { graph, top_level_plugins } = depsInfo;
 
