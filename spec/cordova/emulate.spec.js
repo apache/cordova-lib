@@ -17,6 +17,7 @@
     under the License.
 */
 const rewire = require('rewire');
+const { events } = require('cordova-common');
 const platforms = require('../../src/platforms/platforms');
 const HooksRunner = require('../../src/hooks/HooksRunner');
 const util = require('../../src/cordova/util');
@@ -25,21 +26,24 @@ const supported_platforms = Object.keys(platforms);
 
 describe('emulate command', function () {
     const project_dir = '/some/path';
-    let cordovaEmulate, cordovaPrepare, platformApi, getPlatformApi;
+    let cordovaEmulate, cordovaPrepare, platformApi, getPlatformApi, targets;
 
     beforeEach(function () {
         spyOn(util, 'isCordova').and.returnValue(project_dir);
         spyOn(util, 'cdProjectRoot').and.returnValue(project_dir);
         spyOn(util, 'listPlatforms').and.returnValue(supported_platforms);
         spyOn(HooksRunner.prototype, 'fire').and.returnValue(Promise.resolve());
+        spyOn(events, 'emit');
 
         cordovaEmulate = rewire('../../src/cordova/emulate');
         cordovaPrepare = jasmine.createSpy('cordovaPrepare').and.returnValue(Promise.resolve());
-        cordovaEmulate.__set__({ cordovaPrepare });
+        targets = jasmine.createSpy('targets').and.returnValue(Promise.resolve());
+        cordovaEmulate.__set__({ cordovaPrepare, targets });
 
         platformApi = {
             run: jasmine.createSpy('run').and.returnValue(Promise.resolve()),
-            build: jasmine.createSpy('build').and.returnValue(Promise.resolve())
+            build: jasmine.createSpy('build').and.returnValue(Promise.resolve()),
+            listTargets: jasmine.createSpy('listTargets').and.returnValue(Promise.resolve())
         };
         getPlatformApi = spyOn(platforms, 'getPlatformApi').and.returnValue(platformApi);
     });
@@ -57,6 +61,35 @@ describe('emulate command', function () {
             return expectAsync(
                 cordovaEmulate()
             ).toBeRejectedWithError();
+        });
+    });
+
+    describe('list', function () {
+        it('should warn if platforms are not specified', function () {
+            const result = cordovaEmulate({ platforms: [], options: { list: true } });
+
+            expect(result).toBeFalsy();
+            expect(events.emit).toHaveBeenCalledWith('warn', 'A platform must be provided when using the "--list" flag.');
+        });
+
+        it('should try to use the Platform API to list emulator targets', function () {
+            return cordovaEmulate({ platforms: ['ios'], options: { list: true } })
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(platformApi.listTargets).toHaveBeenCalledWith(jasmine.objectContaining({ options: jasmine.objectContaining({ device: false, emulator: true }) }));
+                });
+        });
+
+        it('should fall back to the pre-Platform API targets', function () {
+            delete platformApi.listTargets;
+
+            return cordovaEmulate({ platforms: ['ios'], options: { list: true } })
+                .then(function () {
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(targets).toHaveBeenCalledWith(jasmine.objectContaining({ options: jasmine.objectContaining({ device: false, emulator: true }) }));
+
+                    expect(events.emit).toHaveBeenCalledWith('warn', 'Please update to the latest platform release to ensure uninterrupted fetching of target lists.');
+                });
         });
     });
 
@@ -78,6 +111,16 @@ describe('emulate command', function () {
                     expect(getPlatformApi).toHaveBeenCalledWith('ios');
                     expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true });
                     expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, optionTastic: true, nobuild: true });
+                });
+        });
+
+        it('Test 005 : should skip preparing if --noprepare is passed', function () {
+            return cordovaEmulate({ platforms: ['ios'], options: { noprepare: true } })
+                .then(function () {
+                    expect(cordovaPrepare).not.toHaveBeenCalledWith(jasmine.objectContaining({ platforms: ['ios'] }));
+                    expect(getPlatformApi).toHaveBeenCalledWith('ios');
+                    expect(platformApi.build).toHaveBeenCalledWith({ device: false, emulator: true, noprepare: true });
+                    expect(platformApi.run).toHaveBeenCalledWith({ device: false, emulator: true, noprepare: true, nobuild: true });
                 });
         });
 

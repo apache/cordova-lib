@@ -18,12 +18,45 @@
 */
 
 const cordova_util = require('./util');
+const { events } = require('cordova-common');
 const HooksRunner = require('../hooks/HooksRunner');
 const platform_lib = require('../platforms/platforms');
 const cordovaPrepare = require('./prepare');
 
+// Support for listing targets.
+const targets = require('./targets');
+
 // Returns a promise.
-module.exports = function emulate (options) {
+module.exports = function emulate (options = {}) {
+    const { options: cliArgs } = options;
+
+    if (cliArgs?.list) {
+        const { platforms } = options;
+
+        if (platforms.length <= 0) {
+            events.emit('warn', 'A platform must be provided when using the "--list" flag.');
+            return false;
+        }
+
+        cordova_util.cdProjectRoot();
+        options = cordova_util.preProcessOptions(options);
+        options.options.device = false;
+        options.options.emulator = true;
+
+        return Promise.resolve(platforms.map(function (platform) {
+            const platformApi = platform_lib.getPlatformApi(platform);
+
+            if (platformApi?.listTargets) {
+                // Use Platform's API to fetch target list when available
+                return platformApi.listTargets(options);
+            } else {
+                events.emit('warn', 'Please update to the latest platform release to ensure uninterrupted fetching of target lists.');
+                // fallback to original method.
+                return targets(options);
+            }
+        }));
+    }
+
     return Promise.resolve().then(function () {
         const projectRoot = cordova_util.cdProjectRoot();
         options = cordova_util.preProcessOptions(options);
