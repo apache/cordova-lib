@@ -4,3 +4,4 @@ spec
 integration-tests
 coverage
 temp
+eslint.config.js
