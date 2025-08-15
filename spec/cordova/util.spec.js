@@ -107,7 +107,7 @@ describe('util module', function () {
 
             return helpers.getFixture('androidApp').copyTo(platformPath)
                 .then(_ => util.getInstalledPlatformsWithVersions(temp))
-                .then(versions => expect(versions[PLATFORM]).toBe('12.0.1'));
+                .then(versions => expect(versions[PLATFORM]).toBe('13.0.0'));
         });
     });
     describe('getPlatformVersion method', () => {
