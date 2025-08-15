@@ -27,7 +27,7 @@
     "@cordova/eslint-config": "^5.1.0",
     "cordova-android": "12.0.1",
     "elementtree": "^0.1.7",
-    "jasmine": "^5.8.0",
+    "jasmine": "^5.9.0",
     "jasmine-spec-reporter": "^7.0.0",
     "nyc": "^17.1.0",
     "rewire": "^9.0.0"
