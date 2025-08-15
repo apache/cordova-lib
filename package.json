@@ -11,7 +11,7 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
-    "cordova-common": "^5.0.1",
+    "cordova-common": "^6.0.0",
     "cordova-fetch": "^4.0.0",
     "cordova-serve": "^4.0.1",
     "detect-indent": "^6.1.0",
