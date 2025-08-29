@@ -13,12 +13,10 @@
   "dependencies": {
     "cordova-common": "^6.0.0",
     "cordova-fetch": "^4.0.0",
-    "cordova-serve": "^4.0.1",
     "detect-indent": "^6.1.0",
     "detect-newline": "^3.1.0",
     "execa": "^5.1.1",
     "globby": "^11.1.0",
-    "md5-file": "^5.0.0",
     "semver": "^7.7.2",
     "stringify-package": "^1.0.1",
     "write-file-atomic": "^6.0.0"
