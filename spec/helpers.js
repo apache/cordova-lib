@@ -78,30 +78,6 @@ module.exports.setDefaultTimeout = timeout => {
     });
 };
 
-/**
- * Returns an arbitrarily navigable stub with optional terminal properties.
- *
- * If a requested property is an own property of `terminalProps` it is returned.
- * If the requested property is `Symbol.toPrimitive` a function returning an
- * empty string is returned.
- *
- * In any other case, it simply returns itself. If you call it, it returns
- * itself.
- *
- * @param  {Object} terminalProps An object whose properties should be exposed
- * @return {Proxy}                A Proxy with above behavior
- */
-module.exports.omniStub = (terminalProps = {}) => {
-    const stub = new Proxy(_ => _, {
-        get: (_, key) => {
-            if (Object.prototype.hasOwnProperty.call(terminalProps, key)) return terminalProps[key];
-            return key === Symbol.toPrimitive ? _ => '' : stub;
-        },
-        apply: _ => stub
-    });
-    return stub;
-};
-
 module.exports.setEngineSpec = function (appPath, engine, spec) {
     appPath = getConfigPath(appPath);
     const parser = new ConfigParser(appPath);
