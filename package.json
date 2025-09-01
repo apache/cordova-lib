@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "cordova-common": "^6.0.0",
-    "cordova-fetch": "^4.0.0",
+    "cordova-fetch": "^5.0.0",
     "detect-indent": "^6.1.0",
     "detect-newline": "^3.1.0",
     "execa": "^5.1.1",
