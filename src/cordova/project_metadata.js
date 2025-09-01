@@ -7,7 +7,7 @@
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
@@ -23,7 +23,7 @@ const semver = require('semver');
 
 /** Returns all the platforms that are currently saved into config.xml
  *  @return {Promise<{name: string, version: string, src: string}[]>}
- *      e.g: [ {name: 'android', version: '3.5.0'}, {name: 'wp8', src: 'C:/path/to/platform'}, {name: 'ios', src: 'git://...'} ]
+ *      e.g: [ {name: 'android', version: '3.5.0'}, {name: 'ios', src: 'git://...'} ]
  */
 function getPlatforms (projectRoot) {
     const xml = cordova_util.projectConfig(projectRoot);

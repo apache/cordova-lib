@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.test.plugins.dummyplugin"
@@ -27,9 +26,9 @@
     <name>dummyplugin</name>
     <!-- These are going to be required by plugman-registry -->
     <description>my description</description>
-    <author>Jackson Badman</author>
+    <author>Apache Software Foundation</author>
     <keywords>dummy,plugin</keywords>
-    <license>BSD</license>
+    <license>Apache-2.0</license>
     <!-- end plugman-registry requirements -->
 
     <asset src="www/dummyplugin.js" target="dummyplugin.js" />
@@ -72,20 +71,6 @@
                 target-dir="src/com/phonegap/plugins/dummyplugin" />
         <lib-file src="src/android/TestLib.jar" />
     </platform>
-    
-
-    <!-- blackberry10 -->
-    <platform name="blackberry10">
-        <config-file target="www/config.xml" parent="/widget">
-            <feature id="dummyPlugin" required="true" version="1.0.0.0"/>
-        </config-file>
-
-        <source-file src="src/blackberry10/index.js"/>
-        <js-module src="www/dummyplugin.js" name="Dummy">
-            <clobbers target="dummy" />
-        </js-module>
-    </platform>
-
 
     <!-- ios -->
     <platform name="ios">
@@ -110,46 +95,4 @@
         <framework src="src/ios/libsqlite3.dylib" weak="true" />
         <framework src="src/ios/Custom.framework" custom="true" />
     </platform>
-
-    <!-- tizen -->
-    <platform name="tizen">
-        <source-file src="src/tizen/dummer.js"/>
-    </platform>
-
-    <!-- windows -->
-    <platform name="windows">
-        <config-file target="config.xml" parent="/*">
-            <feature id="dummyPlugin" required="true" version="1.0.0.0"/>
-        </config-file>
-
-        <source-file src="src/windows/dummer.js"/>
-
-        <resource-file src="src/windows/text_sample1.txt" target="text_samples/text_sample1.txt" arch="x86" />
-        <resource-file src="src/windows/text_sample2.txt" target="text_samples/text_sample2.txt" versions="&gt;=8.1" />
-        <resource-file src="src/windows/text_sample3.txt" target="text_samples/text_sample3.txt" device-target="phone"/>
-        <resource-file src="src/windows/text_sample4.txt" target="text_samples/text_sample4.txt" device-target="windows" versions="8.0" arch="x64"/>
-
-        <lib-file src="TestSDK1, Version=1.0" arch="x86"/>
-        <lib-file src="TestSDK2, Version=1.0" versions=">=8.1"/>
-        <lib-file src="TestSDK3, Version=1.0" device-target="phone"/>
-        <lib-file src="TestSDK4, Version=1.0" device-target="windows" versions="8.0" arch="x86"/>
-
-        <framework src="src/windows/dummy1.dll" arch="x64"/>
-        <framework src="src/windows/dummy2.dll" versions=">=8.0"/>
-        <framework src="src/windows/dummy3.dll" device-target="windows"/>
-        <framework src="src/windows/dummy4.dll" device-target="phone" versions="8.1" arch="ARM"/>
-        <framework src="src/windows/dummy5.dll" custom="true" target-dir="phoneDir" device-target="phone" />
-        <framework src="src/windows/dummy6.dll" custom="true" target-dir="sharedDir" versions="&gt;=8.1" />
-
-        <framework src="src/windows/dummy1.vcxproj" type="projectReference" arch="x64"/>
-        <framework src="src/windows/dummy2.vcxproj" type="projectReference" versions="<8.1"/>
-        <!-- "target" attribute is an alias for "device-target" (but is deprecated) - test for it here -->
-        <framework src="src/windows/dummy3.vcxproj" type="projectReference" target="win"/>
-        <framework src="src/windows/dummy4.vcxproj" type="projectReference" device-target="all" versions="8.1" arch="x86"/>
-
-        <js-module src="www/dummyplugin.js" name="Dummy">
-            <clobbers target="dummy" />
-        </js-module>
-    </platform>
-
 </plugin>

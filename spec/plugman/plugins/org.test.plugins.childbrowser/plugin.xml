@@ -8,7 +8,7 @@
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.test.plugins.childbrowser"
@@ -103,22 +102,5 @@
         <framework src="social.framework" weak="true" />
         <framework src="music.framework" weak="rabbit" />
         <framework src="Custom.framework" custom="true" />
-    </platform>
-
-    <!-- wp8 -->
-    <platform name="wp8">
-        <resource-file src="src\wp7\Images\appbar.back.rest.png" />
-        <config-file target="config.xml" parent="/widget/plugins">
-            <plugin name="org.test.plugins.childbrowser"
-                value="org.test.plugins.childbrowser"/>
-        </config-file>
-
-        <source-file src="src\wp7\ChildBrowserCommand.cs"
-                     target-dir="Plugins\" />
-
-        <!-- modify the project file to include the added files -->
-        <config-file target=".csproj" parent=".">
-        </config-file>
-
     </platform>
 </plugin>
