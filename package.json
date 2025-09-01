@@ -28,7 +28,7 @@
     "elementtree": "^0.1.7",
     "jasmine": "^5.10.0",
     "jasmine-spec-reporter": "^7.0.0",
-    "rewire": "^9.0.0"
+    "rewire": "^9.0.1"
   },
   "scripts": {
     "test": "npm run lint && npm run test:coverage",
