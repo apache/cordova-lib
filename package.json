@@ -19,7 +19,7 @@
     "globby": "^11.1.0",
     "semver": "^7.7.2",
     "stringify-package": "^1.0.1",
-    "write-file-atomic": "^6.0.0"
+    "write-file-atomic": "^7.0.0"
   },
   "devDependencies": {
     "@cordova/eslint-config": "^6.0.0",
