@@ -20,6 +20,45 @@
 -->
 # Cordova-lib Release Notes
 
+### 13.0.0 (Oct 29, 2025)
+
+**Breaking Changes:**
+
+* [GH-964](https://github.com/apache/cordova-lib/pull/964) chore(npm)!: bump `write-file-atomic@7.0.0`
+* [GH-961](https://github.com/apache/cordova-lib/pull/961) chore!: update dependencies & node requirement
+* [GH-957](https://github.com/apache/cordova-lib/pull/957) feat!: remove `cordova serve` command
+* [GH-955](https://github.com/apache/cordova-lib/pull/955) chore(npm)!: bump various packages
+* [GH-953](https://github.com/apache/cordova-lib/pull/953) feat(plugman)!: remove `create plugin` support
+* [GH-949](https://github.com/apache/cordova-lib/pull/949) chore!: bump node requirement & npm dependencies
+* [GH-958](https://github.com/apache/cordova-lib/pull/958) chore!: remove deprecated platform data
+* [GH-959](https://github.com/apache/cordova-lib/pull/959) chore!: remove unused templates
+
+**Features:**
+
+* [GH-952](https://github.com/apache/cordova-lib/pull/952) feat: replace `dep-graph` dependency w/ custom class
+
+**Fixes:**
+
+* [GH-944](https://github.com/apache/cordova-lib/pull/944) fix(emulator): Support listing emulators with `--list`
+
+**Chores:**
+
+* [GH-963](https://github.com/apache/cordova-lib/pull/963) chore: update `package-lock.json`
+* [GH-960](https://github.com/apache/cordova-lib/pull/960) chore: various updates to the root files
+* [GH-956](https://github.com/apache/cordova-lib/pull/956) chore(npm): bump `@cordova/eslint-config@6.0.0`
+* [GH-946](https://github.com/apache/cordova-lib/pull/946) chore(deps-dev): bump `brace-expansion` from 1.1.11 to 1.1.12
+* [GH-939](https://github.com/apache/cordova-lib/pull/939) chore(deps): bump `path-to-regexp` and express
+* [GH-937](https://github.com/apache/cordova-lib/pull/937) chore(deps): bump `cross-spawn` from 7.0.3 to 7.0.6
+* [GH-938](https://github.com/apache/cordova-lib/pull/938) chore(ci): Fix failing dependabot PRs
+
+**CI & Others:**
+
+* [GH-954](https://github.com/apache/cordova-lib/pull/954) ci: various workflow improvements
+* [GH-950](https://github.com/apache/cordova-lib/pull/950) ci(workflow): update release-audit & license config
+* [GH-945](https://github.com/apache/cordova-lib/pull/945) ci: Add node 22 and 24 to CI testing matrix
+* [GH-941](https://github.com/apache/cordova-lib/pull/941) Keep final new line in `package.json`
+* [GH-942](https://github.com/apache/cordova-lib/pull/942) Persist relative paths on disk
+
 ### 12.0.2 (Oct 29, 2024)
 
 **Fixes:**
