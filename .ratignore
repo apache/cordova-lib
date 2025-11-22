@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-\.(.*)
-spec
-fixtures
-coverage
-node_modules
+.git/
+coverage/
+node_modules/
+spec/cordova/fixtures/
+spec/plugman/plugins/
