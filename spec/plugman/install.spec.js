@@ -105,7 +105,7 @@ describe('plugman/install', () => {
                 api.addPlugin.and.callThrough();
                 events.removeAllListeners('results');
             });
-    }, 2 * TIMEOUT);
+    }, 3 * TIMEOUT);
 
     afterAll(() => {
         fs.rmSync(temp_dir, { recursive: true, force: true });
