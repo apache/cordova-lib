@@ -518,8 +518,16 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
             } else if (trimmedReq.indexOf('cordova-') === 0) {
                 // Might be a platform constraint
                 const platform = trimmedReq.substring(8);
-                if (platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req])) {
-                    badInstalledVersion = platformMap[platform];
+                if (platformMap[platform]) {
+                    let platformVersion = platformMap[platform];
+                    if (semver.prerelease(platformVersion)) {
+                        // Keep prerelease behavior consistent with the "cordova" version check above.
+                        platformVersion = semver.inc(platformVersion, 'patch');
+                    }
+
+                    if (!semver.satisfies(platformVersion, reqs[req])) {
+                        badInstalledVersion = platformMap[platform];
+                    }
                 }
             }
 
