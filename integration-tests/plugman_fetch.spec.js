@@ -25,7 +25,7 @@ const fetch = rewire('../src/plugman/fetch');
 const metadata = require('../src/plugman/util/metadata');
 const temp = path.join(os.tmpdir(), 'plugman', 'fetch');
 const plugins_dir = path.join(__dirname, '..', 'spec', 'plugman', 'plugins');
-let test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
+const test_plugin = path.join(plugins_dir, 'org.test.plugins.childbrowser');
 const test_pkgjson_plugin = path.join(plugins_dir, 'pkgjson-test-plugin');
 const test_plugin_searchpath = path.join(test_plugin, '..');
 const test_plugin_id = 'org.test.plugins.childbrowser';
@@ -115,7 +115,7 @@ describe('fetch', function () {
             });
         });
         it('Test 028 : should fail when locally-available plugin is missing pacakge.json', function () {
-            test_plugin = path.join(plugins_dir, 'org.test.androidonly');
+            const test_plugin = path.join(plugins_dir, 'org.test.androidonly');
             return expectAsync(
                 fetch(test_plugin, temp)
             ).toBeRejectedWithError(/needs a valid package\.json/);

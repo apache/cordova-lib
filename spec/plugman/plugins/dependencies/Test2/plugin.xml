@@ -25,7 +25,7 @@
 
     <name>Plugin Test2</name>
 
-    <dependency id="cordova-plugin-file" version="2.X.0" />
+    <dependency id="cordova-plugin-file" version="2" />
 
     <asset src="www/plugin-test.js" target="plugin-test.js" />
 

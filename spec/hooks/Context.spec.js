@@ -75,11 +75,6 @@ describe('hooks/Context', () => {
             expect(requireCordovaModule('cordova-lib/src/platforms/platforms')).toBe(platforms);
         });
 
-        it('correctly resolves inner modules of cordova-lib', () => {
-            const platforms = require('../../src/platforms/platforms');
-            expect(requireCordovaModule('cordova-lib/src/platforms/platforms')).toBe(platforms);
-        });
-
         describe('with stubbed require', () => {
             let requireSpy;
 
