@@ -372,7 +372,7 @@ describe('pkgJson', function () {
             expect(installedPlatforms()).toEqual([]);
 
             // Add the testing platform with --save and add specific version to android platform.
-            return cordova.platform('add', ['android@9.0.0', 'ios@6.1.0'], { save: true }).then(function () {
+            return cordova.platform('add', ['android@9.0.0', 'ios@7.1.1'], { save: true }).then(function () {
                 expect(installedPlatforms()).toEqual(['android', 'ios']);
 
                 // Check the platform add was successful in platforms list and
@@ -380,7 +380,7 @@ describe('pkgJson', function () {
                 expect(getPkgJson('cordova.platforms')).toEqual(['android', 'ios']);
                 expect(getPkgJson('devDependencies')).toEqual({
                     'cordova-android': specWithMinSatisfyingVersion('9.0.0'),
-                    'cordova-ios': specWithMinSatisfyingVersion('6.1.0')
+                    'cordova-ios': specWithMinSatisfyingVersion('7.1.1')
                 });
 
                 expect(getCfg().getEngines()).toEqual([]);
@@ -430,7 +430,7 @@ describe('pkgJson', function () {
             setPkgJson('cordova.platforms', [PLATFORM]);
             setPkgJson('devDependencies', {
                 [PLUGIN]: '^3.2.2',
-                [`cordova-${PLATFORM}`]: '^6.1.0'
+                [`cordova-${PLATFORM}`]: '^7.1.1'
             });
 
             // config.xml has no platforms or plugins yet.
@@ -495,17 +495,17 @@ describe('pkgJson', function () {
 
             setPkgJson('cordova.platforms', [PLATFORM]);
             setPkgJson('devDependencies', {
-                [`cordova-${PLATFORM}`]: '^6.1.0',
+                [`cordova-${PLATFORM}`]: '^7.1.1',
                 [PLUGIN]: '^3.2.2'
             });
             getCfg()
-                .addEngine(PLATFORM, '~6.1.0')
+                .addEngine(PLATFORM, '~7.1.1')
                 .addPlugin({ name: PLUGIN, spec: '~3.2.1' })
                 .write();
 
             expect(installedPlatforms()).toEqual([]);
 
-            return cordova.platform('add', `${PLATFORM}@6.1.0`, { save: true }).then(function () {
+            return cordova.platform('add', `${PLATFORM}@7.1.1`, { save: true }).then(function () {
                 // Pkg.json has ios.
                 expect(getPkgJson('cordova.platforms')).toEqual([PLATFORM]);
             }).then(function () {
