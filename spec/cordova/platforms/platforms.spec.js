@@ -24,7 +24,8 @@ const rewire = require('rewire');
 const events = require('cordova-common').events;
 
 const util = require('../../../src/cordova/util');
-const platforms = rewire('../../../src/platforms/platforms');
+const realPlatforms = rewire('../../../src/platforms/index');
+const platforms = require('../../../src/platforms/platforms');
 
 const CORDOVA_ROOT = path.join(__dirname, '../fixtures/projects/platformApi');
 const PLATFORM_WITH_API = path.join(CORDOVA_ROOT, 'platforms/windows');
@@ -47,7 +48,7 @@ describe('platforms/platforms', () => {
 
         beforeEach(function () {
             // reset api cache after each spec
-            platforms.__set__('cachedApis', {});
+            realPlatforms.__set__('cachedApis', {});
             isCordova = spyOn(util, 'isCordova').and.returnValue(CORDOVA_ROOT);
 
             fs.rmSync(PLATFORM_SYMLINK, { recursive: true, force: true });
@@ -58,7 +59,7 @@ describe('platforms/platforms', () => {
             spyOn(events, 'emit').and.returnValue(true);
             spyOn(util, 'convertToRealPathSafe').and.callThrough();
             spyOn(util, 'requireNoCache').and.callThrough();
-            const platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
+            const platformApi = realPlatforms.getPlatformApi('windows', PLATFORM_WITH_API);
             expect(platformApi).toBeDefined();
             expect(platformApi.platform).toEqual('windows');
             expect(events.emit.calls.count()).toEqual(1);
@@ -70,39 +71,39 @@ describe('platforms/platforms', () => {
         });
 
         it('should cache PlatformApi instance for further calls', function () {
-            const platformApi = platforms.getPlatformApi('windows', PLATFORM_WITH_API);
+            const platformApi = realPlatforms.getPlatformApi('windows', PLATFORM_WITH_API);
             expect(platformApi.fakeProperty).not.toBeDefined();
             platformApi.fakeProperty = 'fakeValue';
-            expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty).toBe('fakeValue');
+            expect(realPlatforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty).toBe('fakeValue');
         });
 
         it('should resolve symlinks before creating an instance', function () {
-            const platformApi = platforms.getPlatformApi('windows', PLATFORM_SYMLINK);
-            expect(platforms.getPlatformApi('windows', PLATFORM_WITH_API)).toBe(platformApi);
+            const platformApi = realPlatforms.getPlatformApi('windows', PLATFORM_SYMLINK);
+            expect(realPlatforms.getPlatformApi('windows', PLATFORM_WITH_API)).toBe(platformApi);
         });
 
         it('should return cached instance by symlink to project root', function () {
-            platforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty = 'fakeValue';
-            expect(platforms.getPlatformApi('windows', PLATFORM_SYMLINK).fakeProperty).toBe('fakeValue');
+            realPlatforms.getPlatformApi('windows', PLATFORM_WITH_API).fakeProperty = 'fakeValue';
+            expect(realPlatforms.getPlatformApi('windows', PLATFORM_SYMLINK).fakeProperty).toBe('fakeValue');
         });
 
         it('should succeed if called inside of cordova project w/out platformRoot param', function () {
-            const platformApi = platforms.getPlatformApi('windows');
+            const platformApi = realPlatforms.getPlatformApi('windows');
             expect(platformApi).toBeDefined();
             expect(platformApi.platform).toEqual('windows');
         });
 
         it('should throw if called outside of cordova project w/out platformRoot param', function () {
             isCordova.and.returnValue(false);
-            expect(function () { platforms.getPlatformApi('windows'); }).toThrow();
+            expect(function () { realPlatforms.getPlatformApi('windows'); }).toThrow();
         });
 
         it('should throw for unknown platform', function () {
-            expect(function () { platforms.getPlatformApi('invalid_platform'); }).toThrow();
+            expect(function () { realPlatforms.getPlatformApi('invalid_platform'); }).toThrow();
         });
 
         it('should throw for nonsense www platform', function () {
-            expect(function () { platforms.getPlatformApi('www'); }).toThrow();
+            expect(function () { realPlatforms.getPlatformApi('www'); }).toThrow();
         });
     });
 });

@@ -20,7 +20,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const semver = require('semver');
-const url = require('url');
 const detectIndent = require('detect-indent');
 const detectNewline = require('detect-newline');
 const stringifyPackage = require('stringify-package');
@@ -288,8 +287,11 @@ function determinePluginTarget (projectRoot, cfg, target, fetchOptions) {
 }
 
 function parseSource (target, opts) {
-    // @todo Use 'url.URL' constructor instead since 'url.parse' was deprecated since v11.0.0
-    var uri = url.parse(target); // eslint-disable-line
+    let uri = {};
+    try {
+        uri = new URL(target);
+    } catch (err) { }
+
     if (uri.protocol && uri.protocol !== 'file:' && uri.protocol[1] !== ':' && !target.match(/^\w+:\\/)) {
         return target;
     } else {
