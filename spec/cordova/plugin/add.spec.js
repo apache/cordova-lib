@@ -449,6 +449,12 @@ describe('cordova/plugin/add', function () {
             it('should return an array with failed platform requirements ', function () {
                 expect(add.getFailedRequirements({ 'cordova-android': '>=6.0.0' }, {}, { android: '5.5.0' }, '7.0.0')).toEqual([{ dependency: 'cordova-android', installed: '5.5.0', required: '>=6.0.0' }]);
             });
+            it('should treat prerelease platform versions as the matching release version', function () {
+                expect(add.getFailedRequirements({ 'cordova-ios': '>=7.0.0' }, {}, { ios: '8.0.2-dev.0' }, '12.0.0').length).toBe(0);
+            });
+            it('should return failed platform requirements for prerelease versions below minimum', function () {
+                expect(add.getFailedRequirements({ 'cordova-ios': '>=7.0.0' }, {}, { ios: '6.9.9-dev.0' }, '12.0.0')).toEqual([{ dependency: 'cordova-ios', installed: '6.9.9-dev.0', required: '>=7.0.0' }]);
+            });
         });
         describe('listUnmetRequirements helper method', function () {
             it('should emit warnings for failed requirements', function () {
