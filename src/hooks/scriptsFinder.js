@@ -17,6 +17,7 @@
  under the License.
  */
 
+const fs = require('node:fs');
 const path = require('node:path');
 const cordovaUtil = require('../cordova/util');
 const events = require('cordova-common').events;
@@ -96,13 +97,51 @@ function getPluginScriptFiles (plugin, hook, platforms) {
 }
 
 /**
+ * Orders plugins by their position in package.json's `cordova.plugins`, so that their hooks run in
+ * the order the plugins were installed in.
+ *
+ * `PluginInfoProvider.getAllWithinSearchPath` globs the plugins directory and does not sort, so
+ * without this the order hooks run in is whatever the filesystem returned for that directory. That
+ * silently decides which of two plugins writing the same file wins, and it can differ from one
+ * machine to the next. Installation order already follows package.json (see
+ * cordova/platform/addHelper.js), and this uses the same comparison so the two agree.
+ *
+ * Plugins missing from package.json keep sorting before the listed ones, exactly as they do during
+ * installation, and `Array.prototype.sort` is stable, so plugins that compare equal stay in the
+ * order the search path yielded.
+ *
+ * @param {PluginInfo[]} plugins   as returned by the plugin search path
+ * @param {string} projectRoot     the project directory holding package.json
+ * @returns {PluginInfo[]} the plugins, ordered
+ */
+function sortPluginsByPackageJson (plugins, projectRoot) {
+    const pkgJsonPath = path.join(projectRoot, 'package.json');
+    if (!fs.existsSync(pkgJsonPath)) {
+        return plugins;
+    }
+
+    const pkgJson = cordovaUtil.requireNoCache(pkgJsonPath);
+    if (!pkgJson || !pkgJson.cordova || !pkgJson.cordova.plugins) {
+        return plugins;
+    }
+
+    const pkgPluginIDs = Object.keys(pkgJson.cordova.plugins);
+    return plugins.slice().sort(function (a, b) {
+        return pkgPluginIDs.indexOf(a.id) - pkgPluginIDs.indexOf(b.id);
+    });
+}
+
+/**
  * Gets hook scripts defined by all plugins.
  */
 function getAllPluginsHookScriptFiles (hook, opts) {
     let scripts = [];
     let currentPluginOptions;
 
-    const plugins = (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins'));
+    const plugins = sortPluginsByPackageJson(
+        (new PluginInfoProvider()).getAllWithinSearchPath(path.join(opts.projectRoot, 'plugins')),
+        opts.projectRoot
+    );
 
     plugins.forEach(function (pluginInfo) {
         currentPluginOptions = {
