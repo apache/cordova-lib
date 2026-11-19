@@ -520,7 +520,7 @@ function getFailedRequirements (reqs, pluginMap, platformMap, cordovaVersion) {
             } else if (trimmedReq.indexOf('cordova-') === 0) {
                 // Might be a platform constraint
                 const platform = trimmedReq.substring(8);
-                if (platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req])) {
+                if (platformMap[platform] && !semver.satisfies(platformMap[platform], reqs[req], { loose: true, includePrerelease: true })) {
                     badInstalledVersion = platformMap[platform];
                 }
             }
